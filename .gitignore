@@ -1,4 +1,20 @@
-﻿# Compiled source #
+﻿# Folders #
+###########
+bin
+.metadata
+
+data/accounts/
+data/backup/
+data/commands/
+data/databases/
+data/logs/
+data/mail/
+data/maps/
+data/spells/
+data/theme/
+
+
+# Compiled source #
 ###################
 *.class
 
