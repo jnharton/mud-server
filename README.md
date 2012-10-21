@@ -35,3 +35,6 @@ Usage: java MUDServer.jar
 ## Updates
 None of the code is up yet for this because I want/need to decide on a license to use and then deal
 with the fact that my code depends on some LGPL'd network (server/client) code.
+
+## Copyright
+Copyright (c) 2012 Jeremy Harton. See LICENSE.txt for further details. (license and code not up yet)
