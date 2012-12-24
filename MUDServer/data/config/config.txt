@@ -1,0 +1,3 @@
+ansi:on		# ansi colors
+il_tag:off	# inline tagging
+telnet:on	# telnet compatibility

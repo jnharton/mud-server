@@ -1,0 +1,11 @@
+mail
+MAIL
+
+Read the mail in your player inbox, the former command with no argument will list the
+number of unread messages, the latter will display a particular message, the one with
+the id/index selected. The third option will output a list of the messages you have,
+with their id, subject, brief portion of message, etc.
+
+Syntax: 'mail'
+        'mail <message #>'
+        'mail #list'

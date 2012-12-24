@@ -1,0 +1,205 @@
+package mud;
+
+import mud.objects.Item;
+import mud.objects.ItemType;
+import mud.objects.items.Clothing;
+import mud.objects.items.ClothingType;
+
+/**
+ * Slot is a class which represents the logical possibility of equipping/wearing
+ * something on the body of a Player in a text-based game, here known generally
+ * as a MUD
+ * 
+ * Last edited: April 20, 2012 (4/20/2012)
+ * 
+ * @author Jeremy
+ * @version %M%.%m%
+ */
+public class Slot {
+	private String description;        // descriptive text
+	private SlotType slotType;         // the type of slot this is
+	private ItemType itemType;         // the type of item the slot can hold
+	private ClothingType clothingType; // the type of clothing item the slot can hold
+	private Item item;                 // the item the slot currently holds
+	private boolean full;              // the not full/full state of the slot
+	
+	/**
+	 * Constructs a slot based on a single parameter, an
+	 * item type that it can hold.
+	 * 
+	 * @param slotType
+	 * @param itemType
+	 */
+	public Slot(SlotType slotType, ItemType itemType) {
+		this(slotType, itemType, null);
+	}
+	
+	/**
+	 * Constructs a slot based on two parameters: the
+	 * item type it can hold and an item to place in the
+	 * slot as it is being constructed.
+	 * 
+	 * @param slotType
+	 * @param itemType
+	 * @param item
+	 */
+	public Slot(SlotType slotType, ItemType itemType, Item item) {
+		this.slotType = slotType;
+		this.itemType = itemType;
+		
+		if(item != null) { // ensure that putting null in doesn't register as full
+			this.item = item;
+			this.full = true;
+		}
+		else {
+			this.item = null;
+			this.full = false;
+		}
+	}
+	
+	/**
+	 * Constructs a slot based on a single parameter, an
+	 * item type that it can hold.
+	 * 
+	 * @param slotType
+	 * @param clothingType
+	 */
+	public Slot(SlotType slotType, ClothingType clothingType) {
+		this(slotType, clothingType, null);
+	}
+	
+	/**
+	 * Constructs a slot based on two parameters: the
+	 * item type it can hold and an item to place in the
+	 * slot as it is being constructed.
+	 * 
+	 * @param slotType
+	 * @param clothingType
+	 * @param clothing
+	 */
+	public Slot(SlotType slotType, ClothingType clothingType, Clothing clothing) {
+		this.slotType = slotType;
+		this.itemType = ItemType.CLOTHING;
+		this.clothingType = clothingType;
+		
+		if(clothing != null) { // ensure that putting null in doesn't register as full
+			this.item = clothing;
+			this.full = true;
+		}
+		else {
+			this.item = null;
+			this.full = false;
+		}
+	}
+	
+	/**
+	 * Tell us what item is stored in the slot.
+	 * 
+	 * @return
+	 */
+	public Item getItem() {
+		return this.item;
+	}
+	
+	/**
+	 * Insert an item into the slot, and mark the
+	 * slot as full, since a slot can only hold one
+	 * item.
+	 * 
+	 * @param item
+	 */
+	public void insert(Item item) {
+		this.item = item;
+		this.full = true;
+	}
+	
+	/**
+	 * Remove an item from the slot, marking the item
+	 * member as null and the slot as not full.
+	 * 
+	 * @return item the item that was in the slot
+	 */
+	public Item remove() {
+		Item item = this.item;
+		this.item = null;
+		this.full = false;
+		return item;
+	}
+	
+	/**
+	 * Get the descriptive text for this slot.
+	 * 
+	 * @return string containing descriptive text
+	 */
+	public String getDescription() {
+		return this.description;
+	}
+	
+	/**
+	 * Set the descriptive text for this slot.
+	 * 
+	 * @param newDescription new descriptive text for this slot
+	 */
+	public void setDescription(String newDescription) {
+		this.description = newDescription;
+	}
+	
+	/**
+	 * Tell us what type of item can go in the slot.
+	 * 
+	 * @return a string indicating the item type that fits in the slot
+	 */
+	public ItemType getType() {
+		return this.itemType;
+	}
+	
+	/**
+	 * Tell us what type of of clothing, if any, can go in the slot
+	 * 
+	 * @return a string indicating the clothing type that fits in the slot
+	 */
+	public ClothingType getCType() {
+		return this.clothingType;
+	}
+	
+	/**
+	 * Returns a true/false value telling whether a specific item
+	 * type will fit in this slot.
+	 * 
+	 * @param tType the type to check against
+	 * @return a boolean indicative of whether this slot is of that type
+	 */
+	public boolean isType(ItemType iType) {
+		return this.itemType.equals(iType);
+	}
+	
+	/**
+	 * Allows us to determine whether the slot is full or not full.
+	 * 
+	 * NOTE: Redundant, because isFull() can be used or it's negative
+	 * checked against. Still might be potentially useful for clarity of logic
+	 * 
+	 * @return a boolean representing whether the slot is empty or not empty
+	 */
+	public boolean isEmpty() {
+		if( this.full ) {
+			return false;
+		}
+		else {
+			return true;
+		}
+	}
+	
+	/**
+	 * Allows us to determine whether the slot is full or not full.
+	 * 
+	 * @return a boolean representing whether the slot is full or not full.
+	 */
+	public boolean isFull() {
+		return this.full;
+	}
+	
+	public String toString() {
+		return "no string representation";
+	}
+}

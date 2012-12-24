@@ -1,0 +1,8 @@
+invisibility#You cast invisibility on &target#instant#invisibility#none#self,friend
+see invisibility#You cast see invisibility on &target#instant#see_invis#none#self
+teleport#You cast teleport.#instant#none#none#self,friend
+dispel#You cast dispel#instant#!any#none#self,friend
+fireball#You cast fireball#timer#burning,dam-10#none#enemy
+cure light wounds#You cast cure light wounds on &target.#instant#heal+10#none#enemy,self,friend
+cure moderate wounds#You cast cure moderate wounds on &target.#instant#heal+20#none#enemy,self,friend
+arcane lock#You cast arcane lock on &target#permanent#arcane_lock#none#item,thing

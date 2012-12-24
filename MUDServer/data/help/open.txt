@@ -1,0 +1,4 @@
+open
+OPEN
+
+Syntax: 'open <name>=<source dbref#>=<destination dbref#>'

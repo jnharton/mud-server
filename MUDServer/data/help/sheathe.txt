@@ -1,0 +1,6 @@
+sheathe
+SHEATHE
+
+Sheathes either the weapon specified, or both of your weapons.
+
+Syntax: 'sheath [weapon]'

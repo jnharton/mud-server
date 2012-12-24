@@ -1,0 +1,11 @@
+nameref
+NAMEREF
+
+nameref assigns an integer to a string, which can then be used as '$<name>', which the command parser
+will evaluate out to some number.
+
+ex. 'nameref home 182' and then when you use '$home' in your arguments it will be replaced with '182'
+
+Syntax: 'nameref <string -- reference> <integer -- database ref num>' assign a name reference
+        'nameref #list'                                               list known references
+        'nameref #clear'                                              clear nameref table

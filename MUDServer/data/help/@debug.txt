@@ -1,0 +1,25 @@
+@debug
+@DEBUG
+
+'@debug <parameter>'
+
+Parameters:
+
+on/off           - turn debugging on and off
+cmdDelay         - tell us the current command delay (how long the program waits between interpreting commands)
+dbdump           - list out the whole database (<index>: <object name> <object dbref>)
+exitlcache/elc   -
+timedata         - tell us the current real world time and in-game time
+seasons          - list the defined seasons
+holidays         - list the defined holidays
+chat             - list unsent chat messages (per specified channel?)
+client           - tell us about the client object that represents us
+objlcache/olc    - list the cached object lookups
+position/pos     - tell us our position data (for currently connected player, cartesian coordinate system)
+roomlcache/rlc   - list the cached room lookups
+udbnstack/unused - list information about unused database reference numbers
+<a number>       - change the debug level (how much and what gets sent to us)
+
+Turns debug message reporting on/off and display current information about certain chunks of data.
+
+Last Updated: November 26, 2012

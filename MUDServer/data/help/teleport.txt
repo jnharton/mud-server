@@ -1,0 +1,8 @@
+teleport
+TELEPORT
+
+'teleport <destination>'
+'teleport <target> to <destination>'
+
+Teleports you or a target to a destination you know. (non-functional)
+Spell?Command?OOC?

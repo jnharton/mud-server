@@ -1,0 +1,10 @@
+@setmode
+@SETMODE
+
+Sets the game-mode to one of the following:
+
+Normal - 'n'
+Wizard - 'w'
+Maintenance - 'm';
+
+Syntax: '@setmode <mode flag>'

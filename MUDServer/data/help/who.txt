@@ -1,0 +1,6 @@
+who
+WHO
+
+List the players that are connected with their level, class, and "known" name.
+
+Syntax: 'who'

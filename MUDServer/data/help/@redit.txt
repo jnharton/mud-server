@@ -1,0 +1,8 @@
+@redit
+@REDIT
+
+Launches the room editor to either create a new room or to edit an existing
+one.
+
+Syntax: 'redit'
+        'redit <room dbref# or name>'

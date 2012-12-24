@@ -1,0 +1,6 @@
+motd
+MOTD
+
+Display the Message of The Day on request.
+
+Syntax: 'motd'

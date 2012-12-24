@@ -1,0 +1,2 @@
+1:Syntaxe Invalide!
+2:NaN N'est pas un nombre!

@@ -1,0 +1,4 @@
+stats
+STATS
+
+Server statistics on the number of players, etc

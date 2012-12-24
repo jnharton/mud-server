@@ -1,0 +1,10 @@
+@access
+@ACCESS
+
+A means to view the access level for a player and to changed it. This
+is an admin command.
+
+Syntax: '@access <player name>'
+        '@access <player name> = <int - access level>'
+
+Last Updated: May 30, 2012

@@ -1,0 +1,10 @@
+movement
+MOVEMENT
+
+Movement on this server borrows from more roleplaying styled games in that there
+are named exits rather than directional ones. It is possible that directional 
+comamnds might be added, but at present they are absent. Also, there is some
+notion of position within a room, but as of now there is no reliable means
+of moving within a room.
+
+Last Updated: May 5, 2012

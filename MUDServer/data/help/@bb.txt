@@ -1,0 +1,8 @@
+@bb
+@BB
+
+Bulletin Board Command
+
+Syntax: '@bb +add <subject>=<message>' adds a message to the board with the specified subject and message
+        '@bb +delete <message number>' deletes the specified message
+        '@bb +read'                    lists all the messages on the board

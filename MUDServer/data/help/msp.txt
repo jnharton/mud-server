@@ -1,0 +1,6 @@
+msp
+MSP
+
+Turns MUD Sound Protocol (MSP) messages on or off.
+
+Syntax: 'msp <on/off>'

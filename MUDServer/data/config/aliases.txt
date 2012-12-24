@@ -1,0 +1,24 @@
+# Command Aliases File
+alias @backdb:@backup
+alias @check:@chk
+alias @describe:describe,@desc,desc
+alias @loaddb:@load
+alias @success:@succ
+alias @osuccess:@osucc
+alias @recycle:@rec
+alias @teleport:@tel
+alias commands:cmds
+alias examine:ex,exam
+alias jump:j,jmp
+alias page:p
+alias north:n
+alias south:s
+alias east:e
+alias west:w
+alias inventory:inv,i
+alias look:l
+alias quit:QUIT
+alias @setskill:@ss
+alias go:approachh
+alias equip:eq
+alias attack:kill

@@ -1,0 +1,6 @@
+create
+CREATE
+
+Notes: The former works before login and the latter after login, they are exclusive.
+
+Syntax: 'create <name> <password>' or 'create <name>'

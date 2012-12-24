@@ -1,0 +1,8 @@
+look
+LOOK
+
+Presents the player, you, with a description of their current location, from their
+present perspective (angle, etc) or information about the player or object being
+looked at.
+
+Syntax 'look <me/here/name of object/name of place>'

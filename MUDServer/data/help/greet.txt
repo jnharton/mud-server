@@ -1,0 +1,27 @@
+greet
+GREET
+
+This command is used to tell another player your name, since otherwise you'll only see <classname><#>,
+where classname is the name of their player class, and # is whatever the number of players that had
+that class when they logged on. It is non-unique from login to login (might be replaced with a slightly different
+way of naming) since the number of players of a given class on at a time will likely fluctuate.
+Once you and they greet each other respectively, greeting someone gives them your character's "first" name,
+but does not automatically divulge theirs to you. Both parties must participate for both of them to see each
+others name as well as theirs.
+
+This exists for IC interaction purposes, since there is no way you'd realistically know a total stranger's name.
+In the FUTURE, this may be expanded to include some kind of introduce command or alias that will allow you to
+tell someone else a third person's name if you know it so that they know who that is. Also, FUTURE, there may be
+means to tag people for yourself with a string such that the systems will know them by that string for you, so if
+they're on, you won't know their name, but might be able to identify them as being on.
+
+As of yet not sure if I will support using that non-unique name for non-IC communication (i.e. I think it'll be
+allowed for saying something specifically to them in the room, because theoretically you can go talk to a particular
+person if you can tell them apart from someone else), but not for OOC communication. It will probably be possible
+soon that everyone will be able to see a staff member's character's name or at least a unique ooc-only identifier 
+that you can contact them directly in-game OOC and IC.
+
+Syntax: 'greet <character name/non-unique identifier>'
+
+example: 'greet none1', this will attempt to greet the second player that is logged on right now whose class
+is NONE.

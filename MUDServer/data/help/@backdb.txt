@@ -1,0 +1,6 @@
+@backdb
+@BACKDB
+
+Backs up the database to disk.
+
+Syntax: '@backdb'

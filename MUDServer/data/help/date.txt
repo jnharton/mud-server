@@ -1,0 +1,6 @@
+date
+DATE
+
+Reports the in-character game date and holiday if the current day is a holiday.
+
+Syntax: 'date'

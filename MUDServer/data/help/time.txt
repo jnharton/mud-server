@@ -1,0 +1,7 @@
+time
+TIME
+
+Reports the general time of day (position of the sun in the sky) and the current phase of the
+moon.
+
+Syntax: 'time' 

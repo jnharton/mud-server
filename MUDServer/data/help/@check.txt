@@ -1,0 +1,7 @@
+@check
+@CHECK
+
+List the exits in the current room and any messages triggered on using each of them, such as: success,
+osuccess (what others see), fail (what you see), and ofail (what others see) messages.
+
+Syntax: '@check'

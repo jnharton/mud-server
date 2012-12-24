@@ -1,0 +1,8 @@
+map
+MAP
+
+Shows an ascii map of the current region/area/rooms
+
+NOTE: Uses ansi colors
+
+Syntax: 'map'

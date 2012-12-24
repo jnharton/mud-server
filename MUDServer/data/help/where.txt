@@ -1,0 +1,6 @@
+where
+WHERE
+test
+List the players that are connected and some of their state info.
+
+Syntax: 'where'

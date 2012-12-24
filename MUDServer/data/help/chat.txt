@@ -1,0 +1,11 @@
+chat
+CHAT
+
+Command to chat with other players via various channels.
+
+Syntax: 'chat <channel> <message>'
+        'chat <channel> #listeners'
+        'chat #channels'            list channels that exists (shows enabled, disabled if you are in/not in it)
+
+* additionally the command interpreter supports the following "aliasing" '<channel name> <message>',
+for example 'ooc Hello, world!' will produce the same result as 'chat ooc Hello, world!'

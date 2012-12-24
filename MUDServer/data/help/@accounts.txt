@@ -1,0 +1,8 @@
+@accounts
+@ACCOUNTS
+
+Lists some information for all of the existing accounts
+
+Syntax: '@accounts'
+
+Last Updated: May 30, 2012

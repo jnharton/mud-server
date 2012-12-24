@@ -1,0 +1,6 @@
+vitals
+VITALS
+
+Show your current hitpoints and mana?
+
+Syntax: 'vitals'

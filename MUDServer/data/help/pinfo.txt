@@ -1,0 +1,10 @@
+pinfo
+PINFO
+
+'pinfo'
+
+List player info, abilities, stats, etc.
+
+aliases: score
+
+Last Updated: June 6th, 2012

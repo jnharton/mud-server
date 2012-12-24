@@ -1,0 +1,10 @@
+@ban
+@BAN
+
+Ban a player you specify. This is an ip address ban.
+
+NOTE: Currently the player needs to be connected.
+
+Syntax: '@ban <player name>'
+
+Last Updated: May 30, 2012

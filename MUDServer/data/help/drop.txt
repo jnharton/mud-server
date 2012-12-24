@@ -1,0 +1,6 @@
+drop
+DROP
+
+Drops whatever you are holding onto the ground in the room your in. Only works for things.
+
+Syntax: 'drop <object dbref#/name>'

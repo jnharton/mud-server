@@ -1,0 +1,6 @@
+take
+TAKE
+
+Pick an object up off the ground, or retrieve it from some location.
+
+Syntax: 'take <object name/id>'

@@ -1,0 +1,4 @@
+housing
+HOUSING
+
+Lists player housing options and information.

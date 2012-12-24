@@ -1,0 +1,6 @@
+loaddb
+LOADDB
+
+Loads, or if the game is already running, reloads, the database from disk.
+
+Syntax: 'loaddb'

@@ -1,0 +1,19 @@
+@lsedit
+@LSEDIT
+
+Interactive List Editor
+
+Creates a new list in the stored properties of your player character or an object
+you own, or edits an existing list on said object or player.
+
+Syntax: 'lsedit <object/player>=<listname'
+
+Interactive Commands available:
+.quit  - save and exit list
+.abort - abort editing, unpersist changes, and/or delete the newly created list
+.help  - display help
+.print - display a listing of the list, a line at a time (no line numbers)
+.list  - display a listing of the list, a line at a time (line numbers)
+.save  - save the current list
+.stat  - display current status of the list
+.quit  - exit the list editor, after saving the current lists
