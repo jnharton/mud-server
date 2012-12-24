@@ -42,6 +42,6 @@ for the weird structure, which is due to this project being worked on in eclipse
 ## Copyright
 Copyright (c) 2012 Jeremy Harton. See LICENSE.txt for further details.
 
-The license given applies to all files, excepting those under src/mud/net which are licensed under the
-GNU LGPL (Lesser GNU Public License) For the specific details of the license refer to the headers in the
-respective files or the included full, unpersonalized version in LICENSE2.TXT
+The license given applies to all files in the source directory, excepting those under src/mud/net which are
+licensed under the GNU LGPL (Lesser GNU Public License) For the specific details of that license refer to the
+headers in the respective files or the included full, unpersonalized version of LGPL 2.1 in LICENSE2.TXT.
