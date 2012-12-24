@@ -35,8 +35,13 @@ Usage: java -jar MUDServer.jar
 ```
 
 ## Updates
-None of the code is up yet for this because I want/need to decide on a license to use and then deal
-with the fact that my code depends on some LGPL'd network (server/client) code.
+
+The code is up for this, although my code depends on some LGPL'd network (server/client) code. My apologies
+for the weird structure, which is due to this project being worked on in eclipse.
 
 ## Copyright
-Copyright (c) 2012 Jeremy Harton. See LICENSE.txt for further details. (license and code not up yet)
+Copyright (c) 2012 Jeremy Harton. See LICENSE.txt for further details.
+
+The license given applies to all files, excepting those under src/mud/net which are licensed under the
+GNU LGPL (Lesser GNU Public License) For the specific details of the license refer to the headers in the
+respective files or the included full, unpersonalized version in LICENSE2.TXT
