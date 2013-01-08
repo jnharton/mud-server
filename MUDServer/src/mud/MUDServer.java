@@ -10895,7 +10895,7 @@ public class MUDServer {
 	public static void exit() {
 		System.exit(0);
 	}
-
+	
 	/**
 	 * A runnable message loop to send messages to players asynchronously
 	 * @author Jeremy
