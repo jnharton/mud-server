@@ -73,17 +73,63 @@ public class ExamineCommand extends Command {
 					}
 				}
 			}
-			else { // get by string/name
+			else {
+				
+				/*MUDObject mobj = parent.getObject(dbref);
+
+				if(mobj != null) {
+					if(mobj instanceof Player) {
+						Player player = (Player) mobj;
+						parent.examine(player, client);
+					}
+
+					else if(mobj instanceof Room) {
+						Room room = (Room) mobj;
+						parent.examine(room, client);
+					}
+
+					else if(mobj instanceof Exit) {
+						Exit exit = (Exit) mobj;
+						parent.examine(exit, client);
+					}
+					
+					else if(mobj instanceof Thing) {
+						Thing thing = (Thing) mobj;
+						parent.examine(thing, client);
+					}
+
+					else if(mobj instanceof Item) {
+						Item item = (Item) mobj;
+						parent.examine(item, client);
+					}
+
+					else {
+						parent.examine(mobj, client);
+					}
+				}*/
+				
+				// get by string/name
 				Room room = parent.getRoom(arg);
+				
 				if(room != null) {
 					parent.examine(room, client);
 					return;
 				}
+				
 				Player player = parent.getPlayer(arg);
+				
 				if(player != null) {
 					parent.examine(player, client);
 					return;
 				}
+				
+				Exit exit = parent.getExit(arg, client);
+				
+				if(exit != null) {
+					parent.examine(exit, client);
+					return;
+				}
+				
 			}
 		}
 	}

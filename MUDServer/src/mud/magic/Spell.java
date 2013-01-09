@@ -71,6 +71,8 @@ public class Spell
 	public ArrayList<Effect> effects;  // an arraylist of spell effects (e.g. invisibility, acid resistance)
 	HashMap<String, Reagent> reagents; // a matched set of  reagent:quantity spell requirements
 	
+	int manaCost = 5;
+	
 	public Spell(String tName, String tSchool, String tCastMsg, ArrayList<Effect> tEffects)
 	{
 		this.name = tName;
@@ -138,6 +140,10 @@ public class Spell
 	 */
 	public int getLevel() { // returns the integer that represents the spell's level
 		return this.spell_level;
+	}
+	
+	public int getManaCost() {
+		return this.manaCost;
 	}
 	
 	/**

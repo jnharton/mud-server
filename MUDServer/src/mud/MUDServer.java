@@ -480,6 +480,8 @@ public class MUDServer {
 	private static int WIZARD = 3; // Most permissions
 	private static int GOD = 4;    // Pff, such arrogant idiots we are! (anyway, max permissions)
 	// Corresponding Flags: U,B,A,W,G
+	
+	private static int MAX_SKILL = 50;
 
 	public static int OOC_CHANNEL = 0;
 	public static int STAFF_CHANNEL = 1;
@@ -6404,9 +6406,8 @@ public class MUDServer {
 				System.out.println(skill.toString());
 				
 				if(skill.toString().toLowerCase().equals(skillName.toLowerCase()) == true) {
-					int max_skill = 50;
 					
-					if(skillValue < max_skill) {
+					if(skillValue < MAX_SKILL) {
 						send("Set " + skill.toString() + " skill to " + skillValue, client);
 						System.out.println(p.getSkills().put(skill, skillValue));
 					}
@@ -6419,10 +6420,11 @@ public class MUDServer {
 	}
 
 	private void cmd_score(String arg, Client client) {
-		Player p = getPlayer(client);
+		Player player = getPlayer(client);
 
-		send("You are " + p.getName() + " " + p.getTitle() + ", level " + p.getLevel(), client);
-		send("Race: " + p.getPlayerRace().getName() + " Sex: " + p.getGender().toString() + " Class: " + p.getPClass().getName(), client);
+		send("You are " + player.getName() + " " + player.getTitle() + ", level " + player.getLevel(), client);
+		send("Race: " + player.getPlayerRace().getName() + " Sex: " + player.getGender().toString() + " Class: " + player.getPClass().getName(), client);
+		send("Money: " + player.getMoney(0) + " cp, " + player.getMoney(1) + " sp, " + player.getMoney(2) + " gp, and " + player.getMoney(3) + " pp.", client);
 	}
 
 	private void cmd_success(String arg, Client client) {
@@ -7278,8 +7280,8 @@ public class MUDServer {
 	 */
 	public boolean exitHandler(String cmd, Client client)
 	{
-		Player player = getPlayer(client);
-		Room room = getRoom(client);
+		Player player = getPlayer(client); // get current player
+		Room room = getRoom(client);       // get current room
 
 		debug("Entering exit handler...");
 
@@ -7299,14 +7301,14 @@ public class MUDServer {
 
 					// set player's location
 					player.setLocation(exit.getDest());
+					
+					// send other exit properties
 
 					// send the osuccess message
 					if(exit.osuccMsg.equals("") == false) {
 						Message msg = new Message(exit.osuccMsg, room.getDBRef());
 						addMessage(msg);
 					}
-
-					// send other exit properties
 					
 					// remove listener from room
 					room.removeListener(player);
