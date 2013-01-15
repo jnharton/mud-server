@@ -91,7 +91,7 @@ public class Player extends MUDObject
 
 	// preferences (ACCOUNT DATA?)
 	private int lineLimit = 80;                       // how wide the client's screen is in columns (shouldn't be in Player class)
-	public int invDispWidth = 60;                    // display width for the complex version of inventory display
+	public int invDispWidth = 60;                     // display width for the complex version of inventory display
 	private Character invType = 'C';                  // S = simple, C = Complex (candidate for being a config option, not a single variable)
 	private LinkedHashMap<String, String> config;     // player preferences for player configurable options
 	

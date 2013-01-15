@@ -184,7 +184,7 @@
 183#ls#E#You see nothing.#48#182#2
 184#out#E#You see nothing.#182#48#2
 185#Terys#WMV#A weapon merchant.#161#null#12,12,12,12,12,12#1000,1000,1000,1000#0#3#14
-186#Iridan#N#An innkeeper.#4#null#0,0,0,0,0,0#0,0,0,0#0#10#0
+186#Iridan#IKV#An innkeeper.#4#null#0,0,0,0,0,0#0,0,0,0#0#3#14
 187#Potion#I#A potion.#8#8#1#null
 188#out#E#You see nothing.#4#9#2
 189#inn#E#You see nothing.#9#4#2

@@ -34,6 +34,14 @@ public class Currency {
 		this.index = index;   // index is the part of the money array on the player that holds that kind of currency
 	}
 	
+	/**
+	 * Get the name of this currency
+	 * 
+	 * @return
+	 */
+	public String getName() {
+		return this.name;
+	}
 	public String toString() {
 		return this.name;
 	}
@@ -61,11 +69,30 @@ public class Currency {
 		}
 	}
 	
+	/**
+	 * Get Abbreviation
+	 * 
+	 * Return an abbreviated short forum of the currency name
+	 * 
+	 * @return
+	 */
 	public String getAbbrev() {
 		return this.abbrev;
 	}
 	
+	/**
+	 * Return the value of a single unit of this currency
+	 * in terms of a different currency. If it isn't based
+	 * on another currency, return -1.
+	 * 
+	 * @return
+	 */
 	public Integer toInteger() {
-		return this.value;
+		if(base != null) {
+			return this.value;
+		}
+		else {
+			return -1;
+		}
 	}
 }

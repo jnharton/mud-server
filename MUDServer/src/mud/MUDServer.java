@@ -220,12 +220,17 @@ public class MUDServer {
 	private int logLevel = 3;               // 
 	private boolean prompt_enabled = false; // show player information bar
 	
+	// update states
 	private boolean update_shops = false;   // is it time to update the shops
 	private boolean update_weather = false; // do we need to run a weather update?
 
 	// Protocols
+	/*
+	 * this section is badly designed. In theory it represents whether support for something is enabled,
+	 * but in the case of colors only ANSI -or- XTERM should be possible (one color system).
+	 */
 	private int ansi = 1;        // (0=off,1=on) ANSI Color on/off, default: on [currently only dictates bright or not]
-	private int xterm = 1;       // (0=off,1=on) XTERM Color on/off, default: on [currently only dictates bright or not]
+	private int xterm = 0;       // (0=off,1=on) XTERM Color on/off, default: off [not implemented]
 	private int msp = 0;         // (0=off,1=on) MUD Sound Protocol on/off, default: off
 	private int telnet = 0;      // (0=no telnet: mud client mode, 1=telnet: telnet client mode, 2=telnet: telnet and mud client)
 
@@ -289,8 +294,8 @@ public class MUDServer {
 	// static  - the contents of the hashmap are currently loaded once at startup and not modified thereafter
 	// class static - identical for every instances of the class
 	// pna - per name association?
-	private HashMap<String, Command> commandMap = new HashMap<String, Command>(1, 0.75f);       // HashMap that holds an instance of each command currently (dynamic)
-	public HashMap<String, Integer> helpmap = new HashMap<String, Integer>(1, 0.75f);           // HashMap that associate help 'file' names with indices to the help 'file' storage (somewhat static)
+	private HashMap<String, Command> commandMap = new HashMap<String, Command>(20, 0.75f);       // HashMap that holds an instance of each command currently (dynamic)
+	public HashMap<String, Integer> helpmap = new HashMap<String, Integer>(20, 0.75f);           // HashMap that associate help 'file' names with indices to the help 'file' storage (somewhat static)
 	
 	private HashMap<Client, Player> sclients = new HashMap<Client, Player>(max_players, 0.75f); // HashMap to associate Players to Clients (dynamic)
 	public HashMap<Player, Client> tclients = new HashMap<Player, Client>(max_players, 0.75f);  // HashMap to associate Clients to Players (dynamic)
@@ -299,17 +304,17 @@ public class MUDServer {
 	private HashMap<String, Integer> pna = new HashMap<String, Integer>(11, 0.75f);             // HashMap that records the current number of players of a given class (dynamic)
 	private HashMap<Player, Player> DMControlTable = new HashMap<Player, Player>(1, 0.75f);     // HashMap that keeps track of what Players are controlling NPCs (dynamic)
 	
-	private HashMap<String, String> displayColors = new HashMap<String, String>(1, 0.75f);      // HashMap specifying particular colors for parts of text (somewhat static)
-	private HashMap<String, String> colors = new HashMap<String, String>(1, 0.75f);             // HashMap to store ansi/vt100 escape codes for outputting color (static)
+	private HashMap<String, String> displayColors = new HashMap<String, String>(8, 0.75f);      // HashMap specifying particular colors for parts of text (somewhat static)
+	private HashMap<String, String> colors = new HashMap<String, String>(8, 0.75f);             // HashMap to store ansi/vt100 escape codes for outputting color (static)
 
-	public HashMap<String, String> aliases = new HashMap<String, String>(1, 0.75f);             // HashMap to store command aliases (static)
-	private HashMap<Integer, String> Errors = new HashMap<Integer, String>(1, 0.75f);           // HashMap to store error messages for easy retrieval (static)
-	private HashMap<Character, String> RoomTypes = new HashMap<Character, String>(1, 0.75f);    // HashMap that stores existing room types (static)
+	public HashMap<String, String> aliases = new HashMap<String, String>(20, 0.75f);             // HashMap to store command aliases (static)
+	private HashMap<Integer, String> Errors = new HashMap<Integer, String>(5, 0.75f);           // HashMap to store error messages for easy retrieval (static)
+	private HashMap<Character, String> RoomTypes = new HashMap<Character, String>(3, 0.75f);    // HashMap that stores existing room types (static)
 	
-	private HashMap<String, Date> holidays = new HashMap<String, Date>(4, 0.75f);               // HashMap that holds an in-game date for a "holiday" name string
-	private HashMap<Integer, String> years = new HashMap<Integer, String>(1, 0.75f);            // HashMap that holds year names for game themes that supply them (static)
+	private HashMap<String, Date> holidays = new HashMap<String, Date>(10, 0.75f);               // HashMap that holds an in-game date for a "holiday" name string
+	private HashMap<Integer, String> years = new HashMap<Integer, String>(50, 0.75f);            // HashMap that holds year names for game themes that supply them (static)
 
-	private LinkedHashMap<Character, String> Flags = new LinkedHashMap<Character, String>(1, 0.75f); // HashMap that stores existing MUDObject flags (static)
+	private LinkedHashMap<Character, String> Flags = new LinkedHashMap<Character, String>(8, 0.75f); // HashMap that stores existing MUDObject flags (static)
 
 	/* not used much currently */
 	private LinkedHashMap<String, String> config = new LinkedHashMap<String, String>(11, 0.75f); // LinkedHashMap to track current config instead of using tons of individual integers?
@@ -357,12 +362,15 @@ public class MUDServer {
 	private ArrayList<Message> pages;        // ArrayList of Messages to other players
 	private ArrayList<Message> messages;     // ArrayList of Messages from the game to a player
 	private ArrayList<ChatChannel> channels; // ArrayList of chat channels ( not sure how to set this up yet, seems to have an issue holding threads? )
+	
+	private HashMap<String, ChatChannel> channelMap;
 
 	// "Security" Stuff
 	private ArrayList<String> banlist;       // ArrayList of banned ip addresses
 
 	// Other
 	private ArrayList<Effect> effectTable;   // ArrayList of existing effects (can be reused many places)
+	private ArrayList<String> forbiddenNames;//
 
 	// cmd lists
 	private String[] user_cmds = new String[] {
@@ -490,16 +498,22 @@ public class MUDServer {
 
 	public static String admin_pass = Utils.hash("password"); // need to fix the security issues of this (unused, but for admin command
 
-	public MUDServer(String address) {}
-	
 	// value is relative to copper coins
 	public static Currency COPPER = new Currency("Copper", "cp", null, 1, 0);
 	public static Currency SILVER = new Currency("Silver", "sp", COPPER, 100, 1);
 	public static Currency GOLD = new Currency("Gold", "gp", COPPER, 10000, 2);
 	public static Currency PLATINUM = new Currency("Platinum", "pp", COPPER, 1000000, 3);
-	
-	
-	public ArrayList<Player> moving = new ArrayList<Player>();
+
+	public static Currency BIT = new Currency("Bit", "b", null, 1, 0);
+
+	public ArrayList<Player> moving = new ArrayList<Player>(); // list of players who are currently moving
+
+	/**
+	 * MUDServer
+	 * 
+	 * @param address
+	 */
+	public MUDServer(String address) {}
 
 	/**
 	 * MUDServer
@@ -693,6 +707,8 @@ public class MUDServer {
 		this.messages = new ArrayList<Message>();     // everything else
 		// initialize chat channel array
 		this.channels = new ArrayList<ChatChannel>(); // chat channels
+		
+		this.channelMap = new HashMap<String, ChatChannel>(5, 0.75f);
 
 		MUDObject.parent = this; // assign a static reference to the running server (ugly, but allows some flex)
 
@@ -769,6 +785,9 @@ public class MUDServer {
 
 		// instantiate banned ip list
 		banlist = loadListDatabase(CONFIG_DIR + "banlist.txt");
+		
+		// instantiate forbidden names list
+		forbiddenNames = loadListDatabase(CONFIG_DIR + "names.txt");
 
 		// load configuration data (file -- default.config)
 		//loadConfiguration(CONFIG_DIR + "config.txt", configs); ?
@@ -781,6 +800,7 @@ public class MUDServer {
 			value = value.substring(0, value.indexOf('#'));
 			config.put(name, value);
 		}
+		
 		// print out config map
 		debug(config.entrySet());
 
@@ -983,6 +1003,8 @@ public class MUDServer {
 		staff = new ChatChannel(s, this, STAFF_CHANNEL, "STAFF");
 		channels.add(ooc);
 		channels.add(staff);
+		channelMap.put(ooc.getName(), ooc);
+		channelMap.put(staff.getName(), staff);
 		chatThread = new Thread(ooc, "OOC");
 		chatThread.start();
 		chatThread1 = new Thread(staff, "STAFF");
@@ -2377,36 +2399,7 @@ public class MUDServer {
 						prompt(client);
 					}
 					else if( cmd.equals("quests") || (aliasExists && alias.equals("quests") ) ) {
-						send("Quests", client);
-						send("================================================================================", client);
-						for(Quest quest : player.getQuests()) {
-							if( !quest.isComplete() ) {
-								client.write(Colors.YELLOW + "   o " + quest.getName());
-								client.write(Colors.MAGENTA + " ( " + quest.location + " ) " + Colors.CYAN);
-								client.write('\n');
-								for(Task task : quest.getTasks()) {
-									if( task.isComplete() ) {
-										// should be greyed out if task is complete
-										client.write(Colors.GREEN + "      o " + task.getDescription());
-										if( task.getType().equals(TaskType.KILL) ) {
-											client.write(" [ " + task.kills + " / " + task.toKill + " ]");
-										}
-										client.write(Colors.MAGENTA + " ( " + task.location + " ) " + Colors.CYAN);
-										client.write('\n');
-									}
-									else {
-										client.write(Colors.CYAN + "      o " + task.getDescription());
-										if( task.getType().equals(TaskType.KILL) ) {
-											client.write(" [ " + task.kills + " / " + task.toKill + " ]");
-										}
-										client.write(Colors.MAGENTA + " ( " + task.location + " ) " + Colors.CYAN);
-										client.write('\n');
-									}
-								}
-							}
-						}
-						client.write("" + Colors.WHITE);
-						send("================================================================================", client);
+						cmd_quests(arg, client);
 					}
 					// pass arguments to the quit function
 					else if( cmd.equals("quit") || (aliasExists && alias.equals("QUIT") ) )
@@ -2459,6 +2452,8 @@ public class MUDServer {
 								else {
 									send("Game> No amount specified, no hitpoint (hp) change has been made.", client);
 								}
+								
+								checkState(player);
 							}
 							catch(NumberFormatException nfe) {
 								nfe.printStackTrace();
@@ -2486,6 +2481,8 @@ public class MUDServer {
 								else {
 									send("Game> No amount specified, no mana (mana) change has been made.", client);
 								}
+								
+								checkState(player);
 							}
 							catch(NumberFormatException nfe) {
 								nfe.printStackTrace();
@@ -2519,6 +2516,7 @@ public class MUDServer {
 					{
 						// DM/Debug Command
 						int changeXP = 0;
+						
 						if(arg.equals("") == false) {
 							try {
 								System.out.println("ARG: " + arg);
@@ -2528,15 +2526,6 @@ public class MUDServer {
 
 								player.setXP(changeXP);
 								send("Game> Gave " + player.getName() + " " + changeXP + " experience (xp).", client);
-
-								/*if(Integer.signum(changeXP) > 0) {
-									player.setXP(changeXP);
-									send("Game> Gave " + player.getName() + " " + changeXP + " experience (xp).");
-								}
-								else if(Integer.signum(changeXP) < 0) {
-									player.setXP(changeXP);
-									send("Game> Gave " + player.getName() + " " + changeXP + " experience (xp).");
-								}*/
 
 							}
 							catch(NumberFormatException nfe) {
@@ -3225,6 +3214,7 @@ public class MUDServer {
 		else if(args.length > 1) {
 			String test = args[0];
 			String msg = arg.replace(test + " ", "");
+			
 			// argument: show listeners on a specific channel
 			if( args[1].toLowerCase().equals("#listeners") ) {
 				for(ChatChannel cc : channels) {
@@ -3240,6 +3230,8 @@ public class MUDServer {
 					}
 				}
 			}
+			
+			// argument: list unsent messages on a particular channel
 			else if( args[1].toLowerCase().equals("#messages") ) {
 				for(ChatChannel cc : channels) {
 					if( cc.getName().toLowerCase().equals(test) ) {
@@ -3254,8 +3246,8 @@ public class MUDServer {
 					}
 				}
 			}
+			// if the channel name is that specified, write the message to the channel
 			else {
-				// if the channel name is that specified, write the message to the channel
 				for(ChatChannel cc : channels) {
 					if( cc.getName().toLowerCase().equals(test) ) {
 						cc.write(getPlayer(client), msg);
@@ -4161,76 +4153,81 @@ public class MUDServer {
 	 * @param client
 	 */
 	private void cmd_drink(String arg, Client client) {
-		Player player = getPlayer(client);
+		if( arg.equals("") == false ) {
+			Player player = getPlayer(client);
 
-		// create a new list to hold drinkable items
-		ArrayList<Item> itemList = new ArrayList<Item>();
+			// create a new list to hold drinkable items
+			ArrayList<Item> itemList = new ArrayList<Item>();
 
-		// get drinkable items
-		for(Item item : player.getInventory()) {
-			if(item.drinkable == 1) { // drinkable check
-				itemList.add(item);
-			}
-		}
-
-		debug(itemList);
-		
-		Item item = null;
-
-		if( player.getMode() == PlayerMode.COMBAT ) { // if in combat
-			// try healing, etc potions first if just 'drink' is typed
-			ArrayList<Item> healing = new ArrayList<Item>();
-			
-			for(Item item1 : itemList) {
-				/* need to check to see if something contains a healing effect
-				 * 
-				 * does it need to have solely a heal effect?
-				 */
-			}
-		}
-		else { // else
-			// search by name for the item
-			for(Item item1 : itemList) {
-				if( item1.getName().equals(arg) || item1.getName().contains(arg) ) {
-					item = item1;
-					break;
+			// get drinkable items
+			for(Item item : player.getInventory()) {
+				if(item.drinkable == 1) { // drinkable check
+					itemList.add(item);
 				}
 			}
-		}
-		
-		/*
-		 * you should type 'drink healing' instead of 'drink potion' if you want a healing potion,
-		 * otherwise you might get a potion of invisibility or bull's strength
-		 */
 
-		if(item != null) {
-			// determine what kind of drinkable item it is and apply an effects
-			// or status changes accordingly
-			if(item instanceof Potion) {
-				Potion potion = (Potion) item;
+			debug(itemList);
 
-				debug("Potion?: " + potion.toString());
+			Item item = null;
 
-				List<Effect> effects = potion.getEffects();
+			if( player.getMode() == PlayerMode.COMBAT ) { // if in combat
+				// try healing, etc potions first if just 'drink' is typed
+				ArrayList<Item> healing = new ArrayList<Item>();
 
-				debug(effects);
+				for(Item item1 : itemList) {
+					/* need to check to see if something contains a healing effect
+					 * 
+					 * does it need to have solely a heal effect?
+					 */
+				}
+			}
+			else { // else
+				// search by name for the item
+				for(Item item1 : itemList) {
+					if( item1.getName().equals(arg) || item1.getName().contains(arg) ) {
+						item = item1;
+						break;
+					}
+				}
+			}
 
-				/*for(Effect effect : effects) {
+			/*
+			 * you should type 'drink healing' instead of 'drink potion' if you want a healing potion,
+			 * otherwise you might get a potion of invisibility or bull's strength
+			 */
+
+			if(item != null) {
+				// determine what kind of drinkable item it is and apply an effects
+				// or status changes accordingly
+				if(item instanceof Potion) {
+					Potion potion = (Potion) item;
+
+					debug("Potion?: " + potion.toString());
+
+					List<Effect> effects = potion.getEffects();
+
+					debug(effects);
+
+					/*for(Effect effect : effects) {
 					debug("Effect: " + effect.getName());
 					applyEffect(player, effect);
 				}*/
 
-				applyEffect(player, potion.getEffect());
+					applyEffect(player, potion.getEffect());
 
-				/*
-				 * if the drinkable item is stackable too,
-				 * then I need to be sure to use only one
-				 */
+					/*
+					 * if the drinkable item is stackable too,
+					 * then I need to be sure to use only one
+					 */
 
-				player.getInventory().remove(item);                          // remove from inventory
-				main1.set(item.getDBRef(), new NullObject(item.getDBRef())); // remove from existence
-				unusedDBNs.push(item.getDBRef());                            // add dbref to unused list
+					player.getInventory().remove(item);                          // remove from inventory
+					main1.set(item.getDBRef(), new NullObject(item.getDBRef())); // remove from existence
+					unusedDBNs.push(item.getDBRef());                            // add dbref to unused list
+				}
 			}
+		}
+		else {
+			send("Drink what?", client);
 		}
 	}
 
@@ -5884,6 +5881,41 @@ public class MUDServer {
 		}
 		client.write('\n');
 	}
+	
+	private void cmd_quests(String arg, Client client) {
+		Player player = getPlayer(client);
+		
+		send("Quests", client);
+		send("================================================================================", client);
+		for(Quest quest : player.getQuests()) {
+			if( !quest.isComplete() ) {
+				client.write(Colors.YELLOW + "   o " + quest.getName());
+				client.write(Colors.MAGENTA + " ( " + quest.location + " ) " + Colors.CYAN);
+				client.write('\n');
+				for(Task task : quest.getTasks()) {
+					if( task.isComplete() ) {
+						// should be greyed out if task is complete
+						client.write(Colors.GREEN + "      o " + task.getDescription());
+						if( task.getType().equals(TaskType.KILL) ) {
+							client.write(" [ " + task.kills + " / " + task.toKill + " ]");
+						}
+						client.write(Colors.MAGENTA + " ( " + task.location + " ) " + Colors.CYAN);
+						client.write('\n');
+					}
+					else {
+						client.write(Colors.CYAN + "      o " + task.getDescription());
+						if( task.getType().equals(TaskType.KILL) ) {
+							client.write(" [ " + task.kills + " / " + task.toKill + " ]");
+						}
+						client.write(Colors.MAGENTA + " ( " + task.location + " ) " + Colors.CYAN);
+						client.write('\n');
+					}
+				}
+			}
+		}
+		client.write("" + Colors.WHITE);
+		send("================================================================================", client);
+	}
 
 	// Function to disconnect player
 	private void cmd_quit(String arg, Client client)
@@ -7022,7 +7054,15 @@ public class MUDServer {
 						send(colors("+" + a.getMod() + " " + a.armor.getName() + " " + a.getDesc() + " (" + a.getWeight() + ") Cost: " + cost, "yellow"), client);
 					}
 					else {
-						send("?", client);
+						String cost = "";
+						int index = 0;
+						for(Integer i : item.getCost()) {
+							if(i > 0) {
+								cost += i + " " + getCurrency(index).getAbbrev();
+							}
+							index++;
+						}
+						send(colors(item.getName() + " " + item.getDesc() + " (" + item.getWeight() + ") Cost: " + cost, "yellow"), client);
 					}
 				}
 
@@ -9098,6 +9138,15 @@ public class MUDServer {
 						main1.add(am);
 						npcs1.add(am);
 					}
+					else if (oFlags.equals("IKV") ) {
+						Innkeeper ik = new Innkeeper(this, oDBRef, oName, oFlags, oDesc, "Merchant", "VEN", oLocation, new String[]{"1000", "1000", "1000", "1000"} );
+
+						debug("DEBUG (db entry): " + ik.toDB(), 2);
+						debug("Innkeeper", 2);
+
+						main1.add(ik);
+						npcs1.add(ik);
+					}
 					//Exit(String tempName, String tempFlags, String tempDesc, int tempLoc, int tempDBREF, int tempDestination)
 					else if(oFlags.equals("E") == true)
 					{
@@ -9444,6 +9493,18 @@ public class MUDServer {
 					}
 				}
 			}
+			else if(npc instanceof Innkeeper) {
+				Innkeeper ik = (Innkeeper) npc;
+				if(ik.stock.size() == 0) { // no merchandise
+					ik.stock = createItems(new Book("Arcani Draconus"), 10);
+					System.out.println("Innkeeper's (" + ik.getName() + ") store has " + ik.stock.size() + " items.");
+					for(Item item : ik.stock) {
+						int l = item.getLocation();
+						item.setLocation(ik.getDBRef());
+						System.out.println("Item #" + item.getDBRef() + " had Location #" + l + " and is now at location #" + item.getLocation());
+					}
+				}
+			}
 		}
 	}
 
@@ -9763,6 +9824,7 @@ public class MUDServer {
 							// create channel according to data
 							ChatChannel c = new ChatChannel(s, this, channelId, channelName);
 							channels.add(c);
+							channelMap.put(c.getName(), c);
 
 							if( channels.contains(c) ) {
 								debug("Channel Added: " + c.getName() + "(" + c.getID() + ")");
@@ -10263,9 +10325,7 @@ public class MUDServer {
 		// xterm 256 color testing
 		//someClient.write(XTERM256.TEST.toString());
 		send(XTERM256.TEST.toString(), someClient);
-		//send(MOTD());
-		send(rainbow(MOTD()), someClient);
-		//send(colors(MOTD(),"cyan"), someClient);
+		send(colors(MOTD(),"cyan"), someClient);
 		// reset color
 		//send(colors("Color Reset to Default!", "white"));
 		send("Mode: " + mode, someClient);
@@ -10437,6 +10497,12 @@ public class MUDServer {
 		Matcher isValid = validName.matcher(testName);
 
 		nameIsValid = isValid.matches();
+		
+		// test for forbidden names (simple check -- only matches on identical names)
+		// I really should use some pattern recognition here...
+		if( forbiddenNames.contains(testName) ) {
+			nameIsValid = false;
+		}
 
 		debug(nameIsValid);
 
@@ -12975,6 +13041,22 @@ public class MUDServer {
 
 			return items;
 		}
+		else if(template instanceof Book) {
+			Book templateBook = (Book) template;
+			
+			for(int i = 0; i < numItems; i++) {
+				item = new Book( templateBook );
+				item.setDBRef(nextDB("use"));
+				item.setLocation(0);
+				items.add(item);
+
+				main.add(item.toDB());
+				main1.add(item);
+				this.items.add(item);
+			}
+
+			return items;
+		}
 
 		return null;
 	}
@@ -13349,7 +13431,7 @@ public class MUDServer {
 
 		switch(player.getState()) {
 		case ALIVE:
-			if( hp < 0 && hp > -10 ) { player.setState(State.INCAPACITATED); }
+			if( hp <= 0 && hp > -10 ) { player.setState(State.INCAPACITATED); }
 			if(hp <= -10) { player.setState(State.DEAD); }
 			break;
 		case INCAPACITATED:
@@ -13358,7 +13440,7 @@ public class MUDServer {
 			break;
 		case DEAD: // only resurrection spells or divine intervention can bring you back from the dead
 			if( hp > 0 ) { player.setState(State.ALIVE); }
-			if( hp > -10 && hp < 0 ) { player.setState(State.INCAPACITATED); }
+			if( hp > -10 && hp <= 0 ) { player.setState(State.INCAPACITATED); }
 			break;
 		default:
 			break;

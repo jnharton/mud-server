@@ -19,12 +19,14 @@ public class Book extends Item implements Editable {
 	private Integer currentPage = 0;
 
 	public Book() {
+		this.item_type = ItemType.BOOK;
 		this.title = "";
 		this.author = "";
 		this.pages = new ArrayList<ArrayList<String>>();
 	}
 	
 	public Book(String bookTitle) {
+		this.item_type = ItemType.BOOK;
 		this.title = bookTitle;
 		this.author = "";
 		this.pages = new ArrayList<ArrayList<String>>();
@@ -37,9 +39,15 @@ public class Book extends Item implements Editable {
 	}
 
 	public Book(String bookTitle, String bookAuthor, int pages) {
+		this.item_type = ItemType.BOOK;
 		this.title = bookTitle;
 		this.author = bookAuthor;
 		this.pages = new ArrayList<ArrayList<String>>(pages);
+	}
+	
+	public Book( Book template ) {
+		this(template.title, template.author, template.pages.size());
+		this.item_type = template.item_type;
 	}
 	
 	/**
