@@ -214,8 +214,8 @@ public class MUDServer {
 	private int mode = 0;                   // (0=normal: player connect, 1=wizard: wizard connect only, 2=maintenance: maintenance mode)
 	private int multiplay = 0;              // (0=only one character per account is allowed, 1=infinite connects allowed)
 	private int guest_users = 0;            // (0=guests disallowed, 1=guests allowed)
-	private int debug = 0;                  // (0=off,1=on) Debug: server sends debug messages to the console
-	private int debugLevel = 2;             // (1=debug,2=extra debug,3=verbose) the current priority of what should be printed out for debugging info
+	private int debug = 1;                  // (0=off,1=on) Debug: server sends debug messages to the console
+	private int debugLevel = 3;             // (1=debug,2=extra debug,3=verbose) the current priority of what should be printed out for debugging info
 	private boolean logging = true;         // logging? (true=yes,false=no)
 	private int logLevel = 3;               // 
 	private boolean prompt_enabled = false; // show player information bar
@@ -507,6 +507,10 @@ public class MUDServer {
 	public static Currency BIT = new Currency("Bit", "b", null, 1, 0);
 
 	public ArrayList<Player> moving = new ArrayList<Player>(); // list of players who are currently moving
+	
+	private static final int MAX_STACK_SIZE = 25;
+	
+	//public
 
 	/**
 	 * MUDServer
@@ -782,6 +786,10 @@ public class MUDServer {
 		loadThings(); // load things (post-room loading)
 		loadItems();  // load items (post-room loading)
 		fillShops();
+		
+		/*for(NPC npc : npcs1) {
+			getRoom(npc.getLocation()).addListener(npc);	
+		}*/
 
 		// instantiate banned ip list
 		banlist = loadListDatabase(CONFIG_DIR + "banlist.txt");
@@ -3237,7 +3245,7 @@ public class MUDServer {
 					if( cc.getName().toLowerCase().equals(test) ) {
 						client.write("Messages on Chat Channel: " + cc.getName().toUpperCase() + "\n");
 						client.write("------------------------------\n");
-						ArrayList<Message> messages = cc.getMessages();
+						ConcurrentLinkedQueue<Message> messages = cc.getMessages();
 						for(Message m : messages) {
 							client.write(m.getSender() + " " + m.getRecipient() + " " + m.getMessage() + "\n");
 						}
@@ -3255,6 +3263,7 @@ public class MUDServer {
 						return;
 					}
 				}
+				
 				client.write("Game> No such chat channel.");
 			}
 		}
@@ -3867,11 +3876,43 @@ public class MUDServer {
 			debug = 0;
 			send("Game> Debugging: Off", client);
 		}
+		else if( arg.equals("clients") ) {
+			Client[] clients = s.getClients();
+			
+			int cn = 0;
+			
+			for(Client c : clients) {
+				if(c != null) {
+					send(cn + " " + c.ip() + " " + c.toString(), client);
+				}
+				else {
+					send(cn + " " + "---.---.---.--- null", client);
+				}
+				cn++;
+			}
+		}
 		else if( arg.equals("cmdDelay") ) {
 			/*
 			 * tell us what the delay per command is
 			 */
 			send(cmdExec.getCommandDelay(), client);
+		}
+		else if( arg.equals("creatures") ) {
+			send("Creatures", client);
+			send("--------------------------------------------------------------------------", client);
+			int dbref;
+			String name;
+			int loc;
+			String room_name;
+			for(Creature c : creatures) {
+				dbref = c.getDBRef();
+				name = c.getName();
+				loc = c.getLocation();
+				room_name = getRoom(loc).getName();
+				
+				send(dbref + " " + name + " " + room_name + " (#" + loc + ")", client);
+			}
+			send("--------------------------------------------------------------------------", client);
 		}
 		else if( arg.equals("dbdump") ) {
 			/*
@@ -3934,10 +3975,16 @@ public class MUDServer {
 					if( args1[1].equals("messages") ) { // @ debug chat:<channel>=message
 						ChatChannel ch = getChatChannel(args[1]);
 
-						send("Chat Messages (" + ch.getName() + ")", client);
-						send("--------------------------------------------", client);
-						for(Message msg : ch.getMessages()) {
-							send(msg.getSender() + " | " + msg.getMessage(), client);
+						if(ch != null) {
+
+							send("Chat Messages (" + ch.getName() + ")", client);
+							send("--------------------------------------------", client);
+							for(Message msg : ch.getMessages()) {
+								send(msg.getSender() + " | " + msg.getMessage(), client);
+							}
+						}
+						else {
+							send("No such chat channel.", client);
 						}
 					}
 				}
@@ -6644,10 +6691,14 @@ public class MUDServer {
 						// if there is an existing, not full stack of that item trying to add these to it
 						if(item instanceof Stackable) {
 							Stackable sItem = (Stackable) item;
-							if( getItem(item.getName(), client) != null ) {
+							
+							if( getItem(item.getName(), player) != null ) {
 								debug("stackable - have a stack already");
-								Stackable sItem1 = (Stackable) getItem(item.getName(), client);
-								sItem1.stack(sItem);
+								Stackable sItem1 = (Stackable) getItem(item.getName(), player);
+								if(sItem1.stackSize() < MAX_STACK_SIZE) {
+									sItem1.stack(sItem);
+								}
+								else { continue; }
 								debug(player.getInventory().contains(item));
 							}
 							else {
@@ -6661,9 +6712,11 @@ public class MUDServer {
 							player.getInventory().add(item);
 							debug(player.getInventory().contains(item));
 						}
-						debug(item.getLocation());
-						item.setLocation(player.getDBRef());
-						debug(item.getLocation());
+						
+						debug(item.getLocation());           // old location
+						item.setLocation(player.getDBRef()); // "move" item
+						debug(item.getLocation());           // new location
+						
 						send("You picked " + colors(item.getName(), "yellow") + " up off the floor.", client);
 					}
 
@@ -8417,7 +8470,16 @@ public class MUDServer {
 	 */
 	public MUDObject getObject(Integer dbref) {
 		try {
-			return main1.get(dbref);
+			debug("Getting Object with dbref of " + dbref + "...", 2);
+			
+			MUDObject m = main1.get(dbref);
+			
+			if(m.getDBRef() == dbref) {
+				return m;
+			}
+			else {
+				return null;
+			}
 		}
 		catch(IndexOutOfBoundsException ioobe) {
 			ioobe.printStackTrace();
@@ -8427,8 +8489,8 @@ public class MUDServer {
 	}
 
 	// these are kind of important for containers, but also for general examine
-	public Item getItem(String name, Client client) {
-		for(Item item : getPlayer(client).getInventory()) {
+	public Item getItem(String name, Player player) {
+		for(Item item : player.getInventory()) {
 			if(item.getName().equals(name) == true) {
 				return item;
 			}
@@ -9026,6 +9088,8 @@ public class MUDServer {
 				debug("Found NULLObject -- Ignored Existing Data"); // tell us what happened
 
 				main1.add(new NullObject(dbref)); // put NullObject in arraylist
+				
+				// don't add NullObject's dbref to unused stack
 
 				// skip further checking
 				continue;
@@ -9064,7 +9128,8 @@ public class MUDServer {
 							nfe.printStackTrace();
 							cre.race = Races.NONE;
 						}
-
+						
+						// add the creature to the in-memory database and to the list of creatures
 						main1.add(cre);
 						creatures.add(cre);
 					}
@@ -9413,11 +9478,13 @@ public class MUDServer {
 	 */
 	public void loadItems() {
 		for(Item item : this.items) {// !PROBLEM! not all items are necessarily in rooms
+			
+			debug(item.getDBRef() + " " + item.getName());
+			
 			MUDObject m = getObject(item.getLocation());
 			
-			debug("Item Loaded", 2);
 			debug(item.getLocation() + " " + m.getName(), 2);
-			debug(m.toDB());
+			debug("Item Loaded", 2);
 
 			if(m instanceof Room) {
 				Room room = getRoom(item.getLocation());
@@ -12844,7 +12911,7 @@ public class MUDServer {
 
 		NPC npc = new NPC(oDBRef, oName, oFlags, oDesc, oLocation, "", "IC", oStats, oMoney); 
 
-		// Set Player Race
+		// Set NPC Race
 		try {
 			raceNum = Integer.parseInt(attr[9]);
 			npc.setPlayerRace(Races.getRace(raceNum));
@@ -12854,7 +12921,7 @@ public class MUDServer {
 			npc.setPlayerRace(Races.NONE);
 		}
 
-		// Set Player Class
+		// Set NPC Class
 		try {
 			classNum = Integer.parseInt(attr[10]);
 			npc.setPClass(Classes.getClass(classNum));

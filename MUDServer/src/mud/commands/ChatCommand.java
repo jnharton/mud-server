@@ -1,6 +1,7 @@
 package mud.commands;
 
 import java.util.ArrayList;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import mud.Colors;
 import mud.MUDServer;
@@ -67,7 +68,7 @@ public class ChatCommand extends Command {
 					if( cc.getName().toLowerCase().equals(test) ) {
 						client.write("Messages on Chat Channel: " + cc.getName().toUpperCase() + "\n");
 						client.write("------------------------------\n");
-						ArrayList<Message> messages = cc.getMessages();
+						ConcurrentLinkedQueue<Message>  messages = cc.getMessages();
 						for(Message m : messages) {
 							client.write(m.getSender() + " " + m.getRecipient() + " " + m.getMessage() + "\n");
 						}
@@ -80,11 +81,12 @@ public class ChatCommand extends Command {
 				// if the channel name is that specified, write the message to the channel
 				for(ChatChannel cc : parent.getChatChannels()) {
 					if( cc.getName().toLowerCase().equals(test) ) {
-						cc.write(client, msg);
+						cc.write(parent.getPlayer(client), arg);
 						client.write("wrote " + msg + " to " + cc.getName() + " channel.\n");
 						return;
 					}
 				}
+				
 				client.write("Game> No such chat channel.");
 			}
 		}

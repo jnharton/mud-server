@@ -1,6 +1,7 @@
 package mud.utils;
 
 import java.util.ArrayList;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import mud.MUDServer;
 import mud.net.Client;
@@ -19,7 +20,9 @@ public class ChatChannel implements Runnable {
 	
 	private int restrict;                  // restrict access based on some integer
 	
-	private ArrayList<Message> messages;   // messages sent to the channel
+	//private ArrayList<Message> messages;   // messages sent to the channel
+	
+	private ConcurrentLinkedQueue<Message> messages;
 	private ArrayList<Player> listeners;   // players who are listening to the channel
 
 	public ChatChannel(Server parent, MUDServer parent1, int id, String name) {
@@ -27,7 +30,7 @@ public class ChatChannel implements Runnable {
 		this.parent1 = parent1;
 		this.id = id;
 		this.name = name;
-		this.messages = new ArrayList<Message>();
+		this.messages = new ConcurrentLinkedQueue<Message>();
 		this.listeners = new ArrayList<Player>(10);
 	}
 	
@@ -39,38 +42,36 @@ public class ChatChannel implements Runnable {
 
 	@Override
 	public void run() {
+		Client client;
+		
 		// while the game is running, and the time thread is not suspended
 		while( parent1.isRunning() ) {
 			// if client is a logged in player, send them any messages queued for them
 			// Send any pages, messages, etc to their respective recipients, or to a list of recipients?
-			for(Player player : parent1.tclients.keySet()) {
-				Client client = parent1.tclients.get(player);
+			for(Player player : this.listeners) { // for every "listening player
+				if(1 == 1) {
+					for(Message msg : this.messages) { // for the list of messages
+						try {
+							client = parent1.getClient(player);
 
-				if( client != null && client.active() ) {
-
-					// if the player associated is listening to this channel
-					if( this.listeners.contains(player) ) {
-						for(Message msg : this.messages) { // for the list of messages
-							try {
-								client.write("(" + parent1.colors(this.name, this.chan_color) + ") " + "<" + msg.getSender().getName() + "> " + parent1.colors(msg.getMessage(), this.text_color) + "\r\n"); // send the message
-								parent1.debug("(" + this.name + ") " + "<" + msg.getSender().getName() + "> " + msg.getMessage() + "\n");										
-								parent1.debug("chat message sent successfully");
-							}
-							catch(NullPointerException npe) {
-								parent1.debug("Game [chat channel: " + this.getName() + "] > Null Message.");
-								npe.printStackTrace();
-							}
+							client.write("(" + parent1.colors(this.name, this.chan_color) + ") " + "<" + msg.getSender().getName() + "> " + parent1.colors(msg.getMessage(), this.text_color) + "\r\n"); // send the message
+							parent1.debug("(" + this.name + ") " + "<" + msg.getSender().getName() + "> " + msg.getMessage() + "\n");										
+							parent1.debug("chat message sent successfully");
+						}
+						catch(NullPointerException npe) {
+							parent1.debug("Game [chat channel: " + this.getName() + "] > Null Message.");
+							npe.printStackTrace();
 						}
 					}
 				}
 			}
 
-			/*for( Player player : this.listeners ) {
-				Client client = parent1.getClient(player);
-
-				if( client != null && client.active() ) {
-					for(Message msg : this.messages) { // for the list of messages
+			/*for(Message msg : this.messages) { // for the list of messages
+				for(Player player : this.listeners) { // for every "listening player
+					if(1 == 1) {
 						try {
+							client = parent1.getClient(player);
+
 							client.write("(" + parent1.colors(this.name, this.chan_color) + ") " + "<" + msg.getSender().getName() + "> " + parent1.colors(msg.getMessage(), this.text_color) + "\r\n"); // send the message
 							parent1.debug("(" + this.name + ") " + "<" + msg.getSender().getName() + "> " + msg.getMessage() + "\n");										
 							parent1.debug("chat message sent successfully");
@@ -82,7 +83,10 @@ public class ChatChannel implements Runnable {
 					}
 				}
 			}*/
-
+			
+			/*
+			 * maybe instead of doing this I should just process the next message in the queue, and never "clear" it?
+			 */
 			// we've sent all the messages, so clear out the list
 			this.messages.clear();
 		}
@@ -132,7 +136,7 @@ public class ChatChannel implements Runnable {
 		}
 	}
 	
-	synchronized public ArrayList<Message> getMessages() {
+	synchronized public ConcurrentLinkedQueue<Message> getMessages() {
 		return this.messages;
 	}
 	

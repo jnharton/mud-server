@@ -6,7 +6,7 @@
 5#Nathan's_Test_Room#RS#You see nothing.#0#N#10,10,10#-1#
 6#Test_Room#RS#You see nothing.#0#N#10,10,10#-1#
 7#Turtles All The Way Down#RS#You see nothing.#0#N#10,10,10#-1#
-8#Welcome#RS#The player welcome room.#0#I#10,10,10#-1#
+8#Welcome#RS#The player welcome room.#0#N#10,10,10#-1#
 9#Player Start Room#RS#null#0#O#10,10,10#-1#
 10#Region Parent: New York City#RS#The NYC Region Parent.#0#N#10,10,10#-1#
 11#NYC: Times Square#RS#The famous Times Square, NYC, USA. It's a big open plaza.#0#O#10,10,10#-1#
@@ -184,7 +184,7 @@
 183#ls#E#You see nothing.#48#182#2
 184#out#E#You see nothing.#182#48#2
 185#Terys#WMV#A weapon merchant.#161#null#12,12,12,12,12,12#1000,1000,1000,1000#0#3#14
-186#Iridan#IKV#An innkeeper.#4#null#0,0,0,0,0,0#0,0,0,0#0#3#14
+186#Iridan#N#An innkeeper.#4#null#0,0,0,0,0,0#0,0,0,0#0#10#0
 187#Potion#I#A potion.#8#8#1#null
 188#out#E#You see nothing.#4#9#2
 189#inn#E#You see nothing.#9#4#2
@@ -235,11 +235,11 @@
 234#leather armor#I#armor#192#0#1#0
 235#leather armor#I#armor#192#0#1#0
 236#leather armor#I#armor#192#0#1#0
-&237#portal#E##8#5#1#0
+237#portal#E##8#5#1#0
 238#Erin#P#There is nothing to see.#9#pqkvewtvugfncpqkvctgxcveqtgvcytgvukpkutgvukpkuckfpgtcuugepktr#0,0,0,0,0,0#125,250,500,0#4#10#0
 239#Potion of Healing#I#A healing potion.#19#8#1#heal+10
 240#A Guide to Waterdeep#I#An infamous guide to Waterdeep, written by the infamous Volothamp Geddarm himself.#19#2#Volothamp Geddarm#A Guide to Waterdeep#0
-241#Asela#P#There is nothing to see.#9#uktfkgxcveqnckvpgttqvckfpgtc#0,0,0,0,0,0#0,50,50,10#0#10#0
+241#null#null#null#-1#null#null#null#null#null#null
 242#leave#E#You see nothing.#252#251#2
 243#into#E#You see nothing.#251#252#2
 244#Travelling cloak#I#A durable wool cloak made for travellers to keep them dry and less dusty.#19#3#2#0
