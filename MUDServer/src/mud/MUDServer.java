@@ -67,6 +67,7 @@ import mud.weather.*;
 // JAVA Libraries
 
 // java.io
+import java.awt.image.BufferedImage;
 import java.io.*;
 
 // java.net
@@ -680,13 +681,13 @@ public class MUDServer {
 			this.log = new Log();                      // main log - character actions, etc
 			//this.connection = new Log("connection"); // connection log - connection errors, etc
 			this.debugLog = new Log("debug");          // debug log - any and all debugging
-			//this.chatLog = new Log("chat");            // chat log - all chat messages
+			this.chatLog = new Log("chat");            // chat log - all chat messages
 
 			// open log files for writing
 			this.log.openLog();
 			//this.connection.openLog();
 			this.debugLog.openLog();
-			//this.chatLog.openLog();
+			this.chatLog.openLog();
 
 			// tell us it's enabled.
 			debug("Logging Enabled.");
@@ -1029,6 +1030,11 @@ public class MUDServer {
 		System.out.println("Command Execution (Thread) Started!");
 
 		test(); // set up some testing
+		
+		accounts = new ArrayList<Account>(100);
+		loadAccounts();
+		if(accounts.size() == 0) {
+		}
 
 		System.out.println("Command Delay: " + cmdExec.getCommandDelay());
 		System.out.println("Next Database Reference Number (DBRef/DBRN): " + nextDB(""));
@@ -1836,9 +1842,16 @@ public class MUDServer {
 
 							if(args.length >= 3) {
 								if(args[0].equals("+add")) {
-									client.write("Adding new account");
+									if(this.accounts != null) {
+										client.write("Adding new account");
 
-									Account account = new Account();
+										Account account = new Account(this.accounts.size(), args[1], args[2], 5);
+										
+										account.linkCharacter(getPlayer(client));
+										account.setPlayer(getPlayer(client));
+										
+										this.accounts.add(account);
+									}
 								}
 							}
 						}
@@ -3396,30 +3409,41 @@ public class MUDServer {
 			account = true;
 
 			BufferedReader br;
-
+			String aName = "";
+			String aPass = "";
+			
+			// really ought to design a handler for flexible interactive input
 			try {
 				br = new BufferedReader(new InputStreamReader(client.input));
 
 				client.write("Account Name?");
 
-				String name = br.readLine();
+				aName = br.readLine();
 
-				System.out.println("N: " + name);
+				System.out.println("Name: " + aName);
 
 				client.write("Account Password?");
 
-				String password = br.readLine();
+				aPass = br.readLine();
 
-				System.out.println("P: " + password);
+				System.out.println("Password: " + aPass);
 			}
 			catch (IOException e) {
 				e.printStackTrace();
 			}
 
-			/*Account account = getAccount(user);
-			 * boolean verified = verify(account);
-			 * account_menu(client);
-			 */
+			Account account1 = getAccount(aName); // determine if the account exists
+
+			if(account1 != null) {
+
+				boolean verified = verify(account1, aPass); // determine if the account exists, and whether the password is valid for it
+
+				if( verified ) {
+					account_menu(account1, client);
+					
+					// need a handler for input here, so change it
+				}
+			}
 		}
 		else {
 			while( auth )
@@ -3556,7 +3580,10 @@ public class MUDServer {
 
 			tStatus = "OOC"; // fudge status til I work out storage details
 			// this next line is a problem if I change authtable to only hold the player name and password
+			
+			//player = getPlayer(user);
 			player = loadPlayer(authTable.get(line)); // ensures that we load the player properly
+			
 			//player = new Player(tDBRef, user, tFlags, tDesc, tLocation, "", tPass, tStatus, tStats, tMoney);
 			
 			init_conn(player, client, false);  // pass the player to the connection initialization function
@@ -7355,8 +7382,10 @@ public class MUDServer {
 	public boolean chatHandler(String channel, String arg, Client client) {
 		for(ChatChannel cc : channels) {
 			if(cc.getName().toLowerCase().equals(channel) == true) {
-				cc.write(getPlayer(client), arg);
+				Player player = getPlayer(client);
+				cc.write(player, arg);
 				client.write("wrote " + arg + " to " + cc.getName() + " channel.\n");
+				chatLog.writeln("(" + cc.getName() + ") <" + player.getName() + "> " + arg);
 				return true;
 			}
 		}
@@ -10053,9 +10082,12 @@ public class MUDServer {
 			player.setMoney(3, 10); // platinum
 			
 			// give basic equipment (testing purposes)
-			final Armor leather_armor = new Armor();
+			final Armor armor = new Armor("Leather Armor", "A brand new set of leather armor, nice and smooth, but a bit stiff still.", -1, -1, 0, ArmorType.LEATHER, ItemType.ARMOR);
 			final Weapon sword = new Weapon("Long Sword", "A perfectly ordinary longsword.", 0, Handed.ONE, WeaponType.LONGSWORD, 15.0);
+			armor.setLocation(player.getDBRef());
+			armor.setDBRef(nextDB("use"));
 			sword.setDBRef(nextDB("use"));
+			player.getInventory().add(armor);
 			player.getInventory().add(sword);
 		}
 
@@ -10637,6 +10669,15 @@ public class MUDServer {
 		
 		log.writeln("Done.");
 		
+		// Accounts
+		log.writeln("Game> Backing up Accounts...");
+		
+		synchronized(accounts) {
+			saveAccounts();
+		}
+		
+		log.writeln("Done.");
+		
 		// Things
 		log.writeln("Game> Backing up Things...");
 		
@@ -10718,6 +10759,8 @@ public class MUDServer {
 			{
 				if(DMControlTable.get(player) == null) {
 					players.remove(player);
+					tclients.remove(sclients.get(player));
+					sclients.remove(player);
 					debug("Player removed.");
 					break;
 				}
@@ -10760,7 +10803,7 @@ public class MUDServer {
 			log.closeLog();
 			//connection.closeLog();
 			debugLog.closeLog();
-			//chatLog.closeLog();
+			chatLog.closeLog();
 			
 			System.out.println("Done");
 		}
@@ -11587,12 +11630,25 @@ public class MUDServer {
 	// Random Movement
 	void randomMovement() {
 	}
-
+	
+	/**
+	 * Display the account menu for a specific account to the client specified
+	 * 
+	 * NOTE: This is ahead of the implementation, there isn't yet an account system, but
+	 * this code was written in preparation of the possible implementation of such a feature.
+	 * 
+	 * NOTE1: The design/layout for this is borrowed from the login process on TorilMUD.
+	 * (torilmud.com)
+	 * 
+	 * @param account
+	 * @param client
+	 */
 	public void account_menu(Account account, Client client) {
 		if(account != null) {
 			// not the place for the below, since it relates to before player connection
 			// in fact, init_conn will need modification if it expects to handle accounts instead of players
 			String divider = "-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-";
+			
 			send("Characters:", client);
 
 			send(colors(divider, "green"), client);
@@ -13795,5 +13851,50 @@ public class MUDServer {
 			}
 			send("\\" + bottom + "/", client);
 		}
+	}
+	
+	public Account getAccount(String accountName) {
+		for(Account account : accounts) {
+			if(account.getUsername() == accountName) {
+				return account;
+			}
+		}
+		
+		return null;
+	}
+	
+	public boolean verify(Account account, String password) {
+		if( account.getPassword() == password ) {
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+	
+	/**
+	 * Convert a loaded ascii image into lines of text with ansi
+	 * color coding included to color the ascii
+	 * 
+	 * @param image
+	 * @return
+	 */
+	public static String[] ImageToAscii(BufferedImage image) {
+		int[] pixelData = null;
+		int[] rgb = new int[1000];
+		
+		int height = image.getHeight();
+		int width = image.getWidth();
+		
+		ArrayList<String> strings = new ArrayList<String>(width);
+		
+		for(int x = 0; x < width; x++) {
+			for(int y = 0; y < height; y++) {
+				pixelData = image.getRGB(x, y, 1, 1, rgb, 0, 1);
+				System.out.println(pixelData);
+			}
+		}
+		
+		return (String[]) strings.toArray();
 	}
 }

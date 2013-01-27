@@ -93,9 +93,27 @@ public class Account implements Serializable {
 	public Account(int aId) {
 		Account.calendar = Calendar.getInstance(TimeZone.getTimeZone("America/New_York"), new Locale("ENGLISH", "US"));
 		
+		this.created = new Date(Account.calendar.get(Calendar.MONTH), Account.calendar.get(Calendar.DATE), Account.calendar.get(Calendar.YEAR));
+		this.modified = new Date(Account.calendar.get(Calendar.MONTH), Account.calendar.get(Calendar.DATE), Account.calendar.get(Calendar.YEAR));
 		this.id = aId;
 		this.status = Status.ACTIVE;
+	}
+	
+	/**
+	 * 
+	 * @param aId
+	 */
+	public Account(int aId, String aUsername, String aPassword, int aCharLimit) {
+		Account.calendar = Calendar.getInstance(TimeZone.getTimeZone("America/New_York"), new Locale("ENGLISH", "US"));
+		
 		this.created = new Date(Account.calendar.get(Calendar.MONTH), Account.calendar.get(Calendar.DATE), Account.calendar.get(Calendar.YEAR));
+		this.modified = new Date(Account.calendar.get(Calendar.MONTH), Account.calendar.get(Calendar.DATE), Account.calendar.get(Calendar.YEAR));
+		this.id = aId;
+		this.status = Status.ACTIVE;
+		this.username = aUsername;
+		this.password = aPassword;
+		this.charLimit = aCharLimit;
+		this.characters = new ArrayList<Player>(aCharLimit);
 	}
 	
 	/**
@@ -250,7 +268,9 @@ public class Account implements Serializable {
 	public String display() {
 		String username = Utils.padRight(getUsername(), 8);
 		String id = Utils.padRight(String.valueOf(getId()), 6);
-		String name = Utils.padRight(player.getName(), 40);
+		String name;
+		if(player != null) { name = Utils.padRight(player.getName(), 40); }
+		else { name = Utils.padRight("", 40); };
 		String creationDate = Utils.padRight(created.toString(), 10);
 		
 		return username + " " + id + " " + name + " " + creationDate;

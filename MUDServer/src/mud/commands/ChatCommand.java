@@ -68,7 +68,7 @@ public class ChatCommand extends Command {
 					if( cc.getName().toLowerCase().equals(test) ) {
 						client.write("Messages on Chat Channel: " + cc.getName().toUpperCase() + "\n");
 						client.write("------------------------------\n");
-						ConcurrentLinkedQueue<Message>  messages = cc.getMessages();
+						ConcurrentLinkedQueue<Message> messages = cc.getMessages();
 						for(Message m : messages) {
 							client.write(m.getSender() + " " + m.getRecipient() + " " + m.getMessage() + "\n");
 						}
@@ -81,8 +81,10 @@ public class ChatCommand extends Command {
 				// if the channel name is that specified, write the message to the channel
 				for(ChatChannel cc : parent.getChatChannels()) {
 					if( cc.getName().toLowerCase().equals(test) ) {
-						cc.write(parent.getPlayer(client), arg);
+						Player player = parent.getPlayer(client);
+						cc.write(player, msg);
 						client.write("wrote " + msg + " to " + cc.getName() + " channel.\n");
+						//chatLog.writeln("(" + cc.getName() + ") <" + player.getName() + "> " + msg); (accessibility issue)
 						return;
 					}
 				}

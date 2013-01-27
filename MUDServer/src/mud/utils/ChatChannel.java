@@ -48,19 +48,21 @@ public class ChatChannel implements Runnable {
 		while( parent1.isRunning() ) {
 			// if client is a logged in player, send them any messages queued for them
 			// Send any pages, messages, etc to their respective recipients, or to a list of recipients?
-			for(Player player : this.listeners) { // for every "listening player
-				if(1 == 1) {
-					for(Message msg : this.messages) { // for the list of messages
-						try {
-							client = parent1.getClient(player);
+			synchronized(this.listeners) {
+				for(Player player : this.listeners) { // for every "listening player
+					if(1 == 1) { // check for gag?
+						for(Message msg : this.messages) { // for the list of messages
+							try {
+								client = parent1.getClient(player);
 
-							client.write("(" + parent1.colors(this.name, this.chan_color) + ") " + "<" + msg.getSender().getName() + "> " + parent1.colors(msg.getMessage(), this.text_color) + "\r\n"); // send the message
-							parent1.debug("(" + this.name + ") " + "<" + msg.getSender().getName() + "> " + msg.getMessage() + "\n");										
-							parent1.debug("chat message sent successfully");
-						}
-						catch(NullPointerException npe) {
-							parent1.debug("Game [chat channel: " + this.getName() + "] > Null Message.");
-							npe.printStackTrace();
+								client.write("(" + parent1.colors(this.name, this.chan_color) + ") " + "<" + msg.getSender().getName() + "> " + parent1.colors(msg.getMessage(), this.text_color) + "\r\n"); // send the message
+								parent1.debug("(" + this.name + ") " + "<" + msg.getSender().getName() + "> " + msg.getMessage() + "\n");										
+								parent1.debug("chat message sent successfully"); 
+							}
+							catch(NullPointerException npe) {
+								parent1.debug("Game [chat channel: " + this.getName() + "] > Null Message.");
+								npe.printStackTrace();
+							}
 						}
 					}
 				}
