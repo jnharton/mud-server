@@ -36,8 +36,14 @@ Usage: java -jar MUDServer.jar
 
 ## Updates
 
+December 2012
 The code is up for this, although my code depends on some LGPL'd network (server/client) code. My apologies
-for the weird structure, which is due to this project being worked on in eclipse.
+for the weird structure, which is due to this project being worked on in eclipse. 
+
+January 27, 2012
+I've started pulling together some basic documentation and info on the wiki section of the repository. I have
+more information on my computer, but it's somewhat fragmented and not all of it is up to date with the current
+state of the code and some is more ideas and notions than concrete details about the inner workings.
 
 ## Copyright
 Copyright (c) 2012 Jeremy Harton. See LICENSE.txt for further details.
