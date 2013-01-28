@@ -58,6 +58,7 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.ConcurrentModificationException;
 import java.util.GregorianCalendar;
 import java.util.Hashtable;
@@ -274,7 +275,6 @@ public class MUDServer {
 	// class static - identical for every instances of the class
 	// pna - per name association?
 	private HashMap<String, Command> commandMap = new HashMap<String, Command>(20, 0.75f);       // HashMap that holds an instance of each command currently (dynamic)
-	public HashMap<String, Integer> helpmap = new HashMap<String, Integer>(20, 0.75f);           // HashMap that associate help 'file' names with indices to the help 'file' storage (somewhat static)
 	
 	private HashMap<Client, Player> sclients = new HashMap<Client, Player>(max_players, 0.75f); // HashMap to associate Players to Clients (dynamic)
 	public HashMap<Player, Client> tclients = new HashMap<Player, Client>(max_players, 0.75f);  // HashMap to associate Clients to Players (dynamic)
@@ -332,7 +332,9 @@ public class MUDServer {
 
 	// Stuff
 	private ArrayList<Spell> spells1;         // ArrayList of Spell Objects (all loaded)
-	private ArrayList<String[]> helpfiles;    // ArrayList of Help Files stored as string arrays
+	
+    // Help Files stored as string arrays, indexed by name
+	private HashMap<String, String[]> helpMap = new HashMap<String, String[]>();
 
 	private ArrayList<Account> accounts;     // ArrayList of Accounts (UNUSED)
 	private ArrayList<Session> sessions;     // ArrayList of Session  (UNUSED)
@@ -340,9 +342,8 @@ public class MUDServer {
 	// Communications
 	private ArrayList<Message> pages;        // ArrayList of Messages to other players
 	private ArrayList<Message> messages;     // ArrayList of Messages from the game to a player
-	private ArrayList<ChatChannel> channels; // ArrayList of chat channels ( not sure how to set this up yet, seems to have an issue holding threads? )
-	
-	private HashMap<String, ChatChannel> channelMap;
+
+	private HashMap<String, ChatChannel> channels = new HashMap<String, ChatChannel>();
 
 	// "Security" Stuff
 	private ArrayList<String> banlist;       // ArrayList of banned ip addresses
@@ -657,10 +658,6 @@ public class MUDServer {
 		this.pages = new ArrayList<Message>();        // handles direct player to player communication
 		// initialize messages array
 		this.messages = new ArrayList<Message>();     // everything else
-		// initialize chat channel array
-		this.channels = new ArrayList<ChatChannel>(); // chat channels
-		
-		this.channelMap = new HashMap<String, ChatChannel>(5, 0.75f);
 
 		MUDObject.parent = this; // assign a static reference to the running server (ugly, but allows some flex)
 
@@ -762,16 +759,12 @@ public class MUDServer {
 
 		// help file loading
 		System.out.print("Loading Help Files... ");
-		this.helpfiles = new ArrayList<String[]>(this.help.length);
-		this.helpfiles.ensureCapacity(help.length);
 		try {
-			for (int h = 0; h < this.help.length; h++)
+			for (final String helpFileName : this.help)
 			{
-				if (this.help[h] != null) {
-					String helpfile[] = Utils.loadStrings(this.HELP_DIR + this.help[h]);
-					this.helpfiles.add(helpfile);
-					// add the helpfile to the helpmap HashMap
-					this.helpmap.put(helpfile[0], h);
+				if (helpFileName != null) {
+					String[] helpfile = Utils.loadStrings(this.HELP_DIR + helpFileName);
+					helpMap.put(helpfile[0], helpfile);
 				}
 			}
 			System.out.println("Help Files Loaded!");
@@ -957,10 +950,8 @@ public class MUDServer {
 		// cpu: ~20%
 		ooc = new ChatChannel(s, this, OOC_CHANNEL, "OOC");
 		staff = new ChatChannel(s, this, STAFF_CHANNEL, "STAFF");
-		channels.add(ooc);
-		channels.add(staff);
-		channelMap.put(ooc.getName(), ooc);
-		channelMap.put(staff.getName(), staff);
+		channels.put(ooc.getName(), ooc);
+		channels.put(staff.getName(), staff);
 		chatThread = new Thread(ooc, "OOC");
 		chatThread.start();
 		chatThread1 = new Thread(staff, "STAFF");
@@ -3144,7 +3135,7 @@ public class MUDServer {
 		if ( arg.toLowerCase().equals("#channels") ) {
 			client.write("Chat Channels\n");
 			client.write("--------------------------------\n");
-			for (final ChatChannel cc : channels) {
+			for (final ChatChannel cc : channels.values()) {
 				client.write(Utils.padRight(cc.getName(), 8));
 				client.write(" ");
 				if (cc.isListener(getPlayer(client))) {
@@ -3163,51 +3154,37 @@ public class MUDServer {
 			client.write("--------------------------------\n");
 		}
 		else if (args.length > 1) {
-			String test = args[0];
-			String msg = arg.replace(test + " ", "");
-			
-			// argument: show listeners on a specific channel
+			String channelName = args[0];
+			String msg = arg.replace(channelName + " ", "");
+            final ChatChannel testChannel = getChatChannel(channelName);
+            if (testChannel == null) {
+				client.write("Game> No such chat channel.");
+                return;
+            }
+
+            // argument: show listeners on a specific channel
 			if ( args[1].toLowerCase().equals("#listeners") ) {
-				for (ChatChannel cc : channels) {
-					if ( cc.getName().toLowerCase().equals(test) ) {
-						client.write("Listeners on Chat Channel: " + cc.getName().toUpperCase() + "\n");
-						client.write("------------------------------\n");
-						ArrayList<Player> listeners = cc.getListeners();
-						for (Player p : listeners) {
-							client.write(p.getName() + "\n");
-						}
-						client.write("------------------------------\n");
-						break;
-					}
-				}
+                client.write("Listeners on Chat Channel: " + testChannel.getName().toUpperCase() + "\n");
+                client.write("------------------------------\n");
+                for (final Player p : testChannel.getListeners()) {
+                    client.write(p.getName() + "\n");
+                }
+                client.write("------------------------------\n");
 			}
 			
 			// argument: list unsent messages on a particular channel
 			else if ( args[1].toLowerCase().equals("#messages") ) {
-				for (final ChatChannel cc : channels) {
-					if ( cc.getName().toLowerCase().equals(test) ) {
-						client.write("Messages on Chat Channel: " + cc.getName().toUpperCase() + "\n");
-						client.write("------------------------------\n");
-						ConcurrentLinkedQueue<Message> messages = cc.getMessages();
-						for (Message m : messages) {
-							client.write(m.getSender() + " " + m.getRecipient() + " " + m.getMessage() + "\n");
-						}
-						client.write("------------------------------\n");
-						break;
-					}
-				}
+                client.write("Messages on Chat Channel: " + testChannel.getName().toUpperCase() + "\n");
+                client.write("------------------------------\n");
+                for (final Message m : testChannel.getMessages()) {
+                    client.write(m.getSender() + " " + m.getRecipient() + " " + m.getMessage() + "\n");
+                }
+                client.write("------------------------------\n");
 			}
 			// if the channel name is that specified, write the message to the channel
 			else {
-				for (final ChatChannel cc : channels) {
-					if ( cc.getName().toLowerCase().equals(test) ) {
-						cc.write(getPlayer(client), msg);
-						client.write("wrote " + msg + " to " + cc.getName() + " channel.\n");
-						return;
-					}
-				}
-				
-				client.write("Game> No such chat channel.");
+                testChannel.write(getPlayer(client), msg);
+                client.write("wrote " + msg + " to " + testChannel.getName() + " channel.\n");
 			}
 		}
 	}
@@ -4790,13 +4767,12 @@ public class MUDServer {
 			arg = "help";
 		}
 
-		if (helpmap.containsKey(arg))
+        final String[] helpLines = helpMap.get(arg);
+		if (helpLines != null)
 		{ 
-			int index = helpmap.get(arg);
-			String[] helpfile = (String[]) helpfiles.get(index);
-			for (int i = 1; i < helpfile.length; i++)
+			for (final String line : helpLines)
 			{
-				send(helpfile[i], client);
+				send(line, client);
 			}
 		}
 		else if (arg.equals("@reload"))
@@ -5169,7 +5145,7 @@ public class MUDServer {
 		boolean exist = false;
 
 		// test for existence of helpfile?
-		if (helpmap.get(arg) != null) {
+		if (helpMap.get(arg) != null) {
             exist = true;
         }
 
@@ -7301,18 +7277,17 @@ public class MUDServer {
 	 * @param client  who is writing
 	 * @return did we succeed in writing to the channel? (true/false)
 	 */
-	public boolean chatHandler(final String channel, final String arg, final Client client) {
-		for (final ChatChannel cc : channels) {
-			if (cc.getName().toLowerCase().equals(channel)) {
-				Player player = getPlayer(client);
-				cc.write(player, arg);
-				client.write("wrote " + arg + " to " + cc.getName() + " channel.\n");
-				chatLog.writeln("(" + cc.getName() + ") <" + player.getName() + "> " + arg);
-				return true;
-			}
-		}
+	public boolean chatHandler(final String channelName, final String arg, final Client client) {
+        final ChatChannel testChannel = getChatChannel(channelName);
+        if (testChannel == null) {
+            return false;
+        }
 
-		return false;
+        final Player player = getPlayer(client);
+        testChannel.write(player, arg);
+        client.write("wrote " + arg + " to " + testChannel.getName() + " channel.\n");
+        chatLog.writeln("(" + testChannel.getName() + ") <" + player.getName() + "> " + arg);
+        return true;
 	}
 
 	/**
@@ -7800,20 +7775,7 @@ public class MUDServer {
 			else if ( hcmd.equals("save") || hcmd.equals("s") )
 			{
 				// convert the list to a string array
-				String[] helpfile = Utils.arraylistToString(player.nlist);
-
-				try {
-					Integer h = helpmap.get(player.listname);
-					if (h != null) {
-						this.helpfiles.set(h, helpfile); // load in the new version of the helpfile
-					}
-					else {
-						helpfiles.add(helpfile);
-						this.helpmap.put(helpfile[0], helpfiles.size() - 1); // what the heck index am I using here?
-					}
-				}
-				catch(Exception e) {
-				}
+                this.helpMap.put(player.listname, Utils.arraylistToString(player.nlist));
 
 				send("< Help File Written Out! >", client);
 				send("< Help File Saved. >", client);
@@ -8931,9 +8893,11 @@ public class MUDServer {
 	}
 
 	public void saveHelpFiles() {
-		for (final Entry<String, Integer> he : this.helpmap.entrySet()) {
-			Utils.saveStrings(HELP_DIR + he.getKey() + ".txt", helpfiles.get(he.getValue()));
-		}
+        synchronized (this.helpMap) {
+            for (final Entry<String, String[]> he : this.helpMap.entrySet()) {
+                Utils.saveStrings(HELP_DIR + he.getKey() + ".txt", he.getValue());
+            }
+        }
 	}
 
 	// Data Loading Functions
@@ -9798,12 +9762,8 @@ public class MUDServer {
 
 							// create channel according to data
 							ChatChannel c = new ChatChannel(s, this, channelId, channelName);
-							channels.add(c);
-							channelMap.put(c.getName(), c);
-
-							if ( channels.contains(c) ) {
-								debug("Channel Added: " + c.getName() + "(" + c.getID() + ")");
-							}
+							channels.put(c.getName(), c);
+                            debug("Channel Added: " + c.getName() + "(" + c.getID() + ")");
 
 							Thread chatThread = new Thread(c, channelName);
 							chatThread.start();
@@ -10495,19 +10455,11 @@ public class MUDServer {
 	{
 		// load helpfiles (basically a duplication of the normal helpfile loading)
 		this.help = Utils.loadStrings(HELP_DIR + "index.txt");       // load the index (list of files named the same as the commands
-		synchronized(this.helpfiles) {
-			this.helpfiles = new ArrayList<String[]>(help.length); // create an arraylist of string arrays to hold the help files in memory
-		}
-		this.helpfiles = new ArrayList<String[]>(); // create an arraylist of string arrays to hold the help files in memory
-		this.helpfiles.ensureCapacity(help.length); // make sure we have enough space
 		try {
-			for (int h = 0; h < help.length; h++)
+			for (final String helpFileName : help)
 			{
-				String helpfile[] = Utils.loadStrings(HELP_DIR + help[h]);
-				// add the loaded helpfile to the arraylist
-				this.helpfiles.add(helpfile);
-				// add the command name to the helpmap HashMap
-				this.helpmap.put(helpfile[0], h);
+				String helpLines[] = Utils.loadStrings(HELP_DIR + helpFileName);
+				this.helpMap.put(helpLines[0], helpLines);
 			}
 			//System.out.println("Finished");
 		}
@@ -10586,11 +10538,8 @@ public class MUDServer {
 		
 		log.writeln("Game> Backing up Help Files...");
 
-		// save help files
-		synchronized(helpmap) {
-			saveHelpFiles();
-		}
-		
+        saveHelpFiles();
+
 		log.writeln("Done.");
 
 		// tell us that backing up is done (supply custom message?)
@@ -12702,10 +12651,10 @@ public class MUDServer {
 	 * 
 	 * @param  list the text list we wish to evaluate as code
 	 * @return an arraylist of strings
-	 */
 	public ArrayList<String> evaluateList(ArrayList<String> list) {
 		return null;
 	}
+*/
 	
 	/* ? */
 	
@@ -12960,27 +12909,23 @@ public class MUDServer {
 	 * @param template the item to base the new one on
 	 * @return the new item we just created
 	 */
-	private Item createItem(Item template) {
-		Item item = null;
+    private Item createItem(Weapon template) {
+        final Item item = createItems(template, 1).get(0);
+		item.setLocation(8);
+        return item;
+    }
 
-		if (template instanceof Weapon) {
-			item = new Weapon( (Weapon) template );
-		}
-		else if (template instanceof Armor) {
-			item = new Armor( (Armor) template );
-		}
+    private Item createItem(Book template) {
+        final Item item = createItems(template, 1).get(0);
+		item.setLocation(8);
+        return item;
+    }
 
-		if (item != null) {
-			item.setDBRef(nextDB("use"));
-			item.setLocation(8);
-			items.add(item);
-
-			main.add(item.toDB());
-			main1.add(item);
-		}
-
-		return item;
-	}
+    private Item createItem(Armor template) {
+        final Item item = createItems(template, 1).get(0);
+		item.setLocation(8);
+        return item;
+    }
 
 	/**
 	 * Create new items using an existing item as a template. More or less
@@ -12995,63 +12940,48 @@ public class MUDServer {
 	 * @param numItems how many new items to make.
 	 * @return the new items we just created
 	 */
-	private ArrayList<Item> createItems(Item template, int numItems) {
+	private ArrayList<Item> createItems(Weapon template, int numItems) {
 		ArrayList<Item> items = new ArrayList<Item>(numItems);
 
-		Item item;
-
-		if (template instanceof Weapon) {
-			Weapon templateWeapon = (Weapon) template;
-
-			for (int i = 0; i < numItems; i++) {
-				item = new Weapon( templateWeapon );
-				item.setDBRef(nextDB("use"));
-				item.setLocation(0);
-				items.add(item);
-
-				main.add(item.toDB());
-				main1.add(item);
-				this.items.add(item);
-			}
-
-			return items;
-		}
-		else if (template instanceof Armor) {
-			Armor templateArmor = (Armor) template;
-
-			for (int i = 0; i < numItems; i++) {
-				item = new Armor( templateArmor );
-				item.setDBRef(nextDB("use"));
-				item.setLocation(0);
-				items.add(item);
-
-				main.add(item.toDB());
-				main1.add(item);
-				this.items.add(item);
-			}
-
-			return items;
-		}
-		else if (template instanceof Book) {
-			Book templateBook = (Book) template;
-			
-			for (int i = 0; i < numItems; i++) {
-				item = new Book( templateBook );
-				item.setDBRef(nextDB("use"));
-				item.setLocation(0);
-				items.add(item);
-
-				main.add(item.toDB());
-				main1.add(item);
-				this.items.add(item);
-			}
-
-			return items;
-		}
-
-		return null;
+        for (int i = 0; i < numItems; i++) {
+            final Weapon item = new Weapon(template);
+            items.add(item);
+            initCreatedItem(item);
+        }
+        return items;
 	}
-	
+
+	private ArrayList<Item> createItems(Book template, int numItems) {
+		ArrayList<Item> items = new ArrayList<Item>(numItems);
+
+        for (int i = 0; i < numItems; i++) {
+            final Book item = new Book(template);
+            items.add(item);
+            initCreatedItem(item);
+        }
+        return items;
+	}
+
+	private ArrayList<Item> createItems(Armor template, int numItems) {
+		ArrayList<Item> items = new ArrayList<Item>(numItems);
+
+        for (int i = 0; i < numItems; i++) {
+            final Armor item = new Armor(template);
+            items.add(item);
+            initCreatedItem(item);
+        }
+        return items;
+	}
+    
+    private void initCreatedItem(final Item item) {
+        item.setDBRef(nextDB("use"));
+        item.setLocation(0);
+
+        main.add(item.toDB());
+        main1.add(item);
+        this.items.add(item);
+    }
+
 	/*public NPC createNPC(String name, int location) {
 		NPC npc = new NPC(nextDB("use"), name, null, "N", "A generic npc", "NPC", "IC", location, new String[]{ "0", "0", "0", "0" });
 		npcs1.add(npc);
@@ -13080,10 +13010,10 @@ public class MUDServer {
 	 * @param exits the lists of exits to filter
 	 * @param filters the filters to apply
 	 * @return the filtered list of exits
-	 */
 	public ArrayList<Exit> filter(ArrayList<Exit> exits, Filter...filters) {
 		return null;
 	}
+*/
 
 	/**
 	 * Run a weather update.
@@ -13095,31 +13025,21 @@ public class MUDServer {
 	 * At the present it only updates a single room, ever.
 	 */
 	public void updateWeather() {
-		ArrayList<Room> toUpdate = new ArrayList<Room>(10);
-		
-		for (Room room : rooms1) {
-			if (room.getRoomType() == "O") {
-				toUpdate.add(room);
+		for (final Room room : rooms1) {
+			if (room.getRoomType() != "O") {
+				continue;
 			}
-		}
-		
-		for (Room room1 : toUpdate) {
-			room1.getWeather().nextState();
 
-			WeatherState ws = room1.getWeather().ws;
+			room.getWeather().nextState();
 
-			Message msg;
+			final WeatherState ws = room.getWeather().ws;
+			if (ws.upDown != 1 && ws.upDown != -1) {
+                return;
+            }
 
-			if (ws.upDown == 1) { // up
-				msg = new Message(room1.getWeather().ws.transUpText, 1);
-				addMessage(msg);
-				debug(room1.getWeather().ws.transUpText);
-			}
-			else if (ws.upDown == -1) { // down
-				msg = new Message(room1.getWeather().ws.transDownText, 1);
-				addMessage(msg);
-				debug(room1.getWeather().ws.transDownText);
-			}
+            String changeText = ws.upDown == 1 ? ws.transUpText : ws.transDownText;
+            addMessage(new Message(changeText, 1));
+            debug(changeText);
 		}
 	}
 
@@ -13131,32 +13051,20 @@ public class MUDServer {
 	 * @return a string array that contains the file's contents
 	 */
 	public String[] getHelpFile(String name) {
-		int index = helpmap.get(name);
-
-		String[] helpfile = (String[]) helpfiles.get(index);
-
-		return helpfile;
+		return helpMap.containsKey(name) ? helpMap.get(name) : null;
 	}
 
 	/* chat stuff */
 	/**
 	 * getChatChannel
 	 * 
-	 * Get a ChatChannel object by the name of the chat channel
-	 * it handles
+	 * Get a ChatChannel object by the name of the chat channel it handles
 	 * 
 	 * @param channelName
 	 * @return
 	 */
-	public ChatChannel getChatChannel(String channelName) {
-
-		for (ChatChannel channel : this.channels) {
-			if ( channel.getName().equals(channelName) ) {
-				return channel;
-			}
-		}
-		
-		return null;
+	public ChatChannel getChatChannel(String name) {
+        return channels.get(name.toLowerCase());
 	}
 	
 	/**
@@ -13184,8 +13092,8 @@ public class MUDServer {
 	 * 
 	 * @return
 	 */
-	public ArrayList<ChatChannel> getChatChannels() {
-		return this.channels;
+	public Collection<ChatChannel> getChatChannels() {
+		return this.channels.values();
 	}
 
 	/**
