@@ -52,7 +52,7 @@ public class AttackCommand extends Command {
 							if(hit) { // did we hit?
 
 								boolean criticalHit = false;							
-								int criticalCheckRoll = Utils.roll("1d20");
+								int criticalCheckRoll = Utils.roll(1, 20);
 
 								int damage = 0;
 
@@ -104,10 +104,10 @@ public class AttackCommand extends Command {
 		return USER;
 	}
 
-	public int calculateDamage(WeaponType wType, boolean critical) {
+	public int calculateDamage(final WeaponType wType, final boolean critical) {
 		String damageRoll = wType.getDamage();
 
-		if(critical) {
+		if (critical) {
 			return Utils.roll(damageRoll) * wType.getCritical();
 		}
 		else {
@@ -127,21 +127,16 @@ public class AttackCommand extends Command {
 	}
 
 	public boolean canHit(MUDObject Target) {
-		int roll = Utils.roll("1d20");
+		int roll = Utils.roll(1, 20);
 
-		if(roll == 1) { // Natural 1 (guaranteed miss)
+		if (roll == 1) { // Natural 1 (guaranteed miss)
 			return false;
 		}
-		else if(roll == 20) { // Natural 20 (guaranteed hit)
+		else if (roll == 20) { // Natural 20 (guaranteed hit)
 			return true;
 		}
 		else { // compare to AC of target
-			if(roll > 10) { // dummy check
-				return true;
-			}
-			else {
-				return false;
-			}
+			return roll > 10;
 		}
 	}
 }

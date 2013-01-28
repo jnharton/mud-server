@@ -205,14 +205,14 @@ public class Room extends MUDObject
 	 */
 	public String toDB() {
 		String[] output = new String[9];
-		output[0] = Utils.str(this.getDBRef());           // room database reference number
+		output[0] = this.getDBRef() + "";           // room database reference number
 		output[1] = this.getName();                       // room name
 		output[2] = this.getFlags();                      // room flags
 		output[3] = this.getDesc();                       // room description
-		output[4] = Utils.str(this.getLocation());        // room location (a.k.a parent)
+		output[4] = this.getLocation() + "";        // room location (a.k.a parent)
 		output[5] = this.getRoomType();                   // room type
 		output[6] = this.x + "," + this.y + "," + this.z; // room dimensions (x,y,z)
-		output[7] = Utils.str(-1);                        // room terrain
+		output[7] = "-1";                        // room terrain
 		output[8] = "";                                   //
 		
 		return Utils.join(output, "#");

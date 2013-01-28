@@ -152,15 +152,15 @@ public class Book extends Item implements Editable {
 	@Override
 	public String toDB() {
 		String[] output = new String[9];
-		output[0] = Utils.str(this.getDBRef());          // book database reference number
+		output[0] = this.getDBRef() + "";          // book database reference number
 		output[1] = this.getName();                      // book name
 		output[2] = this.getFlags();                     // book flags
 		output[3] = this.getDesc();                      // book description
-		output[4] = Utils.str(this.getLocation());       // book location
-		output[5] = Utils.str(this.item_type.ordinal()); // item type
+		output[4] = this.getLocation() + "";       // book location
+		output[5] = this.item_type.ordinal() + ""; // item type
 		output[6] = this.getAuthor();                    // book author
 		output[7] = this.getTitle();                     // book title
-		output[8] = Utils.str(this.pages.size());        // # of pages
+		output[8] = this.pages.size() + "";        // # of pages
 		return Utils.join(output, "#");
 	}
 	

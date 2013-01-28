@@ -134,14 +134,14 @@ public class Weapon extends Item implements Equippable<Weapon>, Wieldable<Weapon
 
 	public String toDB() {
 		String[] output = new String[8];
-		output[0] = Utils.str(this.getDBRef());          // weapon database reference number
+		output[0] = this.getDBRef() + "";          // weapon database reference number
 		output[1] = this.getName();                      // weapon name
 		output[2] = this.getFlags();                     // weapon flags
 		output[3] = this.getDesc();                      // weapon description
-		output[4] = Utils.str(this.getLocation());       // weapon location
-		output[5] = Utils.str(this.item_type.ordinal()); // item type
-		output[6] = Utils.str(this.weapon.ordinal());    // weapon type
-		output[7] = Utils.str(this.mod);                 // modifier
+		output[4] = this.getLocation() + "";       // weapon location
+		output[5] = this.item_type.ordinal() + ""; // item type
+		output[6] = this.weapon.ordinal() + "";    // weapon type
+		output[7] = this.mod + "";                 // modifier
 		return Utils.join(output, "#");
 	}
 }

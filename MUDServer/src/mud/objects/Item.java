@@ -140,12 +140,12 @@ public class Item extends MUDObject
 
 	public String toDB() {
 		String[] output = new String[8];
-		output[0] = Utils.str(this.getDBRef());          // database reference number
+		output[0] = this.getDBRef() + "";          // database reference number
 		output[1] = this.getName();                      // name
 		output[2] = this.getFlags();                     // flags
 		output[3] = this.getDesc();                      // description
-		output[4] = Utils.str(this.getLocation());       // location
-		output[5] = Utils.str(this.item_type.ordinal()); // item type
+		output[4] = this.getLocation() + "";       // location
+		output[5] = this.item_type.ordinal() + ""; // item type
 		output[6] = "*";                                 // blank
 		output[7] = "*";                                 // blank
 		return Utils.join(output, "#");

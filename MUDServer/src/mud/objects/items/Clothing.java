@@ -120,14 +120,14 @@ public class Clothing extends Item implements Equippable<Clothing>, Usable<Cloth
 	@Override
 	public String toDB() {
 		String[] output = new String[8];
-		output[0] = Utils.str(this.getDBRef());          // clothing database reference number
+		output[0] = this.getDBRef() + "";          // clothing database reference number
 		output[1] = this.getName();                      // clothing name
 		output[2] = this.getFlags();                     // clothing flags
 		output[3] = this.getDesc();                      // clothing description
-		output[4] = Utils.str(this.getLocation());       // clothing location (a.k.a parent)
-		output[5] = Utils.str(this.item_type.ordinal()); // item type
-		output[6] = Utils.str(this.clothing.ordinal());  // clothing type
-		output[7] = Utils.str(this.mod);                 // modifier
+		output[4] = this.getLocation() + "";       // clothing location (a.k.a parent)
+		output[5] = this.item_type.ordinal() + ""; // item type
+		output[6] = this.clothing.ordinal() + "";  // clothing type
+		output[7] = this.mod + "";                 // modifier
 		return Utils.join(output, "#");
 	}
 	

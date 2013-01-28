@@ -210,25 +210,23 @@ public class Portal extends Exit {
 	@Override
 	public String toDB() {
 		String[] output = new String[8];
-		output[0] = Utils.str(this.getDBRef());    // portal database reference number
+		output[0] = this.getDBRef() + "";    // portal database reference number
 		output[1] = this.getName();                // portal name
 		output[2] = this.getFlags();               // portal flags
 		output[3] = this.getDesc();                // portal description
-		output[4] = Utils.str(this.getLocation()); // portal location (a.k.a source)
-		if(this.type == PortalType.STD) {
-			output[5] = Utils.str(this.destination); // portal destination
+		output[4] = this.getLocation() + ""; // portal location (a.k.a source)
+		if (this.type == PortalType.STD) {
+			output[5] = this.destination + ""; // portal destination
 		}
-		else if(this.type == PortalType.RANDOM) {
-			ArrayList<String> d = new ArrayList<String>();
-			for(int dest : this.destinations) {
-				d.add(Utils.str(dest));
+		else if (this.type == PortalType.RANDOM) {
+			final ArrayList<String> d = new ArrayList<String>();
+			for (int dest : this.destinations) {
+				d.add(dest + "");
 			}
-			String[] destStringArr = Utils.arraylistToString(d);
-			//output[5] = Utils.join(this.destinations, ","); // portal destination(s)
-			output[5] = Utils.join(destStringArr, ","); // portal destination(s)
+			output[5] = Utils.join(d, ","); // portal destination(s)
 		}
-		output[6] = Utils.str(this.getExitType().ordinal()); // exit type
-		output[7] = Utils.str(type.ordinal());               // portal type
+		output[6] = this.getExitType().ordinal() + ""; // exit type
+		output[7] = type.ordinal() + "";               // portal type
 		
 		String output1 = Utils.join(output, "#");  //
 		return output1;

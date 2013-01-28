@@ -1633,7 +1633,7 @@ public class MUDServer {
 						int dX = 2;
 						int dY = 2;
 						Dungeon d = new Dungeon(arg, dX, dY);
-						cmd_jump(Utils.str(d.dRooms[0][0].getDBRef()), client);
+						cmd_jump(d.dRooms[0][0].getDBRef() + "", client);
 						cmd_look("", client);
 						int dXc = 0;
 						int dYc = 0;
@@ -2576,7 +2576,7 @@ public class MUDServer {
 					{
 						debug("Exit? " + cmd);
 						// exit handling
-						if ( Utils.match(cmd, "[a-zA-Z]") ) // no nu
+						if (cmd.matches("[a-zA-Z]+")) // no nums
 						{
 
 							// This will print to the console.
@@ -3040,7 +3040,7 @@ public class MUDServer {
 			else { start = "| "; }
 			
 			if (i == day) {
-				client.write(start + colors(Utils.str(i), "green") + " ");
+				client.write(start + colors(i + "", "green") + " ");
 				continue;
 			}
 			
@@ -3059,7 +3059,7 @@ public class MUDServer {
 		}
 		
 		client.write('\n');
-		client.write("Today is the " + Utils.str(day) + " of " + month_name);
+		client.write("Today is the " + day + " of " + month_name);
 		client.write('\n');
 	}
 
@@ -7746,7 +7746,7 @@ public class MUDServer {
 			else if ( hcmd.equals("save") || hcmd.equals("s") )
 			{
 				// convert the list to a string array
-                this.helpMap.put(player.listname, Utils.arraylistToString(player.nlist));
+                this.helpMap.put(player.listname, player.nlist.toArray(new String[0]));
 
 				send("< Help File Written Out! >", client);
 				send("< Help File Saved. >", client);
@@ -9092,7 +9092,7 @@ public class MUDServer {
 								exits1.add(portal);
 							}
 							else if (oPortalType.equals("R")) { // Random Portal
-								int[] oDestinations = Utils.stringsToInts(Utils.parseArray(attr[5], ",")); 
+								int[] oDestinations = Utils.stringsToInts(attr[5].split(",")); 
 
 								portal = new Portal(PortalType.RANDOM, oLocation, oDestinations);
 								portal.setExitType(et);
