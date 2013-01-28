@@ -75,21 +75,27 @@ public final class Utils {
 		return rtn;
 	}
 
-	// flip a line around and return it
+	/**
+	 * flipLine
+	 * 
+	 * flip a line around and return a reversed copy
+	 * 
+	 * @param temp the string to be flipped
+	 * @return the flipped string
+	 */
 	public static String flipLine(String temp)
 	{
-		// define a temporary string 'arga'
-		String arga = "";
+		StringBuffer arga = new StringBuffer(temp.length());
 
 		// loop through the string, character by character
-		for(int j = 0; j < temp.length(); j++)
+		for(int c = 0; c < temp.length(); c++)
 		{
 			// add each character back to the string, reversing it completely
-			arga = arga + temp.charAt(temp.length() - j - 1);
+			arga.append(temp.charAt(temp.length() - c - 1));
 		}
 
 		// return a string as the result
-		return arga;
+		return arga.toString();
 	}
 
 	public static String str(Object o) {
