@@ -9,7 +9,6 @@ import mud.interfaces.Stackable;
 import mud.interfaces.Usable;
 
 import mud.magic.Spell;
-import mud.miscellaneous.ServerInterface;
 import mud.net.Client;
 
 import mud.objects.Item;

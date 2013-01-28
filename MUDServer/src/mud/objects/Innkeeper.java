@@ -5,6 +5,7 @@ import java.util.LinkedHashMap;
 
 import mud.Abilities;
 import mud.Classes;
+import mud.Currency;
 import mud.MUDServer;
 import mud.Races;
 import mud.interfaces.*;
@@ -94,7 +95,7 @@ public class Innkeeper extends NPC implements Interactive, Vendor {
 				int index = 0;
 				for(Integer i : a.getCost()) {
 					if(i > 0) {
-						cost += i + " " + parent.getCurrency(index).getAbbrev();
+						cost += i + " " + Currency.fromInt(index).getAbbrev();
 					}
 					index++;
 				}

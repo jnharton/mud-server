@@ -20,12 +20,18 @@ package mud;
 import mud.objects.Player;
 
 public class Currency {
+	// value is relative to copper coins
+	public static Currency COPPER = new Currency("Copper", "cp", null, 1, 0);
+	public static Currency SILVER = new Currency("Silver", "sp", COPPER, 100, 1);
+	public static Currency GOLD = new Currency("Gold", "gp", COPPER, 10000, 2);
+	public static Currency PLATINUM = new Currency("Platinum", "pp", COPPER, 1000000, 3);
+
 	private final String name;   // name of the currency
 	private final String abbrev; // abbreviation to use when a short form is required
 	private final Currency base; // a smaller form of currency that the value of this is based o
 	private final int value;     // the equivalent value of this in a smaller form of currency
 	private final int index;
-	
+
 	Currency(String name, String abbrev, Currency base, int value, int index) {
 		this.name = name;     // name is the name the player sees
 		this.abbrev = abbrev; // the common two letter abbreviate (used in indicating money)
@@ -33,27 +39,23 @@ public class Currency {
 		this.value = value;   // value is the number of the base unit that equals it
 		this.index = index;   // index is the part of the money array on the player that holds that kind of currency
 	}
-	
-	/**
-	 * Get the name of this currency
-	 * 
-	 * @return
-	 */
+
 	public String getName() {
 		return this.name;
 	}
+
 	public String toString() {
 		return this.name;
 	}
-	
+
 	// this will always only return the amount asked for (if you have the required input) or none OR
 	// if you give all your money of a type, then it will give as much as it can convert
 	// NOTE: If this class has been modified to change the currency types/values, these conversions need changing
 	// TODO: don't set actual values, just return the amount of the new currency obtained
 	// TODO: replace with a version that doesn't require access to the player object
-	public int convert(Player temp, Currency newCurrency, int amount, int supply) {
-		if(amount != 0 && supply == 0) { // same as asking for as much as you can get with the supply you give
-			if((temp.getMoney(this.index) * this.value) - (newCurrency.value * amount) >= 0) {
+	public int convert(final Player temp, final Currency newCurrency, final int amount, final int supply) {
+		if (amount != 0 && supply == 0) { // same as asking for as much as you can get with the supply you give
+			if ((temp.getMoney(this.index) * this.value) - (newCurrency.value * amount) >= 0) {
 				// sets player money (shouldn't be done here if currency conversion is not an OOC transaction
 				temp.setMoney(this.index, temp.getMoney(this.index) - ((newCurrency.value * amount) / this.value));
 				temp.setMoney(newCurrency.index, amount);
@@ -88,11 +90,27 @@ public class Currency {
 	 * @return
 	 */
 	public Integer toInteger() {
-		if(base != null) {
+		if (base != null) {
 			return this.value;
 		}
 		else {
 			return -1;
 		}
 	}
+
+	public static Currency fromInt(int index) {
+		switch(index) {
+			case 0:
+				return COPPER;
+			case 1:
+				return SILVER;
+			case 2:
+				return GOLD;
+			case 3:
+				return PLATINUM;
+			default:
+				return COPPER;
+		}
+	}
+	
 }

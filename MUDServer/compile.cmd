@@ -1,0 +1,1 @@
+javac -Xlint:unchecked -d classes src/mud/*.java src/mud/colors/*.java src/mud/miscellaneous/*.java src/mud/commands/*.java src/mud/interfaces/*.java src/mud/magic/*.java src/mud/net/*.java src/mud/objects/*.java src/mud/objects/items/*.java src/mud/objects/things/*.java src/mud/protocols/*.java src/mud/quest/*.java src/mud/utils/*.java src/mud/weather/*.java
