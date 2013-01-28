@@ -15,24 +15,19 @@ import mud.weather.Weather;
  */
 public class Room extends MUDObject
 {
-	/**
-	 * 
-	 */
-
 	private enum Terrain { FOREST, MARSH, HILLS, MOUNTAIN, DESERT, PLAINS, AQUATIC };
 
 	private int parent;                                         // the room inside of which this room is located
 	
 	private Weather weather;                                    // the weather in this room
 	
-	private ArrayList<Exit> Exits = new ArrayList<Exit>();      // the exits leading away from the room
+	private ArrayList<Exit> exits = new ArrayList<Exit>();      // the exits leading away from the room
 	
 	public ArrayList<Thing> contents = new ArrayList<Thing>();  // the objects the room contains (things)
 	public ArrayList<Item> contents1 = new ArrayList<Item>();   // the objects the room contains (items)
 	
 	public String exitNames;                                    // formatted string containing the usable exit names
-	public int exits = 0;                                       // the number of exits in the room
-	
+
 	private String roomType = "N";                              // the type of room (I = Inside, O = Outside, P = Protected, N = None)
 
 	public String music;                                        // the ambient background music for this room
@@ -151,14 +146,32 @@ public class Room extends MUDObject
 	 * @return the exits
 	 */
 	public ArrayList<Exit> getExits() {
-		return Exits;
+		return new ArrayList<Exit>(exits);
+	}
+
+	public String getExitNames() {
+        final StringBuilder buf = new StringBuilder();
+        for (final Exit e : exits) {
+            buf.append(", ").append(e.getName());
+        }
+		return buf.toString().substring(2);
+	}
+
+	public String getVisibleExitNames() {
+        final StringBuilder buf = new StringBuilder();
+        for (final Exit e : exits) {
+            if (!e.getFlags().contains("D")) {
+                buf.append(", ").append(e.getName());
+            }
+        }
+		return buf.toString().substring(2);
 	}
 
 	/**
 	 * @param exits the exits to set
 	 */
 	public void setExits(ArrayList<Exit> exits) {
-		Exits = exits;
+		this.exits = exits;
 	}
 
 	/*public String weather() { // ought to return string

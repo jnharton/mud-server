@@ -4672,40 +4672,11 @@ public class MUDServer {
 	 * @param client
 	 */
 	private void cmd_exits(final String arg, final Client client) {
-		final Player player = getPlayer(client);
-		Room room = getRoom(client);
-
-		Exit exit;
-
-		if (room.exits < room.getExits().size()) {
-			room.exitNames = "";
-			for (int e = 0; e < room.getExits().size(); e++)
-			{
-				exit = (Exit) room.getExits().get(e);
-				if (exit != null) {
-					room.exits++;
-					if (room.getExits().size() > 1) {
-						// if the exit isn't DARK
-						if (!exit.getFlags().contains("D")) {
-							if (e < room.getExits().size() - 1) {
-                                room.exitNames = room.exitNames + "," + exit.getName();
-                            }
-							else {
-                                room.exitNames = exit.getName() + room.exitNames;
-                            }
-						}
-					}
-					else {
-                        room.exitNames = exit.getName();
-                    }
-				}
-			}
-		}
-
-		if (room.exitNames != null) {
-			send(colors("Exits: " + room.exitNames, displayColors.get("exit")), client);
-		}
-		else {
+        final String exitNames = getRoom(client).getVisibleExitNames();
+        if (exitNames != null && !exitNames.equals("")) {
+            send(colors("Exits: " + exitNames, displayColors.get("exit")), client);
+        }
+        else {
             send(colors("Exits:", displayColors.get("exit")), client);
         }
 	}
@@ -11164,11 +11135,10 @@ public class MUDServer {
 						debug(game_time.minutes);
 						debug(fired);
 						if ((game_time.minutes + 1) % fired == 0) {
-							Room room;
 
 							// loop through all the rooms and broadcast weather messages accordingly
 							for (int r = 0; r < rooms1.size(); r++) {
-								room = (Room) rooms1.get(r);
+								Room room = (Room) rooms1.get(r);
 								if (room.getRoomType() == "O" || room.getRoomType() == "P") {
 									//atmosphere = room.getAtmosphere();
 									//weather = room.getWeather();
@@ -11382,7 +11352,7 @@ public class MUDServer {
 	 * @param group
 	 * @return
 	 */
-	public Zone new_instance(Zone template, Player...group) {
+	public Zone new_instance(final Zone template, final Player...group) {
 		if (template != null && template.getInstanceId() != -1)
 		{
 			return null;
@@ -11401,7 +11371,7 @@ public class MUDServer {
 	 * @param newItem
 	 * @return
 	 */
-	private boolean hasGenericStorageContainer(Player player, Item newItem) {
+	private boolean hasGenericStorageContainer(final Player player, final Item newItem) {
 		return false;
 	}
 	
@@ -11412,12 +11382,12 @@ public class MUDServer {
 	 * @param item
 	 * @return
 	 */
-	private Container<?> getGenericStorageContainer(Player player, Item item) {
+	private Container<?> getGenericStorageContainer(final Player player, final Item item) {
 		return null;
 	}
 
 	// AI routines
-
+/*
 	// Line of Sight
 	void lineOfSight(Point origin, Player target) {
 		Point goal = target.getCoordinates();
@@ -11443,7 +11413,8 @@ public class MUDServer {
 	// Random Movement
 	void randomMovement() {
 	}
-	
+*/
+
 	/**
 	 * Display the account menu for a specific account to the client specified
 	 * 
@@ -11456,7 +11427,7 @@ public class MUDServer {
 	 * @param account
 	 * @param client
 	 */
-	public void account_menu(Account account, Client client) {
+	public void account_menu(final Account account, final Client client) {
 		if (account != null) {
 			// not the place for the below, since it relates to before player connection
 			// in fact, init_conn will need modification if it expects to handle accounts instead of players
@@ -11495,7 +11466,7 @@ public class MUDServer {
 	 * 
 	 * @param newMessage
 	 */
-	public void addMessage(Message newMessage) {
+	public void addMessage(final Message newMessage) {
 		synchronized(this.messages) { 
 			this.messages.add(newMessage);
 		}
@@ -11507,7 +11478,7 @@ public class MUDServer {
 	 * 
 	 * @param newMessage
 	 */
-	public void addMessages(ArrayList<Message> newMessages) {
+	public void addMessages(final ArrayList<Message> newMessages) {
 		synchronized(this.messages) { 
 			for (Message newMessage : newMessages) {
 				this.messages.add(newMessage);
@@ -11525,7 +11496,7 @@ public class MUDServer {
 	 * @param m
 	 * @param client
 	 */
-	public void examine(MUDObject m, Client client) {
+	public void examine(final MUDObject m, final Client client) {
 		if ( !(m instanceof NullObject) ) {
 			String temp = "";
 
@@ -11556,7 +11527,7 @@ public class MUDServer {
 	 * @param room
 	 * @param client
 	 */
-	public void examine(Room room, Client client) {
+	public void examine(final Room room, final Client client) {
 		String temp = "";
 
 		for (int f = 1; f < room.getFlags().length(); f++) {
@@ -11600,7 +11571,7 @@ public class MUDServer {
 	 * @param player
 	 * @param client
 	 */
-	public void examine(Player player, Client client) {
+	public void examine(final Player player, final Client client) {
 		String temp = "";
 		for (int f = 1; f < player.getFlags().length(); f++) {
 			if (f < player.getFlags().length()) {
@@ -11656,7 +11627,7 @@ public class MUDServer {
 		}
 	}
 
-	public void examine(Exit exit, Client client) {
+	public void examine(final Exit exit, final Client client) {
 		String temp = "";
 		for (int f = 1; f < exit.getFlags().length(); f++) {
 			if (f < exit.getFlags().length() - 1) { temp = temp + Flags.get(exit.getFlags().charAt(f)) + " "; }
@@ -11688,7 +11659,7 @@ public class MUDServer {
 	 * @param mo
 	 * @param client
 	 */
-	public void look(MUDObject mo, Client client) {
+	public void look(final MUDObject mo, final Client client) {
 		send(mo.getName() + " (#" + mo.getDBRef() + ")", client);
 		send(mo.getDesc(),  client);
 	}
@@ -11703,7 +11674,7 @@ public class MUDServer {
 	 * @param player player to look at
 	 * @param client caller's client
 	 */
-	public void look(Player player, Client client) {
+	public void look(final Player player, final Client client) {
 		send(colors(player.getName() + " (#" + player.getDBRef() + ")", (String) displayColors.get("player")), client);
 		send(player.getDesc(), client);
 		send("Wearing (visible): ", client);
@@ -11724,188 +11695,168 @@ public class MUDServer {
 	 * @param room   the room to look at
 	 * @param client the player that's looking/their client
 	 */
-	public void look(Room room, Client client) {
+	public void look(final Room room, final Client client) {
 		Player current = getPlayer(client);
 
-		if (room != null) {
-			if (room.getFlags().contains("S") == false) {
-				send(colors(room.getName() + " (#" + room.getDBRef() + ")", (String) displayColors.get("room")), client);
-			}
-			else {
-				send(colors(room.getName(), (String) displayColors.get("room")), client);
-			}
-			
-			/* Start Description */
-
-			/*
-			 * Make the description conform to a column limit
-			 */
-			int line_limit = current.getLineLimit();
-
-			send(Utils.padRight("", '-', line_limit), client);
-
-			send("", client);
-
-			String description = parse(room.getDesc(), room.timeOfDay);
-			
-			showDesc(description, line_limit, client);
-
-			send("", client);
-
-			/* presumably some sort of config would allow you to disable date and time reporting here,
-			 * maybe even turn off the weather data
-			 */
-			//if (room.getRoomType() == RoomType.OUTSIDE) {
-			if ( room.getRoomType().equals("O") ) {
-				Weather weather = room.getWeather();
-				
-				//send("*** " + "<weather>: " + parse(room.getWeather().ws.description, room.timeOfDay), client);
-				send("*** " + weather.ws.name + ": " + weather.ws.description, client);
-				
-				send("", client);
-
-				send(gameTime(), client); // the in-game time of day
-				
-				send("", client);
-			}
-
-			//send(gameDate(), client); // the actual date of the in-game year
-			//send("", client);
-
-			send(Utils.padRight("", '-', line_limit), client);
-			
-			/* End Description */
-
-			/*
-			 * need to fix this code up, so that rooms whose coordinates, other location
-			 * markers are null will always show up in the list but those with specific coordinates
-			 * will not show up unless you can "see" them or are in the same square
-			 * 
-			 * part of the problem is the exitNames variable, I need it to somehow
-			 * retain all of the exit names for the room ( a cached version if you will )
-			 * as long as the number of exits don't change. However, I also only
-			 * want to show exits whose location is the same as mine or which don't have a
-			 * specific location (i.e. you should be able to reach it no matter what if
-			 * you can traverse the room safely -- hence it's okay to list it; exits such
-			 * as portals/secret doors which could be absent, obscured, etc might not always show up)
-			 */
-			if (room.exits < room.getExits().size() || room.exits > room.getExits().size()) {
-				Exit exit;
-
-				room.exitNames = "";
-
-				for (int e = 0; e < room.getExits().size(); e++)
-				{
-					exit = (Exit) room.getExits().get(e);
-					if (exit != null) {
-						room.exits++;
-						if (room.getExits().size() > 1) {
-							if (e < room.getExits().size() - 1) { room.exitNames = room.exitNames + "," + exit.getName(); }
-							else { room.exitNames = exit.getName() + room.exitNames; }
-						}
-						else { room.exitNames = exit.getName(); }
-					}
-				}
-				
-				room.exits = room.getExits().size();
-			}
-			if (room.exitNames != null) {
-                send(colors("Exits: " + room.exitNames, displayColors.get("exit")), client);
-            }
-			else {
-                send(colors("Exits:", displayColors.get("exit")), client);
-            }
-
-			send("Contents:", client);
-
-			if (room.contents.size() > 0)
-			{
-				for (final Thing thing : room.contents)
-				{
-					if (thing.getFlags().contains("D") == false) { // only shown non-Dark things
-						if (room.getFlags().contains("S") == false) {
-							send(colors(thing.getName() + "(#" + thing.getDBRef() + ")", "yellow"), client);
-						}
-						else { send(colors(thing.getName(), "yellow"), client); }
-					}
-				}
-			}
-
-			if (room.contents1.size() > 0)
-			{
-				for (final Item item : room.contents1)
-				{
-					if (room.getFlags().contains("S") == false) {
-						send(colors(item.getName() + "(#" + item.getDBRef() + ")", "yellow"), client);
-					}
-					else { send(colors(item.getName(), "yellow"), client); }
-				}
-			}
-
-			send("With:", client);
-
-			for (final NPC npc : npcs1) {
-				if (npc.getLocation() == room.getDBRef())
-				{
-					if (room.getFlags().contains("S") == false) {
-						send(colors("[" + npc.getStatus() + "] "+ npc.getName() + "(#" + npc.getDBRef() + ")", "cyan"), client);
-					}
-					else { send(colors("[" + npc.getStatus() + "] "+ npc.getName(), "cyan"), client); }
-				}
-			}
-
-			for (final Creature creature : creatures) {
-				if (creature.getLocation() == room.getDBRef()) {
-					if (room.getFlags().contains("S") == false) {
-						send( colors( creature.getName() + "(#" + creature.getDBRef() + ")", "cyan" ), client );
-					}
-					else {
-						send( colors( creature.getName(), "cyan" ), client );
-					}
-				}
-			}
-
-			for (final Player player : players)
-			{
-				if (player.getLocation() == room.getDBRef())
-				{
-					if (!player.hasEffect("invisibility")) { // if player is not invisible
-						boolean sdesc = false; // short descriptions (true=yes,false=no)
-						if ( sdesc ) { // if using short descriptions
-							send( evaluate( current, player ), client );
-						}
-						else { // otherwise
-							if (current.getNames().contains(player.getName()) || current.getName().equals(player.getName())) {
-								send(colors("[" + player.getStatus() + "] "+ player.getName(), "magenta"), client);
-							}
-							else {
-								send(colors("[" + player.getStatus() + "] "+ player.getCName(), "magenta"), client);
-							}
-						}
-					}
-				}
-			}
-
-			final ArrayList<Portal> tempPortals = new ArrayList<Portal>(5);
-
-			for (Portal portal : portals) {
-				if (portal.getOrigin() == room.getDBRef() && portal.coord.getX() == current.coord.getX() && portal.coord.getY() == current.coord.getY()) {
-					tempPortals.add(portal);
-				}
-				if (portal.getDestination() == room.getDBRef() && portal.coord.getX() == current.coord.getX() && portal.coord.getY() == current.coord.getY()) {
-					tempPortals.add(portal);
-				}
-			}
-			if (tempPortals.size() == 1) {
-				send("There is a portal here.", client);
-			}
-			else if (tempPortals.size() > 1) {
-				send("There are several portals here.", client);
-			}
-		}
-		else {
+		if (room == null) {
 			send("Game> Invalid Room?", client);
+            return;
 		}
+
+        if (!room.getFlags().contains("S")) {
+            send(colors(room.getName() + " (#" + room.getDBRef() + ")", (String) displayColors.get("room")), client);
+        }
+        else {
+            send(colors(room.getName(), (String) displayColors.get("room")), client);
+        }
+        
+        /* Start Description */
+
+        /*
+         * Make the description conform to a column limit
+         */
+        int line_limit = current.getLineLimit();
+
+        send(Utils.padRight("", '-', line_limit), client);
+
+        send("", client);
+
+        String description = parse(room.getDesc(), room.timeOfDay);
+        
+        showDesc(description, line_limit, client);
+
+        send("", client);
+
+        /* presumably some sort of config would allow you to disable date and time reporting here,
+         * maybe even turn off the weather data
+         */
+        //if (room.getRoomType() == RoomType.OUTSIDE) {
+        if ( room.getRoomType().equals("O") ) {
+            final Weather weather = room.getWeather();
+            
+            //send("*** " + "<weather>: " + parse(room.getWeather().ws.description, room.timeOfDay), client);
+            send("*** " + weather.ws.name + ": " + weather.ws.description, client);
+            
+            send("", client);
+
+            send(gameTime(), client); // the in-game time of day
+            
+            send("", client);
+        }
+
+        //send(gameDate(), client); // the actual date of the in-game year
+        //send("", client);
+
+        send(Utils.padRight("", '-', line_limit), client);
+        
+        /* End Description */
+
+        /*
+         * need to fix this code up, so that rooms whose coordinates, other location
+         * markers are null will always show up in the list but those with specific coordinates
+         * will not show up unless you can "see" them or are in the same square
+         * 
+         * part of the problem is the exitNames variable, I need it to somehow
+         * retain all of the exit names for the room ( a cached version if you will )
+         * as long as the number of exits don't change. However, I also only
+         * want to show exits whose location is the same as mine or which don't have a
+         * specific location (i.e. you should be able to reach it no matter what if
+         * you can traverse the room safely -- hence it's okay to list it; exits such
+         * as portals/secret doors which could be absent, obscured, etc might not always show up)
+         */
+        final String exitNames = room.getExitNames();
+        if (exitNames != null && !exitNames.equals("")) {
+            send(colors("Exits: " + exitNames, displayColors.get("exit")), client);
+        }
+        else {
+            send(colors("Exits:", displayColors.get("exit")), client);
+        }
+
+        send("Contents:", client);
+
+        if (room.contents.size() > 0)
+        {
+            for (final Thing thing : room.contents)
+            {
+                if (!thing.getFlags().contains("D")) { // only shown non-Dark things
+                    if (!room.getFlags().contains("S")) {
+                        send(colors(thing.getName() + "(#" + thing.getDBRef() + ")", "yellow"), client);
+                    }
+                    else {
+                        send(colors(thing.getName(), "yellow"), client);
+                    }
+                }
+            }
+        }
+
+        if (room.contents1.size() > 0)
+        {
+            for (final Item item : room.contents1)
+            {
+                if (!room.getFlags().contains("S")) {
+                    send(colors(item.getName() + "(#" + item.getDBRef() + ")", "yellow"), client);
+                }
+                else {
+                    send(colors(item.getName(), "yellow"), client);
+                }
+            }
+        }
+
+        send("With:", client);
+
+        for (final NPC npc : npcs1) {
+            if (npc.getLocation() == room.getDBRef())
+            {
+                if (!room.getFlags().contains("S")) {
+                    send(colors("[" + npc.getStatus() + "] "+ npc.getName() + "(#" + npc.getDBRef() + ")", "cyan"), client);
+                }
+                else { send(colors("[" + npc.getStatus() + "] "+ npc.getName(), "cyan"), client); }
+            }
+        }
+
+        for (final Creature creature : creatures) {
+            if (creature.getLocation() == room.getDBRef()) {
+                if (!room.getFlags().contains("S")) {
+                    send( colors( creature.getName() + "(#" + creature.getDBRef() + ")", "cyan" ), client );
+                }
+                else {
+                    send( colors( creature.getName(), "cyan" ), client );
+                }
+            }
+        }
+
+        for (final Player player : players)
+        {
+            if (player.getLocation() == room.getDBRef())
+            {
+                if (!player.hasEffect("invisibility")) { // if player is not invisible
+                    boolean sdesc = false; // short descriptions (true=yes,false=no)
+                    if ( sdesc ) { // if using short descriptions
+                        send( evaluate( current, player ), client );
+                    }
+                    else { // otherwise
+                        if (current.getNames().contains(player.getName()) || current.getName().equals(player.getName())) {
+                            send(colors("[" + player.getStatus() + "] "+ player.getName(), "magenta"), client);
+                        }
+                        else {
+                            send(colors("[" + player.getStatus() + "] "+ player.getCName(), "magenta"), client);
+                        }
+                    }
+                }
+            }
+        }
+
+        final ArrayList<Portal> tempPortals = new ArrayList<Portal>(5);
+        
+        for (final Portal portal : portals) {
+            final boolean playerAtPortal = portal.coord.getX() == current.coord.getX() && portal.coord.getY() == current.coord.getY();
+            if (playerAtPortal && (portal.getOrigin() == room.getDBRef() || portal.getDestination() == room.getDBRef())) {
+                tempPortals.add(portal);
+            }
+        }
+
+        if (tempPortals.size() == 1)        send("There is a portal here.", client);
+        else if (tempPortals.size() > 1)    send("There are several portals here.", client);
 	}
 
 	/**
@@ -11918,14 +11869,14 @@ public class MUDServer {
 	 * @param toParse
 	 * @return
 	 */
-	public String parse(String toParse) {
+	public String parse(final String toParse) {
 
 		int index = 0;
 
-		String input = toParse;
+		final String input = toParse;
 		String output = "";
 
-		String work = input;
+		final String work = input;
 
 		debug(input, 2);
 		debug("Length (input): " + input.length(), 2);
@@ -11977,7 +11928,7 @@ public class MUDServer {
 	 * @param CtimeOfDay the current time of day
 	 * @return
 	 */
-	public String parse(String toParse, String CtimeOfDay) {
+	public String parse(final String toParse, final String CtimeOfDay) {
 		debug("start desc parsing");
 
 		int index = 0;
@@ -12078,13 +12029,8 @@ public class MUDServer {
 	 * @param effect
 	 * @return whether or the not the effect was successfully applied
 	 */
-	public boolean applyEffect(MUDObject m, Effect effect) {
-		if (m instanceof Player) {
-			return applyEffect((Player) m, effect);
-		}
-		else {
-			return false;
-		}
+	public boolean applyEffect(final MUDObject m, final Effect effect) {
+        return false;
 	}
 
 	/**
@@ -12098,8 +12044,8 @@ public class MUDServer {
 	 * @param effect
 	 * @return whether or the not the effect was successfully applied
 	 */
-	public boolean applyEffect(Player player, Effect effect) {
-		Client client = getClient(player);
+	public boolean applyEffect(final Player player, final Effect effect) {
+		final Client client = getClient(player);
 
 		/* WARNING: healing effects currently remove any supplementary hitpoints.
 		 * this should not remove hitpoints, it should only them up to the total
@@ -12204,15 +12150,8 @@ public class MUDServer {
 	 * @param  c the client to kick
 	 * @return true (succeeded), false (failed for some reason)
 	 */
-	public boolean kick(Client c) {
-		try {
-			this.s.disconnect(c);
-			return true;
-		}
-		catch(Exception e) {
-		}
-
-		return false;
+	public void kick(final Client c) {
+        this.s.disconnect(c);
 	}
 
 	/**
@@ -12244,45 +12183,6 @@ public class MUDServer {
 	 * 
 	 * perform a skill check
 	 * 
-	 * NOTE: checks against a player
-	 * 
-	 * @param p        player we are performing this check for
-	 * @param s        the skill "object"
-	 * @param diceRoll a dice roll specified by a string (ex. '1d4' to roll a single d4 or 4-sided die)
-	 * @param DC       the DC(difficulty) check you are comparing your skill against
-	 * @return         true (succeeded in passing DC), false (failed to pass DC)
-	 */
-	public boolean skill_check(Player p, Skill s, String diceRoll, int DC) {
-		// ex. 10 skill + 4 mod (via STR) > 25 ?: false (14 < 25)
-
-		String skillName = s.getName();
-
-		int skillValue = p.getSkill(s);
-		int skillMod = p.getAbility(s.getAbility());
-
-		int skill = skillValue + skillMod;
-
-		System.out.println(skillName + ": " + skill + " [ " + skillValue + "(skill) " + skillMod + "(modifier)" + " ]");
-		int roll = Utils.roll(diceRoll);
-		System.out.println(diceRoll + " -> " + roll);
-
-		System.out.println("Difficulty Check: " + DC);
-
-		if ( skill + roll >= DC ) {
-			System.out.println("Success");
-			return true;
-		}
-		else {
-			System.out.println("Failure");
-			return false;
-		}
-	}
-
-	/**
-	 * skill_check
-	 * 
-	 * perform a skill check
-	 * 
 	 * NOTE: doesn't check against a player, just checks against specified value
 	 * 
 	 * @param s          the skill "object"
@@ -12292,16 +12192,20 @@ public class MUDServer {
 	 * @param DC         the DC(difficulty) check you are comparing your skill against
 	 * @return           true (succeeded in passing DC), false (failed to pass DC)
 	 */
-	public boolean skill_check(Skill s, String diceRoll, int skillValue, int skillMod, int DC) {
+	public boolean skill_check(final Player p, final Skill s, final String diceRoll, final int DC) {
+        return skill_check(s, diceRoll, p.getSkill(s), p.getAbility(s.getAbility()), DC);
+	}
+
+	public boolean skill_check(final Skill s, final String diceRoll, final int skillValue, final int skillMod, final int DC) {
 		// ex. 10 skill + 4 mod (via STR) > 25 ?: false (14 < 25)
 
-		String skillName = s.getName();
+		final String skillName = s.getName();
 
-		int skill = skillValue + skillMod;
+		final int skill = skillValue + skillMod;
 
 		System.out.println(skillName + ": " + skill + " [ " + skillValue + "(skill) " + skillMod + "(modifier)" + " ]");
 
-		int roll = Utils.roll(diceRoll); // roll the dice
+		final int roll = Utils.roll(diceRoll);
 
 		System.out.println(diceRoll + " -> " + roll); // tell us what we rolled
 
