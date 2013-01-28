@@ -60,20 +60,21 @@ public class Account implements Serializable {
 	private static Calendar calendar;
 
 	// passive properties (might be modified, but not frequently)
-	public Date created;        // creation date
-	public Date modified;       // modification date (when any of these passive properties were last modified)
-	public Date archived;       // archival date (null, unless account was archived; if unarchived, then when it was last archived)
-	private int id;             // id
-	private Status status;      // status
-	private String username;    // username
-	private String password;    // password
-	private int charLimit = 3;  // character limit
+	public Date created;                  // creation date
+	public Date modified;                 // modification date (when any of these passive properties were last modified)
+	public Date archived;                 // archival date (null, unless account was archived; if unarchived, then when it was last archived)
+	private int id;                       // id
+	private Status status;                // status
+	private String username;              // username
+	private String password;              // password
+	private int charLimit = 3;            // character limit
+	private ArrayList<Player> characters; // all the characters that exist for an account
 
 	// active properties (current state)
 	transient private Client client;
 	transient private Player player;
 	
-	private ArrayList<Player> characters; // all the characters that exist for an account
+	transient private boolean online;
 
 	/**
 	 * 
@@ -265,15 +266,33 @@ public class Account implements Serializable {
 		return this.characters;
 	}
 	
+	public void setOnline(boolean online) {
+		this.online = online;
+	}
+	
+	/*public boolean isOnline() {
+		return online;
+	}*/
+	
+	public String isOnline() {
+		if( online ) {
+			return "Yes";
+		}
+		else {
+			return "No";
+		}
+	}
+	
 	public String display() {
 		String username = Utils.padRight(getUsername(), 8);
 		String id = Utils.padRight(String.valueOf(getId()), 6);
 		String name;
 		if(player != null) { name = Utils.padRight(player.getName(), 40); }
-		else { name = Utils.padRight("", 40); };
+		else { name = Utils.padRight("null", 40); };
+		String state = Utils.padRight(isOnline(), 6);
 		String creationDate = Utils.padRight(created.toString(), 10);
 		
-		return username + " " + id + " " + name + " " + creationDate;
+		return username + " " + id + " " + name + " " + state + " " + creationDate;
 	}
 	
 	/**
