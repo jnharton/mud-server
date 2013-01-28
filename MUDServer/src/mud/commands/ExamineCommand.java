@@ -8,6 +8,7 @@ import mud.objects.Room;
 import mud.objects.Thing;
 
 import mud.net.Client;
+import mud.utils.Utils;
 
 import mud.objects.Player;
 
@@ -28,18 +29,9 @@ public class ExamineCommand extends Command {
 			parent.examine(player, client);
 		}
 		else {
-			int dbref;
-
-			try {
-				dbref = Integer.parseInt(arg);
-			}
-			catch(NumberFormatException nfe) {
-				nfe.printStackTrace();
-				dbref = -1;
-			}
+            final int dbref = Utils.toInt(arg, -1);
 
 			if (dbref != -1) {
-
 				MUDObject mobj = parent.getObject(dbref);
 
 				if (mobj != null) {

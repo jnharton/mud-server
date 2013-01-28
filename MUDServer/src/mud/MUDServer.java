@@ -880,7 +880,6 @@ public class MUDServer {
 		// load entries
 		BBEntry bbe;
 
-		int id;
 		String author, subject, message;
 		
 		ArrayList<String> entries = loadListDatabase(DATA_DIR + "bboard.txt");
@@ -891,7 +890,7 @@ public class MUDServer {
 			String[] entryInfo = e.split("#");
 			
 			try {
-				id = Integer.parseInt(entryInfo[0]);
+				final int id = Integer.parseInt(entryInfo[0]);
 				author = entryInfo[1];
 				subject = entryInfo[2];
 				message = entryInfo[3];
@@ -1949,14 +1948,8 @@ public class MUDServer {
 						String[] args = arg.split(" ");
 						
 						if ( args[0].equals("cmdDelay") ) {
-							int delay = -1;
-							try {
-							delay = Integer.parseInt(args[1]);
-							}
-							catch(NumberFormatException nfe) {
-								nfe.printStackTrace();
-							}
-							
+                            final int delay = Utils.toInt(args[1], -1);
+
 							if (delay > 0 ) {
 								cmdExec.setCommandDelay(delay);
 								send("Command Delay adjusted to: " + delay  + "ms", client);
@@ -2404,28 +2397,23 @@ public class MUDServer {
 					{
 						// DM/Debug Command
 						if (!arg.equals("")) {
-							try {
-								System.out.println("ARG: " + arg);
-								final int changeMANA = Integer.parseInt(arg);
-								System.out.println("INTERPRETED VALUE: " + changeMANA);
-								System.out.println("SIGN: " + Integer.signum(changeMANA));
-								if (Integer.signum(changeMANA) > 0) {
-									player.setMana(changeMANA);
-									send("Game> Gave " + player.getName() + " " + changeMANA + " mana (mana).", client);
-								}
-								else if (Integer.signum(changeMANA) < 0) {
-									player.setMana(changeMANA);
-									send("Game> Gave " + player.getName() + " " + changeMANA + " mana (mana).", client);
-								}
-								else {
-									send("Game> No amount specified, no mana (mana) change has been made.", client);
-								}
-								
-								checkState(player);
-							}
-							catch(NumberFormatException nfe) {
-								nfe.printStackTrace();
-							}
+                            System.out.println("ARG: " + arg);
+                            final int changeMANA = Utils.toInt(arg, 0);
+                            System.out.println("INTERPRETED VALUE: " + changeMANA);
+                            System.out.println("SIGN: " + Integer.signum(changeMANA));
+                            if (Integer.signum(changeMANA) > 0) {
+                                player.setMana(changeMANA);
+                                send("Game> Gave " + player.getName() + " " + changeMANA + " mana (mana).", client);
+                            }
+                            else if (Integer.signum(changeMANA) < 0) {
+                                player.setMana(changeMANA);
+                                send("Game> Gave " + player.getName() + " " + changeMANA + " mana (mana).", client);
+                            }
+                            else {
+                                send("Game> No amount specified, no mana (mana) change has been made.", client);
+                            }
+                            
+                            checkState(player);
 						}
 					}
 					else if ( cmd.equals("setlevel") ) {
@@ -2452,22 +2440,14 @@ public class MUDServer {
 					else if ( cmd.equals("setxp") || (aliasExists && alias.equals("setxp") ) )
 					{
 						// DM/Debug Command
-						int changeXP = 0;
-						
 						if (!arg.equals("")) {
-							try {
-								System.out.println("ARG: " + arg);
-								changeXP = Integer.parseInt(arg);
-								System.out.println("INTERPRETED VALUE: " + changeXP);
-								System.out.println("SIGN: " + Integer.signum(changeXP));
+                            System.out.println("ARG: " + arg);
+                            final int changeXP = Utils.toInt(arg, 0);
+                            System.out.println("INTERPRETED VALUE: " + changeXP);
+                            System.out.println("SIGN: " + Integer.signum(changeXP));
 
-								player.setXP(changeXP);
-								send("Game> Gave " + player.getName() + " " + changeXP + " experience (xp).", client);
-
-							}
-							catch(NumberFormatException nfe) {
-								nfe.printStackTrace();
-							}
+                            player.setXP(changeXP);
+                            send("Game> Gave " + player.getName() + " " + changeXP + " experience (xp).", client);
 						}
 						else {
 							send("Game> No amount specified, no experience (xp) change has been made.", client);
@@ -2681,16 +2661,7 @@ public class MUDServer {
 	private void cmd_allocate(final String arg, final Client client) {
 
 		int start = nextDB("clean");
-		int num;
-
-		try {
-			num = Integer.parseInt(arg);
-		}
-		catch (NumberFormatException nfe) {
-			nfe.printStackTrace();
-			num = 10;
-		}
-
+		final int num = Utils.toInt(arg, 10);
 
 		// create a bunch of NullObjects as placeholders
 		synchronized(main) {
@@ -3927,23 +3898,8 @@ public class MUDServer {
 			}
 		}
 		else if ( args2[0].equals("listen") ) {
-			int dbref;
-			Room room = null;
-			
-			try {
-				dbref = Integer.parseInt(args2[1]);
-			}
-			catch (NumberFormatException nfe) {
-				nfe.printStackTrace();
-				dbref = -1;
-			}
-			
-			if (dbref != -1) {
-				room = getRoom(dbref);
-			}
-			else {
-				room = getRoom(args2[1]);
-			}
+			final int dbref = Utils.toInt(args2[1], -1);
+			final Room room = dbref != -1 ? getRoom(dbref) : getRoom(args2[1]);
 			
 			if (room != null) {
 				StringBuffer listenList = new StringBuffer();
@@ -4008,14 +3964,11 @@ public class MUDServer {
 			client.write(" ]\n");
 		}
 		else if (!arg.equals("")) {
-			try {
-				int level = Integer.parseInt(arg);
-				debugLevel = level;
-				send("Game> Debug Level changed to: " + level, client);
-			}
-			catch (NumberFormatException nfe) {
-				nfe.printStackTrace();
-			}
+            final int level = Utils.toInt(arg, debugLevel);
+            if (debugLevel != level) {
+                send("Game> Debug Level changed to: " + level, client);
+            }
+            debugLevel = level;
 		}
 		else {
 			// print help information?
@@ -4218,16 +4171,8 @@ public class MUDServer {
 		ArrayList<Item> inventory = player.getInventory();
 
 		// get the integer value, if there is one, as the argument
-		Integer dbref = -1;
+		final int dbref = Utils.toInt(arg, -1);
 
-		try {
-			dbref = Integer.parseInt(arg);
-		}
-		catch (NumberFormatException nfe) {
-			debug("Exception(TAKE): " + nfe.getMessage());
-			debug("DBRef (NOT!): " + dbref);
-		}
-		
 		// get the object the argument refers to: by name (if it's in the calling player's inventory), or by dbref#
 		// should be done by searching the player's inventory for the object and if there is such an object, drop it on the floor.
 		for (int i = 0; i < player.getInventory().size(); i++)
@@ -4283,15 +4228,7 @@ public class MUDServer {
 	private void cmd_equip(final String arg, final Client client)
 	{
 		final Player player = getPlayer(client);
-
-		int i;
-
-		try {
-            i = Integer.parseInt(arg);
-        }
-		catch(NumberFormatException nfe) {
-            i = -1;
-        }
+		final int i = Utils.toInt(arg, -1);
 
 		/*if (arg.equals("") && i == -1) { send("Equip what?"); }
 		else {
@@ -4385,14 +4322,7 @@ public class MUDServer {
 			examine(player, client);
 		}
 		else {
-			int dbref;
-
-			try {
-				dbref = Integer.parseInt(arg);
-			}
-			catch(NumberFormatException nfe) {
-				dbref = -1;
-			}
+            final int dbref = Utils.toInt(arg, -1);
 
 			if (dbref != -1) {
 				
@@ -4878,17 +4808,9 @@ public class MUDServer {
 
 		getRoom(client).removeListener(player); // remove listener
 		
-		int dbref;
+		final int dbref = Utils.toInt(arg, -1);
 		boolean success = false;
 
-		try {
-			dbref = Integer.parseInt(arg);
-		}
-		catch (NumberFormatException nfe) {
-			nfe.printStackTrace();
-			dbref = -1;
-		}
-		
 		// try to find the room, by dbref or by name
 		Room room = (dbref != -1) ? getRoom(dbref) : getRoom(arg);
 
@@ -5003,16 +4925,8 @@ public class MUDServer {
 				debug("Specifier: " + spec);
 			}
 
-			int dbref = -1;
+            final int dbref = Utils.toInt(arg, -1);
 			MUDObject m = null;
-
-			try {
-				dbref = Integer.parseInt(arg);
-			}
-			catch (NumberFormatException nfe) {
-				dbref = -1;
-				nfe.printStackTrace();
-			}
 
 			if (dbref != -1) {
 				try {
@@ -5062,7 +4976,7 @@ public class MUDServer {
 	 */
 	private void cmd_lsedit(final String arg, final Client client)
 	{
-		Player player = getPlayer(client);
+		final Player player = getPlayer(client);
 
 		player.setStatus("EDT");
 		player.setEditor(Editor.LIST);
@@ -5075,22 +4989,17 @@ public class MUDServer {
 
 		if (!exist) // if the list doesn't exist, clear out the variables for a new one
 		{
-			player.listname = arg;
-			player.nlist = new ArrayList<String>(max_list_length);
-			player.nlist.ensureCapacity(max_list_length);
-			player.nline = 0;
+            player.startEditing(arg);
 		}
 		else // if the list does exist, load it into the list data variables
 		{
-			player.listname = arg;
-			player.nlist = player.getLists().get(arg);
-			player.nlist.ensureCapacity(max_list_length);
-			player.nline = player.nlist.size();
+            player.loadEditList(arg);
 		}
 
 		send("List Editor v0.0b\n", client);
 
-		String header = "< List: " + player.listname + " Line: " + player.nline + " Lines: " + player.nlist.size() + " >";
+        final EditList list = player.getEditList();
+		String header = "< List: " + list.name + " Line: " + list.getCurrentLine() + " Lines: " + list.getNumLines() + " >";
 
 		send(header, client);
 	}
@@ -5121,18 +5030,14 @@ public class MUDServer {
 			send("Game> (help editor) Error: Invalid Help File!", client);
 			send("Game> (help editor) Creating new help file...", client);
 
-			player.listname = arg;
-			player.nlist = new ArrayList<String>(max_list_length);
+            player.startEditing(arg);
+            final EditList list = player.getEditList();
 
 			// need to generate header of help file without including it in editable space
 			// header: @command // shows the naming, so it's easy to index
 			//         @COMMAND // printed out as the name of the command when viewing help
-			player.nlist.add(arg);               // add name of command, lowercase (header)
-			player.nlist.add(arg.toUpperCase()); // add name of command, uppercase (header)
-
-			player.nline = player.nlist.size() - 1; // move current line to end
-			//player.nline = player.line + 2;       // move current line from 0 to 2
-
+			list.addLine(arg);               // add name of command, lowercase (header)
+			list.addLine(arg.toUpperCase()); // add name of command, uppercase (header)
 
 			send("Game> (help editor) Helpfile created.", client);
 		}
@@ -5143,29 +5048,22 @@ public class MUDServer {
 			// load the help file with an offset so I can avoid borking
 			// the two header data lines ?
 
-			player.listname = arg;
-			player.nlist = loadList(HELP_DIR + player.listname + ".txt");
-			//player.nlist = loadList(HELP_DIR + player.listname + ".txt", 2);
-			player.nlist.ensureCapacity(max_list_length);
-			player.nline = 0;
+			player.loadEditList(arg, loadList(HELP_DIR + arg + ".txt"));
+            final EditList list = player.getEditList();
 
 			// if loading fails, create it
-			if (player.nlist == null) {
+			if (list.getNumLines() == 0) {
 				send("Game> (help editor) Error: Invalid Help File!", client);
 				send("Game> (help editor) Creating new help file...", client);
 
-				player.listname = arg;
-				player.nlist = new ArrayList<String>(max_list_length);
-				
+				player.startEditing(arg);
+
 				// need to generate header of help file without including it in editable space
 				// header: @command // shows the naming, so it's easy to index
 				//         @COMMAND // printed out as the name of the command when viewing help
-				player.nlist.add(arg);               // add name of command, lowercase (header)
-				player.nlist.add(arg.toUpperCase()); // add name of command, uppercase (header)
-
-				player.nline = player.nlist.size() - 1; // move current line to end
-				//player.nline = player.line + 2;       // move current line from 0 to 2
-
+                final EditList newlist = player.getEditList();
+				newlist.addLine(arg);               // add name of command, lowercase (header)
+				newlist.addLine(arg.toUpperCase()); // add name of command, uppercase (header)
 
 				send("Game> (help editor) Helpfile created.", client);
 			}
@@ -5173,8 +5071,8 @@ public class MUDServer {
 
 		send("Help Editor v0.0b\n", client);
 
-		String header = "< Help File: " + player.listname + ".txt" + "Current Line: " + player.nline + " Lines: " + player.nlist.size() + "  >";
-
+        final EditList list = player.getEditList();
+        String header = "< Help File: " + list.name + ".txt" + "Current Line: " + list.getCurrentLine() + " Lines: " + list.getLines() + "  >";
 		send(header, client);
 	}
 
@@ -5230,10 +5128,7 @@ public class MUDServer {
 			else { client.write("You have " + String.valueOf(messages) + " unread messages.\n"); }
 		}
 		else {
-			int msg;
-
-			try { msg = Integer.parseInt(arg); }
-			catch(NumberFormatException nfe) { msg = -1; }
+            final int msg = Utils.toInt(arg, -1);
 
 			if (msg > -1 && msg < player.getMailBox().numMessages()) {
 				Mail mail = player.getMailBox().get(msg);
@@ -5864,22 +5759,13 @@ public class MUDServer {
 		// run the recycle function
 		// need to find object whose name is arg and pass that object to cmd_recycle, food for thought here -- 4.15.2010
 		MUDObject object = null;
-		int dbref;
-
-		// attempt to get an integer out of the argument (it may not contain one)
-		try {
-			dbref = Integer.parseInt(arg);
-		}
-		catch(NumberFormatException nfe) {
-			nfe.printStackTrace();
-			dbref = -1;
-		}
+		final int dbref = Utils.toInt(arg, -1);
 
 		if (dbref != -1) { // if we found one
 			try {
 				object = getObject(dbref);
 			}
-			catch(NullPointerException npe) {
+			catch (NullPointerException npe) {
 				npe.printStackTrace();
 			}
 		}
@@ -6225,26 +6111,22 @@ public class MUDServer {
 				exist = true;
 			}
 			else {
-				try {
-					int dbref = Integer.parseInt(arg);
-					room = getRoom(dbref);
+                final int dbref = Utils.toInt(arg, -1);
+                if (dbref != -1) {
+                    room = getRoom(dbref);
+                    if (room != null) {
 
-					if ( room.Edit_Ok ) {
-						room.Edit_Ok = false; // further edit access not permitted (only one person may access at a time
-					}
-					else { // room is not editable, exit the editor
-						abortEditor("Game> Room Editor - Error: room not editable (!Edit_Ok)", old_status, client);
-						return;
-					}
+                        if ( room.Edit_Ok ) {
+                            room.Edit_Ok = false; // further edit access not permitted (only one person may access at a time
+                        }
+                        else { // room is not editable, exit the editor
+                            abortEditor("Game> Room Editor - Error: room not editable (!Edit_Ok)", old_status, client);
+                            return;
+                        }
 
-					exist = true;
-				}
-				catch(NumberFormatException nfe) {
-					nfe.printStackTrace();
-				}
-				catch(NullPointerException npe) {
-					npe.printStackTrace();
-				}
+                        exist = true;
+                    }
+                }
 			}
 
 			if (exist) {	// room exists
@@ -6550,15 +6432,7 @@ public class MUDServer {
 			// should be done by searching the room's contents for the object and if there is such an object, put it in the player's inventory
 			for (final Item item : room.contents1)
 			{
-				Integer dbref = -1;
-
-				try {
-					dbref = Integer.parseInt(arg);
-				}
-				catch (NumberFormatException nfe) {
-					debug("Exception(TAKE): " + nfe.getMessage());
-					debug("DBRef (NOT!): " + dbref);
-				}
+				final int dbref = Utils.toInt(arg, -1);
 
 				// if there is a name or dbref match from the argument in the inventory
 				// if the item name exactly equals the arguments or the name contains the argument (both case-sensitive), or if the dbref is correct
@@ -6661,13 +6535,7 @@ public class MUDServer {
 	 */
 	private void cmd_unequip(final String arg, final Client client) {
 		Player player = getPlayer(client);
-
-		// should be string based, but integers will do for now.
-
-		int i;
-
-		try { i = Integer.parseInt(arg); }
-		catch(NumberFormatException nfe) { i = -1; }
+        final int i = Utils.toInt(arg, -1);
 
 		if (arg.equals("") && i == -1) {
             send("Unequip what?", client);
@@ -7664,7 +7532,7 @@ public class MUDServer {
 			
 			if ( hcmd.equals("abort") || hcmd.equals("a") )
 			{
-				player.nlist = null;
+				player.abortEditing();
 
 				send("< List Aborted. >", client);
 				send("< Exiting... >", client);
@@ -7673,17 +7541,12 @@ public class MUDServer {
 				player.setStatus("OOC");
 			}
 			else if ( hcmd.equals("del") || hcmd.equals("d") ) {
-				try {
-					int toDelete = Integer.parseInt(harg);
-					player.nline = toDelete - 1;
-					player.nlist.remove(toDelete);
+                final EditList list = player.getEditList();
+                if (list != null) {
+                    final int toDelete = Utils.toInt(harg, -1);
+                    list.removeLine(toDelete);
 					send("< Line " + toDelete + " deleted. >", client);
-				}
-				catch(NumberFormatException nfe) {
-					debug("Invalid Line");
-					nfe.printStackTrace();
-					player.nline = 0;
-				}
+                }
 			}
 			else if ( hcmd.equals("help") || hcmd.equals("h") )
 			{
@@ -7701,32 +7564,34 @@ public class MUDServer {
 			}
 			else if ( hcmd.equals("insert") || hcmd.equals("i") )
 			{
-				try {
-					player.nline = Integer.parseInt(harg);
-				}
-				catch(NumberFormatException nfe) {
-					debug("Invalid Line");
-					nfe.printStackTrace();
-					player.nline = 0;
-				}
+                final EditList list = player.getEditList();
+                if (list != null) {
+                    list.setLineNum(Utils.toInt(harg, 0));
+                }
 			}
 			else if ( hcmd.equals("list") || hcmd.equals("l") )
 			{
-				int i = 0;
-				for (String s : player.nlist)
-				{
-					System.out.println(i + ": " + s);
-					send(i + ": " + s, client);
-					i++;
-				}
+                final EditList list = player.getEditList();
+                if (list != null) {
+                    int i = 0;
+                    for (String s : list.getLines())
+                    {
+                        System.out.println(i + ": " + s);
+                        send(i + ": " + s, client);
+                        i++;
+                    }
+                }
 			}
 			else if ( hcmd.equals("print") || hcmd.equals("p") )
 			{
-				for (String s : player.nlist)
-				{
-					System.out.println(s);
-					send(s, client);
-				}
+                final EditList list = player.getEditList();
+                if (list != null) {
+                    for (String s : list.getLines())
+                    {
+                        System.out.println(s);
+                        send(s, client);
+                    }
+                }
 			}
 			else if ( hcmd.equals("quit") || hcmd.equals("q") )
 			{
@@ -7741,37 +7606,31 @@ public class MUDServer {
 			
 			else if ( hcmd.equals("save") || hcmd.equals("s") )
 			{
-				// convert the list to a string array
-                this.helpMap.put(player.listname, player.nlist.toArray(new String[0]));
+                final EditList list = player.getEditList();
+                if (list != null) {
+                    // convert the list to a string array
+                    this.helpMap.put(list.name, list.getLines().toArray(new String[0]));
 
-				send("< Help File Written Out! >", client);
-				send("< Help File Saved. >", client);
+                    send("< Help File Written Out! >", client);
+                    send("< Help File Saved. >", client);
+                }
 			}
 			else if ( hcmd.equals("stat") || hcmd.equals("st") ) {
-				String header = "< Help File: " + player.listname + " Lines: " + player.nlist.size() + " >";
-				send(header, client);
+                final EditList list = player.getEditList();
+                if (list != null) {
+                    String header = "< Help File: " + list.name + " Lines: " + list.getLines() + " >";
+                    send(header, client);
+                }
 			}
 			
 			System.out.println(getPlayer(client).getStatus());
 		}
-		else
-		{	
-			try {
-				if (player.nlist.size() <= player.nline) {
-					player.nlist.add(input);
-				}
-				else {
-					player.nlist.set(player.nline, input);
-				}
-
-				debug(player.nline + ": " + player.nlist.get(player.nline));
-
-				player.nline = player.nline + 1;
-			}
-			catch(IndexOutOfBoundsException ioobe) {
-				System.out.println(ioobe.toString());
-				ioobe.printStackTrace();
-			}
+		else {
+            final EditList list = player.getEditList();
+            if (list != null) {
+                list.addLine(input);
+                debug(list.getLineNum() + ": " + list.getCurrentLine());
+            }
 		}
 	}
 
@@ -7825,38 +7684,44 @@ public class MUDServer {
 			}
 			else if ( lcmd.equals("print") )
 			{
-				for (String s : player.nlist)
-				{
-					System.out.println(s);
-					send(s, client);
-				}
+                final EditList list = player.getEditList();
+                if (list != null) {
+                    for (String s : list.getLines())
+                    {
+                        System.out.println(s);
+                        send(s, client);
+                    }
+                }
 			}
 			else if ( lcmd.equals("list") )
 			{
 				int i = 0;
-				for (String s : player.nlist)
-				{
-					System.out.println(i + ": " + s);
-					send(i + ": " + s, client);
-					i++;
-				}
+                final EditList list = player.getEditList();
+                if (list != null) {
+                    for (String s : list.getLines())
+                    {
+                        System.out.println(i + ": " + s);
+                        send(i + ": " + s, client);
+                        i++;
+                    }
+                }
 			}
-			else if ( lcmd.equals("save") )
-			{
-				player.getLists().put(player.listname, player.nlist);
+			else if ( lcmd.equals("save") ) {
+                player.saveCurrentEditor();
 
 				send("< List Written Out! >", client);
 				send("< List Saved. >", client);
 			}
 			else if ( lcmd.equals("stat") ) {
-				String header = "< List: " + player.listname + " Line: " + player.nline + " Lines: " + player.nlist.size() + " >";
-				send(header, client);
+                final EditList list = player.getEditList();
+                if (list != null) {
+                    String header = "< List: " + list.name + " Line: " + list.getLineNum() + " Lines: " + list.getLines() + " >";
+                    send(header, client);
+                }
 			}
 			else if ( lcmd.equals("abort") )
 			{
-				player.listname = "";
-				player.nlist = null;
-				player.nline = 0;
+                player.abortEditing();
 
 				send("< List Aborted. >", client);
 				send("< Exiting... >", client);
@@ -7866,24 +7731,12 @@ public class MUDServer {
 			}
 			System.out.println(getPlayer(client).getStatus());
 		}
-		else
-		{	
-			try {
-				if (player.nlist.size() <= player.nline) {
-					player.nlist.add(input);
-				}
-				else {
-					player.nlist.set(player.nline, input);
-				}
-
-				debug(player.nline + ": " + player.nlist.get(player.nline));
-
-				player.nline = player.nline + 1;
-			}
-			catch(IndexOutOfBoundsException ioobe) {
-				System.out.println(ioobe.toString());
-				ioobe.printStackTrace();
-			}
+		else {
+            final EditList list = player.getEditList();
+            if (list != null) {
+                list.addLine(input);
+                debug(list.getNumLines() + ": " + input);
+            }
 		}
 	}
 
@@ -8955,7 +8808,7 @@ public class MUDServer {
 						String oPassword = attr[5];       // 5 - password
 						String[] os = attr[6].split(","); // 6 - stats
 						String[] om = attr[7].split(","); // 7 - money
-						int access;                       // 8 - permissions
+						// int access;                       // 8 - permissions
 						int raceNum;                      // 9 - race number (enum ordinal)
 						int classNum;                     // 10 - class number (enum ordinal)
 
@@ -8964,16 +8817,7 @@ public class MUDServer {
 						Integer[] oMoney = Utils.stringsToIntegers(om);
 
 						Player player = new Player(oDBRef, oName, oFlags, oDesc, oLocation, "", oPassword, "IC", oStats, oMoney);
-
-						// set access
-						try {
-							access = Integer.parseInt(attr[8]);
-							player.setAccess(access); // set access level
-						}
-						catch(NumberFormatException nfe) {
-							nfe.printStackTrace();
-							player.setAccess(USER);
-						}
+                        player.setAccess(Utils.toInt(attr[8], USER));
 
 						// set race
 						try {
@@ -12581,14 +12425,7 @@ public class MUDServer {
 		Player player = new Player(oDBRef, oName, oFlags, oDesc, oLocation, "", oPassword, "IC", oStats, oMoney);
 
 		/* Set Player Permissions */
-		try {
-			access = Integer.parseInt(attr[8]);
-			player.setAccess(access); // set access level
-		}
-		catch(NumberFormatException nfe) {
-			nfe.printStackTrace();
-			player.setAccess(USER);
-		}
+        player.setAccess(Utils.toInt(attr[8], USER));
 
 		/* Set Player Race */
 		try {
@@ -13260,7 +13097,7 @@ public class MUDServer {
 					name = value; // TODO: nothing is actually done with this value, AFAICT
 				}
 				else if ( key.equals("registered") ) {
-					if (Integer.parseInt(value) == 1) { // is this area "registered"
+					if (Utils.toInt(value, -1) == 1) { // is this area "registered"
 						step = 1;
 					}
 				}

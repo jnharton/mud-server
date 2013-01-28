@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 
 import mud.Abilities;
@@ -31,8 +32,7 @@ import mud.quest.Quest;
 import mud.quest.Task;
 import mud.quest.TaskType;
 
-
-// mud.utils
+import mud.utils.EditList;
 import mud.utils.MailBox;
 import mud.utils.Pager;
 import mud.utils.cgData;
@@ -87,7 +87,7 @@ public class Player extends MUDObject
 	protected int access = 0;                         // the player's access level (permissions) - 0=player,1=admin (default: 0)
 
 	private boolean controller = false;               // place to indicate if we are controlling an npc (by default, we are not)
-	private HashMap<String, ArrayList<String>> lists; // array of lists belonging to this player
+	private HashMap<String, EditList> lists = new HashMap<String, EditList>(); // array of lists belonging to this player
 
 	// preferences (ACCOUNT DATA?)
 	private int lineLimit = 80;                       // how wide the client's screen is in columns (shouldn't be in Player class)
@@ -107,10 +107,31 @@ public class Player extends MUDObject
 	private cgData cgd = null;
 
 	// List Editor
-	public String listname;                 // the name of the current list being edited
-	public ArrayList<String> nlist;         // contents of list being edited
-	public int nline;                       // current line in editor
-	public int nsize;                       // space/size (used) in current list
+    private EditList currentEdit;
+
+    public EditList getEditList() {
+        return currentEdit;
+    }
+    
+    public void startEditing(final String name) {
+        currentEdit = new EditList(name);
+    }
+    
+    public void loadEditList(final String name) {
+        currentEdit = getLists().get(name);
+    }
+
+    public void loadEditList(final String name, final List<String> lines) {
+        currentEdit = new EditList(name, lines);
+    }
+
+    public void saveCurrentEditor() {
+        getLists().put(currentEdit.name, currentEdit);
+    }
+
+    public void abortEditing() {
+        currentEdit = null;
+    }
 
 	// Miscellaneous Editor
 	private edData edd = null;
@@ -293,10 +314,7 @@ public class Player extends MUDObject
 		this.names = new ArrayList<String>(); // we get a new blank list this way, not a loaded state
 
 		// initialize list editor variables
-		this.lists = new HashMap<String, ArrayList<String>>(1, 0.75f); // need to be loading saved lists
 		this.editor = Editor.NONE;
-		this.nlist = null;
-		this.nline = 0;
 
 		// instantiate name reference table
 		this.nameRef = new HashMap<String, Integer>(10, 0.75f); // start out assuming 10 name references
@@ -689,7 +707,7 @@ public class Player extends MUDObject
 		this.destination = newDest;
 	}
 
-	public HashMap<String, ArrayList<String>> getLists() {
+	public HashMap<String, EditList> getLists() {
 		return this.lists;
 	}
 

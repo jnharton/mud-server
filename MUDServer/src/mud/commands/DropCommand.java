@@ -6,6 +6,8 @@ import mud.MUDServer;
 
 import mud.net.Client;
 
+import mud.utils.Utils;
+
 import mud.objects.Item;
 import mud.objects.Player;
 import mud.objects.Room;
@@ -26,16 +28,8 @@ public class DropCommand extends Command {
 		ArrayList<Item> inventory = player.getInventory();
 
 		// get the integer value, if there is one, as the argument
-		Integer dbref = -1;
+        final int dbref = Utils.toInt(arg, -1);
 
-		try {
-			dbref = Integer.parseInt(arg);
-		}
-		catch(NumberFormatException nfe) {
-			debug("Exception(TAKE): " + nfe.getMessage());
-			debug("DBRef (NOT!): " + dbref);
-		}
-		
 		// get the object the argument refers to: by name (if it's in the calling player's inventory), or by dbref#
 		// should be done by searching the player's inventory for the object and if there is such an object, drop it on the floor.
 		for (int i = 0; i < inventory.size(); i++)

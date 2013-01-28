@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import mud.Editor;
 import mud.MUDServer;
 import mud.objects.Player;
+import mud.utils.EditList;
 import mud.utils.Mail;
 import mud.utils.MailBox;
 import mud.utils.Utils;
@@ -71,13 +72,10 @@ public class MailCommand extends Command {
 					// would look for the write listname in my lists, use it
 					// to construct a mail message, and then remove it?
 					
-					player.listname = "mailmsg";
-					player.nlist = new ArrayList<String>();
-					player.nline = 0;
-					
+                    player.startEditing("mailmsg");
 					client.write("Mail Editor v0.0b\n");
-
-					String header = "< List: " + player.listname + " Lines: " + player.nlist.size() + " >";
+                    final EditList list = player.getEditList();
+					String header = "< List: " + list.name + " Lines: " + list.getLines() + " >";
 
 					client.write(header);
 					
@@ -89,11 +87,8 @@ public class MailCommand extends Command {
 				}
 			}
 			else {
-				int msg;
+				final int msg = Utils.toInt(args[0], -1);
 
-				try { msg = Integer.parseInt(args[0]); }
-				catch(NumberFormatException nfe) { msg = -1; }
-				
 				if (msg > -1 && msg < player.getMailBox().numMessages()) {
 					client.write("Checking Mail..." + msg + "\n");
 					

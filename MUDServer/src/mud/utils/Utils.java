@@ -168,20 +168,12 @@ public final class Utils {
 	
 	public static int[] stringsToInts(final String[] in) {
 		int[] result = new int[in.length];
-
 		int index = 0;
 
-		for (final String string : in) {
-			try {
-				result[index] = Integer.parseInt(string);
-				index++;
-			}
-			catch(NumberFormatException nfe) {
-				nfe.printStackTrace();
-				System.out.println("Cannot parse element");
-			}
+		for (final String str : in) {
+            result[index] = Utils.toInt(str, 0);
+            index++;
 		}
-		
 		return result;
 	}
 
@@ -251,20 +243,25 @@ public final class Utils {
 	public static int roll(final String input) { // roll(3, 4, 7) for 3d4+7
         final String[] words = input.split("d");
 
-        int num = 1;
-        try {
-            num = Integer.parseInt(words[0]);
-        } catch (Exception e) {}
+        final int num = Utils.toInt(words[0], 1);
 
         int sides = 0, bonus = 0;
         try {
             final String[] second_words = words[1].split("[-+]");
-            sides = Integer.parseInt(second_words[0]);
-            bonus = Integer.parseInt(second_words[1]);
+            sides = Utils.toInt(second_words[0], 0);
+            bonus = Utils.toInt(second_words[1], 0);
         } catch (Exception e) {}
 
         return bonus + roll(num, sides);
 	}
+    
+    public static int toInt(final String str, final int alt) {
+        try {
+            return Integer.parseInt(str);
+        } catch (Exception e) {
+            return alt;
+        }
+    }
 
 	/* Unused */
 	

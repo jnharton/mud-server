@@ -85,8 +85,7 @@ public enum Classes {
 	 * @return Integer hit dice integer for the class (the number of sides the class' hit dice has)
 	 */
 	public Integer getHD() {
-		Integer i = Integer.parseInt(this.hit_dice.substring(1,-1));
-		return i;
+		return Integer.parseInt(this.hit_dice.substring(1,-1));
 	}
 	
 	public String getAbrv() {
