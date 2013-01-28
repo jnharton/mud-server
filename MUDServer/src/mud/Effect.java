@@ -37,10 +37,10 @@ public class Effect
 		id = nextID();
 		name = eName;
 		
-		if(name.toLowerCase().contains("heal") == true) {
+		if (name.toLowerCase().contains("heal")) {
 			type = Type.HEAL;
 		}
-		else if(name.toLowerCase().contains("invis") == true) {
+		else if (name.toLowerCase().contains("invis")) {
 			type = Type.INVIS;
 		}
 	}
@@ -53,10 +53,10 @@ public class Effect
 		durationType = eDurationType;
 		duration = eDuration;
 		
-		if(name.toLowerCase().contains("heal") == true) {
+		if (name.toLowerCase().contains("heal")) {
 			type = Type.HEAL;
 		}
-		else if(name.toLowerCase().contains("invis") == true) {
+		else if (name.toLowerCase().contains("invis")) {
 			type = Type.INVIS;
 		}
 	}

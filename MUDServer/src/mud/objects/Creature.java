@@ -60,17 +60,17 @@ public class Creature extends MUDObject {
 	public String toDB() {
 		String[] output = new String[10]; // used to be 8
 		
-		output[0] = Utils.str(this.getDBRef());    // creature database reference number
+		output[0] = this.getDBRef() + "";    // creature database reference number
 		output[1] = this.getName();                // creature name
 		output[2] = this.getFlags();               // creature flags
 		output[3] = this.getDesc();                // creature description
-		output[4] = Utils.str(this.getLocation()); // creature location
+		output[4] = this.getLocation() + ""; // creature location
 		output[5] = "*";
 		output[6] = "*";
 		output[7] = "*";
 		output[8] = "*";
-		//output[9] = Utils.str(race.getId());       // creature race
-		output[9] = Utils.str(9);
+		//output[9] = race.getId() + "";       // creature race
+		output[9] ="9";
 		
 		return Utils.join(output, "#");
 	}

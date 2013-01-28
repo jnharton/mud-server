@@ -141,10 +141,10 @@ public abstract class MUDObject {
 	 */
 	public void setFlags(String tempFlags)
 	{
-		if(tempFlags.contains("!") == true) {
+		if (tempFlags.contains("!")) {
 			String remove = tempFlags.replace("!","");
-			if(remove.length() > 1) {
-				for(int f = 0; f < tempFlags.length(); f++) {
+			if (remove.length() > 1) {
+				for (int f = 0; f < tempFlags.length(); f++) {
 					this.flags = this.flags.replace(remove.subSequence(f, f+1), "");
 				}
 			}
@@ -241,7 +241,7 @@ public abstract class MUDObject {
 	{
 		for (int e = 0; e < this.effects.size(); e++)
 		{
-			if(this.effects.get(e).toString().equals(arg))
+			if (this.effects.get(e).toString().equals(arg))
 			{
 				return true;
 			}
@@ -283,7 +283,7 @@ public abstract class MUDObject {
 		for (int e = 0; e < this.effects.size(); e++)
 		{
 			effect = this.effects.get(e);
-			if(effect.getName().equals(tEffect) == true) {
+			if (effect.getName().equals(tEffect)) {
 				this.effects.remove(effect);
 			}
 		}

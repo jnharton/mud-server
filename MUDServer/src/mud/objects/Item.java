@@ -67,8 +67,8 @@ public class Item extends MUDObject
 
 	public void examine() {
 		String temp = "";
-		for(int f = 1; f < this.flags.length(); f++) {
-			if(f < this.flags.length() - 1) { temp = temp + Flags.get(this.flags.charAt(f)) + " "; }
+		for (int f = 1; f < this.flags.length(); f++) {
+			if (f < this.flags.length() - 1) { temp = temp + Flags.get(this.flags.charAt(f)) + " "; }
 			else { temp = temp + Flags.get(this.flags.charAt(f)); }
 		}
 		//send(this.name + "(#" + this.dbref + ")");
@@ -78,8 +78,8 @@ public class Item extends MUDObject
 	
 	public String[] examine1() {
 		String temp = "";
-		for(int f = 1; f < this.flags.length(); f++) {
-			if(f < this.flags.length() - 1) { temp = temp + Flags.get(this.flags.charAt(f)) + " "; }
+		for (int f = 1; f < this.flags.length(); f++) {
+			if (f < this.flags.length() - 1) { temp = temp + Flags.get(this.flags.charAt(f)) + " "; }
 			else { temp = temp + Flags.get(this.flags.charAt(f)); }
 		}
 		String dbrefString = this.name + "(#" + getDBRef() + ")";
@@ -101,15 +101,15 @@ public class Item extends MUDObject
 	/*@Override
 	public String getName() {
 		Item item = null;
-		if(this instanceof Weapon) { item = (Weapon) this; }
-		else if(this instanceof Armor) { item = (Armor) this; }
-		else if(this instanceof Shield) { item = (Shield) this; }
-		else if(this instanceof Wand) { item = (Wand) this; }
-		else if(this instanceof Clothing) { item = (Clothing) this; }
-		else if(this instanceof Jewelry) { item = (Jewelry) this; }
-		else if(this instanceof Arrow) { item = (Arrow) this; }
+		if (this instanceof Weapon) { item = (Weapon) this; }
+		else if (this instanceof Armor) { item = (Armor) this; }
+		else if (this instanceof Shield) { item = (Shield) this; }
+		else if (this instanceof Wand) { item = (Wand) this; }
+		else if (this instanceof Clothing) { item = (Clothing) this; }
+		else if (this instanceof Jewelry) { item = (Jewelry) this; }
+		else if (this instanceof Arrow) { item = (Arrow) this; }
 
-		if(item != null) { return item.getName(); }
+		if (item != null) { return item.getName(); }
 		else { return this.name; }
 	}*/
 
@@ -118,7 +118,7 @@ public class Item extends MUDObject
 	}
 
 	public Double getWeight() {
-		if(isWet) {
+		if (isWet) {
 			return (this.weight * wet) * reduction_factor;
 		}
 		else {
@@ -140,12 +140,12 @@ public class Item extends MUDObject
 
 	public String toDB() {
 		String[] output = new String[8];
-		output[0] = Utils.str(this.getDBRef());          // database reference number
+		output[0] = this.getDBRef() + "";          // database reference number
 		output[1] = this.getName();                      // name
 		output[2] = this.getFlags();                     // flags
 		output[3] = this.getDesc();                      // description
-		output[4] = Utils.str(this.getLocation());       // location
-		output[5] = Utils.str(this.item_type.ordinal()); // item type
+		output[4] = this.getLocation() + "";       // location
+		output[5] = this.item_type.ordinal() + ""; // item type
 		output[6] = "*";                                 // blank
 		output[7] = "*";                                 // blank
 		return Utils.join(output, "#");

@@ -16,7 +16,7 @@ public class AdminCommand extends Command {
 		String testpass = Utils.hash(arg);
 		String realpass = MUDServer.admin_pass;
 		
-		if( testpass.equals(realpass) == true ) {
+		if (testpass.equals(realpass)) {
 			parent.send("Game> correct admin password, changing access to ADMIN", client);
 			
 			Player player = parent.getPlayer(client);

@@ -138,14 +138,14 @@ public class Wand extends Item implements Equippable<Wand>, Usable<Wand>, Wielda
 
 	public String toDB() {
 		String[] output = new String[8];
-		output[0] = Utils.str(this.getDBRef());          // wand database reference number
+		output[0] = this.getDBRef() + "";          // wand database reference number
 		output[1] = this.getName();                      // wand name
 		output[2] = this.getFlags();                     // wand flags
 		output[3] = this.getDesc();                      // wand description
-		output[4] = Utils.str(this.getLocation());       // wand location
-		output[5] = Utils.str(this.item_type.ordinal()); // item type
+		output[4] = this.getLocation() + "";       // wand location
+		output[5] = this.item_type.ordinal() + ""; // item type
 		output[6] = this.spell.name;                     // wand spell name
-		output[7] = Utils.str(this.charges);             // wand spell charges
+		output[7] = this.charges + "";             // wand spell charges
 		return Utils.join(output, "#");
 	}
 

@@ -52,7 +52,7 @@ public class BulletinBoard {
 		out.add(mudName + " Bulletin Board");
 		out.add("+-------------------------------------------------+");
 		out.add("| Topics:                                         |");
-		for(BBEntry entry : this.entries) {
+		for (BBEntry entry : this.entries) {
 			out.add("| " + Utils.padRight(entry.toView(), 80) + " |");
 		}
 		out.add("+-------------------------------------------------+");
@@ -85,12 +85,12 @@ public class BulletinBoard {
 		int t = 0;
 		int start = rStart;
 
-		for(BBEntry entry : this.entries) {
-			if(t == 0 && entry.getId() == start + 1) {
+		for (final BBEntry entry : this.entries) {
+			if (t == 0 && entry.getId() == start + 1) {
 				s = 1;
 				t = 0;
 			}
-			else if(s == 1) {
+			else if (s == 1) {
 				int tid = entry.getId() - 1;
 				System.out.println("Old Entry Id: " + entry.getId());
 				entry.setId(tid);

@@ -75,8 +75,8 @@ public class Skill {
 	 * @return
 	 */
 	/*public Skills getSkill(int skillId) {
-		for(Classes c : temp) {
-			if(temp.id == skillId) {
+		for (Classes c : temp) {
+			if (temp.id == skillId) {
 				return  temp;
 			}
 			else {

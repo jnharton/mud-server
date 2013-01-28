@@ -85,7 +85,7 @@ public class Log
 	 */
 	public void openLog()
 	{
-		if(this.isOpen == false) {
+		if (!this.isOpen) {
 			try {
 				this.file = new File(DATA_DIR + "logs/" + this.filename);
 				this.output = new PrintWriter(file);
@@ -113,8 +113,8 @@ public class Log
 	 * @param b
 	 */
 	public void write(Byte b) {
-		if(this.isOpen) {
-			if(this.isFull == false) {
+		if (this.isOpen) {
+			if (!this.isFull) {
 				this.output.print(b + ' ');
 				this.output.flush();
 			}
@@ -130,8 +130,8 @@ public class Log
 	 * @param b
 	 */
 	public void writeln(Byte b) {
-		if(this.isOpen) {
-			if(this.isFull == false) {
+		if (this.isOpen) {
+			if (!this.isFull) {
 				this.output.println(b + ' ');
 				this.output.flush();
 			}
@@ -148,25 +148,25 @@ public class Log
 	 */
 	public void write(String message)
 	{
-		if(this.isOpen == true)
+		if (this.isOpen)
 		{
-			if(this.isFull == false) {
+			if (!this.isFull) {
 				// update calendar
 				this.calendar = Calendar.getInstance(TimeZone.getTimeZone("America/New_York"), new Locale("ENGLISH", "US"));
 				
 				//
 				String hour, minute, second;
-				if(hour() < 10) { hour = "0" + str(hour()); }
+				if (hour() < 10) { hour = "0" + str(hour()); }
 				else { hour = str(hour()); }
-				if(minute() < 10) { minute = "0" + str(minute()); }
+				if (minute() < 10) { minute = "0" + str(minute()); }
 				else { minute = str(minute()); }
-				if(second() < 10) { second = "0" + str(second()); }
+				if (second() < 10) { second = "0" + str(second()); }
 				else { second = str(second()); }
 				String logString = "[" + hour + ":" + minute + ":" + second + "] " + message;
 				this.output.print(logString);
 				this.output.flush();
 				//this.length++;
-				//if(this.length == max_log_size) {
+				//if (this.length == max_log_size) {
 				//	this.isFull = true;
 				//}
 			}
@@ -183,25 +183,25 @@ public class Log
 	 */
 	public void writeln(String message)
 	{
-		if(this.isOpen == true)
+		if (this.isOpen)
 		{
-			if(this.isFull == false) {
+			if (!this.isFull) {
 				// update calendar
 				this.calendar = Calendar.getInstance(TimeZone.getTimeZone("America/New_York"), new Locale("ENGLISH", "US"));
 				
 				//
 				String hour, minute, second;
-				if(hour() < 10) { hour = "0" + str(hour()); }
+				if (hour() < 10) { hour = "0" + str(hour()); }
 				else { hour = str(hour()); }
-				if(minute() < 10) { minute = "0" + str(minute()); }
+				if (minute() < 10) { minute = "0" + str(minute()); }
 				else { minute = str(minute()); }
-				if(second() < 10) { second = "0" + str(second()); }
+				if (second() < 10) { second = "0" + str(second()); }
 				else { second = str(second()); }
 				String logString = "[" + hour + ":" + minute + ":" + second + "] " + message;
 				this.output.println(logString);
 				this.output.flush();
 				//this.length++;
-				//if(this.length == max_log_size) {
+				//if (this.length == max_log_size) {
 				//	this.isFull = true;
 				//}
 			}
@@ -220,19 +220,19 @@ public class Log
 	 */
 	public void write(String playerName, int playerLoc, String action)
 	{
-		if(this.isOpen == true)
+		if (this.isOpen)
 		{
-			if(this.isFull == false) {
+			if (!this.isFull) {
 				// update calendar
 				this.calendar = Calendar.getInstance(TimeZone.getTimeZone("America/New_York"), new Locale("ENGLISH", "US"));
 				
 				//
 				String hour, minute, second;
-				if(hour() < 10) { hour = "0" + str(hour()); }
+				if (hour() < 10) { hour = "0" + str(hour()); }
 				else { hour = str(hour()); }
-				if(minute() < 10) { minute = "0" + str(minute()); }
+				if (minute() < 10) { minute = "0" + str(minute()); }
 				else { minute = str(minute()); }
-				if(second() < 10) { second = "0" + str(second()); }
+				if (second() < 10) { second = "0" + str(second()); }
 				else { second = str(second()); }
 				String logString = "log failure";
 				logString = "[" + hour + ":" + minute + ":" + second + "] (" + playerName + ") {Location: #" + playerLoc +  "}  " + action;
@@ -240,7 +240,7 @@ public class Log
 				this.output.flush();
 				//this.length++;
 				// need a way to get the max log size
-				//if(this.length == max_log_size) {
+				//if (this.length == max_log_size) {
 				//	this.isFull = true;
 				//}
 			}
@@ -259,19 +259,19 @@ public class Log
 		 */
 		public void writeln(String playerName, int playerLoc, String action)
 		{
-			if(this.isOpen == true)
+			if (this.isOpen)
 			{
-				if(this.isFull == false) {
+				if (!this.isFull) {
 					// update calendar
 					this.calendar = Calendar.getInstance(TimeZone.getTimeZone("America/New_York"), new Locale("ENGLISH", "US"));
 					
 					//
 					String hour, minute, second;
-					if(hour() < 10) { hour = "0" + str(hour()); }
+					if (hour() < 10) { hour = "0" + str(hour()); }
 					else { hour = str(hour()); }
-					if(minute() < 10) { minute = "0" + str(minute()); }
+					if (minute() < 10) { minute = "0" + str(minute()); }
 					else { minute = str(minute()); }
-					if(second() < 10) { second = "0" + str(second()); }
+					if (second() < 10) { second = "0" + str(second()); }
 					else { second = str(second()); }
 					String logString = "log failure";
 					logString = "[" + hour + ":" + minute + ":" + second + "] (" + playerName + ") {Location: #" + playerLoc +  "}  " + action;
@@ -279,7 +279,7 @@ public class Log
 					this.output.flush();
 					//this.length++;
 					// need a way to get the max log size
-					//if(this.length == max_log_size) {
+					//if (this.length == max_log_size) {
 					//	this.isFull = true;
 					//}
 				}
@@ -298,7 +298,7 @@ public class Log
 	public void closeLog()
 	{
 		// if the log is open
-		if( this.isOpen() ) {
+		if ( this.isOpen() ) {
 			this.output.flush();
 			this.output.close();
 			this.isOpen = false;

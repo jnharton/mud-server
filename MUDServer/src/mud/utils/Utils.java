@@ -1,99 +1,68 @@
 package mud.utils;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+import java.util.Random;
 import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.security.spec.KeySpec;
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.PBEKeySpec;
+
 
 public final class Utils {
 
+    private static SecretKeyFactory f;
+    static {
+        try {
+            f = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.exit(-1);
+        }
+    }
+    final private static byte[] salt = new byte[16];
+    final private static Random random = new Random(6456856);
+    static {
+        random.nextBytes(salt);
+    }
+
 	/**
 	 * Hash Function
-	 * 
-	 * hash function (simple alphabetical shift and a reverse line for testing)
-	 * some kind of hash function for password shadowing, that is: we'll store the
-	 * hashed version and check the input password by hashing it and comparing it
-	 * to the stored hash.
+	 * from http://stackoverflow.com/questions/2860943/suggestions-for-library-to-hash-passwords-in-java
 	 * 
 	 * @param input a string of non-zero length
 	 * @return a hashed string, a string generated based on the input that is single, and unique to the input combination
 	 */
-	public static String hash(String input)
-	{
-		// consider replacing strings with character arrays while working?
-
-		// two character forward alphabetical shift in set
-		String alphabet =  "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-		String alphabet1 = "cdefghijklmnopqrstuvwxyzabCDEFGHIJKLMNOPQRSTUVWXYZAB";
-
-		// letters for words swap
-		String[] special = new String[] { "ARENDIA", "BORDER", "CAIPHAS", "DESTRUCTION", "EMINENT",
-				"FAILURE", "GRENADE", "HEXAGON", "IDRIS", "JARL", "KRPYTOS", "LAMELLAR", "MYSTERIOUS",
-				"NONAGON", "OCTAVE", "PRINCESS", "QUEUE", "RATIONAL", "SINISTER", "TORRENTIAL", "UBUNTU",
-				"VIVACIOUS", "WATER", "XYLOPHONE", "YEOMAN", "ZOSTER" };
-
-
-		String working = "";
-		String rtn = "";
-
-		// letters for words swap (case is preserved)
-		for(int c = 0; c < input.length(); c++)
-		{
-			Character ch = input.charAt(c); // get the character at the current position in the input string
-			String replace = "";            // place to store the replacement word for this character
-
-			if(Character.isLowerCase(ch) == true) {
-				replace = special[alphabet.indexOf(ch)].toLowerCase();
-			}
-			else if(Character.isUpperCase(ch) == true) {
-				replace = special[alphabet.indexOf(ch)].toUpperCase();
-			}
-
-			working += replace;
-		}
-
-		// swap each character with the one two spaces ahead of it in the alphabet (case included)
-		for(int c = 0; c < working.length(); c++)
-		{
-			rtn = rtn + str(alphabet1.charAt(alphabet.indexOf(working.charAt(c))));
-		}
-
-		// take the shift crypto and reverse the line for additional obfuscation
-		rtn = flipLine(rtn);
-
-		// drop the second half of it (future feature)?
-		//rtn = rtn.substring(0, rtn.length() / 2);
-
-		// return the outputs
-		return rtn;
+	public static String hash(final String password) {
+        final KeySpec spec = new PBEKeySpec(password.toCharArray(), salt, 65536, 128);
+        try {
+            final byte[] hash = f.generateSecret(spec).getEncoded();
+            return new BigInteger(1, hash).toString(16);
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.exit(-1);
+        }
+        return null;
 	}
 
-	// flip a line around and return it
-	public static String flipLine(String temp)
+	public static String reverseString(final String temp)
 	{
-		// define a temporary string 'arga'
-		String arga = "";
-
-		// loop through the string, character by character
-		for(int j = 0; j < temp.length(); j++)
-		{
-			// add each character back to the string, reversing it completely
-			arga = arga + temp.charAt(temp.length() - j - 1);
+        final StringBuilder buf = new StringBuilder();
+		for (int j = temp.length(); j >= 0; j--) {
+            buf.append(temp.charAt(j));
 		}
-
-		// return a string as the result
-		return arga;
-	}
-
-	public static String str(Object o) {
-		return o.toString();
+		return buf.toString();
 	}
 
 	/**
@@ -103,26 +72,17 @@ public final class Utils {
 	 * @param filename
 	 * @param sArray
 	 */
-	public static void saveStrings(String filename, String[] sArray) {
-		File file = null;
-		PrintWriter output = null;
-
+	public static void saveStrings(final String filename, final String[] sArray) {
 		try {
-			file = new File(filename);
-			if( !(file instanceof File) ) {
-				throw new FileNotFoundException("Invalid File!");
-			}
-			else {
-				output = new PrintWriter(file);
-				for(String s : sArray) {
-					output.println(s);
-				}
-				output.flush();
-				output.close();
-			}
+			final File file = new File(filename);
+            final PrintWriter output = new PrintWriter(file);
+            for (final String s : sArray) {
+                output.println(s);
+            }
+            output.close();
 		}
-		catch(FileNotFoundException fnfe) {
-			fnfe.printStackTrace();
+		catch (Exception e) {
+			e.printStackTrace();
 		}
 	}
 
@@ -134,92 +94,55 @@ public final class Utils {
 	 * @param filename
 	 * @return
 	 */
-	public static String[] loadStrings(String filename) {
-		File file;
-		FileReader fReader;
-
+	public static String[] loadStrings(final String filename) {
 		try {
-			file = new File(filename); // open the specified file
-
-			if(!(file instanceof File)) {
-				throw new FileNotFoundException("Invalid File!");
-			}
-			else {
-				Scanner input;
-				ArrayList<String> output;
-
-				if(file.isFile() && file.canRead()) {
-					fReader = new FileReader(file);   // pass the file to the file reader
-
-					input = new Scanner( fReader );   // pass the file reader to the scanner
-					output = new ArrayList<String>(); // create the output arraylist
-
-					while(input.hasNextLine()) {
-						output.add(input.nextLine());
-					}
-
-					input.close();                    // close the scanner, and implicity the filereader and file
-
-					return (String[]) output.toArray( new String[ output.size() ] ); // return the new thing as an array
-				}
-			}
+			final File file = new File(filename);
+            final BufferedReader br = new BufferedReader(new FileReader(file));
+            final ArrayList<String> output = new ArrayList<String>();
+            String line;
+            while ((line = br.readLine()) != null) {
+                output.add(line);
+            }
+            br.close();
+            return output.toArray(new String[0]);
 		}
-		catch(FileNotFoundException fnfe) {
-			System.out.println( fnfe.getMessage() );
+		catch(Exception e) {
 			System.out.println("--- Stack Trace ---");
-			fnfe.printStackTrace();
+			e.printStackTrace();
 		}
-		catch(NullPointerException npe) {
-			System.out.println("--- Stack Trace ---");
-			npe.printStackTrace();
-		}
-
-		return new String[0]; // return an non-empty,non-full zero size String[]
+		return new String[0];
 	}
 
-	public static byte[] loadBytes(String filename) {
-		File file;
-		FileInputStream fis;
-
-		byte[] byte_array = null;
-		int index = 0;
-
+	public static byte[] loadBytes(final String filename) {
 		try {
-			file = new File(filename);         // create a new file object to refer to the file
-			fis = new FileInputStream(file);   // create a new file input stream to read from the file
-
-			byte_array = new byte[(int) file.length()]; // create a new byte array to hold the file
-
-			try {
-				while(fis.available() > 0) {
-					byte_array[index] = (byte) fis.read();
-					index++;
-				}
-			}
-			catch (IOException ioe) {
-				ioe.printStackTrace();
-			}
+			final File file = new File(filename);
+			final FileInputStream fis = new FileInputStream(file);
+            final int FILE_LEN = (int) file.length();
+			final byte[] byte_array = new byte[FILE_LEN]; // create a new byte array to hold the file
+            int index = 0;
+            while (index < FILE_LEN) {
+                final int numRead = fis.read(byte_array, index, FILE_LEN - index);
+                index += numRead;
+            }
 		}
-		catch (FileNotFoundException fnfe) {
-			fnfe.printStackTrace();
+		catch (Exception e) {
+			e.printStackTrace();
 		}
-
-		return byte_array;
+		return new byte[0];
 	}
 
-	public static String join(String[] in, String sep) {
-		String out = "";
+	public static String join(final String[] in, final String sep) {
+        return join(Arrays.asList(in), sep);
+	}
 
-		for(int l = 0; l < in.length; l++) {
-			if(l < in.length - 1) {
-				out = out + in[l] + sep;
-			}
-			else {
-				out = out + in[l];
-			}
-		}
-
-		return out;
+	public static String join(final List<String> in, String sep) {
+        if (sep == null) sep = "";
+        if (in.size() == 0) return "";
+        final StringBuilder out = new StringBuilder();
+        for (final String s : in) {
+            out.append(sep).append(s);
+        }
+		return out.delete(0, sep.length()).toString();
 	}
 
 	/**
@@ -243,12 +166,12 @@ public final class Utils {
 		return out;
 	}
 	
-	public static int[] stringsToInts(String[] in) {
+	public static int[] stringsToInts(final String[] in) {
 		int[] result = new int[in.length];
 
 		int index = 0;
 
-		for(String string : in) {
+		for (final String string : in) {
 			try {
 				result[index] = Integer.parseInt(string);
 				index++;
@@ -262,13 +185,6 @@ public final class Utils {
 		return result;
 	}
 
-
-	public static String[] parseArray(String s, String sep) {
-		String[] strings = s.split(sep);
-
-		return strings;
-	}
-	
 	public static String padRight(String s) {
 		return String.format("%1$-70s", s);
 	}
@@ -302,62 +218,17 @@ public final class Utils {
 		int index = 0;
 		System.out.println(in.length);
 		out = new String[in.length - begin];
-		for(int l = begin; l < in.length; l++) {
+		for (int l = begin; l < in.length; l++) {
 			out[index] = in[l];
 			index++;
 		}
 		return out;
 	}
 
-	public static String[] subset(String[] in, int begin, int end) {
-		String[] out;
-		out = new String[end - begin];
-		for(int l = begin; l < end; l++) {
-			if(in[l] != null) {
-				out[l] = in[l];
-			}
-		}
-		return out;
+	public static String trim(final String s) {
+		return s == null ? null : s.trim();
 	}
 
-	public static String trim(String s) {
-		return s.trim();
-	}
-	
-	/**
-	 * string matching
-	 * 
-	 * @param input
-	 * @param regexp
-	 * @return
-	 */
-	public static boolean match(String input, String regexp) {
-		Pattern p = Pattern.compile(regexp);
-		Matcher m = p.matcher(input);
-		boolean test = m.find();
-		return test;
-	}
-	
-	/**
-	 * Convert an arraylist of strings to a string array
-	 * 
-	 * @param list the arraylist to converted
-	 * @return the converted arraylist (a string array)
-	 */
-	public static String[] arraylistToString(ArrayList<String> list) {
-		String[] result = new String[list.size()];
-
-		int index = 0;
-
-		for(String s : list) {
-			result[index] = s;
-			index++;
-		}
-
-		return result;
-	}
-	
-	
 	/**
 	 * d20 dice roller
 	 * 
@@ -365,58 +236,36 @@ public final class Utils {
 	 * @param number
 	 * @return
 	 */
-	public static int roll(int number, int sides) { // roll(3, 4) for 3d4
+	public static int roll(final int number, final int sides) { // roll(3, 4) for 3d4
 		int i = 0;
-
-		for(int n = 0; n < number; n++) {
-			int result = ((int)(Math.random() * sides));
-			i += result;
+		for (int n = 0; n < number; n++) {
+			i += 1 + (int)(Math.random() * sides);
 		}
-
 		return i;
 	}
 
-	public static int roll(String dice) { // roll(3d4+1)
-		int number = 0;
-		int sides = 0;
-		int modifier = 0;
-		
-		int roll = 0;
-		int result = 0;
-
-		// 3d4 = 3 d 4
-		// 3d4+1 = 3 d 4 + 1
-		try {
-
-			number = Integer.parseInt(dice.substring(0, dice.indexOf("d")));
-			
-			if(dice.indexOf("+") == -1) {
-				sides = Integer.parseInt(dice.substring(dice.indexOf("d") + 1, dice.length()));
-			}
-			else {
-				sides = Integer.parseInt(dice.substring(dice.indexOf("d") + 1, dice.indexOf("+")));
-				modifier = Integer.parseInt(dice.substring(dice.indexOf("+") + 1, dice.length()));
-			}
-			
-			System.out.println(number);
-			System.out.println(sides);
-			System.out.println(modifier);
-			System.out.println("" + number + "d" + sides + "+" + modifier);
-			
-			System.out.println("Rolling " + number + "d" + sides);
-			
-			roll = roll(number, sides);
-			System.out.println("roll: " + roll);
-			
-			result = roll + modifier;
-			System.out.println("result: " + result);
-		}
-		catch(NumberFormatException nfe) {
-		}
-		
-		return result;
+	public static int roll(final int number, final int sides, final int bonus) { // roll(3, 4, 7) for 3d4+7
+        return bonus + roll(number, sides);
 	}
-	
+
+	public static int roll(final String input) { // roll(3, 4, 7) for 3d4+7
+        final String[] words = input.split("d");
+
+        int num = 1;
+        try {
+            num = Integer.parseInt(words[0]);
+        } catch (Exception e) {}
+
+        int sides = 0, bonus = 0;
+        try {
+            final String[] second_words = words[1].split("[-+]");
+            sides = Integer.parseInt(second_words[0]);
+            bonus = Integer.parseInt(second_words[1]);
+        } catch (Exception e) {}
+
+        return bonus + roll(num, sides);
+	}
+
 	/* Unused */
 	
 	/*
@@ -467,11 +316,11 @@ public final class Utils {
 	public static String[] concat(String[] one, String[] two) {
 		String[] out;
 		out = new String[one.length + two.length];
-		for(int l = 0; l < out.length; l++) {
-			if(one.length - 1 > l) {
+		for (int l = 0; l < out.length; l++) {
+			if (one.length - 1 > l) {
 				out[l] = one[l];
 			}
-			else if(two.length - 1 > l - (one.length - 1)) {
+			else if (two.length - 1 > l - (one.length - 1)) {
 				out[l] = two[l - (one.length - 1)];
 			}
 		}

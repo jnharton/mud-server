@@ -100,22 +100,22 @@ public class Exit extends MUDObject implements Lockable<Exit>
 	}
 
 	public void setMessage(String name, String newMsg) {
-		if(name.toLowerCase().equals("succmsg") == true) { this.succMsg = newMsg; }
-		else if(name.toLowerCase().equals("osuccmsg") == true) { this.osuccMsg = newMsg; }
-		else if(name.toLowerCase().equals("failmsg") == true) { this.failMsg = newMsg; }
-		else if (name.toLowerCase().equals("ofailmsg") == true) { this.ofailMsg = newMsg; }
+		if (name.toLowerCase().equals("succmsg")) { this.succMsg = newMsg; }
+		else if (name.toLowerCase().equals("osuccmsg")) { this.osuccMsg = newMsg; }
+		else if (name.toLowerCase().equals("failmsg")) { this.failMsg = newMsg; }
+		else if (name.toLowerCase().equals("ofailmsg")) { this.ofailMsg = newMsg; }
 	}
 
 	@Override
 	public void lock() {
-		if(this.eType == ExitType.DOOR) {
+		if (this.eType == ExitType.DOOR) {
 			this.isLocked = true;
 		}
 	}
 
 	@Override
 	public void unlock() {
-		if(this.eType == ExitType.DOOR) {
+		if (this.eType == ExitType.DOOR) {
 			this.isLocked = false;
 		}
 	}
@@ -135,13 +135,13 @@ public class Exit extends MUDObject implements Lockable<Exit>
 
 	public String toDB() {
 		String[] output = new String[7];
-		output[0] = Utils.str(this.getDBRef());     // exit database reference number
+		output[0] = this.getDBRef() + "";     // exit database reference number
 		output[1] = this.getName();                 // exit name
 		output[2] = this.getFlags();                // exit flags
 		output[3] = this.getDesc();                 // exit description
-		output[4] = Utils.str(this.getLocation());  // exit location (a.k.a source)
-		output[5] = Utils.str(this.getDest());      // exit destination
-		output[6] = Utils.str(this.eType.ordinal()); // exit type
+		output[4] = this.getLocation() + "";  // exit location (a.k.a source)
+		output[5] = this.getDest() + "";      // exit destination
+		output[6] = this.eType.ordinal() + ""; // exit type
 		return Utils.join(output, "#");
 	}
 	

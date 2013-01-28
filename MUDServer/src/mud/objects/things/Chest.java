@@ -95,11 +95,11 @@ public class Chest extends Thing implements Lockable<Item>, Storage<Item> {
 	 */
 	public String toDB() {
 		String[] output = new String[8];
-		output[0] = Utils.str(this.getDBRef());    // chest database reference number
+		output[0] = this.getDBRef() + "";    // chest database reference number
 		output[1] = this.getName();                // chest name
 		output[2] = this.getFlags();               // chest flags
 		output[3] = this.getDesc();                // chest description
-		output[4] = Utils.str(this.getLocation()); // chest location (a.k.a parent)
+		output[4] = this.getLocation() + ""; // chest location (a.k.a parent)
 		output[5] = "*";                           // blank field
 		output[6] = "*";                           // blank field
 		output[7] = "*";                           // blank field

@@ -60,8 +60,8 @@ public class MSP {
 
 	public static void play(String tFileName, String tType) {
 		MSP.play(tFileName);
-		if(tType.toLowerCase().equals("music") == true) { cType = Type.MUSIC; }
-		else if(tType.toLowerCase().equals("sound") == true) { cType = Type.SOUND; }
+		if (tType.toLowerCase().equals("music")) { cType = Type.MUSIC; }
+		else if (tType.toLowerCase().equals("sound")) { cType = Type.SOUND; }
 	}
 	
 	public static void play(String tFileName, String tType, int tVolume) {
@@ -125,14 +125,14 @@ public class MSP {
 		
 		switch(cType) {
 		case MUSIC:
-			if( fileName.equals("Off") ) { msg = "!!MUSIC(Off)"; }
+			if ( fileName.equals("Off") ) { msg = "!!MUSIC(Off)"; }
 			else {
 				msg = "!!MUSIC(" + fileName + " V=" + volume + " L=" + repeats + " P=" + priority + ")";
 			}
 			System.out.println(msg);
 			break;
 		case SOUND:
-			if( fileName.equals("Off") ) { msg = "!!MUSIC(Off)"; }
+			if ( fileName.equals("Off") ) { msg = "!!MUSIC(Off)"; }
 			else {
 				msg = "!!SOUND(" + fileName + " V=" + volume + " L=" + repeats + " P=" + priority + ")";
 			}

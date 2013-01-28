@@ -15,11 +15,11 @@ public class AccessCommand extends Command {
 		// syntax: access <player>=<access level denoted by integer -- 0 is none/1 is admin>
 		String[] args = arg.split("=");
 
-		if(args.length > 0) {
+		if (args.length > 0) {
 			Player player = getPlayer(args[0]);
 
-			if(player != null) { // if we have a valid player
-				if(args.length > 1) { // if we have specified a new access level
+			if (player != null) { // if we have a valid player
+				if (args.length > 1) { // if we have specified a new access level
 					Integer aL = player.getAccess();
 
 					try {

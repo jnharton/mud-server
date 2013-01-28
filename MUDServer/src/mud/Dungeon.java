@@ -79,7 +79,7 @@ public class Dungeon implements Instance
 
 	// work in progress, basically needs to duplicate the dungeon instance passed to it
 	public Dungeon(Dungeon template) {
-		if(!template.isInstance()) { // use the template
+		if (!template.isInstance()) { // use the template
 			parent = template;    // set child's parent
 		}
 		else { // use the template's parent

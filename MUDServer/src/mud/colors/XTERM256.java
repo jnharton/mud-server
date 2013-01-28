@@ -59,7 +59,7 @@ public enum XTERM256 {
 	}
 
 	XTERM256(int red, int blue, int green) {
-		if( ( red >= 0 && red <= 5 ) && ( blue >= 0 && blue <= 5 ) && ( green >= 0 && green <= 5) ) {
+		if ( ( red >= 0 && red <= 5 ) && ( blue >= 0 && blue <= 5 ) && ( green >= 0 && green <= 5) ) {
 			this.num = (red * 36) + (green * 6) + blue;
 		}
 		else {

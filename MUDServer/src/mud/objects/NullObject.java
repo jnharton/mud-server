@@ -26,7 +26,7 @@ public class NullObject extends MUDObject {
 		// ex. 0#null#null#null#-1
 		String[] output = new String[11];
 		
-		output[0] = Utils.str(getDBRef()); // database reference number
+		output[0] = getDBRef() + ""; // database reference number
 		output[1] = "null";                // no name
 		output[2] = "null";                // no flags
 		output[3] = "null";                // no description

@@ -64,7 +64,7 @@ public class Slot {
 		this.slotType = slotType;
 		this.itemType = itemType;
 		
-		if(item != null) { // ensure that putting null in doesn't register as full
+		if (item != null) { // ensure that putting null in doesn't register as full
 			this.item = item;
 			this.full = true;
 		}
@@ -99,7 +99,7 @@ public class Slot {
 		this.itemType = ItemType.CLOTHING;
 		this.clothingType = clothingType;
 		
-		if(clothing != null) { // ensure that putting null in doesn't register as full
+		if (clothing != null) { // ensure that putting null in doesn't register as full
 			this.item = clothing;
 			this.full = true;
 		}
@@ -199,7 +199,7 @@ public class Slot {
 	 * @return a boolean representing whether the slot is empty or not empty
 	 */
 	public boolean isEmpty() {
-		if( this.full ) {
+		if ( this.full ) {
 			return false;
 		}
 		else {

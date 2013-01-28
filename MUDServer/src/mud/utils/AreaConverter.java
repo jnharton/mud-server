@@ -30,7 +30,7 @@ public class AreaConverter {
 	
 	public AreaFile convert(String filename) {
 		// CircleMUD Area File
-		if(filename.regionMatches(true, filename.length() - 3, ".are", 0, 3) == true) {
+		if (filename.regionMatches(true, filename.length() - 3, ".are", 0, 3)) {
 			String[] fileArray = loadStrings(DATA_DIR + "test\\" + filename);
 		}
 		return null;
@@ -98,7 +98,7 @@ public class AreaConverter {
 		try {
 			file = new File(filename);
 			
-			if(!(file instanceof File)) {
+			if (!(file instanceof File)) {
 				throw new FileNotFoundException("Invalid File!");
 			}
 			else {
@@ -106,13 +106,13 @@ public class AreaConverter {
 				
 				ArrayList<String> output;
 				
-				if(file.isFile() && file.canRead()) {
+				if (file.isFile() && file.canRead()) {
 					try {
 						input = new Scanner(file);
 						
 						output = new ArrayList<String>();
 						
-						while(input.hasNextLine()) {
+						while (input.hasNextLine()) {
 							output.add(input.nextLine());
 						}
 						

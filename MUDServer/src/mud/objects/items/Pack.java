@@ -19,7 +19,7 @@ public class Pack extends Clothing {
 	}
 
 	public void put(Item i) {
-		if(this.contents.size() < size) {
+		if (this.contents.size() < size) {
 			this.contents.add(i);
 		}
 	}
@@ -35,11 +35,11 @@ public class Pack extends Clothing {
 	}
 
 	public Item search(String name) {
-		for(Item i : this.contents) {
-			if(i.getName().equals(name) == true) {
+		for (Item i : this.contents) {
+			if (i.getName().equals(name)) {
 				return i;
 			}
-			else if(i.getName().equals(name.toLowerCase()) == true)
+			else if (i.getName().equals(name.toLowerCase()))
 			{
 				return i;
 			}
@@ -49,12 +49,12 @@ public class Pack extends Clothing {
 	
 	public String toDB() {
 		String[] output = new String[8];
-		output[0] = Utils.str(this.getDBRef());          // pack database reference number
+		output[0] = this.getDBRef() + "";          // pack database reference number
 		output[1] = this.getName();                      // pack name
 		output[2] = this.getFlags();                     // pack flags
 		output[3] = this.getDesc();                      // pack description
-		output[4] = Utils.str(this.getLocation());       // pack location
-		output[5] = Utils.str(this.item_type.ordinal()); // item type
+		output[4] = this.getLocation() + "";       // pack location
+		output[5] = this.item_type.ordinal() + ""; // item type
 		output[6] = "*";                                 // nothing (placeholder)
 		output[7] = "*";                                 // nothing (placeholder)
 		return Utils.join(output, "#");
