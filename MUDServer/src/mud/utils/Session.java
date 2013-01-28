@@ -76,7 +76,7 @@ public class Session {
 	 * @param newClient
 	 */
 	public void setClient(Client newClient) {
-		if( !connected ) { this.client = newClient; }
+		if ( !connected ) { this.client = newClient; }
 	}
 	
 	public boolean isConnected() {

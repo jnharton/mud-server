@@ -66,7 +66,7 @@ public class Jewelry extends Item implements Equippable<Jewelry>, Usable<Jewelry
 
 	public void use(String arg, Client client) {
 		System.out.println("[Jewelry->Use]");
-		if(this.equip_type == ItemType.RING) {
+		if (this.equip_type == ItemType.RING) {
 			Player player = parent.getPlayer(client);
 			parent.debug(player);
 			System.out.println(parent.applyEffect(player, e));

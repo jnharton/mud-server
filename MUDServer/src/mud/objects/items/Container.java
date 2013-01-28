@@ -80,7 +80,7 @@ public class Container<E extends Item> extends Item implements Storage<E>, Equip
 		
 		result.add(name + " (#" + getDBRef() + ")");
 		result.add(this.desc);
-		for(E item : contents) {
+		for (E item : contents) {
 			result.add(item.getName() + " (#" + item.getName() + ")");
 		}
 		
@@ -92,8 +92,8 @@ public class Container<E extends Item> extends Item implements Storage<E>, Equip
 		 * this means each item must track how wide it's name/string version is
 		 * note: will retrieve only the first item if no specifier
 		 */
-		for(E item : this.contents) {
-			if(item.getDBRef() == index) {
+		for (E item : this.contents) {
+			if (item.getDBRef() == index) {
 				return this.contents.get(index);
 			}
 		}
@@ -106,8 +106,8 @@ public class Container<E extends Item> extends Item implements Storage<E>, Equip
 		// check display width, change if necessary (shorten)
 		// this means each item must track how wide it's name/string version is
 		// note: will retrieve only the first item if no specifier
-		for(E item : this.contents) {
-			if(item.getName().equals(itemName)) {
+		for (E item : this.contents) {
+			if (item.getName().equals(itemName)) {
 				this.weight -= item.getWeight();
 				return this.contents.remove(this.contents.indexOf(item));
 			}

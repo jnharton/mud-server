@@ -12,7 +12,7 @@ public class Time {
 	}
 	
 	public String hour() {
-		if(this.hour < 10) {
+		if (this.hour < 10) {
 			return "0" + String.valueOf(this.hour);
 		}
 		else {
@@ -21,7 +21,7 @@ public class Time {
 	}
 	
 	public String minute() {
-		if(this.minute < 10) {
+		if (this.minute < 10) {
 			return "0" + String.valueOf(this.minute);
 		}
 		else {
@@ -30,7 +30,7 @@ public class Time {
 	}
 	
 	public String second() {
-		if(this.second < 10) {
+		if (this.second < 10) {
 			return "0" + String.valueOf(this.second);
 		}
 		else {

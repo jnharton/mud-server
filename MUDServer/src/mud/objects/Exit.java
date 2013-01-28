@@ -100,22 +100,22 @@ public class Exit extends MUDObject implements Lockable<Exit>
 	}
 
 	public void setMessage(String name, String newMsg) {
-		if(name.toLowerCase().equals("succmsg") == true) { this.succMsg = newMsg; }
-		else if(name.toLowerCase().equals("osuccmsg") == true) { this.osuccMsg = newMsg; }
-		else if(name.toLowerCase().equals("failmsg") == true) { this.failMsg = newMsg; }
-		else if (name.toLowerCase().equals("ofailmsg") == true) { this.ofailMsg = newMsg; }
+		if (name.toLowerCase().equals("succmsg")) { this.succMsg = newMsg; }
+		else if (name.toLowerCase().equals("osuccmsg")) { this.osuccMsg = newMsg; }
+		else if (name.toLowerCase().equals("failmsg")) { this.failMsg = newMsg; }
+		else if (name.toLowerCase().equals("ofailmsg")) { this.ofailMsg = newMsg; }
 	}
 
 	@Override
 	public void lock() {
-		if(this.eType == ExitType.DOOR) {
+		if (this.eType == ExitType.DOOR) {
 			this.isLocked = true;
 		}
 	}
 
 	@Override
 	public void unlock() {
-		if(this.eType == ExitType.DOOR) {
+		if (this.eType == ExitType.DOOR) {
 			this.isLocked = false;
 		}
 	}

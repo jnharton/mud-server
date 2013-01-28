@@ -20,9 +20,9 @@ public class GreetCommand extends Command {
 		Player player1 = parent.getPlayer(arg);
 		Client client1 = parent.tclients.get(player1);
 		debug("player1: " + player1.getName());
-		if(player1.getNames().contains(current.getName()) == false) {
+		if (!player1.getNames().contains(current.getName())) {
 			player1.addName(current.getName());
-			if(current.getNames().contains(player1.getName()) == true) {
+			if (current.getNames().contains(player1.getName())) {
 				send("You tell " + player1.getName() + " that your name is " + current.getName(), client);
 			}
 			else {

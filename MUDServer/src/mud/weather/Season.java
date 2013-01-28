@@ -20,7 +20,7 @@ public class Season {
 	public Season(String sName, WeatherState...sWeatherStates) {
 		this.name = sName;
 		this.weather_states = new LinkedList<WeatherState>();
-		for(WeatherState ws : sWeatherStates) {
+		for (WeatherState ws : sWeatherStates) {
 			//System.out.println("Added " + ws);
 			this.weather_states.add(ws);
 		}
@@ -42,17 +42,17 @@ public class Season {
 		
 		System.out.println(roll);
 
-		if(roll <= transitionDownP) {
+		if (roll <= transitionDownP) {
 			transitionDown = true;
 		}
-		else if(roll > transitionDownP) {
+		else if (roll > transitionDownP) {
 			transitionDown = false;
 		}
 
 		// return transition result
-		if( transitionDown ) { // transition down
+		if ( transitionDown ) { // transition down
 			System.out.println("Transition Down?");
-			if( li.hasNext() ) {
+			if ( li.hasNext() ) {
 				System.out.println("Transition Down");
 				newState = li.next();
 				System.out.println("Is current equal to next? " + cs.equals(newState));
@@ -66,7 +66,7 @@ public class Season {
 		}
 		else { // transition up
 			System.out.println("Transition Up?");
-			if( li.hasPrevious() ) {
+			if ( li.hasPrevious() ) {
 				System.out.println("Transition Up");
 				newState = li.previous();
 				newState.upDown = 1;

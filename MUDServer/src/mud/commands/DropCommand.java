@@ -38,12 +38,12 @@ public class DropCommand extends Command {
 		
 		// get the object the argument refers to: by name (if it's in the calling player's inventory), or by dbref#
 		// should be done by searching the player's inventory for the object and if there is such an object, drop it on the floor.
-		for(int i = 0; i < inventory.size(); i++)
+		for (int i = 0; i < inventory.size(); i++)
 		{			
 			item = inventory.get(i);
 
 			// if there is a name or dbref match from the argument in the inventory
-			if( item.getName().equals(arg) == true || item.getName().contains(arg) == true || item.getDBRef() == dbref )
+			if ( item.getName().equals(arg) || item.getName().contains(arg) || item.getDBRef() == dbref )
 			{
 				debug(item.getName() + " true");
 				// move object from player inventory to floor

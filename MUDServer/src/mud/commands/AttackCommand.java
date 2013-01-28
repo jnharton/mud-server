@@ -22,14 +22,14 @@ public class AttackCommand extends Command {
 		Player player = parent.getPlayer(client);
 
 		try {
-			if(arg.equals("") == false) {
+			if (!arg.equals("")) {
 				// here we want to try and get whatever was targeted
 
 				MUDObject mobj = parent.getObject(arg);
 
 				player.setTarget(mobj);
 
-				if(player.getTarget() != null) {
+				if (player.getTarget() != null) {
 					// start attacking
 
 					// get our weapon type
@@ -38,25 +38,25 @@ public class AttackCommand extends Command {
 					// can we attack them?
 					boolean attack = canAttack(player.getTarget());
 
-					if(attack) {
+					if (attack) {
 						parent.send("Can attack.", client);
 						parent.send("You attack " + player.getTarget().getName() + ".", client);
 
 						boolean inRange = true;
 
-						if(inRange) { // are they in range of our weapon?
+						if (inRange) { // are they in range of our weapon?
 							parent.send("In range.", client);
 
 							boolean hit = canHit(player.getTarget());
 
-							if(hit) { // did we hit?
+							if (hit) { // did we hit?
 
 								boolean criticalHit = false;							
 								int criticalCheckRoll = Utils.roll(1, 20);
 
 								int damage = 0;
 
-								if(criticalCheckRoll > 10) { /*dummy hit check, if c > 10 we hit them and it's a critical */
+								if (criticalCheckRoll > 10) { /*dummy hit check, if c > 10 we hit them and it's a critical */
 									damage = calculateDamage(wt, true); // need to figure out how to get whatever weapon they used
 								}
 								else {
@@ -116,7 +116,7 @@ public class AttackCommand extends Command {
 	}
 
 	public boolean canAttack(MUDObject target) {
-		if(target instanceof Player) {
+		if (target instanceof Player) {
 			return canAttack( (Player) target );
 		}
 		return true;

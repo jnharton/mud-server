@@ -121,10 +121,10 @@ public class Weapon extends Item implements Equippable<Weapon>, Wieldable<Weapon
 	}
 
 	public String toString() {
-		if(this.mod > 0) {
+		if (this.mod > 0) {
 			return "+" + this.mod + " " + this.getName();
 		}
-		else if(this.mod < 0) {
+		else if (this.mod < 0) {
 			return this.mod + " " + this.getName();
 		}
 		else {

@@ -19,7 +19,7 @@ public class Pack extends Clothing {
 	}
 
 	public void put(Item i) {
-		if(this.contents.size() < size) {
+		if (this.contents.size() < size) {
 			this.contents.add(i);
 		}
 	}
@@ -35,11 +35,11 @@ public class Pack extends Clothing {
 	}
 
 	public Item search(String name) {
-		for(Item i : this.contents) {
-			if(i.getName().equals(name) == true) {
+		for (Item i : this.contents) {
+			if (i.getName().equals(name)) {
 				return i;
 			}
-			else if(i.getName().equals(name.toLowerCase()) == true)
+			else if (i.getName().equals(name.toLowerCase()))
 			{
 				return i;
 			}

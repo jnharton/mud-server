@@ -49,13 +49,13 @@ public class WeaponMerchant extends NPC implements Interactive, Vendor {
 	public void interact(Client client) {
 		parent.send(this.getName(), client);
 		parent.send("-----< Stock >--------------------", client);
-		for(Item item : this.stock) {
-			if(item instanceof Weapon) {
+		for (Item item : this.stock) {
+			if (item instanceof Weapon) {
 				Weapon w = (Weapon) item;
 				String cost = "";
 				int index = 0;
-				for(Integer i : w.getCost()) {
-					if(i > 0) {
+				for (Integer i : w.getCost()) {
+					if (i > 0) {
 						cost += i + " " + Currency.fromInt(index).getAbbrev();
 					}
 					index++;
@@ -75,12 +75,12 @@ public class WeaponMerchant extends NPC implements Interactive, Vendor {
 
 	public Item buy(String name) {
 		Item bought = null;
-		for(Item item : this.stock) {
-			if(item.getName().equals(name) == true) {
+		for (Item item : this.stock) {
+			if (item.getName().equals(name)) {
 				
 				bought = item;
 				
-				if( this.stock.remove(item) == true ) {
+				if (this.stock.remove(item)) {
 					return bought;
 				}
 			}
@@ -92,8 +92,8 @@ public class WeaponMerchant extends NPC implements Interactive, Vendor {
 	}
 
 	public boolean hasItem(String name) {
-		for(Item item : this.stock) {
-			if(item.getName().equals(name) == true) {
+		for (Item item : this.stock) {
+			if (item.getName().equals(name)) {
 				return true;
 			}
 		}
@@ -102,8 +102,8 @@ public class WeaponMerchant extends NPC implements Interactive, Vendor {
 	}
 
 	public Item getItem(String name) {
-		for(Item item : this.stock) {
-			if(item.getName().equals(name) == true) {
+		for (Item item : this.stock) {
+			if (item.getName().equals(name)) {
 				return item;
 			}
 		}

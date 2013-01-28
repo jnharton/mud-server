@@ -26,7 +26,7 @@ public class CastCommand extends Command {
 		
 		player = parent.getPlayer(client);    // get a reference to the player object
 		
-		if(player.isCaster()) {
+		if (player.isCaster()) {
 			try {
 				debug("Argument: " + arg);
 				
@@ -44,14 +44,14 @@ public class CastCommand extends Command {
 				debug("Game> Spell Casting Malfunction.");
 			}
 
-			if(spell != null) {
+			if (spell != null) {
 				// level check
-				if( player.getLevel() < spell.getLevel() ) {
+				if ( player.getLevel() < spell.getLevel() ) {
 					// reagents check
-					if( 1 == 1 ) { // !reagents
+					if ( 1 == 1 ) { // !reagents
 
 						// target check, if no target then auto-target self, etc, dependent on spell
-						if(player.getTarget() == null) {
+						if (player.getTarget() == null) {
 							player.setTarget(player); // auto-target to self
 						}
 						else {
@@ -65,13 +65,13 @@ public class CastCommand extends Command {
 							send(spell.castMsg.replace("&target", player.getTarget().getName()), client); // send cast msg
 
 							// if our target is a player tell them otherwise don't bother
-							if(target instanceof Player) {
+							if (target instanceof Player) {
 								Message message1 = new Message(player, player.getName() + " cast " + spell.name + " on you." , (Player) target);
 								parent.addMessage(message1);
 							}
 
 							// apply effects
-							for(int e = 0; e < spell.effects.size(); e++) {
+							for (int e = 0; e < spell.effects.size(); e++) {
 								effect = spell.effects.get(e);
 
 								parent.applyEffect(target, effect); // apply the effect to the target

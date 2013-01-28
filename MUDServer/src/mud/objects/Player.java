@@ -394,8 +394,8 @@ public class Player extends MUDObject
 	}
 
 	public String getIdleString() {
-		if( this.idle > 0 ) {
-			if(this.idle > 60) {
+		if ( this.idle > 0 ) {
+			if (this.idle > 60) {
 				int m = this.idle / 60;
 				int s = this.idle % 60;
 				return m + "m" + s + "s";
@@ -416,7 +416,7 @@ public class Player extends MUDObject
 	public void setStatus(String arg) { this.status = arg; }
 
 	public MUDObject getTarget() {
-		if(this.target instanceof NPC) {
+		if (this.target instanceof NPC) {
 			return (NPC) this.target;
 		}
 		else {
@@ -451,13 +451,13 @@ public class Player extends MUDObject
 	}
 	
 	public void setMoney(int[] money) {
-		for(int i = 0; i < 4; i++) {
+		for (int i = 0; i < 4; i++) {
 			setMoney(i, money[i]);
 		}
 	}
 	
 	public void setMoney(Integer[] money) {
-		for(int i = 0; i < 4; i++) {
+		for (int i = 0; i < 4; i++) {
 			setMoney(i, money[i]);
 		}
 	}
@@ -621,21 +621,21 @@ public class Player extends MUDObject
 	}
 	
 	public void equip(Item item, String location) {
-		if( this.slots.containsKey(location) ) {
+		if ( this.slots.containsKey(location) ) {
 			this.slots.get(location).insert(item);
 		}
 	}
 	
 	public void unequip(Item item, Slot slot) {
-		if(slot.isFull()) {
-			if(slot.getItem() == item) {
+		if (slot.isFull()) {
+			if (slot.getItem() == item) {
 				slot.remove();
 			}
 		}
 	}
 
 	public void unequip(Item item, String location) {
-		if( this.slots.containsKey(location) ) {
+		if ( this.slots.containsKey(location) ) {
 			this.slots.get(location);
 			this.inventory.add(item);
 		}
@@ -748,7 +748,7 @@ public class Player extends MUDObject
 	}
 	
 	public boolean isLevelUp() {
-		if( getXP() >= getXPToLevel() ) {
+		if ( getXP() >= getXPToLevel() ) {
 			return true;
 		}
 		else {

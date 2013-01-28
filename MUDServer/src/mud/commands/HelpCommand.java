@@ -14,7 +14,7 @@ public class HelpCommand extends Command {
 
 	@Override
 	public void execute(String arg, Client client) {
-		if(arg.equals("@reload") == true)
+		if (arg.equals("@reload"))
 		{
 			parent.help_reload();
 			client.write("Game> Help Files Reloaded!\n");
@@ -51,7 +51,7 @@ public class HelpCommand extends Command {
 				}
 			}
 		}
-		/*else if( parent.topics.containsKey(arg) ) {
+		/*else if ( parent.topics.containsKey(arg) ) {
 		}*/
 		else
 		{

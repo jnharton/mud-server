@@ -32,7 +32,7 @@ public class Arrow extends Item implements  Projectile<Arrow>, Stackable<Arrow> 
 	 * @return int the size of the stack
 	 */
 	public int stackSize() {
-		if(this.a != null) {
+		if (this.a != null) {
 			return 1 + a.stackSize();
 		}
 		else {
@@ -42,7 +42,7 @@ public class Arrow extends Item implements  Projectile<Arrow>, Stackable<Arrow> 
 
 	@Override
 	public boolean stack(Arrow object) {
-		if(a == null) {
+		if (a == null) {
 			a = object;
 			return true;
 		}
@@ -53,8 +53,8 @@ public class Arrow extends Item implements  Projectile<Arrow>, Stackable<Arrow> 
 
 	@Override
 	public Arrow split(int number) {
-		if(number > 0 && stackSize() > number) {
-			if(a == null) {
+		if (number > 0 && stackSize() > number) {
+			if (a == null) {
 				return this;
 			}
 			else {
@@ -63,7 +63,7 @@ public class Arrow extends Item implements  Projectile<Arrow>, Stackable<Arrow> 
 
 				int qty = 0;       // the total quantity of arrows, how we know if we have split off enough
 
-				while(qty < number) {
+				while (qty < number) {
 					prev = curr;
 					curr = curr.a;
 					qty++;

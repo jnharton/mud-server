@@ -179,7 +179,7 @@ public class Room extends MUDObject
 	}*/
 
 	public Integer getInstanceId() {
-		if(this.instance_id != null) {
+		if (this.instance_id != null) {
 			return this.instance_id;
 		}
 		else {

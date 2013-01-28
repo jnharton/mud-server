@@ -102,19 +102,19 @@ public enum Classes {
 	}
 	
 	public static Classes getClass(int id) {
-		if(Classes.BARBARIAN.getId() == id) { return Classes.BARBARIAN; }
-		else if(Classes.BARD.getId() == id) { return Classes.BARD; }
-		else if(Classes.CLERIC.getId() == id) { return Classes.CLERIC; }
-		else if(Classes.DRUID.getId() == id) { return Classes.DRUID; }
-		else if(Classes.FIGHTER.getId() == id) { return Classes.FIGHTER; }
-		else if(Classes.MONK.getId() == id) { return Classes.MONK; }
-		else if(Classes.PALADIN.getId() == id) { return Classes.PALADIN; }
-		else if(Classes.RANGER.getId() == id) { return Classes.RANGER; }
-		else if(Classes.ROGUE.getId() == id) { return Classes.ROGUE; }
-		else if(Classes.SORCERER.getId() == id) { return Classes.SORCERER; }
-		else if(Classes.WARRIOR.getId() == id) { return Classes.WARRIOR; }
-		else if(Classes.WIZARD.getId() == id) { return Classes.WIZARD; }
-		else if(Classes.NONE.getId() == id) { return Classes.NONE; }
+		if (Classes.BARBARIAN.getId() == id) { return Classes.BARBARIAN; }
+		else if (Classes.BARD.getId() == id) { return Classes.BARD; }
+		else if (Classes.CLERIC.getId() == id) { return Classes.CLERIC; }
+		else if (Classes.DRUID.getId() == id) { return Classes.DRUID; }
+		else if (Classes.FIGHTER.getId() == id) { return Classes.FIGHTER; }
+		else if (Classes.MONK.getId() == id) { return Classes.MONK; }
+		else if (Classes.PALADIN.getId() == id) { return Classes.PALADIN; }
+		else if (Classes.RANGER.getId() == id) { return Classes.RANGER; }
+		else if (Classes.ROGUE.getId() == id) { return Classes.ROGUE; }
+		else if (Classes.SORCERER.getId() == id) { return Classes.SORCERER; }
+		else if (Classes.WARRIOR.getId() == id) { return Classes.WARRIOR; }
+		else if (Classes.WIZARD.getId() == id) { return Classes.WIZARD; }
+		else if (Classes.NONE.getId() == id) { return Classes.NONE; }
 		else { return null; }
 	}
 	

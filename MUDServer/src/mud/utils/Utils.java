@@ -100,7 +100,7 @@ public final class Utils {
             final BufferedReader br = new BufferedReader(new FileReader(file));
             final ArrayList<String> output = new ArrayList<String>();
             String line;
-            while((line = br.readLine()) != null) {
+            while ((line = br.readLine()) != null) {
                 output.add(line);
             }
             br.close();
@@ -218,26 +218,15 @@ public final class Utils {
 		int index = 0;
 		System.out.println(in.length);
 		out = new String[in.length - begin];
-		for(int l = begin; l < in.length; l++) {
+		for (int l = begin; l < in.length; l++) {
 			out[index] = in[l];
 			index++;
 		}
 		return out;
 	}
 
-	public static String[] subset(String[] in, int begin, int end) {
-		String[] out;
-		out = new String[end - begin];
-		for(int l = begin; l < end; l++) {
-			if(in[l] != null) {
-				out[l] = in[l];
-			}
-		}
-		return out;
-	}
-
-	public static String trim(String s) {
-		return s.trim();
+	public static String trim(final String s) {
+		return s == null ? null : s.trim();
 	}
 
 	/**
@@ -327,11 +316,11 @@ public final class Utils {
 	public static String[] concat(String[] one, String[] two) {
 		String[] out;
 		out = new String[one.length + two.length];
-		for(int l = 0; l < out.length; l++) {
-			if(one.length - 1 > l) {
+		for (int l = 0; l < out.length; l++) {
+			if (one.length - 1 > l) {
 				out[l] = one[l];
 			}
-			else if(two.length - 1 > l - (one.length - 1)) {
+			else if (two.length - 1 > l - (one.length - 1)) {
 				out[l] = two[l - (one.length - 1)];
 			}
 		}

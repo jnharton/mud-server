@@ -136,10 +136,10 @@ public class Armor extends Item implements Equippable<Armor>, Wearable<Armor>
 	
 	@Override
 	public String toString() {
-		if(this.mod > 0) {
+		if (this.mod > 0) {
 			return "+" + this.mod + " " + this.getName();
 		}
-		else if(this.mod < 0) {
+		else if (this.mod < 0) {
 			return this.mod + " " + this.getName();
 		}
 		else {

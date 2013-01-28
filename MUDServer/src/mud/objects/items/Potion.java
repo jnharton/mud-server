@@ -82,7 +82,7 @@ public class Potion extends Item implements Stackable<Potion>, Usable<Potion> {
 		
 		this.effects = new ArrayList<Effect>();
 		
-		/*for(Effect e : this.spell.getEffects()) {
+		/*for (Effect e : this.spell.getEffects()) {
 			this.effects.add(e);
 		}*/
 	}
@@ -133,7 +133,7 @@ public class Potion extends Item implements Stackable<Potion>, Usable<Potion> {
 
 	@Override
 	public int stackSize() {
-		if(this.p != null) {
+		if (this.p != null) {
 			return 1 + p.stackSize();
 		}
 		else {
@@ -143,7 +143,7 @@ public class Potion extends Item implements Stackable<Potion>, Usable<Potion> {
 
 	@Override
 	public boolean stack(Potion object) {
-		if(p == null) {
+		if (p == null) {
 			p = object;
 			return true;
 		}
@@ -154,8 +154,8 @@ public class Potion extends Item implements Stackable<Potion>, Usable<Potion> {
 
 	@Override
 	public Potion split(int number) {
-		if(number > 0 && stackSize() > number) {
-			if(p == null) {
+		if (number > 0 && stackSize() > number) {
+			if (p == null) {
 				return this;
 			}
 			else {
@@ -164,7 +164,7 @@ public class Potion extends Item implements Stackable<Potion>, Usable<Potion> {
 
 				int qty = 0;
 
-				while(qty < number) {
+				while (qty < number) {
 					prev = curr;
 					curr = curr.p;
 					qty++;

@@ -58,7 +58,7 @@ public class Portal extends Exit {
 		super(ExitType.PORTAL);
 		this.type = PortalType.STD;
 		this.key = pKey;
-		if(pKey != null) { this.requiresKey = true; }
+		if (pKey != null) { this.requiresKey = true; }
 		
 		this.location = pOrigin;
 		
@@ -76,12 +76,12 @@ public class Portal extends Exit {
 		this.location = pOrigin;
 		
 		this.origin = pOrigin;
-		if(pType == PortalType.STD) {
+		if (pType == PortalType.STD) {
 			this.destination = pDestinations[0];
 		}
-		else if(pType == PortalType.RANDOM) {
+		else if (pType == PortalType.RANDOM) {
 			this.destinations = new ArrayList<Integer>(pDestinations.length);
-			for(int d : pDestinations) {
+			for (int d : pDestinations) {
 				this.destinations.add(d);
 			}
 		}
@@ -93,15 +93,15 @@ public class Portal extends Exit {
 		super(ExitType.PORTAL);
 		this.type = pType;
 		this.key = pKey;
-		if(pKey != null) { this.requiresKey = true; }
+		if (pKey != null) { this.requiresKey = true; }
 		
 		this.location = pOrigin;
 		
 		this.origin = pOrigin;
-		if(pType == PortalType.STD) { this.destination = pDestinations[0]; }
-		else if(pType == PortalType.RANDOM) {
+		if (pType == PortalType.STD) { this.destination = pDestinations[0]; }
+		else if (pType == PortalType.RANDOM) {
 			this.destinations = new ArrayList<Integer>(pDestinations.length);
-			for(int d : pDestinations) {
+			for (int d : pDestinations) {
 				this.destinations.add(d);
 			}
 		}
@@ -115,13 +115,13 @@ public class Portal extends Exit {
 	public void setType(PortalType newType) {
 		PortalType last = this.type;
 		this.type = newType;
-		if(last != newType) { // don't permit changing to the same type as it is already
-			if( newType == PortalType.RANDOM ) {
+		if (last != newType) { // don't permit changing to the same type as it is already
+			if ( newType == PortalType.RANDOM ) {
 				this.destinations = new ArrayList<Integer>(1); // instantiate the destinations array list
 				this.destinations.add(this.destination);       // add the current destination
 				this.destination = null;                       // clear the normal destination
 			}
-			else if( last == PortalType.RANDOM) {
+			else if ( last == PortalType.RANDOM) {
 				this.destination = getDestination();           // select a random destination
 				this.destinations = null;                      // clear the destinaton array list
 			}
@@ -145,8 +145,8 @@ public class Portal extends Exit {
 	}
 
 	public int getDestination() {
-		if(this.type == PortalType.RANDOM) {
-			if(destinations != null && destinations.size() > 0) {
+		if (this.type == PortalType.RANDOM) {
+			if (destinations != null && destinations.size() > 0) {
 				int roll = generator.nextInt(destinations.size()); // roll a random destination
 				return destinations.get(roll);	
 			}
@@ -160,7 +160,7 @@ public class Portal extends Exit {
 	}
 
 	public void setDestination(int newDestination) {
-		if(destinations == null) {
+		if (destinations == null) {
 			this.destination = newDestination;
 		}
 		else {
@@ -174,8 +174,8 @@ public class Portal extends Exit {
 	 * @param key
 	 */
 	public void activate(Object pKey) {
-		if(key instanceof String) {
-			if( ( (String) pKey ).equals( (String) this.key ) ) {
+		if (key instanceof String) {
+			if ( ( (String) pKey ).equals( (String) this.key ) ) {
 				this.active = true;
 				System.out.println("Portal: activated");
 			}
@@ -187,8 +187,8 @@ public class Portal extends Exit {
 	 * @param key
 	 */
 	public void deactivate(Object pKey) {
-		if(key instanceof String) {
-			if( ( (String) pKey ).equals( (String) this.key ) == true ) {
+		if (key instanceof String) {
+			if (((String) pKey).equals((String) this.key)) {
 				this.active = false;
 				System.out.println("Portal: deactivated");
 			}

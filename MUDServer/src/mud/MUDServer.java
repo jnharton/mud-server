@@ -1239,7 +1239,7 @@ public class MUDServer {
                             }
                         }
                         
-                        if (whatClientSaid.trim().equals("") == false) {  // blocks blank input
+                        if (!whatClientSaid.trim().equals("")) {  // blocks blank input
                             //System.out.print("Putting comand in command queue...");
                             cmdQueue.add(new CMD(whatClientSaid.trim(), client, 0)); // put the command in the queue
                             //cmd(whatClientSaid.trim(), c);
@@ -1355,10 +1355,10 @@ public class MUDServer {
 		debug("");
 
 		// cut the input into an array of strings separated by spaces
-		String[] inputList = input.split(" ");
+		final List<String> inputList = Arrays.asList(input.split(" "));
 
-		if (inputList.length > 0) { // if there was any input
-			cmd = Utils.join(Utils.subset(inputList, 0, 1), " "); // get the command from the input list
+		if (!inputList.isEmpty()) { // if there was any input
+			cmd = inputList.remove(0);
 
 			debug("Command: \"" + cmd + "\"", 2);       // print command
 			cmd = cmd.trim();                           // trim the command
@@ -1366,9 +1366,9 @@ public class MUDServer {
 			debug("");
 
 			// if there were any arguments then get the argument, which is everything else
-			arg = Utils.join(Utils.subset(inputList, 1), " ");  // get the arguments from the input list
+			arg = Utils.join(inputList, " ");  // get the arguments from the input list
 
-			if (inputList.length > 1) {
+			if (inputList.size() > 1) {
 				if (!cmd.toLowerCase().equals("connect") && !cmd.toLowerCase().equals("create")) {
 					debug("Arguments: \"" + arg + "\"");          // print arguments
 					arg = Utils.trim(arg);                        // trim arguments
@@ -1388,7 +1388,7 @@ public class MUDServer {
 		// if not logged-in
 		// all of this should have configurable messages and maybe a time duration to
 		// show for when the mode will return to normal
-		if ( loginCheck(client) == false )
+		if (!loginCheck(client))
 		{
 			if (mode == 0) // Normal Running Mode (a.k.a. Mode 0)
 			{
@@ -2375,7 +2375,7 @@ public class MUDServer {
 					{
 						// DM/Debug Command
 						int changeHP = 0;
-						if (arg.equals("") == false) {
+						if (!arg.equals("")) {
 							try {
 								System.out.println("ARG: " + arg);
 								changeHP = Integer.parseInt(arg);
@@ -2403,11 +2403,10 @@ public class MUDServer {
 					else if ( cmd.equals("setmana") || (aliasExists && alias.equals("setmana") ) )
 					{
 						// DM/Debug Command
-						int changeMANA = 0;
-						if (arg.equals("") == false) {
+						if (!arg.equals("")) {
 							try {
 								System.out.println("ARG: " + arg);
-								changeMANA = Integer.parseInt(arg);
+								final int changeMANA = Integer.parseInt(arg);
 								System.out.println("INTERPRETED VALUE: " + changeMANA);
 								System.out.println("SIGN: " + Integer.signum(changeMANA));
 								if (Integer.signum(changeMANA) > 0) {
@@ -2431,12 +2430,10 @@ public class MUDServer {
 					}
 					else if ( cmd.equals("setlevel") ) {
 						// DM/Debug Command
-						int changeLevel = 0;
-						int newLevel = 0;
-						if (arg.equals("") == false) {
+						if (!arg.equals("")) {
 							try {
 								System.out.println("ARG: " + arg);
-								changeLevel = Integer.parseInt(arg);
+								final int changeLevel = Integer.parseInt(arg);
 								System.out.println("INTERPRETED VALUE: " + changeLevel);
 								System.out.println("SIGN: " + Integer.signum(changeLevel));
 
@@ -2457,7 +2454,7 @@ public class MUDServer {
 						// DM/Debug Command
 						int changeXP = 0;
 						
-						if (arg.equals("") == false) {
+						if (!arg.equals("")) {
 							try {
 								System.out.println("ARG: " + arg);
 								changeXP = Integer.parseInt(arg);
@@ -2477,22 +2474,21 @@ public class MUDServer {
 						}
 					}
 					else if ( cmd.equals("sheathe") ) {
-						Weapon w;
 						if (player.getSlots().get("weapon").isFull() ) {
-							w = (Weapon) player.getSlots().get("weapon").remove();
+							final Weapon w = (Weapon) player.getSlots().get("weapon").remove();
 							//temp.inventory.add(temp.getSlots().get("weapon").remove());
 							send("You put away your " + w.getName(), client);
 						}
 						else if ( player.getSlots().get("weapon1").isFull()  ) {
-							w = (Weapon) player.getSlots().get("weapon").remove();
+							final Weapon w = (Weapon) player.getSlots().get("weapon").remove();
 							//temp.inventory.add(temp.getSlots().get("weapon").remove());
 							send("You put away your " + w.getName(), client);
 						}
 					}
 					else if ( cmd.equals("skillcheck") ) {
-						String args[] = arg.split(" ");
+						final String args[] = arg.split(" ");
 						if (args.length >= 4) {
-							String dice = args[0];
+							final String dice = args[0];
 							int skillValue = Integer.parseInt(args[1]);
 							int skillMod = Integer.parseInt(args[2]);
 							int DC = Integer.parseInt(args[3]);
@@ -2506,7 +2502,7 @@ public class MUDServer {
 						client.write("-----------------------------------------------------------------\n");
 						if ( arg.equals("#all") ) {
 							// list all the spells, by level?
-							for (Spell spell : this.spells1) {
+							for (final Spell spell : this.spells1) {
 								client.write(spell.school.toString() + " " + spell.toString() + "\n");
 							}
 						}
@@ -2744,7 +2740,7 @@ public class MUDServer {
 				send("================================================================================", client);
 
 				for (final Quest quest : suitable) {
-					if (quest.isComplete() == false) {
+					if (!quest.isComplete()) {
 						client.write(Colors.YELLOW + "   o " + quest.getName());
 						client.write(Colors.MAGENTA + " ( " + quest.location + " ) " + Colors.CYAN);
 						client.write('\n');
@@ -3342,7 +3338,7 @@ public class MUDServer {
 			}
 		}
 		else {
-			while( auth )
+			while ( auth )
 			{
 				/*
 				 * NOTE:
@@ -5228,7 +5224,7 @@ public class MUDServer {
 		if (arg.equals("")) { // if no arguments
 			client.write("Checking for unread messages...\n");
 
-			int messages = checkMail(player);
+			int messages = player.getMailBox().numUnreadMessages();
 
 			if (messages == 0) { client.write("You have no unread messages.\n"); }
 			else { client.write("You have " + String.valueOf(messages) + " unread messages.\n"); }
@@ -5239,7 +5235,7 @@ public class MUDServer {
 			try { msg = Integer.parseInt(arg); }
 			catch(NumberFormatException nfe) { msg = -1; }
 
-			if (msg > -1 && msg < player.getMailBox().numMessages) {
+			if (msg > -1 && msg < player.getMailBox().numMessages()) {
 				Mail mail = player.getMailBox().get(msg);
 
 				send("Message #: " + mail.getId(), client);
@@ -6825,7 +6821,7 @@ public class MUDServer {
 
 				if (player.hasEffect("invisibility")) { locString = "INVISIBLE"; }
 				else {
-					if ( getRoom(player.getLocation()).flags.contains("S") == false) {
+					if (!getRoom(player.getLocation()).flags.contains("S")) {
 						locString = roomName + " (#" + location + ")";
 					}
 					else { locString = roomName; }
@@ -6887,7 +6883,7 @@ public class MUDServer {
 				}
 
 				// title
-				if (title.equals("") == false) { // if title isn't empty
+				if (!title.equals("")) { // if title isn't empty
 					client.write(' ');
 					client.write("\'" + title + "\'");
 				}
@@ -7283,7 +7279,7 @@ public class MUDServer {
 					debug("success");
 
 					// send the success message
-					if (exit.succMsg.equals("") == false) {
+					if (!exit.succMsg.equals("")) {
 						Message msg = new Message(exit.succMsg, player);
 						addMessage(msg);
 						//send(exit.succMsg, client);
@@ -8273,25 +8269,6 @@ public class MUDServer {
 
 	}
 
-	// check the number of unread mail messages you have
-	public int checkMail(final Player player) {
-		int messages = 0;
-
-		if (player != null) {
-			for (final Mail m : player.getMailBox()) {
-				if (m != null) {
-					if ( m.isUnread() ) {
-						messages++;
-					}
-				}
-			}
-
-			player.getMailBox().unread = messages;
-		}
-
-		return messages;
-	}
-
 	// logged-in player check
 	public boolean loginCheck(Client client) {
 		return sclients.containsKey(client);
@@ -8477,7 +8454,7 @@ public class MUDServer {
 		// look through all the exits (would be great if this could ignore previously searched exits
 		// perhaps by dbref (since that's much shorter than holding object references, etc
 		for (int e = 0; e < exits1.size(); e++) {
-			if (eNums.contains(e) == false) {
+			if (!eNums.contains(e)) {
 				exit = (Exit) exits1.get(e);
 
 				if (exit.getName().toLowerCase().equals(exitName)) {
@@ -9550,7 +9527,7 @@ public class MUDServer {
 		try {
 			debug("Theme Loading...");
 
-			if (themeFile != null && themeFile.equals("") == false) {
+			if (themeFile != null && !themeFile.equals("") ) {
 				theme_data = Utils.loadStrings(themeFile);
 
 				for (int l = 0; l < theme_data.length; l++) {
@@ -9720,7 +9697,7 @@ public class MUDServer {
 
 						BufferedReader br = new BufferedReader(fr);
 
-						while( br.ready() ) { 
+						while ( br.ready() ) { 
 							// load data (one line at a time)
 							String string = br.readLine();
 
@@ -9932,7 +9909,7 @@ public class MUDServer {
 		// indicate to the player how much mail/unread mail they have
 		client.writeln("Checking for unread messages...");
 
-		int messages = checkMail(player);
+		int messages = player.getMailBox().numUnreadMessages();
 
 		if (messages == 0) { client.writeln("You have no unread messages."); }
 		else { client.writeln("You have " + String.valueOf(messages) + " unread messages."); }
@@ -10554,7 +10531,7 @@ public class MUDServer {
 		for (int p = 0; p < this.players.size(); p++) {
 			Player player = this.players.get(p);
 
-			if (sclients.values().contains(player) == false)
+			if (!sclients.values().contains(player))
 			{
 				if (DMControlTable.get(player) == null) {
 					players.remove(player);
@@ -10868,7 +10845,7 @@ public class MUDServer {
 		@Override
 		public void run() {
 			// while the game is running, and the time thread is not suspended
-			while( running && s.hasClients()) {
+			while ( running && s.hasClients()) {
 				// if client is a logged in player, send them any messages queued for them
 				// Send any pages, messages, etc to their respective recipients, or to a list of recipients?
 				try {
@@ -10982,7 +10959,7 @@ public class MUDServer {
 		// message sending with specifics needs a loginCheck(client), but it needs to not cause the game to crash
 		@Override
 		public void run() {
-			while( running ) {
+			while ( running ) {
 				try {
 					Thread.sleep(timeScale);
 					if (this.minutes == 59) {
@@ -11128,7 +11105,7 @@ public class MUDServer {
 		@Override
 		public void run() {
 			// while the game is running, and the time thread is not suspended
-			while(running && timeLoop.isAlive()) {
+			while (running && timeLoop.isAlive()) {
 				if (inSync) {
 					try {
 						// once every period
@@ -11166,7 +11143,7 @@ public class MUDServer {
 
 		public void sync() {
 			debug("Syncing...");
-			while((game_time.minutes + 1) % fired != 0) {
+			while ((game_time.minutes + 1) % fired != 0) {
 				debug(game_time.minutes);
 				debug(fired);
 				debug("Waiting...");
@@ -11398,8 +11375,8 @@ public class MUDServer {
 		int d_x_pos = goal.getX(); // get goal X coord
 		int d_y_pos = goal.getY(); // get goal Y coord
 		
-		while(x_pos < d_x_pos) {
-			while(y_pos < d_y_pos) {
+		while (x_pos < d_x_pos) {
+			while (y_pos < d_y_pos) {
 				// find out if there's anything at that intersection of x and y
 				// increment y
 			}
@@ -11956,7 +11933,7 @@ public class MUDServer {
 
 			debug("Current Output: " + output, 2);
 
-			while(input.contains("{")) { // while there is still markup
+			while (input.contains("{")) { // while there is still markup
 
 				debug(input.substring(mid + 1, end));
 
@@ -12449,10 +12426,6 @@ public class MUDServer {
 			// add the mail object to the mailbox
 			player.getMailBox().add(mail);
 		}
-
-		// store the number of unread messages
-		if (messages == 0) { player.getMailBox().unread = 0; }
-		else { player.getMailBox().unread = messages; }
 	}
 	
 	private void saveMail(Player player) {
