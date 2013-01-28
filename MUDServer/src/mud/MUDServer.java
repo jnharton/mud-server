@@ -220,6 +220,7 @@ public class MUDServer {
 	private boolean logging = true;         // logging? (true=yes,false=no)
 	private int logLevel = 3;               // 
 	private boolean prompt_enabled = false; // show player information bar
+	private boolean lookup_caching = true;  // cache object lookups (true=yes, false=no)
 	
 	// update states
 	private boolean update_shops = false;   // is it time to update the shops
@@ -476,12 +477,12 @@ public class MUDServer {
 	private HashMap<String, String> authTable1 = new HashMap<String, String>(max_players, 0.75f); // hold database info for player login
 	
 	// Lookup/Cache Tables
-	private Hashtable<String, Integer> object_lookup = new Hashtable<String, Integer>(10, 0.75f);  //
-	private Hashtable<String, Integer> exit_lookup = new Hashtable<String, Integer>(10, 0.75f);    //
-	private Hashtable<String, Integer> room_lookup = new Hashtable<String, Integer>(10, 0.75f);    //
-	private Hashtable<Integer, Integer> room_lookup2 = new Hashtable<Integer, Integer>(10, 0.75f); //
-	private HashMap<String, Integer> spells2 = new HashMap<String, Integer>(1, 0.75f);             // HashMap to lookup spells by index using name as key (static)
-
+	private Hashtable<String, Integer> object_lookup;
+	private Hashtable<String, Integer> exit_lookup;
+	private Hashtable<String, Integer> room_lookup;
+	private Hashtable<Integer, Integer> room_lookup2;
+	private HashMap<String, Integer> spells2 = new HashMap<String, Integer>(1, 0.75f); // HashMap to lookup spells by index using name as key (static)
+	
 	// static values
 	private static int USER = 0;   // limited permissions, no @commands at all
 	private static int BUILD = 1;  // building
@@ -782,10 +783,21 @@ public class MUDServer {
 		// Load everything from databases by flag
 		loadObjects(this.main);
 		System.out.println("Database Loaded!");
-
-		loadExits();  // load exits (post-room loading)
-		loadThings(); // load things (post-room loading)
-		loadItems();  // load items (post-room loading)
+		
+		// Initialize Lookup Caches
+		if( lookup_caching ) {
+			 object_lookup = new Hashtable<String, Integer>(10, 0.75f);
+			 exit_lookup = new Hashtable<String, Integer>(10, 0.75f);
+			 room_lookup = new Hashtable<String, Integer>(10, 0.75f);
+			 room_lookup2 = new Hashtable<Integer, Integer>(10, 0.75f);
+		}
+		
+		// Post-Room Loading
+		loadExits();  // load exits
+		loadThings(); // load things
+		loadItems();  // load items
+		
+		//
 		fillShops();
 		
 		/*for(NPC npc : npcs1) {
@@ -1589,6 +1601,9 @@ public class MUDServer {
 					break;
 				}
 			}
+			else if( player.getStatus().equals("INPUT") ) { // handling interactive input (ex. account logins)
+				
+			}
 			else if( player.getStatus().equals("VIEW") ) { // viewing help files
 				op_pager(input, client);
 			}
@@ -1826,16 +1841,16 @@ public class MUDServer {
 					if( cmd.equals("@accounts") || ( aliasExists && alias.equals("@accounts") ) ) {
 						if( arg.equals("") ) {
 							send("Accounts (Online)", client);
-							send("------------------------------------------------------------------------------------", client);
-							send("Name     ID     Player                                   Created            Age", client);
-							send("------------------------------------------------------------------------------------", client);
-							//send("Test   000001 Nathan                                   02-11-2011 02:36AM 365 days", client);
+							send("-------------------------------------------------------------------------------------------", client);
+							send("Name     ID     Player                                   Online Created            Age", client);
+							send("-------------------------------------------------------------------------------------------", client);
+							//send("Test     000001 Nathan                                   No     02-11-2011 02:36AM 365 days", client);
 							if(this.accounts != null) {
 								for(Account a : this.accounts) {
 									send(a.display(), client);
 								}
 							}
-							send("------------------------------------------------------------------------------------", client);
+							send("-------------------------------------------------------------------------------------------", client);
 						}
 						else {
 							String[] args = arg.split(" ");
@@ -1849,6 +1864,8 @@ public class MUDServer {
 										
 										account.linkCharacter(getPlayer(client));
 										account.setPlayer(getPlayer(client));
+										account.setClient(client);
+										account.setOnline(true);
 										
 										this.accounts.add(account);
 									}
@@ -3401,62 +3418,11 @@ public class MUDServer {
 			auth = false;
 		}
 		else if( user.toLowerCase().equals("account") ) {
-			/*
-			 * This code here ties up the program, and no one else
-			 * can have their commands processed until this is done,
-			 * although the command queue will hold the commands they send
-			 */
 			account = true;
-
-			BufferedReader br;
-			String aName = "";
-			String aPass = "";
-			
-			// really ought to design a handler for flexible interactive input
-			try {
-				br = new BufferedReader(new InputStreamReader(client.input));
-
-				client.write("Account Name?");
-
-				aName = br.readLine();
-
-				System.out.println("Name: " + aName);
-
-				client.write("Account Password?");
-
-				aPass = br.readLine();
-
-				System.out.println("Password: " + aPass);
-			}
-			catch (IOException e) {
-				e.printStackTrace();
-			}
-
-			Account account1 = getAccount(aName); // determine if the account exists
-
-			if(account1 != null) {
-
-				boolean verified = verify(account1, aPass); // determine if the account exists, and whether the password is valid for it
-
-				if( verified ) {
-					account_menu(account1, client);
-					
-					// need a handler for input here, so change it
-				}
-			}
 		}
 		else {
 			while( auth )
 			{
-				/*
-				 * NOTE:
-				 * if all players always existed, then instead of instantiating a player i'd
-				 * simply assign a client to it. Otherwise I need to get the player data from
-				 * somewhere so I can load it up. 
-				 */
-
-				// account check
-
 				/*
 				 * I don't want account names to conflict with characters, so perhaps
 				 * I will insert a stopgap measure where you must indicate an account
@@ -3467,15 +3433,71 @@ public class MUDServer {
 				 * If the user input is 'account' we will assume you want to connect to
 				 * an account and will do an interactive login for you.
 				 * 
-				 * Other we will look for a character by the name given.
+				 * Otherwise we will look for a character by the name given.
 				 */
+				
+				/*
+				 * NOTE:
+				 * if all players always existed, then instead of instantiating a player i'd
+				 * simply assign a client to it. Otherwise I need to get the player data from
+				 * somewhere so I can load it up. 
+				 */
+
+				// account check
+				if( account ) {
+					/*
+					 * This code here ties up the program, and no one else
+					 * can have their commands processed until this is done,
+					 * although the command queue will hold the commands they send
+					 */
+					
+					BufferedReader br;
+					String aName = "";
+					String aPass = "";
+					
+					// really ought to design a handler for flexible interactive input
+					try {
+						br = new BufferedReader(new InputStreamReader(client.input));
+
+						client.write("Account Name?");
+
+						aName = br.readLine();
+
+						System.out.println("Name: " + aName);
+
+						client.write("Account Password?");
+
+						aPass = br.readLine();
+
+						System.out.println("Password: " + aPass);
+					}
+					catch (IOException e) {
+						e.printStackTrace();
+					}
+					
+					Account account1 = getAccount(aName); // determine if the account exists
+
+					if(account1 != null) {
+
+						boolean verified = verify(account1, aPass); // determine if the account exists, and whether the password is valid for it
+
+						if( verified ) {
+							account_menu(account1, client);
+							// need a handler for input here, so change it
+						}
+						else {
+							System.out.println("No such account!");
+							client.write("No such account!");
+						}
+					}
+				}
 
 				/*String password = authTable1.get(user);
 				if( pass.equals(password) ) {
 				}*/
 
 				// character check
-				if(authTable.get(line) != null) {
+				else if(authTable.get(line) != null) {
 
 					/* need to integrate account checking into here */
 
@@ -4023,15 +4045,20 @@ public class MUDServer {
 			send(client.ip(), client);
 		}
 		else if( arg.equals("exitlcache") || arg.equals("elc") ) {
-			/* indicate size of exit lookup table/cache */
-			send("Exit Lookup Cache (table size): " + exit_lookup.size(), client);
-			
-			send("", client);
-			
-			/* show us the current contents of the exit lookup table/cache */
-			send("Table 1", client);
-			for(String key : exit_lookup.keySet()) {
-				send("\""+ key + "\" -> " + exit_lookup.get(key), client);
+			if( lookup_caching ) {
+				/* indicate size of exit lookup table/cache */
+				send("Exit Lookup Cache (table size): " + exit_lookup.size(), client);
+
+				send("", client);
+
+				/* show us the current contents of the exit lookup table/cache */
+				send("Table 1", client);
+				for(String key : exit_lookup.keySet()) {
+					send("\""+ key + "\" -> " + exit_lookup.get(key), client);
+				}
+			}
+			else {
+				send("Lookup Caching Disabled", client);
 			}
 		}
 		else if( args2[0].equals("listen") ) {
@@ -4064,15 +4091,20 @@ public class MUDServer {
 			}
 		}
 		else if( arg.equals("objlcache") || arg.equals("olc") ) {
-			/* indicate size of object lookup table/cache */
-			send("Object Lookup Cache (table size): " + object_lookup.size(), client);
-			
-			send("", client);
-			
-			/* show us the current contents of the object lookup table/cache */
-			send("Table 1", client);
-			for(String key : object_lookup.keySet()) {
-				send("\""+ key + "\" -> " + object_lookup.get(key), client);
+			if( lookup_caching ) {
+				/* indicate size of object lookup table/cache */
+				send("Object Lookup Cache (table size): " + object_lookup.size(), client);
+
+				send("", client);
+
+				/* show us the current contents of the object lookup table/cache */
+				send("Table 1", client);
+				for(String key : object_lookup.keySet()) {
+					send("\""+ key + "\" -> " + object_lookup.get(key), client);
+				}
+			}
+			else {
+				send("Lookup Caching Disabled", client);
 			}
 		}
 		else if( arg.equals("position") || arg.equals("pos") ) {
@@ -4083,22 +4115,26 @@ public class MUDServer {
 			send("Moving: " + player.isMoving(), client);
 		}
 		else if(arg.equals("roomlcache") || arg.equals("rlc") ) {
-			/* indicate size of room lookup tables/caches */
-			send("Room Lookup Cache (table size): " + room_lookup.size(), client);
-			send("Room Lookup Cache 2 (table size): " + room_lookup2.size(), client);
-			
-			send("", client);
-			
-			/* show us the current contents of the room lookup tables/caches */
-			send("Table 1", client);
-			for(String key : room_lookup.keySet()) {
-				send("\""+ key + "\" -> " + room_lookup.get(key), client);
-			}
-			send("Table 2", client);
-			for(Integer key : room_lookup2.keySet()) {
-				send(key + " -> " + room_lookup2.get(key), client);
-			}
+			if( lookup_caching ) {
+				/* indicate size of room lookup tables/caches */
+				send("Room Lookup Cache (table size): " + room_lookup.size(), client);
+				send("Room Lookup Cache 2 (table size): " + room_lookup2.size(), client);
 
+				send("", client);
+
+				/* show us the current contents of the room lookup tables/caches */
+				send("Table 1", client);
+				for(String key : room_lookup.keySet()) {
+					send("\""+ key + "\" -> " + room_lookup.get(key), client);
+				}
+				send("Table 2", client);
+				for(Integer key : room_lookup2.keySet()) {
+					send(key + " -> " + room_lookup2.get(key), client);
+				}
+			}
+			else {
+				send("Lookup Caching Disabled", client);
+			}
 		}
 		else if( arg.equals("udbnstack") || arg.equals("unused") ) {
 			client.write("Stack: [ ");
@@ -8473,7 +8509,7 @@ public class MUDServer {
 	public MUDObject getObject(String objectName) {
 		if(main1 != null) {
 			//check lookup cache
-			if( object_lookup.containsKey(objectName) ) {
+			if( lookup_caching && object_lookup.containsKey(objectName) ) {
 				return main1.get( object_lookup.get(objectName) );
 			}
 			// if no cached result, go look
@@ -8481,7 +8517,10 @@ public class MUDServer {
 				for(MUDObject mo : main1) {
 					System.out.println(mo.getName());
 					if( mo.getName().equals(objectName) ) {
-						object_lookup.put(objectName, main1.indexOf(mo)); // cache the result?
+						if( lookup_caching ) {
+							object_lookup.put(objectName, main1.indexOf(mo)); // cache the result?
+						}
+						
 						return mo; // return the object
 					}
 				}
@@ -8585,7 +8624,7 @@ public class MUDServer {
 		if(exits1 != null) {
 			
 			//check lookup cache
-			if( exit_lookup.containsKey(exitName) ) {
+			if( lookup_caching && exit_lookup.containsKey(exitName) ) {
 				return exits1.get( exit_lookup.get(exitName) );
 			}
 			// if no cached result, go look
@@ -8594,7 +8633,10 @@ public class MUDServer {
 				{
 					if( exit.getName().equals(exitName) )
 					{
-						exit_lookup.put(exitName, exits1.indexOf(exit)); // cache the result?
+						if( lookup_caching ) {
+							exit_lookup.put(exitName, exits1.indexOf(exit)); // cache the result?
+						}
+						
 						return exit;
 					}
 
@@ -8783,7 +8825,7 @@ public class MUDServer {
 	{
 		if(rooms1 != null) {
 			//check lookup cache
-			if( room_lookup.containsKey(roomName) ) {
+			if( lookup_caching && room_lookup.containsKey(roomName) ) {
 				return rooms1.get( room_lookup.get(roomName) );
 			}
 			// if no cached result, go look
@@ -8792,7 +8834,9 @@ public class MUDServer {
 				{
 					if( room.getName().equals(roomName) )
 					{
-						room_lookup.put(roomName, rooms1.indexOf(room)); // cache the result?
+						if( lookup_caching ) {
+							room_lookup.put(roomName, rooms1.indexOf(room)); // cache the result?
+						}
 						return room;
 					}
 
@@ -8813,7 +8857,7 @@ public class MUDServer {
 	{
 		if(rooms1 != null) {
 			//check lookup cache
-			if( room_lookup2.containsKey(dbref) ) {
+			if( lookup_caching && room_lookup2.containsKey(dbref) ) {
 				//System.out.println("Using cache...");
 				return rooms1.get( room_lookup2.get(dbref) );
 			}
@@ -8823,11 +8867,14 @@ public class MUDServer {
 				{
 					if(room.getDBRef() == dbref)
 					{
-						//System.out.println("Looking Up Room...");
-						//System.out.println(dbref);
-						//System.out.println(rooms1.indexOf(room));
-						room_lookup2.put(dbref, (Integer) rooms1.indexOf(room)); // cache the result?
-						//System.out.println(room_lookup2.get(dbref));
+						if( lookup_caching ) {
+							//System.out.println("Looking Up Room...");
+							//System.out.println(dbref);
+							//System.out.println(rooms1.indexOf(room));
+							room_lookup2.put(dbref, (Integer) rooms1.indexOf(room)); // cache the result?
+							//System.out.println(room_lookup2.get(dbref));
+						}
+						
 						return room;
 					}
 
@@ -9130,20 +9177,25 @@ public class MUDServer {
 			if(oInfo != null)
 			{
 				try {
-					String[] attr = oInfo.split("#");
+					String[] attr = oInfo.split("#"); // split the string on the '#' symbols in it
+					
+					// copy the information relevant to all objects (and thus existing in complete form for all
+					// objects into variables.
 					oDBRef = Integer.parseInt(attr[0]);
 					oName = attr[1];
 					oFlags = attr[2];
 					oDesc = attr[3];
 					oLocation = Integer.parseInt(attr[4]);
-
+					
+					// print out that basic information (Debugging Purposes)
 					/*debug("Database Reference Number: " + oDBRef);
 					debug("Name: " + oName);
 					debug("Flags: " + oFlags);
 					debug("Description: " + oDesc);
 					debug("Location: " + oLocation);*/
-
-					if(oFlags.indexOf("C") == 0) {
+					
+					if(oFlags.indexOf("C") == 0) // Creature
+					{
 						int raceNum;                      // 9 - race number (enum ordinal)
 						
 						Creature cre = new Creature(oDBRef, oName, oFlags, oDesc, oLocation);
@@ -9162,7 +9214,8 @@ public class MUDServer {
 						main1.add(cre);
 						creatures.add(cre);
 					}
-					else if(oFlags.indexOf("P") != -1) {
+					else if(oFlags.indexOf("P") != -1) // Player
+					{
 						
 						String oPassword = attr[5];       // 5 - password
 						String[] os = attr[6].split(","); // 6 - stats
@@ -9214,7 +9267,8 @@ public class MUDServer {
 						authTable.add(s); // add player info to authentication table
 						authTable1.put(player.getName(), player.getPass()); // add player info to authentication table
 					}
-					else if (oFlags.equals("WMV") == true) {
+					else if (oFlags.equals("WMV") == true) // Weapon Merchant Vendor (NPC)
+					{
 						WeaponMerchant wm = new WeaponMerchant(this, oDBRef, oName, oFlags, "A weapon merchant.", "Merchant", "VEN", 161, new String[]{"1000", "1000", "1000", "1000"} );
 
 						debug("DEBUG (db entry): " + wm.toDB(), 2);
@@ -9223,7 +9277,8 @@ public class MUDServer {
 						main1.add(wm);
 						npcs1.add(wm);
 					}
-					else if (oFlags.equals("AMV") == true) {
+					else if (oFlags.equals("AMV") == true) // Armor Merchant Vendor (NPC)
+					{
 						ArmorMerchant am = new ArmorMerchant(this, oDBRef, oName, oFlags, "An armor merchant.", "Merchant", "VEN", 161, new String[]{"1000", "1000", "1000", "1000"} );
 
 						debug("DEBUG (db entry): " + am.toDB(), 2);
@@ -9232,7 +9287,8 @@ public class MUDServer {
 						main1.add(am);
 						npcs1.add(am);
 					}
-					else if (oFlags.equals("IKV") ) {
+					else if (oFlags.equals("IKV") ) // InnKeeper Vendor (NPC)
+					{
 						Innkeeper ik = new Innkeeper(this, oDBRef, oName, oFlags, oDesc, "Merchant", "VEN", oLocation, new String[]{"1000", "1000", "1000", "1000"} );
 
 						debug("DEBUG (db entry): " + ik.toDB(), 2);
@@ -9241,14 +9297,13 @@ public class MUDServer {
 						main1.add(ik);
 						npcs1.add(ik);
 					}
-					//Exit(String tempName, String tempFlags, String tempDesc, int tempLoc, int tempDBREF, int tempDestination)
-					else if(oFlags.equals("E") == true)
+					else if(oFlags.equals("E") == true) // Exit
 					{
 						int eType = Integer.parseInt(attr[6]);
 
 						ExitType et = ExitType.values()[eType];
 
-						if(et == ExitType.STD) {
+						if(et == ExitType.STD) { // Standard Exit
 							int oDest = Integer.parseInt(attr[5]);
 
 							Exit exit = new Exit(oDBRef, oName, oFlags, oDesc, oLocation, oDest);
@@ -9260,14 +9315,16 @@ public class MUDServer {
 							exits1.add(exit);
 
 						}
-						else if(et == ExitType.PORTAL) {
+						else if(et == ExitType.PORTAL) // Portal Exit
+						{
 							Portal portal;
 
 							String oPortalType = attr[6];
 
 							// here we assume a typed but unkeyed portal
 							//public Portal(PortalType pType, int pOrigin, int[] pDestinations) 
-							if(oPortalType.equals("S") == true) { // Standard Portal
+							if(oPortalType.equals("S") == true) // Standard Portal Exit
+							{
 								int oDestination = Integer.parseInt(attr[5]);
 
 								portal = new Portal(PortalType.STD, oLocation, oDestination);
@@ -9280,7 +9337,8 @@ public class MUDServer {
 								main1.add(portal);
 								exits1.add(portal);
 							}
-							else if(oPortalType.equals("R") == true) { // Random Portal
+							else if(oPortalType.equals("R") == true) // Random Portal Exit
+							{
 								int[] oDestinations = Utils.stringsToInts(Utils.parseArray(attr[5], ",")); 
 
 								portal = new Portal(PortalType.RANDOM, oLocation, oDestinations);
@@ -9295,8 +9353,8 @@ public class MUDServer {
 							}
 						}
 					}
-					// NPC(int tempDBRef, String tempName, String tempDesc, int tempLoc, String tempTitle)
-					else if(oFlags.equals("N") == true) {
+					else if(oFlags.equals("N") == true) // Non-Player Character (NPC)
+					{
 						//NPC npc = new NPC(oDBRef, oName, oDesc, oLocation, "npc");
 						NPC npc = loadNPC(oInfo);
 						npc.setCName("npc");
@@ -9309,8 +9367,7 @@ public class MUDServer {
 						main1.add(npc);
 						npcs1.add(npc);
 					}
-					//Room(String tempName, String tempFlags, String tempDesc, int tempParent, int tempDBREF)
-					else if(oFlags.indexOf("R") == 0)
+					else if(oFlags.indexOf("R") == 0) // Room
 					{
 						String roomType = attr[5];
 
@@ -9329,8 +9386,7 @@ public class MUDServer {
 						main1.add(room);
 						rooms1.add(room);
 					}
-					//Thing(String tempName, String tempFlags, String tempDesc, int tempLoc, int tempDBREF)
-					else if(oFlags.indexOf("T") != -1)
+					else if(oFlags.indexOf("T") != -1) // Thing
 					{
 						Thing thing = new Thing(oDBRef, oName, oFlags, oDesc, oLocation);
 
@@ -9339,11 +9395,13 @@ public class MUDServer {
 						main1.add(thing);
 						things.add(thing);
 					}
-					else if(oFlags.indexOf("I") == 0) { // 
+					else if(oFlags.indexOf("I") == 0) // Item
+					{
 						int itemType = Integer.parseInt(attr[5]); // get the type of item it should be
 						ItemType it = ItemType.values()[itemType];
 
-						if( it == ItemType.CLOTHING ) { // Clothing
+						if( it == ItemType.CLOTHING ) // Clothing
+						{
 							int clothingType = Integer.parseInt(attr[6]);
 							int mod = Integer.parseInt(attr[7]);
 
@@ -9356,7 +9414,8 @@ public class MUDServer {
 							debug("DEBUG (db entry): " + clothing.toDB(), 2);
 						}
 
-						if( it == ItemType.WAND ) { // Wand
+						if( it == ItemType.WAND ) // Wand
+						{
 							String spellName = attr[6];
 							int charges = Integer.parseInt(attr[7]);
 
@@ -9369,7 +9428,8 @@ public class MUDServer {
 							debug("DEBUG (db entry): " + wand.toDB(), 2);
 						}
 
-						if( it == ItemType.WEAPON ) { // Weapon Merchant
+						if( it == ItemType.WEAPON ) // Weapon
+						{
 							int weaponType = Integer.parseInt(attr[6]);
 							int mod = Integer.parseInt(attr[7]);
 
@@ -9382,7 +9442,8 @@ public class MUDServer {
 							debug("DEBUG (db entry): " + weapon.toDB(), 2);
 						}
 
-						else if( it == ItemType.ARMOR ) { // Armor Merchant
+						else if( it == ItemType.ARMOR ) // Armor
+						{
 							int armorType = Integer.parseInt(attr[6]);
 							int mod = Integer.parseInt(attr[7]);
 
@@ -9395,7 +9456,8 @@ public class MUDServer {
 							debug("DEBUG (db entry): " + armor.toDB(), 2);
 						}
 
-						if( it == ItemType.ARROW ) { // Arrow
+						if( it == ItemType.ARROW ) // Arrow
+						{
 							int stackID = Integer.parseInt(attr[7]);
 
 							Arrow arrow = new Arrow(oDBRef, oName, oDesc, oLocation);
@@ -9407,7 +9469,8 @@ public class MUDServer {
 							debug("DEBUG (db entry): " + arrow.toDB(), 2);
 						}
 
-						if( it == ItemType.BOOK ) { // Book
+						if( it == ItemType.BOOK ) // Book
+						{
 							String author = attr[6];
 							String title = attr[7];
 							int pages = Integer.parseInt(attr[8]);
@@ -9425,7 +9488,8 @@ public class MUDServer {
 							debug("DEBUG (db entry): " + book.toDB(), 2);
 						}
 
-						if( it == ItemType.POTION ) {
+						if( it == ItemType.POTION ) // Potion
+						{
 							int stack_size = Integer.parseInt(attr[6]);
 							String sn = attr[7];
 
@@ -9449,8 +9513,8 @@ public class MUDServer {
 							debug("DEBUG (db entry): " + potion.toDB(), 2);
 						}
 					}
-					else if(oFlags.equals("null") == true) {
-
+					else if(oFlags.equals("null") == true) // NULLObject
+					{
 						NullObject Null = new NullObject(oDBRef);
 
 						//debug("Found NULLObject");
@@ -11606,7 +11670,7 @@ public class MUDServer {
 	// AI routines
 
 	// Line of Sight
-	void lineOfSight(Point origin, Player target) {
+	protected void lineOfSight(Point origin, Player target) {
 		Point goal = target.getCoordinates();
 		
 		int x_pos = origin.getX(); // get origin X coord
@@ -11623,12 +11687,12 @@ public class MUDServer {
 		}
 	}
 
-	void lineOfSight(Point origin, Point goal) {
+	protected void lineOfSight(Point origin, Point goal) {
 	}
 
 
 	// Random Movement
-	void randomMovement() {
+	protected void randomMovement() {
 	}
 	
 	/**
