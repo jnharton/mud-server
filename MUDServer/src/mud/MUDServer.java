@@ -1355,7 +1355,8 @@ public class MUDServer {
 		debug("");
 
 		// cut the input into an array of strings separated by spaces
-		final List<String> inputList = Arrays.asList(input.split(" "));
+		// using ArrayList because of the need for the remove operation, used below
+		final ArrayList<String> inputList = Utils.stringToArrayList(input, " ");
 
 		if (!inputList.isEmpty()) { // if there was any input
 			cmd = inputList.remove(0);
@@ -3788,7 +3789,7 @@ public class MUDServer {
 			send("Game> Debugging: Off", client);
 		}
 		else if ( arg.equals("clients") ) {
-			Vector<Client> clients = s.getClients();
+			Client[] clients = s.getClients();
 
 			int cn = 0;
 
@@ -8963,7 +8964,7 @@ public class MUDServer {
 							}
 							else if(oPortalType.equals("R") == true) // Random Portal Exit
 							{
-								int[] oDestinations = Utils.stringsToInts(Utils.parseArray(attr[5], ",")); 
+								int[] oDestinations = Utils.stringsToInts(attr[5].split(",")); 
 
 								portal = new Portal(PortalType.RANDOM, oLocation, oDestinations);
 								portal.setExitType(et);
@@ -10723,7 +10724,7 @@ public class MUDServer {
 				// if client is a logged in player, send them any messages queued for them
 				// Send any pages, messages, etc to their respective recipients, or to a list of recipients?
 				try {
-					Vector<Client> clients = s.getClients(); // grab the current set of clients
+					Client[] clients = s.getClients(); // grab the current set of clients
 
 					for (Client client : clients) {
 						if (client != null && client.isRunning()) { // if the client is not null and is still active

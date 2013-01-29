@@ -431,12 +431,6 @@ public final class Utils {
 		
 		return result;
 	}*/
-
-	public static String[] parseArray(String s, String sep) {
-		String[] strings = s.split(sep);
-
-		return strings;
-	}
 	
 	public static String padRight(String s) {
 		return String.format("%1$-70s", s);
@@ -529,6 +523,18 @@ public final class Utils {
 		}
 
 		return result;
+	}
+	
+	public static ArrayList<String> stringToArrayList(String s, String sep) {
+		String[] stringArray = s.split(sep);
+		
+		ArrayList<String> stringList = new ArrayList<String>();
+		
+		for(String string : stringArray) {
+			stringList.add(string);
+		}
+		
+		return stringList;
 	}
     
 	/**
