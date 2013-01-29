@@ -313,10 +313,12 @@ public final class Utils {
                 final int numRead = fis.read(byte_array, index, FILE_LEN - index);
                 index += numRead;
             }
+            return byte_array;
 		}
 		catch (Exception e) {
 			e.printStackTrace();
 		}
+		
 		return new byte[0];
 	}
 
