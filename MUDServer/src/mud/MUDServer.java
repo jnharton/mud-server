@@ -1142,7 +1142,7 @@ public class MUDServer {
 
 		// If the client is not null and has something to say
 		try {
-			if (whatClientSaid != null && !"".equals(whatClientSaid)) {
+			if (whatClientSaid != null && !whatClientSaid.equals("")) {
 				// telnet negotiation
 				if (client.tn) { // if the client is using telnet
 					final byte[] recv = new byte[3];
