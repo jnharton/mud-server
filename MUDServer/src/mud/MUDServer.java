@@ -70,6 +70,7 @@ import java.util.Map.Entry;
 import java.util.Stack;
 import java.util.TimeZone;
 import java.util.HashMap;
+import java.util.Vector;
 
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -1302,7 +1303,8 @@ public class MUDServer {
 	private void run()
 	{
 		debug("Entering main program loop...");
-		debug("Running? " + this.running);           // tell us whether the server is running or not
+		debug("Running? " + this.running);           // tell us whether the MUD server is running or not
+		debug("Server? " + s.isRunning());           // tell us whether the underlying socket server is running
 
 		while (running) {
 			for (final Client client : s.getClients()) {
@@ -3786,7 +3788,7 @@ public class MUDServer {
 			send("Game> Debugging: Off", client);
 		}
 		else if ( arg.equals("clients") ) {
-			Client[] clients = s.getClients();
+			Vector<Client> clients = s.getClients();
 
 			int cn = 0;
 
@@ -10721,14 +10723,9 @@ public class MUDServer {
 				// if client is a logged in player, send them any messages queued for them
 				// Send any pages, messages, etc to their respective recipients, or to a list of recipients?
 				try {
-					Client[] clients = s.getClients(); // grab the current set of clients
-					Client client;
+					Vector<Client> clients = s.getClients(); // grab the current set of clients
 
-					for (int c = 0; c < clients.length; c++) {
-
-						// If there are clients connected to the server
-						client = clients[c];
-
+					for (Client client : clients) {
 						if (client != null && client.isRunning()) { // if the client is not null and is still active
 							if (pages.size() > 0) {
 								for (int a = 0; a < pages.size(); a++) { // for the list of pages

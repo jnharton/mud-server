@@ -50,6 +50,8 @@ public class Server implements Runnable {
             server = new ServerSocket(port);
             thread = new Thread(this);
             thread.start();
+            
+            running = true;
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -69,8 +71,8 @@ public class Server implements Runnable {
 		return !clients.isEmpty();
 	}
 
- 	public Client[] getClients() {
-		return (Client[]) clients.toArray();
+ 	public Vector<Client> getClients() {
+ 		return clients;
 	}
 
     public void disconnect(final Client client) {
@@ -85,6 +87,7 @@ public class Server implements Runnable {
                 Client client = new Client(socket);
                 parent.clientConnection(client);
                 clients.add(client);
+                System.out.println("Client connected from: " + client.ip());
             }
         } catch (Exception e) {
             e.printStackTrace();
