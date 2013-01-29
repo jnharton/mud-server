@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 
 import mud.Abilities;
@@ -31,8 +32,7 @@ import mud.quest.Quest;
 import mud.quest.Task;
 import mud.quest.TaskType;
 
-
-// mud.utils
+import mud.utils.EditList;
 import mud.utils.MailBox;
 import mud.utils.Pager;
 import mud.utils.cgData;
@@ -87,7 +87,7 @@ public class Player extends MUDObject
 	protected int access = 0;                         // the player's access level (permissions) - 0=player,1=admin (default: 0)
 
 	private boolean controller = false;               // place to indicate if we are controlling an npc (by default, we are not)
-	private HashMap<String, ArrayList<String>> lists; // array of lists belonging to this player
+	private HashMap<String, EditList> lists = new HashMap<String, EditList>(); // array of lists belonging to this player
 
 	// preferences (ACCOUNT DATA?)
 	private int lineLimit = 80;                       // how wide the client's screen is in columns (shouldn't be in Player class)
@@ -107,10 +107,31 @@ public class Player extends MUDObject
 	private cgData cgd = null;
 
 	// List Editor
-	public String listname;                 // the name of the current list being edited
-	public ArrayList<String> nlist;         // contents of list being edited
-	public int nline;                       // current line in editor
-	public int nsize;                       // space/size (used) in current list
+    private EditList currentEdit;
+
+    public EditList getEditList() {
+        return currentEdit;
+    }
+    
+    public void startEditing(final String name) {
+        currentEdit = new EditList(name);
+    }
+    
+    public void loadEditList(final String name) {
+        currentEdit = getLists().get(name);
+    }
+
+    public void loadEditList(final String name, final List<String> lines) {
+        currentEdit = new EditList(name, lines);
+    }
+
+    public void saveCurrentEditor() {
+        getLists().put(currentEdit.name, currentEdit);
+    }
+
+    public void abortEditing() {
+        currentEdit = null;
+    }
 
 	// Miscellaneous Editor
 	private edData edd = null;
@@ -293,10 +314,7 @@ public class Player extends MUDObject
 		this.names = new ArrayList<String>(); // we get a new blank list this way, not a loaded state
 
 		// initialize list editor variables
-		this.lists = new HashMap<String, ArrayList<String>>(1, 0.75f); // need to be loading saved lists
 		this.editor = Editor.NONE;
-		this.nlist = null;
-		this.nline = 0;
 
 		// instantiate name reference table
 		this.nameRef = new HashMap<String, Integer>(10, 0.75f); // start out assuming 10 name references
@@ -394,14 +412,14 @@ public class Player extends MUDObject
 	}
 
 	public String getIdleString() {
-		if( this.idle > 0 ) {
-			if(this.idle > 60) {
+		if ( this.idle > 0 ) {
+			if (this.idle > 60) {
 				int m = this.idle / 60;
 				int s = this.idle % 60;
-				return Utils.str(m) + "m" + Utils.str(s) + "s";
+				return m + "m" + s + "s";
 			}
 			else {
-				return Utils.str(this.idle) + "s";
+				return this.idle + "s";
 			}
 		}
 		else {
@@ -416,7 +434,7 @@ public class Player extends MUDObject
 	public void setStatus(String arg) { this.status = arg; }
 
 	public MUDObject getTarget() {
-		if(this.target instanceof NPC) {
+		if (this.target instanceof NPC) {
 			return (NPC) this.target;
 		}
 		else {
@@ -451,13 +469,13 @@ public class Player extends MUDObject
 	}
 	
 	public void setMoney(int[] money) {
-		for(int i = 0; i < 4; i++) {
+		for (int i = 0; i < 4; i++) {
 			setMoney(i, money[i]);
 		}
 	}
 	
 	public void setMoney(Integer[] money) {
-		for(int i = 0; i < 4; i++) {
+		for (int i = 0; i < 4; i++) {
 			setMoney(i, money[i]);
 		}
 	}
@@ -621,21 +639,21 @@ public class Player extends MUDObject
 	}
 	
 	public void equip(Item item, String location) {
-		if( this.slots.containsKey(location) ) {
+		if ( this.slots.containsKey(location) ) {
 			this.slots.get(location).insert(item);
 		}
 	}
 	
 	public void unequip(Item item, Slot slot) {
-		if(slot.isFull()) {
-			if(slot.getItem() == item) {
+		if (slot.isFull()) {
+			if (slot.getItem() == item) {
 				slot.remove();
 			}
 		}
 	}
 
 	public void unequip(Item item, String location) {
-		if( this.slots.containsKey(location) ) {
+		if ( this.slots.containsKey(location) ) {
 			this.slots.get(location);
 			this.inventory.add(item);
 		}
@@ -689,7 +707,7 @@ public class Player extends MUDObject
 		this.destination = newDest;
 	}
 
-	public HashMap<String, ArrayList<String>> getLists() {
+	public HashMap<String, EditList> getLists() {
 		return this.lists;
 	}
 
@@ -748,7 +766,7 @@ public class Player extends MUDObject
 	}
 	
 	public boolean isLevelUp() {
-		if( getXP() >= getXPToLevel() ) {
+		if ( getXP() >= getXPToLevel() ) {
 			return true;
 		}
 		else {
@@ -762,11 +780,11 @@ public class Player extends MUDObject
 	 */
 	public String toDB() {
 		String[] output = new String[11];
-		output[0] = Utils.str(this.getDBRef());           // player database reference number
+		output[0] = this.getDBRef() + "";           // player database reference number
 		output[1] = this.getName();                       // player name
 		output[2] = this.getFlags();                      // player flags
 		output[3] = this.getDesc();                       // player description
-		output[4] = Utils.str(this.getLocation());        // player location
+		output[4] = this.getLocation() + "";        // player location
 		output[5] = this.getPass();                       // player password
 		output[6] = stats.get(Abilities.STRENGTH) +
 				"," + stats.get(Abilities.DEXTERITY) +
@@ -775,9 +793,9 @@ public class Player extends MUDObject
 				"," + stats.get(Abilities.WISDOM) +
 				"," + stats.get(Abilities.CHARISMA);
 		output[7] = "" + this.getMoney(0) + "," + this.getMoney(1) + "," + this.getMoney(2) + "," + this.getMoney(3); // player money
-		output[8] = Utils.str(this.access);               // player permissions level
-		output[9] = Utils.str(race.getId());              // player race
-		output[10] = Utils.str(pclass.getId());           // player class
+		output[8] = this.access + "";               // player permissions level
+		output[9] = race.getId() + "";              // player race
+		output[10] = pclass.getId() + "";           // player class
 		return Utils.join(output, "#");
 	}
 

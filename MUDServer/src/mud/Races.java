@@ -70,13 +70,13 @@ public enum Races {
 	}
 	
 	public static Races getRace(int id) {
-		if(Races.ELF.getId() == id) { return Races.ELF; }
-		else if(Races.DROW.getId() == id) { return Races.DROW; }
-		else if(Races.HUMAN.getId() == id) { return Races.HUMAN; }
-		else if(Races.DWARF.getId() == id) { return Races.DWARF; }
-		else if(Races.GNOME.getId() == id) { return Races.GNOME; }
-		else if(Races.ORC.getId() == id) { return Races.ORC; }
-		else if(Races.NONE.getId() == id) { return Races.NONE; }
+		if (Races.ELF.getId() == id) { return Races.ELF; }
+		else if (Races.DROW.getId() == id) { return Races.DROW; }
+		else if (Races.HUMAN.getId() == id) { return Races.HUMAN; }
+		else if (Races.DWARF.getId() == id) { return Races.DWARF; }
+		else if (Races.GNOME.getId() == id) { return Races.GNOME; }
+		else if (Races.ORC.getId() == id) { return Races.ORC; }
+		else if (Races.NONE.getId() == id) { return Races.NONE; }
 		else { return null; }
 	}
 	
@@ -97,7 +97,7 @@ public enum Races {
 	}
 	
 	public String toString() {
-		if(sub == null) {
+		if (sub == null) {
 			return this.name;
 		}
 		else {

@@ -13,10 +13,10 @@ public class AliasCommand extends Command {
 
 	@Override
 	public void execute(String arg, Client client) {
-		if( arg.equals("#list") ) {
+		if ( arg.equals("#list") ) {
 			parent.send("Aliases", client);
 			parent.send("-------------------------------------------", client);
-			for(Entry<String, String> e : parent.aliases.entrySet()) {
+			for (final Entry<String, String> e : parent.aliases.entrySet()) {
 				parent.send(e.getKey() + " : " + e.getValue(), client);
 			}
 			parent.send("-------------------------------------------", client);

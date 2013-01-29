@@ -137,7 +137,7 @@ public class Account implements Serializable {
 		this.password = aPassword;
 		this.charLimit = aCharLimit;
 		this.characters = new ArrayList<Player>(aCharacters.length);
-		for(Player player : aCharacters) {
+		for (Player player : aCharacters) {
 			this.characters.add(player);
 		}
 	}
@@ -287,7 +287,7 @@ public class Account implements Serializable {
 		String username = Utils.padRight(getUsername(), 8);
 		String id = Utils.padRight(String.valueOf(getId()), 6);
 		String name;
-		if(player != null) { name = Utils.padRight(player.getName(), 40); }
+		if (player != null) { name = Utils.padRight(player.getName(), 40); }
 		else { name = Utils.padRight("null", 40); };
 		String state = Utils.padRight(isOnline(), 6);
 		String creationDate = Utils.padRight(created.toString(), 10);

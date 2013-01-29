@@ -164,28 +164,28 @@ public class Spell
 	}
 	
 	public School getSchool(String schoolName) {
-		if(schoolName.toLowerCase().equals("abjuration") == true) { return School.ABJURATION; }
-		else if(schoolName.toLowerCase().equals("conjuration") == true) { return School.CONJURATION; }
-		else if(schoolName.toLowerCase().equals("divination") == true) { return School.DIVINATION; }
-		else if(schoolName.toLowerCase().equals("enchantment") == true) { return School.ENCHANTMENT; }
-		else if(schoolName.toLowerCase().equals("evocation") == true) { return School.EVOCATION; }
-		else if(schoolName.toLowerCase().equals("illusion") == true) { return School.ILLUSION; }
-		else if(schoolName.toLowerCase().equals("invocation") == true) { return School.INVOCATION; }
-		else if(schoolName.toLowerCase().equals("transmutation") == true) { return School.TRANSMUTATION; }
-		else if(schoolName.toLowerCase().equals("necromancy") == true) { return School.NECROMANCY; }
+		if (schoolName.toLowerCase().equals("abjuration")) { return School.ABJURATION; }
+		else if (schoolName.toLowerCase().equals("conjuration")) { return School.CONJURATION; }
+		else if (schoolName.toLowerCase().equals("divination")) { return School.DIVINATION; }
+		else if (schoolName.toLowerCase().equals("enchantment")) { return School.ENCHANTMENT; }
+		else if (schoolName.toLowerCase().equals("evocation")) { return School.EVOCATION; }
+		else if (schoolName.toLowerCase().equals("illusion")) { return School.ILLUSION; }
+		else if (schoolName.toLowerCase().equals("invocation")) { return School.INVOCATION; }
+		else if (schoolName.toLowerCase().equals("transmutation")) { return School.TRANSMUTATION; }
+		else if (schoolName.toLowerCase().equals("necromancy")) { return School.NECROMANCY; }
 		else { return School.OTHER; }
 	}
 	
 	public void setSchool(String schoolName) {
-		if(schoolName.toLowerCase().equals("abjuration") == true) { this.school = School.ABJURATION; }
-		else if(schoolName.toLowerCase().equals("conjuration") == true) { this.school = School.CONJURATION; }
-		else if(schoolName.toLowerCase().equals("divination") == true) { this.school = School.DIVINATION; }
-		else if(schoolName.toLowerCase().equals("enchantment") == true) { this.school = School.ENCHANTMENT; }
-		else if(schoolName.toLowerCase().equals("evocation") == true) { this.school = School.EVOCATION; }
-		else if(schoolName.toLowerCase().equals("illusion") == true) { this.school = School.ILLUSION; }
-		else if(schoolName.toLowerCase().equals("invocation") == true) { this.school = School.INVOCATION; }
-		else if(schoolName.toLowerCase().equals("transmutation") == true) { this.school = School.TRANSMUTATION; }
-		else if(schoolName.toLowerCase().equals("necromancy") == true) { this.school = School.NECROMANCY; }
+		if (schoolName.toLowerCase().equals("abjuration")) { this.school = School.ABJURATION; }
+		else if (schoolName.toLowerCase().equals("conjuration")) { this.school = School.CONJURATION; }
+		else if (schoolName.toLowerCase().equals("divination")) { this.school = School.DIVINATION; }
+		else if (schoolName.toLowerCase().equals("enchantment")) { this.school = School.ENCHANTMENT; }
+		else if (schoolName.toLowerCase().equals("evocation")) { this.school = School.EVOCATION; }
+		else if (schoolName.toLowerCase().equals("illusion")) { this.school = School.ILLUSION; }
+		else if (schoolName.toLowerCase().equals("invocation")) { this.school = School.INVOCATION; }
+		else if (schoolName.toLowerCase().equals("transmutation")) { this.school = School.TRANSMUTATION; }
+		else if (schoolName.toLowerCase().equals("necromancy")) { this.school = School.NECROMANCY; }
 		else { this.school = School.OTHER; }
 	}
 

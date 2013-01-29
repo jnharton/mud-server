@@ -65,9 +65,9 @@ public class BBEntry {
 	}
 
 	public String toView() {
-		/*return "| " + Utils.padLeft(Utils.str(this.id), 3) + " | " + Utils.padRight(this.author, 8) + " | "
+		/*return "| " + Utils.padLeft(this.id + "", 3) + " | " + Utils.padRight(this.author, 8) + " | "
 				+ Utils.padRight(this.subject, 8) + " | " + Utils.padRight(this.message, 20) + " |";*/
-		return Utils.padLeft(Utils.str(this.id), 3) + ") " + Utils.padRight(this.subject, 20) + "("
+		return Utils.padLeft(this.id + "", 3) + ") " + Utils.padRight(this.subject, 20) + "("
 				+ this.author + ")";
 	}
 

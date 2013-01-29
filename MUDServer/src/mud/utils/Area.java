@@ -54,7 +54,7 @@ public class Area {
 	public Area(Room...rooms) {
 		this.room_ids = new ArrayList<Integer>(rooms.length); // initialize room id holder
 		
-		for(Room room : rooms) {
+		for (Room room : rooms) {
 			this.room_ids.add(room.getDBRef());   // add the room ids to the list
 		}
 		
@@ -71,8 +71,8 @@ public class Area {
 	 * @return
 	 */
 	public boolean hasRoom(int id) {
-		for(Integer r_id :this.room_ids) {
-			if(id == r_id) {
+		for (Integer r_id :this.room_ids) {
+			if (id == r_id) {
 				return true;
 			}
 		}

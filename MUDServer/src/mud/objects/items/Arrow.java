@@ -32,7 +32,7 @@ public class Arrow extends Item implements  Projectile<Arrow>, Stackable<Arrow> 
 	 * @return int the size of the stack
 	 */
 	public int stackSize() {
-		if(this.a != null) {
+		if (this.a != null) {
 			return 1 + a.stackSize();
 		}
 		else {
@@ -42,7 +42,7 @@ public class Arrow extends Item implements  Projectile<Arrow>, Stackable<Arrow> 
 
 	@Override
 	public boolean stack(Arrow object) {
-		if(a == null) {
+		if (a == null) {
 			a = object;
 			return true;
 		}
@@ -53,8 +53,8 @@ public class Arrow extends Item implements  Projectile<Arrow>, Stackable<Arrow> 
 
 	@Override
 	public Arrow split(int number) {
-		if(number > 0 && stackSize() > number) {
-			if(a == null) {
+		if (number > 0 && stackSize() > number) {
+			if (a == null) {
 				return this;
 			}
 			else {
@@ -63,7 +63,7 @@ public class Arrow extends Item implements  Projectile<Arrow>, Stackable<Arrow> 
 
 				int qty = 0;       // the total quantity of arrows, how we know if we have split off enough
 
-				while(qty < number) {
+				while (qty < number) {
 					prev = curr;
 					curr = curr.a;
 					qty++;
@@ -87,13 +87,13 @@ public class Arrow extends Item implements  Projectile<Arrow>, Stackable<Arrow> 
 	@Override
 	public String toDB() {
 		String[] output = new String[8];
-		output[0] = Utils.str(this.getDBRef());          // database reference number
+		output[0] = this.getDBRef() + "";          // database reference number
 		output[1] = this.getName();                      // name
 		output[2] = this.getFlags();                     // flags
 		output[3] = this.getDesc();                      // description
-		output[4] = Utils.str(this.getLocation());       // location
-		output[5] = Utils.str(this.item_type.ordinal()); // item type
-		output[6] = Utils.str(this.stackSize());         // how many arrows are stacked together
+		output[4] = this.getLocation() + "";       // location
+		output[5] = this.item_type.ordinal() + ""; // item type
+		output[6] = this.stackSize() + "";         // how many arrows are stacked together
 		output[7] = "*";                                 // blank
 		
 		/*

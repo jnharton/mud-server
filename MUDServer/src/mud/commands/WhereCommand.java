@@ -19,7 +19,7 @@ public class WhereCommand extends Command {
 		
 		send("Player     Class     S Race      Idle Status Location", client);
 		send("-------------------------------------------------------------------------------------------------", client);
-		for(Player player : parent.getPlayers())
+		for (Player player : parent.getPlayers())
 		{
 			try {
 				String name = player.getName(); // need to limit name to 10 characters
@@ -32,13 +32,13 @@ public class WhereCommand extends Command {
 				int location = player.getLocation(); // set room # limit to 5 characters (max. 99999)
 				String room = parent.getRoom(location).getName(); // truncate to 24 characters
 				String locString;
-				if(player.hasEffect("invisibility")) { locString = "INVISIBLE"; }
+				if (player.hasEffect("invisibility")) { locString = "INVISIBLE"; }
 				else { locString = room + " (#" + player.getLocation() + ")"; }
 				String idle = player.getIdleString();
 
 				Player current = parent.getPlayer(client);
 
-				if(current.getNames().contains(name) == true || current.getName().equals(name) == true) {
+				if (current.getNames().contains(name) || current.getName().equals(name)) {
 					send(Utils.padRight(name, 10) + " " + Utils.padRight(playerClass, 9) + " " + Utils.padRight(playerGender, 1)
 							+ Utils.padRight(race, 9) + " " + Utils.padRight(idle, 4) + " " + Utils.padRight(ustatus, 6) + " " + locString, client);
 				}
@@ -49,7 +49,7 @@ public class WhereCommand extends Command {
 				
 				n++;
 			}
-			catch(NullPointerException npe) {
+			catch (NullPointerException npe) {
 				npe.printStackTrace();
 			}
 		}

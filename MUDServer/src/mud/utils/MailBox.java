@@ -28,27 +28,17 @@ import mud.utils.Mail;
  * should have methods for adding and removing mail (reciept and deletion) as well
  * as a way to get how many messages there are, how many are unread, the next unread one, etc
  * @author Jeremy
- *
  */
 public class MailBox implements Iterable<Mail> {
-	private int size;
-	public int numMessages;
-	public int unread;
-	private ArrayList<Mail> mailbox;
-	
+
+    final private ArrayList<Mail> mailbox;
+
 	public MailBox() {
-		this.size = 10;
-		this.numMessages = 0;
-		this.mailbox = new ArrayList<Mail>(this.size);
+		this.mailbox = new ArrayList<Mail>();
 	}
 	
 	public void add(Mail mail) {
-		if(this.numMessages < this.size) {
-			this.mailbox.add(mail);
-			this.numMessages++;
-		}
-		else {
-		}
+        this.mailbox.add(mail);
 	}
 	
 	public Mail get(int index) {
@@ -56,33 +46,34 @@ public class MailBox implements Iterable<Mail> {
 	}
 	
 	public Mail remove(int index) {
-		this.numMessages--;
 		return mailbox.remove(index);
 	}
-	
-	/*public Mail getUnreadMail() {
-		return null;
-	}*/
-	
+
+	public int numMessages() {
+		return mailbox.size();
+	}
+
+	public int numUnreadMessages() {
+        int num = 0;
+		for (final Mail m : mailbox) {
+			if (m.isUnread()) {
+				num++;
+			}
+		}
+		return num;
+	}
+
 	// allow moving directly to next message
 	public Mail getNextUnreadMail() {
-		for(Mail m : this) {
-			if(m.isUnread()) {
+		for (final Mail m : mailbox) {
+			if (m.isUnread()) {
 				return m;
 			}
 		}
 		
 		return null;
 	}
-	
-	/*public Mail getNextMail() {
-		return null;
-	}
-	
-	public Mail getPreviousMail() {
-		return null;
-	}*/
-	
+
 	public Iterator<Mail> iterator() {
 		return new MailBoxIterator();
 	}
@@ -93,14 +84,10 @@ public class MailBox implements Iterable<Mail> {
 		public boolean hasNext() {  
 			return index < mailbox.size();  
 		}
-		
-		/*public boolean hasPrev() {
-			return index > -1;
-		}*/
 
 		public Mail next() {  
-			if ( hasNext() ) {
-				Mail m = mailbox.get(index);
+			if (hasNext()) {
+				final Mail m = mailbox.get(index);
 				this.index++;
 				return m;
 			}
@@ -108,17 +95,6 @@ public class MailBox implements Iterable<Mail> {
 				throw new NoSuchElementException();
 			}
 		}
-		
-		/*public Mail prev() {
-			if( hasPrev() ) {
-				this.index--; 
-				return mailbox.get(index);
-			}
-			else {
-				throw new NoSuchElementException();
-			}
-		}*/
-		
 
 		public void remove() {  
 			throw new UnsupportedOperationException();

@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import mud.Editor;
 import mud.MUDServer;
 import mud.objects.Player;
+import mud.utils.EditList;
 import mud.utils.Mail;
 import mud.utils.MailBox;
 import mud.utils.Utils;
@@ -26,11 +27,11 @@ public class MailCommand extends Command {
 		
 		String[] args = arg.split(" ");
 		
-		if(arg.equals("") == false) {
-			if(args[0].equals("#delete") == true) {
+		if (!arg.equals("")) {
+			if (args[0].equals("#delete")) {
 				client.write("#delete function entry\n");
 			}
-			else if(args[0].equals("#list") == true) {
+			else if (args[0].equals("#list")) {
 				// kinda dependent on mail message objects and mailbox
 				// basically we get the mailbox object and then give information for each
 				// piece of mail
@@ -41,7 +42,7 @@ public class MailCommand extends Command {
 				client.write("| Mailbox                                                            |\n");
 				client.write("+--------------------------------------------------------------------+\n");
 				
-				for(Mail mail : player.getMailBox()) {
+				for (final Mail mail : player.getMailBox()) {
 					client.write("| ");
 					client.write(Utils.padLeft(mail.getId().toString(), 5).substring(0, 5));
 					client.write(" ");
@@ -56,10 +57,10 @@ public class MailCommand extends Command {
 				
 				client.write("+--------------------------------------------------------------------+\n");
 			}
-			else if(args[0].equals("#write") == true) {
+			else if (args[0].equals("#write")) {
 				/* Functionality is not complete */
 				
-				if(arg.indexOf("+") != -1) {
+				if (arg.indexOf("+") != -1) {
 					String[] args1 = arg.substring(arg.indexOf("+")).split("=");
 					
 					player.setStatus("EDT");
@@ -71,13 +72,10 @@ public class MailCommand extends Command {
 					// would look for the write listname in my lists, use it
 					// to construct a mail message, and then remove it?
 					
-					player.listname = "mailmsg";
-					player.nlist = new ArrayList<String>();
-					player.nline = 0;
-					
+                    player.startEditing("mailmsg");
 					client.write("Mail Editor v0.0b\n");
-
-					String header = "< List: " + player.listname + " Lines: " + player.nlist.size() + " >";
+                    final EditList list = player.getEditList();
+					String header = "< List: " + list.name + " Lines: " + list.getLines() + " >";
 
 					client.write(header);
 					
@@ -89,12 +87,9 @@ public class MailCommand extends Command {
 				}
 			}
 			else {
-				int msg;
+				final int msg = Utils.toInt(args[0], -1);
 
-				try { msg = Integer.parseInt(args[0]); }
-				catch(NumberFormatException nfe) { msg = -1; }
-				
-				if(msg > -1 && msg < player.getMailBox().numMessages) {
+				if (msg > -1 && msg < player.getMailBox().numMessages()) {
 					client.write("Checking Mail..." + msg + "\n");
 					
 					Mail mail = player.getMailBox().get(msg);
@@ -104,7 +99,7 @@ public class MailCommand extends Command {
 					client.write("Subject: " + mail.getSubject() + "\n");
 					client.write(mail.getMessage() + "\n");
 
-					if(mail.isUnread()) {
+					if (mail.isUnread()) {
 						mail.markRead();
 						client.write("< mail marked as read >\n");
 					}
@@ -117,9 +112,9 @@ public class MailCommand extends Command {
 		else {
 			client.write("Checking for unread messages...\n");
 
-			int messages = parent.checkMail(player);
+            final int messages = player.getMailBox().numUnreadMessages();
 
-			if(messages == 0) { client.write("You have no unread messages.\n"); }
+			if (messages == 0) { client.write("You have no unread messages.\n"); }
 			else { client.write("You have " + String.valueOf(messages) + " unread messages.\n"); }
 		}
 	}

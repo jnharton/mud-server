@@ -49,8 +49,8 @@ public class CommandExec implements Runnable {
 
 	@Override
 	public void run() {
-		while( parent1.isRunning() ) {
-			if(!this.cmdQueue.isEmpty()) {
+		while ( parent1.isRunning() ) {
+			if (!this.cmdQueue.isEmpty()) {
 				try {
 					newCmd = this.cmdQueue.remove();
 					
@@ -67,7 +67,7 @@ public class CommandExec implements Runnable {
 					// try to capture errors
 					try {
 						// handle command permissions
-						if( parent1.checkAccess( client, newCmd.getPermissions() ) )
+						if ( parent1.checkAccess( client, newCmd.getPermissions() ) )
 						{
 							// interpret command
 							parent1.cmd(command, client);
@@ -87,15 +87,15 @@ public class CommandExec implements Runnable {
 					// clear the processed command
 					newCmd = null;
 					
-					if( parent1.loginCheck( client ) ) {
+					if ( parent1.loginCheck( client ) ) {
 						parent1.prompt(client); // buggy, especially when you're not logged on yet
 					}
 					
 					// if the queue isn't empty, print out a list of the unresolved commands
-					if(!this.cmdQueue.isEmpty()) {
+					if (!this.cmdQueue.isEmpty()) {
 						System.out.println("Queue");
 						System.out.println("------------------------------");
-						for(CMD c : this.cmdQueue) {
+						for (final CMD c : this.cmdQueue) {
 							System.out.println(c.getCmdString().trim());
 						}
 					}
@@ -106,9 +106,9 @@ public class CommandExec implements Runnable {
 				catch (InterruptedException ie) {
 					// if interrupted when we are beginning to process command
 					System.out.println("Command Execution: Interrupted!");
-					if(newCmd != null) {
+					if (newCmd != null) {
 						// if the command is still waiting
-						if(newCmd.status == Status.WAITING) {
+						if (newCmd.status == Status.WAITING) {
 							this.cmdQueue.add(newCmd); // put it back into the queue
 							newCmd = null;             // null our reference to it
 						}

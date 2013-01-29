@@ -8,6 +8,7 @@ import mud.objects.Room;
 import mud.objects.Thing;
 
 import mud.net.Client;
+import mud.utils.Utils;
 
 import mud.objects.Player;
 
@@ -19,51 +20,42 @@ public class ExamineCommand extends Command {
 
 	@Override
 	public void execute(String arg, Client client) {
-		if( arg.equals("") || arg.equals("here") ) {
+		if ( arg.equals("") || arg.equals("here") ) {
 			Room room = parent.getRoom(client);
 			parent.examine(room, client);
 		}
-		else if(arg.equals("me") == true) {
+		else if (arg.equals("me")) {
 			Player player = parent.getPlayer(client);
 			parent.examine(player, client);
 		}
 		else {
-			int dbref;
+            final int dbref = Utils.toInt(arg, -1);
 
-			try {
-				dbref = Integer.parseInt(arg);
-			}
-			catch(NumberFormatException nfe) {
-				nfe.printStackTrace();
-				dbref = -1;
-			}
-
-			if(dbref != -1) {
-
+			if (dbref != -1) {
 				MUDObject mobj = parent.getObject(dbref);
 
-				if(mobj != null) {
-					if(mobj instanceof Player) {
+				if (mobj != null) {
+					if (mobj instanceof Player) {
 						Player player = (Player) mobj;
 						parent.examine(player, client);
 					}
 
-					else if(mobj instanceof Room) {
+					else if (mobj instanceof Room) {
 						Room room = (Room) mobj;
 						parent.examine(room, client);
 					}
 
-					else if(mobj instanceof Exit) {
+					else if (mobj instanceof Exit) {
 						Exit exit = (Exit) mobj;
 						parent.examine(exit, client);
 					}
 					
-					else if(mobj instanceof Thing) {
+					else if (mobj instanceof Thing) {
 						Thing thing = (Thing) mobj;
 						parent.examine(thing, client);
 					}
 
-					else if(mobj instanceof Item) {
+					else if (mobj instanceof Item) {
 						Item item = (Item) mobj;
 						parent.examine(item, client);
 					}
@@ -77,28 +69,28 @@ public class ExamineCommand extends Command {
 				
 				/*MUDObject mobj = parent.getObject(dbref);
 
-				if(mobj != null) {
-					if(mobj instanceof Player) {
+				if (mobj != null) {
+					if (mobj instanceof Player) {
 						Player player = (Player) mobj;
 						parent.examine(player, client);
 					}
 
-					else if(mobj instanceof Room) {
+					else if (mobj instanceof Room) {
 						Room room = (Room) mobj;
 						parent.examine(room, client);
 					}
 
-					else if(mobj instanceof Exit) {
+					else if (mobj instanceof Exit) {
 						Exit exit = (Exit) mobj;
 						parent.examine(exit, client);
 					}
 					
-					else if(mobj instanceof Thing) {
+					else if (mobj instanceof Thing) {
 						Thing thing = (Thing) mobj;
 						parent.examine(thing, client);
 					}
 
-					else if(mobj instanceof Item) {
+					else if (mobj instanceof Item) {
 						Item item = (Item) mobj;
 						parent.examine(item, client);
 					}
@@ -111,21 +103,21 @@ public class ExamineCommand extends Command {
 				// get by string/name
 				Room room = parent.getRoom(arg);
 				
-				if(room != null) {
+				if (room != null) {
 					parent.examine(room, client);
 					return;
 				}
 				
 				Player player = parent.getPlayer(arg);
 				
-				if(player != null) {
+				if (player != null) {
 					parent.examine(player, client);
 					return;
 				}
 				
 				Exit exit = parent.getExit(arg, client);
 				
-				if(exit != null) {
+				if (exit != null) {
 					parent.examine(exit, client);
 					return;
 				}

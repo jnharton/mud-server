@@ -15,14 +15,14 @@ public class Zone {
 	Room room;
 	private Integer instance_id = null; // instance_id, if this is the original, it should be null
 
-	public Zone(String tName, Room tRoom) {
+	public Zone(final String name, final Room room) {
 		this.id = -1;
 		this.name = tName;
 		this.room = tRoom;
 	}
 
 	public Zone(Zone toCopy) {
-	}
+    }
 
 	public String getName() {
 		return this.name;

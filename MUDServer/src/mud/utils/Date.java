@@ -41,18 +41,18 @@ public class Date implements Serializable {
 	
 	// assume 1 index day and month input 
 	public Date(int month, int day) {
-		if(month > 12) { this.month = 11; }
+		if (month > 12) { this.month = 11; }
 		else { this.month = month; }
-		if(day > 30) { this.day = 29; }
+		if (day > 30) { this.day = 29; }
 		else { this.day = day; }
 	}
 	
 	public Date(int month, int day, int year) {
-		if(month > 12) { this.month = 11; }
+		if (month > 12) { this.month = 11; }
 		else { this.month = month; }
-		if(day > 30) { this.day = 29; }
+		if (day > 30) { this.day = 29; }
 		else { this.day = day; }
-		if(year > 9999) { this.year = 9999; }
+		if (year > 9999) { this.year = 9999; }
 		else { this.year = year; }
 	}
 

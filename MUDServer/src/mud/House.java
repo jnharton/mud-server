@@ -72,7 +72,7 @@ public class House {
 			// size 1, rooms 5
 			// size 2, rooms 10
 			// size 3  rooms 15
-			if(size != -1) {
+			if (size != -1) {
 				return 5 * size;
 			}
 			else {

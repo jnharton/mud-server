@@ -23,312 +23,90 @@
   Boston, MA  02111-1307  USA
 */
 
-/*
- * modified on July 18th, 2012 to remove PApplet references and calls
- * to the core libraries of Processing
- * 
- * modified on July 20th, 2012 to add a getClients() method to access
- * the clients. also, some access keywords changed
+/**
+ * Ripped out tons of ****.
  */
-
 package mud.net;
 
 import java.io.*;
 import java.lang.reflect.*;
 import java.net.*;
+import java.util.*;
 
-import mud.MUDServer;
-import mud.utils.Utils;
-
-/**
-   * ( begin auto-generated from Server.xml )
-   * 
-   * A server sends and receives data to and from its associated clients 
-   * (other programs connected to it). When a server is started, it begins 
-   * listening for connections on the port specified by the <b>port</b> 
-   * parameter. Computers have many ports for transferring data and some are 
-   * commonly used so be sure to not select one of these. For example, web 
-   * servers usually use port 80 and POP mail uses port 110.
-   * 
-   * ( end auto-generated )
- * @webref net
- * @usage application
- * @brief The server class is used to create server objects which send and receives data to and from its associated clients (other programs connected to it). 
- * @instanceName server  	any variable of type Server
- */
 public class Server implements Runnable {
 
-  private MUDServer parent;
-  private Method serverEventMethod;
+    final private Vector<Client> clients = new Vector<Client>();
 
-  private Thread thread;
-  private ServerSocket server;
-  private int port;
-  
-  /** Number of clients currently connected. */
-  private int clientCount;
-  /** Array of client objects, useful length is determined by clientCount. */
-  private Client[] clients;
+    private ServerSocket server;
+    private Thread thread;
+    private boolean running;
 
-  /**
-   * @param parent typically use "this"
-   * @param port port used to transfer data
-   */
-  public Server(MUDServer parent, int port) {
-    this.parent = parent;
-    this.port = port;
+    public Server(final int port) {
 
-    try {
-      server = new ServerSocket(this.port);
-      //clients = new Vector();
-      clients = new Client[10];
+        try {
+            server = new ServerSocket(port);
+            thread = new Thread(this);
+            thread.start();
 
-      thread = new Thread(this);
-      thread.start();
-
-      //parent.registerDispose(this);
-
-      // reflection to check whether host applet has a call for
-      // public void serverEvent(Server s, Client c);
-      // which is called when a new guy connects
-      try {
-        serverEventMethod =
-          parent.getClass().getMethod("serverEvent",
-                                      new Class[] { Server.class,
-                                                    Client.class });
-      } catch (Exception e) {
-        // no such method, or an error.. which is fine, just ignore
-      }
-
-    } catch (IOException e) {
-      e.printStackTrace();
-      thread = null;
-      //errorMessage("<init>", e);
-    }
-  }
-
-
-  /**
-   * ( begin auto-generated from Server_disconnect.xml )
-   * 
-   * Disconnect a particular client.
-   * 
-   * ( end auto-generated )
-   * 
-   * ( end auto-generated )
-   * @webref server:server
-   * @param client the client to disconnect
-   */
-  public void disconnect(Client client) {
-    //client.stop();
-    client.dispose();
-    int index = clientIndex(client);
-    if (index != -1) {
-      removeIndex(index);
-    }
-  }
-  
-  
-  protected void removeIndex(int index) {
-    clientCount--;
-    // shift down the remaining clients
-    for (int i = index; i < clientCount; i++) {
-      clients[i] = clients[i+1];
-    }
-    // mark last empty var for garbage collection
-    clients[clientCount] = null;
-  }
-  
-  
-  protected void addClient(Client client) {
-    if (clientCount == clients.length) {
-      clients = (Client[]) Utils.expand(clients);
-    }
-    clients[clientCount++] = client;
-  }
-  
-  
-  protected int clientIndex(Client client) {
-    for (int i = 0; i < clientCount; i++) {
-      if (clients[i] == client) {
-        return i;
-      }
-    }
-    return -1;
-  }
-
-
-  // the last index used for available. can't just cycle through
-  // the clients in order from 0 each time, because if client 0 won't
-  // shut up, then the rest of the clients will never be heard from.
-  int lastAvailable = -1;
-
-  /**
-   * ( begin auto-generated from Server_available.xml )
-   * 
-   * Returns the next client in line with a new message.
-   * 
-   * ( end auto-generated )
-   * 
-   * ( end auto-generated )
-   * @webref server
-   * @usage application
-   */
-  public Client available() {
-    synchronized (clients) {
-      int index = lastAvailable + 1;
-      if (index >= clientCount) index = 0;
-
-      for (int i = 0; i < clientCount; i++) {
-        int which = (index + i) % clientCount;
-        Client client = clients[which];
-        if (client.available() > 0) {
-          lastAvailable = which;
-          return client;
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.exit(-1);
         }
-      }
     }
-    return null;
-  }
 
+	public void stopRunning() {
+        running = false;
+	}
 
-  /**
-   * ( begin auto-generated from Server_stop.xml )
-   * 
-   * Disconnects all clients and stops the server.
-   * 
-   * ( end auto-generated )
-   * 
-   * <h3>Advanced</h3>
-   * <p/>
-   * Use this to shut down the server if you finish using it while your applet 
-   * is still running. Otherwise, it will be automatically be shut down by the 
-   * host PApplet using dispose(), which is identical. 
-   * @webref server
-   * @usage application
-   */
-  public void stop() {
-    dispose();
-  }
+	public boolean isRunning() {
+		return running;
+	}
 
+	public boolean hasClients() {
+		return !clients.isEmpty();
+	}
 
-  /**
-   * Disconnect all clients and stop the server: internal use only.
-   */
-  public void dispose() {
-    try {
-      thread = null;
+ 	public Client[] getClients() {
+		return (Client[]) clients.toArray();
+	}
 
-      if (clients != null) {
-        for (int i = 0; i < clientCount; i++) {
-          disconnect(clients[i]);
-        }
-        clientCount = 0;
-        clients = null;
-      }
-
-      if (server != null) {
-        server.close();
-        server = null;
-      }
-
-    } catch (IOException e) {
-      e.printStackTrace();
-      //errorMessage("stop", e);
+    public void disconnect(final Client client) {
+        client.stopRunning();
+        clients.remove(client);
     }
-  }
 
-
-  public void run() {
-    while (Thread.currentThread() == thread) {
-      try {
-        Socket socket = server.accept();
-        Client client = new Client(parent, socket);
-        synchronized (clients) {
-          addClient(client);
-          if (serverEventMethod != null) {
-            try {
-              serverEventMethod.invoke(parent, new Object[] { this, client });
-            } catch (Exception e) {
-              System.err.println("Disabling serverEvent() for port " + port);
-              e.printStackTrace();
-              serverEventMethod = null;
+    public void run() {
+        try {
+            while (running) {
+                Socket socket = server.accept();
+                Client client = new Client(socket);
+                clients.add(client);
             }
-          }
+        } catch (Exception e) {
+            e.printStackTrace();
+
+        } finally {
+            for (final Client c : clients) {
+                c.stopRunning();
+            }
         }
-      } catch (IOException e) {
-        //errorMessage("run", e);
-        e.printStackTrace();
-        thread = null;
-      }
-      try {
-        Thread.sleep(8);
-      } catch (InterruptedException ex) { }
     }
-  }
 
-
-  /**
-   * ( begin auto-generated from Server_write.xml )
-   * 
-   * Writes a value to all the connected clients. It sends bytes out from the 
-   * Server object.
-   * 
-   * ( end auto-generated )
-   * 
-   * @webref server
-   * @brief Writes data to all connected clients
-   * @param data data to write
-   */
-  public void write(int data) {  // will also cover char
-    int index = 0;
-    while (index < clientCount) {
-      clients[index].write(data);
-      if (clients[index].active()) {
-        index++;
-      } else {
-        removeIndex(index);
-      }
+    public void write(final String data) {
+        writeToAllClients(data.getBytes());
     }
-  }
 
-  public void write(byte data[]) {
-    int index = 0;
-    while (index < clientCount) {
-      clients[index].write(data);
-      if (clients[index].active()) {
-        index++;
-      } else {
-        removeIndex(index);
-      }
+    public void write(final char data) {
+        writeToAllClients(new byte[]{ (byte) data });
     }
-  }
 
-
-public void write(String data) {
-    int index = 0;
-    while (index < clientCount) {
-      clients[index].write(data);
-      if (clients[index].active()) {
-        index++;
-      } else {
-        removeIndex(index);
-      }
+    public void writeToAllClients(final byte data[]) {
+        for (final Client c : new ArrayList<Client>(clients)) {
+            if (c.isRunning())
+                c.write(data);
+            else
+                clients.remove(c);
+        }
     }
-  }
 
-
-  /**
-   * General error reporting, all corraled here just in case
-   * I think of something slightly more intelligent to do.
-   */
-//  public void errorMessage(String where, Exception e) {
-//    parent.die("Error inside Server." + where + "()", e);
-//    //System.err.println("Error inside Server." + where + "()");
-//    //e.printStackTrace(System.err);
-//  }
-  
-  public Client[] getClients() {
-	  return this.clients;
-  }
 }

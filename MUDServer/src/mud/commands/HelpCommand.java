@@ -14,7 +14,7 @@ public class HelpCommand extends Command {
 
 	@Override
 	public void execute(String arg, Client client) {
-		if(arg.equals("@reload") == true)
+		if (arg.equals("@reload"))
 		{
 			parent.help_reload();
 			client.write("Game> Help Files Reloaded!\n");
@@ -30,27 +30,28 @@ public class HelpCommand extends Command {
 		 * the game for a response)
 		 */
 
-		if( arg.equals("") ) { arg = "help"; }
+		if ( arg.equals("") ) {
+            arg = "help";
+        }
 
-		if( parent.helpmap.containsKey(arg) )
+        final String[] helpfile = parent.getHelpFile(arg);
+		if (helpfile != null)
 		{
-			String[] helpfile = parent.getHelpFile(arg);
 
-			if(helpfile.length > 25) {
-				Player player = parent.getPlayer(client);
+			if (helpfile.length > 25) {
+				final Player player = parent.getPlayer(client);
 				player.setPager( new Pager(helpfile) );
 				player.setStatus("VIEW");
 				
 				parent.op_pager("", client);
 			}
 			else {
-				for(int i = 1; i < helpfile.length; i++)
-				{
-					client.write(helpfile[i] + "\r\n");
+				for (final String line : helpfile) {
+					client.write(line + "\r\n");
 				}
 			}
 		}
-		/*else if( parent.topics.containsKey(arg) ) {
+		/*else if ( parent.topics.containsKey(arg) ) {
 		}*/
 		else
 		{

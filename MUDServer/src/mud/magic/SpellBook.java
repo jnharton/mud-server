@@ -53,7 +53,7 @@ public class SpellBook {
 	}
 	
 	public void addSpells(Spell... newSpells) {
-		for(Spell spell : newSpells) {
+		for (Spell spell : newSpells) {
 			spellTable.get(spell.getLevel()).add(spell);
 		}
 	}
@@ -77,7 +77,7 @@ public class SpellBook {
 	}
 	
 	public void removeSpells(Spell... spells) {
-		for(Spell spell : spells) {
+		for (Spell spell : spells) {
 			spellTable.get(spell.getLevel()).remove(spell);
 		}
 	}

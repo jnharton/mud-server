@@ -66,7 +66,7 @@ public class Jewelry extends Item implements Equippable<Jewelry>, Usable<Jewelry
 
 	public void use(String arg, Client client) {
 		System.out.println("[Jewelry->Use]");
-		if(this.equip_type == ItemType.RING) {
+		if (this.equip_type == ItemType.RING) {
 			Player player = parent.getPlayer(client);
 			parent.debug(player);
 			System.out.println(parent.applyEffect(player, e));
@@ -108,12 +108,12 @@ public class Jewelry extends Item implements Equippable<Jewelry>, Usable<Jewelry
 
 	public String toDB() {
 		String[] output = new String[8];
-		output[0] = Utils.str(this.getDBRef());          // jewelry database reference number
+		output[0] = this.getDBRef() + "";          // jewelry database reference number
 		output[1] = this.getName();                      // jewelry name
 		output[2] = this.getFlags();                     // jewelry flags
 		output[3] = this.getDesc();                      // jewelry description
-		output[4] = Utils.str(this.getLocation());       // jewelry location
-		output[5] = Utils.str(this.item_type.ordinal()); // item type
+		output[4] = this.getLocation() + "";       // jewelry location
+		output[5] = this.item_type.ordinal() + ""; // item type
 		output[6] = "*";                                 // nothing (placeholder)
 		output[7] = "*";                                 // nothing (placeholder)
 		return Utils.join(output, "#");

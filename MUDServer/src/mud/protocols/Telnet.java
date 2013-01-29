@@ -99,7 +99,7 @@ public class Telnet  {
 		
 		System.out.println("Translate from String to Byte (sending)");
 		
-		for(int s = 0; s < work.length; s++) {
+		for (int s = 0; s < work.length; s++) {
 			System.out.println(work[s] + " " + map.get(work[s]));
 			ba[s] = map.get(work[s]);
 		}
@@ -119,7 +119,7 @@ public class Telnet  {
 		
 		System.out.println("Translate from Byte to String (receiving)");
 		
-		for(int b = 0; b < input.length; b++) {
+		for (int b = 0; b < input.length; b++) {
 			System.out.println(input[b] + " " + map1.get(input[b]));
 			output[b] = map1.get(input[b]);
 		}

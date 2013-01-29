@@ -61,7 +61,7 @@ public class Pager {
 	public String[] getView() {
 		String[] output;
 		
-		if(this.content.length >= MAX_ROWS) {
+		if (this.content.length >= MAX_ROWS) {
 			output = Arrays.copyOfRange(this.content, this.topLine, bottomLine);
 		}
 		else {
@@ -84,7 +84,7 @@ public class Pager {
 	}
 	
 	public String[] scrollUp() {
-		if(topLine >= scrollDistance) {
+		if (topLine >= scrollDistance) {
 			this.topLine = topLine - scrollDistance;
 			this.bottomLine = topLine + rows;
 		}
@@ -93,11 +93,11 @@ public class Pager {
 	}
 	
 	public String[] scrollDown() {
-		if(topLine + scrollDistance <= this.content.length) {
+		if (topLine + scrollDistance <= this.content.length) {
 			this.topLine = topLine + scrollDistance;
 			
 			// if the top line doesn't exceed the length and the topline + rows doesn't exceed the length
-			if(topLine < this.content.length && !(topLine + rows > this.content.length) ) {
+			if (topLine < this.content.length && !(topLine + rows > this.content.length) ) {
 				this.bottomLine = topLine + rows;
 			}
 			else {

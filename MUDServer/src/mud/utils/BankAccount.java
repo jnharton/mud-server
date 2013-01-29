@@ -57,8 +57,8 @@ public class BankAccount {
 	{
 		this.id = id;
 		this.money = new int[] { 0, 0, 0, 0 };
-		if(newMoney.length <= 4) {
-			for(int i = 0; i < this.money.length; i++) {
+		if (newMoney.length <= 4) {
+			for (int i = 0; i < this.money.length; i++) {
 				this.money[i] = newMoney[i];
 			}
 		}
@@ -98,8 +98,8 @@ public class BankAccount {
 	 * @param deposit
 	 */
 	public void deposit(int[] deposit) {
-		if(deposit.length >= 4) {
-			for(int i = 0; i < this.money.length; i++) {
+		if (deposit.length >= 4) {
+			for (int i = 0; i < this.money.length; i++) {
 				this.money[i] += deposit[i];
 			}
 		}
@@ -112,9 +112,9 @@ public class BankAccount {
 	 */
 	public int[] withdraw(int[] withdrawal) {
 		int[] n = new int[4];
-		if(withdrawal.length >= 4) {
-			for(int i = 0; i < this.money.length; i++) {
-				if(withdrawal[i] < this.money[i]) {
+		if (withdrawal.length >= 4) {
+			for (int i = 0; i < this.money.length; i++) {
+				if (withdrawal[i] < this.money[i]) {
 					this.money[i] -= withdrawal[i];
 					n[i] += withdrawal[i];
 				}

@@ -57,8 +57,8 @@ public class Task {
 	public Task(String tDescription, TaskType tType, Object other) {
 		this.description = tDescription;
 		this.taskType = tType;
-		if(this.taskType == TaskType.KILL) {
-			if(other instanceof Integer) {
+		if (this.taskType == TaskType.KILL) {
+			if (other instanceof Integer) {
 				Integer k = (Integer) other;
 				
 				this.toKill = k;
@@ -97,19 +97,19 @@ public class Task {
 		case NONE:
 			break;
 		case COLLECT:
-			if(this.collects == this.toCollect) {
+			if (this.collects == this.toCollect) {
 				this.isComplete = true;
 			}
 			else { this.isComplete = false; }
 			break;
 		case KILL:
-			if(this.kills == this.toKill) {
+			if (this.kills == this.toKill) {
 				this.isComplete = true;
 			}
 			else { this.isComplete = false; }
 			break;
 		case RETRIEVE:
-			if( this.hasItem ) {
+			if ( this.hasItem ) {
 				this.isComplete = true;
 			}
 			else { this.isComplete = false; }
@@ -121,7 +121,7 @@ public class Task {
 	public boolean update(TaskUpdate update) {
 		boolean taskChanged = applyUpdate(update);
 		
-		if(taskChanged) {
+		if (taskChanged) {
 			update();
 			return true;
 		}

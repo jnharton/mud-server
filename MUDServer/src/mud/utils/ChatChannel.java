@@ -62,13 +62,13 @@ public class ChatChannel implements Runnable {
 		Client client;
 		
 		// while the game is running, and the time thread is not suspended
-		while( parent1.isRunning() ) {
+		while ( parent1.isRunning() ) {
 			// if client is a logged in player, send them any messages queued for them
 			// Send any pages, messages, etc to their respective recipients, or to a list of recipients?
 			synchronized(this.listeners) {
-				for(Player player : this.listeners) { // for every "listening player
-					if(1 == 1) { // check for gag?
-						for(Message msg : this.messages) { // for the list of messages
+				for (Player player : this.listeners) { // for every "listening player
+					if (1 == 1) { // check for gag?
+						for (Message msg : this.messages) { // for the list of messages
 							try {
 								client = parent1.getClient(player);
 
@@ -85,9 +85,9 @@ public class ChatChannel implements Runnable {
 				}
 			}
 
-			/*for(Message msg : this.messages) { // for the list of messages
-				for(Player player : this.listeners) { // for every "listening player
-					if(1 == 1) {
+			/*for (Message msg : this.messages) { // for the list of messages
+				for (Player player : this.listeners) { // for every "listening player
+					if (1 == 1) {
 						try {
 							client = parent1.getClient(player);
 

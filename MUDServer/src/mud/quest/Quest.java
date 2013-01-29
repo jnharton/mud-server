@@ -35,7 +35,7 @@ public class Quest {
 		this.description = qDescription;
 		this.tasks = new ArrayList<Task>();
 		
-		for(Task task : tasks) { this.tasks.add(task); }
+		for (Task task : tasks) { this.tasks.add(task); }
 	}
 	
 	/**
@@ -52,7 +52,7 @@ public class Quest {
 		this.description = template.description;
 		this.tasks = new ArrayList<Task>();
 		
-		for(Task task : template.getTasks()) { this.tasks.add(task); }
+		for (Task task : template.getTasks()) { this.tasks.add(task); }
 	}
 	
 	public void addTask(Task newTask) {
@@ -93,8 +93,8 @@ public class Quest {
 	}
 	
 	private void update() {
-		for(Task task : this.tasks) {
-			if( !task.isComplete() ) {
+		for (Task task : this.tasks) {
+			if ( !task.isComplete() ) {
 				return;
 			}
 		}
@@ -112,7 +112,7 @@ public class Quest {
 
 		boolean questChanged = applyUpdate(qu);
 
-		if(questChanged) {
+		if (questChanged) {
 			update();
 			return true;
 		}
@@ -136,10 +136,10 @@ public class Quest {
 		int toRemove = -1;
 		boolean questChanged = false;
 		
-		for(Task task : this.tasks) {
-			for(TaskUpdate tu : update.taskUpdates) {
-				if( tu.taskId == task.getId() ) {
-					if( task.update(tu) ) { questChanged = true; } // update task state
+		for (Task task : this.tasks) {
+			for (TaskUpdate tu : update.taskUpdates) {
+				if ( tu.taskId == task.getId() ) {
+					if ( task.update(tu) ) { questChanged = true; } // update task state
 					toRemove = update.taskUpdates.indexOf(tu);     // get index of update for direct removal
 					break;
 				}

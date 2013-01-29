@@ -41,7 +41,7 @@ public class edData {
 	public boolean setObject(String key, Object object) {
 		boolean success = false;
 		
-		if( this.objects.containsKey(key) ) {
+		if ( this.objects.containsKey(key) ) {
 			this.objects.put(key, object);
 			success = true;
 		}

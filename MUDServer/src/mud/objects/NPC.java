@@ -186,7 +186,7 @@ public class NPC extends Player
 			// send some kind of generic response (need an ai of a kind to generate/determine responses)
 			Message msg = new Message(this, greeting);
 			ret.add(msg);
-			if(questList.size() > 0) {
+			if (questList.size() > 0) {
 				//
 				String test = "I have two quests available:\n" +
 						questList.get(0).getName() +
