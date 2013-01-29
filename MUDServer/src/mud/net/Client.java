@@ -31,6 +31,7 @@ package mud.net;
 import java.io.*;
 import java.lang.reflect.*;
 import java.net.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class Client implements Runnable {
 
@@ -40,11 +41,10 @@ public class Client implements Runnable {
 	final private Socket socket;
 	final private InputStream input;
 	final private OutputStream output;
+	final private ConcurrentLinkedQueue<String> queuedLines = new ConcurrentLinkedQueue<String>();
 
     private final int BUF_SIZE = 4096;
 
-	private byte buf[] = new byte[BUF_SIZE];
-	private int bufIndex = 0;
     private boolean running;
 
 	public Client(String host, int port) throws IOException {
@@ -72,11 +72,15 @@ public class Client implements Runnable {
 
 	public void run() {
         try {
+            final byte buf[] = new byte[BUF_SIZE];
             while (running) {
-                synchronized (buf) {
-                    if (bufIndex < BUF_SIZE) {
-                        final int numRead = input.read(buf, bufIndex, BUF_SIZE - bufIndex);
-                        bufIndex += numRead;
+                final int numRead = input.read(buf, 0, BUF_SIZE);
+                if (numRead > 0) {
+                    final String input = new String(buf, 0, numRead);
+                    for (final String line : input.split("(\r\n|\n|\r)")) {
+                        if (line != null && !"".equals(line)) {
+                            queuedLines.add(line);
+                        }
                     }
                 }
             }
@@ -98,29 +102,7 @@ public class Client implements Runnable {
 	}
 
 	public String getInput() {
-        synchronized (buf) {
-            if (bufIndex < 1) {
-                return null;
-            }
-            
-            final String input = new String(buf, 0, bufIndex);
-            bufIndex = 0;
-            return input;
-        }
-	}
-
-	public int available() {
-        return bufIndex;
-	}
-
-	public char readChar() {
-        synchronized (buf) {
-            final char ret = (char) buf[0];
-            for (int i = 0; i < bufIndex - 1; i++) {
-                buf[i] = buf[i + 1];
-            }
-            return ret;
-        }
+        return queuedLines.poll();
 	}
 
 	public void writeln(final String data) {

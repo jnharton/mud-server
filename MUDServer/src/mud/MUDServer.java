@@ -183,7 +183,7 @@ public class MUDServer {
 
 	// server configuration settings
 	private int port = 4202;            // the port on which to listen for client connections
-	private int welcome_room = 8;       // welcome room
+	private int WELCOME_ROOM = 8;       // welcome room
 	private int max_log_size = 5000;    // max length of a log file (in lines)
 	private int max_levels = 20;        // maximum player level
 	private int max_players = 15;       // maximum number of players (adustable, but exceeding 100/1000 may cause other code to break down catastrophically)
@@ -252,7 +252,6 @@ public class MUDServer {
 	// Objects (used throughout program in lieu of function scope variables) -- being phased out (April 2012
 	// these must be global variable, so that mud can have top-level control over them in the program
 	private Server s;                      // The server object
-	private Calendar calendar;
 	private Log log;                       // A log file to keep track of user actions
 	private Log connection;                // A log file to keep track of connection/disconnection
 	private Log debugLog;                  // A log file to keep track of debugging messages
@@ -562,8 +561,8 @@ public class MUDServer {
 	 */
 	public void init() {
 		try {
-			setup();                                       // run setup
-			run();                                         // try to run the main loop;
+			setup();
+			run();      // run main loop
 		}
 		catch (Exception e) {
 			debug("Exception(MAIN): " + e.getMessage());
@@ -606,10 +605,6 @@ public class MUDServer {
 				}  
 			}
 		}
-
-		// Calendar Initialization (this is just for tracking real world time, afaik this has little purpose)
-		// NOTE: should be configurable in the settings
-		calendar = new GregorianCalendar(TimeZone.getTimeZone("America/New_York"), new Locale("ENGLISH", "US"));
 
 		// snag this machine's real IP address
 		try {
@@ -920,7 +915,7 @@ public class MUDServer {
 		/* Server Initialization */
 
 		// doing this here, because most everything that needs to be loaded before should be done by here
-		this.s = new Server(port); // current style
+		this.s = new Server(this, port); // current style
 
 		/* Threads */
 
@@ -1048,7 +1043,7 @@ public class MUDServer {
 		if (pvar == 1) {
 			System.out.println("creating a portal: " + nextDB());
 
-			Portal portal = new Portal(8, 5); // a portal connecting two rooms (#8 and #5)
+			Portal portal = new Portal(WELCOME_ROOM, 5); // a portal connecting two rooms (#8 and #5)
 			portal.setDBRef(nextDB("use"));   // get a new dbref for it
 			portal.name = "portal";           // generic name
 			portal.coord.setX(1);             // x coordinate
@@ -1061,7 +1056,7 @@ public class MUDServer {
 
 			System.out.println("creating a portal: " + nextDB());
 
-			Portal portal1 = new Portal(PortalType.RANDOM, 8, new int[] { 5, 182, 161, 4 });
+			Portal portal1 = new Portal(PortalType.RANDOM, WELCOME_ROOM, new int[] { 5, 182, 161, 4 });
 			portal1.setDBRef(nextDB("use"));  // get a new dbref for it
 			portal1.name = "portal1";         // generic name
 			portal1.coord.setX(2);            // x coordinate
@@ -1142,132 +1137,125 @@ public class MUDServer {
 
 		// If the client is not null and has something to say
 		try {
-			if (whatClientSaid != null && !whatClientSaid.equals("")) {
-				// telnet negotiation
-				if (client.tn) { // if the client is using telnet
-					final byte[] recv = new byte[3];
-					final byte[] clientBytes = whatClientSaid.getBytes();
-					recv[0] = clientBytes.length > 0 ? clientBytes[0] : (byte)'0';
-					recv[1] = clientBytes.length > 1 ? clientBytes[1] : (byte)'0';
-					if (clientBytes.length > 2) {
-						recv[2] = clientBytes[2];
-						client.tn = false;
-					} else {
-						recv[2] = '0';
-					}
-				}
-				// all the rest
-				else {
-					ArrayList<Character> input = null;
+            if (whatClientSaid == null || "".equals(whatClientSaid)) {
+                return;
+            }
+            // telnet negotiation
+            if (client.tn) { // if the client is using telnet
+                final byte[] clientBytes = whatClientSaid.getBytes();
+                if (clientBytes.length >= 3)    client.tn = false;
+            }
+            // all the rest
+            else {
+                ArrayList<Character> input = null;
+                
+                if (telnet > 0) {
+                    if ( inputBuffers.containsKey(client) ) {
+                        input = inputBuffers.get(client);
+                    }
+                    else {
+                        input = new ArrayList<Character>(16384); // 16,384 characters?! really?
+                        inputBuffers.put(client, input);
+                    }
+                }
+                
+                if (telnet == 0) { /* using mud client (no TELNET support) */
+                    // handle whatever was sent
+                }
+                else if (telnet == 1) { // using telnet exclusively, not concerned w/mud clients						
+                    
+                    if (done == 0) {
+                        final Character ch = whatClientSaid.charAt(0);
+                        
+                        System.out.println("Read: " + ch + "(" + ch.toString() + ")");
+                        
+                        if (ch == '\012') { // return
+                            StringBuffer sb = new StringBuffer();
+                            
+                            for (Character cha : input) { sb.append(cha); }
+                            
+                            input.clear();                  // clear the input buffer
+                            whatClientSaid = sb.toString(); // convert stringbuffer to string
+                            
+                            done = 1;
+                        }
+                        else if (ch == '\010') { // backspace
+                            // if there are still elements, remove the last character typed 
+                            if ( !input.isEmpty() ) {
+                                input.remove(input.size() - 1); 
+                            }
+                        }
+                        else {
+                            input.add(ch);
+                        }
+                        
+                        debug("current telnet input: " + input.toString()); // tell us the whole string
+                    }
+                    else {
+                        done = 0;
+                    }
+                }
+                else if (telnet == 2) { /* telnet and mud clients expected */
+                    // in order to compensate for differences,
+                    // we will apply the telnet style, but take all the bytes
+                    // once we have them, we will check for the stop character
+                    // and throw everything else away. this will ensure
+                    // that we can handle a whole string sent by a mudclient
+                    // acceptably quickly and still deal with character by character sending
+                    // status: copy and pasted plain telnet handling code
+                    if (done == 0) {
+                        Character ch;
+                        while (whatClientSaid.length() > 0) {
+                            ch = whatClientSaid.charAt(0);
+                            whatClientSaid = whatClientSaid.substring(1);
+                            if (ch != '\010' && ch != '\013') {
+                                System.out.println("Read: " + ch + "(" + ch.toString() + ")");
+                            }
 
-					if (telnet > 0) {
-						if ( inputBuffers.containsKey(client) ) {
-							input = inputBuffers.get(client);
-						}
-						else {
-							input = new ArrayList<Character>(16384); // 16,384 characters?! really?
-							inputBuffers.put(client, input);
-						}
-					}
+                            if (ch == '\012') {
+                                StringBuffer sb = new StringBuffer();
+                                for (Character cha : input) { sb.append(cha); }
+                                whatClientSaid = sb.toString();
 
-					if (telnet == 0) { /* using mud client (no TELNET support) */
-						// handle whatever was sent
-					}
-					else if (telnet == 1) { // using telnet exclusively, not concerned w/mud clients						
+                                input.clear();
+                                done = 1;
+                            }
+                            else if (ch == '\010') { // if a backspace
+                                // if there are still elements, remove the last character typed 
+                                if ( !input.isEmpty() ) {
+                                    input.remove(input.size() - 1); 
+                                }
+                            }
+                            else {
+                                input.add(ch);
+                            }
+                            
+                            if (ch != '\010' && ch != '\013') {
+                                    debug("current telnet input: " + input.toString()); // tell us the whole string
+                            }
+                        }
+                    }
+                    else {
+                        done = 0;
+                    }
+                }
 
-						if (done == 0) {
-							final Character ch = whatClientSaid.charAt(0);
+                if (!whatClientSaid.trim().equals("")) {  // blocks blank input
+                    //System.out.print("Putting comand in command queue...");
+                    cmdQueue.add(new CMD(whatClientSaid.trim(), client, 0)); // put the command in the queue
+                    //cmd(whatClientSaid.trim(), c);
+                    //System.out.println("Done.");
+                }
+                
+                //getPlayer(c).idle_state = false; 
+                //pulse(c);
+            }
 
-							System.out.println("Read: " + ch + "(" + ch.toString() + ")");
+            // flush players -- making sure that non-existent/disconnected/broken players don't bog down the system
+            flush();
 
-							if (ch == '\012') { // return
-								StringBuffer sb = new StringBuffer();
-
-								for (Character cha : input) { sb.append(cha); }
-
-								input.clear();                  // clear the input buffer
-								whatClientSaid = sb.toString(); // convert stringbuffer to string
-
-								done = 1;
-							}
-							else if (ch == '\010') { // backspace
-								// if there are still elements, remove the last character typed 
-								if ( !input.isEmpty() ) {
-									input.remove(input.size() - 1); 
-								}
-							}
-							else {
-								input.add(ch);
-							}
-
-							debug("current telnet input: " + input.toString()); // tell us the whole string
-						}
-						else {
-							done = 0;
-						}
-					}
-					else if (telnet == 2) { /* telnet and mud clients expected */
-						// in order to compensate for differences,
-						// we will apply the telnet style, but take all the bytes
-						// once we have them, we will check for the stop character
-						// and throw everything else away. this will ensure
-						// that we can handle a whole string sent by a mudclient
-						// acceptably quickly and still deal with character by character sending
-						// status: copy and pasted plain telnet handling code
-						if (done == 0) {
-							Character ch;
-							while (whatClientSaid.length() > 0) {
-								ch = whatClientSaid.charAt(0);
-								whatClientSaid = whatClientSaid.substring(1);
-								if (ch != '\010' && ch != '\013') {
-									System.out.println("Read: " + ch + "(" + ch.toString() + ")");
-								}
-
-								if (ch == '\012') {
-									StringBuffer sb = new StringBuffer();
-									for (Character cha : input) { sb.append(cha); }
-									whatClientSaid = sb.toString();
-
-									input.clear();
-									done = 1;
-								}
-								else if (ch == '\010') { // if a backspace
-									// if there are still elements, remove the last character typed 
-									if ( !input.isEmpty() ) {
-										input.remove(input.size() - 1); 
-									}
-								}
-								else {
-									input.add(ch);
-								}
-
-								if (ch != '\010' && ch != '\013') {
-									debug("current telnet input: " + input.toString()); // tell us the whole string
-								}
-							}
-						}
-						else {
-							done = 0;
-						}
-					}
-
-					if (!whatClientSaid.trim().equals("")) {  // blocks blank input
-						//System.out.print("Putting comand in command queue...");
-						cmdQueue.add(new CMD(whatClientSaid.trim(), client, 0)); // put the command in the queue
-						//cmd(whatClientSaid.trim(), c);
-						//System.out.println("Done.");
-					}
-
-					//getPlayer(c).idle_state = false; 
-					//pulse(c);
-				}
-
-				// flush players -- making sure that non-existent/disconnected/broken players don't bog down the system
-				flush();
-
-				Thread.sleep(250);
-			}
-		}
+            Thread.sleep(250);
+        }
 		catch(InterruptedException ie) {
 		}
 		catch(Exception e) {
@@ -1315,8 +1303,6 @@ public class MUDServer {
 	{
 		debug("Entering main program loop...");
 		debug("Running? " + this.running);           // tell us whether the server is running or not
-
-		String whatClientSaid;
 
 		while (running) {
 			for (final Client client : s.getClients()) {
@@ -2685,8 +2671,7 @@ public class MUDServer {
 		synchronized(main) {
 			synchronized(main1) {
 				for (int n = 0; n < num; n++) {
-					NullObject newObject = new NullObject(start + n);
-
+					final NullObject newObject = new NullObject(start + n);
 					main1.add(newObject);
 					main.add(newObject.toDB());
 				}
@@ -3280,14 +3265,14 @@ public class MUDServer {
 		// NOTE: my problem is related to guest not being findable somehow, all this needs a major revamp
 		if ((user.toLowerCase().equals("guest")) && (pass.toLowerCase().equals("guest"))) {
 			if (guest_users == 1) {
-				player = new Player(nextDB(""), "Guest" + guests, "PG", "A guest player.", welcome_room, "", Utils.hash("password"), "OOC", new Integer[] { 0, 0, 0, 0, 0, 0 }, new Integer[] { 0, 0, 0, 0 });
+				player = new Player(nextDB(""), "Guest" + guests, "PG", "A guest player.", WELCOME_ROOM, "", Utils.hash("password"), "OOC", new Integer[] { 0, 0, 0, 0, 0, 0 }, new Integer[] { 0, 0, 0, 0 });
 				init_conn(player, client, false);
 				guests++;
 				auth = false; // finished connecting
 			}
 		}
 		else if (user.toLowerCase().equals("new")) {
-			player = new Player(nextDB(), "randomName", "P", "New player.", welcome_room, "", Utils.hash("randomPass"), "NEW", new Integer[] { 0, 0, 0, 0 }, new Integer[] { 0, 0, 0, 0, 0, 0 });
+			player = new Player(nextDB(), "randomName", "P", "New player.", WELCOME_ROOM, "", Utils.hash("randomPass"), "NEW", new Integer[] { 0, 0, 0, 0 }, new Integer[] { 0, 0, 0, 0, 0, 0 });
 			init_conn(player, client, false);
 			auth = false;
 		}
@@ -3844,7 +3829,7 @@ public class MUDServer {
 			 * in the database their actual index in the database
 			 */
 			for (int i = 0; i < main1.size(); i++) {
-				MUDObject m = main1.get(i);
+				final MUDObject m = main1.get(i);
 				send(i + ": " + m.getName() + " (#" + m.getDBRef() + ")", client);
 			}
 		}
@@ -5029,18 +5014,10 @@ public class MUDServer {
 		player.setStatus("EDT");
 		player.setEditor(Editor.LIST);
 
-		boolean exist = false;
-
-		if (player.getLists().get(arg) != null) {
-			exist = true;
-		}
-
-		if (!exist) // if the list doesn't exist, clear out the variables for a new one
-		{
+		if (!player.hasEditor(arg)) {// if the list doesn't exist, clear out the variables for a new one
 			player.startEditing(arg);
 		}
-		else // if the list does exist, load it into the list data variables
-		{
+		else {// if the list does exist, load it into the list data variables
 			player.loadEditList(arg);
 		}
 
@@ -5795,8 +5772,7 @@ public class MUDServer {
 	}
 
 	// Function to disconnect player
-	private void cmd_quit(final String arg, final Client client)
-	{
+	private void cmd_quit(final String arg, final Client client) {
 		init_disconn(client);
 	}
 
@@ -6340,7 +6316,7 @@ public class MUDServer {
 	private void cmd_start(final String arg, final Client client)
 	{
 		// initialize the server object
-		s = new Server(port);
+		s = new Server(this, port);
 		// tell us the server has started
 		System.out.println("Server Startup!\n");
 		// reload the help files
@@ -6444,17 +6420,15 @@ public class MUDServer {
 	}
 
 	// Function to take objects in a room
+    @SuppressWarnings("unchecked")
 	private void cmd_take(final String arg, final Client client)
 	{
-		Player player = getPlayer(client);
-		Room room;
-
 		// get player, room objects to work with
-		player = getPlayer(client);
-		room = getRoom(client);
+		final Player player = getPlayer(client);
+		final Room room = getRoom(client);
 
 		// split the arguments into a string array by space characters
-		String[] args = arg.split(" ");
+		final String[] args = arg.split(" ");
 		// tell us how many elements the array has (debug)
 		debug(args.length);
 
@@ -6466,7 +6440,7 @@ public class MUDServer {
 		else if (arg.toLowerCase().equals("all")) {
 			// all implies stuff on the ground
 			// since all the stuff on the ground is in the room, we should evaluate the room to get it's stuff
-			Room r = getRoom(client);
+			final Room r = getRoom(client);
 			// basically we want to evalutate all the items, then take the one with the largest value, one at a time
 			// the evaluation scheme needs to take what's usable and what's not as well monetary value into account
 			// if we have room for everything, then just take it all
@@ -6511,7 +6485,9 @@ public class MUDServer {
 								if (sItem1.stackSize() < MAX_STACK_SIZE) {
 									sItem1.stack(sItem);
 								}
-								else { continue; }
+								else {
+                                    continue;
+                                }
 								debug(player.getInventory().contains(item));
 							}
 							else {
@@ -9887,7 +9863,7 @@ public class MUDServer {
 	 */
 	public void init_disconn(Client client)
 	{
-		Player player = getPlayer(client);
+		final Player player = getPlayer(client);
 
 		if (player != null) // if the chosen client is associated with a player
 		{
@@ -10096,12 +10072,8 @@ public class MUDServer {
 	//
 
 	// event triggered on client connection
-	public void serverEvent(Server someServer, Client someClient)
+	public void clientConnection(final Client someClient)
 	{
-		//telnet_negotiation(someClient);
-		// warn about poor telnet negotiation
-		someClient.write("!!! WARNING !!!\r\n");
-		someClient.write("Server does not recognize or handle telnet option negotiation\r\n");
 		send("Connecting from " + someClient.ip(), someClient);
 		// decide if a player (or in this case, IP address) will be allowed to continue connecting
 		if (banlist.contains(someClient.ip())) {
@@ -10139,28 +10111,9 @@ public class MUDServer {
 		send("Mode: " + mode, someClient);
 	}
 
-	/**
-	 * 
-	 * @param client
-	 */
-	public void disconnectEvent(Client client) {
-		/*
-		 * Not sure this ever gets triggered
-		 */
-		debug("DisconnectEvent Triggered!");
-
-		/*
-		 * use this to do cleanup and make sure
-		 * to tie up all the loose ends when a client
-		 * is disconnected without explicity asking to.
-		 */
-		init_disconn(client);
-	}
-
 	// Miscellaneous Functions
 
 	/**
-	 * 
 	 * wrapper function for nextDB(String arg) to ease usage in
 	 * no parameter cases
 	 * 
@@ -10171,7 +10124,6 @@ public class MUDServer {
 	}
 
 	/**
-	 * 
 	 * function to get next db#
 	 * 
 	 * @param arg
@@ -10450,9 +10402,7 @@ public class MUDServer {
 	// non-existent player "flush" function
 	public void flush()
 	{
-		for (int p = 0; p < this.players.size(); p++) {
-			Player player = this.players.get(p);
-
+		for (final Player player : players) {
 			if (!sclients.values().contains(player))
 			{
 				if (DMControlTable.get(player) == null) {
@@ -10460,7 +10410,7 @@ public class MUDServer {
 					tclients.remove(sclients.get(player));
 					sclients.remove(player);
 					debug("Player removed.");
-					break;
+					return;
 				}
 				else {
 					debug("Player \"idle\", but controlling an npc.");
@@ -12663,7 +12613,7 @@ public class MUDServer {
 
 		item.setDBRef(nextDB("use"));
 		item.setFlags("I");
-		item.setLocation(8);
+		item.setLocation(WELCOME_ROOM);
 
 		item.setItemType(ItemType.NONE);
 
@@ -12703,19 +12653,19 @@ public class MUDServer {
 	 */
 	private Item createItem(Weapon template) {
 		final Item item = createItems(template, 1).get(0);
-		item.setLocation(8);
+		item.setLocation(WELCOME_ROOM);
 		return item;
 	}
 
 	private Item createItem(Book template) {
 		final Item item = createItems(template, 1).get(0);
-		item.setLocation(8);
+		item.setLocation(WELCOME_ROOM);
 		return item;
 	}
 
 	private Item createItem(Armor template) {
 		final Item item = createItems(template, 1).get(0);
-		item.setLocation(8);
+		item.setLocation(WELCOME_ROOM);
 		return item;
 	}
 

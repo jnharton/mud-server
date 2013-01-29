@@ -33,16 +33,19 @@ import java.lang.reflect.*;
 import java.net.*;
 import java.util.*;
 
+import mud.MUDServer;
+
 public class Server implements Runnable {
 
     final private Vector<Client> clients = new Vector<Client>();
+    final private MUDServer parent;
 
     private ServerSocket server;
     private Thread thread;
     private boolean running;
 
-    public Server(final int port) {
-
+    public Server(final MUDServer p, final int port) {
+        parent = p;
         try {
             server = new ServerSocket(port);
             thread = new Thread(this);
@@ -80,6 +83,7 @@ public class Server implements Runnable {
             while (running) {
                 Socket socket = server.accept();
                 Client client = new Client(socket);
+                parent.clientConnection(client);
                 clients.add(client);
             }
         } catch (Exception e) {

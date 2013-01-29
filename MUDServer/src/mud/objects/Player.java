@@ -87,7 +87,7 @@ public class Player extends MUDObject
 	protected int access = 0;                         // the player's access level (permissions) - 0=player,1=admin (default: 0)
 
 	private boolean controller = false;               // place to indicate if we are controlling an npc (by default, we are not)
-	private HashMap<String, EditList> lists = new HashMap<String, EditList>(); // array of lists belonging to this player
+	private HashMap<String, EditList> editorsMap = new HashMap<String, EditList>(); // array of lists belonging to this player
 
 	// preferences (ACCOUNT DATA?)
 	private int lineLimit = 80;                       // how wide the client's screen is in columns (shouldn't be in Player class)
@@ -118,7 +118,7 @@ public class Player extends MUDObject
     }
     
     public void loadEditList(final String name) {
-        currentEdit = getLists().get(name);
+        currentEdit = editorsMap.get(name);
     }
 
     public void loadEditList(final String name, final List<String> lines) {
@@ -126,7 +126,7 @@ public class Player extends MUDObject
     }
 
     public void saveCurrentEditor() {
-        getLists().put(currentEdit.name, currentEdit);
+        editorsMap.put(currentEdit.name, currentEdit);
     }
 
     public void abortEditing() {
@@ -707,8 +707,8 @@ public class Player extends MUDObject
 		this.destination = newDest;
 	}
 
-	public HashMap<String, EditList> getLists() {
-		return this.lists;
+	public boolean hasEditor(final String name) {
+		return editorsMap.containsKey(name);
 	}
 
 	public LinkedList<Spell> getSpellQueue() {
