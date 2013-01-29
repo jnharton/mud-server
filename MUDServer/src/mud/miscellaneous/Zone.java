@@ -17,8 +17,8 @@ public class Zone {
 
 	public Zone(final String name, final Room room) {
 		this.id = -1;
-		this.name = tName;
-		this.room = tRoom;
+		this.name = name;
+		this.room = room;
 	}
 
 	public Zone(Zone toCopy) {

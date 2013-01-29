@@ -48,37 +48,37 @@ public class ChatCommand extends Command {
 		else if (args.length > 1) {
 			String test = args[0];
 			String msg = arg.replace(test + " ", "");
-            final ChatChannel testChannel = parent.getChatChannel(test);
-            if (testChannel == null) {
+			final ChatChannel testChannel = parent.getChatChannel(test);
+			if (testChannel == null) {
 				client.write("Game> No such chat channel.");
-                return;
-            }
+				return;
+			}
 
 			// argument: show listeners on a specific channel
 			if ( args[1].toLowerCase().equals("#listeners") ) {
-                client.write("Listeners on Chat Channel: " + testChannel.getName().toUpperCase() + "\n");
-                client.write("------------------------------\n");
-                ArrayList<Player> listeners = testChannel.getListeners();
-                for (Player p : listeners) {
-                    client.write(p.getName() + "\n");
-                }
-                client.write("------------------------------\n");
+				client.write("Listeners on Chat Channel: " + testChannel.getName().toUpperCase() + "\n");
+				client.write("------------------------------\n");
+				ArrayList<Player> listeners = testChannel.getListeners();
+				for (Player p : listeners) {
+					client.write(p.getName() + "\n");
+				}
+				client.write("------------------------------\n");
 			}
 			else if ( args[1].toLowerCase().equals("#messages") ) {
-                client.write("Messages on Chat Channel: " + testChannel.getName().toUpperCase() + "\n");
-                client.write("------------------------------\n");
-                ConcurrentLinkedQueue<Message> messages = testChannel.getMessages();
-                for (Message m : messages) {
-                    client.write(m.getSender() + " " + m.getRecipient() + " " + m.getMessage() + "\n");
-                }
-                client.write("------------------------------\n");
+				client.write("Messages on Chat Channel: " + testChannel.getName().toUpperCase() + "\n");
+				client.write("------------------------------\n");
+				ConcurrentLinkedQueue<Message> messages = testChannel.getMessages();
+				for (Message m : messages) {
+					client.write(m.getSender() + " " + m.getRecipient() + " " + m.getMessage() + "\n");
+				}
+				client.write("------------------------------\n");
 			}
 			else {
 				// if the channel name is that specified, write the message to the channel
-                Player player = parent.getPlayer(client);
-                testChannel.write(player, msg);
-                client.write("wrote " + msg + " to " + testChannel.getName() + " channel.\n");
-                //chatLog.writeln("(" + testChannel.getName() + ") <" + player.getName() + "> " + msg); (accessibility issue)
+				Player player = parent.getPlayer(client);
+				testChannel.write(player, msg);
+				client.write("wrote " + msg + " to " + testChannel.getName() + " channel.\n");
+				//chatLog.writeln("(" + testChannel.getName() + ") <" + player.getName() + "> " + msg); (accessibility issue)
 			}
 		}
 	}

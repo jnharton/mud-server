@@ -17,6 +17,7 @@ CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTH
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -26,6 +27,8 @@ import java.io.PrintWriter;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+import java.util.Random;
 import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -117,7 +120,7 @@ public final class Utils {
 		// swap each character with the one two spaces ahead of it in the alphabet (case included)
 		for(int c = 0; c < working.length(); c++)
 		{
-			rtn = rtn + str(alphabet1.charAt(alphabet.indexOf(working.charAt(c))));
+			rtn = rtn + alphabet1.charAt(alphabet.indexOf(working.charAt(c)));
 		}
 
 		// take the shift crypto and reverse the line for additional obfuscation
