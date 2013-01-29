@@ -17,7 +17,7 @@
 16#null#null#null#-1#null#null#null#null#null#null
 17#null#null#null#-1#null#null#null#null#null#null
 18#null#null#null#-1#null#null#null#null#null#null
-19#Nathan#P#This is an admin, it is also a player and a builder.#8#ckfpgtcnckvpgttqvgxcvequktfk#12,12,12,12,12,12#25,950,0,0#4#3#10
+19#Nathan#P#This is an admin, it is also a player and a builder.#8#250d8d84cf1ed1e0bd30437498046d02#12,12,12,12,12,12#25,950,0,0#4#3#10
 20#Alisare#N#A pretty elf cleric.#161#null#0,0,0,0,0,0#0,0,0,0#0#1#3
 21#east#E#You see nothing.#8#9#2
 22#Intersection: The Street of Bells & Lamp Street#RS#intersection of the street of bells and lamp street, first intersection south of suldown street.#53#O#10,10,10#-1#
@@ -236,7 +236,7 @@
 235#leather armor#I#armor#192#0#1#0
 236#leather armor#I#armor#192#0#1#0
 237#portal#E##8#5#1#0
-238#Erin#P#There is nothing to see.#9#pqkvewtvugfncpqkvctgxcveqtgvcytgvukpkutgvukpkuckfpgtcuugepktr#0,0,0,0,0,0#125,250,500,0#4#10#0
+238#null#null#null#-1#null#null#null#null#null#null
 239#Potion of Healing#I#A healing potion.#19#8#1#heal+10
 240#A Guide to Waterdeep#I#An infamous guide to Waterdeep, written by the infamous Volothamp Geddarm himself.#19#2#Volothamp Geddarm#A Guide to Waterdeep#0
 241#null#null#null#-1#null#null#null#null#null#null
