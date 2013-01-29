@@ -146,7 +146,9 @@ public class Room extends MUDObject
 	 * @return the exits
 	 */
 	public ArrayList<Exit> getExits() {
-		return new ArrayList<Exit>(exits);
+		//return new ArrayList<Exit>(exits); // ???
+		return exits;
+		
 	}
 
 	public String getExitNames() {
@@ -154,7 +156,8 @@ public class Room extends MUDObject
         for (final Exit e : exits) {
             buf.append(", ").append(e.getName());
         }
-		return buf.toString().substring(2);
+		//return buf.toString().substring(2);
+        return buf.toString();
 	}
 
 	public String getVisibleExitNames() {

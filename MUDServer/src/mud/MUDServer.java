@@ -196,7 +196,7 @@ public class MUDServer {
 	private int multiplay = 0;              // (0=only one character per account is allowed, 1=infinite connects allowed)
 	private int guest_users = 0;            // (0=guests disallowed, 1=guests allowed)
 	private int debug = 1;                  // (0=off,1=on) Debug: server sends debug messages to the console
-	private int debugLevel = 3;             // (1=debug,2=extra debug,3=verbose) the current priority of what should be printed out for debugging info
+	private int debugLevel = 2;             // (1=debug,2=extra debug,3=verbose) the current priority of what should be printed out for debugging info
 	private boolean logging = true;         // logging? (true=yes,false=no)
 	private int logLevel = 3;               // 
 	private boolean prompt_enabled = false; // show player information bar
@@ -8424,8 +8424,8 @@ public class MUDServer {
 	 */
 	public Player getPlayer(Client client)
 	{
-		debug("Searching for player by client...", 2);
-		debug("\"" + client  + "\"", 2);
+		debug("Searching for player by client...", 3);
+		debug("\"" + client  + "\"", 3);
 
 		return sclients.get(client);
 	}
