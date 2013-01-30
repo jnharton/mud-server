@@ -196,7 +196,7 @@ public class MUDServer {
 	private int multiplay = 0;              // (0=only one character per account is allowed, 1=infinite connects allowed)
 	private int guest_users = 0;            // (0=guests disallowed, 1=guests allowed)
 	private int debug = 1;                  // (0=off,1=on) Debug: server sends debug messages to the console
-	private int debugLevel = 2;             // (1=debug,2=extra debug,3=verbose) the current priority of what should be printed out for debugging info
+	private int debugLevel = 3;             // (1=debug,2=extra debug,3=verbose) the current priority of what should be printed out for debugging info
 	private boolean logging = true;         // logging? (true=yes,false=no)
 	private int logLevel = 3;               // 
 	private boolean prompt_enabled = false; // show player information bar
@@ -3283,77 +3283,87 @@ public class MUDServer {
 			account = true;
 		}
 		else {
-			while ( auth )
-			{
+		}
+
+		while ( auth )
+		{
+			/*
+			 * I don't want account names to conflict with characters, so perhaps
+			 * I will insert a stopgap measure where you must indicate an account
+			 * like this:
+			 * 
+			 * connect account
+			 * 
+			 * If the user input is 'account' we will assume you want to connect to
+			 * an account and will do an interactive login for you.
+			 * 
+			 * Otherwise we will look for a character by the name given.
+			 */
+
+			/*
+			 * NOTE:
+			 * if all players always existed, then instead of instantiating a player i'd
+			 * simply assign a client to it. Otherwise I need to get the player data from
+			 * somewhere so I can load it up. 
+			 */
+
+			// account check
+			if( account ) {
 				/*
-				 * I don't want account names to conflict with characters, so perhaps
-				 * I will insert a stopgap measure where you must indicate an account
-				 * like this:
-				 * 
-				 * connect account
-				 * 
-				 * If the user input is 'account' we will assume you want to connect to
-				 * an account and will do an interactive login for you.
-				 * 
-				 * Otherwise we will look for a character by the name given.
+				 * This code here ties up the program, and no one else
+				 * can have their commands processed until this is done,
+				 * although the command queue will hold the commands they send
 				 */
 
-				/*
-				 * NOTE:
-				 * if all players always existed, then instead of instantiating a player i'd
-				 * simply assign a client to it. Otherwise I need to get the player data from
-				 * somewhere so I can load it up. 
-				 */
+				String aName = "";
+				String aPass = "";
 
-				// account check
-				if( account ) {
-					/*
-					 * This code here ties up the program, and no one else
-					 * can have their commands processed until this is done,
-					 * although the command queue will hold the commands they send
-					 */
+				// really ought to design a handler for flexible interactive input
+				try {
+					client.write("Account Name?");
 
-					BufferedReader br;
-					String aName = "";
-					String aPass = "";
+					aName = client.getInput();
 
-					// really ought to design a handler for flexible interactive input
-					try {
-						client.write("Account Name?");
+					System.out.println("Name: " + aName);
 
-						aName = client.getInput();
+					client.write("Account Password?");
 
-						System.out.println("Name: " + aName);
+					aPass = client.getInput();
 
-						client.write("Account Password?");
-
-						aPass = client.getInput();
-
-						System.out.println("Password: " + aPass);
-					}
-					catch (Exception e) {
-						e.printStackTrace();
-					}
-
-					Account account1 = getAccount(aName, aPass); // determine if the account exists
-
-					if (account1 != null) {
-						// the line below is rendered redundant by the getAccount call above, not sure if I like
-						// the way that it works above. I kind of think that behavior might be inconsistent with the naming
-						//boolean verified = verify(account1, aPass); // determine if the account exists, and whether the password is valid for it
-						
-						boolean verified = true;
-
-						if( verified ) {
-							account_menu(account1, client);					
-
-						}
-						else {
-							System.out.println("No such account!");
-							client.write("No such account!");
-						}
-					}
+					System.out.println("Password: " + aPass);
 				}
+				catch (Exception e) {
+					e.printStackTrace();
+				}
+
+				Account account1 = getAccount(aName, aPass); // determine if the account exists
+
+				if (account1 != null) {
+					// the line below is rendered redundant by the getAccount call above, not sure if I like
+					// the way that it works above. I kind of think that behavior might be inconsistent with the naming
+					//boolean verified = verify(account1, aPass); // determine if the account exists, and whether the password is valid for it
+
+					/*boolean verified = true;
+
+					if( verified ) {
+						account_menu(account1, client);					
+
+					}
+					else {
+						auth = false;
+						System.out.println("No such account!");
+						client.write("No such account!");
+					}*/
+					
+					account_menu(account1, client);
+				}
+				else {
+					auth = false;
+					System.out.println("No such account!");
+					client.write("No such account!");
+				}
+			}
+			else {
 
 				/*String password = authTable1.get(user);
 				if ( pass.equals(password) ) {
@@ -12889,7 +12899,7 @@ public class MUDServer {
 			debug("result: " + result, 3);
 			debug("result (length): " + result.length(), 3);
 			debug("next: " + word, 3);
-			debug("next: " + word.length(), 3);
+			debug("next (length): " + word.length(), 3);
 			if (result.length() < 1) { // append current word if empty
 				result.append(word);
 			}
@@ -12903,8 +12913,13 @@ public class MUDServer {
 				result.delete(0, result.length());
 				result.append(word);
 			}
-			debug("result: " + result, 3);
-			debug("result: " + result.length(), 3);
+		}
+		
+		// make sure we send the last word if there was only one left
+		if( result.length() > 0 ) {
+			debug("send", 3);
+			send(result, client);
+			result.delete(0, result.length());
 		}
 	}
 

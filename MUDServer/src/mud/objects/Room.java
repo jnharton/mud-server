@@ -156,8 +156,7 @@ public class Room extends MUDObject
         for (final Exit e : exits) {
             buf.append(", ").append(e.getName());
         }
-		//return buf.toString().substring(2);
-        return buf.toString();
+		return buf.toString().substring(2); // clip off the initial, unecessary " ,"
 	}
 
 	public String getVisibleExitNames() {
@@ -167,7 +166,7 @@ public class Room extends MUDObject
                 buf.append(", ").append(e.getName());
             }
         }
-		return buf.toString().substring(2);
+		return buf.toString().substring(2); // clip off the initial, unecessary " ,"
 	}
 
 	/**
