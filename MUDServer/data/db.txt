@@ -201,7 +201,7 @@
 200#back#E#You see nothing.#195#194#2
 201#next#E#You see nothing.#195#196#2
 202#back#E#You see nothing.#196#195#2
-203#shining_blade#E#You see nothing.#169#161#2
+203#shiningblade#E#You see nothing.#169#161#2
 204#out#E#You see nothing.#161#169#2
 205#Wand of invisibility#I#A wand.#19#11#invisibility#50
 206#Wand of fireball#I#A wand.#19#11#fireball#50

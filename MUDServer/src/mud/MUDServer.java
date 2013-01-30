@@ -7179,7 +7179,7 @@ public class MUDServer {
 						addMessage(msg);
 						//send(exit.succMsg, client);
 					}
-
+					
 					// set player's location
 					player.setLocation(exit.getDest());
 

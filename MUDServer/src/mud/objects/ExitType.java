@@ -15,7 +15,7 @@ package mud.objects;
  */
 
 public enum ExitType {
-	DOOR("STD"),
+	DOOR("DOOR"),
 	PORTAL("PORTAL"),
 	STD("STD");
 	
