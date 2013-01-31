@@ -1,6 +1,7 @@
 package mud.objects;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import mud.MUDObject;
 import mud.utils.Utils;
@@ -24,8 +25,14 @@ public class Thing extends MUDObject {
 	 */
 
 	protected double weight = 40; // the weight in whatever units are used of the equippable object
-
-	// no-argument superconstructor for subclassing
+	
+	HashMap<String, Object> attributes;
+	
+	/**
+	 * Thing - no parameters
+	 * 
+	 * A no-argument constructor for making a sub-class of Thing
+	 */
 	public Thing() {
 	}
 
@@ -47,6 +54,8 @@ public class Thing extends MUDObject {
 		// Set the location
 		this.location = tempLoc;
 		*/
+		
+		this.attributes = new HashMap<String, Object>();
 	}
 	
 	public double getWeight() {
@@ -62,13 +71,13 @@ public class Thing extends MUDObject {
 
 	public String toDB() {
 		String[] output = new String[6];
-		output[0] = this.getDBRef() + "";    // thing database reference number
-		output[1] = this.getName();                // thing name
-		output[2] = this.getFlags();               // thing flags
-		output[3] = this.getDesc();                // thing description
-		output[4] = this.getLocation() + ""; // thing location (a.k.a parent)
-		output[5] = "*";                           // "blank" field which is used for something in every other class
-		String output1 = Utils.join(output, "#");
+		output[0] = this.getDBRef() + "";         // thing database reference number
+		output[1] = this.getName();               // thing name
+		output[2] = this.getFlags();              // thing flags
+		output[3] = this.getDesc();               // thing description
+		output[4] = this.getLocation() + "";      // thing location (a.k.a parent)
+		output[5] = "*";                          // "blank" field which is used for something in every other class
+		String output1 = Utils.join(output, "#"); //
 		return output1;
 	}
 

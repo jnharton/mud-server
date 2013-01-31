@@ -196,7 +196,7 @@ public class MUDServer {
 	private int multiplay = 0;              // (0=only one character per account is allowed, 1=infinite connects allowed)
 	private int guest_users = 0;            // (0=guests disallowed, 1=guests allowed)
 	private int debug = 1;                  // (0=off,1=on) Debug: server sends debug messages to the console
-	private int debugLevel = 3;             // (1=debug,2=extra debug,3=verbose) the current priority of what should be printed out for debugging info
+	private int debugLevel = 2;             // (1=debug,2=extra debug,3=verbose) the current priority of what should be printed out for debugging info
 	private boolean logging = true;         // logging? (true=yes,false=no)
 	private int logLevel = 3;               // 
 	private boolean prompt_enabled = false; // show player information bar
@@ -1519,46 +1519,10 @@ public class MUDServer {
 			// else pass their input to command parsing
 			else
 			{
-				// evaluate name references in the argument string
-				for (int c = 0; c < arg.length(); c++) {
-					if (arg.charAt(c) == '$') {
-						debug("found a nameref");
-						try {
-							Integer firstSpace = arg.indexOf(' ', c);
-							String temp;
-							if (firstSpace != -1) {
-								temp = arg.substring(c + 1, firstSpace);
-								debug("Game> (argument eval) temp: " + temp);
-								Integer tempI;
-								tempI = getPlayer(client).getNameRef(temp);
-								debug("Game> (argument eval) tempI: " + tempI);
-								c = firstSpace + 1;
-								arg = arg.substring(0, c) + tempI + arg.substring(firstSpace, arg.length());
-								debug("Game> (argument eval) result: " + arg);
-							}
-							else {
-								debug("no space after nameref");
-								temp = arg.substring(c + 1, arg.length());
-								debug("Game> (argument eval) temp: " + temp);
-								Integer tempI;
-								tempI = getPlayer(client).getNameRef(temp);
-								debug("Game> (argument eval) tempI: " + tempI);
-								arg = "" + tempI;
-								//arg = arg.substring(0, c) + tempI;
-								debug("Game> (argument eval) result: " + arg);
-							}
-						}
-						catch(NumberFormatException nfe) {
-							nfe.printStackTrace();
-						}
-						catch(NullPointerException npe) {
-							npe.printStackTrace();
-						}
-					}
-				}
-
+				arg = nameref_eval(arg, client);
+				
 				debug("Argument(evaluated): \"" + arg + "\""); // print the trimmed argument
-
+				
 				/* Command Logging */
 
 				// Log all commands after login
@@ -13333,4 +13297,102 @@ public class MUDServer {
 		return null;
 	}
 
+	public String nameref_eval(String input, Client client) {
+		StringBuffer sb = new StringBuffer(input);
+		StringBuffer refString =  new StringBuffer();
+
+		Character ch = null;
+		Integer refNum = 0;
+		
+		int index = 0;
+		int begin = 0;
+		int end = 0;
+
+		boolean check = false;
+		boolean replace = false;
+		boolean eval = false;
+
+		debug("BUFFER: " + sb.toString());
+		debug("");
+
+		while( sb.indexOf("$") != -1 ) {
+			debug("Index: " + index);
+			
+			ch = sb.charAt(index); /* get a character */
+
+			if( check ) {
+				if( Character.isLetter(ch) ) {
+					debug(ch);
+					debug("Is a Letter!");
+
+					refString.append(ch);
+
+					if( index == sb.length() - 1 ) {
+						end = index - 1;
+						check = false;
+						eval = true;
+					}
+				}
+				else {
+					end = index;
+					check = false;
+					eval = true;
+				}
+			}
+			else {
+				if(ch == '$') {
+					debug("found a nameref");
+
+					begin = index;
+					check = true;
+
+					if( !replace ) { replace = true; }
+				}
+			}
+
+			if( !check && eval ) {
+				debug("");
+				debug("Game> (argument eval) reference: " + refString.toString());
+
+				// try to get number from nameref table
+				refNum = getPlayer(client).getNameRef(refString.toString());
+
+				// modify string, if we got a valid reference (i.e. could be in database, a NULLObject is a valid reference
+				if(refNum != null && refNum < dbSize()) {
+					debug("Game> (argument eval) tempI: " + refNum); // report number
+
+					debug("");
+					debug("Begin: " + begin + " End: " + end + " Original: " + sb.substring(begin, end) + " Replacement: " + refNum.toString());
+					debug("");
+
+					sb.replace(begin, end, refNum.toString());
+
+					debug("BUFFER: " + sb.toString());
+					debug("");
+				}
+
+				// clear variables
+				refString.delete(0, refString.length());
+				ch = ' ';
+				refNum = 0;
+				index = -1;
+				begin = 0;
+				end = 0;
+
+				eval = false;
+			}
+			
+			index++;
+		}
+
+		if( replace ) {
+			debug("Game> (argument eval) result: " + sb.toString());
+
+			// change argument to reflect replacements (trim to clear extra space at end)
+			return sb.toString();
+		}
+		else {
+			return input;
+		}
+	}
 }
