@@ -34,9 +34,7 @@ public enum XTERM256 {
 	BRIGHT_BLUE(4, Intensity.BRIGHT),
 	PINK(5, Intensity.BRIGHT),
 	BRIGHT_CYAN(6, Intensity.BRIGHT),
-	WHITE(7, Intensity.BRIGHT),
-	
-	TEST(201);
+	WHITE(7, Intensity.BRIGHT);
 	
 	static enum Intensity { NORMAL, BRIGHT };
 	static int state = 3;
@@ -45,7 +43,7 @@ public enum XTERM256 {
 	private Intensity intensity = null;
 	private int color = -1;
 	
-	private final String prefix = "\\e[";
+	private final String prefix = "\033[";
 	private final String suffix = "m";
 	
 	private int num;

@@ -429,7 +429,8 @@ public class MUDServer {
 	private String theme = THEME_DIR + "forgotten_realms.txt";                     // theme file to load
 
 	public static int[] DAYS = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 }; // days in each month
-	public static String[] months = new String[12];
+	public static int months = 12;
+	public static String[] month_names = new String[months];
 	private MoonPhase mp = MoonPhase.FULL_MOON;
 	private Seasons season = Seasons.SUMMER; // Possible - Spring, Summer, Autumn, Winter
 
@@ -450,7 +451,7 @@ public class MUDServer {
 
 	public Hashtable<Client, ArrayList<Character>> inputBuffers = new Hashtable<Client, ArrayList<Character>>(max_players);
 
-	private int done = 0;
+	private int done = 0; // a way of tracking if we're done with a line of telnet input
 
 	private ArrayList<String> authTable = new ArrayList<String>(max_players); // hold database info for player login
 	private HashMap<String, String> authTable1 = new HashMap<String, String>(max_players, 0.75f); // hold database info for player login
@@ -646,7 +647,7 @@ public class MUDServer {
 
 		// Theme Loading
 		this.loadTheme(theme);
-		this.month_name = months[month - 1];
+		this.month_name = month_names[month - 1];
 		this.year_name = years.get(year);
 
 		debug(""); // formatting
@@ -3879,14 +3880,14 @@ public class MUDServer {
 			Seasons[] seasons = { Seasons.SPRING, Seasons.SUMMER, Seasons.AUTUMN, Seasons.WINTER };
 
 			for (Seasons s : seasons) {
-				send(s + ": " + months[s.beginMonth - 1] + " to " + months[s.endMonth - 1], client);
+				send(s + ": " + month_names[s.beginMonth - 1] + " to " + month_names[s.endMonth - 1], client);
 			}
 		}
 		else if ( arg.toLowerCase().equals("holidays") ) {
 			/* list the holidays */
 			for (Map.Entry<String, Date> entry : holidays.entrySet()) {
-				debug(entry.getKey() + ": " + months[((Date) entry.getValue()).getMonth() - 1] + " " + ((Date) entry.getValue()).getDay());
-				send(entry.getKey() + ": " + months[((Date) entry.getValue()).getMonth() - 1] + " " + ((Date) entry.getValue()).getDay(), client);
+				debug(entry.getKey() + ": " + month_names[((Date) entry.getValue()).getMonth() - 1] + " " + ((Date) entry.getValue()).getDay());
+				send(entry.getKey() + ": " + month_names[((Date) entry.getValue()).getMonth() - 1] + " " + ((Date) entry.getValue()).getDay(), client);
 			}
 		}
 		else if ( args[0].equals("chat") ) { // @ debug chat:<channel>=<type>
@@ -9523,7 +9524,7 @@ public class MUDServer {
 							}
 							else if (section.equals("months")) {
 								// number = name
-								months[Integer.parseInt(Utils.trim(line[0])) - 1] = Utils.trim(line[1]);
+								month_names[Integer.parseInt(Utils.trim(line[0])) - 1] = Utils.trim(line[1]);
 								debug("Month " + Utils.trim(line[0]) + " set to \'" + Utils.trim(line[1]) + "\'");
 							}
 							else if (section.equals("holidays")) {
@@ -10117,7 +10118,8 @@ public class MUDServer {
 		// send the MOTD to the client in cyan
 		// xterm 256 color testing
 		//someClient.write(XTERM256.TEST.toString());
-		send(XTERM256.TEST.toString(), someClient);
+		send(XTERM256.PINK.toString() + "hi", someClient);
+		send(XTERM256.PURPLE.toString() + "hi", someClient);
 		send(colors(MOTD(),"cyan"), someClient);
 		// reset color
 		//send(colors("Color Reset to Default!", "white"));
@@ -10675,7 +10677,7 @@ public class MUDServer {
 	//"st", "nd", "rd", "th"
 	public String gameDate() {
 		//return <general time of year> - <numerical day> day of <month>, <year> <reckoning> - <year name, if any>
-		month_name = months[month - 1];
+		month_name = month_names[month - 1];
 		year_name = years.get(year);
 
 		String holiday = "";
