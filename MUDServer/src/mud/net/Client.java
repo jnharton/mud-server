@@ -37,7 +37,6 @@ public class Client implements Runnable {
 
     public boolean tn;
 
-	final private Thread thread;
 	final private Socket socket;
 	final private InputStream input;
 	final private OutputStream output;
@@ -47,19 +46,18 @@ public class Client implements Runnable {
 
     private boolean running;
 
-	public Client(String host, int port) throws IOException {
+	public Client(final String host, final int port) throws IOException {
         this(new Socket(host, port));
 	}
 
-	public Client(Socket socket) throws IOException {
+	public Client(final Socket socket) throws IOException {
 		this.socket = socket;
 
 		input = socket.getInputStream();
 		output = socket.getOutputStream();
 
         running = true;
-		thread = new Thread(this);
-		thread.start();
+		new Thread(this).start();
 	}
 
 	public void stopRunning() {
@@ -89,11 +87,9 @@ public class Client implements Runnable {
             stopRunning();
 
         } finally {
-            if (socket != null) {
-                try {
-                    socket.close();
-                } catch (Exception e) {}
-            }
+            try {
+                socket.close();
+            } catch (Exception e) {}
         }
 	}
 
