@@ -1035,7 +1035,13 @@ public class MUDServer {
 
 		main.add(thing.toDB());
 		main1.add(thing);*/
-
+		
+		Thing t = getThing(256);
+		
+		t.coord.setX(4);
+		t.coord.setY(6);
+		t.coord.setZ(1);
+		
 		/**
 		 * Portal Testing
 		 */
@@ -8556,6 +8562,16 @@ public class MUDServer {
 
 		return null;
 	}
+	
+	public Thing getThing(int DBREF) {
+		for(Thing thing : things) {
+			if(thing.getDBRef() == DBREF) {
+				return thing;
+			}
+		}
+		
+		return null;
+	}
 
 	/**
 	 * Get the client associated with a player's name.
@@ -8703,7 +8719,7 @@ public class MUDServer {
 
 	public void saveDB() {
 		// save databases to disk
-		Utils.saveStrings(mainDB, (String[]) main.clone());    // modifies 'real' files
+		Utils.saveStrings(mainDB, main.toArray(new String[0])); // modifies 'real' files
 	}
 
 	public void saveHelpFiles() {
@@ -11471,6 +11487,10 @@ public class MUDServer {
 		send(thing.name + "(#" + thing.getDBRef() + ")", client);
 		send("Type: " + Flags.get(thing.flags.charAt(0)) + " Flags: " + temp, client);
 		send("Description: " + thing.getDesc(), client);
+		send("Coordinates:", client);
+		send("X: " + thing.getXCoord(), client);
+		send("Y: " + thing.getYCoord(), client);
+		send("Z: " + thing.getZCoord(), client);
 	}
 
 	/**
@@ -13311,9 +13331,6 @@ public class MUDServer {
 		boolean check = false;
 		boolean replace = false;
 		boolean eval = false;
-
-		debug("BUFFER: " + sb.toString());
-		debug("");
 
 		while( sb.indexOf("$") != -1 ) {
 			debug("Index: " + index);
