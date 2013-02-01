@@ -779,13 +779,13 @@ public class Player extends MUDObject
 	 * format used by the database
 	 */
 	public String toDB() {
-		String[] output = new String[11];
-		output[0] = this.getDBRef() + "";           // player database reference number
-		output[1] = this.getName();                       // player name
-		output[2] = this.getFlags();                      // player flags
-		output[3] = this.getDesc();                       // player description
-		output[4] = this.getLocation() + "";        // player location
-		output[5] = this.getPass();                       // player password
+		String[] output = new String[12];
+		output[0] = this.getDBRef() + "";    // player database reference number
+		output[1] = this.getName();          // player name
+		output[2] = this.getFlags();         // player flags
+		output[3] = this.getDesc();          // player description
+		output[4] = this.getLocation() + ""; // player location
+		output[5] = this.getPass();          // player password
 		output[6] = stats.get(Abilities.STRENGTH) +
 				"," + stats.get(Abilities.DEXTERITY) +
 				"," + stats.get(Abilities.CONSTITUTION) +
@@ -793,9 +793,10 @@ public class Player extends MUDObject
 				"," + stats.get(Abilities.WISDOM) +
 				"," + stats.get(Abilities.CHARISMA);
 		output[7] = "" + this.getMoney(0) + "," + this.getMoney(1) + "," + this.getMoney(2) + "," + this.getMoney(3); // player money
-		output[8] = this.access + "";               // player permissions level
-		output[9] = race.getId() + "";              // player race
-		output[10] = pclass.getId() + "";           // player class
+		output[8] = this.access + "";        // player permissions level
+		output[9] = race.getId() + "";       // player race
+		output[10] = pclass.getId() + "";    // player class
+		output[11] = this.getStatus();       // player status
 		return Utils.join(output, "#");
 	}
 

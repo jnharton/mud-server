@@ -1314,7 +1314,7 @@ public class MUDServer implements MUDServerI {
 		debug("Server? " + s.isRunning());           // tell us whether the underlying socket server is running
 
 		while (running) {
-			for (final Client client : s.getClients()) {
+			for (final Client client : s.getClients_alt()) {
 				runHelper(client);
 			}
 
@@ -1412,7 +1412,6 @@ public class MUDServer implements MUDServerI {
 					{
 						// pass arguments to the player creation function
 						cmd_create(arg, client);
-						//commandMap.get("create").execute(arg, client);
 					}
 					else if ( cmd.equals("help") ) {
 						commandMap.get("help").execute(arg, client);
@@ -3602,13 +3601,15 @@ public class MUDServer implements MUDServerI {
 		{
 			// create a new player object for the new playerm the "" is an empty title, which is not currently persisted
 			Player player = new Player(id, user, start_flags, start_desc, start_room, "", Utils.hash(pass), start_status, start_stats, start_money);
-
-			if ( id < nextDB("clean") ) {
+			
+			/*if ( id < nextDB("clean") ) {
 				main.set(id, player.toDB()); // save player to database
 			}
 			else {
 				main.add(player.toDB());     // save player to database
-			}
+			}*/
+			
+			addToDB(player);
 
 			nextDB("use");        // indicate that the database reference was used
 
@@ -5425,6 +5426,7 @@ public class MUDServer implements MUDServerI {
 		Exit exit = new Exit(name, source, destination);
 		exit.setDBRef(id);
 
+		/*
 		// add it to the string-based database
 		if ( id < nextDB("clean") ) {
 			main.set(id, exit.toDB()); // save player to database
@@ -5440,6 +5442,9 @@ public class MUDServer implements MUDServerI {
 		else {
 			main1.add(exit);     // save player to database
 		}
+		*/
+		
+		addToDB(exit);
 
 		// add the exit to the exits arraylist
 		exits1.add(exit);
@@ -5507,7 +5512,8 @@ public class MUDServer implements MUDServerI {
 		// create the exit
 		Exit exit = new Exit(name, source, destination);
 		exit.setDBRef(id);
-
+		
+		/*
 		// add it to the string-based database
 		if ( id < nextDB("clean") ) {
 			main.set(id, exit.toDB()); // save player to database
@@ -5523,6 +5529,9 @@ public class MUDServer implements MUDServerI {
 		else {
 			main1.add(exit);     // save player to database
 		}
+		*/
+		
+		addToDB(exit);
 
 		// add the exit to the exits arraylist
 		exits1.add(exit);
@@ -8659,6 +8668,14 @@ public class MUDServer implements MUDServerI {
 			debug("Player saved.");
 		}
 	}
+	
+	public void saveNPCs()
+	{	
+		for (final NPC npc : npcs1) {
+			main.set(npc.getDBRef(), npc.toDB());
+			debug("NPC saved.");
+		}
+	}
 
 	// save each room in the list by finding the line with it's name in it
 	// and saving it to that line or by finding the room the line indicates and saving
@@ -8846,15 +8863,17 @@ public class MUDServer implements MUDServerI {
 							String oPassword = attr[5];       // 5 - password
 							String[] os = attr[6].split(","); // 6 - stats
 							String[] om = attr[7].split(","); // 7 - money
-							// int access;                       // 8 - permissions
+							//int access;                     // 8 - permissions
 							int raceNum;                      // 9 - race number (enum ordinal)
 							int classNum;                     // 10 - class number (enum ordinal)
+							String status = attr[11];         // 11 - status (string)                    
 
 
 							Integer[] oStats = Utils.stringsToIntegers(os);
 							Integer[] oMoney = Utils.stringsToIntegers(om);
 
 							Player player = new Player(oDBRef, oName, oFlags, oDesc, oLocation, "", oPassword, "IC", oStats, oMoney);
+							
 							player.setAccess(Utils.toInt(attr[8], USER));
 
 							// set race
@@ -8876,6 +8895,8 @@ public class MUDServer implements MUDServerI {
 								nfe.printStackTrace();
 								player.setPClass(Classes.NONE);
 							}
+							
+							player.setStatus(status);
 
 							//debug("DEBUG (db entry): " + player.toDB(), 2);
 
@@ -9765,16 +9786,18 @@ public class MUDServer implements MUDServerI {
 			// give basic equipment (testing purposes)
 			final Armor armor = new Armor("Leather Armor", "A brand new set of leather armor, nice and smooth, but a bit stiff still.", -1, -1, 0, ArmorType.LEATHER, ItemType.ARMOR);
 			final Weapon sword = new Weapon("Long Sword", "A perfectly ordinary longsword.", 0, Handed.ONE, WeaponType.LONGSWORD, 15.0);
-			armor.setLocation(player.getDBRef());
 			
 			armor.setDBRef(nextDB("use"));
 			sword.setDBRef(nextDB("use"));
 			
+			armor.setLocation(player.getDBRef());
+			sword.setLocation(player.getDBRef());
+			
 			addToDB(armor);
 			addToDB(sword);
 			
-			player.getInventory().add(armor);
-			player.getInventory().add(sword);
+			/*player.getInventory().add(armor);
+			player.getInventory().add(sword);*/
 		}
 
 		// get the time
@@ -10323,6 +10346,15 @@ public class MUDServer implements MUDServerI {
 		}
 
 		log.writeln("Done.");
+		
+		// NPCs
+		log.writeln("Game> Backing up Non-Player Characters (NPCs)...");
+
+		synchronized(npcs1) {
+			saveNPCs(); // NOTE: only modifies in memory storage
+		}
+
+		log.writeln("Done.");
 
 		// Accounts
 		log.writeln("Game> Backing up Accounts...");
@@ -10502,10 +10534,6 @@ public class MUDServer implements MUDServerI {
 		return "Game> Error ( " + funcName + " ): " + errorString;
 	}
 
-	public void send(Object data) {
-		send("" + data);
-	}
-
 	/**
 	 * Send
 	 * 
@@ -10532,6 +10560,10 @@ public class MUDServer implements MUDServerI {
 			}
 			s.write("\r\n");
 		}
+	}
+	
+	public void send(Object data) {
+		send("" + data);
 	}
 
 	/**
@@ -12565,7 +12597,8 @@ public class MUDServer implements MUDServerI {
 		// flags are defined statically here, because I'd need to take in more variables and in no
 		// case should this create anything other than a standard room which has 'RS' for flags
 		Room room = new Room(id, roomName, "RS", "You see nothing.", roomParent);
-
+		
+		/*
 		// add rooms to database (main)
 		if (main.size() >= id + 1) {
 			main.set(room.getDBRef(), room.toDB());
@@ -12582,6 +12615,9 @@ public class MUDServer implements MUDServerI {
 		else {
 			main1.add(room);
 		}
+		*/
+		
+		addToDB(room);
 
 		rooms1.add(room);
 
@@ -12617,7 +12653,8 @@ public class MUDServer implements MUDServerI {
 		item.setItemType(ItemType.NONE);
 
 		items.add(item);
-
+		
+		/*
 		// add item to database (main)
 		if (main.size() >= item.getDBRef() + 1) {
 			main.set(item.getDBRef(), item.toDB());
@@ -12634,6 +12671,9 @@ public class MUDServer implements MUDServerI {
 		else {
 			main1.add(item);
 		}
+		*/
+		
+		addToDB(item);
 
 		// add item to room
 		((Room) main1.get(item.getLocation())).contents1.add(item);
@@ -13422,10 +13462,22 @@ public class MUDServer implements MUDServerI {
 		// we trust herein that the dbref is valid for this MUDObject and doesn't belong
 		// to another and comes only from the set of next ones or is new
 		if( m.getDBRef() < dbSize() ) {
+			main.set(m.getDBRef(), m.toDB());
 			main1.set(m.getDBRef(), m);
 		}
 		else {
+			main.add(m.toDB());
 			main1.add(m);
+		}
+		
+		if(m instanceof Item) {
+			items.add((Item) m);
+		}
+		else if(m instanceof Exit) {
+			exits1.add((Exit) m);
+		}
+		else if(m instanceof Room) {
+			rooms1.add((Room) m);
 		}
 	}
 }
