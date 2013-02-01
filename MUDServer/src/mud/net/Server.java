@@ -33,18 +33,18 @@ import java.lang.reflect.*;
 import java.net.*;
 import java.util.*;
 
-import mud.MUDServer;
+import mud.MUDServerI;
 
 public class Server implements Runnable {
 
     final private Vector<Client> clients = new Vector<Client>();
-    final private MUDServer parent;
+    final private MUDServerI parent;
 
     private ServerSocket server;
     private Thread thread;
     private boolean running;
 
-    public Server(final MUDServer p, final int port) {
+    public Server(final MUDServerI p, final int port) {
         parent = p;
         try {
             server = new ServerSocket(port);
@@ -69,8 +69,8 @@ public class Server implements Runnable {
 		return !clients.isEmpty();
 	}
 
- 	public Client[] getClients() {
-		return (Client[]) clients.toArray();
+ 	public Vector<Client> getClients() {
+		return clients;
 	}
 
     public void disconnect(final Client client) {
@@ -80,10 +80,11 @@ public class Server implements Runnable {
 
     public void run() {
         try {
+            running = true;
             while (running) {
                 Socket socket = server.accept();
                 Client client = new Client(socket);
-                parent.clientConnection(client);
+                parent.clientConnected(client);
                 clients.add(client);
             }
         } catch (Exception e) {
@@ -106,10 +107,12 @@ public class Server implements Runnable {
 
     public void writeToAllClients(final byte data[]) {
         for (final Client c : new ArrayList<Client>(clients)) {
-            if (c.isRunning())
+            if (c.isRunning()) {
                 c.write(data);
-            else
+            }
+            else {
                 clients.remove(c);
+            }
         }
     }
 

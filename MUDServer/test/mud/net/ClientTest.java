@@ -29,6 +29,7 @@ public class ClientTest {
         final ServerSocket serverSock = new ServerSocket(7777);
         final Socket socket = new Socket("localhost", serverSock.getLocalPort());
         final Client client = new Client(serverSock.accept());
+        System.out.println("Client connected.");
 
         // make daemon threads to read data back from client and from test as soon as available
         final List<String> sentToClient = new ArrayList<String>(LIST_SIZE);
@@ -63,7 +64,9 @@ public class ClientTest {
         });
         sendBackThread.setDaemon(true);
         sendBackThread.start();
-        
+
+        System.out.println("Daemon threads started.");
+
         // thread to send data to client
         final Thread t1 = new Thread(new Runnable() {
             @Override
@@ -73,12 +76,13 @@ public class ClientTest {
                     for (final String s : toSendToClient) {
                         myOut.write((s + "\r\n").getBytes());
                         myOut.flush();
-                        try {
-                            Thread.sleep(1); // give client thread chance to read?
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                            System.exit(-1);
-                        }
+                        
+                        // test hangs unless i call println or print with \r, \n, or \r\n here. :|
+                        // at least \r doesn't make the console text scroll by
+                        // java version "1.7.0_07"
+                        // Java(TM) SE Runtime Environment (build 1.7.0_07-b10)
+                        // Java HotSpot(TM) 64-Bit Server VM (build 23.3-b01, mixed mode)
+                        System.out.print("\r");
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -97,10 +101,14 @@ public class ClientTest {
             }
         });
 
+        System.out.println("Starting writer threads.");
+
         t1.start();
-        t1.join();
         t2.start();
+        t1.join();
         t2.join();
+
+        System.out.println("Writer threads joined.");
 
         Thread.sleep(300); // give reader threads a chance to receive all data
 
