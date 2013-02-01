@@ -77,7 +77,8 @@ public class ClientTest {
                         myOut.write((s + "\r\n").getBytes());
                         myOut.flush();
                         
-                        // test hangs unless i call println or print with \r, \n, or \r\n here. :|
+                        // test hangs unless i call println or print with "a", ".", " ", "\r", "\n", or "\r\n" here. :|
+                        // print("") does not prevent it from hanging
                         // at least \r doesn't make the console text scroll by
                         // java version "1.7.0_07"
                         // Java(TM) SE Runtime Environment (build 1.7.0_07-b10)
