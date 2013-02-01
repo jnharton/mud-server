@@ -10714,8 +10714,6 @@ public class MUDServer implements MUDServerI {
 				// Send any pages, messages, etc to their respective recipients, or to a list of recipients?
 				try {
 					for (final Client client : s.getClients()) {
-
-					for (Client client : clients) {
 						if (client != null && client.isRunning()) { // if the client is not null and is still active
 							if (pages.size() > 0) {
 								for (int a = 0; a < pages.size(); a++) { // for the list of pages
@@ -10727,8 +10725,8 @@ public class MUDServer implements MUDServerI {
 										debug("sending message to " + msg.getRecipient().getName()); 
 										send( msg.getSender().getName() + " says, \"" + msg.getMessage() + "\" to you. (tell)", client);
 										synchronized (pages) {
-                                            pages.remove(a);
-                                        }
+											pages.remove(a);
+										}
 									}
 								}
 							}
