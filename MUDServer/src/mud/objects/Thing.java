@@ -26,7 +26,7 @@ public class Thing extends MUDObject {
 
 	protected double weight = 40; // the weight in whatever units are used of the equippable object
 	
-	HashMap<String, Object> attributes;
+	public HashMap<String, Object> attributes;
 	
 	/**
 	 * Thing - no parameters

@@ -87,14 +87,14 @@ public class Arrow extends Item implements  Projectile<Arrow>, Stackable<Arrow> 
 	@Override
 	public String toDB() {
 		String[] output = new String[8];
-		output[0] = this.getDBRef() + "";          // database reference number
-		output[1] = this.getName();                      // name
-		output[2] = this.getFlags();                     // flags
-		output[3] = this.getDesc();                      // description
-		output[4] = this.getLocation() + "";       // location
+		output[0] = this.getDBRef() + "";          // item database reference number
+		output[1] = this.getName();                // item name
+		output[2] = this.getFlags();               // item flags
+		output[3] = this.getDesc();                // item description
+		output[4] = this.getLocation() + "";       // item location
 		output[5] = this.item_type.ordinal() + ""; // item type
 		output[6] = this.stackSize() + "";         // how many arrows are stacked together
-		output[7] = "*";                                 // blank
+		output[7] = "*";                           // blank
 		
 		/*
 		 * recording stacks of these is messy

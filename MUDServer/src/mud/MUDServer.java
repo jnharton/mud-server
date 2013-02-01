@@ -429,7 +429,7 @@ public class MUDServer implements MUDServerI {
 	private String theme = THEME_DIR + "forgotten_realms.txt";                     // theme file to load
 
 	public static int[] DAYS = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 }; // days in each month
-	public static int months = 12;
+	public static int months = 12;                                                 // months in a year
 	public static String[] month_names = new String[months];
 	private MoonPhase mp = MoonPhase.FULL_MOON;
 	private Seasons season = Seasons.SUMMER; // Possible - Spring, Summer, Autumn, Winter
@@ -484,7 +484,7 @@ public class MUDServer implements MUDServerI {
 
 	public ArrayList<Player> moving = new ArrayList<Player>(); // list of players who are currently moving
 
-	private static final int MAX_STACK_SIZE = 25;
+private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackable items (should this be in the stackable interface?)
 
 	public MUDServer(String address) {}
 
@@ -742,9 +742,9 @@ public class MUDServer implements MUDServerI {
 		//
 		fillShops();
 
-		/*for (NPC npc : npcs1) {
+		for (NPC npc : npcs1) {
 			getRoom(npc.getLocation()).addListener(npc);	
-		}*/
+		}
 
 		// instantiate banned ip list
 		banlist = loadListDatabase(CONFIG_DIR + "banlist.txt");
@@ -986,6 +986,7 @@ public class MUDServer implements MUDServerI {
 		System.out.println("Command Delay: " + cmdExec.getCommandDelay());
 		System.out.println("Next Database Reference Number (DBRef/DBRN): " + nextDB(""));
 		nextDB("list");
+		cleanupDB();
 		// tell us that we're done with setup.
 		System.out.println("Server> Setup Done.");
 	}
@@ -1041,6 +1042,8 @@ public class MUDServer implements MUDServerI {
 		t.coord.setX(4);
 		t.coord.setY(6);
 		t.coord.setZ(1);
+		
+		t.attributes.put("height", 10);
 		
 		/**
 		 * Portal Testing
@@ -3148,18 +3151,37 @@ public class MUDServer implements MUDServerI {
 		final Player player = getPlayer(client);
 
 		// identify the thing to be climbed, if it's possible
+		Thing thing = getThing(arg, getRoom(client)); // ex. box, ladder, building
+		
+		if( 1 == 1 ) { // check distance from object
 
-		// get the check for it's difficulty (static assign for testing purposes)
-		int difficultyCheck = 10;
+			// get the check for it's difficulty (static assign for testing purposes)
+			int difficultyCheck = 10;
 
-		// check to see if we can climb it
-		boolean canClimb = skill_check(player, Skills.CLIMB, "1d4+1", difficultyCheck);
+			// check to see if we can climb it
+			boolean canClimb = skill_check(player, Skills.CLIMB, "1d4+1", difficultyCheck);
 
-		// evaluate results
-		if (canClimb) {
+			// evaluate results
+			if (canClimb) {
+				Integer height = (Integer) thing.attributes.get("height"); 
+				if( height != null ) {
+					if(height > 1) {
+						send("You start climbing <direction> the " + thing.getName().toLowerCase(), client);
+					}
+					else if(height == 1) {
+						send("You climb the " + thing.getName().toLowerCase(), client);
+						player.setXCoord(thing.getXCoord());
+						player.setYCoord(thing.getXCoord());
+						player.coord.incZ(1);
+					}
+				}
+			}
+			// answer dependent on how badly check was failed
+			else {
+			}
 		}
 		else {
-			// answer dependent on how badly check was failed
+			send("That's too far away.", client);
 		}
 	}
 
@@ -7079,6 +7101,17 @@ public class MUDServer implements MUDServerI {
 					return "-Result: Incomplete function statement, no parameters!";
 				}
 			}
+			else if(pArg.equals("{distance}") || pArg.equals("{distance")) {
+				
+				// params - two points in the form '(x,y)' separated by a ','.
+				// ex. (1,1),(4,4)
+				
+				String[] params = ca[1].substring(0, ca[1].indexOf("}")).split(",");
+				
+				if(params.length == 2) {
+				}
+				
+			}
 			else { return "PGM: Error!"; }
 		}
 		else if (pArg != null)
@@ -8574,6 +8607,16 @@ public class MUDServer implements MUDServerI {
 		return null;
 	}
 	
+	public Thing getThing(String name, Room room) {
+		for(Thing thing : room.contents) {
+			if(name == thing.getName()) {
+				return thing;
+			}
+		}
+		
+		return null;
+	}
+	
 	public Thing getThing(int DBREF) {
 		for(Thing thing : things) {
 			if(thing.getDBRef() == DBREF) {
@@ -8792,7 +8835,17 @@ public class MUDServer implements MUDServerI {
 			}
 		}
 	}
-
+	
+	/**
+	 * loadObjects
+	 * 
+	 * Loads game objects
+	 * 
+	 * NOTE: intended use is one time loading of all game objects at server start,
+	 * use in another fashion may not preserve ordering of the list
+	 * 
+	 * @param in
+	 */
 	synchronized public void loadObjects(ArrayList<String> in)
 	{
 		for (String s : in)
@@ -13479,5 +13532,49 @@ public class MUDServer implements MUDServerI {
 		else if(m instanceof Room) {
 			rooms1.add((Room) m);
 		}
+	}
+	
+	/**
+	 * When the unused DBRefs exceed some threshold, go check for more than a certain number of spaces
+	 * at the end of the arraylist and resize it
+	 * 
+	 * maybe I could extend this to shifting stuff around to compact it?
+	 * 
+	 * threshold? 1000 unused, 500 at end of list
+	 */
+	private void cleanupDB() {
+		if( unusedDBNs.size() > 1000 ) { // meets threshold
+			int[] temp = new int[unusedDBNs.size()];
+			
+			int index = 0;
+			
+			for(Integer integer : unusedDBNs) {
+				temp[index] = integer;
+				index++;
+			}
+			
+			Arrays.sort(temp);
+			
+			System.out.println(Arrays.toString(temp));
+		}
+	}
+	
+	public static int distance(Point start, Point end) {
+		if( start != end ) {
+			// use pythagorean theorem to get straight line distance
+			int rise = Math.abs( start.getY() - end.getY() );
+			int run = Math.abs( start.getX() - end.getX() );
+			
+			int distance = (int) Math.sqrt( square(run) + square(rise) );
+			
+			return distance;
+			// calculate travel distance going at right angles
+		}
+		
+		return -1;
+	}
+	
+	public static int square(int num) {
+		return num * num;
 	}
 }
