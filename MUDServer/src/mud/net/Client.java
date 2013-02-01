@@ -70,11 +70,16 @@ public class Client implements Runnable {
 
 	public void run() {
         try {
+            // can't use BufferedReader here - we need access to the buffer for telnet commands, 
+            // which won't be followed by a newline
             final byte buf[] = new byte[BUF_SIZE];
+            int numRead = 0;
             while (running) {
-                final int numRead = input.read(buf, 0, BUF_SIZE);
-                if (numRead > 0) {
+                final int lastNumRead = input.read(buf, numRead, BUF_SIZE - numRead);
+                numRead += lastNumRead;
+                if (numRead > 1 && (buf[numRead - 1] == '\r' || buf[numRead - 1] == '\n')) {
                     final String input = new String(buf, 0, numRead);
+                    numRead = 0;
                     for (final String line : input.split("(\r\n|\n|\r)")) {
                         if (line != null && !"".equals(line)) {
                             queuedLines.add(line);

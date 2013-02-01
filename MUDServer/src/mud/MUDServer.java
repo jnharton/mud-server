@@ -116,7 +116,7 @@ import java.util.regex.Matcher;
  * Last Worked On: 11.2.2012
  **/
 
-public class MUDServer {
+public class MUDServer implements MUDServerI {
 	// Libraries
 	// Processing Network Library (a modified version, link?)
 
@@ -3770,11 +3770,8 @@ public class MUDServer {
 			send("Game> Debugging: Off", client);
 		}
 		else if ( arg.equals("clients") ) {
-			Client[] clients = s.getClients();
-
 			int cn = 0;
-
-			for (Client c : clients) {
+			for (Client c : s.getClients()) {
 				if (c != null) {
 					send(cn + " " + c.ip() + " " + c.toString(), client);
 				}
@@ -10066,7 +10063,7 @@ public class MUDServer {
 	//
 
 	// event triggered on client connection
-	public void clientConnection(final Client someClient)
+	public void clientConnected(final Client someClient)
 	{
 		send("Connecting from " + someClient.ip(), someClient);
 		// decide if a player (or in this case, IP address) will be allowed to continue connecting
@@ -10716,22 +10713,22 @@ public class MUDServer {
 				// if client is a logged in player, send them any messages queued for them
 				// Send any pages, messages, etc to their respective recipients, or to a list of recipients?
 				try {
-					Client[] clients = s.getClients(); // grab the current set of clients
+					for (final Client client : s.getClients()) {
 
 					for (Client client : clients) {
 						if (client != null && client.isRunning()) { // if the client is not null and is still active
 							if (pages.size() > 0) {
 								for (int a = 0; a < pages.size(); a++) { // for the list of pages
 									// get a message
-									Message msg = (Message) pages.get(a);
+									final Message msg = (Message) pages.get(a);
 
 									// if the current client is the recipient
 									if (client == tclients.get( msg.getRecipient() ) ) {
 										debug("sending message to " + msg.getRecipient().getName()); 
-										String sender = msg.getSender().getName();
-										String message = msg.getMessage();
-										send( sender + " says, \"" + message + "\" to you. (tell)", client); // send the message
-										synchronized(pages) { pages.remove(a); } // remove it from the list
+										send( msg.getSender().getName() + " says, \"" + msg.getMessage() + "\" to you. (tell)", client);
+										synchronized (pages) {
+                                            pages.remove(a);
+                                        }
 									}
 								}
 							}
