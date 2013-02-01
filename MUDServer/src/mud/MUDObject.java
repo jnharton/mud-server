@@ -308,11 +308,19 @@ public abstract class MUDObject {
 	}
 	
 	public int getYCoord() {
-		return this.coord.getX();
+		return this.coord.getY();
 	}
 	
 	public void setYCoord(int newYCoord) {
 		this.coord.setY(newYCoord);
+	}
+	
+	public int getZCoord() {
+		return this.coord.getZ();
+	}
+	
+	public void setZCoord(int newZCoord) {
+		this.coord.setZ(newZCoord);
 	}
 	
 	public Point getCoordinates() {
