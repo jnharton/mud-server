@@ -3769,11 +3769,16 @@ public class MUDServer implements MUDServerI {
 			debug = 0;
 			send("Game> Debugging: Off", client);
 		}
-		else if ( arg.equals("clients") ) {
+		else if ( arg.toLowerCase().equals("clients") ) {
 			int cn = 0;
 			for (Client c : s.getClients()) {
 				if (c != null) {
-					send(cn + " " + c.ip() + " " + c.toString(), client);
+					if(c == client) {
+						send(cn + " " + c.ip() + " " + c.toString() + "[YOU]", client);
+					}
+					else {
+						send(cn + " " + c.ip() + " " + c.toString(), client);
+					}
 				}
 				else {
 					send(cn + " " + "---.---.---.--- null", client);
@@ -3787,7 +3792,7 @@ public class MUDServer implements MUDServerI {
 			 */
 			send(cmdExec.getCommandDelay(), client);
 		}
-		else if ( arg.equals("creatures") ) {
+		else if ( arg.toLowerCase().equals("creatures") ) {
 			send("Creatures", client);
 			send("--------------------------------------------------------------------------", client);
 			int dbref;
@@ -3804,7 +3809,7 @@ public class MUDServer implements MUDServerI {
 			}
 			send("--------------------------------------------------------------------------", client);
 		}
-		else if ( arg.equals("dbdump") ) {
+		else if ( arg.toLowerCase().equals("dbdump") ) {
 			/*
 			 * List all of the names and dbrefs of the objects
 			 * in the database their actual index in the database
@@ -3857,7 +3862,7 @@ public class MUDServer implements MUDServerI {
 				send(entry.getKey() + ": " + month_names[((Date) entry.getValue()).getMonth() - 1] + " " + ((Date) entry.getValue()).getDay(), client);
 			}
 		}
-		else if ( args[0].equals("chat") ) { // @ debug chat:<channel>=<type>
+		else if ( args[0].toLowerCase().equals("chat") ) { // @ debug chat:<channel>=<type>
 			/* list unsent messsages */
 			if (args.length >= 1) {
 				String[] args1 = args[1].split("=");
@@ -3880,12 +3885,12 @@ public class MUDServer implements MUDServerI {
 				}
 			}
 		}
-		else if ( arg.equals("client") ) {
+		else if ( arg.toLowerCase().equals("client") ) {
 			/* tell us about ourselves (i.e. which client object we are and our ip address) */
 			send(client, client);
 			send(client.ip(), client);
 		}
-		else if ( arg.equals("exitlcache") || arg.equals("elc") ) {
+		else if ( arg.toLowerCase().equals("exitlcache") || arg.toLowerCase().equals("elc") ) {
 			if( lookup_caching ) {
 				/* indicate size of exit lookup table/cache */
 				send("Exit Lookup Cache (table size): " + exit_lookup.size(), client);
@@ -3902,7 +3907,7 @@ public class MUDServer implements MUDServerI {
 				send("Lookup Caching Disabled", client);
 			}
 		}
-		else if ( args2[0].equals("listen") ) {
+		else if ( args2[0].toLowerCase().equals("listen") ) {
 			final int dbref = Utils.toInt(args2[1], -1);
 			final Room room = dbref != -1 ? getRoom(dbref) : getRoom(args2[1]);
 
@@ -3916,7 +3921,7 @@ public class MUDServer implements MUDServerI {
 				send("Listeners: " + listenList.toString(), client);
 			}
 		}
-		else if ( arg.equals("objlcache") || arg.equals("olc") ) {
+		else if ( arg.toLowerCase().equals("objlcache") || arg.toLowerCase().equals("olc") ) {
 			if( lookup_caching ) {
 				/* indicate size of object lookup table/cache */
 				send("Object Lookup Cache (table size): " + object_lookup.size(), client);
@@ -3933,14 +3938,14 @@ public class MUDServer implements MUDServerI {
 				send("Lookup Caching Disabled", client);
 			}
 		}
-		else if ( arg.equals("position") || arg.equals("pos") ) {
+		else if ( arg.toLowerCase().equals("position") || arg.toLowerCase().equals("pos") ) {
 			Player player = getPlayer(client);
 
 			send("X: " + player.getXCoord(), client);
 			send("Y: " + player.getYCoord(), client);
 			send("Moving: " + player.isMoving(), client);
 		}
-		else if (arg.equals("roomlcache") || arg.equals("rlc") ) {
+		else if (arg.toLowerCase().equals("roomlcache") || arg.toLowerCase().equals("rlc") ) {
 			if( lookup_caching ) {
 				/* indicate size of room lookup tables/caches */
 				send("Room Lookup Cache (table size): " + room_lookup.size(), client);
@@ -3962,7 +3967,7 @@ public class MUDServer implements MUDServerI {
 				send("Lookup Caching Disabled", client);
 			}
 		}
-		else if ( arg.equals("udbnstack") || arg.equals("unused") ) {
+		else if ( arg.toLowerCase().equals("udbnstack") || arg.toLowerCase().equals("unused") ) {
 			client.write("Stack: [ ");
 			/*for (int i = 0; i < unusedDBNs.size(); i++) {
 				if ( i < unusedDBNs.size() - 1) {
@@ -9761,8 +9766,13 @@ public class MUDServer implements MUDServerI {
 			final Armor armor = new Armor("Leather Armor", "A brand new set of leather armor, nice and smooth, but a bit stiff still.", -1, -1, 0, ArmorType.LEATHER, ItemType.ARMOR);
 			final Weapon sword = new Weapon("Long Sword", "A perfectly ordinary longsword.", 0, Handed.ONE, WeaponType.LONGSWORD, 15.0);
 			armor.setLocation(player.getDBRef());
+			
 			armor.setDBRef(nextDB("use"));
 			sword.setDBRef(nextDB("use"));
+			
+			addToDB(armor);
+			addToDB(sword);
+			
 			player.getInventory().add(armor);
 			player.getInventory().add(sword);
 		}
@@ -13405,6 +13415,17 @@ public class MUDServer implements MUDServerI {
 		}
 		else {
 			return input;
+		}
+	}
+	
+	private void addToDB(MUDObject m) {
+		// we trust herein that the dbref is valid for this MUDObject and doesn't belong
+		// to another and comes only from the set of next ones or is new
+		if( m.getDBRef() < dbSize() ) {
+			main1.set(m.getDBRef(), m);
+		}
+		else {
+			main1.add(m);
 		}
 	}
 }

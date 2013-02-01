@@ -24,7 +24,7 @@
 23#The Street of Bells#RS#You see nothing.#53#O#10,10,10#-1#
 24#Astropolis: Great Hall#RS#You see nothing.#0#I#10,10,10#-1#
 25#Nathan's Test Room#RS#You see nothing.#0#I#10,10,10#-1#
-26#null#null#null#-1
+26#null#null#null#-1# null#null#null#null#null#null
 27#The Street of Bells#RS#You see nothing.#53#O#10,10,10#-1#
 28#west#E#You see nothing.#9#8#2
 29#west#E#You see nothing.#8#7#2
