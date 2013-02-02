@@ -14,7 +14,7 @@ import mud.net.Client;
 public class ObjectLoader {
 
 	static public void loadObjects(final List<String> in, final LoggerI log, final ObjectDB objectDB, 
-            final MUDServer parent, final ArrayList<String> authTable, final HashMap<String, String> authTable1)
+            final MUDServer parent)
 	{
 		for (final String oInfo : in)
 		{	
@@ -88,9 +88,7 @@ public class ObjectLoader {
                     //log.debug("log.debug (db entry): " + player.toDB(), 2);
 
                     objectDB.add(player);
-
-                    authTable.add(oInfo); // add player info to authentication table
-                    authTable1.put(player.getName(), player.getPass()); // add player info to authentication table
+                    objectDB.addPlayer(player);
                 }
                 else if (oFlags.equals("WMV")) {
                     WeaponMerchant wm = new WeaponMerchant(parent, oDBRef, oName, oFlags, "A weapon merchant.", "Merchant", "VEN", 161, new String[]{"1000", "1000", "1000", "1000"} );

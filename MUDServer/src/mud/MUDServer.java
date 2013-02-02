@@ -192,7 +192,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 	private String motd = "motd.txt";   // Message of The Day file
 
 	// server state settings
-	private int mode = 0;                   // (0=normal: player connect, 1=wizard: wizard connect only, 2=maintenance: maintenance mode)
+	private GameMode mode = GameMode.NORMAL;                   // (0=normal: player connect, 1=wizard: wizard connect only, 2=maintenance: maintenance mode)
 	private int multiplay = 0;              // (0=only one character per account is allowed, 1=infinite connects allowed)
 	private int guest_users = 0;            // (0=guests disallowed, 1=guests allowed)
 	private int debug = 1;                  // (0=off,1=on) Debug: server sends debug messages to the console
@@ -441,9 +441,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 	
 	private int done = 0;
 
-	private ArrayList<String> authTable = new ArrayList<String>(max_players); // hold database info for player login
-	private HashMap<String, String> authTable1 = new HashMap<String, String>(max_players, 0.75f); // hold database info for player login
-	
 	// Lookup/Cache Tables
 	private Hashtable<String, Integer> room_lookup = new Hashtable<String, Integer>(10, 0.75f);    //
 	private Hashtable<Integer, Integer> room_lookup2 = new Hashtable<Integer, Integer>(10, 0.75f); //
@@ -689,8 +686,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 		System.out.println("Spells Loaded!");
 
 		// Load everything from databases by flag
-		ObjectLoader.loadObjects(loadListDatabase(mainDB), this, objectDB, this, 
-                authTable, authTable1);
+		ObjectLoader.loadObjects(loadListDatabase(mainDB), this, objectDB, this);
 		System.out.println("Database Loaded!");
 
 		objectDB.loadExits(this);  // load exits (post-room loading)
@@ -1337,7 +1333,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 		// show for when the mode will return to normal
 		if (!loginCheck(client))
 		{
-			if (mode == 0) // Normal Running Mode (a.k.a. Mode 0)
+			if (mode == GameMode.NORMAL) // Normal Running Mode (a.k.a. Mode 0)
 			{
 				if (this.players.size() < this.max_players) { // if the maximum number of players hasn't been exceeded.
 					// pass arguments to the player connect function
@@ -1374,7 +1370,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 				}
 				else { send("Sorry. Maximum number of players are connected. Please try back later.", client); }
 			}
-			else if (mode == 1) // Wizard-Only Mode (a.k.a. Mode 1)
+			else if (mode == GameMode.WIZARD) // Wizard-Only Mode (a.k.a. Mode 1)
 			{
 				send("System is in Wizard-Only Mode.", client);
 				if ( cmd.equals("connect") || ( aliasExists && alias.equals("connect") ) )
@@ -1395,7 +1391,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 					debug("Command> Unknown Command");
 				}
 			}
-			else if (mode == 2) // Maintenance Mode (a.k.a. Mode 2)
+			else if (mode == GameMode.MAINTENANCE) // Maintenance Mode (a.k.a. Mode 2)
 			{
 				send("System is in Maintenance Mode.", client); // >configurable message<
 				send("No Logins allowed. Booting Client...", client);
@@ -3092,34 +3088,10 @@ public class MUDServer implements MUDServerI, LoggerI {
 	 */
 	private void cmd_connect(final String arg, final Client client)
 	{
-		boolean auth;  // variable whose state reflects the current step in the connection process (true=in progress, false=failed)
-		boolean valid; // variable whose state reflects the whether the player is valid, i.e. exists and that is their password (true=valid, false=invalid)
-
-		boolean account; // are we doing an account login?
-
-		String user = ""; // storage for actual username we're testing against
-		String pass = ""; // storage for actual password we're testing against
-
 		// Trim the argument of any additional whitespace
-		String[] args = Utils.trim(arg).split(" ");
-		
-		if (args.length == 2) {
-			// extract the username from the argument
-			user = args[0];
-			// Trim the username of any additional whitespace
-			user = Utils.trim(user);
-			// extract the password from the argument
-			pass = args[1];
-			//trim the password of any additional whitespace
-			pass = Utils.trim(pass);
-		}
-		else if (args.length == 1) {
-			// extract the username from the argument
-			user = args[0];
-			// Trim the username of any additional whitespace
-			user = Utils.trim(user);
-		}
-		else {
+		final String[] args = Utils.trim(arg).split(" ");
+
+        if (args.length < 1 || args.length > 2) {
 			// unless I get accounts working the way I want that last line will be a lie.
 			/*send("Enter a valid character creation or connection string\n" +
 					"such as 'create <character name> <password>' or 'connect <character name> <password>'" +
@@ -3127,24 +3099,18 @@ public class MUDServer implements MUDServerI, LoggerI {
 			send("Enter a valid character creation or connection string\n" +
 					"such as 'create <character name> <password>' or 'connect <character name> <password>'", client);
 			return;
-		}
+        }
+
+        final String user = Utils.trim(args[0]);
+        final String pass = args.length > 1 ? Utils.trim(args[1]) : "";
 
 		debug("User?: " + user);
 		debug("Password?: " + Utils.padRight("", '*',pass.length()) );
 		debug("");
 
-		auth = true;     // we are now attempting to init the connection
-		valid = false;   // we do not yet have a valid player
-		account = false; // we are not currently logging in an account
-
-		int line = 0;  // current line of the password file/list we're looking through
-
-		String[] uInfo;
-		int tDBRef = 0, tLocation = 0;
-		Integer[] tMoney = new Integer[0], tStats = new Integer[0];
-		String tUser = "", tPass = "", tFlags = "", tDesc = "", tStatus = "";
-
-		Player player; // player object (uninstantiated)
+        // variable whose state reflects the current step in the connection process (true=in progress, false=failed)
+		// we are now attempting to init the connection
+		boolean auth = true;
 
 		// Guest Player
 		// SERIOUS: got a problem here, system does not seem to know guests are connected
@@ -3152,197 +3118,87 @@ public class MUDServer implements MUDServerI, LoggerI {
 		// NOTE: my problem is related to guest not being findable somehow, all this needs a major revamp
 		if ((user.toLowerCase().equals("guest")) && (pass.toLowerCase().equals("guest"))) {
 			if (guest_users == 1) {
-				player = new Player(-1, "Guest" + guests, "PG", "A guest player.", WELCOME_ROOM, "", Utils.hash("password"), "OOC", new Integer[] { 0, 0, 0, 0, 0, 0 }, new Integer[] { 0, 0, 0, 0 });
+				final Player player = new Player(-1, "Guest" + guests, "PG", "A guest player.", WELCOME_ROOM, "", Utils.hash("password"), "OOC", new Integer[] { 0, 0, 0, 0, 0, 0 }, new Integer[] { 0, 0, 0, 0 });
                 objectDB.addAsNew(player);
 				init_conn(player, client, false);
 				guests++;
-				auth = false; // finished connecting
 			}
 		}
 		else if (user.toLowerCase().equals("new")) {
-			player = new Player(-1, "randomName", "P", "New player.", WELCOME_ROOM, "", Utils.hash("randomPass"), "NEW", new Integer[] { 0, 0, 0, 0 }, new Integer[] { 0, 0, 0, 0, 0, 0 });
+			final Player player = new Player(-1, "randomName", "P", "New player.", WELCOME_ROOM, "", Utils.hash("randomPass"), "NEW", new Integer[] { 0, 0, 0, 0 }, new Integer[] { 0, 0, 0, 0, 0, 0 });
             objectDB.addAsNew(player);
 			init_conn(player, client, false);
-			auth = false;
 		}
 		else if ( user.toLowerCase().equals("account") ) {
-			/*
-			 * This code here ties up the program, and no one else
-			 * can have their commands processed until this is done,
-			 * although the command queue will hold the commands they send
-			 */
-			account = true;
-
-			BufferedReader br;
-			String aName = "";
-			String aPass = "";
-			
-			// really ought to design a handler for flexible interactive input
 			try {
 				client.write("Account Name?");
-
-				aName = client.getInput();
-
+				final String aName = client.getInput();
 				System.out.println("Name: " + aName);
 
 				client.write("Account Password?");
-
-				aPass = client.getInput();
-
+				final String aPass = client.getInput();
 				System.out.println("Password: " + aPass);
+
+                final Account account1 = getAccount(aName, aPass);
+                if (account1 != null) {
+                    account_menu(account1, client);
+                }
 			}
 			catch (Exception e) {
 				e.printStackTrace();
 			}
-
-			Account account1 = getAccount(aName, aPass);
-			if (account1 != null) {
-                account_menu(account1, client);
-			}
 		}
 		else {
-			while ( auth )
-			{
-				/*
-				 * NOTE:
-				 * if all players always existed, then instead of instantiating a player i'd
-				 * simply assign a client to it. Otherwise I need to get the player data from
-				 * somewhere so I can load it up. 
-				 */
+            /*
+             * NOTE:
+             * if all players always existed, then instead of instantiating a player i'd
+             * simply assign a client to it. Otherwise I need to get the player data from
+             * somewhere so I can load it up. 
+             */
 
-				// account check
+            // account check
 
-				/*
-				 * I don't want account names to conflict with characters, so perhaps
-				 * I will insert a stopgap measure where you must indicate an account
-				 * like this:
-				 * 
-				 * connect account
-				 * 
-				 * If the user input is 'account' we will assume you want to connect to
-				 * an account and will do an interactive login for you.
-				 * 
-				 * Other we will look for a character by the name given.
-				 */
+            /*
+             * I don't want account names to conflict with characters, so perhaps
+             * I will insert a stopgap measure where you must indicate an account
+             * like this:
+             * 
+             * connect account
+             * 
+             * If the user input is 'account' we will assume you want to connect to
+             * an account and will do an interactive login for you.
+             * 
+             * Other we will look for a character by the name given.
+             */
 
-				/*String password = authTable1.get(user);
-				if ( pass.equals(password) ) {
-				}*/
+            // character check
+            final Player p = objectDB.getPlayer(user);
+            if (p == null || !p.getPass().equals(Utils.hash(pass))) {
+                debug("CONNECT: Fail");
+                send("Either that player does not exist, or has a different password.", client);
+                return;
+            }
+            
+            debug("PASS: Pass"); // report success for password check
 
-				// character check
-				if (authTable.get(line) != null) {
-
-					/* need to integrate account checking into here */
-
-					// get user info from line of users array
-					//uInfo = main.get(line).split("#");
-					uInfo = authTable.get(line).split("#");
-					// get user dbref # from array of user info and trim of whitespace
-					tDBRef = Integer.parseInt(Utils.trim(uInfo[0]));
-					// get user from array of user info and trim of whitespace
-					tUser = Utils.trim(uInfo[1]);
-					// get user flags from array of user info and trim of whitespace
-					tFlags = Utils.trim(uInfo[2]);
-					// get user description from array of user info and trim of whitespace
-					tDesc = Utils.trim(uInfo[3]);
-					// get user location from array of user info and trim of whitespace
-					tLocation = Integer.parseInt(Utils.trim(uInfo[4]));
-					// get pass from array of user info and trim of whitespace
-					tPass = Utils.trim(uInfo[5]);
-					// get stats from array of user info and trim of whitespace
-					tStats = Utils.stringsToIntegers(Utils.trim(uInfo[6]).split(","));
-					// get money from array of user info and trim of whitespace
-					tMoney = Utils.stringsToIntegers(Utils.trim(uInfo[7]).split(","));
-
-					if (tUser.equals(user))
-					{	
-
-						debug("USER: Pass");
-						if (tPass.equals(Utils.hash(pass))) // valid user
-						{		
-							debug("PASS: Pass"); // report success for password check
-							auth = false;        // finished connecting
-
-							if (mode == 0) // Open Mode
-							{
-								valid = true; // we have a valid user, go ahead and try to initiate a connection
-							}
-							else if (mode == 1) // Wizard-Only Mode
-							{
-								if ( tFlags.contains("W") ) // Wizard Flag
-								{
-									valid = true; // we have a valid user, go ahead and try to initiate a connection
-								}
-								else
-								{
-									send("Sorry, only Wizards are allowed to login at this time.", client);
-								}
-							}
-							else if (mode == 2)
-							{
-								send("Sorry, the mud is currently in maintenance mode.", client);
-							}
-							else
-							{
-								send("Sorry, you cannot connect to the mud at this time. Please try again later.", client);
-							}
-						}
-						else // invalid user
-						{
-							debug("PASS: Fail"); // report failure for password check
-							send("Either that player does not exist, or has a different password.", client);
-							auth = false;        // finished attempting to connect (needed to obfuscate the truth about which part of the password or the user check failed)
-						}
-					}
-					else
-					{
-						// no user match
-						debug("USER: Fail");
-						if (line != authTable.size() - 1) { line = line + 1; } // move to next line/entry (if we haven't tried them all)
-						else
-						{
-							debug("CONNECT: Fail");
-							auth = false;
-							send("Either that player does not exist, or has a different password.", client);
-						}
-					}
-				}
-				else {
-					if (line != authTable.size() - 1) { line = line + 1; } // move to next line/entry (if we haven't tried them all)
-					else
-					{
-						debug("CONNECT: Fail");
-						auth = false;
-						send("Either that player does not exist, or has a different password.", client);
-					}
-				}
-			}
-		}
-
-		// if valid, attempt connection (validity is false if player is a guest or doesn't exist)
-		if ( valid ) {
-
-			/* try to prevent duplicate logins, accidental or otherwise, needed
-			 * just in case auto-flush/auto-boot doesn't kick their last session
-			 * when their connection becomes unstable.
-			 * 
-			 * if they lost connection without a proper disconnect, this should try to reconnect
-			 * them to their player
-			 */
-
-			/* Handle connection
-			 */
-
-			tStatus = "OOC"; // fudge status til I work out storage details
-			// this next line is a problem if I change authtable to only hold the player name and password
-			
-			//player = getPlayer(user);
-			player = loadPlayer(authTable.get(line)); // ensures that we load the player properly
-			
-			//player = new Player(tDBRef, user, tFlags, tDesc, tLocation, "", tPass, tStatus, tStats, tMoney);
-			
-			init_conn(player, client, false);  // pass the player to the connection initialization function
-		}
+            if (mode == GameMode.NORMAL) {
+                init_conn(p, client, false);    // Open Mode
+            }
+            else if (mode == GameMode.WIZARD) {
+                if ( p.getFlags().contains("W") ) {
+                    init_conn(p, client, false);    // Wizard-Only Mode
+                }
+                else {
+                    send("Sorry, only Wizards are allowed to login at this time.", client);
+                }
+            }
+            else if (mode == GameMode.MAINTENANCE) {
+                send("Sorry, the mud is currently in maintenance mode.", client);
+            }
+            else {
+                send("Sorry, you cannot connect to the mud at this time. Please try again later.", client);
+            }
+        }
 	}
 
 	/**
@@ -3513,7 +3369,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 			init_conn(player, client, true);
 			
 			// add player to the auth table
-			authTable.add(player.toDB());
+			objectDB.addPlayer(player);
 		}
 		else
 		{
@@ -6013,24 +5869,18 @@ public class MUDServer implements MUDServerI, LoggerI {
 	}
 	
 	private void cmd_setmode(final String arg, final Client client) {
-		char test = arg.toLowerCase().charAt(0);
+		char test = (arg == null || arg.isEmpty()) ? ' ' : arg.toLowerCase().charAt(0);
 		switch(test) {
-		case 'n':
-			mode = GameMode.NORMAL.ordinal();
-			break;
-		case 'w':
-			mode = GameMode.WIZARD.ordinal();
-			break;
-		case 'm':
-			mode = GameMode.MAINTENANCE.ordinal();
-			break;
+		case 'n':   mode = GameMode.NORMAL;     break;
+		case 'w':   mode = GameMode.WIZARD;         break;
+		case 'm':   mode = GameMode.MAINTENANCE;    break;
 		default:
 			send("Invalid GameMode, using Normal instead.", client);
-			mode = GameMode.NORMAL.ordinal();
+			mode = GameMode.NORMAL;
 			break;
 		}
 		
-		send("Game> setting GameMode to -" + GameMode.values()[mode].toString() + "-", client);
+		send("Game> setting GameMode to -" + mode + "-", client);
 	}
 
 	/**
@@ -9374,7 +9224,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 		s.write("Server Shutdown!\n");
 		
 		// prevent any new connections
-		mode = GameMode.MAINTENANCE.ordinal();
+		mode = GameMode.MAINTENANCE;
 				
 		// disconnect any connected clients
 		for (Client client1 : s.getClients()) {

@@ -331,4 +331,15 @@ public class ObjectDB {
         return acc;
     }
 
+    ///////////////////////////// PLAYERS
+    final Map<String, Player> players = new HashMap<String, Player>();
+
+    public void addPlayer(final Player p) {
+        players.put(p.getName(), p);
+    }
+
+    public Player getPlayer(final String name) {
+        return players.get(name);
+    }
+
 }
