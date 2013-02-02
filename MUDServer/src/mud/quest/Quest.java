@@ -6,6 +6,8 @@ import java.util.Arrays;
 import mud.objects.Player;
 import mud.utils.Date;
 
+import mud.Colors;
+
 /**
  * Quest Class
  * 
@@ -25,17 +27,15 @@ public class Quest {
 	private Date issueDate;             // the in-game date the quest was given
 	private boolean isComplete = false; // is the quest completed? (this should put it in a deletion queue if we delete completed quests)
 	
-	public String location = "Quest Loc"; // quest location
+	final public String location = "Quest Loc"; // quest location
 
-	private ArrayList<Task> tasks;      // a list of tasks that must be completed to finish the quest
+	final private ArrayList<Task> tasks;      // a list of tasks that must be completed to finish the quest
 
 	public Quest( String qName, String qDescription, Task...tasks ) {
 		this.id = lastId++;
 		this.name = qName;
 		this.description = qDescription;
-		this.tasks = new ArrayList<Task>();
-		
-		for (Task task : tasks) { this.tasks.add(task); }
+		this.tasks = new ArrayList<Task>(Arrays.asList(tasks));
 	}
 	
 	/**
@@ -50,9 +50,7 @@ public class Quest {
 		this.id = lastId++;
 		this.name = template.name;
 		this.description = template.description;
-		this.tasks = new ArrayList<Task>();
-		
-		for (Task task : template.getTasks()) { this.tasks.add(task); }
+		this.tasks = new ArrayList<Task>(template.getTasks());
 	}
 	
 	public void addTask(Task newTask) {
@@ -133,19 +131,18 @@ public class Quest {
 	 * @return boolean indicates whether or not we changed the Quest
 	 */
 	private boolean applyUpdate(QuestUpdate update) {
-		int toRemove = -1;
 		boolean questChanged = false;
 		
-		for (Task task : this.tasks) {
-			for (TaskUpdate tu : update.taskUpdates) {
+		for (final Task task : this.tasks) {
+			for (final TaskUpdate tu : new ArrayList<TaskUpdate>(update.taskUpdates)) {
 				if ( tu.taskId == task.getId() ) {
-					if ( task.update(tu) ) { questChanged = true; } // update task state
-					toRemove = update.taskUpdates.indexOf(tu);     // get index of update for direct removal
+					if ( task.update(tu) ) {
+                        questChanged = true;
+                    }
+					update.taskUpdates.remove(tu);
 					break;
 				}
 			}
-			
-			update.taskUpdates.remove(toRemove); // toss the used update
 		}
 		
 		return questChanged;
@@ -155,11 +152,23 @@ public class Quest {
 		return this.isComplete;
 	}
 
+    @Override
 	public String toString() {
 		return this.name + "\n" + this.description;
 	}
 
-	public boolean isSuitable(Player player) {
+	public String toDisplay() {
+        final StringBuilder buf = new StringBuilder();
+        buf.append(Colors.YELLOW).append("   o ").append(getName());
+        buf.append(Colors.MAGENTA).append(" ( ").append(location).append(" ) ").append(Colors.CYAN);
+        buf.append("\n");
+        for (final Task task : getTasks()) {
+            buf.append(task.toDisplay());
+        }
+        return buf.toString();
+	}
+
+	public boolean isSuitable(final Player player) {
 		return true;
 	}
 }

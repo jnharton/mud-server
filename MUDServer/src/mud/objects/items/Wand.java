@@ -31,7 +31,7 @@ public class Wand extends Item implements Equippable<Wand>, Usable<Wand>, Wielda
 	}
 
 	public Wand(int tCharges, String spellName) {
-		super(parent.nextDB("use"), "Wand", "", "I", 8);
+		super(-1, "Wand", "", "I", 8);
 		this.equippable = true;
 		this.item_type = ItemType.WAND;
 		this.equip_type = ItemType.WEAPON;
@@ -42,7 +42,7 @@ public class Wand extends Item implements Equippable<Wand>, Usable<Wand>, Wielda
 	}
 
 	public Wand(int tCharges, Spell tSpell) {
-		super(parent.nextDB("use"), "Wand", "", "I", 8);
+		super(-1, "Wand", "", "I", 8);
 		this.equippable = true;
 		this.item_type = ItemType.WAND;
 		this.equip_type = ItemType.WEAPON;

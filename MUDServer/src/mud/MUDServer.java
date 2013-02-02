@@ -56,6 +56,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
@@ -115,7 +116,7 @@ import java.util.regex.Matcher;
  * Last Worked On: 11.2.2012
  **/
 
-public class MUDServer implements MUDServerI {
+public class MUDServer implements MUDServerI, LoggerI {
 	// Libraries
 	// Processing Network Library (a modified version, link?)
 
@@ -309,25 +310,15 @@ public class MUDServer implements MUDServerI {
 	private String[] errors;        // string array into which existing error messages file is loaded
 	private String[] help;          // string array of help file filenames
 
-	// Stacks
-	private Stack<Integer> unusedDBNs; // holds unused database references (ones less than the size of the array), that exist due to "recycled" objects
-
 	// ArrayList(s)
 
 	// Databases/Data
-	private ArrayList<String> main;          // arraylist of all objects as strings (currently mirrors db file structure) -- 11/10/2011
-	private ArrayList<MUDObject> main1;      // ArrayList of all Objects (part of db merge that was in progress)
+    private ObjectDB objectDB = new ObjectDB();
 	
 	/*
 	 * I don't want to generate these on the fly and they need to stay 'in sync' so to speak.
 	 */
 	private ArrayList<Player> players;       // ArrayList of Player Objects currently in use
-	private ArrayList<Creature> creatures;   // ArrayList of Creature Objects (all loaded)
-	private ArrayList<NPC> npcs1;            // ArrayList of NPC Objects (all loaded)
-	private ArrayList<Room> rooms1;          // ArrayList of Room Objects (all loaded)
-	private ArrayList<Exit> exits1;          // ArrayList of Exit Objects (all loaded)
-	private ArrayList<Thing> things;         // ArrayList of Thing Objects (all loaded)
-	private ArrayList<Item> items;           // ArrayList of Item Objects (all loaded)
 
 	// Stuff
 	private ArrayList<Spell> spells1;         // ArrayList of Spell Objects (all loaded)
@@ -454,8 +445,6 @@ public class MUDServer implements MUDServerI {
 	private HashMap<String, String> authTable1 = new HashMap<String, String>(max_players, 0.75f); // hold database info for player login
 	
 	// Lookup/Cache Tables
-	private Hashtable<String, Integer> object_lookup = new Hashtable<String, Integer>(10, 0.75f);  //
-	private Hashtable<String, Integer> exit_lookup = new Hashtable<String, Integer>(10, 0.75f);    //
 	private Hashtable<String, Integer> room_lookup = new Hashtable<String, Integer>(10, 0.75f);    //
 	private Hashtable<Integer, Integer> room_lookup2 = new Hashtable<Integer, Integer>(10, 0.75f); //
 	private HashMap<String, Integer> spells2 = new HashMap<String, Integer>(1, 0.75f);             // HashMap to lookup spells by index using name as key (static)
@@ -656,23 +645,8 @@ public class MUDServer implements MUDServerI {
 
 		MUDObject.parent = this; // assign a static reference to the running server (ugly, but allows some flex)
 
-		// initialize main arraylist?
-		this.main1 = new ArrayList<MUDObject>(); // main, live database
-
 		// initialize player array
 		this.players = new ArrayList<Player>(max_players);
-		// initialize creatures array
-		this.creatures = new ArrayList<Creature>();
-		// Initialize the npcs array list (where NPC objects are stored)
-		this.npcs1 = new ArrayList<NPC>();
-		// Initialize the exits array list (where Exit objects are stored)
-		this.exits1 = new ArrayList<Exit>();
-		// Initialize the rooms array list (where Room objects are stored)
-		this.rooms1 = new ArrayList<Room>();
-		// Initialize the stuff Array List  (where Thing objects are stored)
-		this.things = new ArrayList<Thing>();
-		// Initialize the items Array List  (where Item objects are stored)
-		this.items= new ArrayList<Item>();
 
 		// Initialize the spells array list (where Spell objects are stored)
 		this.spells1 = new ArrayList<Spell>();
@@ -688,16 +662,12 @@ public class MUDServer implements MUDServerI {
 		// wise to implement configurable auto db-saving here
 		//
 
-		// Database File (mainDB)
-		this.main = loadListDatabase(mainDB);
 		// Error Messages Files (errorsDB)
 		this.errors = loadDatabase(errorDB);
 		// Help Files (helpDB)
 		this.help = loadDatabase(helpDB);
 		// Spell Files (spellDB)
 		this.spells = loadDatabase(spellDB);
-		// Unused DB reference numbers (unDB)
-		unusedDBNs = new Stack<Integer>();
 
 		// error message hashmap loading
 		for (int err = 0; err < this.errors.length; err++)
@@ -719,10 +689,11 @@ public class MUDServer implements MUDServerI {
 		System.out.println("Spells Loaded!");
 
 		// Load everything from databases by flag
-		loadObjects(this.main);
+		ObjectLoader.loadObjects(loadListDatabase(mainDB), this, objectDB, this, 
+                authTable, authTable1);
 		System.out.println("Database Loaded!");
 
-		loadExits();  // load exits (post-room loading)
+		objectDB.loadExits(this);  // load exits (post-room loading)
 		placeThingsInRooms(); // load things (post-room loading)
 		loadItems();  // load items (post-room loading)
 		fillShops();
@@ -969,8 +940,8 @@ public class MUDServer implements MUDServerI {
 		}
 
 		System.out.println("Command Delay: " + cmdExec.getCommandDelay());
-		System.out.println("Next Database Reference Number (DBRef/DBRN): " + nextDB(""));
-		nextDB("list");
+		System.out.println("Next Database Reference Number (DBRef/DBRN): " + objectDB.peekNextId());
+		printUnusedDB();
 		// tell us that we're done with setup.
 		System.out.println("Server> Setup Done.");
 	}
@@ -985,14 +956,17 @@ public class MUDServer implements MUDServerI {
 		int avar = 0;
 
 		if (avar == 1 ) {
-			Arrow a = new Arrow(nextDB("use"), "Flaming Arrow", "a flaming arrow", 8);
-			Arrow b = new Arrow(nextDB("use"), "Flaming Arrow", "a flaming arrow", 8);
+			Arrow a = new Arrow(-1, "Flaming Arrow", "a flaming arrow", 8);
+            objectDB.addAsNew(a);
+			Arrow b = new Arrow(-1, "Flaming Arrow", "a flaming arrow", 8);
+            objectDB.addAsNew(b);
 			a.stack(b);
 
 			Arrow c;
 
 			for (int i = 0; i < 30; i++) {
-				c = new Arrow(nextDB("use"), "Flaming Arrow", "a flaming arrow", 8);
+				c = new Arrow(-1, "Flaming Arrow", "a flaming arrow", 8);
+                objectDB.addAsNew(c);
 				a.stack(c);
 			}
 
@@ -1010,12 +984,11 @@ public class MUDServer implements MUDServerI {
 		/*System.out.println("creating a thing: " + nextDB());
 
 		Room r = getRoom(207);
-		Thing thing = new Thing(nextDB("use"), "slab", "TD", "a large, rectangular stone slab" , 207);
+		Thing thing = new Thing(-1, "slab", "TD", "a large, rectangular stone slab" , 207);
 
 		thing.coord.x = 4;
 		thing.coord.y = 6;
 
-		things.add(thing);
 		r.contents.add(thing);
 
 		main.add(thing.toDB());
@@ -1028,53 +1001,44 @@ public class MUDServer implements MUDServerI {
 		int pvar = 0;
 
 		if (pvar == 1) {
-			System.out.println("creating a portal: " + nextDB());
+			System.out.println("creating a portal: " + objectDB.peekNextId());
 
 			Portal portal = new Portal(WELCOME_ROOM, 5); // a portal connecting two rooms (#8 and #5)
-			portal.setDBRef(nextDB("use"));   // get a new dbref for it
 			portal.name = "portal";           // generic name
 			portal.coord.setX(1);             // x coordinate
 			portal.coord.setY(1);             // y coordinate
 
 			portals.add(portal);              // add to list of portals
+			objectDB.addAsNew(portal);                // add to live game
 
-			main.add(portal.toDB());          // add to database
-			main1.add(portal);                // add to live game
-
-			System.out.println("creating a portal: " + nextDB());
+			System.out.println("creating a portal: " + objectDB.peekNextId());
 
 			Portal portal1 = new Portal(PortalType.RANDOM, WELCOME_ROOM, new int[] { 5, 182, 161, 4 });
-			portal1.setDBRef(nextDB("use"));  // get a new dbref for it
 			portal1.name = "portal1";         // generic name
 			portal1.coord.setX(2);            // x coordinate
 			portal1.coord.setY(2);            // y coordinate
 
 			portals.add(portal1);             // add to list of portals
-
-			main.add(portal1.toDB());         // add to database
-			main1.add(portal1);               // add to live game
+			objectDB.addAsNew(portal1);               // add to live game
 		}
 
 		/**
 		 * Quest Testing
 		 */
-		synchronized(npcs1) {
-			System.out.println("NPCs: " + npcs1.size());
+			System.out.println("NPCs: " + objectDB.getNPCs().size());
 
-			try {
-				NPC npc = getNPC("Iridan");
+            final NPC npc = getNPC("Iridan");
+            if (npc != null) {
+                final Quest quest = new Quest("Clear kobold infestation", "A cave near town is infested with kobolds, " +
+                        "whom recently began raiding the town. Kill them all to end the infestation.",
+                        new Task("Kill 15 kobolds", TaskType.KILL, 15));
 
-				Quest quest = new Quest("Clear kobold infestation", "A cave near town is infested with kobolds, " +
-						"whom recently began raiding the town. Kill them all to end the infestation.",
-						new Task("Kill 15 kobolds", TaskType.KILL, 15));
-
-				npc.setQuestList();
-				npc.setQuest(quest);
-			}
-			catch(NullPointerException npe) {
-				npe.printStackTrace();
-			}
-		}
+                npc.setQuestList();
+                npc.addQuest(quest);
+            }
+            else {
+                debug("getNPC(\"Iridan\") returned null.");
+            }
 
 		/**
 		 * Weather Testing
@@ -1108,10 +1072,8 @@ public class MUDServer implements MUDServerI {
 		// apply our new weather object to a room
 		room.setWeather(weather);
 		
-		for (final Room room1 : rooms1) {
-			if ( room1.getRoomType().equals("O") ) {
-				room1.setWeather(weather);
-			}
+		for (final Room room1 : objectDB.getWeatherRooms()) {
+            room1.setWeather(weather);
 		}
 
 		/**
@@ -1457,7 +1419,7 @@ public class MUDServer implements MUDServerI {
 			// if the user is editing a list, pass their input to the list editor
 			if ( player.getStatus().equals("EDT") )
 			{	
-				Editor editor = player.getEditor();
+				final Editor editor = player.getEditor();
 
 				switch(editor) {
 				case AREA:
@@ -1504,7 +1466,7 @@ public class MUDServer implements MUDServerI {
 					if (arg.charAt(c) == '$') {
 						debug("found a nameref");
 						try {
-							Integer firstSpace = arg.indexOf(' ', c);
+							final int firstSpace = arg.indexOf(' ', c);
 							String temp;
 							if (firstSpace != -1) {
 								temp = arg.substring(c + 1, firstSpace);
@@ -1878,11 +1840,8 @@ public class MUDServer implements MUDServerI {
 					else if ( cmd.equals("@nextdb") || ( aliasExists && alias.equals("@nextdb") ) )
 					{
 						adminCmd = true;
-						if ( arg.equals("" ) ) {
-							send("Next Database Reference Number (DBRef/DBRN): " + nextDB(), client);
-						}
-						else {
-							nextDB(arg);
+						if ( arg.equals("") ) {
+							send("Next Database Reference Number (DBRef/DBRN): " + objectDB.peekNextId(), client);
 						}
 					}
 					// pass arguments to the @passwd function
@@ -2645,20 +2604,7 @@ public class MUDServer implements MUDServerI {
 	 * @param client
 	 */
 	private void cmd_allocate(final String arg, final Client client) {
-
-		int start = nextDB("clean");
-		final int num = Utils.toInt(arg, 10);
-
-		// create a bunch of NullObjects as placeholders
-		synchronized(main) {
-			synchronized(main1) {
-				for (int n = 0; n < num; n++) {
-					final NullObject newObject = new NullObject(start + n);
-					main1.add(newObject);
-					main.add(newObject.toDB());
-				}
-			}
-		}
+        objectDB.allocate(Utils.toInt(arg, 10));
 	}
 
 	/**
@@ -2675,81 +2621,43 @@ public class MUDServer implements MUDServerI {
 	private void cmd_ask(final String arg, final Client client) {
 		final String[] args = arg.split(" ");
 
-		try {
-			final Player player = getPlayer(client); // get the player
-			NPC npc = getNPC(args[0]);         // get the npc we're referring to
+        if (args.length < 2) {
+            return;
+        }
 
-			String keyword = args[1];          // get the keyword;
+        final Player player = getPlayer(client); // get the player
+        final NPC npc = getNPC(args[0]);         // get the npc we're referring to
 
-			if ( keyword.equals("quests") ) {
-				ArrayList<Quest> quests = npc.getQuestList();
-				ArrayList<Quest> suitable = new ArrayList<Quest>();
+        final String keyword = args[1];          // get the keyword;
 
-				for (Quest quest : quests) {
-					if ( quest.isSuitable(player) ) {
-						// add suitable (valid for the player quests) to a list
-						suitable.add( new Quest( quest ) );	
-					}
-				}
+        if ( keyword.equals("quests") ) {
+            final List<Quest> suitable = npc.getQuestsFor(player);
 
-				send("Available Quests", client);
-				send("================================================================================", client);
+            send("Available Quests", client);
+            send("================================================================================", client);
 
-				for (final Quest quest : suitable) {
-					if (!quest.isComplete()) {
-						client.write(Colors.YELLOW + "   o " + quest.getName());
-						client.write(Colors.MAGENTA + " ( " + quest.location + " ) " + Colors.CYAN);
-						client.write('\n');
-						for (Task task : quest.getTasks()) {
-							if ( task.isComplete() ) {
-								client.write(Colors.GREEN + "      o " + task.getDescription());
-								client.write(Colors.MAGENTA + " ( " + task.location + " ) " + Colors.CYAN);
-								client.write("[+]");
-								client.write('\n');
-							}
-							else {
-								client.write(Colors.CYAN + "      o " + task.getDescription());
-								client.write(Colors.MAGENTA + " ( " + task.location + " ) " + Colors.CYAN);
-								client.write("[ ]");
-								client.write('\n');
-							}
-						}
-					}
-					client.write("" + Colors.WHITE);
-				}
+            for (final Quest quest : suitable) {
+                if (!quest.isComplete()) {
+                    client.write(quest.toDisplay());
+                }
+                client.write("" + Colors.WHITE);
+            }
 
-				send("================================================================================", client);
-				send("* To accept a quest, type 'ask <npc> accept <quest identifier>')", client);
-				send("* If you don't see a quest here, you are currently on it / already completed it.", client);
-				send("* Also, finished quests are greyed out.", client);
-				send("** For the moment, the quest identifier is the quest's index in the list (0-?)", client);
-			}
-			else if ( keyword.equals("accept") ) {
-				if ( args.length == 3 ) {
-					ArrayList<Quest> quests = npc.getQuestList();
-					ArrayList<Quest> suitable = new ArrayList<Quest>();
-
-					for (final Quest quest : quests) {
-						if ( quest.isSuitable(player) ) {
-							// add suitable (valid for the player quests) to a list
-							suitable.add( new Quest( quest ) );	
-						}
-					}
-
-					try {
-						player.getQuests().add( suitable.get(Integer.parseInt(args[2])) );
-						send("Quest Added!", client);
-					}
-					catch (NumberFormatException nfe) {
-						nfe.printStackTrace();
-					}
-				}
-			}
-		}
-		catch (NullPointerException npe) {
-			npe.printStackTrace();
-			return;
-		}
+            send("================================================================================", client);
+            send("* To accept a quest, type 'ask <npc> accept <quest identifier>')", client);
+            send("* If you don't see a quest here, you are currently on it / already completed it.", client);
+            send("* Also, finished quests are greyed out.", client);
+            send("** For the moment, the quest identifier is the quest's index in the list (0-?)", client);
+        }
+        else if ( keyword.equals("accept") ) {
+            if ( args.length == 3 ) {
+                final Quest q = npc.getQuestFor(player, Utils.toInt(args[2], -1));
+                if (q != null) {
+                    player.getQuests().add(q);
+                    send("Quest Added!", client);
+                }
+            }
+        }
 	}
 
 	/**
@@ -2779,13 +2687,10 @@ public class MUDServer implements MUDServerI {
 
 		// NOTE: for these to work, I need to convert my database to one file so that the database line for an item and it's dbref number are the same
 		client.write("Game> Backing up Players...");
-		savePlayers(); // NOTE: only modifies in memory storage
 		client.write("Done.\n");
 		client.write("Game> Backing up Rooms...");
-		saveRooms(); // NOTE: only modifies in memory storage
 		client.write("Done.\n");
 		client.write("Game> Backing up Items...");
-		saveItems();
 		client.write("Done.\n");
 
 		// save databases to disk
@@ -3247,14 +3152,16 @@ public class MUDServer implements MUDServerI {
 		// NOTE: my problem is related to guest not being findable somehow, all this needs a major revamp
 		if ((user.toLowerCase().equals("guest")) && (pass.toLowerCase().equals("guest"))) {
 			if (guest_users == 1) {
-				player = new Player(nextDB(""), "Guest" + guests, "PG", "A guest player.", WELCOME_ROOM, "", Utils.hash("password"), "OOC", new Integer[] { 0, 0, 0, 0, 0, 0 }, new Integer[] { 0, 0, 0, 0 });
+				player = new Player(-1, "Guest" + guests, "PG", "A guest player.", WELCOME_ROOM, "", Utils.hash("password"), "OOC", new Integer[] { 0, 0, 0, 0, 0, 0 }, new Integer[] { 0, 0, 0, 0 });
+                objectDB.addAsNew(player);
 				init_conn(player, client, false);
 				guests++;
 				auth = false; // finished connecting
 			}
 		}
 		else if (user.toLowerCase().equals("new")) {
-			player = new Player(nextDB(), "randomName", "P", "New player.", WELCOME_ROOM, "", Utils.hash("randomPass"), "NEW", new Integer[] { 0, 0, 0, 0 }, new Integer[] { 0, 0, 0, 0, 0, 0 });
+			player = new Player(-1, "randomName", "P", "New player.", WELCOME_ROOM, "", Utils.hash("randomPass"), "NEW", new Integer[] { 0, 0, 0, 0 }, new Integer[] { 0, 0, 0, 0, 0, 0 });
+            objectDB.addAsNew(player);
 			init_conn(player, client, false);
 			auth = false;
 		}
@@ -3563,7 +3470,6 @@ public class MUDServer implements MUDServerI {
 	{
 		System.out.println(arg);                                  // argument
 		
-		int id = nextDB();                                        // get the next available database id
 		String user;                                              // username
 		String pass;                                              // password
 
@@ -3580,20 +3486,12 @@ public class MUDServer implements MUDServerI {
 		}
 
 		// check for existing player by that name, if exists report that the name is already used, if not continue on
-		if (checkName(user) && validateName(user))
+		if (!objectDB.hasName(user) && validateName(user))
 		{
 			// create a new player object for the new playerm the "" is an empty title, which is not currently persisted
-			Player player = new Player(id, user, start_flags, start_desc, start_room, "", Utils.hash(pass), start_status, start_stats, start_money);
-			
-			if ( id < nextDB("clean") ) {
-				main.set(id, player.toDB()); // save player to database
-			}
-			else {
-				main.add(player.toDB());     // save player to database
-			}
-			
-			nextDB("use");        // indicate that the database reference was used
-			
+			final Player player = new Player(-1, user, start_flags, start_desc, start_room, "", Utils.hash(pass), start_status, start_stats, start_money);
+			objectDB.addAsNew(player);
+
 			String mail[];        // create the mailbox
 			mail = new String[4]; // size it to make room for one message's worth
 			
@@ -3703,7 +3601,7 @@ public class MUDServer implements MUDServerI {
 		// use the object loading constructor for testing purposes
 
 		int location = getPlayer(client).getLocation();
-		int dbref = nextDB("use");
+		int dbref = getNextDB();
 
 		Item item = new Clothing(arg, "A new piece of clothing.", location, dbref, 0, ClothingType.SHIRT);
 
@@ -3772,17 +3670,8 @@ public class MUDServer implements MUDServerI {
 		else if ( arg.equals("creatures") ) {
 			send("Creatures", client);
 			send("--------------------------------------------------------------------------", client);
-			int dbref;
-			String name;
-			int loc;
-			String room_name;
-			for (Creature c : creatures) {
-				dbref = c.getDBRef();
-				name = c.getName();
-				loc = c.getLocation();
-				room_name = getRoom(loc).getName();
-				
-				send(dbref + " " + name + " " + room_name + " (#" + loc + ")", client);
+			for (final Creature c : objectDB.getCreatures()) {
+				send(String.format("%s %s %s (#%s)", c.getDBRef(), c.getName(), getRoom(c.getLocation()).getName(), c.getLocation()), client);
 			}
 			send("--------------------------------------------------------------------------", client);
 		}
@@ -3791,10 +3680,7 @@ public class MUDServer implements MUDServerI {
 			 * List all of the names and dbrefs of the objects
 			 * in the database their actual index in the database
 			 */
-			for (int i = 0; i < main1.size(); i++) {
-				final MUDObject m = main1.get(i);
-				send(i + ": " + m.getName() + " (#" + m.getDBRef() + ")", client);
-			}
+            objectDB.dump(client, this);
 		}
 		else if ( arg.toLowerCase().equals("timedata") ) {
 			// get current data
@@ -3868,16 +3754,7 @@ public class MUDServer implements MUDServerI {
 			send(client.ip(), client);
 		}
 		else if ( arg.equals("exitlcache") || arg.equals("elc") ) {
-			/* indicate size of exit lookup table/cache */
-			send("Exit Lookup Cache (table size): " + exit_lookup.size(), client);
-			
-			send("", client);
-			
-			/* show us the current contents of the exit lookup table/cache */
-			send("Table 1", client);
-			for (final String key : exit_lookup.keySet()) {
-				send("\""+ key + "\" -> " + exit_lookup.get(key), client);
-			}
+			send("No more Exit Lookup Cache.", client);
 		}
 		else if ( args2[0].equals("listen") ) {
 			final int dbref = Utils.toInt(args2[1], -1);
@@ -3894,16 +3771,17 @@ public class MUDServer implements MUDServerI {
 			}
 		}
 		else if ( arg.equals("objlcache") || arg.equals("olc") ) {
-			/* indicate size of object lookup table/cache */
+			/* indicate size of object lookup table/cache
 			send("Object Lookup Cache (table size): " + object_lookup.size(), client);
 			
 			send("", client);
 			
-			/* show us the current contents of the object lookup table/cache */
+			/* show us the current contents of the object lookup table/cache
 			send("Table 1", client);
 			for (final String key : object_lookup.keySet()) {
 				send("\""+ key + "\" -> " + object_lookup.get(key), client);
 			}
+            */
 		}
 		else if ( arg.equals("position") || arg.equals("pos") ) {
 			Player player = getPlayer(client);
@@ -3939,10 +3817,11 @@ public class MUDServer implements MUDServerI {
 				else {
 					client.write(unusedDBNs.get(i) + ", ");
 				}
-			}*/
+			}
 			for (final Integer i : unusedDBNs) {
 				client.write(i + ", ");
 			}
+            */
 			client.write(" ]\n");
 		}
 		else if (!arg.equals("")) {
@@ -4119,8 +3998,7 @@ public class MUDServer implements MUDServerI {
 					 */
 
 					player.getInventory().remove(item);                          // remove from inventory
-					main1.set(item.getDBRef(), new NullObject(item.getDBRef())); // remove from existence
-					unusedDBNs.push(item.getDBRef());                            // add dbref to unused list
+					objectDB.set(item.getDBRef(), new NullObject(item.getDBRef())); // remove from existence
 				}
 			}
 		}
@@ -4518,19 +4396,19 @@ public class MUDServer implements MUDServerI {
 	 * @param client
 	 */
 	private void cmd_find(final String arg, final Client client) {
-		final ArrayList<String> test = new ArrayList<String>(10);
+		final LinkedList<String> matches = new LinkedList<>();
 		
-		for (final MUDObject m : main1) {
-			if ( m.getName().toLowerCase().contains( arg.toLowerCase() ) ) {
-				test.add(m.getName() + " (#" + m.getDBRef() + ")");
-			}
+		for (final MUDObject m : objectDB.findByLower(arg)) {
+			// if ( m.getName().toLowerCase().contains( arg.toLowerCase() ) ) {
+				matches.add(m.getName() + " (#" + m.getDBRef() + ")");
+			// }
 		}
-		
-		for (final String s : test) {
+
+		for (final String s : matches) {
 			send(s, client);
 		}
 		send("**********", client);
-		send(test.size() + " objects found.", client);
+		send(matches.size() + " objects found.", client);
 	}
 
 	/**
@@ -5355,8 +5233,6 @@ public class MUDServer implements MUDServerI {
 	 */
 	private void cmd_open(final String arg, final Client client)
 	{
-		int id = nextDB();
-		
 		final String[] args = arg.split("=");
 		
 		String name = args[0];
@@ -5386,35 +5262,15 @@ public class MUDServer implements MUDServerI {
 		
 		// create the exit
 		Exit exit = new Exit(name, source, destination);
-		exit.setDBRef(id);
-		
-		// add it to the string-based database
-		if ( id < nextDB("clean") ) {
-			main.set(id, exit.toDB()); // save player to database
-		}
-		else {
-			main.add(exit.toDB());     // save player to database
-		}
-		
-		// add it to the object-based database
-		if ( id < nextDB("clean") ) {
-			main1.set(id, exit); // save player to database
-		}
-		else {
-			main1.add(exit);     // save player to database
-		}
-		
-		// add the exit to the exits arraylist
-		exits1.add(exit);
+
+        objectDB.addAsNew(exit);
+		objectDB.addExit(exit);
 		
 		// add the exit to the source room
 		room.getExits().add(exit);
 		
 		// tell us that we succeeded in creating the exit
 		send("You open an exit called " + exit.getName() + "(#" + exit.getDBRef() + ")" + " from #" + exit.getLocation() + " to #" + exit.getDest() + ".", client);
-		
-		// mark the next dbref num (the one we're using) as used
-		nextDB("use");
 	}
 	
 	/**
@@ -5428,11 +5284,9 @@ public class MUDServer implements MUDServerI {
 	 * @param client
 	 */
 	private void cmd_door(final String arg, final Client client) {
-		int id = nextDB();
+		final String[] args = arg.split("=");
 		
-		String[] args = arg.split("=");
-		
-		String name = args[0];
+		final String name = args[0];
 		int source = 0, destination = 0;
 
 		Room room = getRoom(client);
@@ -5469,35 +5323,15 @@ public class MUDServer implements MUDServerI {
 		
 		// create the exit
 		Exit exit = new Exit(name, source, destination);
-		exit.setDBRef(id);
-				
-		// add it to the string-based database
-		if ( id < nextDB("clean") ) {
-			main.set(id, exit.toDB()); // save player to database
-		}
-		else {
-			main.add(exit.toDB());     // save player to database
-		}
-		
-		// add it to the object-based database
-		if ( id < nextDB("clean") ) {
-			main1.set(id, exit); // save player to database
-		}
-		else {
-			main1.add(exit);     // save player to database
-		}
-		
-		// add the exit to the exits arraylist
-		exits1.add(exit);
-		
+
+        objectDB.addAsNew(exit);
+		objectDB.addExit(exit);
+
 		// add the exit to the source room
 		room.getExits().add(exit);
 		
 		// tell us that we succeeded in creating the exit
 		send("You open an exit called " + exit.getName() + "(#" + exit.getDBRef() + ")" + " from #" + exit.getLocation() + " to #" + exit.getDest() + ".", client);
-		
-		// mark the next dbref num (the one we're using) as used
-		nextDB("use");
 	}
 
 	/**
@@ -5512,7 +5346,7 @@ public class MUDServer implements MUDServerI {
 	 */
 	private void cmd_osuccess(final String arg, final Client client) {
 		final String[] args = arg.split("=");
-		final Exit exit = (Exit) getExit(args[0], client);
+		final Exit exit = (Exit) getExit(args[0]);
 		if (args.length > 1) {
 			exit.setMessage("osuccMsg", args[1]);
 			send(exit.getName() + "'s osuccess message set to: " + args[1], client);
@@ -5521,7 +5355,7 @@ public class MUDServer implements MUDServerI {
 
 	private void cmd_fail(final String arg, final Client client) {
 		final String[] args = arg.split("=");
-		final Exit exit = (Exit) getExit(args[0], client);
+		final Exit exit = (Exit) getExit(args[0]);
 		if (args.length > 1) {
 			exit.setMessage("failMsg", args[1]);
 			send(exit.getName() + "'s fail message set to: " + args[1], client);
@@ -5540,7 +5374,7 @@ public class MUDServer implements MUDServerI {
 	 */
 	private void cmd_ofail(final String arg, final Client client) {
 		final String[] args = arg.split("=");
-		final Exit exit = (Exit) getExit(args[0], client);
+		final Exit exit = (Exit) getExit(args[0]);
 		if (args.length > 1) {
 			exit.setMessage("ofailMsg", args[1]);
 			send(exit.getName() + "'s ofail message set to: " + args[1], client);
@@ -5616,7 +5450,6 @@ public class MUDServer implements MUDServerI {
         else { // if there is only one argument (i.e. new password for current player)
             player.setPass(arg);
             send("Your password has been changed to: '" +  tmp[0] + "' hash: " + player.getPass(), client);
-            savePlayer(client);
         }
 	}
 
@@ -5758,7 +5591,7 @@ public class MUDServer implements MUDServerI {
 				//Room room = getRoom(thing.getLocation());
 				
 				// remove thing from room
-				things.remove(thing);          // recycle the thing
+				objectDB.removeThing(thing);          // recycle the thing
 				
 				success = true;
 			}
@@ -5767,7 +5600,7 @@ public class MUDServer implements MUDServerI {
 				Room room = getRoom(exit.getLocation());
 				
 				room.getExits().remove(exit); // remove exit from room
-				exits1.remove(exit);          // remove exit from db
+				objectDB.removeExit(exit);          // remove exit from db
 				
 				success = true;
 			}
@@ -5787,7 +5620,7 @@ public class MUDServer implements MUDServerI {
 					room.contents.remove((Thing) object);
 				}*/
 				
-				rooms1.remove(room);          // recycle the room
+				objectDB.removeRoom(room);          // recycle the room
 				
 				success = true;
 			}
@@ -5797,12 +5630,10 @@ public class MUDServer implements MUDServerI {
 
 			if ( success ) {
 				String msg = name + "(#" + num + "): Recycled."; // i(#127728): Recycled.
-				
+
 				NullObject nobj = new NullObject(num);
-				
-				main.set(num, nobj.toDB());                      // clear the database entry (text)
-				main1.set(num, nobj);                            // clear the database entry (object)
-				addUnused(num);                                  // add the dbref to the unused array
+
+				objectDB.set(num, nobj);                            // clear the database entry (object)
 
 				send(msg, client);
 			}
@@ -5843,11 +5674,11 @@ public class MUDServer implements MUDServerI {
 
 					ArrayList<Container<Item>> containers = new ArrayList<Container<Item>>(5);
 
-					Item i = (Item) main1.get(Integer.parseInt(args[0])); // get the thing to get by dbref
+					final Item i = (Item) objectDB.get(Integer.parseInt(args[0])); // get the thing to get by dbref
 					if (i == null) { debug("NULL"); }
 					else { debug(i); } // send us a string representation of the object (debug)
 
-					MUDObject m = main1.get(Integer.parseInt(args[2]));
+					MUDObject m = objectDB.get(Integer.parseInt(args[2]));
 
 					/*for (Thing thing : getRoom(client).contents) { // get all the containers nearby??
 						if (thing instanceof Container) { // this is not possible, since it's not an item
@@ -5857,7 +5688,7 @@ public class MUDServer implements MUDServerI {
 
 					Container<Item> container;
 
-					for (Container<Item> con : containers)
+					for (final Container<Item> con : containers)
 					{
 						container = con;
 						
@@ -6254,7 +6085,7 @@ public class MUDServer implements MUDServerI {
 
 	private void cmd_success(final String arg, final Client client) {
 		final String[] args = arg.split("=");
-		final Exit exit = (Exit) getExit(args[0], client);
+		final Exit exit = (Exit) getExit(args[0]);
 		if (args.length > 1) {
 			exit.setMessage("succMsg", args[1]);
 			send(exit.getName() + "'s success message set to: " + args[1], client);
@@ -6316,31 +6147,24 @@ public class MUDServer implements MUDServerI {
 	// Function to list stats
 	private void cmd_stats(final String arg, final Client client)
 	{
-		int usersCount = 0, npcsCount = 0, exitsCount = 0, roomsCount = 0, thingsCount = 0;
-		
-		String[] data;
-		
-		System.out.println(main.size());
-		
-		for (final String s : main) {
-			System.out.println(s);
-			data = s.split("#");
-			if (data[2].contains("P")) { usersCount++; }
-			else if (data[2].contains("N")) { npcsCount++; }
-			else if (data[2].contains("E")) { exitsCount++; }
-			else if (data[2].contains("R")) { roomsCount++; }
-			else if (data[2].contains("T")) { thingsCount++; }
-		}
-		
+		System.out.println(objectDB.getSize());
+
+        final int[] counts = objectDB.getFlagCounts(new String[]{ "P", "N", "E", "R", "T" });
+		final int usersCount = counts[0];
+        final int npcsCount = counts[1];
+        final int exitsCount = counts[2];
+        final int roomsCount = counts[3];
+        final int thingsCount = counts[4];
+
 		int total = usersCount + npcsCount + exitsCount + roomsCount + thingsCount;
-		
+
 		send(name + " Statistics", client);
 		send("-----------------------", client);
-		send("Players: " + usersCount + "   " + ((((Integer) usersCount).doubleValue() * 100) / total) + "%", client);
-		send("NPCS:    " + npcsCount + "   " + ((((Integer) npcsCount).doubleValue() * 100) / total) + "%", client);
-		send("Exits:   " + exitsCount + "   " + ((((Integer) exitsCount).doubleValue() * 100) / total) + "%", client);
-		send("Rooms:   " + roomsCount + "   " + ((((Integer) roomsCount).doubleValue() * 100) / total) + "%", client);
-		send("Things:  " + thingsCount + "   " + ((((Integer) thingsCount).doubleValue() * 100) / total) + "%", client);
+        send(String.format("Players: %s   %s%%", usersCount,  usersCount  * 100.0 / total), client);
+        send(String.format("NPCS:    %s   %s%%", npcsCount,   npcsCount   * 100.0 / total), client);
+        send(String.format("Exits:   %s   %s%%", exitsCount,  exitsCount  * 100.0 / total), client);
+        send(String.format("Rooms:   %s   %s%%", roomsCount,  roomsCount  * 100.0 / total), client);
+        send(String.format("Things:  %s   %s%%", thingsCount, thingsCount * 100.0 / total), client);
 		send("Total:   " + total, client);
 		send("-----------------------", client);
 	}
@@ -6798,10 +6622,8 @@ public class MUDServer implements MUDServerI {
 			debug(zones.entrySet());
 			for (Object k : zones.keySet()) {
 				send("" + ((Zone) k).getName(), client);
-				for (Room r : this.rooms1) {
-					if (r.getParent() == ((Zone) k).getRoom().getLocation()) {
-						send("     - " + r.getName() + "(#" + r.getLocation() + ")", client);
-					}
+				for (final Room r : objectDB.getRoomsByParentLocation(((Zone) k).getRoom().getLocation())) {
+                    send("     - " + r.getName() + "(#" + r.getLocation() + ")", client);
 				}
 			}
 		}
@@ -7758,8 +7580,8 @@ public class MUDServer implements MUDServerI {
 			
 			// if 
 			if (args.length > 1 ) {
-				int destination = Integer.parseInt(args[1]);
-				MUDObject m = main1.get(destination);
+				final int destination = Integer.parseInt(args[1]);
+				final MUDObject m = objectDB.get(destination);
 
 				if ( m != null ) {
 					if ( m instanceof Room ) {
@@ -8110,7 +7932,7 @@ public class MUDServer implements MUDServerI {
 	 * @return
 	 */
 	public MUDObject getObject(final String objectName, final Client client) {
-		MUDObject object = getExit(objectName, client);
+		MUDObject object = getExit(objectName);
         if (object != null) return object;
 		
         object = getRoom(objectName);
@@ -8125,25 +7947,8 @@ public class MUDServer implements MUDServerI {
 	 * @param objectDBRef
 	 * @return
 	 */
-	public MUDObject getObject(final String objectName) {
-		if (main1 != null) {
-			//check lookup cache
-			if ( object_lookup.containsKey(objectName) ) {
-				return main1.get( object_lookup.get(objectName) );
-			}
-			// if no cached result, go look
-			else {
-				for (final MUDObject mo : main1) {
-					System.out.println(mo.getName());
-					if ( mo.getName().equals(objectName) ) {
-						object_lookup.put(objectName, main1.indexOf(mo)); // cache the result?
-						return mo; // return the object
-					}
-				}
-			}
-		}
-
-		return null;
+	public MUDObject getObject(final String name) {
+        return objectDB.getByName(name);
 	}
 
 	/**
@@ -8153,23 +7958,7 @@ public class MUDServer implements MUDServerI {
 	 * @return
 	 */
 	public MUDObject getObject(Integer dbref) {
-		try {
-			debug("Getting Object with dbref of " + dbref + "...", 2);
-			
-			MUDObject m = main1.get(dbref);
-			
-			if (m.getDBRef() == dbref) {
-				return m;
-			}
-			else {
-				return null;
-			}
-		}
-		catch(IndexOutOfBoundsException ioobe) {
-			ioobe.printStackTrace();
-		}
-
-		return null;
+        return objectDB.get(dbref);
 	}
 
 	// these are kind of important for containers, but also for general examine
@@ -8234,30 +8023,8 @@ public class MUDServer implements MUDServerI {
 	 * @param client
 	 * @return
 	 */
-	public Exit getExit(final String exitName, final Client client) {
-		// look through all the exits (would be great if this could ignore previously searched exits
-		// perhaps by dbref (since that's much shorter than holding object references, etc
-		if (exits1 != null) {
-			
-			//check lookup cache
-			if ( exit_lookup.containsKey(exitName) ) {
-				return exits1.get( exit_lookup.get(exitName) );
-			}
-			// if no cached result, go look
-			else {
-				for (final Exit exit : exits1)
-				{
-					if ( exit.getName().equals(exitName) )
-					{
-						exit_lookup.put(exitName, exits1.indexOf(exit)); // cache the result?
-						return exit;
-					}
-
-				}
-			}
-		}
-
-		return null;
+	public Exit getExit(final String exitName) {
+        return objectDB.getExit(exitName);
 	}
 	
 	/*public Exit getExit(String exitName, Client client) {
@@ -8293,33 +8060,17 @@ public class MUDServer implements MUDServerI {
 	}*/
 
 	public Exit getExit(final Integer dbref, final Client client) {
-		final Room room = getRoom(client);
-
-		ArrayList<Integer> eNums = new ArrayList<Integer>();
 
 		// look through the present room's exits first
-		for (int e = 0; e < room.getExits().size(); e++) {
-			Exit exit = (Exit) room.getExits().get(e);
-			if (exit.getDBRef() == dbref) {
-				return exit;
-			}
-			else {
-				eNums.add(e);
+		for (final Exit e : getRoom(client).getExits()) {
+			if (e.getDBRef() == dbref) {
+				return e;
 			}
 		}
 
 		// look through all the exits (would be great if this could ignore previously searched exits
 		// perhaps by dbref (since that's much shorter than holding object references, etc
-		for (int e = 0; e < exits1.size(); e++) {
-			if (!eNums.contains(e)) {
-				Exit exit = (Exit) exits1.get(e);
-
-				if (exit.getDBRef() == dbref) {
-					return exit;
-				}
-			}
-		}
-		return null;
+        return objectDB.getExit(dbref);
 	}
 
 	/**
@@ -8329,14 +8080,7 @@ public class MUDServer implements MUDServerI {
 	 * @return
 	 */
 	public NPC getNPC(final String name) {
-		for (final NPC npc : npcs1) {
-			if (npc.getName().equals(name) || npc.getCName().equals(name)) {
-				debug("NPC (" + name + "): " + npc.getName());
-				return npc;
-			}
-		}
-		
-		return null;
+        return objectDB.getNPC(name);
 	}
 
 	/**
@@ -8346,14 +8090,7 @@ public class MUDServer implements MUDServerI {
 	 * @return
 	 */
 	public NPC getNPC(final Integer dbref) {
-		for (final NPC npc : npcs1) {
-			if (npc.getDBRef() == dbref) {
-				debug("NPC (" + name + "): " + npc.getName());
-				return npc;
-			}
-		}
-		
-		return null;
+        return objectDB.getNPC(dbref);
 	}
 
 	/**
@@ -8435,26 +8172,7 @@ public class MUDServer implements MUDServerI {
 	 */
 	public Room getRoom(final String roomName)
 	{
-		if (rooms1 != null) {
-			//check lookup cache
-			if ( room_lookup.containsKey(roomName) ) {
-				return rooms1.get( room_lookup.get(roomName) );
-			}
-			// if no cached result, go look
-			else {
-				for (Room room : rooms1)
-				{
-					if ( room.getName().equals(roomName) )
-					{
-						room_lookup.put(roomName, rooms1.indexOf(room)); // cache the result?
-						return room;
-					}
-
-				}
-			}
-		}
-
-		return null;
+        return objectDB.getRoomByName(roomName);
 	}
 
 	/**
@@ -8465,31 +8183,7 @@ public class MUDServer implements MUDServerI {
 	 */
 	public Room getRoom(final Integer dbref)
 	{
-		if (rooms1 != null) {
-			//check lookup cache
-			if (room_lookup2.containsKey(dbref) ) {
-				//System.out.println("Using cache...");
-				return rooms1.get( room_lookup2.get(dbref) );
-			}
-			// if no cached result, go look
-			else {
-				for (final Room room : rooms1)
-				{
-					if (room.getDBRef() == dbref)
-					{
-						//System.out.println("Looking Up Room...");
-						//System.out.println(dbref);
-						//System.out.println(rooms1.indexOf(room));
-						room_lookup2.put(dbref, (Integer) rooms1.indexOf(room)); // cache the result?
-						//System.out.println(room_lookup2.get(dbref));
-						return room;
-					}
-
-				}
-			}
-		}
-
-		return null;
+        return objectDB.getRoomById(dbref);
 	}
 	
 	/**
@@ -8503,18 +8197,7 @@ public class MUDServer implements MUDServerI {
 	 */
 	public Thing getThing(String arg, Client client)
 	{
-		final Player player = getPlayer(client);
-		final Room room = getRoom(client);
-
-		for (final Thing thing : this.things)
-		{
-			if (thing.getLocation() == room.getDBRef() && thing.getName().equals(arg))
-			{
-                return thing;
-			}
-		}
-
-		return null;
+        return objectDB.getThing(getRoom(client).getDBRef(), arg);
 	}
 
 	/**
@@ -8537,50 +8220,6 @@ public class MUDServer implements MUDServerI {
 	 * Data Saving Functions
 	 */
 
-	// player save functions
-	public void savePlayer(final Client client)
-	{
-		savePlayer( getPlayer(client) );
-	}
-
-	public void savePlayer(final Player player)
-	{
-		if (player instanceof Player) // if they are actually a player
-		{
-			// modify the in-memory persistent version of the player
-			main.set(player.getDBRef(), player.toDB());
-			// report the result to the game
-			send("Game> Player saved.", getClient(player));
-		}
-	}
-
-	// will save the room the player is in (possibly merge into some kind of future
-	// OLC, online creation/editing package or set of functions since it would permit
-	// saving rooms to the "database in memory" on the fly)
-	public void saveRoom(final Client client)
-	{
-		Room room = getRoom(client); // get the room object associated with the player, via the client
-
-		if (room instanceof Room) // if it is actually a room
-		{
-			// modify the in-memory persistent version of the room
-			main.set(room.getDBRef(), room.toDB());
-			// report the result to the game
-			send("Room saved.", client);
-		}
-	}
-
-	public void saveRoom(final Room room)
-	{
-		if (room instanceof Room) // if it is actually a room
-		{
-			// modify the in-memory persistent version of the room
-			main.set(room.getDBRef(), room.toDB());
-			// report the result to the game
-			//send("Room saved.");
-		}
-	}
-
 	public void saveAccounts() {
 		try {
 			for (final Account a : accounts) {
@@ -8594,76 +8233,9 @@ public class MUDServer implements MUDServerI {
 		}
 	}
 
-	public void savePlayers()
-	{	
-		for (final Player player : players) {
-			main.set(player.getDBRef(), player.toDB());
-			debug("Player saved.");
-		}
-	}
-
-	// save each room in the list by finding the line with it's name in it
-	// and saving it to that line or by finding the room the line indicates and saving
-	// it there
-	public void saveRooms()
-	{
-		for (final Room room : rooms1) {
-			if ( room.getDBRef() < main.size() ) {
-				main.set(room.getDBRef(), room.toDB());
-			}
-			else {
-				main.add(room.toDB());
-			}
-		}
-		debug("Room Saved.");
-	}
-
-	public void saveExits() {
-		for (final Exit exit : exits1) {
-			main.set(exit.getDBRef(), exit.toDB());
-		}
-		debug("Exit Saved.");
-	}
-
-	public void saveThings()
-	{
-		for (final Thing thing : things) {
-			main.set(thing.getDBRef(), thing.toDB());
-		}
-		debug("Thing Saved.");
-	}
-
-	/**
-	 * saveItems
-	 * 
-	 * This goes through all the items in the game and then
-	 * replaces the db data with the current db representation.
-	 */
-	public void saveItems()
-	{
-		for (final Item item : items) {
-			if (item instanceof Wand) {
-				System.out.println(item.toDB());
-				System.out.println(((Wand) item).toDB());
-			}
-			else if (item instanceof Weapon) {
-				System.out.println(item.toDB());
-				System.out.println(((Weapon) item).toDB());
-			}
-			else if (item instanceof Clothing) {
-				System.out.println(item.toDB());
-				System.out.println(((Clothing) item).toDB());
-			}
-			debug("Before Save: " + main.get(item.getDBRef()), 2); 
-			main.set(item.getDBRef(), item.toDB());
-			debug("After Save: " + main.get(item.getDBRef()), 2);
-		}
-		debug("Item Saved.");
-	}
-	
 	public void saveDB() {
-		// save databases to disk
-		Utils.saveStrings(mainDB, (String[]) main.clone());    // modifies 'real' files
+		// save databases to disk, modifies 'real' files
+		objectDB.save(mainDB);
 	}
 
 	public void saveHelpFiles() {
@@ -8718,395 +8290,12 @@ public class MUDServer implements MUDServerI {
 		}
 	}
 
-	synchronized public void loadObjects(ArrayList<String> in)
-	{
-		for (String s : in)
-		{	
-			String oInfo = s;
-
-			if ( s.charAt(0) == '&' ) { // means to ignore that line
-
-				int dbref = Integer.parseInt(s.split("#")[0].substring(1)); // get the dbref
-
-				debug("Found NULLObject -- Ignored Existing Data"); // tell us what happened
-
-				main1.add(new NullObject(dbref)); // put NullObject in arraylist
-				
-				// don't add NullObject's dbref to unused stack
-
-				// skip further checking
-				continue;
-			}
-
-			Integer oDBRef = 0, oLocation = 0;
-			String oName = "", oFlags = "", oDesc = "";
-
-			if (oInfo != null)
-			{
-				try {
-					String[] attr = oInfo.split("#");
-					oDBRef = Integer.parseInt(attr[0]);
-					oName = attr[1];
-					oFlags = attr[2];
-					oDesc = attr[3];
-					oLocation = Integer.parseInt(attr[4]);
-
-					/*debug("Database Reference Number: " + oDBRef);
-					debug("Name: " + oName);
-					debug("Flags: " + oFlags);
-					debug("Description: " + oDesc);
-					debug("Location: " + oLocation);*/
-
-					if (oFlags.indexOf("C") == 0) {
-						int raceNum;                      // 9 - race number (enum ordinal)
-						
-						Creature cre = new Creature(oDBRef, oName, oFlags, oDesc, oLocation);
-						
-						// set race
-						try {
-							raceNum = Integer.parseInt(attr[9]);
-							cre.race = Races.getRace(raceNum);
-						}
-						catch(NumberFormatException nfe) {
-							nfe.printStackTrace();
-							cre.race = Races.NONE;
-						}
-						
-						// add the creature to the in-memory database and to the list of creatures
-						main1.add(cre);
-						creatures.add(cre);
-					}
-					else if (oFlags.indexOf("P") != -1) {
-						
-						String oPassword = attr[5];       // 5 - password
-						String[] os = attr[6].split(","); // 6 - stats
-						String[] om = attr[7].split(","); // 7 - money
-						// int access;                       // 8 - permissions
-						int raceNum;                      // 9 - race number (enum ordinal)
-						int classNum;                     // 10 - class number (enum ordinal)
-
-
-						Integer[] oStats = Utils.stringsToIntegers(os);
-						Integer[] oMoney = Utils.stringsToIntegers(om);
-
-						Player player = new Player(oDBRef, oName, oFlags, oDesc, oLocation, "", oPassword, "IC", oStats, oMoney);
-                        player.setAccess(Utils.toInt(attr[8], USER));
-
-						// set race
-						try {
-							raceNum = Integer.parseInt(attr[9]);
-							player.setPlayerRace(Races.getRace(raceNum));
-						}
-						catch(NumberFormatException nfe) {
-							nfe.printStackTrace();
-							player.setPlayerRace(Races.NONE);
-						}
-
-						// set class
-						try {
-							classNum = Integer.parseInt(attr[10]);
-							player.setPClass(Classes.getClass(classNum));
-						}
-						catch(NumberFormatException nfe) {
-							nfe.printStackTrace();
-							player.setPClass(Classes.NONE);
-						}
-
-						//debug("DEBUG (db entry): " + player.toDB(), 2);
-
-						main1.add(player);
-
-						authTable.add(s); // add player info to authentication table
-						authTable1.put(player.getName(), player.getPass()); // add player info to authentication table
-					}
-					else if (oFlags.equals("WMV")) {
-						WeaponMerchant wm = new WeaponMerchant(this, oDBRef, oName, oFlags, "A weapon merchant.", "Merchant", "VEN", 161, new String[]{"1000", "1000", "1000", "1000"} );
-
-						debug("DEBUG (db entry): " + wm.toDB(), 2);
-						debug("Weapon Merchant", 2);
-
-						main1.add(wm);
-						npcs1.add(wm);
-					}
-					else if (oFlags.equals("AMV")) {
-						ArmorMerchant am = new ArmorMerchant(this, oDBRef, oName, oFlags, "An armor merchant.", "Merchant", "VEN", 161, new String[]{"1000", "1000", "1000", "1000"} );
-
-						debug("DEBUG (db entry): " + am.toDB(), 2);
-						debug("Armor Merchant", 2);
-
-						main1.add(am);
-						npcs1.add(am);
-					}
-					else if (oFlags.equals("IKV") ) {
-						Innkeeper ik = new Innkeeper(this, oDBRef, oName, oFlags, oDesc, "Merchant", "VEN", oLocation, new String[]{"1000", "1000", "1000", "1000"} );
-
-						debug("DEBUG (db entry): " + ik.toDB(), 2);
-						debug("Innkeeper", 2);
-
-						main1.add(ik);
-						npcs1.add(ik);
-					}
-					//Exit(String tempName, String tempFlags, String tempDesc, int tempLoc, int tempDBREF, int tempDestination)
-					else if (oFlags.equals("E"))
-					{
-						int eType = Integer.parseInt(attr[6]);
-
-						ExitType et = ExitType.values()[eType];
-
-						if (et == ExitType.STD) {
-							int oDest = Integer.parseInt(attr[5]);
-
-							Exit exit = new Exit(oDBRef, oName, oFlags, oDesc, oLocation, oDest);
-							exit.setExitType(et);
-
-							debug("DEBUG (db entry): " + exit.toDB(), 2);
-
-							main1.add(exit);
-							exits1.add(exit);
-
-						}
-						else if (et == ExitType.PORTAL) {
-							Portal portal;
-
-							String oPortalType = attr[6];
-
-							// here we assume a typed but unkeyed portal
-							//public Portal(PortalType pType, int pOrigin, int[] pDestinations) 
-							if (oPortalType.equals("S")) { // Standard Portal
-								int oDestination = Integer.parseInt(attr[5]);
-
-								portal = new Portal(PortalType.STD, oLocation, oDestination);
-								portal.setExitType(et);
-								
-								portal.name = attr[1];            // name
-								portal.coord.setX(1);             // x coordinate
-								portal.coord.setY(1);             // y coordinate
-								
-								main1.add(portal);
-								exits1.add(portal);
-							}
-							else if (oPortalType.equals("R")) { // Random Portal
-								int[] oDestinations = Utils.stringsToInts(attr[5].split(",")); 
-
-								portal = new Portal(PortalType.RANDOM, oLocation, oDestinations);
-								portal.setExitType(et);
-								
-								portal.name = attr[1];            // name
-								portal.coord.setX(1);             // x coordinate
-								portal.coord.setY(1);             // y coordinate
-
-								main1.add(portal);
-								exits1.add(portal);
-							}
-						}
-					}
-					// NPC(int tempDBRef, String tempName, String tempDesc, int tempLoc, String tempTitle)
-					else if (oFlags.equals("N")) {
-						//NPC npc = new NPC(oDBRef, oName, oDesc, oLocation, "npc");
-						NPC npc = loadNPC(oInfo);
-						npc.setCName("npc");
-
-						npc.setQuestList();
-						npc.getQuestList().add(new Quest("Test", "Test", new Task("Test")));
-
-						debug("DEBUG (db entry): " + npc.toDB(), 2);
-
-						main1.add(npc);
-						npcs1.add(npc);
-					}
-					//Room(String tempName, String tempFlags, String tempDesc, int tempParent, int tempDBREF)
-					else if (oFlags.indexOf("R") == 0)
-					{
-						String roomType = attr[5];
-
-						Room room;
-						room = new Room(oDBRef, oName, oFlags, oDesc, oLocation);
-
-
-						debug("DEBUG (db entry): " + room.toDB(), 2);
-
-						room.setRoomType(roomType);
-
-						if (room.getRoomType().equals("O")) {
-							room.getProps().put("sky", "The sky is clear and flecked with stars.");
-						}
-
-						main1.add(room);
-						rooms1.add(room);
-					}
-					//Thing(String tempName, String tempFlags, String tempDesc, int tempLoc, int tempDBREF)
-					else if (oFlags.indexOf("T") != -1)
-					{
-						Thing thing = new Thing(oDBRef, oName, oFlags, oDesc, oLocation);
-
-						debug("DEBUG (db entry): " + thing.toDB(), 2);
-
-						main1.add(thing);
-						things.add(thing);
-					}
-					else if (oFlags.indexOf("I") == 0) { // 
-						int itemType = Integer.parseInt(attr[5]); // get the type of item it should be
-						ItemType it = ItemType.values()[itemType];
-
-						if ( it == ItemType.CLOTHING ) { // Clothing
-							int clothingType = Integer.parseInt(attr[6]);
-							int mod = Integer.parseInt(attr[7]);
-
-							Clothing clothing = new Clothing(oName, oDesc, oLocation, oDBRef, mod, ClothingType.values()[clothingType]);
-							clothing.item_type = it;
-
-							main1.add(clothing);
-							items.add(clothing);
-
-							debug("DEBUG (db entry): " + clothing.toDB(), 2);
-						}
-
-						if ( it == ItemType.WAND ) { // Wand
-							String spellName = attr[6];
-							int charges = Integer.parseInt(attr[7]);
-
-							Wand wand = new Wand(oName, oDesc, oLocation, oDBRef, ItemType.values()[itemType], charges, spellName);
-							//wand.item_type = it; // unnecessary
-
-							main1.add(wand);
-							items.add(wand);
-
-							debug("DEBUG (db entry): " + wand.toDB(), 2);
-						}
-
-						if ( it == ItemType.WEAPON ) { // Weapon Merchant
-							int weaponType = Integer.parseInt(attr[6]);
-							int mod = Integer.parseInt(attr[7]);
-
-							Weapon weapon = new Weapon(oName, oDesc, oLocation, oDBRef, mod, Handed.ONE, WeaponType.values()[weaponType], 15.0);
-							weapon.item_type = it;
-
-							main1.add(weapon);
-							items.add(weapon);
-							
-							debug("DEBUG (db entry): " + weapon.toDB(), 2);
-						}
-
-						else if ( it == ItemType.ARMOR ) { // Armor Merchant
-							int armorType = Integer.parseInt(attr[6]);
-							int mod = Integer.parseInt(attr[7]);
-
-							Armor armor = new Armor(oName, oDesc, (int) oLocation, (int) oDBRef, mod , ArmorType.values()[armorType], ItemType.values()[itemType]);
-							armor.item_type = it;
-
-							main1.add(armor);
-							items.add(armor);
-
-							debug("DEBUG (db entry): " + armor.toDB(), 2);
-						}
-
-						if ( it == ItemType.ARROW ) { // Arrow
-							int stackID = Integer.parseInt(attr[7]);
-
-							Arrow arrow = new Arrow(oDBRef, oName, oDesc, oLocation);
-							arrow.item_type = it;
-
-							main1.add(arrow);
-							items.add(arrow);
-
-							debug("DEBUG (db entry): " + arrow.toDB(), 2);
-						}
-
-						if ( it == ItemType.BOOK ) { // Book
-							String author = attr[6];
-							String title = attr[7];
-							int pages = Integer.parseInt(attr[8]);
-
-							Book book = new Book(oName, oDesc, oLocation, oDBRef);
-							book.item_type = it;
-
-							book.setAuthor(author);
-							book.setTitle(title);
-							book.setPageNum(0);
-
-							main1.add(book);
-							items.add(book);
-
-							debug("DEBUG (db entry): " + book.toDB(), 2);
-						}
-
-						if ( it == ItemType.POTION ) {
-							int stack_size = Integer.parseInt(attr[6]);
-							String sn = attr[7];
-
-							/*
-							 * whatever I do here needs to recreate the entirety
-							 * of a stack of potions correctly
-							 */
-
-							Potion potion = new Potion(oDBRef, oName, "I", oDesc, oLocation, sn);
-
-							for (int i = 1; i < stack_size; i++) {
-								Potion potion1 = new Potion(oDBRef, oName, "I", oDesc, oLocation, sn);
-								potion.item_type = ItemType.POTION;
-
-								potion.stack(potion1);
-							}
-
-							main1.add(potion);
-							items.add(potion);
-
-							debug("DEBUG (db entry): " + potion.toDB(), 2);
-						}
-					}
-					else if (oFlags.equals("null")) {
-
-						NullObject Null = new NullObject(oDBRef);
-
-						//debug("Found NULLObject");
-						debug("DEBUG (db entry): " + Null.toDB() + " [Found NULLObject]", 2);
-
-						main1.add(new NullObject(oDBRef));
-						unusedDBNs.push(Null.getDBRef());
-					}
-				}
-				catch(ConcurrentModificationException cme) {
-					cme.printStackTrace();
-				}
-				catch(ArrayIndexOutOfBoundsException aioobe) {
-					aioobe.printStackTrace();
-				}
-			}
-		}
-	}
-	
-	/**
-	 * Go through all the exits that exist in the database and
-	 * place/attach them in/to the respective rooms they are
-	 * part of
-	 */
-	public void loadExits() {
-		for (final Exit exit : exits1) {
-			if (exit != null) {
-                Room room = getRoom(exit.getLocation());
-
-                if (room != null) {
-                    room.getExits().add(exit);
-                    debug("Exit Loaded", 2);
-                    debug(room.getDBRef() + " " + exit.getDBRef(), 2);
-                }
-            }
-		}
-	}
-
 	/**
 	 * Go through all the things that exist in the database
 	 * and place them in the respective rooms they are located in
 	 */
 	public void placeThingsInRooms() {
-		for (final Thing t : things) {
-			if (t != null) {
-                Room room = getRoom(t.getLocation());
-                if (room != null) {
-                    room.contents.add(t);
-                }
-			}
-		}
+        objectDB.placeThingsInRooms(this);
 	}
 
 	/**
@@ -9114,54 +8303,37 @@ public class MUDServer implements MUDServerI {
 	 * and place them in the respective rooms they are located in
 	 */
 	public void loadItems() {
-		for (Item item : this.items) {// !PROBLEM! not all items are necessarily in rooms
-			
+        objectDB.addItemsToRooms();
+
+		for (final Entry<Item, Player> entry : objectDB.getItemsHeld().entrySet()) {
+
+            final Item item = entry.getKey();
+            final Player npc = entry.getValue();
+
 			debug(item.getDBRef() + " " + item.getName());
 			
-			MUDObject m = getObject(item.getLocation());
-			
-			debug(item.getLocation() + " " + m.getName(), 2);
+			debug(item.getLocation() + " " + npc.getName(), 2);
 			debug("Item Loaded", 2);
 
-			if (m instanceof Room) {
-				Room room = getRoom(item.getLocation());
-
-				if (item != null && room != null) {
-					room.contents1.add(item);
-				}
-			}
-			else if (m instanceof Player) {
-				if (m instanceof NPC) {
-					if (m instanceof ArmorMerchant) {
-						ArmorMerchant am = (ArmorMerchant) m;
-
-						debug("ArmorMerchant (" + am.getName() + ") " + item.getName(), 2);
-
-						if (item != null && am != null) {
-							am.stock.add(item);
-						}
-					}
-					else if (m instanceof WeaponMerchant) {
-						WeaponMerchant wm = (WeaponMerchant) m;
-
-						debug("WeaponMerchant (" + wm.getName() + ") " + item.getName(), 2);
-
-						if (item != null & wm != null) {
-							wm.stock.add(item);
-						}
-					}
-					else {
-						NPC npc = (NPC) m;
-						debug(npc.getName() + ": Not a merchant", 2);
-					}
-				}
-				else {
-					Player player = (Player) m;
-					player.getInventory().add(item);
-				}
-			}
+            if (npc instanceof NPC) {
+                if (npc instanceof ArmorMerchant) {
+                    final ArmorMerchant am = (ArmorMerchant) npc;
+                    debug("ArmorMerchant (" + am.getName() + ") " + item.getName(), 2);
+                    am.stock.add(item);
+                }
+                else if (npc instanceof WeaponMerchant) {
+                    final WeaponMerchant wm = (WeaponMerchant) npc;
+                    debug("WeaponMerchant (" + wm.getName() + ") " + item.getName(), 2);
+                    wm.stock.add(item);
+                }
+                else {
+                    debug(npc.getName() + ": Not a merchant", 2);
+                }
+            }
+            else {
+                ((Player) npc).getInventory().add(item);
+            }
 		}
-
 	}
 	
 	/**
@@ -9170,14 +8342,14 @@ public class MUDServer implements MUDServerI {
 	 * if they have NO stock.
 	 */
 	public void fillShops() {
-		for (NPC npc : npcs1) {
+		for (final NPC npc : objectDB.getNPCs()) {
 			// Weapon Merchants
 			if (npc instanceof WeaponMerchant) {
 				WeaponMerchant wm = (WeaponMerchant) npc;
 				if (wm.stock.size() == 0) { // no merchandise
 					wm.stock = createItems(new Weapon(0, Handed.ONE, WeaponType.LONGSWORD, 15), 10);
 					System.out.println("Weapon Merchant's (" + wm.getName() + ") store has " + wm.stock.size() + " items.");
-					for (Item item : wm.stock) {
+					for (final Item item : wm.stock) {
 						int l = item.getLocation();
 						item.setLocation(wm.getDBRef());
 						System.out.println("Item #" + item.getDBRef() + " had Location #" + l + " and is now at location #" + item.getLocation());
@@ -9190,7 +8362,7 @@ public class MUDServer implements MUDServerI {
 				if (am.stock.size() == 0) { // no merchandise
 					am.stock = createItems(new Armor(0, 0, ArmorType.CHAIN_MAIL), 10);
 					System.out.println("Armor Merchant's (" + am.getName() + ") store has " + am.stock.size() + " items.");
-					for (Item item : am.stock) {
+					for (final Item item : am.stock) {
 						int l = item.getLocation();
 						item.setLocation(am.getDBRef());
 						System.out.println("Item #" + item.getDBRef() + " had Location #" + l + " and is now at location #" + item.getLocation());
@@ -9202,7 +8374,7 @@ public class MUDServer implements MUDServerI {
 				if (ik.stock.size() == 0) { // no merchandise
 					ik.stock = createItems(new Book("Arcani Draconus"), 10);
 					System.out.println("Innkeeper's (" + ik.getName() + ") store has " + ik.stock.size() + " items.");
-					for (Item item : ik.stock) {
+					for (final Item item : ik.stock) {
 						int l = item.getLocation();
 						item.setLocation(ik.getDBRef());
 						System.out.println("Item #" + item.getDBRef() + " had Location #" + l + " and is now at location #" + item.getLocation());
@@ -9689,8 +8861,8 @@ public class MUDServer implements MUDServerI {
 			final Armor armor = new Armor("Leather Armor", "A brand new set of leather armor, nice and smooth, but a bit stiff still.", -1, -1, 0, ArmorType.LEATHER, ItemType.ARMOR);
 			final Weapon sword = new Weapon("Long Sword", "A perfectly ordinary longsword.", 0, Handed.ONE, WeaponType.LONGSWORD, 15.0);
 			armor.setLocation(player.getDBRef());
-			armor.setDBRef(nextDB("use"));
-			sword.setDBRef(nextDB("use"));
+			objectDB.addAsNew(armor);
+			objectDB.addAsNew(sword);
 			player.getInventory().add(armor);
 			player.getInventory().add(sword);
 		}
@@ -9736,11 +8908,9 @@ public class MUDServer implements MUDServerI {
 		ArrayList<Item> inventory = player.getInventory();
 
 		// go through objects array and put references to objects that are located in/on the player in their inventory
-		for (Item item : this.items) {
-			if (item.getLocation() == player.getDBRef()) {
-				debug("Item -> " + item.getName() + " (#" + item.getDBRef() + ") @" + item.getLocation());
-				inventory.add(item);
-			}
+		for (final Item item : objectDB.getItemsByLoc(player.getDBRef())) {
+            debug("Item -> " + item.getName() + " (#" + item.getDBRef() + ") @" + item.getLocation());
+            inventory.add(item);
 		}
 
 		/* ChatChannel Setup */
@@ -9847,15 +9017,9 @@ public class MUDServer implements MUDServerI {
 			// if player is a guest
 			if ( player.getFlags().charAt(0) == 'G') {
 				// remove from database
-				main1.set( player.getDBRef(), new NullObject( player.getDBRef() ) );  // replace db entry with NULLObjet
-				main.set( player.getDBRef(), main1.get( player.getDBRef() ).toDB() ); // adjust database with nullobject dbstring
-
-				// cleanup
+				objectDB.set( player.getDBRef(), new NullObject( player.getDBRef() ) );  // replace db entry with NULLObjet
 			}
 			else {
-				// save changes to player
-				savePlayer(client);
-				
 				// save mail
 				saveMail(player);
 
@@ -10030,73 +9194,20 @@ public class MUDServer implements MUDServerI {
 		send("Mode: " + mode, someClient);
 	}
 
-	// Miscellaneous Functions
-
-	/**
-	 * wrapper function for nextDB(String arg) to ease usage in
-	 * no parameter cases
-	 * 
-	 * @return the next unused database reference (dbref) number
-	 */
-	public int nextDB() {
-		return nextDB("");
-	}
-
-	/**
-	 * function to get next db#
-	 * 
-	 * @param arg
-	 * @return the next unused database reference (dbref) number
-	 */
-	public int nextDB(String arg)
+	public void printUnusedDB()
 	{
-		int tmp = 0;
-
-		// dummy request (just tell us what's next)
-		if (arg.equals("")) {
-			if (!unusedDBNs.isEmpty()) {  // if the stack isn't empty
-				tmp = unusedDBNs.peek(); // look at the top and tell us what's next
-			}
-			else { // the stack is empty, so there aren't any unused ones
-				debug("No unused existing database references, calculating next new one...");
-				tmp = main1.size();
-			}
-		}
-		// give us a unused dbref to use
-		else if (arg.equals("use")) { // use request (we want to get one to use)
-			if (!unusedDBNs.isEmpty()) { // if the stack isn't empty
-				tmp = unusedDBNs.pop(); // take one off and give it to use
-			}
-			else { // the stack is empty, so there aren't any unused ones
-				debug("No unused existing database references, calculating next new one...");
-				tmp = main1.size();
-			}
-		}
-		// show us a list of unused dbref numbers
-		else if (arg.equals("list")) {
-			StringBuffer out = new StringBuffer();
-			System.out.print("Next Database Reference Numbers: ");
-			out.append("Next Database Reference Numbers: ");
-			System.out.print("[ ");
-			for (Integer i : unusedDBNs) {
-				System.out.print(i + ", ");
-				out.append(i + ", ");
-			}
-			System.out.println(" ]");
-			out.append(" ]");
-			//send(out.toString(), client);
-		}
-		// just grab new numbers after the current largest, so we get a nice contiguous chunk
-		else if (arg.equals("clean")) { 
-			tmp = main1.size();
-		}
-		else {
-			debug("no argument?");
-		}
-
-		return tmp;
+        StringBuffer out = new StringBuffer();
+        out.append("Next Database Reference Numbers: ");
+        out.append("[ ");
+        /*
+        for (final Integer i : unusedDBNs) {
+            out.append(i + ", ");
+        }
+        */
+        out.append(" ]");
+        System.out.print(out);
 	}
-	
+
 	/**
 	 * Colors
 	 * 
@@ -10130,41 +9241,6 @@ public class MUDServer implements MUDServerI {
 		}
 	}
 	
-	/**
-	 * Check to see that the chosen player name is not already in use.
-	 * 
-	 * Used in player creation
-	 * 
-	 * Note: In the future, it'd be nice to have a last name or other naming distinction
-	 * because limiting everyone to one instance of a first name per the whole mud is
-	 * considerably limiting and somewhat unrealistic
-	 * 
-	 * @param testName
-	 * @return
-	 */
-	public boolean checkName(String testName)
-	{
-		boolean nameIsUnique = true;
-
-		// get existing names
-		ArrayList<String> names = new ArrayList<String>();
-
-		for (String player : main) {
-			String[] playerInfo = player.split("#");
-			names.add(playerInfo[1]);
-		}
-
-		if ( names.contains(testName) ) {
-			nameIsUnique = false;
-			//debug("Name is not unique.");
-		}
-		else {
-			//debug("Name is Unique!");
-		}
-
-		return nameIsUnique;
-	}
-
 	// check to see that the chosen player name, conforms to the naming rules
 	// NOTE: no naming rules exists nor any method for loading or checking against external ones
 	public boolean validateName(String testName)
@@ -10217,27 +9293,15 @@ public class MUDServer implements MUDServerI {
 		// Rooms
 		log.writeln("Game> Backing up Rooms...");
 		
-		synchronized(rooms1) {
-			saveRooms(); // NOTE: only modifies in memory storage
-		}
-		
 		log.writeln("Done.");
 		
 		// Exits
 		log.writeln("Game> Backing up Exits...");
 		
-		synchronized(exits1) {
-			saveExits(); // NOTE: only modifies in memory storage
-		}
-		
 		log.writeln("Done.");
 		
 		// Players
 		log.writeln("Game> Backing up Players...");
-		
-		synchronized(players) {
-			savePlayers(); // NOTE: only modifies in memory storage
-		}
 		
 		log.writeln("Done.");
 		
@@ -10253,28 +9317,18 @@ public class MUDServer implements MUDServerI {
 		// Things
 		log.writeln("Game> Backing up Things...");
 		
-		synchronized(things) {
-			saveThings(); // NOTE: only modifies in memory storage
-		}
-		
 		log.writeln("Done.");
 		
 		// Items
 		log.writeln("Game> Backing up Items...");
-		
-		synchronized(items) {
-			saveItems(); // NOTE: only modifies in memory storage
-		}
 		
 		log.writeln("Done.");
 		
 		// Database
 		log.writeln("Game> Backing up Database...");
 
-		synchronized(main) {
-			saveDB(); // NOTE: real file modification occurs here
-		}
-		
+        saveDB(); // NOTE: real file modification occurs here
+
 		log.writeln("Done.");
 		
 		log.writeln("Game> Backing up Help Files...");
@@ -10291,30 +9345,7 @@ public class MUDServer implements MUDServerI {
 	
 	// very broken, produces nulls, effectively destroying the database
 	public void backup2() {
-		// save database to disk
-		String[] toSave;
-		int index = 0;
-		
-		send("Saving Database...");
-
-		synchronized(main1) {
-			toSave = new String[main1.size()];
-
-			try {
-				for (MUDObject m : main1) {
-					if (m instanceof Player) {
-						System.out.println("test: " + ((Player) m).toDB());
-					}
-					toSave[index] = m.toDB();
-				}
-			}
-			catch(NullPointerException npe) {
-				npe.printStackTrace();
-			}
-		}
-
-		Utils.saveStrings(mainDB, toSave);    // modifies 'real' files
-		
+        objectDB.save(mainDB);
 		send("Done");
 	}
 
@@ -10899,16 +9930,14 @@ public class MUDServer implements MUDServerI {
 						if ((game_time.minutes + 1) % fired == 0) {
 
 							// loop through all the rooms and broadcast weather messages accordingly
-							for (int r = 0; r < rooms1.size(); r++) {
-								Room room = (Room) rooms1.get(r);
-								if (room.getRoomType() == "O" || room.getRoomType() == "P") {
-									//atmosphere = room.getAtmosphere();
-									//weather = room.getWeather();
-									broadcast("", room);
-									debug("message sent");
-								}
-								else { debug("no message sent"); }
-							}
+                            for (final Room r : objectDB.getWeatherRooms()) {
+                                broadcast("", r);
+                                debug("message sent");
+                            }
+                            for (final Room r : objectDB.getRoomsByType("P")) {
+                                broadcast("", r);
+                                debug("message sent");
+                            }
 							debug("loop fired.");
 							debug(game_time.minutes);
 							debug(fired);
@@ -11304,26 +10333,20 @@ public class MUDServer implements MUDServerI {
 		send("Type: " + Flags.get(room.getFlags().charAt(0)) + " Flags: " + temp + " Room Type: " + RoomTypes.get(room.getRoomType().charAt(0)), client);
 		send("Description: " + room.getDesc(), client);
 		send("Location: " + getRoom(room.getLocation()).getName() + "(#" + room.getLocation() + ")", client);
+
 		send("Sub-Rooms:", client);
-		for (int r = 0; r < rooms1.size(); r++) {
-			Room room1 = (Room) rooms1.get(r);
-			if (room1.getLocation() == room.getDBRef()) {
-				send(room1.getName() + "(#" + room1.getDBRef() + ")", client);
-			}
-		}
+        for (final Room r : objectDB.getRoomsByLocation(room.getDBRef())) {
+            send(r.getName() + "(#" + r.getDBRef() + ")", client);
+        }
+
 		send("Contents:", client);
-		for (int o = 0; o < things.size(); o++) {
-			Thing thing = (Thing) things.get(o);
-			if (thing.getLocation() == room.getDBRef()) {
-				send( colors(thing.getName(), "yellow") + "(#" + thing.getDBRef() + ")", client);
-			}
+        final List<Thing> roomThings = objectDB.getThingsForRoom(room.getDBRef());
+		for (final Thing t : roomThings) {
+            send( colors(t.getName(), "yellow") + "(#" + t.getDBRef() + ")", client);
 		}
 		send("Creatures:", client);
-		for (int c = 0; c < creatures.size(); c++) {
-			Creature creature = creatures.get(c);
-			if (creature.getLocation() == room.getDBRef()) {
-				send( colors( creature.getName(), "cyan" ), client );
-			}
+        for (final Creature creep : objectDB.getCreatureByRoom(room.getDBRef())) {
+            send( colors( creep.getName(), "cyan" ), client );
 		}
 	}
 
@@ -11566,24 +10589,21 @@ public class MUDServer implements MUDServerI {
 
         send("With:", client);
 
-        for (final NPC npc : npcs1) {
-            if (npc.getLocation() == room.getDBRef())
-            {
-                if (!room.getFlags().contains("S")) {
-                    send(colors("[" + npc.getStatus() + "] "+ npc.getName() + "(#" + npc.getDBRef() + ")", "cyan"), client);
-                }
-                else { send(colors("[" + npc.getStatus() + "] "+ npc.getName(), "cyan"), client); }
+        for (final NPC npc : objectDB.getNPCsByRoom(room.getDBRef())) {
+            if (!room.getFlags().contains("S")) {
+                send(colors("[" + npc.getStatus() + "] "+ npc.getName() + "(#" + npc.getDBRef() + ")", "cyan"), client);
+            }
+            else {
+                send(colors("[" + npc.getStatus() + "] "+ npc.getName(), "cyan"), client);
             }
         }
 
-        for (final Creature creature : creatures) {
-            if (creature.getLocation() == room.getDBRef()) {
-                if (!room.getFlags().contains("S")) {
-                    send( colors( creature.getName() + "(#" + creature.getDBRef() + ")", "cyan" ), client );
-                }
-                else {
-                    send( colors( creature.getName(), "cyan" ), client );
-                }
+        for (final Creature creep : objectDB.getCreatureByRoom(room.getDBRef())) {
+            if (!room.getFlags().contains("S")) {
+                send( colors( creep.getName() + "(#" + creep.getDBRef() + ")", "cyan" ), client );
+            }
+            else {
+                send( colors( creep.getName(), "cyan" ), client );
             }
         }
 
@@ -12240,16 +11260,6 @@ public class MUDServer implements MUDServerI {
 		}
 	}
 
-	/**
-	 * Put unused database reference numbers onto a stack of unused or recently
-	 * freed numbers that will be reused. 
-	 * 
-	 * @param dbref database reference number (integer)
-	 */
-	public void addUnused(int dbref) {
-		unusedDBNs.push(dbref); // add it to the stack
-	}
-
 	/* this really shouldn't handle actual costs, it should just tell us if we can afford it */
 	/**
 	 * Tell us if we, the player, can afford to purchase an item, based on it's
@@ -12393,75 +11403,6 @@ public class MUDServer implements MUDServerI {
 		return player;
 	}
 
-	/**
-	 * Generate a player from it's database representation
-	 * 
-	 * NOTE: for testing purposes only now, init_conn doesn't go through
-	 * loadObjects, which is pointless when you consider that I only hold onto a copy
-	 * of the objects and it never goes into the player's array.
-	 * 
-	 * NOTE2: meant to solve a problem where I haven't copied the load code into init_conn,
-	 * but want a properly initialized/loaded player for existing characters when they login
-	 * 
-	 * @param playerData
-	 * @return a player object
-	 */
-	public NPC loadNPC(String npcData) {
-
-		String[] attr = npcData.split("#");
-
-		Integer oDBRef = 0, oLocation = 0;
-		String oName = "", oFlags = "", oDesc = "";
-		String[] os, om;
-
-		oDBRef = Integer.parseInt(attr[0]);    // 0 - npc database reference number
-		oName = attr[1];                       // 1 - npc name
-		oFlags = attr[2];                      // 2 - npc flags
-		oDesc = attr[3];                       // 3 - npc description
-		oLocation = Integer.parseInt(attr[4]); // 4 - npc location
-
-		// 5 - npc doesn't have a password
-		os = attr[6].split(",");               // 6 - npc stats
-		om = attr[7].split(",");               // 7 - npc money
-		int access;                            // 8 - npc permissions
-		int raceNum;                           // 9 - npc race number (enum ordinal)
-		int classNum;                          // 10 - npc class number (enum ordinal)
-
-		/*debug("Database Reference Number: " + oDBRef);
-		debug("Name: " + oName);
-		debug("Flags: " + oFlags);
-		debug("Description: " + oDesc);
-		debug("Location: " + oLocation);*/
-
-		Integer[] oStats = Utils.stringsToIntegers(os);
-		Integer[] oMoney = Utils.stringsToIntegers(om);
-
-
-		NPC npc = new NPC(oDBRef, oName, oFlags, oDesc, oLocation, "", "IC", oStats, oMoney); 
-
-		// Set NPC Race
-		try {
-			raceNum = Integer.parseInt(attr[9]);
-			npc.setPlayerRace(Races.getRace(raceNum));
-		}
-		catch(NumberFormatException nfe) {
-			nfe.printStackTrace();
-			npc.setPlayerRace(Races.NONE);
-		}
-
-		// Set NPC Class
-		try {
-			classNum = Integer.parseInt(attr[10]);
-			npc.setPClass(Classes.getClass(classNum));
-		}
-		catch(NumberFormatException nfe) {
-			nfe.printStackTrace();
-			npc.setPClass(Classes.NONE);
-		}
-
-		return npc;
-	}
-	
 	/* Creation Functions */
 	
 	/**
@@ -12474,43 +11415,16 @@ public class MUDServer implements MUDServerI {
 	 */
 	public Room createRoom(String roomName, int roomParent)
 	{
-		int id = nextDB();
-
 		// flags are defined statically here, because I'd need to take in more variables and in no
 		// case should this create anything other than a standard room which has 'RS' for flags
-		Room room = new Room(id, roomName, "RS", "You see nothing.", roomParent);
+		final Room room = new Room(-1, roomName, "RS", "You see nothing.", roomParent);
 
 		// add rooms to database (main)
-		if (main.size() >= id + 1) {
-			main.set(room.getDBRef(), room.toDB());
-			main1.set(room.getDBRef(), room);
-		}
-		else {
-			main.add(room.toDB());
-		}
-
-		// add rooms to live mud (main1)
-		if (main1.size() >= id + 1) {
-			main1.set(room.getDBRef(), room);
-		}
-		else {
-			main1.add(room);
-		}
-
-		rooms1.add(room);
+        objectDB.addAsNew(room);
+		objectDB.addRoom(room);
 
 		// tell us about it
 		//send("Room '" + roomName + "' created as #" + id + ". Parent set to " + roomParent + ".", );
-
-		/*
-		 * tell the list that we're done, I'd like to fix this extra step, but I don't want to take
-		 * it away until I know the process is complete, probaby I just need to put it back in the unused
-		 * pile if this fails somehow.
-		 * 
-		 * NOTE: this discrepancy may commonly result in two items create in near simultaneity accidentally
-		 * ending up with the same dbref which is a SIGNIFICANT problem
-		 */
-		nextDB("use");
 
 		/* for use of room editor */
 		return room;
@@ -12522,35 +11436,17 @@ public class MUDServer implements MUDServerI {
 	 * @return
 	 */
 	private Item createItem() {
-		Item item = new Item();
+		final Item item = new Item();
 
-		item.setDBRef(nextDB("use"));
 		item.setFlags("I");
 		item.setLocation(WELCOME_ROOM);
 
 		item.setItemType(ItemType.NONE);
 
-		items.add(item);
+        objectDB.addAsNew(item);
+		objectDB.addItem(item);
 
-		// add item to database (main)
-		if (main.size() >= item.getDBRef() + 1) {
-			main.set(item.getDBRef(), item.toDB());
-			main1.set(item.getDBRef(), item);
-		}
-		else {
-			main.add(item.toDB());
-		}
-
-		// add item to live mud (main1)
-		if (main1.size() >= item.getDBRef() + 1) {
-			main1.set(item.getDBRef(), item);
-		}
-		else {
-			main1.add(item);
-		}
-
-		// add item to room
-		((Room) main1.get(item.getLocation())).contents1.add(item);
+		((Room) objectDB.get(item.getLocation())).contents1.add(item);
 
 		return item;
 	}
@@ -12629,22 +11525,19 @@ public class MUDServer implements MUDServerI {
 	}
     
     private void initCreatedItem(final Item item) {
-        item.setDBRef(nextDB("use"));
+        objectDB.addAsNew(item);
         item.setLocation(0);
-
-        main.add(item.toDB());
-        main1.add(item);
-        this.items.add(item);
+        objectDB.addItem(item);
     }
 
 	/*public NPC createNPC(String name, int location) {
-		NPC npc = new NPC(nextDB("use"), name, null, "N", "A generic npc", "NPC", "IC", location, new String[]{ "0", "0", "0", "0" });
+		NPC npc = new NPC(getNextDB(), name, null, "N", "A generic npc", "NPC", "IC", location, new String[]{ "0", "0", "0", "0" });
 		npcs1.add(npc);
 		return npc;
 	}
 
 	public Creature createCreature(String race, String name, String desc) {
-		Creature creature = new Creature(nextDB("use"), race, name, desc);
+		Creature creature = new Creature(getNextDB(), race, name, desc);
 		creatures.add(creature);
 		return creature;
 	}*/
@@ -12680,12 +11573,9 @@ public class MUDServer implements MUDServerI {
 	 * At the present it only updates a single room, ever.
 	 */
 	public void updateWeather() {
-		for (final Room room : rooms1) {
-			if (room.getRoomType() != "O") {
-				continue;
-			}
+		for (final Room room : objectDB.getWeatherRooms()) {
 
-			room.getWeather().nextState();
+            room.getWeather().nextState();
 
 			final WeatherState ws = room.getWeather().ws;
 			if (ws.upDown != 1 && ws.upDown != -1) {
@@ -12920,8 +11810,7 @@ public class MUDServer implements MUDServerI {
 		final int dbref = potion.getDBRef();           // get it's dbref
 		final NullObject nobj = new NullObject(dbref); // create a nullobject with that dbref
 
-		main1.set(dbref,  nobj);                 // remove from "live" database (replace with NullObject)
-		main.set(dbref,  nobj.toDB());           // remove from "disk" databse (toDB of a NullObject)
+		objectDB.set(dbref,  nobj);                 // remove from "live" database (replace with NullObject)
 		player.getInventory().remove(potion);    // remove from player inventory
 	}
 
@@ -13010,13 +11899,10 @@ public class MUDServer implements MUDServerI {
 		final String[] file = Utils.loadStrings(filename);
 
 		int step = 0; // 0=AREA, 1=ROOM
-		int[] dbrefs = null;
 
 		Area area = null;
 
 		String name;
-
-		int currentRoom = 0;
 
 		for (final String s : file) {
 			if ( s.equals("@AREA") ) {
@@ -13043,16 +11929,7 @@ public class MUDServer implements MUDServerI {
 					}
 				}
 				else if ( key.equals("rooms") ) {
-					dbrefs = new int[Integer.parseInt(value)]; // find out how many dbrefs we need
-
 					area = new Area(Integer.parseInt(value));
-					
-					/* should probably use the allocation function to do this */
-
-					for (int i = 0; i < dbrefs.length; i++) {   // allocate dbrefs
-						dbrefs[i] = nextDB("clean");
-					}
-
 					step = 1;
 				}
 				break;
@@ -13065,8 +11942,7 @@ public class MUDServer implements MUDServerI {
 				final Room room = new Room(); // creates a "blank" room with basic flags and locks, a location and desc borders
 
 				if ( key.equals("dbref") ) {
-					room.setDBRef(dbrefs[currentRoom]);
-					currentRoom++;
+                    objectDB.addAsNew(room);
 				}
 				else if ( key.equals("name") ) {
 					room.setName(value);
@@ -13123,10 +11999,10 @@ public class MUDServer implements MUDServerI {
 	 * where I need to be sure I don't try and access an index outside
 	 * of the database
 	 * @return
-	 */
 	public int dbSize() {
 		return main1.size();
 	}
+	 */
 
 	/**
 	 * Takes an input string and generates a new one where each letter is prefixed by

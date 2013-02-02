@@ -34,8 +34,8 @@ public class Jewelry extends Item implements Equippable<Jewelry>, Usable<Jewelry
 
 	public Jewelry(int jMod, String jType, double jWeight)
 	{
-		//super(nextDB(), "Ring of Invisibility", "A medium-sized gold ring with a smooth, unmarked surface.", "IJEW", 8);
-		super(parent.nextDB());
+		//super(getNextDB(), "Ring of Invisibility", "A medium-sized gold ring with a smooth, unmarked surface.", "IJEW", 8);
+		super(-1);
 		this.name = "Ring of Invisibility";
 		this.desc = "A medium-sized gold ring with a smooth, unmarked surface.";
 		this.flags = "IJEW";

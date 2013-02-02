@@ -101,21 +101,21 @@ public class ExamineCommand extends Command {
 				}*/
 				
 				// get by string/name
-				Room room = parent.getRoom(arg);
+				final Room room = parent.getRoom(arg);
 				
 				if (room != null) {
 					parent.examine(room, client);
 					return;
 				}
 				
-				Player player = parent.getPlayer(arg);
+				final Player player = parent.getPlayer(arg);
 				
 				if (player != null) {
 					parent.examine(player, client);
 					return;
 				}
 				
-				Exit exit = parent.getExit(arg, client);
+				final Exit exit = parent.getExit(arg);
 				
 				if (exit != null) {
 					parent.examine(exit, client);
