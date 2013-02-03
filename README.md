@@ -24,7 +24,7 @@ This code is very much in an unfinished state, there may be radical shifts in th
 in the future. Try not to make too many assumptions about stability and backup the database if you
 play with this as future code may destroy them or use a alternate approach for data storage.
 
-This code may require at least Java 6 (1.6)
+This code may require at least Java 7 (1.7)
 
 ## Usage
 ```
@@ -40,10 +40,16 @@ December 2012
 The code is up for this, although my code depends on some LGPL'd network (server/client) code. My apologies
 for the weird structure, which is due to this project being worked on in eclipse. 
 
-January 27, 2012
+January 27, 2013
 I've started pulling together some basic documentation and info on the wiki section of the repository. I have
 more information on my computer, but it's somewhat fragmented and not all of it is up to date with the current
 state of the code and some is more ideas and notions than concrete details about the inner workings.
+
+February 3, 2013
+Seeing lots of contribution from [joshgit](https://github.com/joshgit), and dealt with ~3 pull requests already. Made
+switch from Java 6 (1.6) to Java 1.7 (1.7) in project settings today in part to make it not complain about empty generic
+usage in Java 7, and there were hardly any problems. So from now on I'll be working under the assumption of Java 7 as
+the required minimum.
 
 ## Copyright
 Copyright (c) 2012 Jeremy Harton. See LICENSE.txt for further details.
