@@ -973,15 +973,16 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 		r.contents.add(thing);
 
 		main.add(thing.toDB());
-		main1.add(thing);*/
+		main1.add(thing);
 		
-		Thing t = getThing(256);
+		Thing t = getThing(256); // ladder
 		
 		t.coord.setX(4);
 		t.coord.setY(6);
 		t.coord.setZ(1);
 		
 		t.attributes.put("height", 10);
+		*/
 		
 		/**
 		 * Portal Testing
@@ -9108,7 +9109,7 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
         }
         */
         out.append(" ]");
-        System.out.print(out);
+        System.out.println(out);
 	}
 
 	/**
