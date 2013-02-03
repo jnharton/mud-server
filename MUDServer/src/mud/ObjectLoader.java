@@ -196,9 +196,9 @@ public class ObjectLoader {
 
                     log.debug("log.debug (db entry): " + room.toDB(), 2);
 
-                    room.setRoomType(roomType);
+                    room.setRoomType(RoomType.fromLetter(roomType.charAt(0)));
 
-                    if (room.getRoomType().equals("O")) {
+                    if (room.getRoomType().equals(RoomType.OUTSIDE)) {
                         room.getProps().put("sky", "The sky is clear and flecked with stars.");
                     }
 

@@ -278,8 +278,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 
 	public HashMap<String, String> aliases = new HashMap<String, String>(20, 0.75f);             // HashMap to store command aliases (static)
 	private HashMap<Integer, String> Errors = new HashMap<Integer, String>(5, 0.75f);           // HashMap to store error messages for easy retrieval (static)
-	private HashMap<Character, String> RoomTypes = new HashMap<Character, String>(3, 0.75f);    // HashMap that stores existing room types (static)
-	
+
 	private HashMap<String, Date> holidays = new HashMap<String, Date>(10, 0.75f);               // HashMap that holds an in-game date for a "holiday" name string
 	private HashMap<Integer, String> years = new HashMap<Integer, String>(50, 0.75f);            // HashMap that holds year names for game themes that supply them (static)
 
@@ -449,9 +448,9 @@ public class MUDServer implements MUDServerI, LoggerI {
 	
 	private static final int MAX_STACK_SIZE = 25;
 	
-	public MUDServer(String address) {}
+	public MUDServer(final String address) {}
 
-	public MUDServer(String address, int incomingPort) {
+	public MUDServer(final String address, int incomingPort) {
 		this.port = incomingPort;
 	}
 
@@ -474,7 +473,7 @@ public class MUDServer implements MUDServerI, LoggerI {
             // process command line parameters
             for (int a = 0; a < args.length; a++) {
                 String s = args[a];
-                
+
                 String param = s.substring(2, s.length());
 
                 if ( s.contains("--") ) {
@@ -635,11 +634,11 @@ public class MUDServer implements MUDServerI, LoggerI {
 		//
 
 		// Error Messages Files (errorsDB)
-		this.errors = loadDatabase(errorDB);
+		this.errors = Utils.loadStrings(errorDB);
 		// Help Files (helpDB)
-		this.help = loadDatabase(helpDB);
+		this.help = Utils.loadStrings(helpDB);
 		// Spell Files (spellDB)
-		this.spells = loadDatabase(spellDB);
+		this.spells = Utils.loadStrings(spellDB);
 
 		// error message hashmap loading
 		for (int err = 0; err < this.errors.length; err++)
@@ -743,13 +742,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 		Flags.put('Z', "ZONE");    // ?
 		debug("Flags: " + Flags.entrySet()); // Print out the whole set of flags (DEBUG)
 
-		// set up room types
-		RoomTypes.put('E', "EXPOSED"); // Exposed to some weather
-		RoomTypes.put('I', "INSIDE");  // Not affected by any weather
-		RoomTypes.put('O', "OUTSIDE"); // Affected by all weather
-		RoomTypes.put('N', "NONE");    // Same effect as inside for weather purposes
-		debug("Room Types: " + RoomTypes.entrySet()); // Print out the whole set of room types (DEBUG)
-
 		/*
 		 * Command Mapping
 		 * 
@@ -827,9 +819,8 @@ public class MUDServer implements MUDServerI, LoggerI {
 		// doing this here, because most everything that needs to be loaded before should be done by here
 		this.s = new Server(this, port); // current style
 
-		/* Threads */
-		
-		 * chatThreadx: chat channel
+		/* Threads
+		 * chatThread: chat channel
 		 * cmdExec: command execution
 		 */
 
@@ -5176,10 +5167,11 @@ public class MUDServer implements MUDServerI, LoggerI {
 				
                 for (final String recipName : recipients)
                 {
-                    final Client recipClient = tclients.get(getPlayer(recipName));
+                    final Player targetPlayer = getPlayer(recipName);
+                    final Client recipClient = tclients.get(targetPlayer);
                     if (recipClient != null) {
                         // mesage with a player sender, text to send, and the player to send it to
-                        s.sendMessage(recipClient, new Message(getPlayer(client), Utils.trim(ms), recip));
+                        s.sendMessage(recipClient, new Message(getPlayer(client), Utils.trim(ms), targetPlayer));
                     }
                 }
 			}
@@ -6744,7 +6736,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 
 					// call msp to play a tune that is the theme for a type of room
 					if (msp == 1) { // MSP is enabled
-						if (room.getRoomType().equals("I")) { // if inside play the room's music
+						if (room.getRoomType().equals(RoomType.INSIDE)) { // if inside play the room's music
 							// need to check and see if sound filename isn't empty
 							MSP.play(room.music, "", 25, -1);
 							//MSP.play(room.theme, room.theme.substring(room.theme.indexOf("."), -1), 25, -1);
@@ -6754,7 +6746,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 							// send the message (but only to this client)
 							send(msg, client);
 						}
-						else if (room.getRoomType().equals("O")) { // if outside, play appropriate weather sounds?
+						else if (room.getRoomType().equals(RoomType.OUTSIDE)) { // if outside, play appropriate weather sounds?
 						}
 					}
 
@@ -8204,41 +8196,13 @@ public class MUDServer implements MUDServerI, LoggerI {
 	 * 
 	 * @param filename the filename to load strings from
 	 * @param offset   the number of lines to skip before loading strings (from beginning of file)
-	 * @return         an arraylist of strings
+	 * @return         a list of strings
 	 */
-	public ArrayList<String> loadList(String filename, int offset) {
-		String[] string_array;
-		ArrayList<String> strings;
-
-		string_array = Utils.loadStrings(filename);
-
-		strings = new ArrayList<String>(string_array.length);
-
-		for (int line = 0; line < string_array.length; line++) {
-			if (line >= offset) {
-				strings.add(string_array[line]);
-			}
-		}
-
-		return strings;
+	public List<String> loadList(String filename, int offset) {
+		final ArrayList<String> lines = new ArrayList<String>(Arrays.asList(Utils.loadStrings(filename)));
+        return lines.size() < offset ? new ArrayList<String>() : lines.subList(offset, lines.size());
 	}
 
-	/**
-	 * Load an array of strings from a file with one string per line
-	 * 
-	 * @param filename the name of the file to load from
-	 * @return         an array of strings
-	 */
-	public String[] loadDatabase(String filename) {
-		String[] string_array;
-		string_array = Utils.loadStrings(filename);
-		return string_array;
-	}
-
-	/**
-	 * 
-	 * @param temp
-	 */
 	public void loadSpells(String[] temp) {
 		try {
 			for (int s = 0; s < temp.length; s++) {
@@ -8275,10 +8239,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 		}
 	}
 
-	/**
-	 * 
-	 * @param themeFile
-	 */
 	public void loadTheme(String themeFile) {
 		theme1 = new Theme();
 		int depth = 0;
@@ -8448,52 +8408,39 @@ public class MUDServer implements MUDServerI, LoggerI {
 		return item;
 	}
 
-	public void loadChannels(String filename) {
-		// open file
-		File file = new File(filename);
+	public void loadChannels(final String filename) {
+        try {
+            final FileReader fr = new FileReader(new File(filename));
+            final BufferedReader br = new BufferedReader(fr);
+            String line;
+            while ((line = br.readLine()) != null) { 
+                // load data (one line at a time)
 
-		if (file.exists() ) {
-			if ( file.isFile() ) {
-				if ( file.canRead() ) {
-					try {
-						FileReader fr = new FileReader(file);
+                // split line in file
+                final String[] cInfo = line.split("#");
 
-						BufferedReader br = new BufferedReader(fr);
+                // extract channel information from array of data
+                final int channelId = Integer.parseInt(cInfo[0]);
+                final String channelName = cInfo[1];
 
-						while ( br.ready() ) { 
-							// load data (one line at a time)
-							String string = br.readLine();
+                // create channel according to data
+                final ChatChannel c = new ChatChannel(s, this, channelId, channelName);
+                channels.put(c.getName(), c);
+                debug("Channel Added: " + c.getName() + "(" + c.getID() + ")");
 
-							// split line in file
-							String[] cInfo = string.split("#");
+                final Thread chatThread = new Thread(c, channelName);
+                chatThread.start();
 
-							// extract channel information from array of data
-							Integer channelId = Integer.parseInt(cInfo[0]);
-							String channelName = cInfo[1];
-
-							// create channel according to data
-							ChatChannel c = new ChatChannel(s, this, channelId, channelName);
-							channels.put(c.getName(), c);
-                            debug("Channel Added: " + c.getName() + "(" + c.getID() + ")");
-
-							Thread chatThread = new Thread(c, channelName);
-							chatThread.start();
-
-							if ( chatThread.isAlive() ) {
-								debug("Channel Started: " + c.getName() + "(" + c.getID() + ")");
-							}
-						}
-					}
-					catch (FileNotFoundException e) {
-						e.printStackTrace();
-					}
-					catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-				}
-			}
-		}
+                if (!chatThread.isAlive() ) {
+                    debug("Channel not alive: " + c.getName() + "(" + c.getID() + ")");
+                }
+            }
+            br.close();
+            fr.close();
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
 	}
 
 	/**
@@ -8506,9 +8453,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 	 */
 	public String MOTD()
 	{
-		byte[] MOTD = Utils.loadBytes(MOTD_DIR + motd);
-		String MOTD1 = new String(MOTD);
-		return MOTD1;
+		return new String(Utils.loadBytes(MOTD_DIR + motd));
 	}
 
 	/**
@@ -9740,7 +9685,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 			}
 		}
 		send(room.getName() + "(#" + room.getDBRef() + ")", client);
-		send("Type: " + Flags.get(room.getFlags().charAt(0)) + " Flags: " + temp + " Room Type: " + RoomTypes.get(room.getRoomType().charAt(0)), client);
+		send("Type: " + Flags.get(room.getFlags().charAt(0)) + " Flags: " + temp + " Room Type: " + room.getRoomType(), client);
 		send("Description: " + room.getDesc(), client);
 		send("Location: " + getRoom(room.getLocation()).getName() + "(#" + room.getLocation() + ")", client);
 
@@ -9925,8 +9870,7 @@ public class MUDServer implements MUDServerI, LoggerI {
         /* presumably some sort of config would allow you to disable date and time reporting here,
          * maybe even turn off the weather data
          */
-        //if (room.getRoomType() == RoomType.OUTSIDE) {
-        if ( room.getRoomType().equals("O") ) {
+        if ( room.getRoomType().equals(RoomType.OUTSIDE) ) {
             final Weather weather = room.getWeather();
             
             //send("*** " + "<weather>: " + parse(room.getWeather().ws.description, room.timeOfDay), client);
@@ -10427,7 +10371,7 @@ public class MUDServer implements MUDServerI, LoggerI {
             broadcast("", r);
             debug("message sent");
         }
-        for (final Room r : objectDB.getRoomsByType("P")) {
+        for (final Room r : objectDB.getRoomsByType(RoomType.PLAYER)) {
             broadcast("", r);
             debug("message sent");
         }

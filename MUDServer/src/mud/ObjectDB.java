@@ -169,7 +169,7 @@ public class ObjectDB {
         return roomsById.get(id);
     }
 
-    public List<Room> getRoomsByType(final String type) {
+    public List<Room> getRoomsByType(final RoomType type) {
         final List<Room> acc = new LinkedList<Room>();
         for (final Room r : roomsById.values()) {
             if (r.getRoomType().equals(type)) {
@@ -180,7 +180,7 @@ public class ObjectDB {
     }
 
     public List<Room> getWeatherRooms() {
-        return getRoomsByType("O");
+        return getRoomsByType(RoomType.OUTSIDE);
     }
 
     public List<Room> getRoomsByParentLocation(final int loc) {

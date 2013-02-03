@@ -28,7 +28,7 @@ public class Room extends MUDObject
 	
 	public String exitNames;                                    // formatted string containing the usable exit names
 
-	private String roomType = "N";                              // the type of room (I = Inside, O = Outside, P = Protected, N = None)
+	private RoomType roomType = RoomType.NONE;                   // the type of room (I = Inside, O = Outside, P = Protected, N = None)
 
 	public String music;                                        // the ambient background music for this room
 	public String timeOfDay = "DAY";                            // replace this with an enum with one type per each or a hashmap string, boolean?
@@ -113,7 +113,7 @@ public class Room extends MUDObject
 	 * 
 	 * @param newRoomType
 	 */
-	public void setRoomType(String newRoomType) {
+	public void setRoomType(final RoomType newRoomType) {
 		this.roomType = newRoomType;
 	}
 	
@@ -122,7 +122,7 @@ public class Room extends MUDObject
 	 * 
 	 * @return
 	 */
-	public String getRoomType() {
+	public RoomType getRoomType() {
 		return this.roomType;
 	}
 
@@ -210,7 +210,7 @@ public class Room extends MUDObject
 		output[2] = this.getFlags();                      // room flags
 		output[3] = this.getDesc();                       // room description
 		output[4] = this.getLocation() + "";        // room location (a.k.a parent)
-		output[5] = this.getRoomType();                   // room type
+		output[5] = this.getRoomType().toString().substring(0, 1);                   // room type
 		output[6] = this.x + "," + this.y + "," + this.z; // room dimensions (x,y,z)
 		output[7] = "-1";                        // room terrain
 		output[8] = "";                                   //
