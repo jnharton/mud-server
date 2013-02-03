@@ -1,7 +1,9 @@
 package mud.objects.things;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 
+import mud.ObjectFlag;
 import mud.interfaces.Lockable;
 import mud.interfaces.Storage;
 
@@ -23,7 +25,7 @@ public class Chest extends Thing implements Lockable<Item>, Storage<Item> {
 	}
 	
 	public Chest(String name, String desc) {
-		super(-1, "Public Chest", "T", "A chest", 8);
+		super(-1, "Public Chest", EnumSet.of(ObjectFlag.THING), "A chest", 8);
 		this.key = null;
 		this.isLocked = false;
 		
@@ -97,7 +99,7 @@ public class Chest extends Thing implements Lockable<Item>, Storage<Item> {
 		String[] output = new String[8];
 		output[0] = this.getDBRef() + "";    // chest database reference number
 		output[1] = this.getName();                // chest name
-		output[2] = this.getFlags();               // chest flags
+		output[2] = this.getFlagsAsString();               // chest flags
 		output[3] = this.getDesc();                // chest description
 		output[4] = this.getLocation() + ""; // chest location (a.k.a parent)
 		output[5] = "*";                           // blank field

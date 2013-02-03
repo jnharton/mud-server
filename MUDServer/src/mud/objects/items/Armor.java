@@ -1,6 +1,9 @@
 package mud.objects.items;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
+
+import mud.ObjectFlag;
 
 import mud.interfaces.Equippable;
 import mud.interfaces.Wearable;
@@ -53,7 +56,7 @@ public class Armor extends Item implements Equippable<Armor>, Wearable<Armor>
 	
 	public Armor(int aMod, ArmorType armor)
 	{
-		super(-1, armor.getName().toLowerCase(), "I", "armor", 8);
+		super(-1, armor.getName().toLowerCase(), EnumSet.of(ObjectFlag.ITEM), "armor", 8);
 		this.equippable = true;
 		this.equip_type = ItemType.ARMOR;
 		this.item_type = ItemType.ARMOR;
@@ -64,7 +67,7 @@ public class Armor extends Item implements Equippable<Armor>, Wearable<Armor>
 	
 	public Armor(int dbref, int aMod, ArmorType armor)
 	{
-		super(dbref, armor.getName().toLowerCase(), "I", "armor", 8);
+		super(dbref, armor.getName().toLowerCase(), EnumSet.of(ObjectFlag.ITEM), "armor", 8);
 		this.equippable = true;
 		this.equip_type = ItemType.ARMOR;
 		this.item_type = ItemType.ARMOR;
@@ -88,7 +91,7 @@ public class Armor extends Item implements Equippable<Armor>, Wearable<Armor>
 	 */
 	public Armor(String wName, String wDesc, int wLoc, int wDBREF, int aMod, ArmorType armor, ItemType item)
 	{
-		super(wDBREF, wName, "I", wDesc, wLoc);
+		super(wDBREF, wName, EnumSet.of(ObjectFlag.ITEM), wDesc, wLoc);
 		this.equippable = true;
 		this.equip_type = ItemType.ARMOR;
 		
@@ -124,9 +127,9 @@ public class Armor extends Item implements Equippable<Armor>, Wearable<Armor>
 	public String toDB() {
 		String[] output = new String[8];
 		output[0] = this.getDBRef() + "";          // database reference number
-		output[1] = this.getName();                      // name
-		output[2] = this.getFlags();                     // flags
-		output[3] = this.getDesc();                      // description
+		output[1] = this.getName();                // name
+		output[2] = this.getFlagsAsString();       // flags
+		output[3] = this.getDesc();                // description
 		output[4] = this.getLocation() + "";       // location
 		output[5] = this.item_type.ordinal() + ""; // item type
 		output[6] = this.armor.ordinal() + "";     // armor type

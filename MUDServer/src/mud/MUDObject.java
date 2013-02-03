@@ -20,6 +20,7 @@ package mud;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.EnumSet;
 
 import mud.utils.Utils;
 
@@ -32,20 +33,11 @@ import mud.utils.Utils;
 public abstract class MUDObject {
 	public static MUDServer parent;
 
-	// HashMap that stores existing MUDObject flags (static)
-	protected static HashMap<Character, String> Flags = new HashMap<Character, String>(1, 0.75f) {
-		{
-			put('A', "ADMIN");  put('B', "BUILDER"); put('E', "EXIT"); put('H', "HOUSE");
-			put('N', "NPC");    put('P', "PLAYER");  put('R', "ROOM"); put('W', "WIZARD");
-			put('V', "VENDOR"); put('Z', "ZONE");
-		};
-	};
-	
 	/* object data - persistent */
 	private int dbref = 0;       // database reference number (an index of sorts), private so nothing can change it
 	protected String name = "";  // object name
 	protected String desc = "";  // object description
-	protected String flags = ""; // object flags
+	protected EnumSet<ObjectFlag> flags = EnumSet.noneOf(ObjectFlag.class);
 	protected Object locks = ""; // object locks
 	protected int location = 0;  // object location
 	
@@ -77,7 +69,7 @@ public abstract class MUDObject {
 		this.dbref = tempDBRef;
 	}
 
-	public MUDObject(int tempDBRef, String tempName, String tempFlags, String tempDesc, int tempLoc) {
+	public MUDObject(final int tempDBRef, final String tempName, final EnumSet<ObjectFlag> tempFlags, final String tempDesc, final int tempLoc) {
 		this.dbref = tempDBRef;
 		this.name = tempName;
 		this.flags = tempFlags;
@@ -129,34 +121,45 @@ public abstract class MUDObject {
 	 * 
 	 * @return the flags set on the MUDObject (String)
 	 */
-	public String getFlags()
+	public EnumSet<ObjectFlag> getFlags()
 	{
 		return this.flags;
 	}
-	
+
+    public String getFlagsAsString()
+	{
+        final StringBuilder buf = new StringBuilder();
+        for (final ObjectFlag f : flags) {
+            buf.append(f.toString().charAt(0));
+        }
+		return buf.toString();
+	}
+
 	/**
 	 * Set the flags set on the MUDObject
 	 * 
 	 * @param tempFlags the new flags for the MUDObject (String)
 	 */
-	public void setFlags(String tempFlags)
+	public void setFlags(final EnumSet<ObjectFlag> tempFlags)
 	{
-		if (tempFlags.contains("!")) {
-			String remove = tempFlags.replace("!","");
-			if (remove.length() > 1) {
-				for (int f = 0; f < tempFlags.length(); f++) {
-					this.flags = this.flags.replace(remove.subSequence(f, f+1), "");
-				}
-			}
-			else {
-				this.flags = this.flags.replace(remove, "");
-			}
-		}
-		else {
-			// Set the new flag string (need to fix this so flags
-			// are always inserted in a particular order
-			this.flags = this.flags + tempFlags;
-		}
+        this.flags = tempFlags;
+	}
+
+	public void setFlags(final String str)
+	{
+        this.flags.clear();
+        for (final Character ch : str.toCharArray()) {
+            this.flags.add(ObjectFlag.fromLetter(ch));
+        }
+	}
+
+	public void removeFlags(final String str)
+	{
+        for (Character ch : str.toCharArray()) {
+            if (!ch.equals('!')) {
+                this.flags.remove(ObjectFlag.fromLetter(ch));
+            }
+        }
 	}
 
 	/**
@@ -327,4 +330,5 @@ public abstract class MUDObject {
 	public abstract String toDB();
 	
 	public abstract String toJSON();
+
 }

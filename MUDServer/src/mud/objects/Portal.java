@@ -212,7 +212,7 @@ public class Portal extends Exit {
 		String[] output = new String[8];
 		output[0] = this.getDBRef() + "";    // portal database reference number
 		output[1] = this.getName();                // portal name
-		output[2] = this.getFlags();               // portal flags
+		output[2] = this.getFlagsAsString();               // portal flags
 		output[3] = this.getDesc();                // portal description
 		output[4] = this.getLocation() + ""; // portal location (a.k.a source)
 		if (this.type == PortalType.STD) {

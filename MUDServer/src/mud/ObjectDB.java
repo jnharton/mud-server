@@ -83,10 +83,11 @@ public class ObjectDB {
         Arrays.fill(counts, 0);
 
         for (final MUDObject obj : objsByName.values()) {
-            final String flags = obj.getFlags();
-            for (int i = 0; i < letters.length; i++) {
-                if (flags.contains(letters[i])) {
-                    counts[i] += 1;
+            for (final ObjectFlag f : obj.getFlags()) {
+                for (int i = 0; i < letters.length; i++) {
+                    if (f.toString().startsWith(letters[i])) {
+                        counts[i] += 1;
+                    }
                 }
             }
         }

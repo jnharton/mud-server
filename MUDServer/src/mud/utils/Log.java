@@ -90,13 +90,14 @@ public class Log
 				this.file = new File(DATA_DIR + "logs/" + this.filename);
 				this.output = new PrintWriter(file);
 			}
-			catch(FileNotFoundException fnfe) {
+			catch (FileNotFoundException fnfe) {
 				try {
 					this.file.createNewFile();
 					this.output = new PrintWriter(file);
 					
 				}
 				catch (IOException e) {
+                    System.out.println("Bath path: " + file);
 					e.printStackTrace();
 				}
 			}

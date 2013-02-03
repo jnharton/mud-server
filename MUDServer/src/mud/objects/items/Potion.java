@@ -2,8 +2,10 @@ package mud.objects.items;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.EnumSet;
 
 import mud.Effect;
+import mud.ObjectFlag;
 
 import mud.interfaces.Stackable;
 import mud.interfaces.Usable;
@@ -42,7 +44,7 @@ public class Potion extends Item implements Stackable<Potion>, Usable<Potion> {
 	//private static double weight = 0.5;
 
 	public Potion() {
-		super(-1, "Potion", "I", "An empty glass potion bottle.", 8);
+		super(-1, "Potion", EnumSet.of(ObjectFlag.ITEM), "An empty glass potion bottle.", 8);
 		this.item_type = ItemType.POTION;
 		this.drinkable = 1;
 		this.spell = null;
@@ -61,7 +63,7 @@ public class Potion extends Item implements Stackable<Potion>, Usable<Potion> {
 	}*/
 	
 	public Potion(Effect effect) {
-		super(-1, "Potion", "I", "A potion of " + effect.getName(), 8);
+		super(-1, "Potion", EnumSet.of(ObjectFlag.ITEM), "A potion of " + effect.getName(), 8);
 		
 		this.item_type = ItemType.POTION;
 		this.drinkable = 1;
@@ -73,7 +75,7 @@ public class Potion extends Item implements Stackable<Potion>, Usable<Potion> {
 	}
 
 	public Potion(Spell spell) {
-		super(-1, "Potion", "I", "A potion of " + spell.name, 8);
+		super(-1, "Potion", EnumSet.of(ObjectFlag.ITEM), "A potion of " + spell.name, 8);
 		
 		this.item_type = ItemType.POTION;
 		this.drinkable = 1;
@@ -102,7 +104,7 @@ public class Potion extends Item implements Stackable<Potion>, Usable<Potion> {
 	 * @param stack_size
 	 * @param spellName
 	 */
-	public Potion(int tempDBRef, String tempName, String tempFlags, String tempDesc, int tempLoc, String s) {
+	public Potion(int tempDBRef, String tempName, final EnumSet<ObjectFlag> tempFlags, String tempDesc, int tempLoc, String s) {
 		super(tempDBRef);
 		
 		this.name = tempName;
@@ -211,7 +213,7 @@ public class Potion extends Item implements Stackable<Potion>, Usable<Potion> {
 		String[] output = new String[8];
 		output[0] = this.getDBRef() + "";          // potion database reference number
 		output[1] = this.getName();                      // potion name
-		output[2] = this.getFlags();                     // potion flags
+		output[2] = this.getFlagsAsString();                     // potion flags
 		output[3] = this.getDesc();                      // potion description
 		output[4] = this.getLocation() + "";       // potion location
 		output[5] = this.item_type.ordinal() + ""; // item type

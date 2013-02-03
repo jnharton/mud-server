@@ -2,8 +2,10 @@ package mud.objects.items;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.EnumSet;
 
 import mud.Effect;
+import mud.ObjectFlag;
 
 import mud.interfaces.Equippable;
 import mud.interfaces.Usable;
@@ -42,7 +44,7 @@ public class Clothing extends Item implements Equippable<Clothing>, Usable<Cloth
 
 	public Clothing(String name, int cMod, ClothingType cType, double cWeight)
 	{
-		super(-1, name, "I", "<TESTING>", 8);
+		super(-1, name, EnumSet.of(ObjectFlag.ITEM), "<TESTING>", 8);
 		this.equippable = true;
 		this.equip_type = ItemType.CLOTHING; // the type of equipment it is
 		this.item_type = ItemType.CLOTHING;
@@ -67,7 +69,7 @@ public class Clothing extends Item implements Equippable<Clothing>, Usable<Cloth
 	 * @param spellName
 	 */
 	public Clothing(String tempName, String tempDesc, int tempLoc, int tempDBREF, int cMod, ClothingType cType) {
-		super(-1, tempName, "I", tempDesc, tempLoc);
+		super(-1, tempName, EnumSet.of(ObjectFlag.ITEM), tempDesc, tempLoc);
 		this.equippable = true;
 		this.equip_type = ItemType.CLOTHING;
 		this.item_type = ItemType.CLOTHING;
@@ -122,7 +124,7 @@ public class Clothing extends Item implements Equippable<Clothing>, Usable<Cloth
 		String[] output = new String[8];
 		output[0] = this.getDBRef() + "";          // clothing database reference number
 		output[1] = this.getName();                      // clothing name
-		output[2] = this.getFlags();                     // clothing flags
+		output[2] = this.getFlagsAsString();                     // clothing flags
 		output[3] = this.getDesc();                      // clothing description
 		output[4] = this.getLocation() + "";       // clothing location (a.k.a parent)
 		output[5] = this.item_type.ordinal() + ""; // item type

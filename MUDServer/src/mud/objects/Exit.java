@@ -3,8 +3,12 @@ package mud.objects;
 import java.util.ArrayList;
 
 import mud.MUDObject;
+import mud.ObjectFlag;
+
 import mud.interfaces.Lockable;
 import mud.utils.Utils;
+
+import java.util.EnumSet;
 
 /**
  * Exit Class
@@ -33,11 +37,11 @@ public class Exit extends MUDObject implements Lockable<Exit>
 	
 	// empty default constructor for subclasses
 	public Exit() {
-		this.flags = "E";
+		this.flags = EnumSet.of(ObjectFlag.EXIT);
 	}
 	
 	public Exit(ExitType eType) {
-		this.flags = "E";
+		this.flags = EnumSet.of(ObjectFlag.EXIT);
 		this.eType = eType;
 	}
 	
@@ -47,7 +51,7 @@ public class Exit extends MUDObject implements Lockable<Exit>
 		// Set the description to the default
 		this.desc = "You see nothing.";
 		// Set the flags
-		this.flags = "E";
+		this.flags = EnumSet.of(ObjectFlag.EXIT);
 		// Set the locks
 		this.locks = "";
 		// Set the location
@@ -63,7 +67,7 @@ public class Exit extends MUDObject implements Lockable<Exit>
 	
 	// Object Loading Constructor
 	// Name, Flags, Description, DBRef #, Location of exit (DBRef #), destination of exit (DBRef #)
-	public Exit(int tempDBRef, String tempName, String tempFlags, String tempDesc, int tempLoc, int tempDestination)
+	public Exit(int tempDBRef, String tempName, final EnumSet<ObjectFlag> flagsNotUsed, String tempDesc, int tempLoc, int tempDestination)
 	{
 		// Set the dbref (database reference)
 		super(tempDBRef);
@@ -72,7 +76,7 @@ public class Exit extends MUDObject implements Lockable<Exit>
 		// Set the description to the default
 		this.desc = "You see nothing.";
 		// Set the flags
-		this.flags = "E";
+		this.flags = EnumSet.of(ObjectFlag.EXIT);;
 		// Set the locks
 		this.locks = "";
 		// Set the location
@@ -137,7 +141,7 @@ public class Exit extends MUDObject implements Lockable<Exit>
 		String[] output = new String[7];
 		output[0] = this.getDBRef() + "";     // exit database reference number
 		output[1] = this.getName();                 // exit name
-		output[2] = this.getFlags();                // exit flags
+		output[2] = this.getFlagsAsString();                // exit flags
 		output[3] = this.getDesc();                 // exit description
 		output[4] = this.getLocation() + "";  // exit location (a.k.a source)
 		output[5] = this.getDest() + "";      // exit destination

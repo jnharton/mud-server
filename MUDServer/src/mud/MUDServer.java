@@ -61,6 +61,7 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.ConcurrentModificationException;
+import java.util.EnumSet;
 import java.util.GregorianCalendar;
 import java.util.Hashtable;
 import java.util.LinkedHashMap;
@@ -238,7 +239,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 	private String helpDB = DATA_DIR + "help\\index.txt";          // index file (help)
 
 	// Default Player Data
-	private final String start_flags = "P";                       // default flag string
+	private final EnumSet<ObjectFlag> startFlags = EnumSet.of(ObjectFlag.PLAYER);                       // default flag string
 	private final String start_status = "NEW";                    // default status string
 	private final String start_desc = "There is nothing to see."; // default desc string
 	private final Integer start_room = 9;                         // default starting room
@@ -296,7 +297,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 
 	// Arrays
 	private String[] spells;        // string array of spell info
-	private String[] errors;        // string array into which existing error messages file is loaded
 	private String[] help;          // string array of help file filenames
 
 	// ArrayList(s)
@@ -633,26 +633,19 @@ public class MUDServer implements MUDServerI, LoggerI {
 		// wise to implement configurable auto db-saving here
 		//
 
-		// Error Messages Files (errorsDB)
-		this.errors = Utils.loadStrings(errorDB);
-		// Help Files (helpDB)
-		this.help = Utils.loadStrings(helpDB);
 		// Spell Files (spellDB)
 		this.spells = Utils.loadStrings(spellDB);
 
 		// error message hashmap loading
-		for (int err = 0; err < this.errors.length; err++)
-		{
-			if (this.errors[err] != null) {
-				String[] working = this.errors[err].split(":");
-				//System.out.println(working);
-				if (working.length >= 2)
-				{
-					debug("Error(number): " + working[0]);
-					debug("Error(message): " + working[1]);
-					this.Errors.put(Integer.parseInt(working[0]), working[1]);
-				}
-			}
+		final String[] errors = Utils.loadStrings(errorDB);
+        for (final String e : errors)
+        {
+            final String[] working = e.split(":");
+            if (working.length >= 2) {
+                debug("Error(number): " + working[0]);
+                debug("Error(message): " + working[1]);
+                this.Errors.put(Integer.parseInt(working[0]), working[1]);
+            }
 		}
 
 		// load spells
@@ -695,17 +688,12 @@ public class MUDServer implements MUDServerI, LoggerI {
 
 		// help file loading
 		System.out.print("Loading Help Files... ");
-		try {
-			for (final String helpFileName : this.help)
-			{
-				if (helpFileName != null) {
-					String[] helpfile = Utils.loadStrings(this.HELP_DIR + helpFileName);
-					helpMap.put(helpfile[0], helpfile);
-				}
-			}
-			System.out.println("Help Files Loaded!");
-		}
-		catch(NullPointerException npe) { System.out.println("NullPointerException in helpfile loading."); }
+        for (final String helpFileName : Utils.loadStrings(helpDB))
+        {
+            final String[] helpfile = Utils.loadStrings(this.HELP_DIR + helpFileName);
+            helpMap.put(helpfile[0], helpfile);
+        }
+        System.out.println("Help Files Loaded!");
 
 		// Set Up Colors
 
@@ -3031,14 +3019,14 @@ public class MUDServer implements MUDServerI, LoggerI {
 		// NOTE: my problem is related to guest not being findable somehow, all this needs a major revamp
 		if ((user.toLowerCase().equals("guest")) && (pass.toLowerCase().equals("guest"))) {
 			if (guest_users == 1) {
-				final Player player = new Player(-1, "Guest" + guests, "PG", "A guest player.", WELCOME_ROOM, "", Utils.hash("password"), "OOC", new Integer[] { 0, 0, 0, 0, 0, 0 }, new Integer[] { 0, 0, 0, 0 });
+				final Player player = new Player(-1, "Guest" + guests, EnumSet.of(ObjectFlag.PLAYER, ObjectFlag.GUEST), "A guest player.", WELCOME_ROOM, "", Utils.hash("password"), "OOC", new Integer[] { 0, 0, 0, 0, 0, 0 }, new Integer[] { 0, 0, 0, 0 });
                 objectDB.addAsNew(player);
 				init_conn(player, client, false);
 				guests++;
 			}
 		}
 		else if (user.toLowerCase().equals("new")) {
-			final Player player = new Player(-1, "randomName", "P", "New player.", WELCOME_ROOM, "", Utils.hash("randomPass"), "NEW", new Integer[] { 0, 0, 0, 0 }, new Integer[] { 0, 0, 0, 0, 0, 0 });
+			final Player player = new Player(-1, "randomName", startFlags.clone(), "New player.", WELCOME_ROOM, "", Utils.hash("randomPass"), "NEW", new Integer[] { 0, 0, 0, 0 }, new Integer[] { 0, 0, 0, 0, 0, 0 });
             objectDB.addAsNew(player);
 			init_conn(player, client, false);
 		}
@@ -3258,7 +3246,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 		if (!objectDB.hasName(user) && validateName(user))
 		{
 			// create a new player object for the new playerm the "" is an empty title, which is not currently persisted
-			final Player player = new Player(-1, user, start_flags, start_desc, start_room, "", Utils.hash(pass), start_status, start_stats, start_money);
+			final Player player = new Player(-1, user, startFlags.clone(), start_desc, start_room, "", Utils.hash(pass), start_status, start_stats, start_money);
 			objectDB.addAsNew(player);
 
 			String mail[];        // create the mailbox
@@ -4103,11 +4091,11 @@ public class MUDServer implements MUDServerI, LoggerI {
 			if (args[1].contains("!")) {
 				send("Removing sFlag(s)", client);
 				if (args[0].equals("me")) {
-					player.setFlags(args[1]);
+					player.removeFlags(args[1]);
 				}
 				else if (args[0].equals("here")) {
 					room = getRoom(client);
-					room.setFlags(args[1]);
+					room.removeFlags(args[1]);
 					send(room.getName() + " flagged " + Flags.get(args[1].charAt(0)), client);
 				}
 				else {
@@ -4140,17 +4128,8 @@ public class MUDServer implements MUDServerI, LoggerI {
 	 */
 	private void cmd_flags(final String arg, final Client client) {
 		final MUDObject m = getObject(arg);
-
 		client.write("Flags: ");
-
-		String flags = m.getFlags();
-
-		for (int i = 0; i < flags.length(); i++) {
-			client.write(Flags.get(flags.charAt(i)));
-			if (i < flags.length() - 1) {
-				client.write(" ");
-			}
-		}
+		client.write(ObjectFlag.toInitString(m.getFlags()));
 	}
 	
 	/**
@@ -8401,7 +8380,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 		debug("Description: " + oDesc);
 		debug("Location: " + oLocation);
 
-		Item item = new Item(oDBRef, oName, oFlags, oDesc, oLocation);
+		Item item = new Item(oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), oDesc, oLocation);
 
 		item.setItemType(itemType);
 
@@ -8720,7 +8699,7 @@ public class MUDServer implements MUDServerI, LoggerI {
         sessions.remove(toRemove);
 
         // if player is a guest
-        if ( player.getFlags().charAt(0) == 'G') {
+        if (player.getFlags().contains(ObjectFlag.GUEST)) {
             // remove from database
             objectDB.set( player.getDBRef(), new NullObject( player.getDBRef() ) );  // replace db entry with NULLObjet
         }
@@ -9644,18 +9623,10 @@ public class MUDServer implements MUDServerI, LoggerI {
 	 */
 	public void examine(final MUDObject m, final Client client) {
 		if ( !(m instanceof NullObject) ) {
-			String temp = "";
-
-			for (int f = 1; f < m.getFlags().length(); f++) {
-				if (f < m.getFlags().length() - 1) { temp = temp + Flags.get(m.getFlags().charAt(f)) + " "; }
-				else { temp = temp + Flags.get(m.getFlags().charAt(f)); }
-			}
-
 			send(m.getName() + "(#" + m.getDBRef() + ")", client);
-			debug("Temp: " + temp);
 			debug("Flags: " + m.getFlags());
-			debug(m.getFlags().charAt(0));
-			send("Type: " + Flags.get(m.getFlags().charAt(0)) + " Flags: " + temp, client);
+			debug(ObjectFlag.firstInit(m.getFlags()));
+            send("Type: " + ObjectFlag.firstInit(m.getFlags()) + " Flags: " + ObjectFlag.toInitString(m.getFlags()), client);
 			if (m instanceof Item) {
 				send("Item Type: " + ((Item) m).item_type.toString(), client);
 			}
@@ -9674,18 +9645,8 @@ public class MUDServer implements MUDServerI, LoggerI {
 	 * @param client
 	 */
 	public void examine(final Room room, final Client client) {
-		String temp = "";
-
-		for (int f = 1; f < room.getFlags().length(); f++) {
-			if (f < room.getFlags().length()) {
-				temp = temp + Flags.get(room.getFlags().charAt(f)) + " ";
-			}
-			else {
-				temp = temp + Flags.get(room.getFlags().charAt(f));
-			}
-		}
 		send(room.getName() + "(#" + room.getDBRef() + ")", client);
-		send("Type: " + Flags.get(room.getFlags().charAt(0)) + " Flags: " + temp + " Room Type: " + room.getRoomType(), client);
+		send("Type: " + ObjectFlag.firstInit(room.getFlags()) + " Flags: " + ObjectFlag.toInitString(room.getFlags()), client);
 		send("Description: " + room.getDesc(), client);
 		send("Location: " + getRoom(room.getLocation()).getName() + "(#" + room.getLocation() + ")", client);
 
@@ -9712,17 +9673,8 @@ public class MUDServer implements MUDServerI, LoggerI {
 	 * @param client
 	 */
 	public void examine(final Player player, final Client client) {
-		String temp = "";
-		for (int f = 1; f < player.getFlags().length(); f++) {
-			if (f < player.getFlags().length()) {
-				temp = temp + Flags.get(player.getFlags().charAt(f)) + " ";
-			}
-			else {
-				temp = temp + Flags.get(player.getFlags().charAt(f));
-			}
-		}
 		send(player.name + "(#" + player.getDBRef() + ")", client);
-		send("Type: " + Flags.get(player.getFlags().charAt(0)) + " Flags: " + temp, client);
+		send("Type: " + ObjectFlag.firstInit(player.getFlags()) + " Flags: " + ObjectFlag.toInitString(player.getFlags()), client);
 		send("Description: " + player.getDesc(), client);
 		send("Location: " + getRoom(player.getLocation()).getName() + "(#" + player.getLocation() + ")", client);
 
@@ -9768,25 +9720,15 @@ public class MUDServer implements MUDServerI, LoggerI {
 	}
 
 	public void examine(final Exit exit, final Client client) {
-		String temp = "";
-		for (int f = 1; f < exit.getFlags().length(); f++) {
-			if (f < exit.getFlags().length() - 1) { temp = temp + Flags.get(exit.getFlags().charAt(f)) + " "; }
-			else { temp = temp + Flags.get(exit.getFlags().charAt(f)); }
-		}
 		send(exit.getName() + "(#" + exit.getDBRef() + ")", client);
-		send("Type: " + Flags.get(exit.getFlags().charAt(0)) + " Flags: " + temp, client);
+		send("Type: " + ObjectFlag.firstInit(exit.getFlags()) + " Flags: " + ObjectFlag.toInitString(exit.getFlags()), client);
 		send(" Exit Type: " + exit.getExitType().getName(), client);
 		send("Description: " + exit.getDesc(), client);
 	}
 	
 	public void examine(Thing thing, Client client) {
-		String temp = "";
-		for (int f = 1; f < thing.getFlags().length(); f++) {
-			if (f < thing.getFlags().length() - 1) { temp = temp + Flags.get(thing.getFlags().charAt(f)) + " "; }
-			else { temp = temp + Flags.get(thing.getFlags().charAt(f)); }
-		}
 		send(thing.name + "(#" + thing.getDBRef() + ")", client);
-		send("Type: " + Flags.get(thing.flags.charAt(0)) + " Flags: " + temp, client);
+		send("Type: " + ObjectFlag.firstInit(thing.getFlags()) + " Flags: " + ObjectFlag.toInitString(thing.getFlags()), client);
 		send("Description: " + thing.getDesc(), client);
 	}
 
@@ -10739,7 +10681,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 		Integer[] oStats = Utils.stringsToIntegers(os);
 		Integer[] oMoney = Utils.stringsToIntegers(om);
 
-		Player player = new Player(oDBRef, oName, oFlags, oDesc, oLocation, "", oPassword, "IC", oStats, oMoney);
+		Player player = new Player(oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), oDesc, oLocation, "", oPassword, "IC", oStats, oMoney);
 
 		/* Set Player Permissions */
         player.setAccess(Utils.toInt(attr[8], USER));
@@ -10783,7 +10725,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 	{
 		// flags are defined statically here, because I'd need to take in more variables and in no
 		// case should this create anything other than a standard room which has 'RS' for flags
-		final Room room = new Room(-1, roomName, "RS", "You see nothing.", roomParent);
+		final Room room = new Room(-1, roomName, EnumSet.of(ObjectFlag.ROOM, ObjectFlag.SILENT), "You see nothing.", roomParent);
 
 		// add rooms to database (main)
         objectDB.addAsNew(room);

@@ -1,8 +1,13 @@
 package mud.objects;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
+
+import mud.ObjectFlag;
 import mud.MUDObject;
+
 //import mud.miscellaneous.Atmosphere;
+
 import mud.objects.Thing;
 import mud.utils.Utils;
 import mud.weather.Weather;
@@ -48,7 +53,7 @@ public class Room extends MUDObject
 	 * Construct a room using only default parameter
 	 */
 	public Room() {
-		this.flags = "RS";
+		this.flags = EnumSet.of(ObjectFlag.ROOM, ObjectFlag.SILENT);
 		this.locks = "";            // Set the locks
 		this.location = 0;          // Set the location
 		
@@ -56,14 +61,14 @@ public class Room extends MUDObject
 	}
 
 	// misc note: parent == location
-	public Room(int tempDBREF, String tempName, String tempFlags, String tempDesc, int tempParent)
+	public Room(int tempDBREF, String tempName, final EnumSet<ObjectFlag> tempFlagsNotUsed, String tempDesc, int tempParent)
 	{
 		super(tempDBREF);
 		//this.dbref = tempDBREF;     // Set the dbref (database reference)
 		this.name = tempName;       // Set the name
 		this.desc = tempDesc;       // Set the description to the default
 		this.parent = tempParent;   // Set the parent room
-		this.flags = "RS";          // Set the flags
+		this.flags = EnumSet.of(ObjectFlag.ROOM, ObjectFlag.SILENT);
 		this.locks = "";            // Set the locks
 		this.location = tempParent; // Set the location
 		
@@ -207,7 +212,7 @@ public class Room extends MUDObject
 		String[] output = new String[9];
 		output[0] = this.getDBRef() + "";           // room database reference number
 		output[1] = this.getName();                       // room name
-		output[2] = this.getFlags();                      // room flags
+		output[2] = this.getFlagsAsString();                      // room flags
 		output[3] = this.getDesc();                       // room description
 		output[4] = this.getLocation() + "";        // room location (a.k.a parent)
 		output[5] = this.getRoomType().toString().substring(0, 1);                   // room type

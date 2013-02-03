@@ -1,5 +1,8 @@
 package mud.objects;
 
+import java.util.EnumSet;
+
+import mud.ObjectFlag;
 import mud.Currency;
 import mud.net.Client;
 import mud.utils.Bank;
@@ -8,8 +11,10 @@ public class Banker extends NPC implements mud.interfaces.Banker {
 	
 	private Bank bank;
 	
-	public Banker(int tempDBRef, String tempName, String tempPass, String tempFlags, String tempDesc, String tempTitle, String tempPStatus, int tempLoc, String[] tempMoney) {
-		super(tempDBRef, tempName, tempPass, tempFlags, tempDesc, tempTitle, tempPStatus, tempLoc, tempMoney);
+	public Banker(final int tempDBRef, final String tempName, final String tempPass, final EnumSet<ObjectFlag> tempFlags, 
+            final String tempDesc, final String tempTitle, final String tempPStatus, final int tempLoc, final String[] tempMoney) {
+
+        super(tempDBRef, tempName, tempPass, tempFlags, tempDesc, tempTitle, tempPStatus, tempLoc, tempMoney);
 	}
 	
 	@Override

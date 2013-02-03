@@ -41,7 +41,7 @@ public class ObjectLoader {
                 log.debug("Location: " + oLocation);*/
 
                 if (oFlags.indexOf("C") == 0) {
-                    final Creature cre = new Creature(oDBRef, oName, oFlags, oDesc, oLocation);
+                    final Creature cre = new Creature(oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), oDesc, oLocation);
 
                     // set race
                     try {
@@ -63,7 +63,7 @@ public class ObjectLoader {
                     final Integer[] oStats = Utils.stringsToIntegers(attr[6].split(",")); // 6 - stats
                     final Integer[] oMoney = Utils.stringsToIntegers(attr[7].split(",")); // 7 - money
 
-                    final Player player = new Player(oDBRef, oName, oFlags, oDesc, oLocation, "", oPassword, "IC", oStats, oMoney);
+                    final Player player = new Player(oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), oDesc, oLocation, "", oPassword, "IC", oStats, oMoney);
                     final int USER = 0; // stole this constant from MUDServer.
                     player.setAccess(Utils.toInt(attr[8], USER));
 
@@ -91,7 +91,7 @@ public class ObjectLoader {
                     objectDB.addPlayer(player);
                 }
                 else if (oFlags.equals("WMV")) {
-                    WeaponMerchant wm = new WeaponMerchant(parent, oDBRef, oName, oFlags, "A weapon merchant.", "Merchant", "VEN", 161, new String[]{"1000", "1000", "1000", "1000"} );
+                    WeaponMerchant wm = new WeaponMerchant(parent, oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), "A weapon merchant.", "Merchant", "VEN", 161, new String[]{"1000", "1000", "1000", "1000"} );
 
                     log.debug("log.debug (db entry): " + wm.toDB(), 2);
                     log.debug("Weapon Merchant", 2);
@@ -100,7 +100,7 @@ public class ObjectLoader {
                     objectDB.addNPC(wm);
                 }
                 else if (oFlags.equals("AMV")) {
-                    ArmorMerchant am = new ArmorMerchant(parent, oDBRef, oName, oFlags, "An armor merchant.", "Merchant", "VEN", 161, new String[]{"1000", "1000", "1000", "1000"} );
+                    ArmorMerchant am = new ArmorMerchant(parent, oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), "An armor merchant.", "Merchant", "VEN", 161, new String[]{"1000", "1000", "1000", "1000"} );
 
                     log.debug("log.debug (db entry): " + am.toDB(), 2);
                     log.debug("Armor Merchant", 2);
@@ -109,7 +109,7 @@ public class ObjectLoader {
                     objectDB.addNPC(am);
                 }
                 else if (oFlags.equals("IKV") ) {
-                    Innkeeper ik = new Innkeeper(parent, oDBRef, oName, oFlags, oDesc, "Merchant", "VEN", oLocation, new String[]{"1000", "1000", "1000", "1000"} );
+                    Innkeeper ik = new Innkeeper(parent, oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), oDesc, "Merchant", "VEN", oLocation, new String[]{"1000", "1000", "1000", "1000"} );
 
                     log.debug("log.debug (db entry): " + ik.toDB(), 2);
                     log.debug("Innkeeper", 2);
@@ -127,7 +127,7 @@ public class ObjectLoader {
                     if (et == ExitType.STD) {
                         int oDest = Integer.parseInt(attr[5]);
 
-                        Exit exit = new Exit(oDBRef, oName, oFlags, oDesc, oLocation, oDest);
+                        Exit exit = new Exit(oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), oDesc, oLocation, oDest);
                         exit.setExitType(et);
 
                         log.debug("log.debug (db entry): " + exit.toDB(), 2);
@@ -190,8 +190,7 @@ public class ObjectLoader {
                 {
                     String roomType = attr[5];
 
-                    Room room;
-                    room = new Room(oDBRef, oName, oFlags, oDesc, oLocation);
+                    final Room room = new Room(oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), oDesc, oLocation);
 
 
                     log.debug("log.debug (db entry): " + room.toDB(), 2);
@@ -208,7 +207,7 @@ public class ObjectLoader {
                 //Thing(String tempName, String tempFlags, String tempDesc, int tempLoc, int tempDBREF)
                 else if (oFlags.indexOf("T") != -1)
                 {
-                    final Thing thing = new Thing(oDBRef, oName, oFlags, oDesc, oLocation);
+                    final Thing thing = new Thing(oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), oDesc, oLocation);
 
                     log.debug("log.debug (db entry): " + thing.toDB(), 2);
 
@@ -223,7 +222,7 @@ public class ObjectLoader {
                         int clothingType = Integer.parseInt(attr[6]);
                         int mod = Integer.parseInt(attr[7]);
 
-                        Clothing clothing = new Clothing(oName, oDesc, oLocation, oDBRef, mod, ClothingType.values()[clothingType]);
+                        final Clothing clothing = new Clothing(oName, oDesc, oLocation, oDBRef, mod, ClothingType.values()[clothingType]);
                         clothing.item_type = it;
 
                         objectDB.add(clothing);
@@ -310,10 +309,10 @@ public class ObjectLoader {
                          * of a stack of potions correctly
                          */
 
-                        Potion potion = new Potion(oDBRef, oName, "I", oDesc, oLocation, sn);
+                        Potion potion = new Potion(oDBRef, oName, EnumSet.of(ObjectFlag.ITEM), oDesc, oLocation, sn);
 
                         for (int i = 1; i < stack_size; i++) {
-                            Potion potion1 = new Potion(oDBRef, oName, "I", oDesc, oLocation, sn);
+                            Potion potion1 = new Potion(oDBRef, oName, EnumSet.of(ObjectFlag.ITEM), oDesc, oLocation, sn);
                             potion.item_type = ItemType.POTION;
 
                             potion.stack(potion1);
@@ -361,7 +360,7 @@ public class ObjectLoader {
 
 		String[] attr = npcData.split("#");
 
-		Integer oDBRef = 0, oLocation = 0;
+		int oDBRef = 0, oLocation = 0;
 		String oName = "", oFlags = "", oDesc = "";
 		String[] os, om;
 
@@ -388,7 +387,7 @@ public class ObjectLoader {
 		Integer[] oMoney = Utils.stringsToIntegers(om);
 
 
-		NPC npc = new NPC(oDBRef, oName, oFlags, oDesc, oLocation, "", "IC", oStats, oMoney); 
+        NPC npc = new NPC(oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), oDesc, oLocation, "", "IC", oStats, oMoney);
 
 		// Set NPC Race
 		try {

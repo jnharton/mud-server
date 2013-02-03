@@ -1,6 +1,9 @@
 package mud.objects.items;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
+
+import mud.ObjectFlag;
 
 import mud.interfaces.Equippable;
 import mud.interfaces.Wieldable;
@@ -21,7 +24,7 @@ public class Weapon extends Item implements Equippable<Weapon>, Wieldable<Weapon
 	Handed handed;
 
 	public Weapon() {
-		super(-1, "Sword", "I", "A nice, shiny steel longsword.", 8);
+		super(-1, "Sword", EnumSet.of(ObjectFlag.ITEM), "A nice, shiny steel longsword.", 8);
 		this.equippable = true;
 		this.equip_type = ItemType.WEAPON;  // the type of equipment it is
 		this.item_type = ItemType.WEAPON;
@@ -44,7 +47,7 @@ public class Weapon extends Item implements Equippable<Weapon>, Wieldable<Weapon
 
 	public Weapon(int wMod, Handed handed, WeaponType wType, double wWeight)
 	{
-		super(-1, "Sword", "I", "A nice, shiny steel longsword.", 8);
+		super(-1, "Sword", EnumSet.of(ObjectFlag.ITEM), "A nice, shiny steel longsword.", 8);
 		this.equippable = true;
 		this.equip_type = ItemType.WEAPON; // the type of equipment it is
 		this.item_type = ItemType.WEAPON;
@@ -56,7 +59,7 @@ public class Weapon extends Item implements Equippable<Weapon>, Wieldable<Weapon
 	
 	public Weapon(String wName, String wDesc, int wMod, Handed handed, WeaponType wType, double wWeight)
 	{
-		super(-1, wName, "I", wDesc, -1);
+		super(-1, wName, EnumSet.of(ObjectFlag.ITEM), wDesc, -1);
 		this.equippable = true;
 		this.equip_type = ItemType.WEAPON; // the type of equipment it is
 		this.item_type = ItemType.WEAPON;
@@ -83,7 +86,7 @@ public class Weapon extends Item implements Equippable<Weapon>, Wieldable<Weapon
 	 */
 	public Weapon(String wName, String wDesc, int wLoc, int wDBREF, int wMod, Handed handed, WeaponType wType, double wWeight)
 	{
-		super(wDBREF, wName, "I", wDesc, wLoc);
+		super(wDBREF, wName, EnumSet.of(ObjectFlag.ITEM), wDesc, wLoc);
 		this.equippable = true;
 		this.equip_type = ItemType.WEAPON; // the type of equipment it is
 		this.item_type = ItemType.WEAPON;
@@ -136,7 +139,7 @@ public class Weapon extends Item implements Equippable<Weapon>, Wieldable<Weapon
 		String[] output = new String[8];
 		output[0] = this.getDBRef() + "";          // weapon database reference number
 		output[1] = this.getName();                      // weapon name
-		output[2] = this.getFlags();                     // weapon flags
+		output[2] = this.getFlagsAsString();                     // weapon flags
 		output[3] = this.getDesc();                      // weapon description
 		output[4] = this.getLocation() + "";       // weapon location
 		output[5] = this.item_type.ordinal() + ""; // item type

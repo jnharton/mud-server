@@ -2,8 +2,11 @@ package mud.objects;
 
 import mud.MUDObject;
 import mud.Races;
+import mud.ObjectFlag;
 
 import mud.utils.Utils;
+
+import java.util.EnumSet;
 
 /**
  * Creature class
@@ -28,14 +31,14 @@ public class Creature extends MUDObject {
 	public Creature(int dbref, String race, String name, String desc) {
 		super(dbref);
 		this.name = name;
-		this.flags = "C";
+		this.flags = EnumSet.of(ObjectFlag.COMPLEX);
 		this.locks = "";
 		this.desc = desc;
 		this.location = 8;
 	}
 
 	// "normal", but not default, constructor
-	public Creature(int tempDBRef, String tempName, String tempFlags, String tempDesc, int tempLoc) {
+	public Creature(final int tempDBRef, final String tempName, final EnumSet<ObjectFlag> tempFlags, final String tempDesc, final int tempLoc) {
 		super(tempDBRef);
 		this.name = tempName;
 		this.flags = tempFlags;
@@ -62,7 +65,7 @@ public class Creature extends MUDObject {
 		
 		output[0] = this.getDBRef() + "";    // creature database reference number
 		output[1] = this.getName();                // creature name
-		output[2] = this.getFlags();               // creature flags
+		output[2] = this.getFlagsAsString();               // creature flags
 		output[3] = this.getDesc();                // creature description
 		output[4] = this.getLocation() + ""; // creature location
 		output[5] = "*";

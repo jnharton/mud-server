@@ -1,6 +1,9 @@
 package mud.objects.items;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
+
+import mud.ObjectFlag;
 
 import mud.SlotType;
 import mud.interfaces.Editable;
@@ -66,7 +69,7 @@ public class Book extends Item implements Editable {
 	 * @param spellName
 	 */
 	public Book(String tempName, String tempDesc, int tempLoc, int tempDBREF) {
-		super(tempDBREF, tempName, "I", tempDesc, tempLoc);
+		super(tempDBREF, tempName, EnumSet.of(ObjectFlag.ITEM), tempDesc, tempLoc);
 		
 		this.item_type = ItemType.BOOK;
 		this.st = SlotType.NONE;
@@ -154,7 +157,7 @@ public class Book extends Item implements Editable {
 		String[] output = new String[9];
 		output[0] = this.getDBRef() + "";          // book database reference number
 		output[1] = this.getName();                      // book name
-		output[2] = this.getFlags();                     // book flags
+		output[2] = this.getFlagsAsString();                     // book flags
 		output[3] = this.getDesc();                      // book description
 		output[4] = this.getLocation() + "";       // book location
 		output[5] = this.item_type.ordinal() + ""; // item type
