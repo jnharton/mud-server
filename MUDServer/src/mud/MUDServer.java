@@ -3192,6 +3192,7 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 
             // character check
             final Player p = objectDB.getPlayer(user);
+            
             if (p == null || !p.getPass().equals(Utils.hash(pass))) {
                 debug("CONNECT: Fail");
                 send("Either that player does not exist, or has a different password.", client);
@@ -3199,6 +3200,8 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
             }
             
             debug("PASS: Pass"); // report success for password check
+            
+            auth = false;
 
             if (mode == GameMode.NORMAL) {
                 init_conn(p, client, false);    // Open Mode
