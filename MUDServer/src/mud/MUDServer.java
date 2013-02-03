@@ -681,6 +681,7 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 		System.out.println("Database Loaded!");
 
 		objectDB.loadExits(this);  // load exits (post-room loading)
+		
 		if( lookup_caching ) {
 			room_lookup = new Hashtable<String, Integer>(10, 0.75f);
 			room_lookup2 = new Hashtable<Integer, Integer>(10, 0.75f);

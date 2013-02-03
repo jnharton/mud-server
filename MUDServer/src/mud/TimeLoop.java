@@ -42,10 +42,10 @@ public class TimeLoop implements Runnable
     public TimeLoop(final MUDServer server, final int[] DAYS, final int months, final int days, final int hours, final int mins) {
         this.DAYS = DAYS;
         this.server = server;
-        this.minutes = mins; // the initial number of minutes (start time)
-        this.hours = hours;     // the initial number of hours (start time)
-        this.days = days;         // the initial number of days (start day)
-        this.months = months;     // the initial number of months (start month)
+        this.minutes = mins;  // the initial number of minutes (start time)
+        this.hours = hours;   // the initial number of hours (start time)
+        this.days = days;     // the initial number of days (start day)
+        this.months = months; // the initial number of months (start month)
     }
 
     // message sending with specifics needs a loginCheck(client), but it needs to not cause the game to crash

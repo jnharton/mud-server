@@ -343,6 +343,85 @@ public class ObjectLoader {
             }
 		}
 	}
+	
+	/* loadPlayer is probably redundant with loadNPC to some extent and doesn't seem to be used, but just moving
+	 * it to here for now.
+	 * 
+	 * ~jnharton
+	 */
+	
+	/**
+	 * Generate a player from it's database representation
+	 * 
+	 * NOTE: for testing purposes only now, init_conn doesn't go through
+	 * loadObjects, which is pointless when you consider that I only hold onto a copy
+	 * of the objects and it never goes into the player's array.
+	 * 
+	 * NOTE2: meant to solve a problem where I haven't copied the load code into init_conn,
+	 * but want a properly initialized/loaded player for existing characters when they login
+	 * 
+	 * @param playerData
+	 * @return a player object
+	 */
+	public Player loadPlayer(String playerData) {
+
+		String[] attr = playerData.split("#");
+
+		Integer oDBRef = 0, oLocation = 0;
+		String oName = "", oFlags = "", oDesc = "", oPassword = "";
+		String[] os, om;
+
+		oDBRef = Integer.parseInt(attr[0]);    // 0 - player database reference number
+		oName = attr[1];                       // 1 - player name
+		oFlags = attr[2];                      // 2 - player flags
+		oDesc = attr[3];                       // 3 - player description
+		oLocation = Integer.parseInt(attr[4]); // 4 - player location
+
+		oPassword = attr[5];                   // 5 - player password
+		os = attr[6].split(",");               // 6 - player stats
+		om = attr[7].split(",");               // 7 - player money
+		int access;                            // 8 - player permissions
+		int raceNum;                           // 9 - player race number (enum ordinal)
+		int classNum;                          // 10 - player class number (enum ordinal)
+
+		/*debug("Database Reference Number: " + oDBRef);
+		debug("Name: " + oName);
+		debug("Flags: " + oFlags);
+		debug("Description: " + oDesc);
+		debug("Location: " + oLocation);*/
+
+		Integer[] oStats = Utils.stringsToIntegers(os);
+		Integer[] oMoney = Utils.stringsToIntegers(om);
+
+		Player player = new Player(oDBRef, oName, oFlags, oDesc, oLocation, "", oPassword, "IC", oStats, oMoney);
+		
+		final int USER = 0; // stole this constant from MUDServer.
+		
+		/* Set Player Permissions */
+		player.setAccess(Utils.toInt(attr[8], USER));
+
+		/* Set Player Race */
+		try {
+			raceNum = Integer.parseInt(attr[9]);
+			player.setPlayerRace(Races.getRace(raceNum));
+		}
+		catch(NumberFormatException nfe) {
+			nfe.printStackTrace();
+			player.setPlayerRace(Races.NONE);
+		}
+
+		/* Set Player Class */
+		try {
+			classNum = Integer.parseInt(attr[10]);
+			player.setPClass(Classes.getClass(classNum));
+		}
+		catch(NumberFormatException nfe) {
+			nfe.printStackTrace();
+			player.setPClass(Classes.NONE);
+		}
+
+		return player;
+	}
 
 	/**
 	 * Generate a player from it's database representation
