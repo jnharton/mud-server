@@ -30,7 +30,7 @@ public class Container<E extends Item> extends Item implements Storage<E>, Equip
 	private String bottom = "------------------------------";
 
 	public Container() {
-		super(parent.nextDB(), "Container", "I", "A generic container", 4);
+		super(-1, "Container", "I", "A generic container", 4);
 		
 		this.equippable = false;
 		this.equip_type = ItemType.CONTAINER; // the type of equipment it is
@@ -42,8 +42,6 @@ public class Container<E extends Item> extends Item implements Storage<E>, Equip
 		this.full = false;
 		
 		this.contents = new ArrayList<E>(5);
-		
-		parent.nextDB("use");
 	}
 	
 	// initial size

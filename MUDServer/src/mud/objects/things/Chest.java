@@ -23,7 +23,7 @@ public class Chest extends Thing implements Lockable<Item>, Storage<Item> {
 	}
 	
 	public Chest(String name, String desc) {
-		super(parent.nextDB("use"), "Public Chest", "T", "A chest", 8);
+		super(-1, "Public Chest", "T", "A chest", 8);
 		this.key = null;
 		this.isLocked = false;
 		

@@ -1,6 +1,7 @@
 package mud.objects;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 
@@ -236,11 +237,35 @@ public class NPC extends Player
 		this.greeting = newGreeting;
 	}
 	
-	public ArrayList<Quest> getQuestList() {
-		return this.questList;
+	public Quest getQuestFor(final Player player, final int questNum) {
+        if (questNum < 0) {
+            return null;
+        }
+        int foundQuests = -1;
+
+        for (final Quest q : questList) {
+            if ( q.isSuitable(player) ) {
+                foundQuests += 1;
+                if (foundQuests == questNum) {
+                    return q;
+                }
+            }
+        }
+        return null;
 	}
-	
-	public void setQuest(Quest newQuest) {
+
+	public List<Quest> getQuestsFor(final Player player) {
+        final ArrayList<Quest> suitable = new ArrayList<Quest>();
+
+        for (final Quest quest : questList) {
+            if ( quest.isSuitable(player) ) {
+                suitable.add( new Quest( quest ) );	
+            }
+        }
+        return suitable;
+	}
+
+	public void addQuest(Quest newQuest) {
 		this.questList.add(newQuest);
 	}
 	

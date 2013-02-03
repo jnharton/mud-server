@@ -42,7 +42,7 @@ public class Clothing extends Item implements Equippable<Clothing>, Usable<Cloth
 
 	public Clothing(String name, int cMod, ClothingType cType, double cWeight)
 	{
-		super(parent.nextDB(), name, "I", "<TESTING>", 8);
+		super(-1, name, "I", "<TESTING>", 8);
 		this.equippable = true;
 		this.equip_type = ItemType.CLOTHING; // the type of equipment it is
 		this.item_type = ItemType.CLOTHING;
@@ -67,7 +67,7 @@ public class Clothing extends Item implements Equippable<Clothing>, Usable<Cloth
 	 * @param spellName
 	 */
 	public Clothing(String tempName, String tempDesc, int tempLoc, int tempDBREF, int cMod, ClothingType cType) {
-		super(tempDBREF, tempName, "I", tempDesc, tempLoc);
+		super(-1, tempName, "I", tempDesc, tempLoc);
 		this.equippable = true;
 		this.equip_type = ItemType.CLOTHING;
 		this.item_type = ItemType.CLOTHING;

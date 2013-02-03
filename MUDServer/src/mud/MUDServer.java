@@ -56,6 +56,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
@@ -116,7 +117,7 @@ import java.util.regex.Matcher;
  * Last Worked On: 11.2.2012
  **/
 
-public class MUDServer implements MUDServerI {
+public class MUDServer implements MUDServerI, LoggerI {
 	// Libraries
 	// Processing Network Library (a modified version, link?)
 
@@ -192,7 +193,7 @@ public class MUDServer implements MUDServerI {
 	private String motd = "motd.txt";   // Message of The Day file
 
 	// server state settings
-	private int mode = 0;                   // (0=normal: player connect, 1=wizard: wizard connect only, 2=maintenance: maintenance mode)
+	private GameMode mode = GameMode.NORMAL;                   // (0=normal: player connect, 1=wizard: wizard connect only, 2=maintenance: maintenance mode)
 	private int multiplay = 0;              // (0=only one character per account is allowed, 1=infinite connects allowed)
 	private int guest_users = 0;            // (0=guests disallowed, 1=guests allowed)
 	private int debug = 1;                  // (0=off,1=on) Debug: server sends debug messages to the console
@@ -201,10 +202,6 @@ public class MUDServer implements MUDServerI {
 	private int logLevel = 3;               // 
 	private boolean prompt_enabled = false; // show player information bar
 	private boolean lookup_caching = true;  // cache object lookups (true=yes, false=no)
-
-	// update states
-	private boolean update_shops = false;   // is it time to update the shops
-	private boolean update_weather = false; // do we need to run a weather update?
 
 	// Protocols
 	/*
@@ -281,7 +278,6 @@ public class MUDServer implements MUDServerI {
 	public HashMap<Player, Client> tclients = new HashMap<Player, Client>(max_players, 0.75f);  // HashMap to associate Clients to Players (dynamic)
 
 	private HashMap<Zone, Integer> zones = new HashMap<Zone, Integer>(1, 0.75f);                // HashMap that tracks currently "loaded" zones (dynamic)
-	private HashMap<String, Integer> pna = new HashMap<String, Integer>(11, 0.75f);             // HashMap that records the current number of players of a given class (dynamic)
 	private HashMap<Player, Player> DMControlTable = new HashMap<Player, Player>(1, 0.75f);     // HashMap that keeps track of what Players are controlling NPCs (dynamic)
 
 	private HashMap<String, String> displayColors = new HashMap<String, String>(8, 0.75f);      // HashMap specifying particular colors for parts of text (somewhat static)
@@ -311,25 +307,15 @@ public class MUDServer implements MUDServerI {
 	private String[] errors;        // string array into which existing error messages file is loaded
 	private String[] help;          // string array of help file filenames
 
-	// Stacks
-	private Stack<Integer> unusedDBNs; // holds unused database references (ones less than the size of the array), that exist due to "recycled" objects
-
 	// ArrayList(s)
 
 	// Databases/Data
-	private ArrayList<String> main;          // arraylist of all objects as strings (currently mirrors db file structure) -- 11/10/2011
-	private ArrayList<MUDObject> main1;      // ArrayList of all Objects (part of db merge that was in progress)
+    private ObjectDB objectDB = new ObjectDB();
 
 	/*
 	 * I don't want to generate these on the fly and they need to stay 'in sync' so to speak.
 	 */
 	private ArrayList<Player> players;       // ArrayList of Player Objects currently in use
-	private ArrayList<Creature> creatures;   // ArrayList of Creature Objects (all loaded)
-	private ArrayList<NPC> npcs1;            // ArrayList of NPC Objects (all loaded)
-	private ArrayList<Room> rooms1;          // ArrayList of Room Objects (all loaded)
-	private ArrayList<Exit> exits1;          // ArrayList of Exit Objects (all loaded)
-	private ArrayList<Thing> things;         // ArrayList of Thing Objects (all loaded)
-	private ArrayList<Item> items;           // ArrayList of Item Objects (all loaded)
 
 	// Stuff
 	private ArrayList<Spell> spells1;         // ArrayList of Spell Objects (all loaded)
@@ -419,19 +405,12 @@ public class MUDServer implements MUDServerI {
 	private int game_hour = 5;    // 5am
 	private int game_minute = 58; // 55m past 5am
 
-	private String time_of_day = "night";
-	private String celestial_body = "moon";
-	private String cb_location = "high in the sky";
-	private String moon_phase = "full";
-	private int dn = 0; // day/night, day is 1, night is 0
-
 	//Theme Related Variables
 	private String theme = THEME_DIR + "forgotten_realms.txt";                     // theme file to load
 
 	public static int[] DAYS = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 }; // days in each month
 	public static int months = 12;                                                 // months in a year
 	public static String[] month_names = new String[months];
-	private MoonPhase mp = MoonPhase.FULL_MOON;
 	private Seasons season = Seasons.SUMMER; // Possible - Spring, Summer, Autumn, Winter
 
 	private String month_name;
@@ -453,12 +432,7 @@ public class MUDServer implements MUDServerI {
 
 	private int done = 0; // a way of tracking if we're done with a line of telnet input
 
-	private ArrayList<String> authTable = new ArrayList<String>(max_players); // hold database info for player login
-	private HashMap<String, String> authTable1 = new HashMap<String, String>(max_players, 0.75f); // hold database info for player login
-
 	// Lookup/Cache Tables
-	private Hashtable<String, Integer> object_lookup;
-	private Hashtable<String, Integer> exit_lookup;
 	private Hashtable<String, Integer> room_lookup;
 	private Hashtable<Integer, Integer> room_lookup2;
 	private HashMap<String, Integer> spells2 = new HashMap<String, Integer>(1, 0.75f); // HashMap to lookup spells by index using name as key (static)
@@ -659,23 +633,8 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 
 		MUDObject.parent = this; // assign a static reference to the running server (ugly, but allows some flex)
 
-		// initialize main arraylist?
-		this.main1 = new ArrayList<MUDObject>(); // main, live database
-
 		// initialize player array
 		this.players = new ArrayList<Player>(max_players);
-		// initialize creatures array
-		this.creatures = new ArrayList<Creature>();
-		// Initialize the npcs array list (where NPC objects are stored)
-		this.npcs1 = new ArrayList<NPC>();
-		// Initialize the exits array list (where Exit objects are stored)
-		this.exits1 = new ArrayList<Exit>();
-		// Initialize the rooms array list (where Room objects are stored)
-		this.rooms1 = new ArrayList<Room>();
-		// Initialize the stuff Array List  (where Thing objects are stored)
-		this.things = new ArrayList<Thing>();
-		// Initialize the items Array List  (where Item objects are stored)
-		this.items= new ArrayList<Item>();
 
 		// Initialize the spells array list (where Spell objects are stored)
 		this.spells1 = new ArrayList<Spell>();
@@ -691,16 +650,12 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 		// wise to implement configurable auto db-saving here
 		//
 
-		// Database File (mainDB)
-		this.main = loadListDatabase(mainDB);
 		// Error Messages Files (errorsDB)
 		this.errors = loadDatabase(errorDB);
 		// Help Files (helpDB)
 		this.help = loadDatabase(helpDB);
 		// Spell Files (spellDB)
 		this.spells = loadDatabase(spellDB);
-		// Unused DB reference numbers (unDB)
-		unusedDBNs = new Stack<Integer>();
 
 		// error message hashmap loading
 		for (int err = 0; err < this.errors.length; err++)
@@ -722,10 +677,10 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 		System.out.println("Spells Loaded!");
 
 		// Load everything from databases by flag
-		loadObjects(this.main);
+		ObjectLoader.loadObjects(loadListDatabase(mainDB), this, objectDB, this);
 		System.out.println("Database Loaded!");
 
-		// Initialize Lookup Caches
+		objectDB.loadExits(this);  // load exits (post-room loading)
 		if( lookup_caching ) {
 			object_lookup = new Hashtable<String, Integer>(10, 0.75f);
 			exit_lookup = new Hashtable<String, Integer>(10, 0.75f);
@@ -822,25 +777,6 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 		RoomTypes.put('O', "OUTSIDE"); // Affected by all weather
 		RoomTypes.put('N', "NONE");    // Same effect as inside for weather purposes
 		debug("Room Types: " + RoomTypes.entrySet()); // Print out the whole set of room types (DEBUG)
-
-		// name hiding by class, number of players per class tracking
-		pna.put(Classes.ADEPT.toString(), 0);
-		pna.put(Classes.ARISTOCRAT.toString(), 0);
-		pna.put(Classes.BARBARIAN.toString(), 0);
-		pna.put(Classes.BARD.toString(), 0);
-		pna.put(Classes.CLERIC.toString(), 0);
-		pna.put(Classes.COMMONER.toString(), 0);
-		pna.put(Classes.DRUID.toString(), 0);
-		pna.put(Classes.EXPERT.toString(), 0);
-		pna.put(Classes.FIGHTER.toString(), 0);
-		pna.put(Classes.MONK.toString(), 0);
-		pna.put(Classes.NONE.toString(), 0);
-		pna.put(Classes.PALADIN.toString(), 0);
-		pna.put(Classes.RANGER.toString(), 0);
-		pna.put(Classes.ROGUE.toString(), 0);
-		pna.put(Classes.SORCERER.toString(), 0);
-		pna.put(Classes.WARRIOR.toString(), 0);
-		pna.put(Classes.WIZARD.toString(), 0);
 
 		/*
 		 * Command Mapping
@@ -942,7 +878,7 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 
 		// Time Loop
 		// cpu: -for now, appears marginal-
-		game_time = new TimeLoop(game_hour, game_minute);
+		game_time = new TimeLoop(this, DAYS, month, day, game_hour, game_minute);
 		timeLoop = new Thread(game_time, "time");
 		timeLoop.start();
 		System.out.println("Time (Thread) Started!");
@@ -984,8 +920,8 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 		}
 
 		System.out.println("Command Delay: " + cmdExec.getCommandDelay());
-		System.out.println("Next Database Reference Number (DBRef/DBRN): " + nextDB(""));
-		nextDB("list");
+		System.out.println("Next Database Reference Number (DBRef/DBRN): " + objectDB.peekNextId());
+		printUnusedDB();
 		cleanupDB();
 		// tell us that we're done with setup.
 		System.out.println("Server> Setup Done.");
@@ -1001,14 +937,17 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 		int avar = 0;
 
 		if (avar == 1 ) {
-			Arrow a = new Arrow(nextDB("use"), "Flaming Arrow", "a flaming arrow", 8);
-			Arrow b = new Arrow(nextDB("use"), "Flaming Arrow", "a flaming arrow", 8);
+			Arrow a = new Arrow(-1, "Flaming Arrow", "a flaming arrow", 8);
+            objectDB.addAsNew(a);
+			Arrow b = new Arrow(-1, "Flaming Arrow", "a flaming arrow", 8);
+            objectDB.addAsNew(b);
 			a.stack(b);
 
 			Arrow c;
 
 			for (int i = 0; i < 30; i++) {
-				c = new Arrow(nextDB("use"), "Flaming Arrow", "a flaming arrow", 8);
+				c = new Arrow(-1, "Flaming Arrow", "a flaming arrow", 8);
+                objectDB.addAsNew(c);
 				a.stack(c);
 			}
 
@@ -1026,12 +965,11 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 		/*System.out.println("creating a thing: " + nextDB());
 
 		Room r = getRoom(207);
-		Thing thing = new Thing(nextDB("use"), "slab", "TD", "a large, rectangular stone slab" , 207);
+		Thing thing = new Thing(-1, "slab", "TD", "a large, rectangular stone slab" , 207);
 
 		thing.coord.x = 4;
 		thing.coord.y = 6;
 
-		things.add(thing);
 		r.contents.add(thing);
 
 		main.add(thing.toDB());
@@ -1052,53 +990,44 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 		int pvar = 0;
 
 		if (pvar == 1) {
-			System.out.println("creating a portal: " + nextDB());
+			System.out.println("creating a portal: " + objectDB.peekNextId());
 
 			Portal portal = new Portal(WELCOME_ROOM, 5); // a portal connecting two rooms (#8 and #5)
-			portal.setDBRef(nextDB("use"));   // get a new dbref for it
 			portal.name = "portal";           // generic name
 			portal.coord.setX(1);             // x coordinate
 			portal.coord.setY(1);             // y coordinate
 
 			portals.add(portal);              // add to list of portals
+			objectDB.addAsNew(portal);                // add to live game
 
-			main.add(portal.toDB());          // add to database
-			main1.add(portal);                // add to live game
-
-			System.out.println("creating a portal: " + nextDB());
+			System.out.println("creating a portal: " + objectDB.peekNextId());
 
 			Portal portal1 = new Portal(PortalType.RANDOM, WELCOME_ROOM, new int[] { 5, 182, 161, 4 });
-			portal1.setDBRef(nextDB("use"));  // get a new dbref for it
 			portal1.name = "portal1";         // generic name
 			portal1.coord.setX(2);            // x coordinate
 			portal1.coord.setY(2);            // y coordinate
 
 			portals.add(portal1);             // add to list of portals
-
-			main.add(portal1.toDB());         // add to database
-			main1.add(portal1);               // add to live game
+			objectDB.addAsNew(portal1);               // add to live game
 		}
 
 		/**
 		 * Quest Testing
 		 */
-		synchronized(npcs1) {
-			System.out.println("NPCs: " + npcs1.size());
+			System.out.println("NPCs: " + objectDB.getNPCs().size());
 
-			try {
-				NPC npc = getNPC("Iridan");
+            final NPC npc = getNPC("Iridan");
+            if (npc != null) {
+                final Quest quest = new Quest("Clear kobold infestation", "A cave near town is infested with kobolds, " +
+                        "whom recently began raiding the town. Kill them all to end the infestation.",
+                        new Task("Kill 15 kobolds", TaskType.KILL, 15));
 
-				Quest quest = new Quest("Clear kobold infestation", "A cave near town is infested with kobolds, " +
-						"whom recently began raiding the town. Kill them all to end the infestation.",
-						new Task("Kill 15 kobolds", TaskType.KILL, 15));
-
-				npc.setQuestList();
-				npc.setQuest(quest);
-			}
-			catch(NullPointerException npe) {
-				npe.printStackTrace();
-			}
-		}
+                npc.setQuestList();
+                npc.addQuest(quest);
+            }
+            else {
+                debug("getNPC(\"Iridan\") returned null.");
+            }
 
 		/**
 		 * Weather Testing
@@ -1132,10 +1061,8 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 		// apply our new weather object to a room
 		room.setWeather(weather);
 
-		for (final Room room1 : rooms1) {
-			if ( room1.getRoomType().equals("O") ) {
-				room1.setWeather(weather);
-			}
+		for (final Room room1 : objectDB.getWeatherRooms()) {
+            room1.setWeather(weather);
 		}
 
 		/**
@@ -1320,23 +1247,6 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 			for (final Client client : s.getClients_alt()) {
 				runHelper(client);
 			}
-
-			/*
-			 * As it is the weather probably get's update checked after each
-			 * client gets a say. Is that too often, too little or ?
-			 */
-
-			// weather update trigger
-			if ( update_weather ) {
-				updateWeather();
-				update_weather = false;
-			}
-
-			// shops update trigger
-			if ( update_shops) {
-				fillShops();
-				update_shops = false;
-			}
 		}
 	}
 
@@ -1401,7 +1311,7 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 		// show for when the mode will return to normal
 		if (!loginCheck(client))
 		{
-			if (mode == 0) // Normal Running Mode (a.k.a. Mode 0)
+			if (mode == GameMode.NORMAL) // Normal Running Mode (a.k.a. Mode 0)
 			{
 				if (this.players.size() < this.max_players) { // if the maximum number of players hasn't been exceeded.
 					// pass arguments to the player connect function
@@ -1437,7 +1347,7 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 				}
 				else { send("Sorry. Maximum number of players are connected. Please try back later.", client); }
 			}
-			else if (mode == 1) // Wizard-Only Mode (a.k.a. Mode 1)
+			else if (mode == GameMode.WIZARD) // Wizard-Only Mode (a.k.a. Mode 1)
 			{
 				send("System is in Wizard-Only Mode.", client);
 				if ( cmd.equals("connect") || ( aliasExists && alias.equals("connect") ) )
@@ -1458,7 +1368,7 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 					debug("Command> Unknown Command");
 				}
 			}
-			else if (mode == 2) // Maintenance Mode (a.k.a. Mode 2)
+			else if (mode == GameMode.MAINTENANCE) // Maintenance Mode (a.k.a. Mode 2)
 			{
 				send("System is in Maintenance Mode.", client); // >configurable message<
 				send("No Logins allowed. Booting Client...", client);
@@ -1482,7 +1392,7 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 			// if the user is editing a list, pass their input to the list editor
 			if ( player.getStatus().equals("EDT") )
 			{	
-				Editor editor = player.getEditor();
+				final Editor editor = player.getEditor();
 
 				switch(editor) {
 				case AREA:
@@ -1872,11 +1782,8 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 					else if ( cmd.equals("@nextdb") || ( aliasExists && alias.equals("@nextdb") ) )
 					{
 						adminCmd = true;
-						if ( arg.equals("" ) ) {
-							send("Next Database Reference Number (DBRef/DBRN): " + nextDB(), client);
-						}
-						else {
-							nextDB(arg);
+						if ( arg.equals("") ) {
+							send("Next Database Reference Number (DBRef/DBRN): " + objectDB.peekNextId(), client);
 						}
 					}
 					// pass arguments to the @passwd function
@@ -1982,7 +1889,7 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 							int hour = Integer.parseInt(arg);
 
 							if (hour >= 0 && hour <= 23) {
-								game_time.setHour(hour);
+								game_time.setHours(hour);
 
 								send("Game> Hour set to " + hour, client);
 							}
@@ -2002,15 +1909,13 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 							int minute = Integer.parseInt(arg);
 
 							if (minute >= 0 && minute <= 59) {
-								game_time.setHour(minute);
+								game_time.setMinutes(minute);
 
 								send("Game> Minute set to " + minute, client);
 							}
 							else {
 								send("Game> Invalid minute", client);
 							}
-
-							game_time.setMinute(minute);
 
 							send("Game> Minute set to " + minute, client);
 						}
@@ -2639,20 +2544,7 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 	 * @param client
 	 */
 	private void cmd_allocate(final String arg, final Client client) {
-
-		int start = nextDB("clean");
-		final int num = Utils.toInt(arg, 10);
-
-		// create a bunch of NullObjects as placeholders
-		synchronized(main) {
-			synchronized(main1) {
-				for (int n = 0; n < num; n++) {
-					final NullObject newObject = new NullObject(start + n);
-					main1.add(newObject);
-					main.add(newObject.toDB());
-				}
-			}
-		}
+        objectDB.allocate(Utils.toInt(arg, 10));
 	}
 
 	/**
@@ -2669,81 +2561,43 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 	private void cmd_ask(final String arg, final Client client) {
 		final String[] args = arg.split(" ");
 
-		try {
-			final Player player = getPlayer(client); // get the player
-			NPC npc = getNPC(args[0]);         // get the npc we're referring to
+        if (args.length < 2) {
+            return;
+        }
 
-			String keyword = args[1];          // get the keyword;
+        final Player player = getPlayer(client); // get the player
+        final NPC npc = getNPC(args[0]);         // get the npc we're referring to
 
-			if ( keyword.equals("quests") ) {
-				ArrayList<Quest> quests = npc.getQuestList();
-				ArrayList<Quest> suitable = new ArrayList<Quest>();
+        final String keyword = args[1];          // get the keyword;
 
-				for (Quest quest : quests) {
-					if ( quest.isSuitable(player) ) {
-						// add suitable (valid for the player quests) to a list
-						suitable.add( new Quest( quest ) );	
-					}
-				}
+        if ( keyword.equals("quests") ) {
+            final List<Quest> suitable = npc.getQuestsFor(player);
 
-				send("Available Quests", client);
-				send("================================================================================", client);
+            send("Available Quests", client);
+            send("================================================================================", client);
 
-				for (final Quest quest : suitable) {
-					if (!quest.isComplete()) {
-						client.write(Colors.YELLOW + "   o " + quest.getName());
-						client.write(Colors.MAGENTA + " ( " + quest.location + " ) " + Colors.CYAN);
-						client.write('\n');
-						for (Task task : quest.getTasks()) {
-							if ( task.isComplete() ) {
-								client.write(Colors.GREEN + "      o " + task.getDescription());
-								client.write(Colors.MAGENTA + " ( " + task.location + " ) " + Colors.CYAN);
-								client.write("[+]");
-								client.write('\n');
-							}
-							else {
-								client.write(Colors.CYAN + "      o " + task.getDescription());
-								client.write(Colors.MAGENTA + " ( " + task.location + " ) " + Colors.CYAN);
-								client.write("[ ]");
-								client.write('\n');
-							}
-						}
-					}
-					client.write("" + Colors.WHITE);
-				}
+            for (final Quest quest : suitable) {
+                if (!quest.isComplete()) {
+                    client.write(quest.toDisplay());
+                }
+                client.write("" + Colors.WHITE);
+            }
 
-				send("================================================================================", client);
-				send("* To accept a quest, type 'ask <npc> accept <quest identifier>')", client);
-				send("* If you don't see a quest here, you are currently on it / already completed it.", client);
-				send("* Also, finished quests are greyed out.", client);
-				send("** For the moment, the quest identifier is the quest's index in the list (0-?)", client);
-			}
-			else if ( keyword.equals("accept") ) {
-				if ( args.length == 3 ) {
-					ArrayList<Quest> quests = npc.getQuestList();
-					ArrayList<Quest> suitable = new ArrayList<Quest>();
-
-					for (final Quest quest : quests) {
-						if ( quest.isSuitable(player) ) {
-							// add suitable (valid for the player quests) to a list
-							suitable.add( new Quest( quest ) );	
-						}
-					}
-
-					try {
-						player.getQuests().add( suitable.get(Integer.parseInt(args[2])) );
-						send("Quest Added!", client);
-					}
-					catch (NumberFormatException nfe) {
-						nfe.printStackTrace();
-					}
-				}
-			}
-		}
-		catch (NullPointerException npe) {
-			npe.printStackTrace();
-			return;
-		}
+            send("================================================================================", client);
+            send("* To accept a quest, type 'ask <npc> accept <quest identifier>')", client);
+            send("* If you don't see a quest here, you are currently on it / already completed it.", client);
+            send("* Also, finished quests are greyed out.", client);
+            send("** For the moment, the quest identifier is the quest's index in the list (0-?)", client);
+        }
+        else if ( keyword.equals("accept") ) {
+            if ( args.length == 3 ) {
+                final Quest q = npc.getQuestFor(player, Utils.toInt(args[2], -1));
+                if (q != null) {
+                    player.getQuests().add(q);
+                    send("Quest Added!", client);
+                }
+            }
+        }
 	}
 
 	/**
@@ -2773,13 +2627,10 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 
 		// NOTE: for these to work, I need to convert my database to one file so that the database line for an item and it's dbref number are the same
 		client.write("Game> Backing up Players...");
-		savePlayers(); // NOTE: only modifies in memory storage
 		client.write("Done.\n");
 		client.write("Game> Backing up Rooms...");
-		saveRooms(); // NOTE: only modifies in memory storage
 		client.write("Done.\n");
 		client.write("Game> Backing up Items...");
-		saveItems();
 		client.write("Done.\n");
 
 		// save databases to disk
@@ -3200,34 +3051,10 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 	 */
 	private void cmd_connect(final String arg, final Client client)
 	{
-		boolean auth;  // variable whose state reflects the current step in the connection process (true=in progress, false=failed)
-		boolean valid; // variable whose state reflects the whether the player is valid, i.e. exists and that is their password (true=valid, false=invalid)
-
-		boolean account; // are we doing an account login?
-
-		String user = ""; // storage for actual username we're testing against
-		String pass = ""; // storage for actual password we're testing against
-
 		// Trim the argument of any additional whitespace
-		String[] args = Utils.trim(arg).split(" ");
+		final String[] args = Utils.trim(arg).split(" ");
 
-		if (args.length == 2) {
-			// extract the username from the argument
-			user = args[0];
-			// Trim the username of any additional whitespace
-			user = Utils.trim(user);
-			// extract the password from the argument
-			pass = args[1];
-			//trim the password of any additional whitespace
-			pass = Utils.trim(pass);
-		}
-		else if (args.length == 1) {
-			// extract the username from the argument
-			user = args[0];
-			// Trim the username of any additional whitespace
-			user = Utils.trim(user);
-		}
-		else {
+        if (args.length < 1 || args.length > 2) {
 			// unless I get accounts working the way I want that last line will be a lie.
 			/*send("Enter a valid character creation or connection string\n" +
 					"such as 'create <character name> <password>' or 'connect <character name> <password>'" +
@@ -3235,24 +3062,18 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 			send("Enter a valid character creation or connection string\n" +
 					"such as 'create <character name> <password>' or 'connect <character name> <password>'", client);
 			return;
-		}
+        }
+
+        final String user = Utils.trim(args[0]);
+        final String pass = args.length > 1 ? Utils.trim(args[1]) : "";
 
 		debug("User?: " + user);
 		debug("Password?: " + Utils.padRight("", '*',pass.length()) );
 		debug("");
 
-		auth = true;     // we are now attempting to init the connection
-		valid = false;   // we do not yet have a valid player
-		account = false; // we are not currently logging in an account
-
-		int line = 0;  // current line of the password file/list we're looking through
-
-		String[] uInfo;
-		int tDBRef = 0, tLocation = 0;
-		Integer[] tMoney = new Integer[0], tStats = new Integer[0];
-		String tUser = "", tPass = "", tFlags = "", tDesc = "", tStatus = "";
-
-		Player player; // player object (uninstantiated)
+        // variable whose state reflects the current step in the connection process (true=in progress, false=failed)
+		// we are now attempting to init the connection
+		boolean auth = true;
 
 		// Guest Player
 		// SERIOUS: got a problem here, system does not seem to know guests are connected
@@ -3260,16 +3081,16 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 		// NOTE: my problem is related to guest not being findable somehow, all this needs a major revamp
 		if ((user.toLowerCase().equals("guest")) && (pass.toLowerCase().equals("guest"))) {
 			if (guest_users == 1) {
-				player = new Player(nextDB(""), "Guest" + guests, "PG", "A guest player.", WELCOME_ROOM, "", Utils.hash("password"), "OOC", new Integer[] { 0, 0, 0, 0, 0, 0 }, new Integer[] { 0, 0, 0, 0 });
+				final Player player = new Player(-1, "Guest" + guests, "PG", "A guest player.", WELCOME_ROOM, "", Utils.hash("password"), "OOC", new Integer[] { 0, 0, 0, 0, 0, 0 }, new Integer[] { 0, 0, 0, 0 });
+                objectDB.addAsNew(player);
 				init_conn(player, client, false);
 				guests++;
-				auth = false; // finished connecting
 			}
 		}
 		else if (user.toLowerCase().equals("new")) {
-			player = new Player(nextDB(), "randomName", "P", "New player.", WELCOME_ROOM, "", Utils.hash("randomPass"), "NEW", new Integer[] { 0, 0, 0, 0 }, new Integer[] { 0, 0, 0, 0, 0, 0 });
+			final Player player = new Player(-1, "randomName", "P", "New player.", WELCOME_ROOM, "", Utils.hash("randomPass"), "NEW", new Integer[] { 0, 0, 0, 0 }, new Integer[] { 0, 0, 0, 0, 0, 0 });
+            objectDB.addAsNew(player);
 			init_conn(player, client, false);
-			auth = false;
 		}
 		else if ( user.toLowerCase().equals("account") ) {
 			account = true;
@@ -3306,7 +3127,6 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 				 * can have their commands processed until this is done,
 				 * although the command queue will hold the commands they send
 				 */
-
 				String aName = "";
 				String aPass = "";
 
@@ -3341,6 +3161,10 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 						account_menu(account1, client);					
 
 					}
+			catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
 					else {
 						auth = false;
 						System.out.println("No such account!");
@@ -3357,124 +3181,35 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 			}
 			else {
 
-				/*String password = authTable1.get(user);
-				if ( pass.equals(password) ) {
-				}*/
+            // character check
+            final Player p = objectDB.getPlayer(user);
+            if (p == null || !p.getPass().equals(Utils.hash(pass))) {
+                debug("CONNECT: Fail");
+                send("Either that player does not exist, or has a different password.", client);
+                return;
+            }
+            
+            debug("PASS: Pass"); // report success for password check
 
-				// character check
-				if (authTable.get(line) != null) {
+            if (mode == GameMode.NORMAL) {
+                init_conn(p, client, false);    // Open Mode
+            }
+            else if (mode == GameMode.WIZARD) {
+                if ( p.getFlags().contains("W") ) {
+                    init_conn(p, client, false);    // Wizard-Only Mode
+                }
+                else {
+                    send("Sorry, only Wizards are allowed to login at this time.", client);
+                }
+            }
+            else if (mode == GameMode.MAINTENANCE) {
+                send("Sorry, the mud is currently in maintenance mode.", client);
+            }
+            else {
+                send("Sorry, you cannot connect to the mud at this time. Please try again later.", client);
+            }
 
-					/* need to integrate account checking into here */
-
-					// get user info from line of users array
-					//uInfo = main.get(line).split("#");
-					uInfo = authTable.get(line).split("#");
-					// get user dbref # from array of user info and trim of whitespace
-					tDBRef = Integer.parseInt(Utils.trim(uInfo[0]));
-					// get user from array of user info and trim of whitespace
-					tUser = Utils.trim(uInfo[1]);
-					// get user flags from array of user info and trim of whitespace
-					tFlags = Utils.trim(uInfo[2]);
-					// get user description from array of user info and trim of whitespace
-					tDesc = Utils.trim(uInfo[3]);
-					// get user location from array of user info and trim of whitespace
-					tLocation = Integer.parseInt(Utils.trim(uInfo[4]));
-					// get pass from array of user info and trim of whitespace
-					tPass = Utils.trim(uInfo[5]);
-					// get stats from array of user info and trim of whitespace
-					tStats = Utils.stringsToIntegers(Utils.trim(uInfo[6]).split(","));
-					// get money from array of user info and trim of whitespace
-					tMoney = Utils.stringsToIntegers(Utils.trim(uInfo[7]).split(","));
-
-					if (tUser.equals(user))
-					{	
-
-						debug("USER: Pass");
-						if (tPass.equals(Utils.hash(pass))) // valid user
-						{		
-							debug("PASS: Pass"); // report success for password check
-							auth = false;        // finished connecting
-
-							if (mode == 0) // Open Mode
-							{
-								valid = true; // we have a valid user, go ahead and try to initiate a connection
-							}
-							else if (mode == 1) // Wizard-Only Mode
-							{
-								if ( tFlags.contains("W") ) // Wizard Flag
-								{
-									valid = true; // we have a valid user, go ahead and try to initiate a connection
-								}
-								else
-								{
-									send("Sorry, only Wizards are allowed to login at this time.", client);
-								}
-							}
-							else if (mode == 2)
-							{
-								send("Sorry, the mud is currently in maintenance mode.", client);
-							}
-							else
-							{
-								send("Sorry, you cannot connect to the mud at this time. Please try again later.", client);
-							}
-						}
-						else // invalid user
-						{
-							debug("PASS: Fail"); // report failure for password check
-							send("Either that player does not exist, or has a different password.", client);
-							auth = false;        // finished attempting to connect (needed to obfuscate the truth about which part of the password or the user check failed)
-						}
-					}
-					else
-					{
-						// no user match
-						debug("USER: Fail");
-						if (line != authTable.size() - 1) { line = line + 1; } // move to next line/entry (if we haven't tried them all)
-						else
-						{
-							debug("CONNECT: Fail");
-							auth = false;
-							send("Either that player does not exist, or has a different password.", client);
-						}
-					}
-				}
-				else {
-					if (line != authTable.size() - 1) { line = line + 1; } // move to next line/entry (if we haven't tried them all)
-					else
-					{
-						debug("CONNECT: Fail");
-						auth = false;
-						send("Either that player does not exist, or has a different password.", client);
-					}
-				}
-			}
-		}
-
-		// if valid, attempt connection (validity is false if player is a guest or doesn't exist)
-		if ( valid ) {
-
-			/* try to prevent duplicate logins, accidental or otherwise, needed
-			 * just in case auto-flush/auto-boot doesn't kick their last session
-			 * when their connection becomes unstable.
-			 * 
-			 * if they lost connection without a proper disconnect, this should try to reconnect
-			 * them to their player
-			 */
-
-			/* Handle connection
-			 */
-
-			tStatus = "OOC"; // fudge status til I work out storage details
-			// this next line is a problem if I change authtable to only hold the player name and password
-
-			//player = getPlayer(user);
-			player = loadPlayer(authTable.get(line)); // ensures that we load the player properly
-
-			//player = new Player(tDBRef, user, tFlags, tDesc, tLocation, "", tPass, tStatus, tStats, tMoney);
-
-			init_conn(player, client, false);  // pass the player to the connection initialization function
-		}
+        }
 	}
 
 	/**
@@ -3602,7 +3337,6 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 	{
 		System.out.println(arg);                                  // argument
 
-		int id = nextDB();                                        // get the next available database id
 		String user;                                              // username
 		String pass;                                              // password
 
@@ -3619,21 +3353,13 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 		}
 
 		// check for existing player by that name, if exists report that the name is already used, if not continue on
-		if (checkName(user) && validateName(user))
+		if (!objectDB.hasName(user) && validateName(user))
 		{
 			// create a new player object for the new playerm the "" is an empty title, which is not currently persisted
-			Player player = new Player(id, user, start_flags, start_desc, start_room, "", Utils.hash(pass), start_status, start_stats, start_money);
-			
-			/*if ( id < nextDB("clean") ) {
-				main.set(id, player.toDB()); // save player to database
-			}
-			else {
-				main.add(player.toDB());     // save player to database
-			}*/
+			final Player player = new Player(-1, user, start_flags, start_desc, start_room, "", Utils.hash(pass), start_status, start_stats, start_money);
+			objectDB.addAsNew(player);
 			
 			addToDB(player);
-
-			nextDB("use");        // indicate that the database reference was used
 
 			String mail[];        // create the mailbox
 			mail = new String[4]; // size it to make room for one message's worth
@@ -3656,7 +3382,7 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 			init_conn(player, client, true);
 
 			// add player to the auth table
-			authTable.add(player.toDB());
+			objectDB.addPlayer(player);
 		}
 		else
 		{
@@ -3744,7 +3470,7 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 		// use the object loading constructor for testing purposes
 
 		int location = getPlayer(client).getLocation();
-		int dbref = nextDB("use");
+		int dbref = getNextDB();
 
 		Item item = new Clothing(arg, "A new piece of clothing.", location, dbref, 0, ClothingType.SHIRT);
 
@@ -3818,17 +3544,8 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 		else if ( arg.toLowerCase().equals("creatures") ) {
 			send("Creatures", client);
 			send("--------------------------------------------------------------------------", client);
-			int dbref;
-			String name;
-			int loc;
-			String room_name;
-			for (Creature c : creatures) {
-				dbref = c.getDBRef();
-				name = c.getName();
-				loc = c.getLocation();
-				room_name = getRoom(loc).getName();
-
-				send(dbref + " " + name + " " + room_name + " (#" + loc + ")", client);
+			for (final Creature c : objectDB.getCreatures()) {
+				send(String.format("%s %s %s (#%s)", c.getDBRef(), c.getName(), getRoom(c.getLocation()).getName(), c.getLocation()), client);
 			}
 			send("--------------------------------------------------------------------------", client);
 		}
@@ -3837,10 +3554,7 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 			 * List all of the names and dbrefs of the objects
 			 * in the database their actual index in the database
 			 */
-			for (int i = 0; i < main1.size(); i++) {
-				final MUDObject m = main1.get(i);
-				send(i + ": " + m.getName() + " (#" + m.getDBRef() + ")", client);
-			}
+            objectDB.dump(client, this);
 		}
 		else if ( arg.toLowerCase().equals("timedata") ) {
 			// get current data
@@ -3856,25 +3570,24 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 			send("Real Time: " + real_time, client);
 
 			// In-game Time
-			String gameTime = "" + game_time.hours;
+			String gameTime = "" + game_time.getHours();
 
-			if (game_time.hours < 10) { gameTime = " " + gameTime; }
-			if (game_time.minutes < 10) { gameTime = gameTime + ":0" + game_time.minutes; }
-			else { gameTime = gameTime + ":" + game_time.minutes; }
+			if (game_time.getHours() < 10) { gameTime = " " + gameTime; }
+			if (game_time.getMinutes() < 10) { gameTime = gameTime + ":0" + game_time.getMinutes(); }
+			else { gameTime = gameTime + ":" + game_time.getMinutes(); }
 
 			send("Game Time: " + gameTime, client);
 
 			// Time Scale (the relative number of seconds to an-game minute)
-			send("Time Scale: 1 minute/" + (game_time.timeScale / 1000) + " seconds", client);
+			send("Time Scale: 1 minute/" + (game_time.getScale() / 1000) + " seconds", client);
 		}
 		else if ( arg.toLowerCase().equals("seasons") ) {
 			/*
 			 * list all the seasons
 			 */
 			//return this.name + ": " + months[beginMonth - 1] + " to " + months[endMonth - 1];
-			Seasons[] seasons = { Seasons.SPRING, Seasons.SUMMER, Seasons.AUTUMN, Seasons.WINTER };
 
-			for (Seasons s : seasons) {
+			for (final Seasons s : Seasons.values()) {
 				send(s + ": " + month_names[s.beginMonth - 1] + " to " + month_names[s.endMonth - 1], client);
 			}
 		}
@@ -3914,17 +3627,7 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 			send(client.ip(), client);
 		}
 		else if ( arg.toLowerCase().equals("exitlcache") || arg.toLowerCase().equals("elc") ) {
-			if( lookup_caching ) {
-				/* indicate size of exit lookup table/cache */
-				send("Exit Lookup Cache (table size): " + exit_lookup.size(), client);
-
-				send("", client);
-
-				/* show us the current contents of the exit lookup table/cache */
-				send("Table 1", client);
-				for (final String key : exit_lookup.keySet()) {
-					send("\""+ key + "\" -> " + exit_lookup.get(key), client);
-				}
+			send("No more Exit Lookup Cache.", client);
 			}
 			else {
 				send("Lookup Caching Disabled", client);
@@ -3945,17 +3648,17 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 			}
 		}
 		else if ( arg.toLowerCase().equals("objlcache") || arg.toLowerCase().equals("olc") ) {
-			if( lookup_caching ) {
-				/* indicate size of object lookup table/cache */
+			/* indicate size of object lookup table/cache
 				send("Object Lookup Cache (table size): " + object_lookup.size(), client);
 
 				send("", client);
 
-				/* show us the current contents of the object lookup table/cache */
+			/* show us the current contents of the object lookup table/cache
 				send("Table 1", client);
 				for (final String key : object_lookup.keySet()) {
 					send("\""+ key + "\" -> " + object_lookup.get(key), client);
 				}
+            */
 			}
 			else {
 				send("Lookup Caching Disabled", client);
@@ -3999,10 +3702,11 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 				else {
 					client.write(unusedDBNs.get(i) + ", ");
 				}
-			}*/
+			}
 			for (final Integer i : unusedDBNs) {
 				client.write(i + ", ");
 			}
+            */
 			client.write(" ]\n");
 		}
 		else if (!arg.equals("")) {
@@ -4179,8 +3883,7 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 					 */
 
 					player.getInventory().remove(item);                          // remove from inventory
-					main1.set(item.getDBRef(), new NullObject(item.getDBRef())); // remove from existence
-					unusedDBNs.push(item.getDBRef());                            // add dbref to unused list
+					objectDB.set(item.getDBRef(), new NullObject(item.getDBRef())); // remove from existence
 				}
 			}
 		}
@@ -4578,19 +4281,19 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 	 * @param client
 	 */
 	private void cmd_find(final String arg, final Client client) {
-		final ArrayList<String> test = new ArrayList<String>(10);
+		final LinkedList<String> matches = new LinkedList<>();
 
-		for (final MUDObject m : main1) {
-			if ( m.getName().toLowerCase().contains( arg.toLowerCase() ) ) {
-				test.add(m.getName() + " (#" + m.getDBRef() + ")");
-			}
+		for (final MUDObject m : objectDB.findByLower(arg)) {
+			// if ( m.getName().toLowerCase().contains( arg.toLowerCase() ) ) {
+				matches.add(m.getName() + " (#" + m.getDBRef() + ")");
+			// }
 		}
 
-		for (final String s : test) {
+		for (final String s : matches) {
 			send(s, client);
 		}
 		send("**********", client);
-		send(test.size() + " objects found.", client);
+		send(matches.size() + " objects found.", client);
 	}
 
 	/**
@@ -5415,8 +5118,6 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 	 */
 	private void cmd_open(final String arg, final Client client)
 	{
-		int id = nextDB();
-
 		final String[] args = arg.split("=");
 
 		String name = args[0];
@@ -5446,39 +5147,19 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 
 		// create the exit
 		Exit exit = new Exit(name, source, destination);
-		exit.setDBRef(id);
 
-		/*
-		// add it to the string-based database
-		if ( id < nextDB("clean") ) {
-			main.set(id, exit.toDB()); // save player to database
-		}
-		else {
-			main.add(exit.toDB());     // save player to database
-		}
+        objectDB.addAsNew(exit);
+		objectDB.addExit(exit);
 
-		// add it to the object-based database
-		if ( id < nextDB("clean") ) {
-			main1.set(id, exit); // save player to database
-		}
-		else {
-			main1.add(exit);     // save player to database
-		}
 		*/
 		
 		addToDB(exit);
-
-		// add the exit to the exits arraylist
-		exits1.add(exit);
 
 		// add the exit to the source room
 		room.getExits().add(exit);
 
 		// tell us that we succeeded in creating the exit
 		send("You open an exit called " + exit.getName() + "(#" + exit.getDBRef() + ")" + " from #" + exit.getLocation() + " to #" + exit.getDest() + ".", client);
-
-		// mark the next dbref num (the one we're using) as used
-		nextDB("use");
 	}
 
 	/**
@@ -5492,11 +5173,9 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 	 * @param client
 	 */
 	private void cmd_door(final String arg, final Client client) {
-		int id = nextDB();
+		final String[] args = arg.split("=");
 
-		String[] args = arg.split("=");
-
-		String name = args[0];
+		final String name = args[0];
 		int source = 0, destination = 0;
 
 		Room room = getRoom(client);
@@ -5533,39 +5212,18 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 
 		// create the exit
 		Exit exit = new Exit(name, source, destination);
-		exit.setDBRef(id);
-		
-		/*
-		// add it to the string-based database
-		if ( id < nextDB("clean") ) {
-			main.set(id, exit.toDB()); // save player to database
-		}
-		else {
-			main.add(exit.toDB());     // save player to database
-		}
 
-		// add it to the object-based database
-		if ( id < nextDB("clean") ) {
-			main1.set(id, exit); // save player to database
-		}
-		else {
-			main1.add(exit);     // save player to database
-		}
+        objectDB.addAsNew(exit);
+		objectDB.addExit(exit);
 		*/
 		
 		addToDB(exit);
-
-		// add the exit to the exits arraylist
-		exits1.add(exit);
 
 		// add the exit to the source room
 		room.getExits().add(exit);
 
 		// tell us that we succeeded in creating the exit
 		send("You open an exit called " + exit.getName() + "(#" + exit.getDBRef() + ")" + " from #" + exit.getLocation() + " to #" + exit.getDest() + ".", client);
-
-		// mark the next dbref num (the one we're using) as used
-		nextDB("use");
 	}
 
 	/**
@@ -5580,7 +5238,7 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 	 */
 	private void cmd_osuccess(final String arg, final Client client) {
 		final String[] args = arg.split("=");
-		final Exit exit = (Exit) getExit(args[0], client);
+		final Exit exit = (Exit) getExit(args[0]);
 		if (args.length > 1) {
 			exit.setMessage("osuccMsg", args[1]);
 			send(exit.getName() + "'s osuccess message set to: " + args[1], client);
@@ -5589,7 +5247,7 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 
 	private void cmd_fail(final String arg, final Client client) {
 		final String[] args = arg.split("=");
-		final Exit exit = (Exit) getExit(args[0], client);
+		final Exit exit = (Exit) getExit(args[0]);
 		if (args.length > 1) {
 			exit.setMessage("failMsg", args[1]);
 			send(exit.getName() + "'s fail message set to: " + args[1], client);
@@ -5608,7 +5266,7 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 	 */
 	private void cmd_ofail(final String arg, final Client client) {
 		final String[] args = arg.split("=");
-		final Exit exit = (Exit) getExit(args[0], client);
+		final Exit exit = (Exit) getExit(args[0]);
 		if (args.length > 1) {
 			exit.setMessage("ofailMsg", args[1]);
 			send(exit.getName() + "'s ofail message set to: " + args[1], client);
@@ -5684,7 +5342,6 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 		else { // if there is only one argument (i.e. new password for current player)
 			player.setPass(arg);
 			send("Your password has been changed to: '" +  tmp[0] + "' hash: " + player.getPass(), client);
-			savePlayer(client);
 		}
 	}
 
@@ -5826,7 +5483,7 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 				//Room room = getRoom(thing.getLocation());
 
 				// remove thing from room
-				things.remove(thing);          // recycle the thing
+				objectDB.removeThing(thing);          // recycle the thing
 
 				success = true;
 			}
@@ -5835,7 +5492,7 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 				Room room = getRoom(exit.getLocation());
 
 				room.getExits().remove(exit); // remove exit from room
-				exits1.remove(exit);          // remove exit from db
+				objectDB.removeExit(exit);          // remove exit from db
 
 				success = true;
 			}
@@ -5855,7 +5512,7 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 					room.contents.remove((Thing) object);
 				}*/
 
-				rooms1.remove(room);          // recycle the room
+				objectDB.removeRoom(room);          // recycle the room
 
 				success = true;
 			}
@@ -5868,9 +5525,7 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 
 				NullObject nobj = new NullObject(num);
 
-				main.set(num, nobj.toDB());                      // clear the database entry (text)
-				main1.set(num, nobj);                            // clear the database entry (object)
-				addUnused(num);                                  // add the dbref to the unused array
+				objectDB.set(num, nobj);                            // clear the database entry (object)
 
 				send(msg, client);
 			}
@@ -5911,11 +5566,11 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 
 					ArrayList<Container<Item>> containers = new ArrayList<Container<Item>>(5);
 
-					Item i = (Item) main1.get(Integer.parseInt(args[0])); // get the thing to get by dbref
+					final Item i = (Item) objectDB.get(Integer.parseInt(args[0])); // get the thing to get by dbref
 					if (i == null) { debug("NULL"); }
 					else { debug(i); } // send us a string representation of the object (debug)
 
-					MUDObject m = main1.get(Integer.parseInt(args[2]));
+					MUDObject m = objectDB.get(Integer.parseInt(args[2]));
 
 					/*for (Thing thing : getRoom(client).contents) { // get all the containers nearby??
 						if (thing instanceof Container) { // this is not possible, since it's not an item
@@ -5925,7 +5580,7 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 
 					Container<Item> container;
 
-					for (Container<Item> con : containers)
+					for (final Container<Item> con : containers)
 					{
 						container = con;
 
@@ -6250,24 +5905,18 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 	}
 
 	private void cmd_setmode(final String arg, final Client client) {
-		char test = arg.toLowerCase().charAt(0);
+		char test = (arg == null || arg.isEmpty()) ? ' ' : arg.toLowerCase().charAt(0);
 		switch(test) {
-		case 'n':
-			mode = GameMode.NORMAL.ordinal();
-			break;
-		case 'w':
-			mode = GameMode.WIZARD.ordinal();
-			break;
-		case 'm':
-			mode = GameMode.MAINTENANCE.ordinal();
-			break;
+		case 'n':   mode = GameMode.NORMAL;     break;
+		case 'w':   mode = GameMode.WIZARD;         break;
+		case 'm':   mode = GameMode.MAINTENANCE;    break;
 		default:
 			send("Invalid GameMode, using Normal instead.", client);
-			mode = GameMode.NORMAL.ordinal();
+			mode = GameMode.NORMAL;
 			break;
 		}
 
-		send("Game> setting GameMode to -" + GameMode.values()[mode].toString() + "-", client);
+		send("Game> setting GameMode to -" + mode + "-", client);
 	}
 
 	/**
@@ -6322,7 +5971,7 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 
 	private void cmd_success(final String arg, final Client client) {
 		final String[] args = arg.split("=");
-		final Exit exit = (Exit) getExit(args[0], client);
+		final Exit exit = (Exit) getExit(args[0]);
 		if (args.length > 1) {
 			exit.setMessage("succMsg", args[1]);
 			send(exit.getName() + "'s success message set to: " + args[1], client);
@@ -6384,31 +6033,24 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 	// Function to list stats
 	private void cmd_stats(final String arg, final Client client)
 	{
-		int usersCount = 0, npcsCount = 0, exitsCount = 0, roomsCount = 0, thingsCount = 0;
+		System.out.println(objectDB.getSize());
 
-		String[] data;
-
-		System.out.println(main.size());
-
-		for (final String s : main) {
-			System.out.println(s);
-			data = s.split("#");
-			if (data[2].contains("P")) { usersCount++; }
-			else if (data[2].contains("N")) { npcsCount++; }
-			else if (data[2].contains("E")) { exitsCount++; }
-			else if (data[2].contains("R")) { roomsCount++; }
-			else if (data[2].contains("T")) { thingsCount++; }
-		}
+        final int[] counts = objectDB.getFlagCounts(new String[]{ "P", "N", "E", "R", "T" });
+		final int usersCount = counts[0];
+        final int npcsCount = counts[1];
+        final int exitsCount = counts[2];
+        final int roomsCount = counts[3];
+        final int thingsCount = counts[4];
 
 		int total = usersCount + npcsCount + exitsCount + roomsCount + thingsCount;
 
 		send(name + " Statistics", client);
 		send("-----------------------", client);
-		send("Players: " + usersCount + "   " + ((((Integer) usersCount).doubleValue() * 100) / total) + "%", client);
-		send("NPCS:    " + npcsCount + "   " + ((((Integer) npcsCount).doubleValue() * 100) / total) + "%", client);
-		send("Exits:   " + exitsCount + "   " + ((((Integer) exitsCount).doubleValue() * 100) / total) + "%", client);
-		send("Rooms:   " + roomsCount + "   " + ((((Integer) roomsCount).doubleValue() * 100) / total) + "%", client);
-		send("Things:  " + thingsCount + "   " + ((((Integer) thingsCount).doubleValue() * 100) / total) + "%", client);
+        send(String.format("Players: %s   %s%%", usersCount,  usersCount  * 100.0 / total), client);
+        send(String.format("NPCS:    %s   %s%%", npcsCount,   npcsCount   * 100.0 / total), client);
+        send(String.format("Exits:   %s   %s%%", exitsCount,  exitsCount  * 100.0 / total), client);
+        send(String.format("Rooms:   %s   %s%%", roomsCount,  roomsCount  * 100.0 / total), client);
+        send(String.format("Things:  %s   %s%%", thingsCount, thingsCount * 100.0 / total), client);
 		send("Total:   " + total, client);
 		send("-----------------------", client);
 	}
@@ -6866,10 +6508,8 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 			debug(zones.entrySet());
 			for (Object k : zones.keySet()) {
 				send("" + ((Zone) k).getName(), client);
-				for (Room r : this.rooms1) {
-					if (r.getParent() == ((Zone) k).getRoom().getLocation()) {
-						send("     - " + r.getName() + "(#" + r.getLocation() + ")", client);
-					}
+				for (final Room r : objectDB.getRoomsByParentLocation(((Zone) k).getRoom().getLocation())) {
+                    send("     - " + r.getName() + "(#" + r.getLocation() + ")", client);
 				}
 			}
 		}
@@ -7837,8 +7477,8 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 
 			// if 
 			if (args.length > 1 ) {
-				int destination = Integer.parseInt(args[1]);
-				MUDObject m = main1.get(destination);
+				final int destination = Integer.parseInt(args[1]);
+				final MUDObject m = objectDB.get(destination);
 
 				if ( m != null ) {
 					if ( m instanceof Room ) {
@@ -8189,7 +7829,7 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 	 * @return
 	 */
 	public MUDObject getObject(final String objectName, final Client client) {
-		MUDObject object = getExit(objectName, client);
+		MUDObject object = getExit(objectName);
 		if (object != null) return object;
 
 		object = getRoom(objectName);
@@ -8204,28 +7844,11 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 	 * @param objectDBRef
 	 * @return
 	 */
-	public MUDObject getObject(final String objectName) {
-		if (main1 != null) {
-			//check lookup cache
-			if( lookup_caching && object_lookup.containsKey(objectName) ) {
-				return main1.get( object_lookup.get(objectName) );
-			}
-			// if no cached result, go look
-			else {
-				for (final MUDObject mo : main1) {
-					System.out.println(mo.getName());
-					if ( mo.getName().equals(objectName) ) {
+	public MUDObject getObject(final String name) {
+        return objectDB.getByName(name);
 						if( lookup_caching ) {
-							object_lookup.put(objectName, main1.indexOf(mo)); // cache the result?
 						}
 
-						return mo; // return the object
-					}
-				}
-			}
-		}
-
-		return null;
 	}
 
 	/**
@@ -8235,23 +7858,7 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 	 * @return
 	 */
 	public MUDObject getObject(Integer dbref) {
-		try {
-			debug("Getting Object with dbref of " + dbref + "...", 2);
-
-			MUDObject m = main1.get(dbref);
-
-			if (m.getDBRef() == dbref) {
-				return m;
-			}
-			else {
-				return null;
-			}
-		}
-		catch(IndexOutOfBoundsException ioobe) {
-			ioobe.printStackTrace();
-		}
-
-		return null;
+        return objectDB.get(dbref);
 	}
 
 	// these are kind of important for containers, but also for general examine
@@ -8316,33 +7923,11 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 	 * @param client
 	 * @return
 	 */
-	public Exit getExit(final String exitName, final Client client) {
-		// look through all the exits (would be great if this could ignore previously searched exits
-		// perhaps by dbref (since that's much shorter than holding object references, etc
-		if (exits1 != null) {
-
-			//check lookup cache
-			if( exit_lookup.containsKey(exitName) ) {
-				return exits1.get( exit_lookup.get(exitName) );
-			}
-			// if no cached result, go look
-			else {
-				for (final Exit exit : exits1)
-				{
-					if ( exit.getName().equals(exitName) )
-					{
+	public Exit getExit(final String exitName) {
+        return objectDB.getExit(exitName);
 						if( lookup_caching ) {
-							exit_lookup.put(exitName, exits1.indexOf(exit)); // cache the result?
 						}
 
-						return exit;
-					}
-
-				}
-			}
-		}
-
-		return null;
 	}
 
 	/*public Exit getExit(String exitName, Client client) {
@@ -8378,33 +7963,17 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 	}*/
 
 	public Exit getExit(final Integer dbref, final Client client) {
-		final Room room = getRoom(client);
-
-		ArrayList<Integer> eNums = new ArrayList<Integer>();
 
 		// look through the present room's exits first
-		for (int e = 0; e < room.getExits().size(); e++) {
-			Exit exit = (Exit) room.getExits().get(e);
-			if (exit.getDBRef() == dbref) {
-				return exit;
-			}
-			else {
-				eNums.add(e);
+		for (final Exit e : getRoom(client).getExits()) {
+			if (e.getDBRef() == dbref) {
+				return e;
 			}
 		}
 
 		// look through all the exits (would be great if this could ignore previously searched exits
 		// perhaps by dbref (since that's much shorter than holding object references, etc
-		for (int e = 0; e < exits1.size(); e++) {
-			if (!eNums.contains(e)) {
-				Exit exit = (Exit) exits1.get(e);
-
-				if (exit.getDBRef() == dbref) {
-					return exit;
-				}
-			}
-		}
-		return null;
+        return objectDB.getExit(dbref);
 	}
 
 	/**
@@ -8414,14 +7983,7 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 	 * @return
 	 */
 	public NPC getNPC(final String name) {
-		for (final NPC npc : npcs1) {
-			if (npc.getName().equals(name) || npc.getCName().equals(name)) {
-				debug("NPC (" + name + "): " + npc.getName());
-				return npc;
-			}
-		}
-
-		return null;
+        return objectDB.getNPC(name);
 	}
 
 	/**
@@ -8431,14 +7993,7 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 	 * @return
 	 */
 	public NPC getNPC(final Integer dbref) {
-		for (final NPC npc : npcs1) {
-			if (npc.getDBRef() == dbref) {
-				debug("NPC (" + name + "): " + npc.getName());
-				return npc;
-			}
-		}
-
-		return null;
+        return objectDB.getNPC(dbref);
 	}
 
 	/**
@@ -8520,28 +8075,9 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 	 */
 	public Room getRoom(final String roomName)
 	{
-		if (rooms1 != null) {
-			//check lookup cache
-			if( lookup_caching && room_lookup.containsKey(roomName) ) {
-				return rooms1.get( room_lookup.get(roomName) );
-			}
-			// if no cached result, go look
-			else {
-				for (Room room : rooms1)
-				{
-					if ( room.getName().equals(roomName) )
-					{
+        return objectDB.getRoomByName(roomName);
 						if( lookup_caching ) {
-							room_lookup.put(roomName, rooms1.indexOf(room)); // cache the result?
 						}
-						return room;
-					}
-
-				}
-			}
-		}
-
-		return null;
 	}
 
 	/**
@@ -8552,34 +8088,10 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 	 */
 	public Room getRoom(final Integer dbref)
 	{
-		if (rooms1 != null) {
-			//check lookup cache
-			if( lookup_caching && room_lookup2.containsKey(dbref) ) {
-				//System.out.println("Using cache...");
-				return rooms1.get( room_lookup2.get(dbref) );
-			}
-			// if no cached result, go look
-			else {
-				for (final Room room : rooms1)
-				{
-					if (room.getDBRef() == dbref)
-					{
+        return objectDB.getRoomById(dbref);
 						if( lookup_caching ) {
-							//System.out.println("Looking Up Room...");
-							//System.out.println(dbref);
-							//System.out.println(rooms1.indexOf(room));
-							room_lookup2.put(dbref, (Integer) rooms1.indexOf(room)); // cache the result?
-							//System.out.println(room_lookup2.get(dbref));
 						}
 
-						return room;
-					}
-
-				}
-			}
-		}
-
-		return null;
 	}
 
 	/**
@@ -8593,18 +8105,7 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 	 */
 	public Thing getThing(String arg, Client client)
 	{
-		final Player player = getPlayer(client);
-		final Room room = getRoom(client);
-
-		for (final Thing thing : this.things)
-		{
-			if (thing.getLocation() == room.getDBRef() && thing.getName().equals(arg))
-			{
-				return thing;
-			}
-		}
-
-		return null;
+        return objectDB.getThing(getRoom(client).getDBRef(), arg);
 	}
 	
 	public Thing getThing(String name, Room room) {
@@ -8647,50 +8148,6 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 	 * Data Saving Functions
 	 */
 
-	// player save functions
-	public void savePlayer(final Client client)
-	{
-		savePlayer( getPlayer(client) );
-	}
-
-	public void savePlayer(final Player player)
-	{
-		if (player instanceof Player) // if they are actually a player
-		{
-			// modify the in-memory persistent version of the player
-			main.set(player.getDBRef(), player.toDB());
-			// report the result to the game
-			send("Game> Player saved.", getClient(player));
-		}
-	}
-
-	// will save the room the player is in (possibly merge into some kind of future
-	// OLC, online creation/editing package or set of functions since it would permit
-	// saving rooms to the "database in memory" on the fly)
-	public void saveRoom(final Client client)
-	{
-		Room room = getRoom(client); // get the room object associated with the player, via the client
-
-		if (room instanceof Room) // if it is actually a room
-		{
-			// modify the in-memory persistent version of the room
-			main.set(room.getDBRef(), room.toDB());
-			// report the result to the game
-			send("Room saved.", client);
-		}
-	}
-
-	public void saveRoom(final Room room)
-	{
-		if (room instanceof Room) // if it is actually a room
-		{
-			// modify the in-memory persistent version of the room
-			main.set(room.getDBRef(), room.toDB());
-			// report the result to the game
-			//send("Room saved.");
-		}
-	}
-
 	public void saveAccounts() {
 		try {
 			for (final Account a : accounts) {
@@ -8704,14 +8161,6 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 		}
 	}
 
-	public void savePlayers()
-	{	
-		for (final Player player : players) {
-			main.set(player.getDBRef(), player.toDB());
-			debug("Player saved.");
-		}
-	}
-	
 	public void saveNPCs()
 	{	
 		for (final NPC npc : npcs1) {
@@ -8720,68 +8169,9 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 		}
 	}
 
-	// save each room in the list by finding the line with it's name in it
-	// and saving it to that line or by finding the room the line indicates and saving
-	// it there
-	public void saveRooms()
-	{
-		for (final Room room : rooms1) {
-			if ( room.getDBRef() < main.size() ) {
-				main.set(room.getDBRef(), room.toDB());
-			}
-			else {
-				main.add(room.toDB());
-			}
-		}
-		debug("Room Saved.");
-	}
-
-	public void saveExits() {
-		for (final Exit exit : exits1) {
-			main.set(exit.getDBRef(), exit.toDB());
-		}
-		debug("Exit Saved.");
-	}
-
-	public void saveThings()
-	{
-		for (final Thing thing : things) {
-			main.set(thing.getDBRef(), thing.toDB());
-		}
-		debug("Thing Saved.");
-	}
-
-	/**
-	 * saveItems
-	 * 
-	 * This goes through all the items in the game and then
-	 * replaces the db data with the current db representation.
-	 */
-	public void saveItems()
-	{
-		for (final Item item : items) {
-			if (item instanceof Wand) {
-				System.out.println(item.toDB());
-				System.out.println(((Wand) item).toDB());
-			}
-			else if (item instanceof Weapon) {
-				System.out.println(item.toDB());
-				System.out.println(((Weapon) item).toDB());
-			}
-			else if (item instanceof Clothing) {
-				System.out.println(item.toDB());
-				System.out.println(((Clothing) item).toDB());
-			}
-			debug("Before Save: " + main.get(item.getDBRef()), 2); 
-			main.set(item.getDBRef(), item.toDB());
-			debug("After Save: " + main.get(item.getDBRef()), 2);
-		}
-		debug("Item Saved.");
-	}
-
 	public void saveDB() {
-		// save databases to disk
-		Utils.saveStrings(mainDB, main.toArray(new String[0])); // modifies 'real' files
+		// save databases to disk, modifies 'real' files
+		objectDB.save(mainDB);
 	}
 
 	public void saveHelpFiles() {
@@ -8846,418 +8236,38 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 	 * 
 	 * @param in
 	 */
-	synchronized public void loadObjects(ArrayList<String> in)
-	{
-		for (String s : in)
-		{	
-			String oInfo = s;
-
-			if ( s.charAt(0) == '&' ) { // means to ignore that line
-
-				int dbref = Integer.parseInt(s.split("#")[0].substring(1)); // get the dbref
-
-				debug("Found NULLObject -- Ignored Existing Data"); // tell us what happened
-
-				main1.add(new NullObject(dbref)); // put NullObject in arraylist
-
-				// don't add NullObject's dbref to unused stack
-
-				// skip further checking
-				continue;
-			}
-
-			Integer oDBRef = 0, oLocation = 0;
-			String oName = "", oFlags = "", oDesc = "";
-
-			if (oInfo != null)
-			{
-				try {
-					String[] attr = oInfo.split("#"); // split the string on the '#' symbols in it
 
 					// copy the information relevant to all objects (and thus existing in complete form for all
 					// objects into variables.
-					oDBRef = Integer.parseInt(attr[0]);
-					oName = attr[1];
-					oFlags = attr[2];
-					oDesc = attr[3];
-					oLocation = Integer.parseInt(attr[4]);
-
 					// print out that basic information (Debugging Purposes)
-					/*debug("Database Reference Number: " + oDBRef);
-					debug("Name: " + oName);
-					debug("Flags: " + oFlags);
-					debug("Description: " + oDesc);
-					debug("Location: " + oLocation);*/
-
-					if (oFlags.indexOf("C") == 0) {
 						{
-							int raceNum;                      // 9 - race number (enum ordinal)
-
-							Creature cre = new Creature(oDBRef, oName, oFlags, oDesc, oLocation);
-
-							// set race
-							try {
-								raceNum = Integer.parseInt(attr[9]);
-								cre.race = Races.getRace(raceNum);
-							}
-							catch(NumberFormatException nfe) {
-								nfe.printStackTrace();
-								cre.race = Races.NONE;
-							}
-
-							// add the creature to the in-memory database and to the list of creatures
-							main1.add(cre);
-							creatures.add(cre);
-						}
 					}
-					else if (oFlags.indexOf("P") != -1) {
 						{
-
-							String oPassword = attr[5];       // 5 - password
-							String[] os = attr[6].split(","); // 6 - stats
-							String[] om = attr[7].split(","); // 7 - money
-							//int access;                     // 8 - permissions
-							int raceNum;                      // 9 - race number (enum ordinal)
-							int classNum;                     // 10 - class number (enum ordinal)
 							String status = attr[11];         // 11 - status (string)                    
-
-
-							Integer[] oStats = Utils.stringsToIntegers(os);
-							Integer[] oMoney = Utils.stringsToIntegers(om);
-
-							Player player = new Player(oDBRef, oName, oFlags, oDesc, oLocation, "", oPassword, "IC", oStats, oMoney);
-							
-							player.setAccess(Utils.toInt(attr[8], USER));
-
-							// set race
-							try {
-								raceNum = Integer.parseInt(attr[9]);
-								player.setPlayerRace(Races.getRace(raceNum));
-							}
-							catch(NumberFormatException nfe) {
-								nfe.printStackTrace();
-								player.setPlayerRace(Races.NONE);
-							}
-
-							// set class
-							try {
-								classNum = Integer.parseInt(attr[10]);
-								player.setPClass(Classes.getClass(classNum));
-							}
-							catch(NumberFormatException nfe) {
-								nfe.printStackTrace();
-								player.setPClass(Classes.NONE);
-							}
 							
 							player.setStatus(status);
 
-							//debug("DEBUG (db entry): " + player.toDB(), 2);
-
-							main1.add(player);
-
-							authTable.add(s); // add player info to authentication table
-							authTable1.put(player.getName(), player.getPass()); // add player info to authentication table
-						}
-					}
 					else if (oFlags.equals("WMV") == true) // Weapon Merchant Vendor (NPC)
 					{
-						WeaponMerchant wm = new WeaponMerchant(this, oDBRef, oName, oFlags, "A weapon merchant.", "Merchant", "VEN", 161, new String[]{"1000", "1000", "1000", "1000"} );
-
-						debug("DEBUG (db entry): " + wm.toDB(), 2);
-						debug("Weapon Merchant", 2);
-
-						main1.add(wm);
-						npcs1.add(wm);
-					}
-					else if (oFlags.equals("AMV") == true) // Armor Merchant Vendor (NPC)
 					{
-						ArmorMerchant am = new ArmorMerchant(this, oDBRef, oName, oFlags, "An armor merchant.", "Merchant", "VEN", 161, new String[]{"1000", "1000", "1000", "1000"} );
-
-						debug("DEBUG (db entry): " + am.toDB(), 2);
-						debug("Armor Merchant", 2);
-
-						main1.add(am);
-						npcs1.add(am);
-					}
-					else if (oFlags.equals("IKV") ) // InnKeeper Vendor (NPC)
 					{
-						Innkeeper ik = new Innkeeper(this, oDBRef, oName, oFlags, oDesc, "Merchant", "VEN", oLocation, new String[]{"1000", "1000", "1000", "1000"} );
-
-						debug("DEBUG (db entry): " + ik.toDB(), 2);
-						debug("Innkeeper", 2);
-
-						main1.add(ik);
-						npcs1.add(ik);
-					}
-					else if(oFlags.equals("E") == true) // Exit
-					{
-						int eType = Integer.parseInt(attr[6]);
-
-						ExitType et = ExitType.values()[eType];
-
-						if(et == ExitType.STD) { // Standard Exit
-							int oDest = Integer.parseInt(attr[5]);
-
-							Exit exit = new Exit(oDBRef, oName, oFlags, oDesc, oLocation, oDest);
-							exit.setExitType(et);
-
-							debug("DEBUG (db entry): " + exit.toDB(), 2);
-
-							main1.add(exit);
-							exits1.add(exit);
-
-						}
-						else if(et == ExitType.PORTAL) // Portal Exit
 						{
-							Portal portal;
-
-							String oPortalType = attr[6];
-
-							// here we assume a typed but unkeyed portal
-							//public Portal(PortalType pType, int pOrigin, int[] pDestinations) 
-							if(oPortalType.equals("S") == true) // Standard Portal Exit
 							{
-								int oDestination = Integer.parseInt(attr[5]);
-
-								portal = new Portal(PortalType.STD, oLocation, oDestination);
-								portal.setExitType(et);
-
-								portal.name = attr[1];            // name
-								portal.coord.setX(1);             // x coordinate
-								portal.coord.setY(1);             // y coordinate
-
-								main1.add(portal);
-								exits1.add(portal);
-							}
-							else if(oPortalType.equals("R") == true) // Random Portal Exit
 							{
-								int[] oDestinations = Utils.stringsToInts(attr[5].split(",")); 
-
-								portal = new Portal(PortalType.RANDOM, oLocation, oDestinations);
-								portal.setExitType(et);
-
-								portal.name = attr[1];            // name
-								portal.coord.setX(1);             // x coordinate
-								portal.coord.setY(1);             // y coordinate
-
-								main1.add(portal);
-								exits1.add(portal);
-							}
-						}
-					}
-					else if(oFlags.equals("N") == true) // Non-Player Character (NPC)
 					{
-						//NPC npc = new NPC(oDBRef, oName, oDesc, oLocation, "npc");
-						NPC npc = loadNPC(oInfo);
-						npc.setCName("npc");
-
-						npc.setQuestList();
-						npc.getQuestList().add(new Quest("Test", "Test", new Task("Test")));
-
-						debug("DEBUG (db entry): " + npc.toDB(), 2);
-
-						main1.add(npc);
-						npcs1.add(npc);
-					}
-					else if(oFlags.indexOf("R") == 0) // Room
-					{
-						String roomType = attr[5];
-
-						Room room;
-						room = new Room(oDBRef, oName, oFlags, oDesc, oLocation);
-
-
-						debug("DEBUG (db entry): " + room.toDB(), 2);
-
-						room.setRoomType(roomType);
-
-						if (room.getRoomType().equals("O")) {
-							room.getProps().put("sky", "The sky is clear and flecked with stars.");
-						}
-
-						main1.add(room);
-						rooms1.add(room);
-					}
-					else if(oFlags.indexOf("T") != -1) // Thing
-					{
-						Thing thing = new Thing(oDBRef, oName, oFlags, oDesc, oLocation);
-
-						debug("DEBUG (db entry): " + thing.toDB(), 2);
-
-						main1.add(thing);
-						things.add(thing);
-					}
-					else if(oFlags.indexOf("I") == 0) // Item
-					{
-						int itemType = Integer.parseInt(attr[5]); // get the type of item it should be
-						ItemType it = ItemType.values()[itemType];
-
-						if( it == ItemType.CLOTHING ) // Clothing
 						{
-							int clothingType = Integer.parseInt(attr[6]);
-							int mod = Integer.parseInt(attr[7]);
-
-							Clothing clothing = new Clothing(oName, oDesc, oLocation, oDBRef, mod, ClothingType.values()[clothingType]);
-							clothing.item_type = it;
-
-							main1.add(clothing);
-							items.add(clothing);
-
-							debug("DEBUG (db entry): " + clothing.toDB(), 2);
-						}
-
-						if( it == ItemType.WAND ) // Wand
 						{
-							String spellName = attr[6];
-							int charges = Integer.parseInt(attr[7]);
-
-							Wand wand = new Wand(oName, oDesc, oLocation, oDBRef, ItemType.values()[itemType], charges, spellName);
-							//wand.item_type = it; // unnecessary
-
-							main1.add(wand);
-							items.add(wand);
-
-							debug("DEBUG (db entry): " + wand.toDB(), 2);
-						}
-
-						if( it == ItemType.WEAPON ) // Weapon
 						{
-							int weaponType = Integer.parseInt(attr[6]);
-							int mod = Integer.parseInt(attr[7]);
-
-							Weapon weapon = new Weapon(oName, oDesc, oLocation, oDBRef, mod, Handed.ONE, WeaponType.values()[weaponType], 15.0);
-							weapon.item_type = it;
-
-							main1.add(weapon);
-							items.add(weapon);
-
-							debug("DEBUG (db entry): " + weapon.toDB(), 2);
-						}
-
-						else if( it == ItemType.ARMOR ) // Armor
 						{
-							int armorType = Integer.parseInt(attr[6]);
-							int mod = Integer.parseInt(attr[7]);
-
-							Armor armor = new Armor(oName, oDesc, (int) oLocation, (int) oDBRef, mod , ArmorType.values()[armorType], ItemType.values()[itemType]);
-							armor.item_type = it;
-
-							main1.add(armor);
-							items.add(armor);
-
-							debug("DEBUG (db entry): " + armor.toDB(), 2);
-						}
-
-						if( it == ItemType.ARROW ) // Arrow
 						{
-							int stackID = Integer.parseInt(attr[7]);
-
-							Arrow arrow = new Arrow(oDBRef, oName, oDesc, oLocation);
-							arrow.item_type = it;
-
-							main1.add(arrow);
-							items.add(arrow);
-
-							debug("DEBUG (db entry): " + arrow.toDB(), 2);
-						}
-
-						if( it == ItemType.BOOK ) // Book
 						{
-							String author = attr[6];
-							String title = attr[7];
-							int pages = Integer.parseInt(attr[8]);
-
-							Book book = new Book(oName, oDesc, oLocation, oDBRef);
-							book.item_type = it;
-
-							book.setAuthor(author);
-							book.setTitle(title);
-							book.setPageNum(0);
-
-							main1.add(book);
-							items.add(book);
-
-							debug("DEBUG (db entry): " + book.toDB(), 2);
-						}
-
-						if( it == ItemType.POTION ) // Potion
 						{
-							int stack_size = Integer.parseInt(attr[6]);
-							String sn = attr[7];
-
-							/*
-							 * whatever I do here needs to recreate the entirety
-							 * of a stack of potions correctly
-							 */
-
-							Potion potion = new Potion(oDBRef, oName, "I", oDesc, oLocation, sn);
-
-							for (int i = 1; i < stack_size; i++) {
-								Potion potion1 = new Potion(oDBRef, oName, "I", oDesc, oLocation, sn);
-								potion.item_type = ItemType.POTION;
-
-								potion.stack(potion1);
-							}
-
-							main1.add(potion);
-							items.add(potion);
-
-							debug("DEBUG (db entry): " + potion.toDB(), 2);
-						}
-					}
-					else if(oFlags.equals("null") == true) // NULLObject
-					{
-						NullObject Null = new NullObject(oDBRef);
-
-						//debug("Found NULLObject");
-						debug("DEBUG (db entry): " + Null.toDB() + " [Found NULLObject]", 2);
-
-						main1.add(new NullObject(oDBRef));
-						unusedDBNs.push(Null.getDBRef());
-					}
-				}
-				catch(ConcurrentModificationException cme) {
-					cme.printStackTrace();
-				}
-				catch(ArrayIndexOutOfBoundsException aioobe) {
-					aioobe.printStackTrace();
-				}
-			}
-		}
-	}
-
-	/**
-	 * Go through all the exits that exist in the database and
-	 * place/attach them in/to the respective rooms they are
-	 * part of
-	 */
-	public void loadExits() {
-		for (final Exit exit : exits1) {
-			if (exit != null) {
-				Room room = getRoom(exit.getLocation());
-
-				if (room != null) {
-					room.getExits().add(exit);
-					debug("Exit Loaded", 2);
-					debug(room.getDBRef() + " " + exit.getDBRef(), 2);
-				}
-			}
-		}
-	}
-
 	/**
 	 * Go through all the things that exist in the database
 	 * and place them in the respective rooms they are located in
 	 */
 	public void placeThingsInRooms() {
-		for (final Thing t : things) {
-			if (t != null) {
-				Room room = getRoom(t.getLocation());
-				if (room != null) {
-					room.contents.add(t);
-				}
-			}
-		}
+        objectDB.placeThingsInRooms(this);
 	}
 
 	/**
@@ -9265,70 +8275,53 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 	 * and place them in the respective rooms they are located in
 	 */
 	public void loadItems() {
-		for (Item item : this.items) {// !PROBLEM! not all items are necessarily in rooms
+        objectDB.addItemsToRooms();
+
+		for (final Entry<Item, Player> entry : objectDB.getItemsHeld().entrySet()) {
+
+            final Item item = entry.getKey();
+            final Player npc = entry.getValue();
 
 			debug(item.getDBRef() + " " + item.getName());
-
-			MUDObject m = getObject(item.getLocation());
-
-			debug(item.getLocation() + " " + m.getName(), 2);
+			
+			debug(item.getLocation() + " " + npc.getName(), 2);
 			debug("Item Loaded", 2);
 
-			if (m instanceof Room) {
-				Room room = getRoom(item.getLocation());
-
-				if (item != null && room != null) {
-					room.contents1.add(item);
-				}
-			}
-			else if (m instanceof Player) {
-				if (m instanceof NPC) {
-					if (m instanceof ArmorMerchant) {
-						ArmorMerchant am = (ArmorMerchant) m;
-
-						debug("ArmorMerchant (" + am.getName() + ") " + item.getName(), 2);
-
-						if (item != null && am != null) {
-							am.stock.add(item);
-						}
-					}
-					else if (m instanceof WeaponMerchant) {
-						WeaponMerchant wm = (WeaponMerchant) m;
-
-						debug("WeaponMerchant (" + wm.getName() + ") " + item.getName(), 2);
-
-						if (item != null & wm != null) {
-							wm.stock.add(item);
-						}
-					}
-					else {
-						NPC npc = (NPC) m;
-						debug(npc.getName() + ": Not a merchant", 2);
-					}
-				}
-				else {
-					Player player = (Player) m;
-					player.getInventory().add(item);
-				}
-			}
+            if (npc instanceof NPC) {
+                if (npc instanceof ArmorMerchant) {
+                    final ArmorMerchant am = (ArmorMerchant) npc;
+                    debug("ArmorMerchant (" + am.getName() + ") " + item.getName(), 2);
+                    am.stock.add(item);
+                }
+                else if (npc instanceof WeaponMerchant) {
+                    final WeaponMerchant wm = (WeaponMerchant) npc;
+                    debug("WeaponMerchant (" + wm.getName() + ") " + item.getName(), 2);
+                    wm.stock.add(item);
+                }
+                else {
+                    debug(npc.getName() + ": Not a merchant", 2);
+                }
+            }
+            else {
+                ((Player) npc).getInventory().add(item);
+            }
 		}
-
 	}
-
+	
 	/**
 	 * For each npc, every one that is either a WeaponMerchant
 	 * or an ArmorMerchant will be stocked with a default set of merchandise
 	 * if they have NO stock.
 	 */
 	public void fillShops() {
-		for (NPC npc : npcs1) {
+		for (final NPC npc : objectDB.getNPCs()) {
 			// Weapon Merchants
 			if (npc instanceof WeaponMerchant) {
 				WeaponMerchant wm = (WeaponMerchant) npc;
 				if (wm.stock.size() == 0) { // no merchandise
 					wm.stock = createItems(new Weapon(0, Handed.ONE, WeaponType.LONGSWORD, 15), 10);
 					System.out.println("Weapon Merchant's (" + wm.getName() + ") store has " + wm.stock.size() + " items.");
-					for (Item item : wm.stock) {
+					for (final Item item : wm.stock) {
 						int l = item.getLocation();
 						item.setLocation(wm.getDBRef());
 						System.out.println("Item #" + item.getDBRef() + " had Location #" + l + " and is now at location #" + item.getLocation());
@@ -9341,7 +8334,7 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 				if (am.stock.size() == 0) { // no merchandise
 					am.stock = createItems(new Armor(0, 0, ArmorType.CHAIN_MAIL), 10);
 					System.out.println("Armor Merchant's (" + am.getName() + ") store has " + am.stock.size() + " items.");
-					for (Item item : am.stock) {
+					for (final Item item : am.stock) {
 						int l = item.getLocation();
 						item.setLocation(am.getDBRef());
 						System.out.println("Item #" + item.getDBRef() + " had Location #" + l + " and is now at location #" + item.getLocation());
@@ -9353,7 +8346,7 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 				if (ik.stock.size() == 0) { // no merchandise
 					ik.stock = createItems(new Book("Arcani Draconus"), 10);
 					System.out.println("Innkeeper's (" + ik.getName() + ") store has " + ik.stock.size() + " items.");
-					for (Item item : ik.stock) {
+					for (final Item item : ik.stock) {
 						int l = item.getLocation();
 						item.setLocation(ik.getDBRef());
 						System.out.println("Item #" + item.getDBRef() + " had Location #" + l + " and is now at location #" + item.getLocation());
@@ -9802,24 +8795,11 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 		// generate generic name for unknown players based on their class and the number of players with the same class presently on
 		// logged on of a given class
 		debug("Generating generic name for player...");
-
-		String className = player.getPClass().toString();
-		String tempName;
-
-		if (pna.get(className) != null) {
-			tempName = className.toLowerCase() + pna.get(className);
-			pna.put(className, pna.get(className) + 1);
-		}
-		else {
-			tempName = className.toLowerCase() + 0;
-			pna.put(className, 1);
-		}
-
 		debug("Done");
 
-		player.setCName(tempName);
+		player.setCName(player.getPClass().toString());
 
-		debug("Number of current connected players that share this player's class: " + pna.get(className));
+		debug("Number of current connected players that share this player's class: " + objectDB.getNumPlayers(player.getPClass()));
 
 		// NOTE: I should probably add a mapping here somewhere that ties the player to their account, if they have one
 
@@ -9840,8 +8820,8 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 			final Armor armor = new Armor("Leather Armor", "A brand new set of leather armor, nice and smooth, but a bit stiff still.", -1, -1, 0, ArmorType.LEATHER, ItemType.ARMOR);
 			final Weapon sword = new Weapon("Long Sword", "A perfectly ordinary longsword.", 0, Handed.ONE, WeaponType.LONGSWORD, 15.0);
 			
-			armor.setDBRef(nextDB("use"));
-			sword.setDBRef(nextDB("use"));
+			objectDB.addAsNew(armor);
+			objectDB.addAsNew(sword);
 			
 			armor.setLocation(player.getDBRef());
 			sword.setLocation(player.getDBRef());
@@ -9894,11 +8874,9 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 		ArrayList<Item> inventory = player.getInventory();
 
 		// go through objects array and put references to objects that are located in/on the player in their inventory
-		for (Item item : this.items) {
-			if (item.getLocation() == player.getDBRef()) {
-				debug("Item -> " + item.getName() + " (#" + item.getDBRef() + ") @" + item.getLocation());
-				inventory.add(item);
-			}
+		for (final Item item : objectDB.getItemsByLoc(player.getDBRef())) {
+            debug("Item -> " + item.getName() + " (#" + item.getDBRef() + ") @" + item.getLocation());
+            inventory.add(item);
 		}
 
 		/* ChatChannel Setup */
@@ -9977,10 +8955,6 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 
 			debug("init_disconn(" + client.ip()+ ")");
 
-			// decrease the number of people with that class, which is stored for generic naming
-			String classname = player.getPClass().toString();
-			pna.put(classname, pna.get(classname) - 1);
-
 			// get time
 			Time time = getTime();
 
@@ -10005,15 +8979,9 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 			// if player is a guest
 			if ( player.getFlags().charAt(0) == 'G') {
 				// remove from database
-				main1.set( player.getDBRef(), new NullObject( player.getDBRef() ) );  // replace db entry with NULLObjet
-				main.set( player.getDBRef(), main1.get( player.getDBRef() ).toDB() ); // adjust database with nullobject dbstring
-
-				// cleanup
+				objectDB.set( player.getDBRef(), new NullObject( player.getDBRef() ) );  // replace db entry with NULLObjet
 			}
 			else {
-				// save changes to player
-				savePlayer(client);
-
 				// save mail
 				saveMail(player);
 
@@ -10189,71 +9157,18 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 		send("Mode: " + mode, someClient);
 	}
 
-	// Miscellaneous Functions
-
-	/**
-	 * wrapper function for nextDB(String arg) to ease usage in
-	 * no parameter cases
-	 * 
-	 * @return the next unused database reference (dbref) number
-	 */
-	public int nextDB() {
-		return nextDB("");
-	}
-
-	/**
-	 * function to get next db#
-	 * 
-	 * @param arg
-	 * @return the next unused database reference (dbref) number
-	 */
-	public int nextDB(String arg)
+	public void printUnusedDB()
 	{
-		int tmp = 0;
-
-		// dummy request (just tell us what's next)
-		if (arg.equals("")) {
-			if (!unusedDBNs.isEmpty()) {  // if the stack isn't empty
-				tmp = unusedDBNs.peek(); // look at the top and tell us what's next
-			}
-			else { // the stack is empty, so there aren't any unused ones
-				debug("No unused existing database references, calculating next new one...");
-				tmp = main1.size();
-			}
-		}
-		// give us a unused dbref to use
-		else if (arg.equals("use")) { // use request (we want to get one to use)
-			if (!unusedDBNs.isEmpty()) { // if the stack isn't empty
-				tmp = unusedDBNs.pop(); // take one off and give it to use
-			}
-			else { // the stack is empty, so there aren't any unused ones
-				debug("No unused existing database references, calculating next new one...");
-				tmp = main1.size();
-			}
-		}
-		// show us a list of unused dbref numbers
-		else if (arg.equals("list")) {
-			StringBuffer out = new StringBuffer();
-			System.out.print("Next Database Reference Numbers: ");
-			out.append("Next Database Reference Numbers: ");
-			System.out.print("[ ");
-			for (Integer i : unusedDBNs) {
-				System.out.print(i + ", ");
-				out.append(i + ", ");
-			}
-			System.out.println(" ]");
-			out.append(" ]");
-			//send(out.toString(), client);
-		}
-		// just grab new numbers after the current largest, so we get a nice contiguous chunk
-		else if (arg.equals("clean")) { 
-			tmp = main1.size();
-		}
-		else {
-			debug("no argument?");
-		}
-
-		return tmp;
+        StringBuffer out = new StringBuffer();
+        out.append("Next Database Reference Numbers: ");
+        out.append("[ ");
+        /*
+        for (final Integer i : unusedDBNs) {
+            out.append(i + ", ");
+        }
+        */
+        out.append(" ]");
+        System.out.print(out);
 	}
 
 	/**
@@ -10287,41 +9202,6 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 		else {
 			return "";
 		}
-	}
-
-	/**
-	 * Check to see that the chosen player name is not already in use.
-	 * 
-	 * Used in player creation
-	 * 
-	 * Note: In the future, it'd be nice to have a last name or other naming distinction
-	 * because limiting everyone to one instance of a first name per the whole mud is
-	 * considerably limiting and somewhat unrealistic
-	 * 
-	 * @param testName
-	 * @return
-	 */
-	public boolean checkName(String testName)
-	{
-		boolean nameIsUnique = true;
-
-		// get existing names
-		ArrayList<String> names = new ArrayList<String>();
-
-		for (String player : main) {
-			String[] playerInfo = player.split("#");
-			names.add(playerInfo[1]);
-		}
-
-		if ( names.contains(testName) ) {
-			nameIsUnique = false;
-			//debug("Name is not unique.");
-		}
-		else {
-			//debug("Name is Unique!");
-		}
-
-		return nameIsUnique;
 	}
 
 	// check to see that the chosen player name, conforms to the naming rules
@@ -10376,27 +9256,15 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 		// Rooms
 		log.writeln("Game> Backing up Rooms...");
 
-		synchronized(rooms1) {
-			saveRooms(); // NOTE: only modifies in memory storage
-		}
-
 		log.writeln("Done.");
 
 		// Exits
 		log.writeln("Game> Backing up Exits...");
 
-		synchronized(exits1) {
-			saveExits(); // NOTE: only modifies in memory storage
-		}
-
 		log.writeln("Done.");
 
 		// Players
 		log.writeln("Game> Backing up Players...");
-
-		synchronized(players) {
-			savePlayers(); // NOTE: only modifies in memory storage
-		}
 
 		log.writeln("Done.");
 		
@@ -10421,27 +9289,17 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 		// Things
 		log.writeln("Game> Backing up Things...");
 
-		synchronized(things) {
-			saveThings(); // NOTE: only modifies in memory storage
-		}
-
 		log.writeln("Done.");
 
 		// Items
 		log.writeln("Game> Backing up Items...");
-
-		synchronized(items) {
-			saveItems(); // NOTE: only modifies in memory storage
-		}
 
 		log.writeln("Done.");
 
 		// Database
 		log.writeln("Game> Backing up Database...");
 
-		synchronized(main) {
-			saveDB(); // NOTE: real file modification occurs here
-		}
+        saveDB(); // NOTE: real file modification occurs here
 
 		log.writeln("Done.");
 
@@ -10459,30 +9317,7 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 
 	// very broken, produces nulls, effectively destroying the database
 	public void backup2() {
-		// save database to disk
-		String[] toSave;
-		int index = 0;
-
-		send("Saving Database...");
-
-		synchronized(main1) {
-			toSave = new String[main1.size()];
-
-			try {
-				for (MUDObject m : main1) {
-					if (m instanceof Player) {
-						System.out.println("test: " + ((Player) m).toDB());
-					}
-					toSave[index] = m.toDB();
-				}
-			}
-			catch(NullPointerException npe) {
-				npe.printStackTrace();
-			}
-		}
-
-		Utils.saveStrings(mainDB, toSave);    // modifies 'real' files
-
+        objectDB.save(mainDB);
 		send("Done");
 	}
 
@@ -10511,7 +9346,7 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 		s.write("Server Shutdown!\n");
 
 		// prevent any new connections
-		mode = GameMode.MAINTENANCE.ordinal();
+		mode = GameMode.MAINTENANCE;
 
 		// disconnect any connected clients
 		for (Client client1 : s.getClients()) {
@@ -10731,12 +9566,12 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 	 */
 	public String gameTime() {
 		String output;
-		if (dn == 0) { // it is night
-			//output = "It is " + time_of_day + ", the " + mp.toString() + " " + celestial_body + " is " + cb_location + ".";
-			output = "It is " + time_of_day + ", the " + moon_phase + " " + celestial_body + " is " + cb_location + ".";
+        final TimeOfDay tod = game_time.getTimeOfDay();
+		if (!game_time.isDaytime()) {
+			output = "It is " + tod.timeOfDay + ", the " + game_time.getMoonPhase() + " " + game_time.getCelestialBody() + " is " + tod.bodyLoc + ".";
 		}
 		else {
-			output = "It is " + time_of_day + ", the " + celestial_body + " is " + cb_location + ".";
+			output = "It is " + tod.timeOfDay + ", the " + game_time.getCelestialBody() + " is " + tod.bodyLoc + ".";
 		}
 		return output;
 	}
@@ -10877,174 +9712,6 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 		}
 	}
 
-	/**
-	 * A runnable time loop to supply game time and changes in date according to it.
-	 * 
-	 * @author Jeremy
-	 *
-	 */
-	public class TimeLoop implements Runnable {
-		private int minutes;
-		private int hours;
-		private int days;
-		private int months;
-		//private int years;
-
-		private int timeScale = 10000; // 10k ms (10 s) 
-
-		/**
-		 * This uses a 6:1 timescale. That is, 6 minutes of game time is equal to 1 minute
-		 * of real time. To adjust that simply change the timeScale variable to the of seconds
-		 * to adjust how much real time (in seconds) is equal to 1 minute of game time.
-		 * 
-		 * Modifications: x:1 timescale
-		 */
-
-		public TimeLoop(int cHours, int cMinutes) {
-			this.minutes = cMinutes; // the initial number of minutes (start time)
-			this.hours = cHours;     // the initial number of hours (start time)
-			this.days = day;         // the initial number of days (start day)
-			this.months = month;     // the initial number of months (start month)
-			//this.years = year;     // the initial number of years (start year)
-		}
-
-		// message sending with specifics needs a loginCheck(client), but it needs to not cause the game to crash
-		@Override
-		public void run() {
-			while ( running ) {
-				try {
-					Thread.sleep(timeScale);
-					if (this.minutes == 59) {
-						this.minutes = 0; // reset minutes
-						if (this.hours == 23) {
-							this.hours = 0; // reset hours
-							if (this.days == DAYS[month - 1]) {
-								if (this.months == 12) {
-									year++;
-									this.months = 1;
-									month = 1;
-								}
-								else {
-									this.months++;
-									month++;
-								}
-								this.days = 1;
-								day = 1;
-							}
-							else {
-								this.days++;
-								day++;
-							}
-						}
-						else {
-							this.hours++;
-
-							update_shops = true;   // global variable
-							update_weather = true; // global variable
-
-							if (this.hours == 5 && minutes == 0) {
-								time_of_day = "before dawn";
-								cb_location = "setting";
-								debug("It is now just before dawn.");
-								//send("It is now just before dawn.");
-								addMessage( new Message("It is now just before dawn.") );
-							}
-							else if (this.hours == 6 && minutes == 0) {
-								time_of_day = "dawn";
-								celestial_body = "sun";
-								cb_location = "rising";
-								dn = 1; // it's day-time
-								debug("It is now dawn.");
-								//send("It is now dawn.");
-								addMessage( new Message("It is now dawn.") );
-							}
-							else if (this.hours == 7 && minutes == 0) {
-								time_of_day = "morning";
-								cb_location = "up";
-								debug("It is now morning.");
-								//send("It is now morning.");
-								addMessage( new Message("It is now morning.") );
-							}
-							else if (this.hours == 12 && minutes == 0) {
-								time_of_day = "midday";
-								cb_location = "high in the sky";
-								debug("It is now midday.");
-								//send("It is now midday.");
-								addMessage( new Message("It is now midday.") );
-							}
-							else if (this.hours == 13 && minutes == 0) {
-								time_of_day = "afternoon";
-								cb_location = "up";
-								debug("It is now afternoon.");
-								//send("It is now afternoon.");
-								addMessage( new Message("It is now afternoon.") );
-							}
-							else if (this.hours == 18 && minutes == 0) {
-								time_of_day = "dusk";
-								cb_location = "setting";
-								debug("It is now dusk.");
-								//send("It is now dusk.");
-								addMessage( new Message("It is now dusk.") );
-							}
-							else if (this.hours == 19 && minutes == 0) {
-								time_of_day = "night";
-								celestial_body = "moon";
-								cb_location = "rising";
-								dn = 0; // it's night-time
-								debug("It is now night.");
-								//send("It is now night.");
-								addMessage( new Message("It is now night.") );
-							}
-							else if (this.hours == 0 && minutes == 0) {
-								time_of_day = "midnight";
-								cb_location = "high in the sky";
-								debug("It is now midnight.");
-								//send("It is now midnight.");
-								addMessage( new Message("It is now midnight.") );
-							}
-						}
-					}
-					else { this.minutes++; }
-					debug("" + hours + ":" + minutes);
-					/*
-					 * per minute things that need to happen
-					 * probably shouldn't be in the time loop, but triggered
-					 * from it, but this is fine for testing purposes
-					 * 
-					 * I'd really like it to be another thread that is
-					 * asleep for the timescale (5s last i checked),
-					 * wakes up to do movement, etc, then goes back to sleep
-					 * 					
-					 * maybe it could just be a heartbeat thread
-					 * I could make it like this one, but I'd rather it was
-					 * in sync with the time, no matter what timescale I choose
-					 * to use
-					 */
-					handle_movement();
-				}
-				catch(NullPointerException npe) {
-					npe.printStackTrace();
-				}
-				catch(InterruptedException ie) {
-					ie.printStackTrace();
-				}
-			}
-		}
-
-		public void setHour(int hour) {
-			this.hours = hour;
-			this.minutes = 0;
-		}
-
-		public void setMinute(int minute) {
-			this.minutes = minute;
-		}
-
-		public void setScale(int ms) {
-			this.timeScale = ms;
-		}
-	}
-
 	public class WeatherLoop implements Runnable {
 
 		private boolean inSync = false;
@@ -11061,26 +9728,24 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 				if (inSync) {
 					try {
 						// once every period
-						debug(game_time.minutes);
+						debug(game_time.getMinutes());
 						debug(fired);
-						if ((game_time.minutes + 1) % fired == 0) {
+						if ((game_time.getMinutes() + 1) % fired == 0) {
 
 							// loop through all the rooms and broadcast weather messages accordingly
-							for (int r = 0; r < rooms1.size(); r++) {
-								Room room = (Room) rooms1.get(r);
-								if (room.getRoomType() == "O" || room.getRoomType() == "P") {
-									//atmosphere = room.getAtmosphere();
-									//weather = room.getWeather();
-									broadcast("", room);
-									debug("message sent");
-								}
-								else { debug("no message sent"); }
-							}
+                            for (final Room r : objectDB.getWeatherRooms()) {
+                                broadcast("", r);
+                                debug("message sent");
+                            }
+                            for (final Room r : objectDB.getRoomsByType("P")) {
+                                broadcast("", r);
+                                debug("message sent");
+                            }
 							debug("loop fired.");
-							debug(game_time.minutes);
+							debug(game_time.getMinutes());
 							debug(fired);
 							fired++;
-							Thread.sleep(game_time.timeScale * period);
+							Thread.sleep(game_time.getScale() * period);
 						}
 						else {
 							inSync = false;
@@ -11095,8 +9760,8 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 
 		public void sync() {
 			debug("Syncing...");
-			while ((game_time.minutes + 1) % fired != 0) {
-				debug(game_time.minutes);
+			while ((game_time.getMinutes() + 1) % fired != 0) {
+				debug(game_time.getMinutes());
 				debug(fired);
 				debug("Waiting...");
 			}
@@ -11161,27 +9826,6 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 			return this.b;
 		}
 	}*/
-
-	public enum MoonPhase {
-		FULL_MOON("Full Moon"),
-		WANING_GIBBOUS("Waning Gibbous"),
-		LAST_QUARTER("Last Quarter"),
-		WANING_CRESCENT("Waning Crescent"),
-		NEW_MOON("New Moon"),
-		WAXING_CRESCENT("Waxing Crescent"),
-		FIRST_QUARTER("First Quarter"),
-		WAXING_GIBBOUS("Waxing Gibbous");
-
-		private String name;
-
-		private MoonPhase(String name) {
-			this.name = name;
-		}
-
-		public String toString() {
-			return this.name;
-		}
-	}
 
 	public void pulse(Client client) {
 		debug("-- pulse --");
@@ -11409,7 +10053,7 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 	 */
 	public void addMessages(final ArrayList<Message> newMessages) {
 		synchronized(this.messages) { 
-			for (Message newMessage : newMessages) {
+			for (final Message newMessage : newMessages) {
 				this.messages.add(newMessage);
 			}
 		}
@@ -11471,26 +10115,20 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 		send("Type: " + Flags.get(room.getFlags().charAt(0)) + " Flags: " + temp + " Room Type: " + RoomTypes.get(room.getRoomType().charAt(0)), client);
 		send("Description: " + room.getDesc(), client);
 		send("Location: " + getRoom(room.getLocation()).getName() + "(#" + room.getLocation() + ")", client);
+
 		send("Sub-Rooms:", client);
-		for (int r = 0; r < rooms1.size(); r++) {
-			Room room1 = (Room) rooms1.get(r);
-			if (room1.getLocation() == room.getDBRef()) {
-				send(room1.getName() + "(#" + room1.getDBRef() + ")", client);
-			}
-		}
+        for (final Room r : objectDB.getRoomsByLocation(room.getDBRef())) {
+            send(r.getName() + "(#" + r.getDBRef() + ")", client);
+        }
+
 		send("Contents:", client);
-		for (int o = 0; o < things.size(); o++) {
-			Thing thing = (Thing) things.get(o);
-			if (thing.getLocation() == room.getDBRef()) {
-				send( colors(thing.getName(), "yellow") + "(#" + thing.getDBRef() + ")", client);
-			}
+        final List<Thing> roomThings = objectDB.getThingsForRoom(room.getDBRef());
+		for (final Thing t : roomThings) {
+            send( colors(t.getName(), "yellow") + "(#" + t.getDBRef() + ")", client);
 		}
 		send("Creatures:", client);
-		for (int c = 0; c < creatures.size(); c++) {
-			Creature creature = creatures.get(c);
-			if (creature.getLocation() == room.getDBRef()) {
-				send( colors( creature.getName(), "cyan" ), client );
-			}
+        for (final Creature creep : objectDB.getCreatureByRoom(room.getDBRef())) {
+            send( colors( creep.getName(), "cyan" ), client );
 		}
 	}
 
@@ -11737,26 +10375,23 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 
 		send("With:", client);
 
-		for (final NPC npc : npcs1) {
-			if (npc.getLocation() == room.getDBRef())
-			{
-				if (!room.getFlags().contains("S")) {
-					send(colors("[" + npc.getStatus() + "] "+ npc.getName() + "(#" + npc.getDBRef() + ")", "cyan"), client);
-				}
-				else { send(colors("[" + npc.getStatus() + "] "+ npc.getName(), "cyan"), client); }
+        for (final NPC npc : objectDB.getNPCsByRoom(room.getDBRef())) {
+            if (!room.getFlags().contains("S")) {
+                send(colors("[" + npc.getStatus() + "] "+ npc.getName() + "(#" + npc.getDBRef() + ")", "cyan"), client);
+            }
+            else {
+                send(colors("[" + npc.getStatus() + "] "+ npc.getName(), "cyan"), client);
 			}
 		}
 
-		for (final Creature creature : creatures) {
-			if (creature.getLocation() == room.getDBRef()) {
-				if (!room.getFlags().contains("S")) {
-					send( colors( creature.getName() + "(#" + creature.getDBRef() + ")", "cyan" ), client );
-				}
-				else {
-					send( colors( creature.getName(), "cyan" ), client );
-				}
-			}
-		}
+        for (final Creature creep : objectDB.getCreatureByRoom(room.getDBRef())) {
+            if (!room.getFlags().contains("S")) {
+                send( colors( creep.getName() + "(#" + creep.getDBRef() + ")", "cyan" ), client );
+            }
+            else {
+                send( colors( creep.getName(), "cyan" ), client );
+            }
+        }
 
 		for (final Player player : players)
 		{
@@ -12162,7 +10797,7 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 	 * NOTE: seems to explode where x != y for the destination
 	 */
 	public void handle_movement() {
-		for (Player player : this.moving) {
+		for (final Player player : this.moving) {
 			synchronized(player) {
 				// if the player is moving (something else could change this)
 				if (player.isMoving()) {
@@ -12411,16 +11046,6 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 		}
 	}
 
-	/**
-	 * Put unused database reference numbers onto a stack of unused or recently
-	 * freed numbers that will be reused. 
-	 * 
-	 * @param dbref database reference number (integer)
-	 */
-	public void addUnused(int dbref) {
-		unusedDBNs.push(dbref); // add it to the stack
-	}
-
 	/* this really shouldn't handle actual costs, it should just tell us if we can afford it */
 	/**
 	 * Tell us if we, the player, can afford to purchase an item, based on it's
@@ -12564,75 +11189,6 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 		return player;
 	}
 
-	/**
-	 * Generate a player from it's database representation
-	 * 
-	 * NOTE: for testing purposes only now, init_conn doesn't go through
-	 * loadObjects, which is pointless when you consider that I only hold onto a copy
-	 * of the objects and it never goes into the player's array.
-	 * 
-	 * NOTE2: meant to solve a problem where I haven't copied the load code into init_conn,
-	 * but want a properly initialized/loaded player for existing characters when they login
-	 * 
-	 * @param playerData
-	 * @return a player object
-	 */
-	public NPC loadNPC(String npcData) {
-
-		String[] attr = npcData.split("#");
-
-		Integer oDBRef = 0, oLocation = 0;
-		String oName = "", oFlags = "", oDesc = "";
-		String[] os, om;
-
-		oDBRef = Integer.parseInt(attr[0]);    // 0 - npc database reference number
-		oName = attr[1];                       // 1 - npc name
-		oFlags = attr[2];                      // 2 - npc flags
-		oDesc = attr[3];                       // 3 - npc description
-		oLocation = Integer.parseInt(attr[4]); // 4 - npc location
-
-		// 5 - npc doesn't have a password
-		os = attr[6].split(",");               // 6 - npc stats
-		om = attr[7].split(",");               // 7 - npc money
-		int access;                            // 8 - npc permissions
-		int raceNum;                           // 9 - npc race number (enum ordinal)
-		int classNum;                          // 10 - npc class number (enum ordinal)
-
-		/*debug("Database Reference Number: " + oDBRef);
-		debug("Name: " + oName);
-		debug("Flags: " + oFlags);
-		debug("Description: " + oDesc);
-		debug("Location: " + oLocation);*/
-
-		Integer[] oStats = Utils.stringsToIntegers(os);
-		Integer[] oMoney = Utils.stringsToIntegers(om);
-
-
-		NPC npc = new NPC(oDBRef, oName, oFlags, oDesc, oLocation, "", "IC", oStats, oMoney); 
-
-		// Set NPC Race
-		try {
-			raceNum = Integer.parseInt(attr[9]);
-			npc.setPlayerRace(Races.getRace(raceNum));
-		}
-		catch(NumberFormatException nfe) {
-			nfe.printStackTrace();
-			npc.setPlayerRace(Races.NONE);
-		}
-
-		// Set NPC Class
-		try {
-			classNum = Integer.parseInt(attr[10]);
-			npc.setPClass(Classes.getClass(classNum));
-		}
-		catch(NumberFormatException nfe) {
-			nfe.printStackTrace();
-			npc.setPClass(Classes.NONE);
-		}
-
-		return npc;
-	}
-
 	/* Creation Functions */
 
 	/**
@@ -12645,47 +11201,20 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 	 */
 	public Room createRoom(String roomName, int roomParent)
 	{
-		int id = nextDB();
-
 		// flags are defined statically here, because I'd need to take in more variables and in no
 		// case should this create anything other than a standard room which has 'RS' for flags
-		Room room = new Room(id, roomName, "RS", "You see nothing.", roomParent);
+		final Room room = new Room(-1, roomName, "RS", "You see nothing.", roomParent);
 		
 		/*
 		// add rooms to database (main)
-		if (main.size() >= id + 1) {
-			main.set(room.getDBRef(), room.toDB());
-			main1.set(room.getDBRef(), room);
-		}
-		else {
-			main.add(room.toDB());
-		}
-
-		// add rooms to live mud (main1)
-		if (main1.size() >= id + 1) {
-			main1.set(room.getDBRef(), room);
-		}
-		else {
-			main1.add(room);
-		}
+        objectDB.addAsNew(room);
+		objectDB.addRoom(room);
 		*/
 		
 		addToDB(room);
 
-		rooms1.add(room);
-
 		// tell us about it
 		//send("Room '" + roomName + "' created as #" + id + ". Parent set to " + roomParent + ".", );
-
-		/*
-		 * tell the list that we're done, I'd like to fix this extra step, but I don't want to take
-		 * it away until I know the process is complete, probaby I just need to put it back in the unused
-		 * pile if this fails somehow.
-		 * 
-		 * NOTE: this discrepancy may commonly result in two items create in near simultaneity accidentally
-		 * ending up with the same dbref which is a SIGNIFICANT problem
-		 */
-		nextDB("use");
 
 		/* for use of room editor */
 		return room;
@@ -12697,39 +11226,21 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 	 * @return
 	 */
 	private Item createItem() {
-		Item item = new Item();
+		final Item item = new Item();
 
-		item.setDBRef(nextDB("use"));
 		item.setFlags("I");
 		item.setLocation(WELCOME_ROOM);
 
 		item.setItemType(ItemType.NONE);
 
-		items.add(item);
-		
+        objectDB.addAsNew(item);
+		objectDB.addItem(item);
 		/*
-		// add item to database (main)
-		if (main.size() >= item.getDBRef() + 1) {
-			main.set(item.getDBRef(), item.toDB());
-			main1.set(item.getDBRef(), item);
-		}
-		else {
-			main.add(item.toDB());
-		}
-
-		// add item to live mud (main1)
-		if (main1.size() >= item.getDBRef() + 1) {
-			main1.set(item.getDBRef(), item);
-		}
-		else {
-			main1.add(item);
-		}
 		*/
 		
 		addToDB(item);
 
-		// add item to room
-		((Room) main1.get(item.getLocation())).contents1.add(item);
+		((Room) objectDB.get(item.getLocation())).contents1.add(item);
 
 		return item;
 	}
@@ -12808,22 +11319,19 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 	}
 
 	private void initCreatedItem(final Item item) {
-		item.setDBRef(nextDB("use"));
+        objectDB.addAsNew(item);
 		item.setLocation(0);
-
-		main.add(item.toDB());
-		main1.add(item);
-		this.items.add(item);
+        objectDB.addItem(item);
 	}
 
 	/*public NPC createNPC(String name, int location) {
-		NPC npc = new NPC(nextDB("use"), name, null, "N", "A generic npc", "NPC", "IC", location, new String[]{ "0", "0", "0", "0" });
+		NPC npc = new NPC(getNextDB(), name, null, "N", "A generic npc", "NPC", "IC", location, new String[]{ "0", "0", "0", "0" });
 		npcs1.add(npc);
 		return npc;
 	}
 
 	public Creature createCreature(String race, String name, String desc) {
-		Creature creature = new Creature(nextDB("use"), race, name, desc);
+		Creature creature = new Creature(getNextDB(), race, name, desc);
 		creatures.add(creature);
 		return creature;
 	}*/
@@ -12859,12 +11367,9 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 	 * At the present it only updates a single room, ever.
 	 */
 	public void updateWeather() {
-		for (final Room room : rooms1) {
-			if (room.getRoomType() != "O") {
-				continue;
-			}
+		for (final Room room : objectDB.getWeatherRooms()) {
 
-			room.getWeather().nextState();
+            room.getWeather().nextState();
 
 			final WeatherState ws = room.getWeather().ws;
 			if (ws.upDown != 1 && ws.upDown != -1) {
@@ -13104,8 +11609,7 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 		final int dbref = potion.getDBRef();           // get it's dbref
 		final NullObject nobj = new NullObject(dbref); // create a nullobject with that dbref
 
-		main1.set(dbref,  nobj);                 // remove from "live" database (replace with NullObject)
-		main.set(dbref,  nobj.toDB());           // remove from "disk" databse (toDB of a NullObject)
+		objectDB.set(dbref,  nobj);                 // remove from "live" database (replace with NullObject)
 		player.getInventory().remove(potion);    // remove from player inventory
 	}
 
@@ -13194,13 +11698,10 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 		final String[] file = Utils.loadStrings(filename);
 
 		int step = 0; // 0=AREA, 1=ROOM
-		int[] dbrefs = null;
 
 		Area area = null;
 
 		String name;
-
-		int currentRoom = 0;
 
 		for (final String s : file) {
 			if ( s.equals("@AREA") ) {
@@ -13227,16 +11728,7 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 					}
 				}
 				else if ( key.equals("rooms") ) {
-					dbrefs = new int[Integer.parseInt(value)]; // find out how many dbrefs we need
-
 					area = new Area(Integer.parseInt(value));
-
-					/* should probably use the allocation function to do this */
-
-					for (int i = 0; i < dbrefs.length; i++) {   // allocate dbrefs
-						dbrefs[i] = nextDB("clean");
-					}
-
 					step = 1;
 				}
 				break;
@@ -13249,8 +11741,7 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 				final Room room = new Room(); // creates a "blank" room with basic flags and locks, a location and desc borders
 
 				if ( key.equals("dbref") ) {
-					room.setDBRef(dbrefs[currentRoom]);
-					currentRoom++;
+                    objectDB.addAsNew(room);
 				}
 				else if ( key.equals("name") ) {
 					room.setName(value);
@@ -13307,10 +11798,10 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 	 * where I need to be sure I don't try and access an index outside
 	 * of the database
 	 * @return
-	 */
 	public int dbSize() {
 		return main1.size();
 	}
+	 */
 
 	/**
 	 * Takes an input string and generates a new one where each letter is prefixed by
@@ -13414,7 +11905,12 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 
 		return null;
 	}
-
+		    
+    public void onHourIncrement() {
+        fillShops();
+        updateWeather();
+    }
+    
 	public String nameref_eval(String input, Client client) {
 		StringBuffer sb = new StringBuffer(input);
 		StringBuffer refString =  new StringBuffer();

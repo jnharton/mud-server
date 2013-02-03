@@ -71,8 +71,8 @@ public class Server implements Runnable {
 		return !clients.isEmpty();
 	}
  	
- 	public Vector<Client> getClients() {
-		return clients;
+ 	public List<Client> getClients() {
+		return new ArrayList<Client>(clients);
  	}
  	
  	public Client[] getClients_alt() {

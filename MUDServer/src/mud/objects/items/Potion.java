@@ -42,7 +42,7 @@ public class Potion extends Item implements Stackable<Potion>, Usable<Potion> {
 	//private static double weight = 0.5;
 
 	public Potion() {
-		super(parent.nextDB("use"), "Potion", "I", "An empty glass potion bottle.", 8);
+		super(-1, "Potion", "I", "An empty glass potion bottle.", 8);
 		this.item_type = ItemType.POTION;
 		this.drinkable = 1;
 		this.spell = null;
@@ -61,7 +61,7 @@ public class Potion extends Item implements Stackable<Potion>, Usable<Potion> {
 	}*/
 	
 	public Potion(Effect effect) {
-		super(parent.nextDB("use"), "Potion", "I", "A potion of " + effect.getName(), 8);
+		super(-1, "Potion", "I", "A potion of " + effect.getName(), 8);
 		
 		this.item_type = ItemType.POTION;
 		this.drinkable = 1;
@@ -73,7 +73,7 @@ public class Potion extends Item implements Stackable<Potion>, Usable<Potion> {
 	}
 
 	public Potion(Spell spell) {
-		super(parent.nextDB("use"), "Potion", "I", "A potion of " + spell.name, 8);
+		super(-1, "Potion", "I", "A potion of " + spell.name, 8);
 		
 		this.item_type = ItemType.POTION;
 		this.drinkable = 1;

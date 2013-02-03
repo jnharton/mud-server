@@ -1,5 +1,7 @@
 package mud.quest;
 
+import mud.Colors;
+
 /**
  * Task Class
  * 
@@ -145,7 +147,17 @@ public class Task {
 		return this.isComplete;
 	}
 
+    @Override
 	public String toString() {
 		return this.description + "(" + this.taskType + ")";
 	}
+
+	public String toDisplay() {
+        final StringBuilder buf = new StringBuilder();
+        buf.append(isComplete() ? Colors.GREEN : Colors.CYAN).append("      o ").append(getDescription());
+        buf.append(Colors.MAGENTA).append(" ( ").append(location).append(" ) ").append(Colors.CYAN);
+        buf.append("[+]\n");
+        return buf.toString();
+	}
+
 }
