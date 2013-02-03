@@ -34,6 +34,7 @@ import java.net.*;
 import java.util.*;
 
 import mud.MUDServerI;
+import mud.utils.Message;
 
 public class Server implements Runnable {
 
@@ -112,6 +113,14 @@ public class Server implements Runnable {
             }
             else {
                 clients.remove(c);
+            }
+        }
+    }
+
+    public void sendMessage(final Client aclient, final Message msg) {
+        for (final Client client : clients) {
+            if (client.equals(aclient)) {
+                client.writeln(msg.getSender().getName() + " says, \"" + msg.getMessage() + "\" to you. (tell)");
             }
         }
     }

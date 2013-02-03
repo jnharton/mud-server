@@ -73,7 +73,7 @@ public class TimeLoop implements Runnable
             incrementHour();
         }
         server.debug("" + hours + ":" + minutes);
-        server.handle_movement();
+        server.handleMovement();
     }
 
     private void incrementHour() {

@@ -252,15 +252,10 @@ public class MUDServer implements MUDServerI, LoggerI {
 	private Log connection;                // A log file to keep track of connection/disconnection
 	private Log debugLog;                  // A log file to keep track of debugging messages
 	private Log chatLog;                   // A log file to keep track of chat messages
-	private Thread messageLoop;            // A Thread Object for Asynchronous Message Sending (Message Thread)
-	private Thread timeLoop;               // A Thread Object for Tracking game time. (Time Thread)
-	private Thread weatherLoop;            // A Thread Object for Broadcasting game weather; (Weather Thread)
 	private Thread cmdExecLoop;            // A Thread Object for handling command execution
 	private Thread chatThread;             // A Thread Object for a ChatChannel
 	private Thread chatThread1;            // A Thread Object for a ChatChannel
-	private MessageLoop game_messages;     // MessageLoop Object
 	private TimeLoop game_time;            // TimeLoop Object
-	private WeatherLoop game_weather;      // WeatherLoop Object
 	private CommandExec cmdExec;           // CommandExec Object
 	private ChatChannel ooc;               // Out-of-Character ChatChannel
 	private ChatChannel staff;             // Staff ChatChannel
@@ -325,9 +320,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 	private ArrayList<Session> sessions;     // ArrayList of Session  (UNUSED)
 
 	// Communications
-	private ArrayList<Message> pages;        // ArrayList of Messages to other players
-	private ArrayList<Message> messages;     // ArrayList of Messages from the game to a player
-
 	private HashMap<String, ChatChannel> channels = new HashMap<String, ChatChannel>();
 
 	// "Security" Stuff
@@ -623,11 +615,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 
 		debug(""); // formatting
 
-		// initialize pages array
-		this.pages = new ArrayList<Message>();        // handles direct player to player communication
-		// initialize messages array
-		this.messages = new ArrayList<Message>();     // everything else
-
 		MUDObject.parent = this; // assign a static reference to the running server (ugly, but allows some flex)
 
 		// initialize player array
@@ -842,9 +829,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 
 		/* Threads */
 		
-		/* messageLoop: player-to-player messages and some game messages
-		 * timeLoop: time, date, season tracking and triggering weather messages
-		 * weatherLoop: weather messages in general
 		 * chatThreadx: chat channel
 		 * cmdExec: command execution
 		 */
@@ -854,26 +838,14 @@ public class MUDServer implements MUDServerI, LoggerI {
 		 * 25% cpu
 		 */
 
-		// Message Loop
-		// cpu: ~30%
-		game_messages = new MessageLoop();
-		messageLoop = new Thread(game_messages, "messages");
-		messageLoop.start();
-		System.out.println("Message (Thread) Started!");
-
 		// Time Loop
 		// cpu: -for now, appears marginal-
 		game_time = new TimeLoop(this, DAYS, month, day, game_hour, game_minute);
-		timeLoop = new Thread(game_time, "time");
-		timeLoop.start();
+		new Thread(game_time, "time").start();
 		System.out.println("Time (Thread) Started!");
 
 		// Weather Loop
 		// cpu: ~20%
-		//game_weather = new WeatherLoop();
-		//weatherLoop = new Thread(game_weather, "weather");
-		//game_weather.sync(); // synchronize to time
-		//weatherLoop.start();
 		//System.out.println("Weather (Thread) Started!");
 
 		// Chat Channels
@@ -5193,20 +5165,23 @@ public class MUDServer implements MUDServerI, LoggerI {
 		String[] in = arg.split("=");
 		
 		if (in.length > 1) {
-			String[] recipients = in[0].split(",");
+			final String[] recipients = in[0].split(",");
 			String ms = "";
 			
 			if (in.length == 2) {
 				ms = in[1];
 				
 				Message msg = new Message("You page, " + "\"" + Utils.trim(ms) + "\" to " + in[0] + ".", getPlayer(client));
-				messages.add(msg);
+				addMessage(msg);
 				
-				for (int r = 0; r < recipients.length; r++)
-				{
-					// mesage with a player sender, text to send, and the player to send it to
-					pages.add(new Message(getPlayer(client), Utils.trim(ms), getPlayer(recipients[r])));
-				}
+                for (final String recipName : recipients)
+                {
+                    final Client recipClient = tclients.get(getPlayer(recipName));
+                    if (recipClient != null) {
+                        // mesage with a player sender, text to send, and the player to send it to
+                        s.sendMessage(recipClient, new Message(getPlayer(client), Utils.trim(ms), recip));
+                    }
+                }
 			}
 		}
 	}
@@ -5360,7 +5335,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 
 	// Function to disconnect player
 	private void cmd_quit(final String arg, final Client client) {
-		init_disconn(client);
+		initDisconn(client);
 	}
 
 	// Object/Room Recycling Function
@@ -8736,115 +8711,103 @@ public class MUDServer implements MUDServerI, LoggerI {
 	 * @param player
 	 * @param client
 	 */
-	public void init_disconn(Client client)
+	public void initDisconn(final Client client)
 	{
 		final Player player = getPlayer(client);
-
-		if (player != null) // if the chosen client is associated with a player
-		{
-			// break any current control of npcs
-			cmd_control("#break", client);
-			
-			// remove listener
-			getRoom(client).removeListener(player);
-
-			/*
-			 * unequip gear
-			 * 
-			 * If we didn't do this, stuff could get stuck in limbo,
-			 * alternatively, we could just loop through the items array
-			 * and put a new copy of the references in the inventory,
-			 * since it's all going to end up back in the inventory anyway
-			 * (or at least until I figure out how to persist information
-			 * about reloading slots for a player).
-			 */
-
-			// Unequipping gear
-			ArrayList<Item> inventory = player.getInventory();
-
-			for (Slot slot : player.getSlots().values()) {
-				if (slot.isFull()) {
-					if (slot.getItem() != null) {
-						inventory.add(slot.getItem());
-					}
-				}
-			}
-
-			send("Equipment un-equipped!", client);
-
-
-			debug("init_disconn(" + client.ip()+ ")");
-
-			// get time
-			Time time = getTime();
-
-			// get variables to log
-			String playerName = player.getName();
-			int playerLoc = player.getLocation();
-
-			// log the disconnect
-			log.writeln(playerName, playerLoc, "Logged out at " + time.hour() + ":" + time.minute() + ":" + time.second() + " from " + client.ip());
-
-			// get session
-			Session toRemove = sessionMap.get(player);
-
-			// record disconnect time
-			toRemove.disconnect = time;
-
-			// store the session info on disk
-
-			// clear session
-			sessions.remove(toRemove);
-
-			// if player is a guest
-			if ( player.getFlags().charAt(0) == 'G') {
-				// remove from database
-				objectDB.set( player.getDBRef(), new NullObject( player.getDBRef() ) );  // replace db entry with NULLObjet
-			}
-			else {
-				// save mail
-				saveMail(player);
-
-				// export player data to pfile format
-				//exportToPFILE(client);
-
-				// run any disconnect properties specified by the player
-				//dProps(player);
-			}
-
-			synchronized(players) {
-				players.remove(player);  // Remove the player object for the disconnecting player
-			}
-			synchronized(sclients) {
-				sclients.remove(client); // remove the player to client mapping
-			}
-			synchronized(tclients) {
-				tclients.remove(player); // remove the client to player mapping
-			}
-
-			// DEBUG: Tell us which character was disconnected
-			debug(playerName + " removed from play!");
-
-			//
-			send("Disconnected from " + name + "!", client);
-		}
-		else
-		{
-			// DEBUG: Indicate failure to find the player who initiated the disconnect or had it initiated for them
-			debug("Player not found!");
-		}
-
-		try {
-			// disconnect the client
+		if (player == null) {
+			debug("Player not found for client: " + client);
 			s.disconnect(client);
+            return;
 		}
-		catch(NullPointerException npe) {
-			npe.printStackTrace();
-		}
+
+        // break any current control of npcs
+        cmd_control("#break", client);
+
+        // remove listener
+        getRoom(client).removeListener(player);
+
+        /*
+         * unequip gear
+         * 
+         * If we didn't do this, stuff could get stuck in limbo,
+         * alternatively, we could just loop through the items array
+         * and put a new copy of the references in the inventory,
+         * since it's all going to end up back in the inventory anyway
+         * (or at least until I figure out how to persist information
+         * about reloading slots for a player).
+         */
+
+        // Unequipping gear
+        final ArrayList<Item> inventory = player.getInventory();
+
+        for (final Slot slot : player.getSlots().values()) {
+            if (slot.isFull()) {
+                if (slot.getItem() != null) {
+                    inventory.add(slot.getItem());
+                }
+            }
+        }
+
+        send("Equipment un-equipped!", client);
+
+
+        debug("initDisconn(" + client.ip()+ ")");
+
+        // get time
+        Time time = getTime();
+
+        // get variables to log
+        String playerName = player.getName();
+        int playerLoc = player.getLocation();
+
+        // log the disconnect
+        log.writeln(playerName, playerLoc, "Logged out at " + time.hour() + ":" + time.minute() + ":" + time.second() + " from " + client.ip());
+
+        // get session
+        Session toRemove = sessionMap.get(player);
+
+        // record disconnect time
+        toRemove.disconnect = time;
+
+        // store the session info on disk
+
+        // clear session
+        sessions.remove(toRemove);
+
+        // if player is a guest
+        if ( player.getFlags().charAt(0) == 'G') {
+            // remove from database
+            objectDB.set( player.getDBRef(), new NullObject( player.getDBRef() ) );  // replace db entry with NULLObjet
+        }
+        else {
+            // save mail
+            saveMail(player);
+
+            // export player data to pfile format
+            //exportToPFILE(client);
+
+            // run any disconnect properties specified by the player
+            //dProps(player);
+        }
+
+        synchronized(players) {
+            players.remove(player);  // Remove the player object for the disconnecting player
+        }
+        synchronized(sclients) {
+            sclients.remove(client); // remove the player to client mapping
+        }
+        synchronized(tclients) {
+            tclients.remove(player); // remove the client to player mapping
+        }
+
+        // DEBUG: Tell us which character was disconnected
+        debug(playerName + " removed from play!");
+
+        s.disconnect(client);
+        send("Disconnected from " + name + "!", client);
 	}
 
-	// TELNET Negotiation
-	public void telnet_negotiation(Client client) {
+	public void telnetNegotiation(Client client) {
 		client.tn = true; // mark as client as being negotiated with
 
 		int s = 0;  // current sub-negotiation? (0=incomplete,1=complete)
@@ -9152,34 +9115,22 @@ public class MUDServer implements MUDServerI, LoggerI {
 	}
 	
 	private void shutdown() {
-		// tell everyone we are shutting down the server
 		s.write("Server Shutdown!\n");
-		
-		// prevent any new connections
-		mode = GameMode.MAINTENANCE;
-				
+
+		mode = GameMode.MAINTENANCE;    // prevent any new connections
+
 		// disconnect any connected clients
-		for (Client client1 : s.getClients()) {
-			init_disconn(client1);
+		for (final Client client1 : s.getClients()) {
+			initDisconn(client1);
 		}
-		
-		System.out.print("Stopping threads... ");
-		
+
+		System.out.print("Stopping main game...");
 		// indicate that the server is no longer running, should cause the main loop to exit
-		// no more commands will be processed
 		running = false;
 
-		// interrupt/kill all running thread
-		/*timeLoop.interrupt();
-		weatherLoop.interrupt();
-		messageLoop.interrupt();*/
-		
-		System.out.println("Done");
-		
 		// close the logs (closes the file object and saves the data to a file)
 		if ( logging ) {
 			System.out.print("Closing logs... ");
-			
 			log.closeLog();
 			//connection.closeLog();
 			debugLog.closeLog();
@@ -9192,20 +9143,12 @@ public class MUDServer implements MUDServerI, LoggerI {
 		}
 		
 		System.out.print("Stopping server... ");
-		
-		// stop the server
 		s.stopRunning();
 		
-		System.out.println("Done");
-		
 		System.out.print("Running backup... ");
-		
-		// run backup
 		backup();
 		
 		System.out.println("Done");
-		
-		// exit the program
 		System.exit(0);
 	}
 
@@ -9273,14 +9216,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 	 * @param data
 	 */
 	public void send(Object data, Client client) {
-		String out = "";
-		if (data instanceof String) {
-			out = (String) data;
-		}
-		else {
-			out = data.toString();
-		}
-		send(out, client);
+		send("" + data, client);
 	}
 
 	/**
@@ -9437,148 +9373,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 
 	public static void exit() {
 		System.exit(0);
-	}
-	
-	/**
-	 * A runnable message loop to send messages to players asynchronously
-	 * @author Jeremy
-	 *
-	 */
-	public class MessageLoop implements Runnable {
-
-		@Override
-		public void run() {
-			// while the game is running, and the time thread is not suspended
-			while ( running && s.hasClients()) {
-				// if client is a logged in player, send them any messages queued for them
-				// Send any pages, messages, etc to their respective recipients, or to a list of recipients?
-				try {
-					for (final Client client : s.getClients()) {
-
-						if (client != null && client.isRunning()) { // if the client is not null and is still active
-							if (pages.size() > 0) {
-								for (int a = 0; a < pages.size(); a++) { // for the list of pages
-									// get a message
-									final Message msg = (Message) pages.get(a);
-									
-									// if the current client is the recipient
-									if (client == tclients.get( msg.getRecipient() ) ) {
-										debug("sending message to " + msg.getRecipient().getName()); 
-										send( msg.getSender().getName() + " says, \"" + msg.getMessage() + "\" to you. (tell)", client);
-										synchronized (pages) {
-                                            pages.remove(a);
-                                        }
-									}
-								}
-							}
-							if (messages.size() > 0) {
-								for (int m = 0; m < messages.size(); m++) { // for the list of messages
-									Message msg = (Message) messages.get(m); // get a message
-									Player player = getPlayer(client); // get the player associated with the client
-
-									// if this client's player is the intended recipient
-									if ( msg.getRecipient() == player ) {
-										send(msg.getMessage(), client);                // send the message to them
-										msg.markSent();                                // mark it as sent
-										debug("sent message");                         // tell us we sent it
-										synchronized(messages) { messages.remove(m); } // remove it from the list (synchronized operation)
-									}
-									// the mud or an npc or some other game controlled object sent it (no specified sender)
-									else if (msg.getSender() == null) {
-										// general game wide broadcast (no specified recipient)
-										if (msg.getRecipient() == null) {
-											send(msg.getMessage());                        // send the message to everyone
-											msg.markSent();                                // mark it as sent
-											debug("sent message");                         // tell us we sent it
-											synchronized(messages) { messages.remove(m); } // REMOVE in future
-										}
-									}
-									// no recipient, so we'll assume it was 'said' out loud
-									else if (msg.getRecipient() == null) {
-										for (Player player1 : players)
-										{
-											if (player1.getLocation() == msg.getLocation())
-											{
-												send(msg.getSender().getName() + " says, \"" + msg.getMessage() + "\".", client); // send the message to the player
-											}
-										}
-										msg.markSent();                                                         // mark it as sent
-										debug("sent message");                                                  // tell us we sent it
-										synchronized(messages) { messages.remove(m); }                          // remove it from the list (synchronized operation)
-									}
-									// problem with the message
-									else {
-										debug("MessageLoop (Fault): message not sent, possible incorrect message data");
-										synchronized(messages) { messages.remove(m); }
-									}
-								}
-							}
-						}
-					}
-				}
-				catch(NullPointerException npe) {
-					Thread.currentThread().interrupt();
-				}
-			}
-		}
-	}
-
-	public class WeatherLoop implements Runnable {
-
-		private boolean inSync = false;
-		private int period = 1; // broadcast period (minutes)
-		private int fired = 1;  // number of times the thread has "fired"
-
-		Atmosphere atmosphere; // Atmosphere Object
-		Weather weather;
-
-		@Override
-		public void run() {
-			// while the game is running, and the time thread is not suspended
-			while (running && timeLoop.isAlive()) {
-				if (inSync) {
-					try {
-						// once every period
-						debug(game_time.getMinutes());
-						debug(fired);
-						if ((game_time.getMinutes() + 1) % fired == 0) {
-
-							// loop through all the rooms and broadcast weather messages accordingly
-                            for (final Room r : objectDB.getWeatherRooms()) {
-                                broadcast("", r);
-                                debug("message sent");
-                            }
-                            for (final Room r : objectDB.getRoomsByType("P")) {
-                                broadcast("", r);
-                                debug("message sent");
-                            }
-							debug("loop fired.");
-							debug(game_time.getMinutes());
-							debug(fired);
-							fired++;
-							Thread.sleep(game_time.getScale() * period);
-						}
-						else {
-							inSync = false;
-							sync();
-						}
-					}
-					catch(InterruptedException ie) {
-					}
-				}
-			}
-		}
-
-		public void sync() {
-			debug("Syncing...");
-			while ((game_time.getMinutes() + 1) % fired != 0) {
-				debug(game_time.getMinutes());
-				debug(fired);
-				debug("Waiting...");
-			}
-			inSync = true;
-			debug("Synced!");
-		}
 	}
 
 	/**
@@ -9847,13 +9641,38 @@ public class MUDServer implements MUDServerI, LoggerI {
 	/**
 	 * allows adding to the message queue from external packages, classes
 	 * 
-	 * 
 	 * @param newMessage
 	 */
-	public void addMessage(final Message newMessage) {
-		synchronized(this.messages) { 
-			this.messages.add(newMessage);
-		}
+	public void addMessage(final Message msg) {
+        // if this client's player is the intended recipient
+        final Player recip = msg.getRecipient();
+        if (recip != null ) {
+            if (tclients.containsKey(recip)) {
+                send(msg.getMessage(), tclients.get(recip));
+                msg.markSent();
+                debug("addMessage, sent message");
+            }
+            else {
+                debug("addMessage, msg recipient not in tclients: " + recip);
+            }
+        }
+        // no recipient, so we'll assume it was 'said' out loud
+        else {
+            // the mud or an npc or some other game controlled object sent it to everyone (no specified sender)
+            if (msg.getSender() == null) {
+                send(msg.getMessage());
+            }
+            else {
+                for (final Player bystander : players) {
+                    if (bystander.getLocation() == msg.getLocation() && tclients.containsKey(bystander))
+                    {
+                        send(msg.getSender().getName() + " says, \"" + msg.getMessage() + "\".", tclients.get(bystander));
+                    }
+                }
+            }
+            msg.markSent();
+            debug("sent message");
+        }
 	}
 
 	/**
@@ -9863,11 +9682,9 @@ public class MUDServer implements MUDServerI, LoggerI {
 	 * @param newMessage
 	 */
 	public void addMessages(final ArrayList<Message> newMessages) {
-		synchronized(this.messages) { 
-			for (final Message newMessage : newMessages) {
-				this.messages.add(newMessage);
-			}
-		}
+        for (final Message m : newMessages) {
+            addMessage(m);
+        }
 	}
 
 	/*public void write(String data, Client client) {
@@ -10603,7 +10420,19 @@ public class MUDServer implements MUDServerI, LoggerI {
 	 * 
 	 * NOTE: seems to explode where x != y for the destination
 	 */
-	public void handle_movement() {
+	public void handleMovement() {
+        // old WeatherLoop code, which only ran once per "minute" anyway
+        // loop through all the rooms and broadcast weather messages accordingly
+        for (final Room r : objectDB.getWeatherRooms()) {
+            broadcast("", r);
+            debug("message sent");
+        }
+        for (final Room r : objectDB.getRoomsByType("P")) {
+            broadcast("", r);
+            debug("message sent");
+        }
+        // end old WeatherLoop code
+
 		for (final Player player : this.moving) {
 			synchronized(player) {
 				// if the player is moving (something else could change this)
