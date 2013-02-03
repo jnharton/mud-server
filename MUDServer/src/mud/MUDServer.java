@@ -201,10 +201,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 	private int logLevel = 3;               // 
 	private boolean prompt_enabled = false; // show player information bar
 	
-	// update states
-	private boolean update_shops = false;   // is it time to update the shops
-	private boolean update_weather = false; // do we need to run a weather update?
-
 	// Protocols
 	/*
 	 * this section is badly designed. In theory it represents whether support for something is enabled,
@@ -280,7 +276,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 	public HashMap<Player, Client> tclients = new HashMap<Player, Client>(max_players, 0.75f);  // HashMap to associate Clients to Players (dynamic)
 	
 	private HashMap<Zone, Integer> zones = new HashMap<Zone, Integer>(1, 0.75f);                // HashMap that tracks currently "loaded" zones (dynamic)
-	private HashMap<String, Integer> pna = new HashMap<String, Integer>(11, 0.75f);             // HashMap that records the current number of players of a given class (dynamic)
 	private HashMap<Player, Player> DMControlTable = new HashMap<Player, Player>(1, 0.75f);     // HashMap that keeps track of what Players are controlling NPCs (dynamic)
 	
 	private HashMap<String, String> displayColors = new HashMap<String, String>(8, 0.75f);      // HashMap specifying particular colors for parts of text (somewhat static)
@@ -408,18 +403,11 @@ public class MUDServer implements MUDServerI, LoggerI {
 	private int game_hour = 5;    // 5am
 	private int game_minute = 58; // 55m past 5am
 
-	private String time_of_day = "night";
-	private String celestial_body = "moon";
-	private String cb_location = "high in the sky";
-	private String moon_phase = "full";
-	private int dn = 0; // day/night, day is 1, night is 0
-
 	//Theme Related Variables
 	private String theme = THEME_DIR + "forgotten_realms.txt";                     // theme file to load
 
 	public static int[] DAYS = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 }; // days in each month
 	public static String[] months = new String[12];
-	private MoonPhase mp = MoonPhase.FULL_MOON;
 	private Seasons season = Seasons.SUMMER; // Possible - Spring, Summer, Autumn, Winter
 
 	private String month_name;
@@ -775,25 +763,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 		RoomTypes.put('N', "NONE");    // Same effect as inside for weather purposes
 		debug("Room Types: " + RoomTypes.entrySet()); // Print out the whole set of room types (DEBUG)
 
-		// name hiding by class, number of players per class tracking
-		pna.put(Classes.ADEPT.toString(), 0);
-		pna.put(Classes.ARISTOCRAT.toString(), 0);
-		pna.put(Classes.BARBARIAN.toString(), 0);
-		pna.put(Classes.BARD.toString(), 0);
-		pna.put(Classes.CLERIC.toString(), 0);
-		pna.put(Classes.COMMONER.toString(), 0);
-		pna.put(Classes.DRUID.toString(), 0);
-		pna.put(Classes.EXPERT.toString(), 0);
-		pna.put(Classes.FIGHTER.toString(), 0);
-		pna.put(Classes.MONK.toString(), 0);
-		pna.put(Classes.NONE.toString(), 0);
-		pna.put(Classes.PALADIN.toString(), 0);
-		pna.put(Classes.RANGER.toString(), 0);
-		pna.put(Classes.ROGUE.toString(), 0);
-		pna.put(Classes.SORCERER.toString(), 0);
-		pna.put(Classes.WARRIOR.toString(), 0);
-		pna.put(Classes.WIZARD.toString(), 0);
-
 		/*
 		 * Command Mapping
 		 * 
@@ -894,7 +863,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 
 		// Time Loop
 		// cpu: -for now, appears marginal-
-		game_time = new TimeLoop(game_hour, game_minute);
+		game_time = new TimeLoop(this, DAYS, month, day, game_hour, game_minute);
 		timeLoop = new Thread(game_time, "time");
 		timeLoop.start();
 		System.out.println("Time (Thread) Started!");
@@ -1253,23 +1222,6 @@ public class MUDServer implements MUDServerI, LoggerI {
             for (final Client client : s.getClients()) {
                 runHelper(client);
             }
-
-			/*
-			 * As it is the weather probably get's update checked after each
-			 * client gets a say. Is that too often, too little or ?
-			 */
-			
-			// weather update trigger
-			if ( update_weather ) {
-				updateWeather();
-				update_weather = false;
-			}
-			
-			// shops update trigger
-			if ( update_shops) {
-				fillShops();
-				update_shops = false;
-			}
 		}
 	}
 
@@ -1943,7 +1895,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 							int hour = Integer.parseInt(arg);
 							
 							if (hour >= 0 && hour <= 23) {
-								game_time.setHour(hour);
+								game_time.setHours(hour);
 								
 								send("Game> Hour set to " + hour, client);
 							}
@@ -1963,15 +1915,13 @@ public class MUDServer implements MUDServerI, LoggerI {
 							int minute = Integer.parseInt(arg);
 							
 							if (minute >= 0 && minute <= 59) {
-								game_time.setHour(minute);
+								game_time.setMinutes(minute);
 								
 								send("Game> Minute set to " + minute, client);
 							}
 							else {
 								send("Game> Invalid minute", client);
 							}
-							
-							game_time.setMinute(minute);
 
 							send("Game> Minute set to " + minute, client);
 						}
@@ -3552,25 +3502,24 @@ public class MUDServer implements MUDServerI, LoggerI {
 			send("Real Time: " + real_time, client);
 
 			// In-game Time
-			String gameTime = "" + game_time.hours;
+			String gameTime = "" + game_time.getHours();
 
-			if (game_time.hours < 10) { gameTime = " " + gameTime; }
-			if (game_time.minutes < 10) { gameTime = gameTime + ":0" + game_time.minutes; }
-			else { gameTime = gameTime + ":" + game_time.minutes; }
+			if (game_time.getHours() < 10) { gameTime = " " + gameTime; }
+			if (game_time.getMinutes() < 10) { gameTime = gameTime + ":0" + game_time.getMinutes(); }
+			else { gameTime = gameTime + ":" + game_time.getMinutes(); }
 
 			send("Game Time: " + gameTime, client);
 
 			// Time Scale (the relative number of seconds to an-game minute)
-			send("Time Scale: 1 minute/" + (game_time.timeScale / 1000) + " seconds", client);
+			send("Time Scale: 1 minute/" + (game_time.getScale() / 1000) + " seconds", client);
 		}
 		else if ( arg.toLowerCase().equals("seasons") ) {
 			/*
 			 * list all the seasons
 			 */
 			//return this.name + ": " + months[beginMonth - 1] + " to " + months[endMonth - 1];
-			Seasons[] seasons = { Seasons.SPRING, Seasons.SUMMER, Seasons.AUTUMN, Seasons.WINTER };
 
-			for (Seasons s : seasons) {
+			for (final Seasons s : Seasons.values()) {
 				send(s + ": " + months[s.beginMonth - 1] + " to " + months[s.endMonth - 1], client);
 			}
 		}
@@ -8673,30 +8622,17 @@ public class MUDServer implements MUDServerI, LoggerI {
 		// generate generic name for unknown players based on their class and the number of players with the same class presently on
 		// logged on of a given class
 		debug("Generating generic name for player...");
-		
-		String className = player.getPClass().toString();
-		String tempName;
-		
-		if (pna.get(className) != null) {
-			tempName = className.toLowerCase() + pna.get(className);
-			pna.put(className, pna.get(className) + 1);
-		}
-		else {
-			tempName = className.toLowerCase() + 0;
-			pna.put(className, 1);
-		}
-		
 		debug("Done");
-		
-		player.setCName(tempName);
-		
-		debug("Number of current connected players that share this player's class: " + pna.get(className));
+
+		player.setCName(player.getPClass().toString());
+
+		debug("Number of current connected players that share this player's class: " + objectDB.getNumPlayers(player.getPClass()));
 
 		// NOTE: I should probably add a mapping here somewhere that ties the player to their account, if they have one
-		
+
 		// add client -> player mapping
 		sclients.put(client, player);
-		
+
 		// player -> client mapping
 		tclients.put(player, client);
 
@@ -8838,10 +8774,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 
 
 			debug("init_disconn(" + client.ip()+ ")");
-
-			// decrease the number of people with that class, which is stored for generic naming
-			String classname = player.getPClass().toString();
-			pna.put(classname, pna.get(classname) - 1);
 
 			// get time
 			Time time = getTime();
@@ -9444,12 +9376,12 @@ public class MUDServer implements MUDServerI, LoggerI {
 	 */
 	public String gameTime() {
 		String output;
-		if (dn == 0) { // it is night
-			//output = "It is " + time_of_day + ", the " + mp.toString() + " " + celestial_body + " is " + cb_location + ".";
-			output = "It is " + time_of_day + ", the " + moon_phase + " " + celestial_body + " is " + cb_location + ".";
+        final TimeOfDay tod = game_time.getTimeOfDay();
+		if (!game_time.isDaytime()) {
+			output = "It is " + tod.timeOfDay + ", the " + game_time.getMoonPhase() + " " + game_time.getCelestialBody() + " is " + tod.bodyLoc + ".";
 		}
 		else {
-			output = "It is " + time_of_day + ", the " + celestial_body + " is " + cb_location + ".";
+			output = "It is " + tod.timeOfDay + ", the " + game_time.getCelestialBody() + " is " + tod.bodyLoc + ".";
 		}
 		return output;
 	}
@@ -9591,174 +9523,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 		}
 	}
 
-	/**
-	 * A runnable time loop to supply game time and changes in date according to it.
-	 * 
-	 * @author Jeremy
-	 *
-	 */
-	public class TimeLoop implements Runnable {
-		private int minutes;
-		private int hours;
-		private int days;
-		private int months;
-		//private int years;
-
-		private int timeScale = 10000; // 10k ms (10 s) 
-
-		/**
-		 * This uses a 6:1 timescale. That is, 6 minutes of game time is equal to 1 minute
-		 * of real time. To adjust that simply change the timeScale variable to the of seconds
-		 * to adjust how much real time (in seconds) is equal to 1 minute of game time.
-		 * 
-		 * Modifications: x:1 timescale
-		 */
-
-		public TimeLoop(int cHours, int cMinutes) {
-			this.minutes = cMinutes; // the initial number of minutes (start time)
-			this.hours = cHours;     // the initial number of hours (start time)
-			this.days = day;         // the initial number of days (start day)
-			this.months = month;     // the initial number of months (start month)
-			//this.years = year;     // the initial number of years (start year)
-		}
-
-		// message sending with specifics needs a loginCheck(client), but it needs to not cause the game to crash
-		@Override
-		public void run() {
-			while ( running ) {
-				try {
-					Thread.sleep(timeScale);
-					if (this.minutes == 59) {
-						this.minutes = 0; // reset minutes
-						if (this.hours == 23) {
-							this.hours = 0; // reset hours
-							if (this.days == DAYS[month - 1]) {
-								if (this.months == 12) {
-									year++;
-									this.months = 1;
-									month = 1;
-								}
-								else {
-									this.months++;
-									month++;
-								}
-								this.days = 1;
-								day = 1;
-							}
-							else {
-								this.days++;
-								day++;
-							}
-						}
-						else {
-							this.hours++;
-							
-							update_shops = true;   // global variable
-							update_weather = true; // global variable
-
-							if (this.hours == 5 && minutes == 0) {
-								time_of_day = "before dawn";
-								cb_location = "setting";
-								debug("It is now just before dawn.");
-								//send("It is now just before dawn.");
-								addMessage( new Message("It is now just before dawn.") );
-							}
-							else if (this.hours == 6 && minutes == 0) {
-								time_of_day = "dawn";
-								celestial_body = "sun";
-								cb_location = "rising";
-								dn = 1; // it's day-time
-								debug("It is now dawn.");
-								//send("It is now dawn.");
-								addMessage( new Message("It is now dawn.") );
-							}
-							else if (this.hours == 7 && minutes == 0) {
-								time_of_day = "morning";
-								cb_location = "up";
-								debug("It is now morning.");
-								//send("It is now morning.");
-								addMessage( new Message("It is now morning.") );
-							}
-							else if (this.hours == 12 && minutes == 0) {
-								time_of_day = "midday";
-								cb_location = "high in the sky";
-								debug("It is now midday.");
-								//send("It is now midday.");
-								addMessage( new Message("It is now midday.") );
-							}
-							else if (this.hours == 13 && minutes == 0) {
-								time_of_day = "afternoon";
-								cb_location = "up";
-								debug("It is now afternoon.");
-								//send("It is now afternoon.");
-								addMessage( new Message("It is now afternoon.") );
-							}
-							else if (this.hours == 18 && minutes == 0) {
-								time_of_day = "dusk";
-								cb_location = "setting";
-								debug("It is now dusk.");
-								//send("It is now dusk.");
-								addMessage( new Message("It is now dusk.") );
-							}
-							else if (this.hours == 19 && minutes == 0) {
-								time_of_day = "night";
-								celestial_body = "moon";
-								cb_location = "rising";
-								dn = 0; // it's night-time
-								debug("It is now night.");
-								//send("It is now night.");
-								addMessage( new Message("It is now night.") );
-							}
-							else if (this.hours == 0 && minutes == 0) {
-								time_of_day = "midnight";
-								cb_location = "high in the sky";
-								debug("It is now midnight.");
-								//send("It is now midnight.");
-								addMessage( new Message("It is now midnight.") );
-							}
-						}
-					}
-					else { this.minutes++; }
-					debug("" + hours + ":" + minutes);
-					/*
-					 * per minute things that need to happen
-					 * probably shouldn't be in the time loop, but triggered
-					 * from it, but this is fine for testing purposes
-					 * 
-					 * I'd really like it to be another thread that is
-					 * asleep for the timescale (5s last i checked),
-					 * wakes up to do movement, etc, then goes back to sleep
-					 * 					
-					 * maybe it could just be a heartbeat thread
-					 * I could make it like this one, but I'd rather it was
-					 * in sync with the time, no matter what timescale I choose
-					 * to use
-					 */
-					handle_movement();
-				}
-				catch(NullPointerException npe) {
-					npe.printStackTrace();
-				}
-				catch(InterruptedException ie) {
-					ie.printStackTrace();
-				}
-			}
-		}
-
-		public void setHour(int hour) {
-			this.hours = hour;
-			this.minutes = 0;
-		}
-		
-		public void setMinute(int minute) {
-			this.minutes = minute;
-		}
-
-		public void setScale(int ms) {
-			this.timeScale = ms;
-		}
-	}
-
 	public class WeatherLoop implements Runnable {
 
 		private boolean inSync = false;
@@ -9775,9 +9539,9 @@ public class MUDServer implements MUDServerI, LoggerI {
 				if (inSync) {
 					try {
 						// once every period
-						debug(game_time.minutes);
+						debug(game_time.getMinutes());
 						debug(fired);
-						if ((game_time.minutes + 1) % fired == 0) {
+						if ((game_time.getMinutes() + 1) % fired == 0) {
 
 							// loop through all the rooms and broadcast weather messages accordingly
                             for (final Room r : objectDB.getWeatherRooms()) {
@@ -9789,10 +9553,10 @@ public class MUDServer implements MUDServerI, LoggerI {
                                 debug("message sent");
                             }
 							debug("loop fired.");
-							debug(game_time.minutes);
+							debug(game_time.getMinutes());
 							debug(fired);
 							fired++;
-							Thread.sleep(game_time.timeScale * period);
+							Thread.sleep(game_time.getScale() * period);
 						}
 						else {
 							inSync = false;
@@ -9807,8 +9571,8 @@ public class MUDServer implements MUDServerI, LoggerI {
 
 		public void sync() {
 			debug("Syncing...");
-			while ((game_time.minutes + 1) % fired != 0) {
-				debug(game_time.minutes);
+			while ((game_time.getMinutes() + 1) % fired != 0) {
+				debug(game_time.getMinutes());
 				debug(fired);
 				debug("Waiting...");
 			}
@@ -9873,27 +9637,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 			return this.b;
 		}
 	}*/
-
-	public enum MoonPhase {
-		FULL_MOON("Full Moon"),
-		WANING_GIBBOUS("Waning Gibbous"),
-		LAST_QUARTER("Last Quarter"),
-		WANING_CRESCENT("Waning Crescent"),
-		NEW_MOON("New Moon"),
-		WAXING_CRESCENT("Waxing Crescent"),
-		FIRST_QUARTER("First Quarter"),
-		WAXING_GIBBOUS("Waxing Gibbous");
-
-		private String name;
-
-		private MoonPhase(String name) {
-			this.name = name;
-		}
-
-		public String toString() {
-			return this.name;
-		}
-	}
 
 	public void pulse(Client client) {
 		debug("-- pulse --");
@@ -10121,7 +9864,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 	 */
 	public void addMessages(final ArrayList<Message> newMessages) {
 		synchronized(this.messages) { 
-			for (Message newMessage : newMessages) {
+			for (final Message newMessage : newMessages) {
 				this.messages.add(newMessage);
 			}
 		}
@@ -10861,7 +10604,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 	 * NOTE: seems to explode where x != y for the destination
 	 */
 	public void handle_movement() {
-		for (Player player : this.moving) {
+		for (final Player player : this.moving) {
 			synchronized(player) {
 				// if the player is moving (something else could change this)
 				if (player.isMoving()) {
@@ -11956,5 +11699,10 @@ public class MUDServer implements MUDServerI, LoggerI {
 
 		return null;
 	}
-	
+    
+    public void onHourIncrement() {
+        fillShops();
+        updateWeather();
+    }
+
 }

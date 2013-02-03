@@ -342,4 +342,14 @@ public class ObjectDB {
         return players.get(name);
     }
 
+    public int getNumPlayers(final Classes c) {
+        int count = 0;
+        for (final Player p : players.values()) {
+            if (c.equals(p.getPClass())) {
+                count += 1;
+            }
+        }
+        return count;
+    }
+
 }
