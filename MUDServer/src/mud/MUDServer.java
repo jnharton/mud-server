@@ -682,24 +682,24 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 
 		objectDB.loadExits(this);  // load exits (post-room loading)
 		if( lookup_caching ) {
-			object_lookup = new Hashtable<String, Integer>(10, 0.75f);
-			exit_lookup = new Hashtable<String, Integer>(10, 0.75f);
 			room_lookup = new Hashtable<String, Integer>(10, 0.75f);
 			room_lookup2 = new Hashtable<Integer, Integer>(10, 0.75f);
 		}
 
 		// Post-Room Loading
-		loadExits();          // load exits
+		//loadExits();          // load exits ( replace? moved? not sure?)
 		//loadThings();       // load thing (old name)
 		placeThingsInRooms(); // load things (new name)
 		loadItems();          // load items
 
 		//
 		fillShops();
-
-		for (NPC npc : npcs1) {
+		
+		// TODO FIX THIS
+		// make sure npcs are added to listeners
+		/*for (NPC npc : npcs1) {
 			getRoom(npc.getLocation()).addListener(npc);	
-		}
+		}*/
 
 		// instantiate banned ip list
 		banlist = loadListDatabase(CONFIG_DIR + "banlist.txt");
@@ -922,7 +922,6 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 		System.out.println("Command Delay: " + cmdExec.getCommandDelay());
 		System.out.println("Next Database Reference Number (DBRef/DBRN): " + objectDB.peekNextId());
 		printUnusedDB();
-		cleanupDB();
 		// tell us that we're done with setup.
 		System.out.println("Server> Setup Done.");
 	}
@@ -3003,8 +3002,13 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 
 		// identify the thing to be climbed, if it's possible
 		Thing thing = getThing(arg, getRoom(client)); // ex. box, ladder, building
+
+		/* placeholder junk for checking to see if we are close enough to the object
+		 * to act on it directly
+		 */
+		int check = 0;
 		
-		if( 1 == 1 ) { // check distance from object
+		if( check == 1 ) { // check distance from object
 
 			// get the check for it's difficulty (static assign for testing purposes)
 			int difficultyCheck = 10;
@@ -3074,6 +3078,9 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
         // variable whose state reflects the current step in the connection process (true=in progress, false=failed)
 		// we are now attempting to init the connection
 		boolean auth = true;
+		
+		// TODO ascertain what changes were made by joshgit to account login in his code and determine appropriate course of action
+		boolean account = false;
 
 		// Guest Player
 		// SERIOUS: got a problem here, system does not seem to know guests are connected
@@ -3209,7 +3216,7 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
                 send("Sorry, you cannot connect to the mud at this time. Please try again later.", client);
             }
 
-        }
+        }}
 	}
 
 	/**
@@ -3357,9 +3364,8 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 		{
 			// create a new player object for the new playerm the "" is an empty title, which is not currently persisted
 			final Player player = new Player(-1, user, start_flags, start_desc, start_room, "", Utils.hash(pass), start_status, start_stats, start_money);
-			objectDB.addAsNew(player);
 			
-			addToDB(player);
+			objectDB.addAsNew(player);
 
 			String mail[];        // create the mailbox
 			mail = new String[4]; // size it to make room for one message's worth
@@ -3628,10 +3634,6 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 		}
 		else if ( arg.toLowerCase().equals("exitlcache") || arg.toLowerCase().equals("elc") ) {
 			send("No more Exit Lookup Cache.", client);
-			}
-			else {
-				send("Lookup Caching Disabled", client);
-			}
 		}
 		else if ( args2[0].toLowerCase().equals("listen") ) {
 			final int dbref = Utils.toInt(args2[1], -1);
@@ -3648,21 +3650,6 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 			}
 		}
 		else if ( arg.toLowerCase().equals("objlcache") || arg.toLowerCase().equals("olc") ) {
-			/* indicate size of object lookup table/cache
-				send("Object Lookup Cache (table size): " + object_lookup.size(), client);
-
-				send("", client);
-
-			/* show us the current contents of the object lookup table/cache
-				send("Table 1", client);
-				for (final String key : object_lookup.keySet()) {
-					send("\""+ key + "\" -> " + object_lookup.get(key), client);
-				}
-            */
-			}
-			else {
-				send("Lookup Caching Disabled", client);
-			}
 		}
 		else if ( arg.toLowerCase().equals("position") || arg.toLowerCase().equals("pos") ) {
 			Player player = getPlayer(client);
@@ -5151,10 +5138,6 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
         objectDB.addAsNew(exit);
 		objectDB.addExit(exit);
 
-		*/
-		
-		addToDB(exit);
-
 		// add the exit to the source room
 		room.getExits().add(exit);
 
@@ -5215,9 +5198,6 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 
         objectDB.addAsNew(exit);
 		objectDB.addExit(exit);
-		*/
-		
-		addToDB(exit);
 
 		// add the exit to the source room
 		room.getExits().add(exit);
@@ -7846,9 +7826,6 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 	 */
 	public MUDObject getObject(final String name) {
         return objectDB.getByName(name);
-						if( lookup_caching ) {
-						}
-
 	}
 
 	/**
@@ -7925,9 +7902,6 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 	 */
 	public Exit getExit(final String exitName) {
         return objectDB.getExit(exitName);
-						if( lookup_caching ) {
-						}
-
 	}
 
 	/*public Exit getExit(String exitName, Client client) {
@@ -8076,8 +8050,6 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 	public Room getRoom(final String roomName)
 	{
         return objectDB.getRoomByName(roomName);
-						if( lookup_caching ) {
-						}
 	}
 
 	/**
@@ -8089,9 +8061,6 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 	public Room getRoom(final Integer dbref)
 	{
         return objectDB.getRoomById(dbref);
-						if( lookup_caching ) {
-						}
-
 	}
 
 	/**
@@ -8118,12 +8087,15 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 		return null;
 	}
 	
+	// TODO update/fix/remove
 	public Thing getThing(int DBREF) {
+		/*
 		for(Thing thing : things) {
 			if(thing.getDBRef() == DBREF) {
 				return thing;
 			}
 		}
+		*/
 		
 		return null;
 	}
@@ -8163,10 +8135,12 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 
 	public void saveNPCs()
 	{	
+		// TODO needs revamp
+		/*
 		for (final NPC npc : npcs1) {
 			main.set(npc.getDBRef(), npc.toDB());
 			debug("NPC saved.");
-		}
+		}*/
 	}
 
 	public void saveDB() {
@@ -8226,42 +8200,6 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 		}
 	}
 	
-	/**
-	 * loadObjects
-	 * 
-	 * Loads game objects
-	 * 
-	 * NOTE: intended use is one time loading of all game objects at server start,
-	 * use in another fashion may not preserve ordering of the list
-	 * 
-	 * @param in
-	 */
-
-					// copy the information relevant to all objects (and thus existing in complete form for all
-					// objects into variables.
-					// print out that basic information (Debugging Purposes)
-						{
-					}
-						{
-							String status = attr[11];         // 11 - status (string)                    
-							
-							player.setStatus(status);
-
-					else if (oFlags.equals("WMV") == true) // Weapon Merchant Vendor (NPC)
-					{
-					{
-					{
-						{
-							{
-							{
-					{
-						{
-						{
-						{
-						{
-						{
-						{
-						{
 	/**
 	 * Go through all the things that exist in the database
 	 * and place them in the respective rooms they are located in
@@ -8826,8 +8764,9 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 			armor.setLocation(player.getDBRef());
 			sword.setLocation(player.getDBRef());
 			
-			addToDB(armor);
-			addToDB(sword);
+			// TODO Fix this problem 
+			//addToDB(armor);
+			//addToDB(sword);
 			
 			/*player.getInventory().add(armor);
 			player.getInventory().add(sword);*/
@@ -9270,10 +9209,13 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 		
 		// NPCs
 		log.writeln("Game> Backing up Non-Player Characters (NPCs)...");
-
+		
+		// TODO fix/remove
+		// obsoleted or reworking needed?
+		/*
 		synchronized(npcs1) {
 			saveNPCs(); // NOTE: only modifies in memory storage
-		}
+		}*/
 
 		log.writeln("Done.");
 
@@ -11235,10 +11177,6 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 
         objectDB.addAsNew(item);
 		objectDB.addItem(item);
-		/*
-		*/
-		
-		addToDB(item);
 
 		((Room) objectDB.get(item.getLocation())).contents1.add(item);
 
@@ -11792,16 +11730,18 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 	public boolean isRunning() {
 		return this.running;
 	}
-
+	
+	// TODO there is code dependent on getting a reasonable answer here, if this goes, I need to fix it
 	/**
 	 * Returns the size of the database, use for code external to class
 	 * where I need to be sure I don't try and access an index outside
 	 * of the database
 	 * @return
-	public int dbSize() {
-		return main1.size();
-	}
 	 */
+	public int dbSize() {
+		//return main1.size();
+		return -1;
+	}
 
 	/**
 	 * Takes an input string and generates a new one where each letter is prefixed by
@@ -12007,7 +11947,9 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 		}
 	}
 	
+	// TODO appears obsolete, leaving so it doesn't cause errors where changes are unclear elsewhere
 	private void addToDB(MUDObject m) {
+		/*
 		// we trust herein that the dbref is valid for this MUDObject and doesn't belong
 		// to another and comes only from the set of next ones or is new
 		if( m.getDBRef() < dbSize() ) {
@@ -12027,32 +11969,7 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 		}
 		else if(m instanceof Room) {
 			rooms1.add((Room) m);
-		}
-	}
-	
-	/**
-	 * When the unused DBRefs exceed some threshold, go check for more than a certain number of spaces
-	 * at the end of the arraylist and resize it
-	 * 
-	 * maybe I could extend this to shifting stuff around to compact it?
-	 * 
-	 * threshold? 1000 unused, 500 at end of list
-	 */
-	private void cleanupDB() {
-		if( unusedDBNs.size() > 1000 ) { // meets threshold
-			int[] temp = new int[unusedDBNs.size()];
-			
-			int index = 0;
-			
-			for(Integer integer : unusedDBNs) {
-				temp[index] = integer;
-				index++;
-			}
-			
-			Arrays.sort(temp);
-			
-			System.out.println(Arrays.toString(temp));
-		}
+		}*/
 	}
 	
 	public static int distance(Point start, Point end) {
