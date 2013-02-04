@@ -27,8 +27,6 @@ public class Thing extends MUDObject {
 
 	protected double weight = 40; // the weight in whatever units are used of the equippable object
 	
-	public HashMap<String, Object> attributes;
-	
 	/**
 	 * Thing - no parameters
 	 * 
@@ -54,9 +52,7 @@ public class Thing extends MUDObject {
 		this.dbref = tempDBRef;
 		// Set the location
 		this.location = tempLoc;
-		*/
-		
-		this.attributes = new HashMap<String, Object>();
+		*/		
 	}
 	
 	public double getWeight() {

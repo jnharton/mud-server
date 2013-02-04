@@ -392,7 +392,7 @@ public class ObjectLoader {
 		Integer[] oStats = Utils.stringsToIntegers(os);
 		Integer[] oMoney = Utils.stringsToIntegers(om);
 
-		Player player = new Player(oDBRef, oName, oFlags, oDesc, oLocation, "", oPassword, "IC", oStats, oMoney);
+		Player player = new Player(oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), oDesc, oLocation, "", oPassword, "IC", oStats, oMoney);
 		
 		final int USER = 0; // stole this constant from MUDServer.
 		
