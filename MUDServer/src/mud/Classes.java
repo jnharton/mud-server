@@ -44,7 +44,12 @@ public enum Classes {
 	private boolean caster;
 	private String color;
     
-    static private final Classes[] myValues = values();
+    //static private final Classes[] myValues = values();
+	static private final Classes[] myValues = {
+		NONE,
+		BARBARIAN, BARD, CLERIC, DRUID, FIGHTER, MONK, PALADIN, RANGER, ROGUE, SORCERER, WIZARD,
+		ADEPT, ARISTOCRAT, COMMONER, EXPERT, WARRIOR
+	};
 	
 	/**
 	 * The constructor for a enum class that represent D&D-like Player Classes

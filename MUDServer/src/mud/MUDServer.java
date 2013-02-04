@@ -3023,11 +3023,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 		debug("Password?: " + Utils.padRight("", '*',pass.length()) );
 		debug("");
 
-		// variable whose state reflects the current step in the connection process (true=in progress, false=failed)
-		// we are now attempting to init the connection
-		boolean auth = true;
-		boolean account = false;
-
 		// Guest Player
 		// SERIOUS: got a problem here, system does not seem to know guests are connected
 		// or something like that, cannot use QUIT command for some reason
@@ -3065,59 +3060,54 @@ public class MUDServer implements MUDServerI, LoggerI {
 			}
 		}
 		else {
-			while( auth ) {
-				/*
-				 * NOTE:
-				 * if all players always existed, then instead of instantiating a player i'd
-				 * simply assign a client to it. Otherwise I need to get the player data from
-				 * somewhere so I can load it up.
-				 */
+			/*
+			 * NOTE:
+			 * if all players always existed, then instead of instantiating a player i'd
+			 * simply assign a client to it. Otherwise I need to get the player data from
+			 * somewhere so I can load it up.
+			 */
+			
+			// account check
+			
+			/*
+			 * I don't want account names to conflict with characters, so perhaps
+			 * I will insert a stopgap measure where you must indicate an account
+			 * like this:
+			 *
+			 * connect account
+			 *
+			 * If the user input is 'account' we will assume you want to connect to
+			 * an account and will do an interactive login for you.
+			 *
+			 * Other we will look for a character by the name given.
+			 */
 
-				// account check
-				if( account ) {
-					
-				}
+			// character check
+			final Player p = objectDB.getPlayer(user);
+			if (p == null || !p.getPass().equals(Utils.hash(pass))) {
+				debug("CONNECT: Fail");
+				send("Either that player does not exist, or has a different password.", client);
+				return;
+			}
 
-				/*
-				 * I don't want account names to conflict with characters, so perhaps
-				 * I will insert a stopgap measure where you must indicate an account
-				 * like this:
-				 *
-				 * connect account
-				 *
-				 * If the user input is 'account' we will assume you want to connect to
-				 * an account and will do an interactive login for you.
-				 *
-				 * Other we will look for a character by the name given.
-				 */
+			debug("PASS: Pass"); // report success for password check
 
-				// character check
-				final Player p = objectDB.getPlayer(user);
-				if (p == null || !p.getPass().equals(Utils.hash(pass))) {
-					debug("CONNECT: Fail");
-					send("Either that player does not exist, or has a different password.", client);
-					return;
-				}
-
-				debug("PASS: Pass"); // report success for password check
-
-				if (mode == GameMode.NORMAL) {
-					init_conn(p, client, false); // Open Mode
-				}
-				else if (mode == GameMode.WIZARD) {
-					if ( p.getFlags().contains("W") ) {
-						init_conn(p, client, false); // Wizard-Only Mode
-					}
-					else {
-						send("Sorry, only Wizards are allowed to login at this time.", client);
-					}
-				}
-				else if (mode == GameMode.MAINTENANCE) {
-					send("Sorry, the mud is currently in maintenance mode.", client);
+			if (mode == GameMode.NORMAL) {
+				init_conn(p, client, false); // Open Mode
+			}
+			else if (mode == GameMode.WIZARD) {
+				if ( p.getFlags().contains("W") ) {
+					init_conn(p, client, false); // Wizard-Only Mode
 				}
 				else {
-					send("Sorry, you cannot connect to the mud at this time. Please try again later.", client);
+					send("Sorry, only Wizards are allowed to login at this time.", client);
 				}
+			}
+			else if (mode == GameMode.MAINTENANCE) {
+				send("Sorry, the mud is currently in maintenance mode.", client);
+			}
+			else {
+				send("Sorry, you cannot connect to the mud at this time. Please try again later.", client);
 			}
 		}
 
@@ -8748,9 +8738,8 @@ public class MUDServer implements MUDServerI, LoggerI {
 
 			// DEBUG: Tell us which character was disconnected
 			debug(playerName + " removed from play!");
-
-			s.disconnect(client);
 			send("Disconnected from " + name + "!", client);
+			s.disconnect(client);
 		}
 
 		public void telnetNegotiation(Client client) {
@@ -8876,10 +8865,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 			send(colors(program, "yellow") + colors(" " + version, "yellow") + colors(" -- Running on " + computer + "(" + ip + ")", "green"), someClient);
 			send(colors(name, "red"), someClient);
 			// send the MOTD to the client in cyan
-			// xterm 256 color testing
-			//someClient.write(XTERM256.TEST.toString());
-			send(XTERM256.PINK.toString() + "hi", someClient);
-			send(XTERM256.PURPLE.toString() + "hi", someClient);
 			send(colors(MOTD(),"cyan"), someClient);
 			// reset color
 			//send(colors("Color Reset to Default!", "white"));
