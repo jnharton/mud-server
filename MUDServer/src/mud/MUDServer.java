@@ -715,9 +715,10 @@ public class MUDServer implements MUDServerI, LoggerI {
 		this.displayColors.put("thing", "yellow");
 		this.displayColors.put("room", "green");
 		debug("Object Colors: " + displayColors.entrySet()); // DEBUG
-
+		
+		// TODO made redundant by ObjectFlag
 		// set up flags
-		Flags.put('D', "DARK");    // Player, Room Flag: Things in the room are not listed (Room), permanently invisible to everyone and every object (Player)
+		/*Flags.put('D', "DARK");    // Player, Room Flag: Things in the room are not listed (Room), permanently invisible to everyone and every object (Player)
 		Flags.put('E', "EXIT");    // Object Flag: Object is an Exit
 		Flags.put('G', "GUEST");   // Player Flag: Guest Player   
 		Flags.put('H', "HOUSE");   // ?
@@ -730,6 +731,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 		Flags.put('V', "VENDOR");  // NPC Flag: NPC sells stuff
 		Flags.put('Z', "ZONE");    // ?
 		debug("Flags: " + Flags.entrySet()); // Print out the whole set of flags (DEBUG)
+		*/
 
 		/*
 		 * Command Mapping
@@ -2939,16 +2941,15 @@ public class MUDServer implements MUDServerI, LoggerI {
 	private void cmd_climb(final String arg, final Client client) {
 		final Player player = getPlayer(client);
 
-		// TODO fix
 		// identify the thing to be climbed, if it's possible
-		//Thing thing = getThing(arg, getRoom(client)); // ex. box, ladder, building
+		Thing thing = objectDB.getThing(getRoom(client).getDBRef(), arg); // ex. box, ladder, building
 
 		/* placeholder junk for checking to see if we are close enough to the object
 		 * to act on it directly
 		 */
-		int check = 0;
-
-		if( check == 1 ) { // check distance from object
+		
+		// check distance from object
+		if( distance( player.getCoordinates(), thing.getCoordinates() ) <= 1 ) {
 
 			// get the check for it's difficulty (static assign for testing purposes)
 			int difficultyCheck = 10;
@@ -2962,15 +2963,13 @@ public class MUDServer implements MUDServerI, LoggerI {
 				Integer height = 1;
 				if( height != null ) {
 					if(height > 1) {
-						// TODO fix getting the thing
-						//send("You start climbing <direction> the " + thing.getName().toLowerCase(), client);
+						send("You start climbing <direction> the " + thing.getName().toLowerCase(), client);
 					}
 					else if(height == 1) {
-						// TODO fix getting the thing
-						/*send("You climb the " + thing.getName().toLowerCase(), client);
+						send("You climb the " + thing.getName().toLowerCase(), client);
 						player.setXCoord(thing.getXCoord());
 						player.setYCoord(thing.getXCoord());
-						player.coord.incZ(1);*/
+						player.coord.incZ(1);
 					}
 				}
 			}
@@ -8622,16 +8621,17 @@ public class MUDServer implements MUDServerI, LoggerI {
 
 			if (messages == 0) { client.writeln("You have no unread messages."); }
 			else { client.writeln("You have " + String.valueOf(messages) + " unread messages."); }
-
+			
+			// TODO redundant with some other code (I know cause I end with two of everything)
 			/* load the player's inventory */
 
-			ArrayList<Item> inventory = player.getInventory();
+			/*ArrayList<Item> inventory = player.getInventory();
 
 			// go through objects array and put references to objects that are located in/on the player in their inventory
 			for (final Item item : objectDB.getItemsByLoc(player.getDBRef())) {
 				debug("Item -> " + item.getName() + " (#" + item.getDBRef() + ") @" + item.getLocation());
 				inventory.add(item);
-			}
+			}*/
 
 			/* ChatChannel Setup */
 
