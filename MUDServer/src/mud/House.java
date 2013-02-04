@@ -25,6 +25,32 @@ import mud.objects.Player;
 import mud.objects.Room;
 import mud.objects.Thing;
 
+/**
+ * A metadata structure defining a player house.
+ * 
+ * NOTES/IDEAS:
+ * The intention here is to have a way to recognize rooms as belonging to a structure owned
+ * by a player, particularly a house. This should hold a reference to any room belonging to
+ * the house, a maximum size as a number of rooms (to control how "big" the house can be),
+ * a reference to the player who is the owner of it, as well any ancillary data.
+ * # it might be useful to extend this more generally to any structure a player can own
+ * 
+ * Right now, this holds coordinate data for things and items within the house, with the notion
+ * of persisting location. At some level that data belongs to the item, but this way if the item is
+ * in the house we can theoretically set a location for it to stay at it. Useful for positioning furniture
+ * on a 2D coordinate plane, and making it stay in the same spot. Obviously if we implementing a means of
+ * moving it, that change should be reflected.
+ * 
+ * It would be useful to extend this to hold permission data for who can move stuff, if we want stuff
+ * to not be movable, or who has the right to extend this (i.e. for a guild which might need to expand)
+ * structure. Should this also maintain information on spells (such as warding, locking, or positive
+ * effects) place on the structure? If doors are locked with keys, does this know which doors are
+ * locked and with what? 
+ * 
+ * @author Jeremy
+ *
+ */
+
 public class House {
 	private Player owner;
 	private int max_rooms;

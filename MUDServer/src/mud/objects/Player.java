@@ -717,6 +717,10 @@ public class Player extends MUDObject
 	public LinkedList<Spell> getSpellQueue() {
 		return this.spellQueue;
 	}
+	
+	public SpellBook getSpellBook() {
+		return this.spells;
+	}
 
 	public int getLineLimit() {
 		return this.lineLimit;

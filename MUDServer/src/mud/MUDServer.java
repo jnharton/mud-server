@@ -25,8 +25,7 @@ import mud.colors.XTERM256;
 import mud.commands.*;
 import mud.interfaces.*;
 
-import mud.magic.Reagent;
-import mud.magic.Spell;
+import mud.magic.*;
 
 import mud.miscellaneous.Atmosphere;
 import mud.miscellaneous.Zone;
@@ -6192,7 +6191,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 
 			send("Player     Class     S Race      Idle Status Location", client);
 			// 10+1+9+1+(1)+1+9+1+4+1+6+1+24 = 69
-			send("--------------------------------------------------------------------------------", client);
+			send(Utils.padRight("", '-', 69), client);
 			for (Player player : players)
 			{
 				try {
@@ -6232,7 +6231,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 					npe.printStackTrace();
 				}
 			}
-			send("--------------------------------------------------------------------------------", client);
+			send(Utils.padRight("", '-', 69), client);
 			send(n + " players currently online.", client);
 		}
 
@@ -6351,7 +6350,18 @@ public class MUDServer implements MUDServerI, LoggerI {
 				}
 			}
 		}
-
+		
+		/**
+		 * List what is available for sale from a vendor/merchant
+		 * 
+		 * currently no argument is accepted, but perhaps it could be
+		 * utilized to take a keyword for a specific category of items
+		 * the vendor/merchant sells. I.e. we know they sell weapons,
+		 * but can directly request a list of 'swords' or 'axes'. 
+		 * 
+		 * @param arg    not used
+		 * @param client the client sending this command
+		 */
 		private void cmd_list(final String arg, final Client client) {
 			final Player player = getPlayer(client);
 
@@ -6517,7 +6527,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 
 			String mana = ((Integer) player.getMana()).toString();
 			String max_mana = ((Integer) player.getTotalMana()).toString();
-
+			
 			output = output.replace( "%h", hp );
 			output = output.replace( "%H", max_hp );
 
@@ -6708,13 +6718,18 @@ public class MUDServer implements MUDServerI, LoggerI {
 								// need to check and see if sound filename isn't empty
 								MSP.play(room.music, "", 25, -1);
 								//MSP.play(room.theme, room.theme.substring(room.theme.indexOf("."), -1), 25, -1);
-								//System.out.println(MSP.fileName);
-								//System.out.println(MSP.fileType);
+								//debug("MSP", 2);
+								//debug("Filename: " + MSP.fileName, 2);
+								//debug("Filetype: " + MSP.fileType, 2);
 								String msg = MSP.generate();
 								// send the message (but only to this client)
 								send(msg, client);
 							}
 							else if (room.getRoomType().equals(RoomType.OUTSIDE)) { // if outside, play appropriate weather sounds?
+								// perhaps simply setting a pattern of some kind would be good?
+								// in case we wish to have an ambient background (rain, wind) and an effect sound for lightning (thunder)
+								// ASIDE: some clients only support one sound, so an effect sound should be handled
+								// as the sound, and then ind1the ambient background 
 							}
 						}
 
@@ -6778,13 +6793,24 @@ public class MUDServer implements MUDServerI, LoggerI {
 					send("---------------------", client);
 				}
 				else if (scmd.equals("spells")) {
+					SpellBook sb = getPlayer(client).getSpellBook();
 					send("Spellbook", client);
-					send("-----------------", client);
-					send("Level 1:", client);
-					send(" dispel", client);
-					send(" fireball", client);
-					send(" invisibility", client);
-					send("-----------------", client);
+					for(Integer level : sb.spellTable.keySet()) {
+						ArrayList<Spell> spells = sb.spellTable.get(level);
+						send("-----------------", client);
+						send("Level: " + level, client);
+						for(Spell spell : spells) {
+							send(spell.name, client);
+						}
+						send("-----------------", client);
+						
+					}
+					//send("-----------------", client);
+					//send("Level 1:", client);
+					//send(" dispel", client);
+					//send(" fireball", client);
+					//send(" invisibility", client);
+					//send("-----------------", client);
 				}
 				else if (scmd.equals("finalize")) {
 					/* finalize and init spell casting, slot into
@@ -8209,6 +8235,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 					}
 
 					Spell spell = new Spell("Enchantment", tName, tCastMsg, tType, tEffects, tReagents);
+					debug(spell.name + " " + spell.castMsg + " " + spell.type + spell.effects);
 					spells1.add(spell);
 					spells2.put(tName, spells1.size() - 1);
 				}

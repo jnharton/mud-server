@@ -73,8 +73,13 @@ public class CastCommand extends Command {
 							// apply effects
 							for (int e = 0; e < spell.effects.size(); e++) {
 								effect = spell.effects.get(e);
-
-								parent.applyEffect(target, effect); // apply the effect to the target
+								
+								if(target instanceof Player) {
+									parent.applyEffect((Player) target, effect); // apply the effect to the target
+								}
+								else {
+									parent.applyEffect(target, effect); // apply the effect to the target
+								}
 							}	
 						}
 					}

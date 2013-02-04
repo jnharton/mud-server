@@ -18,13 +18,13 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 public class SpellBook {
 	public ArrayList<Spell> L1, L2, L3, L4, L5, L6, L7, L8, L9;
 	
-	public HashMap<Integer, ArrayList<Spell>> spellTable = new HashMap<Integer, ArrayList<Spell>>(1, 0.75f){
+	public LinkedHashMap<Integer, ArrayList<Spell>> spellTable = new LinkedHashMap<Integer, ArrayList<Spell>>(1, 0.75f){
 		{
 			put(0, null); put(1, L1); put(2, L2);
 			put(3, L3);   put(4, L4); put(5, L5);
