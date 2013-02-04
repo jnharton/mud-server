@@ -60,19 +60,13 @@ import java.util.LinkedList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
-import java.util.ConcurrentModificationException;
 import java.util.EnumSet;
-import java.util.GregorianCalendar;
 import java.util.Hashtable;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Stack;
-import java.util.TimeZone;
 import java.util.HashMap;
-import java.util.Vector;
 
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -202,6 +196,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 	private boolean logging = true;         // logging? (true=yes,false=no)
 	private int logLevel = 3;               // 
 	private boolean prompt_enabled = false; // show player information bar
+	
 	// Protocols
 	/*
 	 * this section is badly designed. In theory it represents whether support for something is enabled,
@@ -2588,7 +2583,8 @@ public class MUDServer implements MUDServerI, LoggerI {
 		// tell us that backing up is done (supply custom message?)
 		send("Game> Done.", client);
 		 */
-		send(backup(), client);
+		send("Backup is buggy, therefore it is disabled", client);
+		//send(backup(), client);
 		//sys_backup2();
 	}
 
@@ -4653,7 +4649,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 			send("Help Editor v0.0b\n", client);
 
 			final EditList list = player.getEditList();
-			String header = "< Help File: " + list.name + ".txt" + "Current Line: " + list.getCurrentLine() + " Lines: " + list.getLines() + "  >";
+			String header = "< List: " + list.name + " Line: " + list.getLineNum() + " Lines: " + list.getNumLines() + "  >";
 			send(header, client);
 		}
 
@@ -7151,7 +7147,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 				else if ( hcmd.equals("stat") || hcmd.equals("st") ) {
 					final EditList list = player.getEditList();
 					if (list != null) {
-						String header = "< Help File: " + list.name + " Lines: " + list.getLines() + " >";
+						String header = "< Help File: " + list.name + ".txt" + " Line: " + list.getLineNum() + " Lines: " + list.getNumLines() + "  >";
 						send(header, client);
 					}
 				}
@@ -7248,7 +7244,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 				else if ( lcmd.equals("stat") ) {
 					final EditList list = player.getEditList();
 					if (list != null) {
-						String header = "< List: " + list.name + " Line: " + list.getLineNum() + " Lines: " + list.getLines() + " >";
+						String header = "< List: " + list.name + " Line: " + list.getLineNum() + " Lines: " + list.getNumLines() + " >";
 						send(header, client);
 					}
 				}
@@ -11449,21 +11445,30 @@ public class MUDServer implements MUDServerI, LoggerI {
 			fillShops();
 			updateWeather();
 		}
-
+		
+		/**
+		 * Evaluate a string and resolve name references
+		 * 
+		 * NOTE: name references looks like this -> '$house' and is associated with an integer database reference
+		 * 
+		 * @param input  an input string that potentially contains a name reference
+		 * @param client the client that the string was sent by
+		 * @return the original string with any name references within resolved to numbers
+		 */
 		public String nameref_eval(String input, Client client) {
-			StringBuffer sb = new StringBuffer(input);
-			StringBuffer refString =  new StringBuffer();
+			StringBuilder sb = new StringBuilder(input);    // local, stringbuilder copy of original
+			StringBuilder refString =  new StringBuilder(); // where we'll store the ref. string as we find the characters 
 
-			Character ch = null;
-			Integer refNum = 0;
+			Character ch = null; // the character well pull out of the input stringbuffer
+			Integer refNum = 0;  // the retrieved number the ref. string refers to
 
-			int index = 0;
-			int begin = 0;
-			int end = 0;
+			int index = 0; // current position in sb
+			int begin = 0; // beginning of ref. string
+			int end = 0;   // end of ref. string
 
-			boolean check = false;
-			boolean replace = false;
-			boolean eval = false;
+			boolean check = false;   // have we found the beginning of a potential refrence
+			boolean replace = false; // do we need to perform a replace operation
+			boolean eval = false;    // are we ready to evaluate a complete reference
 
 			while( sb.indexOf("$") != -1 ) {
 				debug("Index: " + index);
@@ -11545,32 +11550,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 				return input;
 			}
 		}
-
-		// TODO appears obsolete, leaving so it doesn't cause errors where changes are unclear elsewhere
-		private void addToDB(MUDObject m) {
-			/*
-		// we trust herein that the dbref is valid for this MUDObject and doesn't belong
-		// to another and comes only from the set of next ones or is new
-		if( m.getDBRef() < dbSize() ) {
-			main.set(m.getDBRef(), m.toDB());
-			main1.set(m.getDBRef(), m);
-		}
-		else {
-			main.add(m.toDB());
-			main1.add(m);
-		}
-
-		if(m instanceof Item) {
-			items.add((Item) m);
-		}
-		else if(m instanceof Exit) {
-			exits1.add((Exit) m);
-		}
-		else if(m instanceof Room) {
-			rooms1.add((Room) m);
-		}*/
-		}
-
+		
 		public static int distance(Point start, Point end) {
 			if( start != end ) {
 				// use pythagorean theorem to get straight line distance
