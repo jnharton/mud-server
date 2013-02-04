@@ -61,6 +61,7 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.ConcurrentModificationException;
+import java.util.EnumSet;
 import java.util.GregorianCalendar;
 import java.util.Hashtable;
 import java.util.LinkedHashMap;
@@ -202,7 +203,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 	private int logLevel = 3;               // 
 	private boolean prompt_enabled = false; // show player information bar
 	private boolean lookup_caching = true;  // cache object lookups (true=yes, false=no)
-
 	// Protocols
 	/*
 	 * this section is badly designed. In theory it represents whether support for something is enabled,
@@ -240,7 +240,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 	private String helpDB = DATA_DIR + "help\\index.txt";          // index file (help)
 
 	// Default Player Data
-	private final String start_flags = "P";                       // default flag string
+	private final EnumSet<ObjectFlag> startFlags = EnumSet.of(ObjectFlag.PLAYER);                       // default flag string
 	private final String start_status = "NEW";                    // default status string
 	private final String start_desc = "There is nothing to see."; // default desc string
 	private final Integer start_room = 9;                         // default starting room
@@ -254,15 +254,10 @@ public class MUDServer implements MUDServerI, LoggerI {
 	private Log connection;                // A log file to keep track of connection/disconnection
 	private Log debugLog;                  // A log file to keep track of debugging messages
 	private Log chatLog;                   // A log file to keep track of chat messages
-	private Thread messageLoop;            // A Thread Object for Asynchronous Message Sending (Message Thread)
-	private Thread timeLoop;               // A Thread Object for Tracking game time. (Time Thread)
-	private Thread weatherLoop;            // A Thread Object for Broadcasting game weather; (Weather Thread)
 	private Thread cmdExecLoop;            // A Thread Object for handling command execution
 	private Thread chatThread;             // A Thread Object for a ChatChannel
 	private Thread chatThread1;            // A Thread Object for a ChatChannel
-	private MessageLoop game_messages;     // MessageLoop Object
 	private TimeLoop game_time;            // TimeLoop Object
-	private WeatherLoop game_weather;      // WeatherLoop Object
 	private CommandExec cmdExec;           // CommandExec Object
 	private ChatChannel ooc;               // Out-of-Character ChatChannel
 	private ChatChannel staff;             // Staff ChatChannel
@@ -285,7 +280,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 
 	public HashMap<String, String> aliases = new HashMap<String, String>(20, 0.75f);             // HashMap to store command aliases (static)
 	private HashMap<Integer, String> Errors = new HashMap<Integer, String>(5, 0.75f);           // HashMap to store error messages for easy retrieval (static)
-	private HashMap<Character, String> RoomTypes = new HashMap<Character, String>(3, 0.75f);    // HashMap that stores existing room types (static)
 
 	private HashMap<String, Date> holidays = new HashMap<String, Date>(10, 0.75f);               // HashMap that holds an in-game date for a "holiday" name string
 	private HashMap<Integer, String> years = new HashMap<Integer, String>(50, 0.75f);            // HashMap that holds year names for game themes that supply them (static)
@@ -304,7 +298,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 
 	// Arrays
 	private String[] spells;        // string array of spell info
-	private String[] errors;        // string array into which existing error messages file is loaded
 	private String[] help;          // string array of help file filenames
 
 	// ArrayList(s)
@@ -327,9 +320,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 	private ArrayList<Session> sessions;     // ArrayList of Session  (UNUSED)
 
 	// Communications
-	private ArrayList<Message> pages;        // ArrayList of Messages to other players
-	private ArrayList<Message> messages;     // ArrayList of Messages from the game to a player
-
 	private HashMap<String, ChatChannel> channels = new HashMap<String, ChatChannel>();
 
 	// "Security" Stuff
@@ -410,7 +400,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 
 	public static int[] DAYS = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 }; // days in each month
 	public static int months = 12;                                                 // months in a year
-	public static String[] month_names = new String[months];
 	private Seasons season = Seasons.SUMMER; // Possible - Spring, Summer, Autumn, Winter
 
 	private String month_name;
@@ -433,8 +422,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 	private int done = 0; // a way of tracking if we're done with a line of telnet input
 
 	// Lookup/Cache Tables
-	private Hashtable<String, Integer> room_lookup;
-	private Hashtable<Integer, Integer> room_lookup2;
 	private HashMap<String, Integer> spells2 = new HashMap<String, Integer>(1, 0.75f); // HashMap to lookup spells by index using name as key (static)
 
 	// static values
@@ -460,9 +447,9 @@ public class MUDServer implements MUDServerI, LoggerI {
 
 private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackable items (should this be in the stackable interface?)
 
-	public MUDServer(String address) {}
+	public MUDServer(final String address) {}
 
-	public MUDServer(String address, int incomingPort) {
+	public MUDServer(final String address, int incomingPort) {
 		this.port = incomingPort;
 	}
 
@@ -626,11 +613,6 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 
 		debug(""); // formatting
 
-		// initialize pages array
-		this.pages = new ArrayList<Message>();        // handles direct player to player communication
-		// initialize messages array
-		this.messages = new ArrayList<Message>();     // everything else
-
 		MUDObject.parent = this; // assign a static reference to the running server (ugly, but allows some flex)
 
 		// initialize player array
@@ -650,26 +632,19 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 		// wise to implement configurable auto db-saving here
 		//
 
-		// Error Messages Files (errorsDB)
-		this.errors = loadDatabase(errorDB);
-		// Help Files (helpDB)
-		this.help = loadDatabase(helpDB);
 		// Spell Files (spellDB)
-		this.spells = loadDatabase(spellDB);
+		this.spells = Utils.loadStrings(spellDB);
 
 		// error message hashmap loading
-		for (int err = 0; err < this.errors.length; err++)
-		{
-			if (this.errors[err] != null) {
-				String[] working = this.errors[err].split(":");
-				//System.out.println(working);
-				if (working.length >= 2)
-				{
-					debug("Error(number): " + working[0]);
-					debug("Error(message): " + working[1]);
-					this.Errors.put(Integer.parseInt(working[0]), working[1]);
-				}
-			}
+		final String[] errors = Utils.loadStrings(errorDB);
+        for (final String e : errors)
+        {
+            final String[] working = e.split(":");
+            if (working.length >= 2) {
+                debug("Error(number): " + working[0]);
+                debug("Error(message): " + working[1]);
+                this.Errors.put(Integer.parseInt(working[0]), working[1]);
+            }
 		}
 
 		// load spells
@@ -725,17 +700,12 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 
 		// help file loading
 		System.out.print("Loading Help Files... ");
-		try {
-			for (final String helpFileName : this.help)
-			{
-				if (helpFileName != null) {
-					String[] helpfile = Utils.loadStrings(this.HELP_DIR + helpFileName);
-					helpMap.put(helpfile[0], helpfile);
-				}
-			}
-			System.out.println("Help Files Loaded!");
-		}
-		catch(NullPointerException npe) { System.out.println("NullPointerException in helpfile loading."); }
+        for (final String helpFileName : Utils.loadStrings(helpDB))
+        {
+            final String[] helpfile = Utils.loadStrings(this.HELP_DIR + helpFileName);
+            helpMap.put(helpfile[0], helpfile);
+        }
+        System.out.println("Help Files Loaded!");
 
 		// Set Up Colors
 
@@ -771,13 +741,6 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 		Flags.put('V', "VENDOR");  // NPC Flag: NPC sells stuff
 		Flags.put('Z', "ZONE");    // ?
 		debug("Flags: " + Flags.entrySet()); // Print out the whole set of flags (DEBUG)
-
-		// set up room types
-		RoomTypes.put('E', "EXPOSED"); // Exposed to some weather
-		RoomTypes.put('I', "INSIDE");  // Not affected by any weather
-		RoomTypes.put('O', "OUTSIDE"); // Affected by all weather
-		RoomTypes.put('N', "NONE");    // Same effect as inside for weather purposes
-		debug("Room Types: " + RoomTypes.entrySet()); // Print out the whole set of room types (DEBUG)
 
 		/*
 		 * Command Mapping
@@ -856,12 +819,8 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 		// doing this here, because most everything that needs to be loaded before should be done by here
 		this.s = new Server(this, port); // current style
 
-		/* Threads */
-
-		/* messageLoop: player-to-player messages and some game messages
-		 * timeLoop: time, date, season tracking and triggering weather messages
-		 * weatherLoop: weather messages in general
-		 * chatThreadx: chat channel
+		/* Threads
+		 * chatThread: chat channel
 		 * cmdExec: command execution
 		 */
 
@@ -870,26 +829,14 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 		 * 25% cpu
 		 */
 
-		// Message Loop
-		// cpu: ~30%
-		game_messages = new MessageLoop();
-		messageLoop = new Thread(game_messages, "messages");
-		messageLoop.start();
-		System.out.println("Message (Thread) Started!");
-
 		// Time Loop
 		// cpu: -for now, appears marginal-
 		game_time = new TimeLoop(this, DAYS, month, day, game_hour, game_minute);
-		timeLoop = new Thread(game_time, "time");
-		timeLoop.start();
+		new Thread(game_time, "time").start();
 		System.out.println("Time (Thread) Started!");
 
 		// Weather Loop
 		// cpu: ~20%
-		//game_weather = new WeatherLoop();
-		//weatherLoop = new Thread(game_weather, "weather");
-		//game_weather.sync(); // synchronize to time
-		//weatherLoop.start();
 		//System.out.println("Weather (Thread) Started!");
 
 		// Chat Channels
@@ -2599,7 +2546,6 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
                 }
             }
         }
-	}
 
 	/**
 	 * Command: Assign
@@ -3080,8 +3026,6 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
         // variable whose state reflects the current step in the connection process (true=in progress, false=failed)
 		// we are now attempting to init the connection
 		boolean auth = true;
-		
-		// TODO ascertain what changes were made by joshgit to account login in his code and determine appropriate course of action
 		boolean account = false;
 
 		// Guest Player
@@ -3090,14 +3034,14 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 		// NOTE: my problem is related to guest not being findable somehow, all this needs a major revamp
 		if ((user.toLowerCase().equals("guest")) && (pass.toLowerCase().equals("guest"))) {
 			if (guest_users == 1) {
-				final Player player = new Player(-1, "Guest" + guests, "PG", "A guest player.", WELCOME_ROOM, "", Utils.hash("password"), "OOC", new Integer[] { 0, 0, 0, 0, 0, 0 }, new Integer[] { 0, 0, 0, 0 });
+				final Player player = new Player(-1, "Guest" + guests, EnumSet.of(ObjectFlag.PLAYER, ObjectFlag.GUEST), "A guest player.", WELCOME_ROOM, "", Utils.hash("password"), "OOC", new Integer[] { 0, 0, 0, 0, 0, 0 }, new Integer[] { 0, 0, 0, 0 });
                 objectDB.addAsNew(player);
 				init_conn(player, client, false);
 				guests++;
 			}
 		}
 		else if (user.toLowerCase().equals("new")) {
-			final Player player = new Player(-1, "randomName", "P", "New player.", WELCOME_ROOM, "", Utils.hash("randomPass"), "NEW", new Integer[] { 0, 0, 0, 0 }, new Integer[] { 0, 0, 0, 0, 0, 0 });
+			final Player player = new Player(-1, "randomName", startFlags.clone(), "New player.", WELCOME_ROOM, "", Utils.hash("randomPass"), "NEW", new Integer[] { 0, 0, 0, 0 }, new Integer[] { 0, 0, 0, 0, 0, 0 });
             objectDB.addAsNew(player);
 			init_conn(player, client, false);
 		}
@@ -3131,35 +3075,18 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 
 			// account check
 			if( account ) {
-				/*
-				 * This code here ties up the program, and no one else
-				 * can have their commands processed until this is done,
-				 * although the command queue will hold the commands they send
-				 */
-				String aName = "";
-				String aPass = "";
-
-				// really ought to design a handler for flexible interactive input
 				try {
 					client.write("Account Name?");
-
-					aName = client.getInput();
-
+				final String aName = client.getInput();
 					System.out.println("Name: " + aName);
 
 					client.write("Account Password?");
-
-					aPass = client.getInput();
-
+				final String aPass = client.getInput();
 					System.out.println("Password: " + aPass);
-				}
-				catch (Exception e) {
-					e.printStackTrace();
-				}
 
-				Account account1 = getAccount(aName, aPass); // determine if the account exists
+                final Account account1 = getAccount(aName, aPass);
 
-				if (account1 != null) {
+                if (account1 != null) {
 					// the line below is rendered redundant by the getAccount call above, not sure if I like
 					// the way that it works above. I kind of think that behavior might be inconsistent with the naming
 					//boolean verified = verify(account1, aPass); // determine if the account exists, and whether the password is valid for it
@@ -3167,43 +3094,54 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 					/*boolean verified = true;
 
 					if( verified ) {
-						account_menu(account1, client);					
+                    account_menu(account1, client);
 
 					}
+			catch (Exception e) {
+				e.printStackTrace();
+                }
+			}
 			catch (Exception e) {
 				e.printStackTrace();
 			}
 		}
 					else {
-						auth = false;
-						System.out.println("No such account!");
-						client.write("No such account!");
-					}*/
-					
-					account_menu(account1, client);
-				}
-				else {
-					auth = false;
-					System.out.println("No such account!");
-					client.write("No such account!");
-				}
-			}
-			else {
-
+            /*
+             * NOTE:
+             * if all players always existed, then instead of instantiating a player i'd
+             * simply assign a client to it. Otherwise I need to get the player data from
+             * somewhere so I can load it up. 
+             */
+            // account check
+            /*
+             * I don't want account names to conflict with characters, so perhaps
+             * I will insert a stopgap measure where you must indicate an account
+             * like this:
+             * 
+             * connect account
+             * 
+             * If the user input is 'account' we will assume you want to connect to
+             * an account and will do an interactive login for you.
+             * 
+             * Other we will look for a character by the name given.
+             */
             // character check
             final Player p = objectDB.getPlayer(user);
-            
             if (p == null || !p.getPass().equals(Utils.hash(pass))) {
                 debug("CONNECT: Fail");
+                send("Either that player does not exist, or has a different password.", client);
+                return;
+            }
+			}
+			else {
                 send("Either that player does not exist, or has a different password.", client);
                 return;
             }
             
             debug("PASS: Pass"); // report success for password check
             
-            auth = false;
-
             if (mode == GameMode.NORMAL) {
+                init_conn(p, client, false);    // Open Mode
                 init_conn(p, client, false);    // Open Mode
             }
             else if (mode == GameMode.WIZARD) {
@@ -3220,8 +3158,7 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
             else {
                 send("Sorry, you cannot connect to the mud at this time. Please try again later.", client);
             }
-
-        }}
+        }
 	}
 
 	/**
@@ -3368,8 +3305,7 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 		if (!objectDB.hasName(user) && validateName(user))
 		{
 			// create a new player object for the new playerm the "" is an empty title, which is not currently persisted
-			final Player player = new Player(-1, user, start_flags, start_desc, start_room, "", Utils.hash(pass), start_status, start_stats, start_money);
-			
+			final Player player = new Player(-1, user, startFlags.clone(), start_desc, start_room, "", Utils.hash(pass), start_status, start_stats, start_money);
 			objectDB.addAsNew(player);
 
 			String mail[];        // create the mailbox
@@ -3655,6 +3591,9 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 			}
 		}
 		else if ( arg.toLowerCase().equals("objlcache") || arg.toLowerCase().equals("olc") ) {
+			/* indicate size of object lookup table/cache
+			/* show us the current contents of the object lookup table/cache
+            */
 		}
 		else if ( arg.toLowerCase().equals("position") || arg.toLowerCase().equals("pos") ) {
 			Player player = getPlayer(client);
@@ -4212,11 +4151,11 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 			if (args[1].contains("!")) {
 				send("Removing sFlag(s)", client);
 				if (args[0].equals("me")) {
-					player.setFlags(args[1]);
+					player.removeFlags(args[1]);
 				}
 				else if (args[0].equals("here")) {
 					room = getRoom(client);
-					room.setFlags(args[1]);
+					room.removeFlags(args[1]);
 					send(room.getName() + " flagged " + Flags.get(args[1].charAt(0)), client);
 				}
 				else {
@@ -4249,17 +4188,8 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 	 */
 	private void cmd_flags(final String arg, final Client client) {
 		final MUDObject m = getObject(arg);
-
 		client.write("Flags: ");
-
-		String flags = m.getFlags();
-
-		for (int i = 0; i < flags.length(); i++) {
-			client.write(Flags.get(flags.charAt(i)));
-			if (i < flags.length() - 1) {
-				client.write(" ");
-			}
-		}
+		client.write(ObjectFlag.toInitString(m.getFlags()));
 	}
 
 	/**
@@ -5265,20 +5195,24 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 		String[] in = arg.split("=");
 
 		if (in.length > 1) {
-			String[] recipients = in[0].split(",");
+			final String[] recipients = in[0].split(",");
 			String ms = "";
 
 			if (in.length == 2) {
 				ms = in[1];
 
 				Message msg = new Message("You page, " + "\"" + Utils.trim(ms) + "\" to " + in[0] + ".", getPlayer(client));
-				messages.add(msg);
+				addMessage(msg);
 
-				for (int r = 0; r < recipients.length; r++)
-				{
-					// mesage with a player sender, text to send, and the player to send it to
-					pages.add(new Message(getPlayer(client), Utils.trim(ms), getPlayer(recipients[r])));
-				}
+                for (final String recipName : recipients)
+                {
+                    final Player targetPlayer = getPlayer(recipName);
+                    final Client recipClient = tclients.get(targetPlayer);
+                    if (recipClient != null) {
+                        // mesage with a player sender, text to send, and the player to send it to
+                        s.sendMessage(recipClient, new Message(getPlayer(client), Utils.trim(ms), targetPlayer));
+                    }
+                }
 			}
 		}
 	}
@@ -5432,7 +5366,7 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 
 	// Function to disconnect player
 	private void cmd_quit(final String arg, final Client client) {
-		init_disconn(client);
+		initDisconn(client);
 	}
 
 	// Object/Room Recycling Function
@@ -6852,7 +6786,7 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 
 					// call msp to play a tune that is the theme for a type of room
 					if (msp == 1) { // MSP is enabled
-						if (room.getRoomType().equals("I")) { // if inside play the room's music
+						if (room.getRoomType().equals(RoomType.INSIDE)) { // if inside play the room's music
 							// need to check and see if sound filename isn't empty
 							MSP.play(room.music, "", 25, -1);
 							//MSP.play(room.theme, room.theme.substring(room.theme.indexOf("."), -1), 25, -1);
@@ -6862,7 +6796,7 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 							// send the message (but only to this client)
 							send(msg, client);
 						}
-						else if (room.getRoomType().equals("O")) { // if outside, play appropriate weather sounds?
+						else if (room.getRoomType().equals(RoomType.OUTSIDE)) { // if outside, play appropriate weather sounds?
 						}
 					}
 
@@ -8080,12 +8014,6 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 	public Thing getThing(String arg, Client client)
 	{
         return objectDB.getThing(getRoom(client).getDBRef(), arg);
-	}
-	
-	public Thing getThing(String name, Room room) {
-		for(Thing thing : room.contents) {
-			if(name == thing.getName()) {
-				return thing;
 			}
 		}
 		
@@ -8097,12 +8025,7 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 		/*
 		for(Thing thing : things) {
 			if(thing.getDBRef() == DBREF) {
-				return thing;
-			}
-		}
 		*/
-		
-		return null;
 	}
 
 	/**
@@ -8136,16 +8059,6 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 		catch (Exception e) {
 			e.printStackTrace();
 		}
-	}
-
-	public void saveNPCs()
-	{	
-		// TODO needs revamp
-		/*
-		for (final NPC npc : npcs1) {
-			main.set(npc.getDBRef(), npc.toDB());
-			debug("NPC saved.");
-		}*/
 	}
 
 	public void saveDB() {
@@ -8345,41 +8258,13 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 	 * 
 	 * @param filename the filename to load strings from
 	 * @param offset   the number of lines to skip before loading strings (from beginning of file)
-	 * @return         an arraylist of strings
+	 * @return         a list of strings
 	 */
-	public ArrayList<String> loadList(String filename, int offset) {
-		String[] string_array;
-		ArrayList<String> strings;
-
-		string_array = Utils.loadStrings(filename);
-
-		strings = new ArrayList<String>(string_array.length);
-
-		for (int line = 0; line < string_array.length; line++) {
-			if (line >= offset) {
-				strings.add(string_array[line]);
-			}
-		}
-
-		return strings;
+	public List<String> loadList(String filename, int offset) {
+		final ArrayList<String> lines = new ArrayList<String>(Arrays.asList(Utils.loadStrings(filename)));
+        return lines.size() < offset ? new ArrayList<String>() : lines.subList(offset, lines.size());
 	}
 
-	/**
-	 * Load an array of strings from a file with one string per line
-	 * 
-	 * @param filename the name of the file to load from
-	 * @return         an array of strings
-	 */
-	public String[] loadDatabase(String filename) {
-		String[] string_array;
-		string_array = Utils.loadStrings(filename);
-		return string_array;
-	}
-
-	/**
-	 * 
-	 * @param temp
-	 */
 	public void loadSpells(String[] temp) {
 		try {
 			for (int s = 0; s < temp.length; s++) {
@@ -8416,10 +8301,6 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 		}
 	}
 
-	/**
-	 * 
-	 * @param themeFile
-	 */
 	public void loadTheme(String themeFile) {
 		theme1 = new Theme();
 		int depth = 0;
@@ -8582,59 +8463,46 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 		debug("Description: " + oDesc);
 		debug("Location: " + oLocation);
 
-		Item item = new Item(oDBRef, oName, oFlags, oDesc, oLocation);
+		Item item = new Item(oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), oDesc, oLocation);
 
 		item.setItemType(itemType);
 
 		return item;
 	}
 
-	public void loadChannels(String filename) {
-		// open file
-		File file = new File(filename);
+	public void loadChannels(final String filename) {
+        try {
+            final FileReader fr = new FileReader(new File(filename));
+            final BufferedReader br = new BufferedReader(fr);
+            String line;
+            while ((line = br.readLine()) != null) { 
+                // load data (one line at a time)
 
-		if (file.exists() ) {
-			if ( file.isFile() ) {
-				if ( file.canRead() ) {
-					try {
-						FileReader fr = new FileReader(file);
+                // split line in file
+                final String[] cInfo = line.split("#");
 
-						BufferedReader br = new BufferedReader(fr);
+                // extract channel information from array of data
+                final int channelId = Integer.parseInt(cInfo[0]);
+                final String channelName = cInfo[1];
 
-						while ( br.ready() ) { 
-							// load data (one line at a time)
-							String string = br.readLine();
+                // create channel according to data
+                final ChatChannel c = new ChatChannel(s, this, channelId, channelName);
+                channels.put(c.getName(), c);
+                debug("Channel Added: " + c.getName() + "(" + c.getID() + ")");
 
-							// split line in file
-							String[] cInfo = string.split("#");
+                final Thread chatThread = new Thread(c, channelName);
+                chatThread.start();
 
-							// extract channel information from array of data
-							Integer channelId = Integer.parseInt(cInfo[0]);
-							String channelName = cInfo[1];
-
-							// create channel according to data
-							ChatChannel c = new ChatChannel(s, this, channelId, channelName);
-							channels.put(c.getName(), c);
-							debug("Channel Added: " + c.getName() + "(" + c.getID() + ")");
-
-							Thread chatThread = new Thread(c, channelName);
-							chatThread.start();
-
-							if ( chatThread.isAlive() ) {
-								debug("Channel Started: " + c.getName() + "(" + c.getID() + ")");
-							}
-						}
-					}
-					catch (FileNotFoundException e) {
-						e.printStackTrace();
-					}
-					catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-				}
-			}
-		}
+                if (!chatThread.isAlive() ) {
+                    debug("Channel not alive: " + c.getName() + "(" + c.getID() + ")");
+                }
+            }
+            br.close();
+            fr.close();
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
 	}
 
 	/**
@@ -8647,9 +8515,7 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 	 */
 	public String MOTD()
 	{
-		byte[] MOTD = Utils.loadBytes(MOTD_DIR + motd);
-		String MOTD1 = new String(MOTD);
-		return MOTD1;
+		return new String(Utils.loadBytes(MOTD_DIR + motd));
 	}
 
 	/**
@@ -8767,8 +8633,8 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 			objectDB.addAsNew(sword);
 			
 			armor.setLocation(player.getDBRef());
-			sword.setLocation(player.getDBRef());
-			
+			objectDB.addAsNew(armor);
+			objectDB.addAsNew(sword);
 			// TODO Fix this problem 
 			//addToDB(armor);
 			//addToDB(sword);
@@ -8860,115 +8726,103 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 	 * @param player
 	 * @param client
 	 */
-	public void init_disconn(Client client)
+	public void initDisconn(final Client client)
 	{
 		final Player player = getPlayer(client);
-
-		if (player != null) // if the chosen client is associated with a player
-		{
-			// break any current control of npcs
-			cmd_control("#break", client);
-
-			// remove listener
-			getRoom(client).removeListener(player);
-
-			/*
-			 * unequip gear
-			 * 
-			 * If we didn't do this, stuff could get stuck in limbo,
-			 * alternatively, we could just loop through the items array
-			 * and put a new copy of the references in the inventory,
-			 * since it's all going to end up back in the inventory anyway
-			 * (or at least until I figure out how to persist information
-			 * about reloading slots for a player).
-			 */
-
-			// Unequipping gear
-			ArrayList<Item> inventory = player.getInventory();
-
-			for (Slot slot : player.getSlots().values()) {
-				if (slot.isFull()) {
-					if (slot.getItem() != null) {
-						inventory.add(slot.getItem());
-					}
-				}
-			}
-
-			send("Equipment un-equipped!", client);
-
-
-			debug("init_disconn(" + client.ip()+ ")");
-
-			// get time
-			Time time = getTime();
-
-			// get variables to log
-			String playerName = player.getName();
-			int playerLoc = player.getLocation();
-
-			// log the disconnect
-			log.writeln(playerName, playerLoc, "Logged out at " + time.hour() + ":" + time.minute() + ":" + time.second() + " from " + client.ip());
-
-			// get session
-			Session toRemove = sessionMap.get(player);
-
-			// record disconnect time
-			toRemove.disconnect = time;
-
-			// store the session info on disk
-
-			// clear session
-			sessions.remove(toRemove);
-
-			// if player is a guest
-			if ( player.getFlags().charAt(0) == 'G') {
-				// remove from database
-				objectDB.set( player.getDBRef(), new NullObject( player.getDBRef() ) );  // replace db entry with NULLObjet
-			}
-			else {
-				// save mail
-				saveMail(player);
-
-				// export player data to pfile format
-				//exportToPFILE(client);
-
-				// run any disconnect properties specified by the player
-				//dProps(player);
-			}
-
-			synchronized(players) {
-				players.remove(player);  // Remove the player object for the disconnecting player
-			}
-			synchronized(sclients) {
-				sclients.remove(client); // remove the player to client mapping
-			}
-			synchronized(tclients) {
-				tclients.remove(player); // remove the client to player mapping
-			}
-
-			// DEBUG: Tell us which character was disconnected
-			debug(playerName + " removed from play!");
-
-			//
-			send("Disconnected from " + name + "!", client);
-		}
-		else
-		{
-			// DEBUG: Indicate failure to find the player who initiated the disconnect or had it initiated for them
-			debug("Player not found!");
-		}
-
-		try {
-			// disconnect the client
+		if (player == null) {
+			debug("Player not found for client: " + client);
 			s.disconnect(client);
+            return;
 		}
-		catch(NullPointerException npe) {
-			npe.printStackTrace();
-		}
+
+        // break any current control of npcs
+        cmd_control("#break", client);
+
+        // remove listener
+        getRoom(client).removeListener(player);
+
+        /*
+         * unequip gear
+         * 
+         * If we didn't do this, stuff could get stuck in limbo,
+         * alternatively, we could just loop through the items array
+         * and put a new copy of the references in the inventory,
+         * since it's all going to end up back in the inventory anyway
+         * (or at least until I figure out how to persist information
+         * about reloading slots for a player).
+         */
+
+        // Unequipping gear
+        final ArrayList<Item> inventory = player.getInventory();
+
+        for (final Slot slot : player.getSlots().values()) {
+            if (slot.isFull()) {
+                if (slot.getItem() != null) {
+                    inventory.add(slot.getItem());
+                }
+            }
+        }
+
+        send("Equipment un-equipped!", client);
+
+
+        debug("initDisconn(" + client.ip()+ ")");
+
+        // get time
+        Time time = getTime();
+
+        // get variables to log
+        String playerName = player.getName();
+        int playerLoc = player.getLocation();
+
+        // log the disconnect
+        log.writeln(playerName, playerLoc, "Logged out at " + time.hour() + ":" + time.minute() + ":" + time.second() + " from " + client.ip());
+
+        // get session
+        Session toRemove = sessionMap.get(player);
+
+        // record disconnect time
+        toRemove.disconnect = time;
+
+        // store the session info on disk
+
+        // clear session
+        sessions.remove(toRemove);
+
+        // if player is a guest
+        if (player.getFlags().contains(ObjectFlag.GUEST)) {
+            // remove from database
+            objectDB.set( player.getDBRef(), new NullObject( player.getDBRef() ) );  // replace db entry with NULLObjet
+        }
+        else {
+            // save mail
+            saveMail(player);
+
+            // export player data to pfile format
+            //exportToPFILE(client);
+
+            // run any disconnect properties specified by the player
+            //dProps(player);
+        }
+
+        synchronized(players) {
+            players.remove(player);  // Remove the player object for the disconnecting player
+        }
+        synchronized(sclients) {
+            sclients.remove(client); // remove the player to client mapping
+        }
+        synchronized(tclients) {
+            tclients.remove(player); // remove the client to player mapping
+        }
+
+        // DEBUG: Tell us which character was disconnected
+        debug(playerName + " removed from play!");
+
+        s.disconnect(client);
+        send("Disconnected from " + name + "!", client);
 	}
 
-	// TELNET Negotiation
-	public void telnet_negotiation(Client client) {
+	public void telnetNegotiation(Client client) {
 		client.tn = true; // mark as client as being negotiated with
 
 		int s = 0;  // current sub-negotiation? (0=incomplete,1=complete)
@@ -9112,7 +8966,7 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
         }
         */
         out.append(" ]");
-        System.out.println(out);
+        System.out.print(out);
 	}
 
 	/**
@@ -9210,9 +9064,6 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 		// Players
 		log.writeln("Game> Backing up Players...");
 
-		log.writeln("Done.");
-		
-		// NPCs
 		log.writeln("Game> Backing up Non-Player Characters (NPCs)...");
 		
 		// TODO fix/remove
@@ -9221,7 +9072,6 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 		synchronized(npcs1) {
 			saveNPCs(); // NOTE: only modifies in memory storage
 		}*/
-
 		log.writeln("Done.");
 
 		// Accounts
@@ -9289,34 +9139,22 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 	}
 
 	private void shutdown() {
-		// tell everyone we are shutting down the server
 		s.write("Server Shutdown!\n");
 
-		// prevent any new connections
-		mode = GameMode.MAINTENANCE;
+		mode = GameMode.MAINTENANCE;    // prevent any new connections
 
 		// disconnect any connected clients
-		for (Client client1 : s.getClients()) {
-			init_disconn(client1);
+		for (final Client client1 : s.getClients()) {
+			initDisconn(client1);
 		}
 
-		System.out.print("Stopping threads... ");
-
+		System.out.print("Stopping main game...");
 		// indicate that the server is no longer running, should cause the main loop to exit
-		// no more commands will be processed
 		running = false;
-
-		// interrupt/kill all running thread
-		/*timeLoop.interrupt();
-		weatherLoop.interrupt();
-		messageLoop.interrupt();*/
-
-		System.out.println("Done");
 
 		// close the logs (closes the file object and saves the data to a file)
 		if ( logging ) {
 			System.out.print("Closing logs... ");
-
 			log.closeLog();
 			//connection.closeLog();
 			debugLog.closeLog();
@@ -9329,20 +9167,12 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 		}
 
 		System.out.print("Stopping server... ");
-
-		// stop the server
 		s.stopRunning();
 
-		System.out.println("Done");
-
 		System.out.print("Running backup... ");
-
-		// run backup
 		backup();
 
 		System.out.println("Done");
-
-		// exit the program
 		System.exit(0);
 	}
 
@@ -9410,14 +9240,7 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 	 * @param data
 	 */
 	public void send(Object data, Client client) {
-		String out = "";
-		if (data instanceof String) {
-			out = (String) data;
-		}
-		else {
-			out = data.toString();
-		}
-		send(out, client);
+		send("" + data, client);
 	}
 
 	/**
@@ -9577,147 +9400,8 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 	}
 
 	/**
-	 * A runnable message loop to send messages to players asynchronously
-	 * @author Jeremy
-	 *
-	 */
-	public class MessageLoop implements Runnable {
-
-		@Override
-		public void run() {
-			// while the game is running, and the time thread is not suspended
-			while ( running && s.hasClients()) {
-				// if client is a logged in player, send them any messages queued for them
-				// Send any pages, messages, etc to their respective recipients, or to a list of recipients?
-				try {
-					for (final Client client : s.getClients()) {
-						if (client != null && client.isRunning()) { // if the client is not null and is still active
-							if (pages.size() > 0) {
-								for (int a = 0; a < pages.size(); a++) { // for the list of pages
-									// get a message
-									final Message msg = (Message) pages.get(a);
-
-									// if the current client is the recipient
-									if (client == tclients.get( msg.getRecipient() ) ) {
-										debug("sending message to " + msg.getRecipient().getName()); 
-										send( msg.getSender().getName() + " says, \"" + msg.getMessage() + "\" to you. (tell)", client);
-										synchronized (pages) {
-											pages.remove(a);
-										}
-									}
-								}
-							}
-							if (messages.size() > 0) {
-								for (int m = 0; m < messages.size(); m++) { // for the list of messages
-									Message msg = (Message) messages.get(m); // get a message
-									Player player = getPlayer(client); // get the player associated with the client
-
-									// if this client's player is the intended recipient
-									if ( msg.getRecipient() == player ) {
-										send(msg.getMessage(), client);                // send the message to them
-										msg.markSent();                                // mark it as sent
-										debug("sent message");                         // tell us we sent it
-										synchronized(messages) { messages.remove(m); } // remove it from the list (synchronized operation)
-									}
-									// the mud or an npc or some other game controlled object sent it (no specified sender)
-									else if (msg.getSender() == null) {
-										// general game wide broadcast (no specified recipient)
-										if (msg.getRecipient() == null) {
-											send(msg.getMessage());                        // send the message to everyone
-											msg.markSent();                                // mark it as sent
-											debug("sent message");                         // tell us we sent it
-											synchronized(messages) { messages.remove(m); } // REMOVE in future
-										}
-									}
-									// no recipient, so we'll assume it was 'said' out loud
-									else if (msg.getRecipient() == null) {
-										for (Player player1 : players)
-										{
-											if (player1.getLocation() == msg.getLocation())
-											{
-												send(msg.getSender().getName() + " says, \"" + msg.getMessage() + "\".", client); // send the message to the player
-											}
-										}
-										msg.markSent();                                                         // mark it as sent
-										debug("sent message");                                                  // tell us we sent it
-										synchronized(messages) { messages.remove(m); }                          // remove it from the list (synchronized operation)
-									}
-									// problem with the message
-									else {
-										debug("MessageLoop (Fault): message not sent, possible incorrect message data");
-										synchronized(messages) { messages.remove(m); }
-									}
-								}
-							}
-						}
-					}
-				}
-				catch(NullPointerException npe) {
-					Thread.currentThread().interrupt();
-				}
-			}
-		}
-	}
-
-	public class WeatherLoop implements Runnable {
-
-		private boolean inSync = false;
-		private int period = 1; // broadcast period (minutes)
-		private int fired = 1;  // number of times the thread has "fired"
-
-		Atmosphere atmosphere; // Atmosphere Object
-		Weather weather;
-
-		@Override
-		public void run() {
-			// while the game is running, and the time thread is not suspended
-			while (running && timeLoop.isAlive()) {
-				if (inSync) {
-					try {
-						// once every period
-						debug(game_time.getMinutes());
-						debug(fired);
-						if ((game_time.getMinutes() + 1) % fired == 0) {
-
-							// loop through all the rooms and broadcast weather messages accordingly
-                            for (final Room r : objectDB.getWeatherRooms()) {
                                 broadcast("", r);
                                 debug("message sent");
-                            }
-                            for (final Room r : objectDB.getRoomsByType("P")) {
-                                broadcast("", r);
-                                debug("message sent");
-                            }
-							debug("loop fired.");
-							debug(game_time.getMinutes());
-							debug(fired);
-							fired++;
-							Thread.sleep(game_time.getScale() * period);
-						}
-						else {
-							inSync = false;
-							sync();
-						}
-					}
-					catch(InterruptedException ie) {
-					}
-				}
-			}
-		}
-
-		public void sync() {
-			debug("Syncing...");
-			while ((game_time.getMinutes() + 1) % fired != 0) {
-				debug(game_time.getMinutes());
-				debug(fired);
-				debug("Waiting...");
-			}
-			inSync = true;
-			debug("Synced!");
-		}
-	}
-
-	/**
 	 * Mode setting for players to indicate a state.
 	 * 
 	 * Normal - normal play
@@ -9983,13 +9667,38 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 	/**
 	 * allows adding to the message queue from external packages, classes
 	 * 
-	 * 
 	 * @param newMessage
 	 */
-	public void addMessage(final Message newMessage) {
-		synchronized(this.messages) { 
-			this.messages.add(newMessage);
-		}
+	public void addMessage(final Message msg) {
+        // if this client's player is the intended recipient
+        final Player recip = msg.getRecipient();
+        if (recip != null ) {
+            if (tclients.containsKey(recip)) {
+                send(msg.getMessage(), tclients.get(recip));
+                msg.markSent();
+                debug("addMessage, sent message");
+            }
+            else {
+                debug("addMessage, msg recipient not in tclients: " + recip);
+            }
+        }
+        // no recipient, so we'll assume it was 'said' out loud
+        else {
+            // the mud or an npc or some other game controlled object sent it to everyone (no specified sender)
+            if (msg.getSender() == null) {
+                send(msg.getMessage());
+            }
+            else {
+                for (final Player bystander : players) {
+                    if (bystander.getLocation() == msg.getLocation() && tclients.containsKey(bystander))
+                    {
+                        send(msg.getSender().getName() + " says, \"" + msg.getMessage() + "\".", tclients.get(bystander));
+                    }
+                }
+            }
+            msg.markSent();
+            debug("sent message");
+        }
 	}
 
 	/**
@@ -9999,11 +9708,9 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 	 * @param newMessage
 	 */
 	public void addMessages(final ArrayList<Message> newMessages) {
-		synchronized(this.messages) { 
-			for (final Message newMessage : newMessages) {
-				this.messages.add(newMessage);
-			}
-		}
+        for (final Message m : newMessages) {
+            addMessage(m);
+        }
 	}
 
 	/*public void write(String data, Client client) {
@@ -10018,18 +9725,10 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 	 */
 	public void examine(final MUDObject m, final Client client) {
 		if ( !(m instanceof NullObject) ) {
-			String temp = "";
-
-			for (int f = 1; f < m.getFlags().length(); f++) {
-				if (f < m.getFlags().length() - 1) { temp = temp + Flags.get(m.getFlags().charAt(f)) + " "; }
-				else { temp = temp + Flags.get(m.getFlags().charAt(f)); }
-			}
-
 			send(m.getName() + "(#" + m.getDBRef() + ")", client);
-			debug("Temp: " + temp);
 			debug("Flags: " + m.getFlags());
-			debug(m.getFlags().charAt(0));
-			send("Type: " + Flags.get(m.getFlags().charAt(0)) + " Flags: " + temp, client);
+			debug(ObjectFlag.firstInit(m.getFlags()));
+            send("Type: " + ObjectFlag.firstInit(m.getFlags()) + " Flags: " + ObjectFlag.toInitString(m.getFlags()), client);
 			if (m instanceof Item) {
 				send("Item Type: " + ((Item) m).item_type.toString(), client);
 			}
@@ -10048,18 +9747,8 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 	 * @param client
 	 */
 	public void examine(final Room room, final Client client) {
-		String temp = "";
-
-		for (int f = 1; f < room.getFlags().length(); f++) {
-			if (f < room.getFlags().length()) {
-				temp = temp + Flags.get(room.getFlags().charAt(f)) + " ";
-			}
-			else {
-				temp = temp + Flags.get(room.getFlags().charAt(f));
-			}
-		}
 		send(room.getName() + "(#" + room.getDBRef() + ")", client);
-		send("Type: " + Flags.get(room.getFlags().charAt(0)) + " Flags: " + temp + " Room Type: " + RoomTypes.get(room.getRoomType().charAt(0)), client);
+		send("Type: " + ObjectFlag.firstInit(room.getFlags()) + " Flags: " + ObjectFlag.toInitString(room.getFlags()), client);
 		send("Description: " + room.getDesc(), client);
 		send("Location: " + getRoom(room.getLocation()).getName() + "(#" + room.getLocation() + ")", client);
 
@@ -10086,17 +9775,8 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 	 * @param client
 	 */
 	public void examine(final Player player, final Client client) {
-		String temp = "";
-		for (int f = 1; f < player.getFlags().length(); f++) {
-			if (f < player.getFlags().length()) {
-				temp = temp + Flags.get(player.getFlags().charAt(f)) + " ";
-			}
-			else {
-				temp = temp + Flags.get(player.getFlags().charAt(f));
-			}
-		}
 		send(player.name + "(#" + player.getDBRef() + ")", client);
-		send("Type: " + Flags.get(player.getFlags().charAt(0)) + " Flags: " + temp, client);
+		send("Type: " + ObjectFlag.firstInit(player.getFlags()) + " Flags: " + ObjectFlag.toInitString(player.getFlags()), client);
 		send("Description: " + player.getDesc(), client);
 		send("Location: " + getRoom(player.getLocation()).getName() + "(#" + player.getLocation() + ")", client);
 
@@ -10142,25 +9822,15 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 	}
 
 	public void examine(final Exit exit, final Client client) {
-		String temp = "";
-		for (int f = 1; f < exit.getFlags().length(); f++) {
-			if (f < exit.getFlags().length() - 1) { temp = temp + Flags.get(exit.getFlags().charAt(f)) + " "; }
-			else { temp = temp + Flags.get(exit.getFlags().charAt(f)); }
-		}
 		send(exit.getName() + "(#" + exit.getDBRef() + ")", client);
-		send("Type: " + Flags.get(exit.getFlags().charAt(0)) + " Flags: " + temp, client);
+		send("Type: " + ObjectFlag.firstInit(exit.getFlags()) + " Flags: " + ObjectFlag.toInitString(exit.getFlags()), client);
 		send(" Exit Type: " + exit.getExitType().getName(), client);
 		send("Description: " + exit.getDesc(), client);
 	}
 
 	public void examine(Thing thing, Client client) {
-		String temp = "";
-		for (int f = 1; f < thing.getFlags().length(); f++) {
-			if (f < thing.getFlags().length() - 1) { temp = temp + Flags.get(thing.getFlags().charAt(f)) + " "; }
-			else { temp = temp + Flags.get(thing.getFlags().charAt(f)); }
-		}
 		send(thing.name + "(#" + thing.getDBRef() + ")", client);
-		send("Type: " + Flags.get(thing.flags.charAt(0)) + " Flags: " + temp, client);
+		send("Type: " + ObjectFlag.firstInit(thing.getFlags()) + " Flags: " + ObjectFlag.toInitString(thing.getFlags()), client);
 		send("Description: " + thing.getDesc(), client);
 		send("Coordinates:", client);
 		send("X: " + thing.getXCoord(), client);
@@ -10248,8 +9918,7 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 		/* presumably some sort of config would allow you to disable date and time reporting here,
 		 * maybe even turn off the weather data
 		 */
-		//if (room.getRoomType() == RoomType.OUTSIDE) {
-		if ( room.getRoomType().equals("O") ) {
+        if ( room.getRoomType().equals(RoomType.OUTSIDE) ) {
 			final Weather weather = room.getWeather();
 
 			//send("*** " + "<weather>: " + parse(room.getWeather().ws.description, room.timeOfDay), client);
@@ -10743,7 +10412,19 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 	 * 
 	 * NOTE: seems to explode where x != y for the destination
 	 */
-	public void handle_movement() {
+	public void handleMovement() {
+        // old WeatherLoop code, which only ran once per "minute" anyway
+        // loop through all the rooms and broadcast weather messages accordingly
+        for (final Room r : objectDB.getWeatherRooms()) {
+            broadcast("", r);
+            debug("message sent");
+        }
+        for (final Room r : objectDB.getRoomsByType(RoomType.PLAYER)) {
+            broadcast("", r);
+            debug("message sent");
+        }
+        // end old WeatherLoop code
+
 		for (final Player player : this.moving) {
 			synchronized(player) {
 				// if the player is moving (something else could change this)
@@ -11106,7 +10787,7 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 		Integer[] oStats = Utils.stringsToIntegers(os);
 		Integer[] oMoney = Utils.stringsToIntegers(om);
 
-		Player player = new Player(oDBRef, oName, oFlags, oDesc, oLocation, "", oPassword, "IC", oStats, oMoney);
+		Player player = new Player(oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), oDesc, oLocation, "", oPassword, "IC", oStats, oMoney);
 
 		/* Set Player Permissions */
 		player.setAccess(Utils.toInt(attr[8], USER));
@@ -11150,15 +10831,12 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 	{
 		// flags are defined statically here, because I'd need to take in more variables and in no
 		// case should this create anything other than a standard room which has 'RS' for flags
-		final Room room = new Room(-1, roomName, "RS", "You see nothing.", roomParent);
+		final Room room = new Room(-1, roomName, EnumSet.of(ObjectFlag.ROOM, ObjectFlag.SILENT), "You see nothing.", roomParent);
 		
 		/*
 		// add rooms to database (main)
         objectDB.addAsNew(room);
 		objectDB.addRoom(room);
-		*/
-		
-		addToDB(room);
 
 		// tell us about it
 		//send("Room '" + roomName + "' created as #" + id + ". Parent set to " + roomParent + ".", );
@@ -11742,11 +11420,11 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 	 * where I need to be sure I don't try and access an index outside
 	 * of the database
 	 * @return
-	 */
 	public int dbSize() {
 		//return main1.size();
 		return -1;
 	}
+	 */
 
 	/**
 	 * Takes an input string and generates a new one where each letter is prefixed by
@@ -11850,12 +11528,12 @@ private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackabl
 
 		return null;
 	}
-		    
+    
     public void onHourIncrement() {
         fillShops();
         updateWeather();
     }
-    
+
 	public String nameref_eval(String input, Client client) {
 		StringBuffer sb = new StringBuffer(input);
 		StringBuffer refString =  new StringBuffer();

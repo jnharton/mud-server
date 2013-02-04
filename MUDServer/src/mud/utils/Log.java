@@ -1,5 +1,6 @@
 package mud.utils;
 
+<<<<<<< HEAD
 /*
 Copyright (c) 2012 Jeremy N. Harton
 
@@ -17,6 +18,8 @@ CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTH
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+=======
+>>>>>>> b87bd3f90dab7b2102f1c926f9648b021f5aa7de
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -107,13 +110,21 @@ public class Log
 				this.file = new File(DATA_DIR + "logs/" + this.filename);
 				this.output = new PrintWriter(file);
 			}
+<<<<<<< HEAD
 			catch(FileNotFoundException fnfe) {
+=======
+			catch (FileNotFoundException fnfe) {
+>>>>>>> b87bd3f90dab7b2102f1c926f9648b021f5aa7de
 				try {
 					this.file.createNewFile();
 					this.output = new PrintWriter(file);
 					
 				}
 				catch (IOException e) {
+<<<<<<< HEAD
+=======
+                    System.out.println("Bath path: " + file);
+>>>>>>> b87bd3f90dab7b2102f1c926f9648b021f5aa7de
 					e.printStackTrace();
 				}
 			}

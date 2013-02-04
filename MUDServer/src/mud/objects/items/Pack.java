@@ -49,14 +49,14 @@ public class Pack extends Clothing {
 	
 	public String toDB() {
 		String[] output = new String[8];
-		output[0] = this.getDBRef() + "";          // pack database reference number
-		output[1] = this.getName();                      // pack name
-		output[2] = this.getFlags();                     // pack flags
-		output[3] = this.getDesc();                      // pack description
-		output[4] = this.getLocation() + "";       // pack location
-		output[5] = this.item_type.ordinal() + ""; // item type
-		output[6] = "*";                                 // nothing (placeholder)
-		output[7] = "*";                                 // nothing (placeholder)
+		output[0] = this.getDBRef() + "";           // pack database reference number
+		output[1] = this.getName();                 // pack name
+		output[2] = this.getFlagsAsString();        // pack flags
+		output[3] = this.getDesc();                 // pack description
+		output[4] = this.getLocation() + "";        // pack location
+		output[5] = this.item_type.ordinal() + "";  // item type
+		output[6] = "*";                            // nothing (placeholder)
+		output[7] = "*";                            // nothing (placeholder)
 		return Utils.join(output, "#");
 	}
 }

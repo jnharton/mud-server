@@ -4,7 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.EnumSet;
 
+import mud.ObjectFlag;
 import mud.Abilities;
 import mud.Classes;
 import mud.Editor;
@@ -47,7 +49,6 @@ public class NPC extends Player
 	/**
 	 * 
 	 */
-
 	protected String greeting = "Lovely weather we're having around these parts.";
 	private ArrayList<String> messages;
 	private ArrayList<Quest> questList = new ArrayList<Quest>(); // a list of quests
@@ -69,7 +70,8 @@ public class NPC extends Player
 		this.money = new Integer[]{ 0, 0, 0 ,0 };
 	}*/
 
-	public NPC(int tempDBRef, String tempName, String tempPass, String tempFlags, String tempDesc, String tempTitle, String tempPStatus, int tempLoc, String[] tempMoney)
+	public NPC(final int tempDBRef, final String tempName, final String tempPass, final EnumSet<ObjectFlag> tempFlags, 
+            final String tempDesc, final String tempTitle, final String tempPStatus, final int tempLoc, final String[] tempMoney)
 	{
 		super(tempDBRef);
 		this.name = tempName;
@@ -82,7 +84,8 @@ public class NPC extends Player
 		this.money = Utils.stringsToIntegers(tempMoney);
 	}
 	
-	public NPC(int tempDBREF, String tempName, String tempFlags, String tempDesc, int tempLoc, String tempTitle, String tempPStatus, Integer[] tempStats, Integer[] tempMoney)
+	public NPC(final int tempDBREF, final String tempName, final EnumSet<ObjectFlag> tempFlags, final String tempDesc, 
+            final int tempLoc, final String tempTitle, final String tempPStatus, final Integer[] tempStats, final Integer[] tempMoney)
 	{
 		super(tempDBREF);
 		

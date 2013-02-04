@@ -17,6 +17,8 @@ package mud;
   SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+import java.util.EnumSet;
+
 import mud.interfaces.Instance;
 import mud.objects.Room;
 import mud.utils.Utils;
@@ -62,7 +64,7 @@ public class Dungeon implements Instance
 			{
 				int id = 0;
 				//int id = nextDB();
-				Room room = new Room(id, instance_name + " Room (" + i + ", " + j + ")", "RD", "You see nothing.", 0);
+				Room room = new Room(id, instance_name + " Room (" + i + ", " + j + ")", EnumSet.of(ObjectFlag.ROOM, ObjectFlag.DARK), "You see nothing.", 0);
 				// flags are created statically here, because I need to take in more variables and in no case should create anything other than a standard room which has 'RD' for a flag
 				//main.add(room.toDB());
 				//rooms1.add(room);
@@ -109,7 +111,7 @@ public class Dungeon implements Instance
 				//int id = nextDB(); // get the next free database reference
 
 				// flags are created statically here, because I need to take in more variables and in no case should create anything other than a standard room which has 'RD' for a flag
-				Room room = new Room(id, instance_name + " Room (" + i + ", " + j + ")", "RD", "You see nothing.", 0);
+				Room room = new Room(id, instance_name + " Room (" + i + ", " + j + ")", EnumSet.of(ObjectFlag.ROOM, ObjectFlag.DARK), "You see nothing.", 0);
 
 				//main.add(room.toDB());
 				//rooms1.add(room);

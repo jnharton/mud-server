@@ -8,6 +8,7 @@ package mud.objects;
  *
  */
 public enum RoomType {
+    PLAYER('P', "PLAYER"),
 	OUTSIDE('O', "OUTSIDE"), // Affected by all weather
 	EXPOSED('E', "EXPOSED"), // Exposed to some weather
 	INSIDE('I', "INSIDE"),   // Not affected by any weather
@@ -21,18 +22,18 @@ public enum RoomType {
 		this.stringRep = stringRep;
 	}
 	
-	public String getString(char flag) {
+	static public RoomType fromLetter(char flag) {
 		switch(flag) {
 		case 'E':
-			return EXPOSED.stringRep;
+			return EXPOSED;
 		case 'I':
-			return INSIDE.stringRep;
+			return INSIDE;
 		case 'O':
-			return OUTSIDE.stringRep;
+			return OUTSIDE;
 		case 'N':
-			return NONE.stringRep;
+			return NONE;
 		default:
-			return ""; 
+			return NONE;
 		}
 	}
 	

@@ -6,7 +6,9 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.EnumSet;
 
+import mud.ObjectFlag;
 import mud.Abilities;
 import mud.Classes;
 import mud.Editor;
@@ -211,7 +213,8 @@ public class Player extends MUDObject
 	 * @param tempMoney
 	 */
 
-	public Player(int tempDBREF, String tempName, String tempFlags, String tempDesc, int tempLoc, String tempTitle, String tempPass, String tempPStatus , Integer[] tempStats, Integer[] tempMoney)
+	public Player(final int tempDBREF, final String tempName, final EnumSet<ObjectFlag> tempFlags, final String tempDesc, final int tempLoc, 
+            final String tempTitle, final String tempPass, final String tempPStatus, final Integer[] tempStats, final Integer[] tempMoney)
 	{
 		// use the MUDObject constructor to handle some of the construction?
 		//super(tempDBREF, tempName, tempFlags, tempDesc, tempLoc);
@@ -782,7 +785,7 @@ public class Player extends MUDObject
 		String[] output = new String[12];
 		output[0] = this.getDBRef() + "";    // player database reference number
 		output[1] = this.getName();          // player name
-		output[2] = this.getFlags();         // player flags
+		output[2] = this.getFlagsAsString();                      // player flags
 		output[3] = this.getDesc();          // player description
 		output[4] = this.getLocation() + ""; // player location
 		output[5] = this.getPass();          // player password

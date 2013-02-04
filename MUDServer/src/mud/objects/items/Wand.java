@@ -2,9 +2,11 @@ package mud.objects.items;
 
 import java.util.ArrayList;
 import java.util.List;
-
+import java.util.EnumSet;
 
 import mud.Effect;
+import mud.ObjectFlag;
+
 import mud.interfaces.Equippable;
 import mud.interfaces.Usable;
 import mud.interfaces.Wieldable;
@@ -31,7 +33,7 @@ public class Wand extends Item implements Equippable<Wand>, Usable<Wand>, Wielda
 	}
 
 	public Wand(int tCharges, String spellName) {
-		super(-1, "Wand", "", "I", 8);
+		super(-1, "Wand", EnumSet.noneOf(ObjectFlag.class), "I", 8);
 		this.equippable = true;
 		this.item_type = ItemType.WAND;
 		this.equip_type = ItemType.WEAPON;
@@ -42,7 +44,7 @@ public class Wand extends Item implements Equippable<Wand>, Usable<Wand>, Wielda
 	}
 
 	public Wand(int tCharges, Spell tSpell) {
-		super(-1, "Wand", "", "I", 8);
+		super(-1, "Wand", EnumSet.noneOf(ObjectFlag.class), "I", 8);
 		this.equippable = true;
 		this.item_type = ItemType.WAND;
 		this.equip_type = ItemType.WEAPON;
@@ -68,7 +70,7 @@ public class Wand extends Item implements Equippable<Wand>, Usable<Wand>, Wielda
 	 * @param spellName
 	 */
 	public Wand(String tempName, String tempDesc, int tempLoc, int tempDBREF, ItemType itemType, int tCharges, String spellName) {
-		super(tempDBREF, tempName, "I", tempDesc, tempLoc);
+		super(tempDBREF, tempName, EnumSet.of(ObjectFlag.ITEM), tempDesc, tempLoc);
 		this.equippable = true;
 		this.item_type = ItemType.WAND;
 		this.equip_type = ItemType.WEAPON;
@@ -140,7 +142,7 @@ public class Wand extends Item implements Equippable<Wand>, Usable<Wand>, Wielda
 		String[] output = new String[8];
 		output[0] = this.getDBRef() + "";          // wand database reference number
 		output[1] = this.getName();                      // wand name
-		output[2] = this.getFlags();                     // wand flags
+		output[2] = this.getFlagsAsString();                     // wand flags
 		output[3] = this.getDesc();                      // wand description
 		output[4] = this.getLocation() + "";       // wand location
 		output[5] = this.item_type.ordinal() + ""; // item type

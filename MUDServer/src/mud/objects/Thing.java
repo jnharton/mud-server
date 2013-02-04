@@ -1,8 +1,9 @@
 package mud.objects;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.EnumSet;
 
+import mud.ObjectFlag;
 import mud.MUDObject;
 import mud.utils.Utils;
 
@@ -37,7 +38,7 @@ public class Thing extends MUDObject {
 	}
 
 	// usual constructor
-	public Thing(int tempDBRef, String tempName, String tempFlags, String tempDesc, int tempLoc)
+	public Thing(final int tempDBRef, final String tempName, final EnumSet<ObjectFlag> tempFlags, final String tempDesc, final int tempLoc)
 	{
 		super(tempDBRef, tempName, tempFlags, tempDesc, tempLoc);
 		/*
@@ -73,7 +74,7 @@ public class Thing extends MUDObject {
 		String[] output = new String[6];
 		output[0] = this.getDBRef() + "";         // thing database reference number
 		output[1] = this.getName();               // thing name
-		output[2] = this.getFlags();              // thing flags
+		output[2] = this.getFlagsAsString();               // thing flags
 		output[3] = this.getDesc();               // thing description
 		output[4] = this.getLocation() + "";      // thing location (a.k.a parent)
 		output[5] = "*";                          // "blank" field which is used for something in every other class

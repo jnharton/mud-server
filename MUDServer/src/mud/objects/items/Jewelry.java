@@ -17,6 +17,7 @@ import mud.objects.ItemType;
 import mud.objects.Player;
 
 import mud.utils.Utils;
+import mud.ObjectFlag;
 
 public class Jewelry extends Item implements Equippable<Jewelry>, Usable<Jewelry>, Wearable<Jewelry>
 {
@@ -38,7 +39,7 @@ public class Jewelry extends Item implements Equippable<Jewelry>, Usable<Jewelry
 		super(-1);
 		this.name = "Ring of Invisibility";
 		this.desc = "A medium-sized gold ring with a smooth, unmarked surface.";
-		this.flags = "IJEW";
+		this.flags = ObjectFlag.getFlagsFromString("IJEW");
 		this.location = 8;
 
 		this.equippable = true;
@@ -110,7 +111,7 @@ public class Jewelry extends Item implements Equippable<Jewelry>, Usable<Jewelry
 		String[] output = new String[8];
 		output[0] = this.getDBRef() + "";          // jewelry database reference number
 		output[1] = this.getName();                      // jewelry name
-		output[2] = this.getFlags();                     // jewelry flags
+		output[2] = this.getFlagsAsString();                     // jewelry flags
 		output[3] = this.getDesc();                      // jewelry description
 		output[4] = this.getLocation() + "";       // jewelry location
 		output[5] = this.item_type.ordinal() + ""; // item type

@@ -2,7 +2,9 @@ package mud.objects;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.EnumSet;
 
+import mud.ObjectFlag;
 import mud.Abilities;
 import mud.Classes;
 import mud.Currency;
@@ -22,17 +24,15 @@ public class ArmorMerchant extends NPC implements Interactive, Vendor {
 	/**
 	 * 
 	 */
+	final private MUDServer parent;
+	public ArrayList<Item> stock = new ArrayList<Item>();
 
-	private MUDServer parent;
-	public ArrayList<Item> stock;
-
-	public ArmorMerchant(MUDServer mudServer, int tempDBRef, String tempName, String tempFlags, String tempDesc, String tempTitle, String tempPStatus, int tempLoc, String[] tempMoney) {
+	public ArmorMerchant(final MUDServer mudServer, final int tempDBRef, final String tempName, final EnumSet<ObjectFlag> tempFlags, 
+            final String tempDesc, final String tempTitle, final String tempPStatus, final int tempLoc, final String[] tempMoney) {
 		super(tempDBRef, tempName, null, tempFlags, tempDesc, tempTitle, tempPStatus, tempLoc, tempMoney);
+
 		this.parent = mudServer;
-		this.stock = new ArrayList<Item>();
-
 		this.access = 0;
-
 		this.stats = new LinkedHashMap<Abilities, Integer>(6, 0.75f);
 
 		this.stats.put(Abilities.STRENGTH, 12);
@@ -47,7 +47,7 @@ public class ArmorMerchant extends NPC implements Interactive, Vendor {
 	}
 	
 	@Override
-	public void interact(Client client) {
+	public void interact(final Client client) {
 		parent.send(this.getName(), client);
 		parent.send("-----< Stock >--------------------", client);
 		for (Item item : this.stock) {

@@ -1,7 +1,11 @@
 package mud.objects.items;
 
 import java.lang.reflect.ParameterizedType;
+
 import java.util.ArrayList;
+import java.util.EnumSet;
+
+import mud.ObjectFlag;
 
 import mud.interfaces.Equippable;
 import mud.interfaces.Storage;
@@ -30,7 +34,7 @@ public class Container<E extends Item> extends Item implements Storage<E>, Equip
 	private String bottom = "------------------------------";
 
 	public Container() {
-		super(-1, "Container", "I", "A generic container", 4);
+		super(-1, "Container", EnumSet.of(ObjectFlag.ITEM), "A generic container", 4);
 		
 		this.equippable = false;
 		this.equip_type = ItemType.CONTAINER; // the type of equipment it is
@@ -193,7 +197,7 @@ public class Container<E extends Item> extends Item implements Storage<E>, Equip
 		String[] output = new String[8];
 		output[0] = this.getDBRef() + "";          // potion database reference number
 		output[1] = this.getName();                      // potion name
-		output[2] = this.getFlags();                     // potion flags
+		output[2] = this.getFlagsAsString();                     // potion flags
 		output[3] = this.getDesc();                      // potion description
 		output[4] = this.getLocation() + "";       // potion location
 		output[5] = this.item_type.ordinal() + ""; // item type

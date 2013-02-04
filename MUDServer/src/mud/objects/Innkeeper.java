@@ -2,7 +2,9 @@ package mud.objects;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.EnumSet;
 
+import mud.ObjectFlag;
 import mud.Abilities;
 import mud.Classes;
 import mud.Currency;
@@ -17,7 +19,7 @@ public class Innkeeper extends NPC implements Interactive, Vendor {
 	private MUDServer parent;
 	public ArrayList<Item> stock;
 
-	public Innkeeper(MUDServer mudServer, int tempDBRef, String tempName, String tempFlags, String tempDesc, String tempTitle, String tempPStatus, int tempLoc, String[] tempMoney) {
+	public Innkeeper(MUDServer mudServer, int tempDBRef, String tempName, final EnumSet<ObjectFlag> tempFlags, String tempDesc, String tempTitle, String tempPStatus, int tempLoc, String[] tempMoney) {
 		super(tempDBRef, tempName, null, tempFlags, tempDesc, tempTitle, tempPStatus, tempLoc, tempMoney);
 
 		this.parent = mudServer;

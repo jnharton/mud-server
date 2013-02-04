@@ -1,6 +1,9 @@
 package mud.objects;
 
 import java.util.BitSet;
+import java.util.EnumSet;
+
+import mud.ObjectFlag;
 
 import mud.MUDObject;
 import mud.SlotType;
@@ -60,30 +63,28 @@ public class Item extends MUDObject
 		this.location = template.location;
 	}
 
-	public Item(int tempDBREF, String tempName, String tempFlags, String tempDesc, int tempLoc)
+	public Item(int tempDBREF, String tempName, final EnumSet<ObjectFlag> tempFlags, String tempDesc, int tempLoc)
 	{
 		super(tempDBREF, tempName, tempFlags, tempDesc, tempLoc);
 	}
 
 	public void examine() {
+        /*
 		String temp = "";
 		for (int f = 1; f < this.flags.length(); f++) {
 			if (f < this.flags.length() - 1) { temp = temp + Flags.get(this.flags.charAt(f)) + " "; }
 			else { temp = temp + Flags.get(this.flags.charAt(f)); }
 		}
+        */
 		//send(this.name + "(#" + this.dbref + ")");
 		//send("Type: " + Flags.get(this.flags.charAt(0)) + " Flags: " + temp);
 		//send(this.desc);
 	}
 	
 	public String[] examine1() {
-		String temp = "";
-		for (int f = 1; f < this.flags.length(); f++) {
-			if (f < this.flags.length() - 1) { temp = temp + Flags.get(this.flags.charAt(f)) + " "; }
-			else { temp = temp + Flags.get(this.flags.charAt(f)); }
-		}
 		String dbrefString = this.name + "(#" + getDBRef() + ")";
-		String typeInfoString = "Type: " + Flags.get(this.flags.charAt(0)) + " Flags: " + temp;
+        // just get first one..............
+		String typeInfoString = "Type: " + ObjectFlag.firstInit(flags) + " Flags: " + ObjectFlag.toInitString(flags);
 		String descString = this.desc;
 		return new String[] { dbrefString, typeInfoString, descString };
 	}
@@ -142,7 +143,7 @@ public class Item extends MUDObject
 		String[] output = new String[8];
 		output[0] = this.getDBRef() + "";          // database reference number
 		output[1] = this.getName();                      // name
-		output[2] = this.getFlags();                     // flags
+		output[2] = this.getFlagsAsString();                     // flags
 		output[3] = this.getDesc();                      // description
 		output[4] = this.getLocation() + "";       // location
 		output[5] = this.item_type.ordinal() + ""; // item type

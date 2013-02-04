@@ -83,10 +83,11 @@ public class ObjectDB {
         Arrays.fill(counts, 0);
 
         for (final MUDObject obj : objsByName.values()) {
-            final String flags = obj.getFlags();
-            for (int i = 0; i < letters.length; i++) {
-                if (flags.contains(letters[i])) {
-                    counts[i] += 1;
+            for (final ObjectFlag f : obj.getFlags()) {
+                for (int i = 0; i < letters.length; i++) {
+                    if (f.toString().startsWith(letters[i])) {
+                        counts[i] += 1;
+                    }
                 }
             }
         }
@@ -169,7 +170,7 @@ public class ObjectDB {
         return roomsById.get(id);
     }
 
-    public List<Room> getRoomsByType(final String type) {
+    public List<Room> getRoomsByType(final RoomType type) {
         final List<Room> acc = new LinkedList<Room>();
         for (final Room r : roomsById.values()) {
             if (r.getRoomType().equals(type)) {
@@ -180,7 +181,7 @@ public class ObjectDB {
     }
 
     public List<Room> getWeatherRooms() {
-        return getRoomsByType("O");
+        return getRoomsByType(RoomType.OUTSIDE);
     }
 
     public List<Room> getRoomsByParentLocation(final int loc) {

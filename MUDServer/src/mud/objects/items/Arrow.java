@@ -5,6 +5,9 @@ import mud.interfaces.Stackable;
 import mud.objects.Item;
 import mud.objects.ItemType;
 import mud.utils.Utils;
+import mud.ObjectFlag;
+
+import java.util.EnumSet;
 
 public class Arrow extends Item implements  Projectile<Arrow>, Stackable<Arrow> {
 	private Arrow a;
@@ -13,7 +16,7 @@ public class Arrow extends Item implements  Projectile<Arrow>, Stackable<Arrow> 
 	}
 
 	public Arrow(int dbref, String name, String desc, int location) {
-		super(dbref, name, "I", desc, location);
+		super(dbref, name, EnumSet.of(ObjectFlag.ITEM), desc, location);
 		this.item_type = ItemType.ARROW;
 	}
 	
@@ -89,7 +92,7 @@ public class Arrow extends Item implements  Projectile<Arrow>, Stackable<Arrow> 
 		String[] output = new String[8];
 		output[0] = this.getDBRef() + "";          // item database reference number
 		output[1] = this.getName();                // item name
-		output[2] = this.getFlags();               // item flags
+		output[2] = this.getFlagsAsString();                     // flags
 		output[3] = this.getDesc();                // item description
 		output[4] = this.getLocation() + "";       // item location
 		output[5] = this.item_type.ordinal() + ""; // item type

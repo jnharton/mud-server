@@ -1,8 +1,13 @@
 package mud.objects;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
+
+import mud.ObjectFlag;
 import mud.MUDObject;
+
 //import mud.miscellaneous.Atmosphere;
+
 import mud.objects.Thing;
 import mud.utils.Utils;
 import mud.weather.Weather;
@@ -28,7 +33,7 @@ public class Room extends MUDObject
 	
 	public String exitNames;                                    // formatted string containing the usable exit names
 
-	private String roomType = "N";                              // the type of room (I = Inside, O = Outside, P = Protected, N = None)
+	private RoomType roomType = RoomType.NONE;                   // the type of room (I = Inside, O = Outside, P = Protected, N = None)
 
 	public String music;                                        // the ambient background music for this room
 	public String timeOfDay = "DAY";                            // replace this with an enum with one type per each or a hashmap string, boolean?
@@ -48,7 +53,7 @@ public class Room extends MUDObject
 	 * Construct a room using only default parameter
 	 */
 	public Room() {
-		this.flags = "RS";
+		this.flags = EnumSet.of(ObjectFlag.ROOM, ObjectFlag.SILENT);
 		this.locks = "";            // Set the locks
 		this.location = 0;          // Set the location
 		
@@ -56,14 +61,14 @@ public class Room extends MUDObject
 	}
 
 	// misc note: parent == location
-	public Room(int tempDBREF, String tempName, String tempFlags, String tempDesc, int tempParent)
+	public Room(int tempDBREF, String tempName, final EnumSet<ObjectFlag> tempFlagsNotUsed, String tempDesc, int tempParent)
 	{
 		super(tempDBREF);
 		//this.dbref = tempDBREF;     // Set the dbref (database reference)
 		this.name = tempName;       // Set the name
 		this.desc = tempDesc;       // Set the description to the default
 		this.parent = tempParent;   // Set the parent room
-		this.flags = "RS";          // Set the flags
+		this.flags = EnumSet.of(ObjectFlag.ROOM, ObjectFlag.SILENT);
 		this.locks = "";            // Set the locks
 		this.location = tempParent; // Set the location
 		
@@ -113,7 +118,7 @@ public class Room extends MUDObject
 	 * 
 	 * @param newRoomType
 	 */
-	public void setRoomType(String newRoomType) {
+	public void setRoomType(final RoomType newRoomType) {
 		this.roomType = newRoomType;
 	}
 	
@@ -122,7 +127,7 @@ public class Room extends MUDObject
 	 * 
 	 * @return
 	 */
-	public String getRoomType() {
+	public RoomType getRoomType() {
 		return this.roomType;
 	}
 
@@ -209,10 +214,10 @@ public class Room extends MUDObject
 		String[] output = new String[9];
 		output[0] = this.getDBRef() + "";                 // room database reference number
 		output[1] = this.getName();                       // room name
-		output[2] = this.getFlags();                      // room flags
+		output[2] = this.getFlagsAsString();                      // room flags
 		output[3] = this.getDesc();                       // room description
 		output[4] = this.getLocation() + "";              // room location (a.k.a parent)
-		output[5] = this.getRoomType();                   // room type
+		output[5] = this.getRoomType().toString().substring(0, 1);                   // room type
 		output[6] = this.x + "," + this.y + "," + this.z; // room dimensions (x,y,z)
 		output[7] = "-1";                                 // room terrain
 		output[8] = "";                                   //

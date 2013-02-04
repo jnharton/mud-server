@@ -2,7 +2,9 @@ package mud.objects;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.EnumSet;
 
+import mud.ObjectFlag;
 import mud.Abilities;
 import mud.Classes;
 import mud.Currency;
@@ -20,17 +22,16 @@ public class WeaponMerchant extends NPC implements Interactive, Vendor {
 	/**
 	 * 
 	 */
-
 	private MUDServer parent;
-	public ArrayList<Item> stock;
+	public ArrayList<Item> stock = new ArrayList<Item>();
 
-	public WeaponMerchant(MUDServer mudServer, int tempDBRef, String tempName, String tempFlags, String tempDesc, String tempTitle, String tempPStatus, int tempLoc, String[] tempMoney) {
-		super(tempDBRef, tempName, null, tempFlags, tempDesc, tempTitle, tempPStatus, tempLoc, tempMoney);
+	public WeaponMerchant(final MUDServer mudServer, final int tempDBRef, final String tempName, final EnumSet<ObjectFlag> tempFlags, 
+            final String tempDesc, final String tempTitle, final String tempPStatus, final int tempLoc, final String[] tempMoney) {
+
+        super(tempDBRef, tempName, null, tempFlags, tempDesc, tempTitle, tempPStatus, tempLoc, tempMoney);
+
 		this.parent = mudServer;
-		this.stock = new ArrayList<Item>();
-		
 		this.access = 0;
-		
 		this.stats = new LinkedHashMap<Abilities, Integer>(6, 0.75f);
 		
 		this.stats.put(Abilities.STRENGTH, 12);
@@ -45,10 +46,10 @@ public class WeaponMerchant extends NPC implements Interactive, Vendor {
 	}
 
 	@Override
-	public void interact(Client client) {
+	public void interact(final Client client) {
 		parent.send(this.getName(), client);
 		parent.send("-----< Stock >--------------------", client);
-		for (Item item : this.stock) {
+		for (final Item item : this.stock) {
 			if (item instanceof Weapon) {
 				Weapon w = (Weapon) item;
 				String cost = "";
@@ -72,7 +73,7 @@ public class WeaponMerchant extends NPC implements Interactive, Vendor {
 		return this.stock;
 	}
 
-	public Item buy(String name) {
+	public Item buy(final String name) {
 		Item bought = null;
 		for (Item item : this.stock) {
 			if (item.getName().equals(name)) {
@@ -87,10 +88,10 @@ public class WeaponMerchant extends NPC implements Interactive, Vendor {
 		return bought;
 	}
 
-	public void sell(Item item) {
+	public void sell(final Item item) {
 	}
 
-	public boolean hasItem(String name) {
+	public boolean hasItem(final String name) {
 		for (Item item : this.stock) {
 			if (item.getName().equals(name)) {
 				return true;
@@ -100,7 +101,7 @@ public class WeaponMerchant extends NPC implements Interactive, Vendor {
 		return false;
 	}
 
-	public Item getItem(String name) {
+	public Item getItem(final String name) {
 		for (Item item : this.stock) {
 			if (item.getName().equals(name)) {
 				return item;
