@@ -36,6 +36,8 @@ import java.security.spec.KeySpec;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 
+import mud.Point;
+
 public final class Utils {
 
     private static SecretKeyFactory f;
@@ -411,6 +413,7 @@ public final class Utils {
             result[index] = Utils.toInt(str, 0);
             index++;
 		}
+		
 		return result;
 	}
 	
@@ -624,5 +627,28 @@ public final class Utils {
         } catch (Exception e) {
             return alt;
         }
+    }
+    
+    public static Point toPoint(final String ptData) {
+    	// (1,1)
+    	int fP = ptData.indexOf('('); // first left parentheses "(" 
+
+    	if(fP > -1) {
+    		int[] coordinates = stringsToInts(ptData.substring(fP + 1, ptData.indexOf(')', fP)).split(","));
+
+    		if(coordinates.length == 2) { // 2D Coordinate
+    			Point point = new Point(coordinates[0], coordinates[1]);
+    			return point;
+    		}
+    		else if(coordinates.length == 3) { // 3D Coordinate
+    			Point point = new Point(coordinates[0], coordinates[1], coordinates[2]);
+    			return point;
+    		}
+    		else {
+    			return new Point(0, 0, 0); // 2D/3D coordinate at 0,0 or 0,0,0 (blank) 
+    		}
+    	}
+
+    	return null;
     }
 }

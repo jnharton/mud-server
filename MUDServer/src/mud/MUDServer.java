@@ -75,17 +75,19 @@ import java.util.regex.Matcher;
 /**
  * @author Jeremy N. Harton
  * 
- * @version 0.9bF1
+ * @version 0.9.2
  * 
  * @see
  * "aSimpleMU
  * Java MUD Server
- * Version 0.9.1bF1 ( 3.31.2012 )
- * - uses Java SDK 1.6
+ * Version 0.9.2 ( 2.4.2013 )
+ * 
+ * - uses Java SDK 1.7
+ * 
  * -- No Theme --
+ * 
  * - still need to remove theme related stuff from previous forks - 4/21/2011 (DONEish, have theming system now)
  * - need to remove MU* stuff and focus on MUD related code
- * MUD Fork (Fork 1 a.k.a F1)
  * 
  * >> Copyright 2010 - Eternity Jeremy N. Harton <<
  * 
@@ -98,17 +100,16 @@ import java.util.regex.Matcher;
  * - revision bumped to 0.8bF1 for major work towards being a MUD server ( 6.4.2011 )
  * - revision bumped to 0.9bF1 for incalculable change since last version ( 3.31.2012 )
  * - revision bumped to 0.9.1bF1 for slow change in last six months ( 11.2.2012 )
+ * - revision bumped to 0.9.2bF1 for recent changes, especially to database design ( 2.4.2013 )
+ * - fork nomenclature dropped 0.9.2bF1 -> 0.9.2
  * 
  * NEED concept for when to increase version number
  * 
- * NEED to fix/change network library, because it appears that any connection from the same
- * computer is also treated as the same client or is hooked into it?
- *
  * Just another Java MUD
  *
- * @Last Work: mail system (objectified), command objects, commands, editors, list editor
+ * @Last Work: database and flags (contributions by joshgit from github.com)
  * @minor version number should increase by 1: when 5 or more commands are added or modified, significant problem is fixed, etc?
- * Last Worked On: 11.2.2012
+ * Last Worked On: 2.4.2013
  **/
 
 public class MUDServer implements MUDServerI, LoggerI {
@@ -172,7 +173,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 
 	// server information
 	private final static String program = "JavaMUD";  // the server program name
-	private final static String version = "0.9.1bF1"; // the server version number
+	private final static String version = "0.9.2"; // the server version number
 	private String computer = "Stardust";             // the name of the server computer
 	private String ip = "192.168.1.243";              // server ip as a string
 	private String name = "Server";                   // the name of the server (obtained from theme definition)
@@ -187,14 +188,14 @@ public class MUDServer implements MUDServerI, LoggerI {
 	private String motd = "motd.txt";   // Message of The Day file
 
 	// server state settings
-	private GameMode mode = GameMode.NORMAL;                   // (0=normal: player connect, 1=wizard: wizard connect only, 2=maintenance: maintenance mode)
-	private int multiplay = 0;              // (0=only one character per account is allowed, 1=infinite connects allowed)
-	private int guest_users = 0;            // (0=guests disallowed, 1=guests allowed)
-	private int debug = 1;                  // (0=off,1=on) Debug: server sends debug messages to the console
-	private int debugLevel = 2;             // (1=debug,2=extra debug,3=verbose) the current priority of what should be printed out for debugging info
-	private boolean logging = true;         // logging? (true=yes,false=no)
-	private int logLevel = 3;               // 
-	private boolean prompt_enabled = false; // show player information bar
+	private GameMode mode = GameMode.NORMAL; // (0=normal: player connect, 1=wizard: wizard connect only, 2=maintenance: maintenance mode)
+	private int multiplay = 0;               // (0=only one character per account is allowed, 1=infinite connects allowed)
+	private int guest_users = 0;             // (0=guests disallowed, 1=guests allowed)
+	private int debug = 1;                   // (0=off,1=on) Debug: server sends debug messages to the console
+	private int debugLevel = 2;              // (1=debug,2=extra debug,3=verbose) priority of debugging information recorded
+	private boolean logging = true;          // logging? (true=yes,false=no)
+	private int logLevel = 3;                // () priority of log information recorded 
+	private boolean prompt_enabled = false;  // show player information bar
 	
 	// Protocols
 	/*
@@ -1641,8 +1642,8 @@ public class MUDServer implements MUDServerI, LoggerI {
 
 							if ( config.containsKey( Utils.trim( args[0] ) ) ) {
 								debug("Config> Setting '" + Utils.trim( args[0] ) + "' to '" + Utils.trim( args[1] ));
-								send("Game [config]> " + Utils.trim( args[0] ) + ": " + Utils.trim( args[1] ), client);
 								config.put( Utils.trim( args[0] ), Utils.trim( args[1] ) );
+								send("Game [config]> " + Utils.trim( args[0] ) + ": " + Utils.trim( args[1] ), client);
 							}
 							else {
 								debug("Game [config]> no such configurable setting exists.");
@@ -1688,9 +1689,9 @@ public class MUDServer implements MUDServerI, LoggerI {
 						// run the list editor
 						cmd_helpedit(arg, client);
 					}
-					else if ( cmd.equals("install") || (aliasExists && alias.equals("install") ) )
+					else if ( cmd.equals("@install") || (aliasExists && alias.equals("install") ) )
 					{
-						send("Syntax: install <area file>", client);
+						send("Syntax: @install <area file>", client);
 						//install_area(arg);
 					}
 					else if ( cmd.equals("@kick") || ( aliasExists && alias.equals("@iedit") ) ) {
@@ -6545,6 +6546,8 @@ public class MUDServer implements MUDServerI, LoggerI {
 		 */
 		public String parse_pgm(final String pArg)
 		{
+			System.out.println("pArg: " + pArg);
+			
 			String[] ca = new String[0];
 
 			if (pArg.indexOf(":") != -1)
@@ -6587,16 +6590,80 @@ public class MUDServer implements MUDServerI, LoggerI {
 						return "-Result: Incomplete function statement, no parameters!";
 					}
 				}
-				else if(pArg.equals("{distance}") || pArg.equals("{distance")) {
+				else if(pArg.equals("{distance}") || ca[0].equals("{distance")) {
+					
+					/*
+					 * parameters:
+					 * 	2d/3d
+					 *  one or two points
+					 */
+					
+					System.out.println("PGM -distance-");
+					
+					if( ca[1] != null ) {
+						// params - two points in the form '(x,y)' separated by a ';'.
+						// ex. (1,1),(4,4)
+						
+						List<String> params = new ArrayList<String>();
+						
+						StringBuffer sb = new StringBuffer();
+						
+						boolean check = true;
+						int dimensions = 0;  // count points, 1 point is between your current position and there, 2 points is between the two points
+						
+						// isolate coordinate points
+						for(int c = 0; c < ca[1].length(); c++) {
+							char ch = ca[1].charAt(c);
+							
+							if( check ) {
+								if(ch == ')') {
+									debug("Current: " + sb.toString(), 3);
+									debug("Added character to sb", 3);
+									sb.append(ch);
+									debug("Final: " + sb.toString(), 3);
+									debug("finished point dec", 3);
+									check = false;
+									params.add(sb.toString());
+									sb.delete(0, sb.length());
+								}
+								else {
+									debug("Current: " + sb.toString(), 3);
+									debug("Added character to sb", 3);
+									sb.append(ch);
+								}
+							}
+							else {
+								if(ch == '(') {
+									sb.delete(0, sb.length());
+									debug("started point dec", 3);
+									debug("Current: " + sb.toString(), 3);
+									debug("Added character to sb", 3);
+									sb.append(ch);
+									check = true;
+								}
+								else if(ch == ',') {
+									
+								}
+							}
+						}
 
-					// params - two points in the form '(x,y)' separated by a ','.
-					// ex. (1,1),(4,4)
+						if(params.size() > 0) {
 
-					String[] params = ca[1].substring(0, ca[1].indexOf("}")).split(",");
+							List<Point> ptList = new ArrayList<>();
 
-					if(params.length == 2) {
+							for(String param : params) {
+								ptList.add(Utils.toPoint(param));
+							}
+
+							return "-Result: " + ptList;
+
+						}
+						else { return "PGM: Error!"; }
 					}
-
+					else
+					{
+						return "-Result: Incomplete function statement, no parameters!";
+					}
 				}
 				else { return "PGM: Error!"; }
 			}

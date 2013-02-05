@@ -49,4 +49,8 @@ public class Point {
 	public void setZ(int newZ) { this.z = newZ; }
 	
 	public void incZ(int increment) { this.z += increment; }
+	
+	public String toString() {
+		return "(" + x + "," + y + ")";
+	}
 }
