@@ -11645,18 +11645,32 @@ public class MUDServer implements MUDServerI, LoggerI {
 			}
 		}
 		
+		/**
+		 * Calculate straight line distance between two Point(s) on the cartesian
+		 * planes.
+		 * 
+		 * @param start Point to start at
+		 * @param end   Point to end at
+		 * @return
+		 */
 		public static int distance(Point start, Point end) {
-			if( start != end ) {
-				// use pythagorean theorem to get straight line distance
-				int rise = Math.abs( start.getY() - end.getY() );
-				int run = Math.abs( start.getX() - end.getX() );
+			if( start != null && end != null) {
+				if( start != end ) {
+					// use pythagorean theorem to get straight line distance
+					// pythagorean theorem (simplified): a^2 + b^2 = c^2
+					int rise = Math.abs( start.getY() - end.getY() ); // x (a)
+					int run = Math.abs( start.getX() - end.getX() );  // y (b)
 
-				int distance = (int) Math.sqrt( square(run) + square(rise) );
+					int distance = (int) Math.sqrt( square(run) + square(rise) ); // z (c)
 
-				return distance;
-				// calculate travel distance going at right angles
+					return distance;
+					// calculate travel distance going at right angles
+				}
+				else {
+					return 0;
+				}
 			}
-
+			
 			return -1;
 		}
 
