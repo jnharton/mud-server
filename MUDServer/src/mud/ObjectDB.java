@@ -231,14 +231,15 @@ public class ObjectDB {
 	 * place/attach them in/to the respective rooms they are part of
 	 */
 	public void loadExits(final MUDServer parent) {
+        parent.debug("Loading exits:", 2);
 		for (final Exit e : exitsById.values()) {
             final Room room = getRoomById(e.getLocation());
             if (room != null) {
                 room.getExits().add(e);
-                parent.debug("Exit Loaded", 2);
-                parent.debug(room.getDBRef() + " " + e.getDBRef(), 2);
+                parent.debug("Exit " + e.getDBRef() + " added to room " + room.getDBRef() + ".", 2);
             }
 		}
+        parent.debug("Done loading exits:", 2);
 	}
 
     //////////////////// CREATURES

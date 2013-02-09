@@ -13,24 +13,24 @@ public class AdminCommand extends Command {
 
 	@Override
 	public void execute(String arg, Client client) {
-		String testpass = Utils.hash(arg);
-		String realpass = MUDServer.admin_pass;
+		final String testpass = Utils.hash(arg);
+		final String realpass = MUDServer.admin_pass;
 		
 		if (testpass.equals(realpass)) {
 			parent.send("Game> correct admin password, changing access to ADMIN", client);
 			
-			Player player = parent.getPlayer(client);
-			
+			final Player player = parent.getPlayer(client);
 			player.setAccess(ADMIN);
-			
-			parent.getChatChannel(MUDServer.STAFF_CHANNEL).addListener(player);
+            try {
+                parent.addToStaffChannel(player);
+            } catch (Exception ex) {
+                parent.send("Staff chat channel doesn't exist.", client);
+            }
 		}
 		else {
-			Player player = parent.getPlayer(client);
-			
+			final Player player = parent.getPlayer(client);
 			player.setAccess(USER);
-			
-			parent.getChatChannel(MUDServer.STAFF_CHANNEL).removeListener(player);
+			parent.removefromStaffChannel(player);
 		}
 	}
 
