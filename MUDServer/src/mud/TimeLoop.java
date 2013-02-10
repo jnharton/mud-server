@@ -72,7 +72,7 @@ public class TimeLoop implements Runnable
             minutes = 0;
             incrementHour();
         }
-        server.debug("" + hours + ":" + minutes);
+        server.debug("Time loop: " + hours + ":" + minutes);
         server.handleMovement();
     }
 

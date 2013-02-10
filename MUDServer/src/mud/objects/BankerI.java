@@ -1,4 +1,4 @@
-package mud.interfaces;
+package mud.objects;
 
 /*
 Copyright (c) 2012 Jeremy N. Harton
@@ -19,7 +19,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 import mud.Coins;
 
-public interface Banker extends Interactive
+public interface BankerI extends InteractiveI
 {
 	public Coins withdraw(final Coins money);
 	public void deposit(final Coins money);

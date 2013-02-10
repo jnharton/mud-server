@@ -31,7 +31,7 @@ public class Message
 	 * @param tempMessage
 	 */
 	public Message(String tempMessage) {
-		this.message = tempMessage.trim();
+		this.message = Utils.trim(tempMessage);
 	}
 	
 	/**
@@ -42,9 +42,9 @@ public class Message
 	 * @param tempMessage
 	 * @param tempRecipient
 	 */
-	public Message(String tempMessage, Player tempRecipient) {
+	public Message(final String tempMessage, final Player tempRecipient) {
 		this.recipient = tempRecipient;
-		this.message = tempMessage.trim();
+		this.message = Utils.trim(tempMessage);
 	}
 	
 	/**
@@ -55,7 +55,7 @@ public class Message
 	 * @param tempSender
 	 * @param tempMessage
 	 */
-	public Message(Player tempSender, String tempMessage) {
+	public Message(final Player tempSender, final String tempMessage) {
 		this.sender = tempSender;
 		this.message = tempMessage;
 		this.location = tempSender.getLocation();
@@ -67,9 +67,9 @@ public class Message
 	 * @param tempMessage
 	 * @param tempRecipient
 	 */
-	public Message(Player tempSender, String tempMessage, Player tempRecipient) {
+	public Message(final Player tempSender, final String tempMessage, final Player tempRecipient) {
 		this.sender = tempSender;
-		this.message = tempMessage.trim();
+		this.message = Utils.trim(tempMessage);
 		this.recipient = tempRecipient;
 	}
 	
@@ -81,12 +81,12 @@ public class Message
 	 * @param tempMessage
 	 * @param tRoom
 	 */
-	public Message(String tempMessage, Integer tLocation) {
-		this.message = tempMessage.trim();
+	public Message(final String tempMessage, final Integer tLocation) {
+		this.message = Utils.trim(tempMessage);
 		this.location = tLocation;
 	}
 	
-	public Message(Client tempClient, String tempMessage) {
+	public Message(final Client tempClient, final String tempMessage) {
 		this.client = tempClient;
 		this.message = tempMessage;
 	}
@@ -95,7 +95,7 @@ public class Message
 		return this.client;
 	}
 	
-	public void setClient(Client newClient) {
+	public void setClient(final Client newClient) {
 		this.client = newClient;
 	}
 	
@@ -103,7 +103,7 @@ public class Message
 		return this.sender;
 	}
 	
-	public void setSender(Player newSender) {
+	public void setSender(final Player newSender) {
 		this.sender = newSender;
 	}
 	
@@ -111,7 +111,7 @@ public class Message
 		return this.recipient;
 	}
 	
-	public void setRecipient(Player newRecipient) {
+	public void setRecipient(final Player newRecipient) {
 		this.recipient = newRecipient;
 	}
 	
@@ -119,7 +119,7 @@ public class Message
 		return this.message;
 	}
 	
-	public void setMessage(String newMessage) {
+	public void setMessage(final String newMessage) {
 		this.message = newMessage;
 	}
 	
@@ -127,7 +127,7 @@ public class Message
 		return this.location;
 	}
 	
-	public void setLocation(Integer newLocation) {
+	public void setLocation(final Integer newLocation) {
 		this.location = newLocation;
 	}
 	

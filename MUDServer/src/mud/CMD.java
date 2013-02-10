@@ -31,6 +31,7 @@ public class CMD {
 	Status status;
 	private String cmdString;
 	private Player player;
+	private Client client;
 	
 	public enum Status {
 		WAITING("waiting"),
@@ -50,14 +51,15 @@ public class CMD {
 
 	private int perm = 0;
 
-	public CMD(final String string, final Player player) {
+	public CMD(final String string, final Player player, final Client client) {
 		this.status = Status.WAITING;
 		this.cmdString = string;
 		this.player = player;
+        this.client = client;
 	}
 
-	public CMD(final String string, final Player player, final int permission) {
-		this(string, player);
+	public CMD(final String string, final Player player, final Client client, final int permission) {
+		this(string, player, client);
 		this.perm = permission;
 	}
 
@@ -66,7 +68,7 @@ public class CMD {
 	}
 
 	public Client getClient() {
-		return this.player.getClient();
+		return this.client;
 	}
 
 	public Player getPlayer() {

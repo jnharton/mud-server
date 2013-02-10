@@ -26,7 +26,6 @@ public class Season {
 	public WeatherState getNextState(final WeatherState cs) {
 		ListIterator<WeatherState> li = this.weather_states.listIterator(weather_states.indexOf(cs) + 1);
 
-		System.out.println("Probability of transitioning down: " + cs.getTransDownProb());
 		boolean transitionDown = Math.random() <= cs.getTransDownProb();
 
         WeatherState newState;

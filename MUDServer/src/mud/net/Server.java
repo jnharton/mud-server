@@ -87,6 +87,7 @@ public class Server implements Runnable {
                 Client client = new Client(socket);
                 parent.clientConnected(client);
                 clients.add(client);
+                System.out.println("Accepted client socket.");
             }
         } catch (Exception e) {
             e.printStackTrace();

@@ -8,7 +8,7 @@ import mud.Currency;
 import mud.net.Client;
 import mud.utils.Bank;
 
-public class Banker extends NPC implements mud.interfaces.Banker {
+public class Banker extends NPC implements BankerI {
 	
 	private Bank bank;
 	

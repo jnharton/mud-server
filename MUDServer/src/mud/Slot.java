@@ -49,7 +49,7 @@ public class Slot {
 	public Slot(final SlotType slotType, final ItemType itemType) {
 		this(slotType, itemType, null);
 	}
-	
+
 	/**
 	 * Constructs a slot based on two parameters: the
 	 * item type it can hold and an item to place in the
@@ -207,4 +207,5 @@ public class Slot {
 	public String toString() {
 		return "no string representation";
 	}
+
 }

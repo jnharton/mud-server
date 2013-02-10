@@ -713,8 +713,9 @@ public class MUDServer implements MUDServerI, LoggerI {
 
 		/* Server Initialization */
 		
-		// doing this here, because most everything that needs to be loaded before should be done by here
-		this.s = new Server(this, port); // current style
+		// almost everything that needs to be loaded should be done before here
+		System.out.println("Creating server on port " + port);
+		this.s = new Server(this, port);
 
 		// Time Loop
 		// cpu: -for now, appears marginal-
@@ -824,7 +825,6 @@ public class MUDServer implements MUDServerI, LoggerI {
                         "whom recently began raiding the town. Kill them all to end the infestation.",
                         new Task("Kill 15 kobolds", TaskType.KILL, 15));
 
-                npc.setQuestList();
                 npc.addQuest(quest);
             }
             else {
@@ -1004,7 +1004,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 
                 if (!whatClientSaid.trim().equals("")) {  // blocks blank input
                     //System.out.print("Putting comand in command queue...");
-                    processCMD(new CMD(whatClientSaid.trim(), sclients.get(client), 0)); // put the command in the queue
+                    processCMD(new CMD(whatClientSaid.trim(), sclients.get(client), client, 0)); // put the command in the queue
                     //cmd(whatClientSaid.trim(), c);
                     //System.out.println("Done.");
                 }
@@ -1098,7 +1098,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 		debug("");
 
 		// cut the input into an array of strings separated by spaces
-		final List<String> inputList = Arrays.asList(input.split(" "));
+		final LinkedList<String> inputList = new LinkedList<String>(Arrays.asList(input.split(" ")));
 
 		if (!inputList.isEmpty()) { // if there was any input
 			cmd = inputList.remove(0);
@@ -8802,7 +8802,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 	 * 
 	 * @param data
 	 */
-	public void debug(Object data, int tDebugLevel)
+	public void debug(final Object data, final int tDebugLevel)
 	{
 		if (debug == 1) // debug enabled
 		{
@@ -8812,7 +8812,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 			if (debugLevel >= tDebugLevel) {
 				System.out.println(data);
 				if ( logging ) {
-					debugLog.writeln(data.toString());
+					debugLog.writeln("" + data);
 				}
 			}
 		}
@@ -8825,7 +8825,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 	 * 
 	 * @param data
 	 */
-	public void debug(Object data)
+	public void debug(final Object data)
 	{
 		debug(data, 1);
 	}
@@ -9859,11 +9859,9 @@ public class MUDServer implements MUDServerI, LoggerI {
         // loop through all the rooms and broadcast weather messages accordingly
         for (final Room r : objectDB.getWeatherRooms()) {
             broadcast("", r);
-            debug("message sent");
         }
         for (final Room r : objectDB.getRoomsByType(RoomType.PLAYER)) {
             broadcast("", r);
-            debug("message sent");
         }
         // end old WeatherLoop code
 
@@ -10303,8 +10301,10 @@ public class MUDServer implements MUDServerI, LoggerI {
             }
 
             String changeText = ws.upDown == 1 ? ws.transUpText : ws.transDownText;
-            addMessage(new Message(changeText, 1));
-            debug(changeText);
+            if (changeText != null) {
+                addMessage(new Message(changeText, 1));
+                debug(changeText);
+            }
 		}
 	}
 

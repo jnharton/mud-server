@@ -212,7 +212,9 @@ public class Player extends MUDObject
 	 */
 	public Player() {}
 
-	public Player(int tempDBREF) { super(tempDBREF); }
+	public Player(int tempDBREF) {
+        super(tempDBREF);
+    }
 
 	/**
 	 * Object Loading Constructor
@@ -356,21 +358,27 @@ public class Player extends MUDObject
 	 * 
 	 * @return integer representing a level of permissions
 	 */
-	public int getAccess() { return this.access; }
+	public int getAccess() {
+        return this.access;
+    }
 
 	/**
 	 * Set Access
 	 * 
 	 * @param newAccessLevel integer representing a level of permissions
 	 */
-	public void setAccess(int newAccessLevel) { this.access = newAccessLevel; }
+	public void setAccess(int newAccessLevel) {
+        this.access = newAccessLevel;
+    }
 
 	/**
 	 * Get Player Class
 	 * 
 	 * @return a Classes object that represents the player's character class
 	 */
-	public Classes getPClass() { return this.pclass; }
+	public Classes getPClass() {
+        return this.pclass;
+    }
 
 	/**
 	 * Set Player Class
