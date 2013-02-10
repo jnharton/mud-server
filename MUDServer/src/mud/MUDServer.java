@@ -270,12 +270,10 @@ public class MUDServer implements MUDServerI, LoggerI {
 	// pna - per name association?
 	private HashMap<String, Command> commandMap = new HashMap<String, Command>(20, 0.75f);       // HashMap that holds an instance of each command currently (dynamic)
 	
-	private HashMap<Client, Player> sclients = new HashMap<Client, Player>(max_players, 0.75f); // HashMap to associate Players to Clients (dynamic)
-	public HashMap<Player, Client> tclients = new HashMap<Player, Client>(max_players, 0.75f);  // HashMap to associate Clients to Players (dynamic)
-	
+    private HashMap<Client, Player> sclients = new HashMap<Client, Player>();
 	private HashMap<Zone, Integer> zones = new HashMap<Zone, Integer>(1, 0.75f);                // HashMap that tracks currently "loaded" zones (dynamic)
-	private HashMap<Player, Player> DMControlTable = new HashMap<Player, Player>(1, 0.75f);     // HashMap that keeps track of what Players are controlling NPCs (dynamic)
-	
+    final private PlayerControlMap playerControlMap = new PlayerControlMap();
+
 	private HashMap<String, String> displayColors = new HashMap<String, String>(8, 0.75f);      // HashMap specifying particular colors for parts of text (somewhat static)
 	private HashMap<String, String> colors = new HashMap<String, String>(8, 0.75f);             // HashMap to store ansi/vt100 escape codes for outputting color (static)
 
@@ -1012,7 +1010,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 
                 if (!whatClientSaid.trim().equals("")) {  // blocks blank input
                     //System.out.print("Putting comand in command queue...");
-                    cmdQueue.add(new CMD(whatClientSaid.trim(), client, 0)); // put the command in the queue
+                    cmdQueue.add(new CMD(whatClientSaid.trim(), sclients.get(client), 0)); // put the command in the queue
                     //cmd(whatClientSaid.trim(), c);
                     //System.out.println("Done.");
                 }
@@ -2513,14 +2511,12 @@ public class MUDServer implements MUDServerI, LoggerI {
 	 */
 	private void cmd_ban(final String arg, final Client client) {
 		if (!arg.equals("")) {
-			Player player1 = getPlayer(arg); // player name based search (banning a player should ban his account as well
-			Client client1 = getClient(player1);
+			final Player player1 = getPlayer(arg); // player name based search (banning a player should ban his account as well
+			final Client client1 = player1.getClient();
 			if (player1 != null) {
 				// add the player's ip address to the banlist (IP address ban)
 				banlist.add(client1.ip());
-				// tell them they have been banned
 				cmd_page(arg + ", you have been banned.", client1);
-				// kick them
 				kick(client1);
 			}
 			else {
@@ -3009,99 +3005,35 @@ public class MUDServer implements MUDServerI, LoggerI {
 	 * @param client
 	 */
 	private void cmd_control(final String arg, final Client client) {
-		Player player;
-		Player npc;
-
+        final Player player = getPlayer(client);
+			
 		if (arg.toLowerCase().equals("#break")) { // NOTE: Looks okay
-			npc = getPlayer(client);
-			player = null;
+            debug("DM Control Table:");
+			debug(playerControlMap);
+
+            playerControlMap.stopControllingAnyone(player);
 
 			debug("DM Control Table:");
-			debug(DMControlTable.entrySet());
-
-			for (final Player p : DMControlTable.keySet()) {
-				if (DMControlTable.get(p) == npc) {
-					player = p;
-					DMControlTable.remove(p);
-					break;
-				}
-			}
-			if (player != null) {
-				// tell us what switch is going to be made
-				debug(npc.getName() + " -> " + player.getName());
-				send(npc.getName() + " -> " + player.getName(), client);
-
-				// remove npc references
-				sclients.remove(client);
-				tclients.remove(npc);
-
-				// add equivalent references for the player (control is returned to player)
-				sclients.put(client, player);
-				tclients.put(player, client);
-
-				// clear any additional access the npc might have obtained from player control
-				npc.setAccess(0);
-
-				npc = null;
-
-				player.setController(false);
-			}
-
-			debug("DM Control Table:");
-			debug(DMControlTable.entrySet());
+			debug(playerControlMap);
 		}
 		else { // should not be able to use this to control other players (at least not normally) NOTE: needs work
-			player = getPlayer(client);
-			npc = getNPC(arg);
+			final Player npc = getNPC(arg);
 
 			debug(player);
 			debug(npc);
 
 			if (npc instanceof NPC) {
-				debug("DM Control Table:");
-				debug(DMControlTable.entrySet());
+                debug("DM Control Table:");
+                debug(playerControlMap);
 
-				if (DMControlTable.containsValue(player)) {
-					for (Player p : DMControlTable.keySet()) {
-						if (DMControlTable.get(p) == player) {
-							DMControlTable.remove(p);	// remove the previous mapping
-							DMControlTable.put(p, npc); // make a new mapping
+                final Player oldSlave = playerControlMap.control(player, npc);
 
-							npc.setAccess(player.getAccess()); // grant new npc same permissions as actual PLAYER
-
-							player.setAccess(0); // reset previous npc's permissions
-
-							debug(player.getName() + " -> " + DMControlTable.get(p).getName());
-							send(player.getName() + " -> " + DMControlTable.get(p).getName(), client);
-
-							break;
-						}
-					}
-
-				}
-				else {
-					DMControlTable.put(player, npc);
-
-					npc.setAccess(player.getAccess());
-
-					player.setController(true);
-
-					debug(player.getName() + " -> " + DMControlTable.get(player).getName());
-					send(player.getName() + " -> " + DMControlTable.get(player).getName(), client);
-				}
-
-				// remove player references
-				sclients.remove(client);
-				tclients.remove(player);
-
-				// add equivalent references for the npc (the game will now treat the player as the npc, because they are in effect)
-				sclients.put(client, npc);
-				tclients.put(npc, client);
-
-				debug("DM Control Table:");
-				debug(DMControlTable.entrySet());
+                debug("DM Control Table:");
+                debug(playerControlMap);
 			}
-			else { send("Players are not controllable, only NPCs", client);	}
+			else {
+                send("Players are not controllable, only NPCs", client);
+            }
 		}
 	}
 
@@ -3119,8 +3051,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 	 */
 	private void cmd_create(final String arg, final Client client)
 	{
-		System.out.println(arg);                                  // argument
-		
 		String user;                                              // username
 		String pass;                                              // password
 
@@ -3143,20 +3073,13 @@ public class MUDServer implements MUDServerI, LoggerI {
 			final Player player = new Player(-1, user, startFlags.clone(), start_desc, start_room, "", Utils.hash(pass), start_status, start_stats, start_money);
 			objectDB.addAsNew(player);
 
-			String mail[];        // create the mailbox
-			mail = new String[4]; // size it to make room for one message's worth
-			
-			// generate a welcome mail message
-			// by line - user, subject, message, flag
-			// flags: U (unread), R (read), D (delete)
-			mail[0] = user;
-			mail[1] = "Welcome";
-			mail[2] = "Welcome to " + serverName;
-			mail[3] = "U";
-			
-			// save the new player's mailbox
-			Utils.saveStrings(DATA_DIR + "mail\\mail-" + user + ".txt", mail);
-			
+            
+            try {
+                new Mail(user, "Welcome", "Welcome to " + serverName).saveToFile(DATA_DIR + "mail\\mail-" + user + ".txt");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
 			// send the welcome message for a new player
 			send("Welcome to the Game, " + user + ", your password is: " + pass, client);
 			
@@ -4091,8 +4014,8 @@ public class MUDServer implements MUDServerI, LoggerI {
 		debug(arg);
 		final Player current = getPlayer(client);
 		debug("current: " + current.getName());
-		Player player1 = getPlayer(arg);
-		Client client1 = tclients.get(player1);
+		final Player player1 = getPlayer(arg);
+		final Client client1 = player1.getClient();
 		debug("player1: " + player1.getName());
 		if (!player1.getNames().contains(current.getName())) {
 			player1.addName(current.getName());
@@ -4586,19 +4509,23 @@ public class MUDServer implements MUDServerI, LoggerI {
 
 			int messages = player.getMailBox().numUnreadMessages();
 
-			if (messages == 0) { client.write("You have no unread messages.\n"); }
-			else { client.write("You have " + String.valueOf(messages) + " unread messages.\n"); }
+			if (messages == 0) {
+                client.write("You have no unread messages.\n");
+            }
+			else {
+                client.write("You have " + String.valueOf(messages) + " unread messages.\n");
+            }
 		}
 		else {
             final int msg = Utils.toInt(arg, -1);
 
-			if (msg > -1 && msg < player.getMailBox().numMessages()) {
-				Mail mail = player.getMailBox().get(msg);
+			if (msg > -1 && msg < player.getMailBox().numUnreadMessages()) {
+				final Mail mail = player.getMailBox().get(msg);
 
-				send("Message #: " + mail.getId(), client);
-				send("To: " + mail.getRecipient(), client);
-				send("Subject: " + mail.getSubject(), client);
-				send(mail.getMessage(), client);
+				send("Message #: " + msg, client);
+                for (final String s : mail.getLines()) {
+                    send(s, client);
+                }
 
 				if (mail.isUnread()) {
 					mail.markRead();
@@ -5010,7 +4937,7 @@ public class MUDServer implements MUDServerI, LoggerI {
                 for (final String recipName : recipients)
                 {
                     final Player targetPlayer = getPlayer(recipName);
-                    final Client recipClient = tclients.get(targetPlayer);
+                    final Client recipClient = targetPlayer.getClient();
                     if (recipClient != null) {
                         // mesage with a player sender, text to send, and the player to send it to
                         s.sendMessage(recipClient, new Message(getPlayer(client), Utils.trim(ms), targetPlayer));
@@ -5263,21 +5190,17 @@ public class MUDServer implements MUDServerI, LoggerI {
 	 * @param client
 	 */
 	private void cmd_retrieve(final String arg, final Client client) {
-		Player player;
-		Room room;
-
-		// get player, room objects to work with
-		player = getPlayer(client);
-		room = getRoom(client);
+		Player player = getPlayer(client);
+		Room room = getRoom(client);
 
 		// split the arguments into a string array by space characters
-		String[] args = arg.split(" ");
+		final String[] args = arg.split(" ");
 		// tell us how many elements the array has (debug)
 		debug(args.length);
 
 		if (arg.contains("from") && args.length == 3) {
 			debug("checking for stuff");
-			for (String s : args) {
+			for (final String s : args) {
 				debug(s); // tell us what the elements of the array are (debug)
 			}
 			if (args[1].toLowerCase().equals("from")) { // if the second argument is from (should confirm that this is the intended syntax -- see above)
@@ -5344,8 +5267,8 @@ public class MUDServer implements MUDServerI, LoggerI {
 	 * open the editor with no room.
 	 */
 	private void cmd_itemedit(final String arg, final Client client) {
-		Player player = getPlayer(client);
-		String old_status = player.getStatus();
+		final Player player = getPlayer(client);
+		final String old_status = player.getStatus();
 
 		player.setStatus("EDT");
 		player.setEditor(Editor.ITEM);
@@ -5627,17 +5550,11 @@ public class MUDServer implements MUDServerI, LoggerI {
 	}
 	
 	private void cmd_setmode(final String arg, final Client client) {
-		char test = (arg == null || arg.isEmpty()) ? ' ' : arg.toLowerCase().charAt(0);
-		switch(test) {
-		case 'n':   mode = GameMode.NORMAL;     break;
-		case 'w':   mode = GameMode.WIZARD;         break;
-		case 'm':   mode = GameMode.MAINTENANCE;    break;
-		default:
+        final char m = arg == null ? '?' : arg.toLowerCase().charAt(0);
+        if (!GameMode.isValidString(m)) {
 			send("Invalid GameMode, using Normal instead.", client);
-			mode = GameMode.NORMAL;
-			break;
-		}
-		
+        }
+        mode = GameMode.fromString(m);
 		send("Game> setting GameMode to -" + mode + "-", client);
 	}
 
@@ -7511,8 +7428,13 @@ public class MUDServer implements MUDServerI, LoggerI {
 	}
 
 	// logged-in player check
-	public boolean loginCheck(Client client) {
-		return sclients.containsKey(client);
+	public boolean loginCheck(final Client client) {
+        for (final Player p : players) {
+            if (p.getClient().equals(client)) {
+                return true;
+            }
+        }
+		return false;
 	}
 
 	// Object "Retrieval" Functions
@@ -7791,16 +7713,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 	public Thing getThing(String arg, Client client)
 	{
         return objectDB.getThing(getRoom(client).getDBRef(), arg);
-	}
-
-	/**
-	 * Get the client associated with a player's name.
-	 * 
-	 * @param player
-	 * @return
-	 */
-	public Client getClient(Player player) {
-		return tclients.get(player);
 	}
 
 	/* Saving Objects */
@@ -8231,7 +8143,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 	 * @param client
 	 * @return
 	 */
-	public void cProps(Player player)
+	public void cProps(final Player player)
 	{
 		LinkedHashMap<String, Object> props;
 		// create string array to store results of evaluated props
@@ -8249,7 +8161,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 					System.out.println(test);
 					if ( test.equals("_connect") ) {
 						System.out.println("Connect Property Found!");
-						send(parse_pgm(prop), getClient(player));
+						send(parse_pgm(prop), player.getClient());
 					}
 				}
 			}
@@ -8283,7 +8195,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 					System.out.println(test);
 					if (test.equals("_disconnect")) {
 						System.out.println("Disconnect Property Found!");
-						send(parse_pgm(prop), getClient(player));
+						send(parse_pgm(prop), player.getClient());
 					}
 				}
 			}
@@ -8303,7 +8215,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 	 * @param client       the connecting client
 	 * @param newCharacter is this a new character
 	 */
-	public void init_conn(Player player, Client client, Boolean newCharacter)
+	public void init_conn(final Player player, final Client client, final boolean newCharacter)
 	{
 		// generate generic name for unknown players based on their class and the number of players with the same class presently on
 		// logged on of a given class
@@ -8315,12 +8227,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 		debug("Number of current connected players that share this player's class: " + objectDB.getNumPlayers(player.getPClass()));
 
 		// NOTE: I should probably add a mapping here somewhere that ties the player to their account, if they have one
-
-		// add client -> player mapping
-		sclients.put(client, player);
-
-		// player -> client mapping
-		tclients.put(player, client);
 
 		if ( newCharacter ) { // if new, do some setup
 			// give money
@@ -8340,7 +8246,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 		}
 
 		// get the time
-		Time time = getTime();
+		final Time time = getTime();
 
 		// get variables to log
 		String pname = player.getName();
@@ -8365,7 +8271,11 @@ public class MUDServer implements MUDServerI, LoggerI {
 		send(colors("Connected to " + serverName + " as " + player.getName(), "yellow"), client);
 
 		/* load the player's mailbox */
-		loadMail(player);
+        try {
+            player.loadMail(DATA_DIR + "mail\\mail-" + player.getName() + "\\");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
 		// indicate to the player how much mail/unread mail they have
 		client.writeln("Checking for unread messages...");
@@ -8396,14 +8306,16 @@ public class MUDServer implements MUDServerI, LoggerI {
 		}
 
 		/* add the player to the game */
+        player.setClient(client);
+        sclients.put(client, player);
 		players.add(player);
 
 		/* run any connect properties specified by the player */
 		//cProps(player);
 
 		/* look at the current room */
-		Room current = getRoom(client);  // determine the room they are in
-		look(current, client);           // show the room
+		final Room current = getRoom(client);   // determine the room they are in
+		look(current, client);                  // show the room
 		
 		current.addListener(player);
 	}
@@ -8484,7 +8396,12 @@ public class MUDServer implements MUDServerI, LoggerI {
         }
         else {
             // save mail
-            saveMail(player);
+            send("Saving mail...", player.getClient());
+            try {
+                player.saveMail(DATA_DIR + "mail\\mail-" + player.getName() + "\\");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
 
             // export player data to pfile format
             //exportToPFILE(client);
@@ -8495,12 +8412,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 
         synchronized(players) {
             players.remove(player);  // Remove the player object for the disconnecting player
-        }
-        synchronized(sclients) {
-            sclients.remove(client); // remove the player to client mapping
-        }
-        synchronized(tclients) {
-            tclients.remove(player); // remove the client to player mapping
         }
 
         // DEBUG: Tell us which character was disconnected
@@ -8787,20 +8698,16 @@ public class MUDServer implements MUDServerI, LoggerI {
 	public void flush()
 	{
 		for (final Player player : players) {
-			if (!sclients.values().contains(player))
-			{
-				if (DMControlTable.get(player) == null) {
-					players.remove(player);
-					tclients.remove(sclients.get(player));
-					sclients.remove(player);
-					debug("Player removed.");
-					return;
-				}
-				else {
-					debug("Player \"idle\", but controlling an npc.");
-				}
-			}
-		}
+            final Player slave = playerControlMap.getSlave(player);
+            if (slave == null) {
+                players.remove(player);
+                debug("Player removed.");
+                return;
+            }
+            else {
+                debug("Player \"idle\", but controlling an npc.");
+            }
+        }
 	}
 	
 	private void shutdown() {
@@ -9082,16 +8989,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 	 */
 	public static enum PlayerMode { NORMAL, COMBAT, PVP, PK };
 
-	/**
-	 * Player State
-	 * 
-	 * Alive - alive, INCAPACITATED - incapacitated (hp < 0 && hp > -10), DEAD (hp < -10)
-	 * 
-	 * @author Jeremy
-	 *
-	 */
-	public static enum State { ALIVE, INCAPACITATED, DEAD };
-
 	/*public static enum Telnet {
 		SE((byte) 240),
 		NOP((byte) 241),
@@ -9335,34 +9232,26 @@ public class MUDServer implements MUDServerI, LoggerI {
 	public void addMessage(final Message msg) {
         // if this client's player is the intended recipient
         final Player recip = msg.getRecipient();
-        if (recip != null ) {
-            if (tclients.containsKey(recip)) {
-                send(msg.getMessage(), tclients.get(recip));
-                msg.markSent();
-                debug("addMessage, sent message");
-            }
-            else {
-                debug("addMessage, msg recipient not in tclients: " + recip);
-            }
-        }
         // no recipient, so we'll assume it was 'said' out loud
+        if (msg.getSender() == null) {
+            send(msg.getMessage());
+        }
+        else if (players.contains(recip)) {
+            send(msg.getMessage(), recip.getClient());
+            msg.markSent();
+            debug("addMessage, sent message");
+        }
         else {
-            // the mud or an npc or some other game controlled object sent it to everyone (no specified sender)
-            if (msg.getSender() == null) {
-                send(msg.getMessage());
-            }
-            else {
-                for (final Player bystander : players) {
-                    if (bystander.getLocation() == msg.getLocation() && tclients.containsKey(bystander))
-                    {
-                        send(msg.getSender().getName() + " says, \"" + msg.getMessage() + "\".", tclients.get(bystander));
-                    }
+            for (final Player bystander : players) {
+                if (bystander.getLocation() == msg.getLocation())
+                {
+                    send(msg.getSender().getName() + " says, \"" + msg.getMessage() + "\".", bystander.getClient());
                 }
             }
-            msg.markSent();
-            debug("sent message");
         }
-	}
+        msg.markSent();
+        debug("sent message");
+    }
 
 	/**
 	 * allows adding to the message queue from external packages, classes
@@ -9888,7 +9777,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 	 * @return whether or the not the effect was successfully applied
 	 */
 	public boolean applyEffect(final Player player, final Effect effect) {
-		final Client client = getClient(player);
+		final Client client = player.getClient();
 
 		/* WARNING: healing effects currently remove any supplementary hitpoints.
 		 * this should not remove hitpoints, it should only them up to the total
@@ -10255,84 +10144,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 		return "";
 	}
 
-	/**
-	 * Load a player's mail file into the mailbox structure.
-	 * 
-	 * This consists of dividing the file into "messages", creating
-	 * message objects and putting them in a "mailbox".
-	 * 
-	 * NOTE: Should we return a mailbox to point the player's mailbox reference
-	 * to or continue as is, where we just modify the player's mailbox.
-	 * 
-	 * @param player the player who's mail file we wish to load
-	 */
-	private void loadMail(Player player) {
-		int msg = 0;
-
-		String mailBox = DATA_DIR + "mail\\mail-" + player.getName() + ".txt";
-		String lines[] = null;
-
-		try {
-			// load the file into a string array
-			lines = Utils.loadStrings(mailBox);
-			
-			// if the result isn't a string array
-			if (!(lines instanceof String[])) {
-				throw new FileNotFoundException("Invalid File!");
-			}
-		}
-		catch(FileNotFoundException fnfe) {
-			fnfe.printStackTrace();
-		}
-
-		int messages = 0;
-
-		// for each segment which could contain mail
-		for (int m = 0; m < lines.length - 1; m = m + 3) {
-			// create mail object
-			Mail mail = new Mail(msg, lines[m], lines[m + 1], lines[m + 2], lines[m + 3].charAt(0));
-			
-			// counting unread messages
-			// need to consider fixing this, I already stored this value in a flag character in the mail object
-			// which happens to be a private variable at the moment
-			if (mail.getFlag() == 'U') {
-				// mark the mail object unread
-				mail.markUnread();
-				// increase the unread count
-				messages++;
-			}
-			// add the mail object to the mailbox
-			player.getMailBox().add(mail);
-		}
-	}
-	
-	private void saveMail(Player player) {
-		MailBox mb = player.getMailBox();
-		
-		send("Saving mail...", getClient(player));
-		
-		try {
-			PrintWriter pw = new PrintWriter(DATA_DIR + "mail\\mail-" + player.getName() + ".txt");
-			
-			for (Mail m : mb) {
-				// Recipient
-				pw.println(m.getRecipient());
-				// Subject
-				pw.println(m.getSubject());
-				// Message
-				pw.println(m.getMessage());
-				// Flag (Read/Unread)
-				pw.println(m.getFlag());
-			}
-			
-			pw.flush();
-			pw.close();
-		}
-		catch (FileNotFoundException fnfe) {
-			fnfe.printStackTrace();
-		}
-	}
-
 	/* this really shouldn't handle actual costs, it should just tell us if we can afford it */
 	/**
 	 * Tell us if we, the player, can afford to purchase an item, based on it's
@@ -10446,7 +10257,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 		Integer[] oStats = Utils.stringsToIntegers(os);
 		Integer[] oMoney = Utils.stringsToIntegers(om);
 
-		Player player = new Player(oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), oDesc, oLocation, "", oPassword, "IC", oStats, oMoney);
+		final Player player = new Player(oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), oDesc, oLocation, "", oPassword, "IC", oStats, oMoney);
 
 		/* Set Player Permissions */
         player.setAccess(Utils.toInt(attr[8], USER));
@@ -10860,26 +10671,26 @@ public class MUDServer implements MUDServerI, LoggerI {
 		switch(player.getState()) {
 		case ALIVE:
 			if (hp <= -10) {
-                player.setState(State.DEAD);
+                player.setState(Player.State.DEAD);
             }
 			else if (hp <= 0) {
-                player.setState(State.INCAPACITATED);
+                player.setState(Player.State.INCAPACITATED);
             }
 			break;
 		case INCAPACITATED:
 			if ( hp > 0 ) {
-                player.setState(State.ALIVE);
+                player.setState(Player.State.ALIVE);
             }
 			else if ( hp <= -10 ) {
-                player.setState(State.DEAD);
+                player.setState(Player.State.DEAD);
             }
 			break;
 		case DEAD: // only resurrection spells or divine intervention can bring you back from the dead
 			if ( hp > 0 ) {
-                player.setState(State.ALIVE);
+                player.setState(Player.State.ALIVE);
             }
 			else if ( hp > -10) {
-                player.setState(State.INCAPACITATED);
+                player.setState(Player.State.INCAPACITATED);
             }
 			break;
 		default:

@@ -8,12 +8,15 @@ import java.util.List;
 import java.util.Set;
 import java.util.EnumSet;
 
+import java.io.File;
+
+import mud.net.Client;
+
 import mud.ObjectFlag;
 import mud.Abilities;
 import mud.Classes;
 import mud.Editor;
 import mud.MUDObject;
-import mud.MUDServer.State;
 import mud.Point;
 import mud.Races;
 import mud.Races.Subraces;
@@ -36,6 +39,7 @@ import mud.quest.TaskType;
 
 import mud.utils.EditList;
 import mud.utils.MailBox;
+import mud.utils.Mail;
 import mud.utils.Pager;
 import mud.utils.cgData;
 import mud.utils.Utils;
@@ -84,7 +88,8 @@ public class Player extends MUDObject
 	protected String status;                          // The player's status (MU)
 	protected String title;                           // The player's title (for where, MU)
 	protected ArrayList<String> names;                // names of other players that the player actually knows
-	private MailBox mailbox;                          // player mailbox
+
+    final private MailBox mailbox = new MailBox();    // player mailbox
 
 	protected int access = 0;                         // the player's access level (permissions) - 0=player,1=admin (default: 0)
 
@@ -157,7 +162,14 @@ public class Player extends MUDObject
 	protected SpellBook spells;             // spells [null if not a wizard]
 	public LinkedList<Spell> spellQueue;    // spell queue [null if not a wizard]
 
-	protected State state = State.ALIVE;    // character's "state of health" (ALIVE, INCAPACITATED, DEAD)
+	/**
+	 * Player State
+	 * Alive - alive, INCAPACITATED - incapacitated (hp < 0 && hp > -10), DEAD (hp < -10)
+	 * @author Jeremy
+	 */
+    public static enum State { ALIVE, INCAPACITATED, DEAD };
+
+	private State state = State.ALIVE;    // character's "state of health" (ALIVE, INCAPACITATED, DEAD)
 
 	protected LinkedHashMap<Abilities, Integer> stats;             // Player Statistics (D&D, MUD)
 	protected LinkedHashMap<Skill, Integer> skills;                // Player Skills (D&D, MUD)
@@ -187,6 +199,8 @@ public class Player extends MUDObject
 	private String custom_prompt = "< %h/%H  %mv/%MV %m/%M >"; // ACCOUNT DATA?
 
 	private Pager pager = null; // a pager (ex. 'less' for linux), displays a page's/screen's worth of text at a time
+    
+    private Client client;
 
 	/**
 	 * No argument constructor for subclasses
@@ -310,9 +324,6 @@ public class Player extends MUDObject
 		// add an initial quest?
 		this.quests.add(new Quest("Test", "A basic quest for testing purposes", new Task("Obtain dominion jewel", TaskType.RETRIEVE)));
 
-		// instantiate mailbox
-		this.mailbox = new MailBox();
-
 		// instantiate list of known names (memory - names)
 		this.names = new ArrayList<String>(); // we get a new blank list this way, not a loaded state
 
@@ -321,6 +332,14 @@ public class Player extends MUDObject
 
 		// instantiate name reference table
 		this.nameRef = new HashMap<String, Integer>(10, 0.75f); // start out assuming 10 name references
+	}
+
+	public void setClient(final Client c) {
+		client = c;
+	}
+
+	public Client getClient() {
+		return client;
 	}
 
 	public void addName(String tName) {
@@ -776,7 +795,21 @@ public class Player extends MUDObject
 			return false;
 		}
 	}
-	
+
+    public void loadMail(final String filename) throws Exception {
+        for (final File f : new File(filename).listFiles()) {
+            mailbox.add(new Mail(f));
+        }
+	}
+
+	public void saveMail(final String filename) throws Exception {
+        int i = 0;
+        for (final Mail m : mailbox) {
+            m.saveToFile(filename + "\\" + i + ".txt");
+            i += 1;
+        }
+	}
+
 	/**
 	 * Translate the persistent aspects of the player into the string
 	 * format used by the database

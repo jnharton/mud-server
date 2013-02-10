@@ -55,7 +55,7 @@ public class ChatChanneler
 
 	public void send(final String channelName, final Player player, final String message) {
         if (chanNamePlayersMap.get(channelName) != null) {
-            mud.getClient(player).write("(" + mud.colors(channelName, this.chan_color) + ") " + "<" + player.getName() + "> " + mud.colors(message, this.text_color) + "\r\n");
+            player.getClient().write("(" + mud.colors(channelName, this.chan_color) + ") " + "<" + player.getName() + "> " + mud.colors(message, this.text_color) + "\r\n");
             mud.debug("(" + channelName + ") <" + player.getName() + "> " + message + "\n");										
         }
 	}
@@ -63,7 +63,7 @@ public class ChatChanneler
 	public void send(final String channelName, final String message) {
         if (chanNamePlayersMap.get(channelName) != null) {
             for (final Player player : chanNamePlayersMap.get(channelName)) {
-                mud.getClient(player).write("(" + mud.colors(channelName, this.chan_color) + ") " + mud.colors(message, this.text_color) + "\r\n");
+                player.getClient().write("(" + mud.colors(channelName, this.chan_color) + ") " + mud.colors(message, this.text_color) + "\r\n");
                 mud.debug("(" + channelName + ") " + message + "\n");										
             }
         }

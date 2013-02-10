@@ -1,5 +1,10 @@
 package mud.utils;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.util.Properties;
+
 /**
  * Class that defines a unit of mail, a single message with several attributes:
  * id - the order of the letter in the recipient's inbox
@@ -10,78 +15,57 @@ package mud.utils;
  * @author Jeremy
  *
  */
-public class Mail {
-	private Integer id;
-	private String recipient;
-	private String subject;
-	private String message;
-	private Character flag;
-	
-	private boolean isUnread;
-	
-	/**
-	 * Mail message
-	 * 
-	 * @param tId
-	 * @param tRecipient
-	 * @param tSubject
-	 * @param tMessage
-	 * @param tFlag
-	 */
-	public Mail(int tId, String tRecipient, String tSubject, String tMessage, Character tFlag) {
-		this.id = tId;
-		this.recipient = tRecipient;
-		this.subject = tSubject;
-		this.message = tMessage;
-		this.flag = tFlag;
+public class Mail extends Properties
+{
+	public Mail(final String tRecipient, final String tSubject, final String tMessage) {
+        setProperty("recipient", tRecipient);
+        setProperty("subject", tSubject);
+        setProperty("message", tMessage);
+        setProperty("flag", "U");
 	}
-	
-	public Integer getId() {
-		return this.id;
+
+	public Mail(final File file) throws Exception {
+        loadFromXML(new FileInputStream(file));
 	}
-	
-	public String getRecipient() {
-		return this.recipient;
-	}
-	
-	public String getSubject() {
-		return this.subject;
-	}
-	
-	public String getMessage() {
-		return this.message;
-	}
-	
-	public Character getFlag() {
-		return this.flag;
-	}
-	
+
+    public String[] getLines() {
+        return new String[] {
+            "To: " + getProperty("recipient"),
+            "Subject : " + getProperty("subject"),
+            "Message: " + getProperty("message")
+        };
+    }
+
 	public void markRead() {
-		this.flag = 'R';
-		this.isUnread = false;
+		setProperty("flag", "R");
 	}
-	
+
 	public void markUnread() {
-		this.flag = 'U';
-		this.isUnread = true;
+		setProperty("flag", "U");
 	}
-	
+
+	public void markDeleted() {
+		setProperty("flag", "D");
+	}
+
 	public boolean isUnread() {
-		return this.isUnread;
+		return "U".equals(getProperty("flag"));
 	}
-	
-	public String[] toStorage() {
-		String[] out = new String[4];
-		
-		out[0] = recipient;
-		out[1] = subject;
-		out[2] = message;
-		out[3] = flag.toString();
-		
-		return out;
+
+	public String getMessage() {
+		return getProperty("message");
 	}
-	
-	public String toString() {
-		return "MAIL " + id + " " + recipient + " " + subject + " " + message + " " + flag;
+
+	public String getRecipient() {
+		return getProperty("recipient");
 	}
+
+	public String getSubject() {
+		return getProperty("subject");
+	}
+
+    public void saveToFile(final String filename) throws Exception {
+        storeToXML(new FileOutputStream(filename), "");
+	}
+
 }

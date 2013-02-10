@@ -8,17 +8,17 @@ import mud.objects.Player;
 
 public class GreetCommand extends Command {
 	
-	public GreetCommand(MUDServer mParent) {
+	public GreetCommand(final MUDServer mParent) {
 		super(mParent);
 	}
 
 	@Override
-	public void execute(String arg, Client client) {
+	public void execute(final String arg, final Client client) {
 		debug(arg);
-		Player current = parent.getPlayer(client);
+		final Player current = parent.getPlayer(client);
 		debug("current: " + current.getName());
-		Player player1 = parent.getPlayer(arg);
-		Client client1 = parent.tclients.get(player1);
+		final Player player1 = parent.getPlayer(arg);
+		final Client client1 = player1.getClient();
 		debug("player1: " + player1.getName());
 		if (!player1.getNames().contains(current.getName())) {
 			player1.addName(current.getName());

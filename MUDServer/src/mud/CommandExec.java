@@ -59,8 +59,8 @@ public class CommandExec implements Runnable {
 					//System.out.println(newCmd.getCmdString() + ": " + newCmd.status); // tell us about it 
 					
 					// parse out stored data
-					String command = newCmd.getCmdString();
-					Client client = newCmd.getClient();
+					final String command = newCmd.getCmdString();
+					final Client client = newCmd.getClient();
 					
 					// verify that client is still connected
 					
