@@ -393,7 +393,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 	private String reckoning;
 
 	private Theme theme1;
-	private ConcurrentLinkedQueue<CMD> cmdQueue = new ConcurrentLinkedQueue<CMD>();
 
 	// Testing
 	private BulletinBoard bb;
@@ -873,7 +872,29 @@ public class MUDServer implements MUDServerI, LoggerI {
 		 * End Testing
 		 */
 	}
-    
+
+    private void processCMD(final CMD newCmd) {
+        final String command = newCmd.getCmdString();
+        final Client client = newCmd.getClient();
+
+        try {
+            if ( checkAccess( client, newCmd.getPermissions() ) )
+            {
+                cmd(command, client);
+            }
+            else {
+                System.out.println("Insufficient Access Permissions");
+            }
+        }
+        catch(Exception e) {
+            e.printStackTrace();
+        }
+
+        if ( loginCheck( client ) ) {
+            prompt(client); // buggy, especially when you're not logged on yet
+        }
+    }
+
     private void runHelper(final Client client) {
         String whatClientSaid = client.getInput();
 
@@ -984,7 +1005,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 
                 if (!whatClientSaid.trim().equals("")) {  // blocks blank input
                     //System.out.print("Putting comand in command queue...");
-                    cmdQueue.add(new CMD(whatClientSaid.trim(), sclients.get(client), 0)); // put the command in the queue
+                    processCMD(new CMD(whatClientSaid.trim(), sclients.get(client), 0)); // put the command in the queue
                     //cmd(whatClientSaid.trim(), c);
                     //System.out.println("Done.");
                 }
