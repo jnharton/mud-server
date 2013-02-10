@@ -12,17 +12,12 @@ package mud.weather;
  * @author Jeremy Harton
  *
  */
-public class Weather {
+public class Weather
+{
 	public Season season;
 	public WeatherState ws;
 
-	public Weather() {
-	}
-
-	public Weather(String name) {
-	}
-	
-	public Weather(Season initialSeason, WeatherState initialState) {
+	public Weather(final Season initialSeason, final WeatherState initialState) {
 		this.season = initialSeason;
 		this.ws = initialState;
 	}
