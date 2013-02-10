@@ -1606,7 +1606,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 					else if ( cmd.equals("@makehouse") )
 					{
 						adminCmd = true;
-						House h = new House(getPlayer(client), 5);
+						final House h = new House(getPlayer(client), 5);
 						for (String s : h.getInfo()) { send(s, client); }
 					}
 					else if ( cmd.equals("@name") ) {
@@ -9029,27 +9029,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 		}
 	}
 
-	/**
-	 * Generate a new instance of a zone for a specified group of players
-	 * - the input syntax needs help since I won't be specifying players individually
-	 * in an arguments list and I need to take in a zone to make an instance of.
-	 * A single instance of a zone doesn't make any sense?
-	 * 
-	 * @param template
-	 * @param group
-	 * @return
-	 */
-	public Zone new_instance(final Zone template, final Player...group) {
-		if (template != null && template.getInstanceId() != -1)
-		{
-			return null;
-		}
-		else {
-			debug("Invalid Template Zone: Null or Not an Instance.");
-			return null;
-		}
-	}
-	
 	/**
 	 * Figure out if the player has a specific container
 	 * for this item.
