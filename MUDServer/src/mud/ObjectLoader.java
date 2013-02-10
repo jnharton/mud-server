@@ -6,6 +6,7 @@ import mud.objects.*;
 import mud.objects.items.*;
 import mud.quest.*;
 
+import mud.Coins;
 import mud.MUDObject;
 import mud.objects.Item;
 import mud.utils.Utils;
@@ -61,9 +62,9 @@ public class ObjectLoader {
                     final String oPassword = attr[5];       // 5 - password
                     // int access;                       // 8 - permissions
                     final Integer[] oStats = Utils.stringsToIntegers(attr[6].split(",")); // 6 - stats
-                    final Integer[] oMoney = Utils.stringsToIntegers(attr[7].split(",")); // 7 - money
+                    final int[] oMoney = Utils.stringsToInts(attr[7].split(",")); // 7 - money
 
-                    final Player player = new Player(oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), oDesc, oLocation, "", oPassword, "IC", oStats, oMoney);
+                    final Player player = new Player(oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), oDesc, oLocation, "", oPassword, "IC", oStats, Coins.fromArray(oMoney));
                     final int USER = 0; // stole this constant from MUDServer.
                     player.setAccess(Utils.toInt(attr[8], USER));
 
@@ -91,7 +92,7 @@ public class ObjectLoader {
                     objectDB.addPlayer(player);
                 }
                 else if (oFlags.equals("WMV")) {
-                    WeaponMerchant wm = new WeaponMerchant(parent, oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), "A weapon merchant.", "Merchant", "VEN", 161, new String[]{"1000", "1000", "1000", "1000"} );
+                    WeaponMerchant wm = new WeaponMerchant(parent, oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), "A weapon merchant.", "Merchant", "VEN", 161, Coins.fromArray(new int[] {1000, 1000, 1000, 1000}));
 
                     log.debug("log.debug (db entry): " + wm.toDB(), 2);
                     log.debug("Weapon Merchant", 2);
@@ -100,7 +101,7 @@ public class ObjectLoader {
                     objectDB.addNPC(wm);
                 }
                 else if (oFlags.equals("AMV")) {
-                    ArmorMerchant am = new ArmorMerchant(parent, oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), "An armor merchant.", "Merchant", "VEN", 161, new String[]{"1000", "1000", "1000", "1000"} );
+                    ArmorMerchant am = new ArmorMerchant(parent, oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), "An armor merchant.", "Merchant", "VEN", 161, Coins.fromArray(new int[] {1000, 1000, 1000, 1000}));
 
                     log.debug("log.debug (db entry): " + am.toDB(), 2);
                     log.debug("Armor Merchant", 2);
@@ -109,7 +110,7 @@ public class ObjectLoader {
                     objectDB.addNPC(am);
                 }
                 else if (oFlags.equals("IKV") ) {
-                    Innkeeper ik = new Innkeeper(parent, oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), oDesc, "Merchant", "VEN", oLocation, new String[]{"1000", "1000", "1000", "1000"} );
+                    Innkeeper ik = new Innkeeper(parent, oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), oDesc, "Merchant", "VEN", oLocation, Coins.fromArray(new int[] {1000, 1000, 1000, 1000}));
 
                     log.debug("log.debug (db entry): " + ik.toDB(), 2);
                     log.debug("Innkeeper", 2);
@@ -384,10 +385,10 @@ public class ObjectLoader {
 		debug("Location: " + oLocation);*/
 
 		Integer[] oStats = Utils.stringsToIntegers(os);
-		Integer[] oMoney = Utils.stringsToIntegers(om);
+		int[] oMoney = Utils.stringsToInts(om);
 
 
-        NPC npc = new NPC(oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), oDesc, oLocation, "", "IC", oStats, oMoney);
+        NPC npc = new NPC(oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), oDesc, oLocation, "", "IC", oStats, Coins.fromArray(oMoney));
 
 		// Set NPC Race
 		try {

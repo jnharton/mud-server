@@ -7,6 +7,7 @@ import java.util.EnumSet;
 import mud.ObjectFlag;
 import mud.Abilities;
 import mud.Classes;
+import mud.Coins;
 import mud.Currency;
 import mud.MUDServer;
 import mud.Races;
@@ -19,7 +20,8 @@ public class Innkeeper extends NPC implements Interactive, Vendor {
 	private MUDServer parent;
 	public ArrayList<Item> stock;
 
-	public Innkeeper(MUDServer mudServer, int tempDBRef, String tempName, final EnumSet<ObjectFlag> tempFlags, String tempDesc, String tempTitle, String tempPStatus, int tempLoc, String[] tempMoney) {
+	public Innkeeper(final MUDServer mudServer, final int tempDBRef, final String tempName, final EnumSet<ObjectFlag> tempFlags, 
+                    final String tempDesc, final String tempTitle, final String tempPStatus, final int tempLoc, final Coins tempMoney) {
 		super(tempDBRef, tempName, null, tempFlags, tempDesc, tempTitle, tempPStatus, tempLoc, tempMoney);
 
 		this.parent = mudServer;
@@ -92,16 +94,8 @@ public class Innkeeper extends NPC implements Interactive, Vendor {
 		parent.send("-----< Stock >--------------------", client);
 		for (Item item : this.stock) {
 			if (item instanceof Armor) {
-				Armor a = (Armor) item;
-				String cost = "";
-				int index = 0;
-				for (Integer i : a.getCost()) {
-					if (i > 0) {
-						cost += i + " " + Currency.fromInt(index).getAbbrev();
-					}
-					index++;
-				}
-				parent.send(parent.colors("+" + a.getMod() + " " + a.getName() + " " + a.getDesc() + " (" + a.armor.getWeight() + ") Cost: " + cost, "yellow"), client);
+				final Armor a = (Armor) item;
+				parent.send(parent.colors("+" + a.getMod() + " " + a.getName() + " " + a.getDesc() + " (" + a.armor.getWeight() + ") Cost: " + a.getCost(), "yellow"), client);
 			}
 			else {
 				parent.send("?", client);

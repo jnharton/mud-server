@@ -15,6 +15,7 @@ import mud.net.Client;
 import mud.ObjectFlag;
 import mud.Abilities;
 import mud.Classes;
+import mud.Coins;
 import mud.Editor;
 import mud.MUDObject;
 import mud.Point;
@@ -155,9 +156,9 @@ public class Player extends MUDObject
 	protected int totalmana;                // Total Mana
 	protected int speed;                    // Movement Speed (largely pointless without a coordinate system)
 	protected int capacity;                 // Carrying Capacity (pounds/lbs)
-	protected Integer level;                // Level
+	protected int level;                // Level
 	protected int xp;                       // Experience
-	protected Integer[] money;              // Money (D&D, MUD)
+	protected Coins money;              // Money (D&D, MUD)
 
 	protected SpellBook spells;             // spells [null if not a wizard]
 	public LinkedList<Spell> spellQueue;    // spell queue [null if not a wizard]
@@ -228,7 +229,7 @@ public class Player extends MUDObject
 	 */
 
 	public Player(final int tempDBREF, final String tempName, final EnumSet<ObjectFlag> tempFlags, final String tempDesc, final int tempLoc, 
-            final String tempTitle, final String tempPass, final String tempPStatus, final Integer[] tempStats, final Integer[] tempMoney)
+            final String tempTitle, final String tempPass, final String tempPStatus, final Integer[] tempStats, final Coins tempMoney)
 	{
 		// use the MUDObject constructor to handle some of the construction?
 		//super(tempDBREF, tempName, tempFlags, tempDesc, tempLoc);
@@ -474,32 +475,16 @@ public class Player extends MUDObject
 	 * 
 	 * @return
 	 */
-	public Integer[] getMoney() {
+	public Coins getMoney() {
 		return this.money;
-	}
-
-	public int getMoney(int index) {
-		return this.money[index];
 	}
 
 	// none of this handles player weight, etc
 	// if I want to control money by how much weight you can carry
 	// then I need to determine a standard weight for the money
 	// and calculate that, then decide if the player can hold it
-	public void setMoney(int type, int amount) {
-		this.money[type] += amount;
-	}
-	
-	public void setMoney(int[] money) {
-		for (int i = 0; i < 4; i++) {
-			setMoney(i, money[i]);
-		}
-	}
-	
-	public void setMoney(Integer[] money) {
-		for (int i = 0; i < 4; i++) {
-			setMoney(i, money[i]);
-		}
+	public void setMoney(final Coins c) {
+		this.money = c;
 	}
 
 	/**
@@ -507,14 +492,16 @@ public class Player extends MUDObject
 	 * 
 	 * @return
 	 */
-	public Integer getLevel() { return this.level; }
+	public int getLevel() {
+        return this.level;
+    }
 	
 	/**
 	 * Set the player's level to a new level.
 	 * 
 	 * @param changeLevel
 	 */
-	public void setLevel(Integer changeLevel) {
+	public void changeLevelBy(final int changeLevel) {
 		this.level += changeLevel;
 	}
 
@@ -861,7 +848,7 @@ public class Player extends MUDObject
 				"," + stats.get(Abilities.INTELLIGENCE) +
 				"," + stats.get(Abilities.WISDOM) +
 				"," + stats.get(Abilities.CHARISMA);
-		output[7] = "" + this.getMoney(0) + "," + this.getMoney(1) + "," + this.getMoney(2) + "," + this.getMoney(3); // player money
+		output[7] = getMoney().toString(false); // player money
 		output[8] = this.access + "";               // player permissions level
 		output[9] = race.getId() + "";              // player race
 		output[10] = pclass.getId() + "";           // player class

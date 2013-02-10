@@ -17,12 +17,10 @@ CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTH
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-import mud.Currency;
+import mud.Coins;
 
-public interface Banker extends Interactive {
-	public int[] withdraw(Currency currency, int amount);
-	
-	public int[] withdraw(int[] money);
-	
-	public void deposit(int[] money);
+public interface Banker extends Interactive
+{
+	public Coins withdraw(final Coins money);
+	public void deposit(final Coins money);
 }

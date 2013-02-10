@@ -243,7 +243,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 	private final String start_desc = "There is nothing to see."; // default desc string
 	private final Integer start_room = 9;                         // default starting room
 	private final Integer[] start_stats = { 0, 0, 0, 0, 0, 0 };   // default stats
-	private final Integer[] start_money = { 0, 0, 0, 0 };         // default money
 
 	// Objects (used throughout program in lieu of function scope variables) -- being phased out (April 2012
 	// these must be global variable, so that mud can have top-level control over them in the program
@@ -1978,7 +1977,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 					}
 					else if ( cmd.equals("levelup") ) {
 						if ( player.isLevelUp() ) {
-							player.setLevel(1);     // increase level
+							player.changeLevelBy(1);
 							send("You leveled up to level " + player.getLevel() + "!", client); 
 						}
 						else {
@@ -2012,7 +2011,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 					}
 					else if ( cmd.equals("money") || ( aliasExists && alias.equals("money") ) )
 					{
-						send("You have " + player.getMoney(0) + " copper pieces, " + player.getMoney(1) + " silver pieces, " + player.getMoney(2) + " gold pieces, and " + player.getMoney(3) + " platinum pieces.", client);
+						send("You have " + player.getMoney() + ".", client);
 					}
 					// call the motd function
 					else if ( cmd.equals("motd") || ( aliasExists && alias.equals("motd") ) )
@@ -2157,7 +2156,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 								System.out.println("INTERPRETED VALUE: " + changeLevel);
 								System.out.println("SIGN: " + Integer.signum(changeLevel));
 
-								player.setLevel(changeLevel);
+								player.changeLevelBy(changeLevel);
 								send("Game> Gave " + player.getName() + " " + changeLevel + " levels (levels).", client);
 							}
 							catch(NumberFormatException nfe) {
@@ -2633,8 +2632,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 				{
 					item = v.getItem(arg);
 
-					//if ( canAfford(player, item) ) {
-					if ( canAfford(player.getMoney(), item.getCost()) ) {
+					if ( player.getMoney().isMoreOrEqual(item.getCost()) ) {
 						item1 = v.buy(arg);
 						
 						player.setMoney(item1.getCost());
@@ -2908,14 +2906,14 @@ public class MUDServer implements MUDServerI, LoggerI {
 		// NOTE: my problem is related to guest not being findable somehow, all this needs a major revamp
 		if ((user.toLowerCase().equals("guest")) && (pass.toLowerCase().equals("guest"))) {
 			if (guest_users == 1) {
-				final Player player = new Player(-1, "Guest" + guests, EnumSet.of(ObjectFlag.PLAYER, ObjectFlag.GUEST), "A guest player.", WELCOME_ROOM, "", Utils.hash("password"), "OOC", new Integer[] { 0, 0, 0, 0, 0, 0 }, new Integer[] { 0, 0, 0, 0 });
+				final Player player = new Player(-1, "Guest" + guests, EnumSet.of(ObjectFlag.PLAYER, ObjectFlag.GUEST), "A guest player.", WELCOME_ROOM, "", Utils.hash("password"), "OOC", new Integer[] { 0, 0, 0, 0, 0, 0 }, Coins.copper(0));
                 objectDB.addAsNew(player);
 				init_conn(player, client, false);
 				guests++;
 			}
 		}
 		else if (user.toLowerCase().equals("new")) {
-			final Player player = new Player(-1, "randomName", startFlags.clone(), "New player.", WELCOME_ROOM, "", Utils.hash("randomPass"), "NEW", new Integer[] { 0, 0, 0, 0 }, new Integer[] { 0, 0, 0, 0, 0, 0 });
+			final Player player = new Player(-1, "randomName", startFlags.clone(), "New player.", WELCOME_ROOM, "", Utils.hash("randomPass"), "NEW", new Integer[] { 0, 0, 0, 0, 0, 0 }, Coins.copper(0));
             objectDB.addAsNew(player);
 			init_conn(player, client, false);
 		}
@@ -3069,7 +3067,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 		if (!objectDB.hasName(user) && validateName(user))
 		{
 			// create a new player object for the new playerm the "" is an empty title, which is not currently persisted
-			final Player player = new Player(-1, user, startFlags.clone(), start_desc, start_room, "", Utils.hash(pass), start_status, start_stats, start_money);
+			final Player player = new Player(-1, user, startFlags.clone(), start_desc, start_room, "", Utils.hash(pass), start_status, start_stats, Coins.copper(0));
 			objectDB.addAsNew(player);
 
             try {
@@ -4162,7 +4160,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 			}
 
 			send("Weight: " + calculateWeight(player) + "/" + player.getCapacity() + " lbs.", client);
-			send("You have " + player.getMoney(0) + " cp, " + player.getMoney(1) + " sp, " + player.getMoney(2) + " gp, and " + player.getMoney(3) + " pp.", client);
+			send("You have " + player.getMoney().toString() + ".", client);
 		}
 	}
 
@@ -5584,7 +5582,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 
 		send("You are " + player.getName() + " " + player.getTitle() + ", level " + player.getLevel(), client);
 		send("Race: " + player.getPlayerRace().getName() + " Sex: " + player.getGender().toString() + " Class: " + player.getPClass().getName(), client);
-		send("Money: " + player.getMoney(0) + " cp, " + player.getMoney(1) + " sp, " + player.getMoney(2) + " gp, and " + player.getMoney(3) + " pp.", client);
+		send("Money: " + player.getMoney().toString() + ".", client);
 	}
 
 	private void cmd_success(final String arg, final Client client) {
@@ -6027,7 +6025,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 
 				// [ level class ] name - specialty/prestige class - group/guild (race)
 				client.write(colors("[", "blue"));
-				client.write(player.getLevel().toString());
+				client.write(player.getLevel() + "");
 				client.write(' ');
 				client.write(colors(player.getPClass().getAbrv(), player.getPClass().getColor()));
 				client.write(colors("]", "blue"));
@@ -6138,39 +6136,15 @@ public class MUDServer implements MUDServerI, LoggerI {
 
 				for (final Item item : ((Vendor) player.getTarget()).list()) {
 					if (item instanceof Weapon) {
-						Weapon w = (Weapon) item;
-						String cost = "";
-						int index = 0;
-						for (Integer i : w.getCost()) {
-							if (i > 0) {
-								cost += i + " " + Currency.fromInt(index).getAbbrev();
-							}
-							index++;
-						}
-						send(colors("+" + w.getMod() + " " + w.weapon.getName() + " " + w.getDesc() + " (" + w.getWeight() + ") Cost: " + cost, "yellow"), client);
+						final Weapon w = (Weapon) item;
+						send(colors("+" + w.getMod() + " " + w.weapon.getName() + " " + w.getDesc() + " (" + w.getWeight() + ") Cost: " + w.getCost(), "yellow"), client);
 					}
 					else if (item instanceof Armor) {
-						Armor a = (Armor) item;
-						String cost = "";
-						int index = 0;
-						for (Integer i : a.getCost()) {
-							if (i > 0) {
-								cost += i + " " + Currency.fromInt(index).getAbbrev();
-							}
-							index++;
-						}
-						send(colors("+" + a.getMod() + " " + a.armor.getName() + " " + a.getDesc() + " (" + a.getWeight() + ") Cost: " + cost, "yellow"), client);
+						final Armor a = (Armor) item;
+						send(colors("+" + a.getMod() + " " + a.armor.getName() + " " + a.getDesc() + " (" + a.getWeight() + ") Cost: " + a.getCost(), "yellow"), client);
 					}
 					else {
-						String cost = "";
-						int index = 0;
-						for (Integer i : item.getCost()) {
-							if (i > 0) {
-								cost += i + " " + Currency.fromInt(index).getAbbrev();
-							}
-							index++;
-						}
-						send(colors(item.getName() + " " + item.getDesc() + " (" + item.getWeight() + ") Cost: " + cost, "yellow"), client);
+						send(colors(item.getName() + " " + item.getDesc() + " (" + item.getWeight() + ") Cost: " + item.getCost(), "yellow"), client);
 					}
 				}
 
@@ -8199,11 +8173,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 		// NOTE: I should probably add a mapping here somewhere that ties the player to their account, if they have one
 
 		if ( newCharacter ) { // if new, do some setup
-			// give money
-			player.setMoney(0, 0);  // copper
-			player.setMoney(1, 50); // silver
-			player.setMoney(2, 50); // gold
-			player.setMoney(3, 10); // platinum
+			player.setMoney(Coins.platinum(10).add(Coins.gold(50)).add(Coins.silver(50)));
 			
 			// give basic equipment (testing purposes)
 			final Armor armor = new Armor("Leather Armor", "A brand new set of leather armor, nice and smooth, but a bit stiff still.", -1, -1, 0, ArmorType.LEATHER, ItemType.ARMOR);
@@ -9003,10 +8973,11 @@ public class MUDServer implements MUDServerI, LoggerI {
 		// gold coin = 4.5g
 		// platinum coin = 4.5g
 		//send(gramsToOunces(4.5));
-		weight += ( player.getMoney(0) * ( 0.0625 ) );  // copper (1/16 oz./coin)
-		weight += ( player.getMoney(1) * ( 0.1250 ) );  // silver (1/8 oz./coin)
-		weight += ( player.getMoney(2) * ( 0.2500 ) );  // gold (1/4 oz./coin)
-		weight += ( player.getMoney(3) * ( 0.5000 ) );  // platinum (1/2 oz./coin)
+        final int[] coins = player.getMoney().toArray();
+		weight += coins[0] * ( 0.0625 );  // copper (1/16 oz./coin)
+		weight += coins[1] * ( 0.1250 );  // silver (1/8 oz./coin)
+		weight += coins[2] * ( 0.2500 );  // gold (1/4 oz./coin)
+		weight += coins[3] * ( 0.5000 );  // platinum (1/2 oz./coin)
 		return weight;
 	}
 
@@ -10067,64 +10038,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 		return "";
 	}
 
-	/* this really shouldn't handle actual costs, it should just tell us if we can afford it */
-	/**
-	 * Tell us if we, the player, can afford to purchase an item, based on it's
-	 * value and our money. This assumes only "cash" on hand.
-	 * 
-	 * NOTE: This only tells us if we can afford it
-	 * 
-	 * @param player the player who wished to purchase the item
-	 * @param item the item whose cost we are checking
-	 * @return true if can afford, else false
-	 */
-	public boolean canAfford(Player player, Item item) {
-		Integer[] cost = item.getCost();
-		int[] expense = new int[] { 0, 0, 0, 0 };
-
-		for (int i = 0; i < 4; i++) {
-			if (cost[i] > player.getMoney(i)) {
-				return false;
-			}
-			else if (cost[i] <= player.getMoney(i)) {
-				expense[i] -= cost[i];
-				System.out.println("Cost (" + i + "): " + expense[i]);
-			}
-		}
-		
-		return true;
-	}
-
-	/**
-	 * Tell us if we have the money to spend the cost of something or not.
-	 * This assumes only "cash" on hand.
-	 * 
-	 * NOTE: This only tells us if we can afford it
-	 * 
-	 * @param money the money we have on our person
-	 * @param cost  the cost of something
-	 * @return true if we can afford it, otherwise false
-	 */
-	public boolean canAfford(Integer[] money, Integer[] cost) {
-		int[] expense = new int[] { 0, 0, 0, 0 };
-
-		for (int i = 0; i < 4; i++) {
-			if (cost[i] > money[i]) {
-				return false;
-			}
-			else if (cost[i] <= money[i]) {
-				expense[i] = cost[i];
-				System.out.println("Cost (" + i + "): " + expense[i]);
-			}
-		}
-
-		for (int i = 0; i < 4; i++) {
-			money[i] -= expense[i];
-		}
-
-		return true;
-	}
-
 	/**
 	 * Evaluate a list via the program parser (parse_pgm)
 	 * 
@@ -10178,9 +10091,9 @@ public class MUDServer implements MUDServerI, LoggerI {
 		debug("Location: " + oLocation);*/
 
 		Integer[] oStats = Utils.stringsToIntegers(os);
-		Integer[] oMoney = Utils.stringsToIntegers(om);
+		int[] oMoney = Utils.stringsToInts(om);
 
-		final Player player = new Player(oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), oDesc, oLocation, "", oPassword, "IC", oStats, oMoney);
+		final Player player = new Player(oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), oDesc, oLocation, "", oPassword, "IC", oStats, Coins.fromArray(oMoney));
 
 		/* Set Player Permissions */
         player.setAccess(Utils.toInt(attr[8], USER));

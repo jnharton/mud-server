@@ -9,6 +9,7 @@ import java.util.EnumSet;
 import mud.ObjectFlag;
 import mud.Abilities;
 import mud.Classes;
+import mud.Coins;
 import mud.Editor;
 import mud.Races;
 import mud.Skill;
@@ -71,7 +72,7 @@ public class NPC extends Player
 	}*/
 
 	public NPC(final int tempDBRef, final String tempName, final String tempPass, final EnumSet<ObjectFlag> tempFlags, 
-            final String tempDesc, final String tempTitle, final String tempPStatus, final int tempLoc, final String[] tempMoney)
+            final String tempDesc, final String tempTitle, final String tempPStatus, final int tempLoc, final Coins tempMoney)
 	{
 		super(tempDBRef);
 		this.name = tempName;
@@ -81,11 +82,11 @@ public class NPC extends Player
 		this.status = tempPStatus;
 		this.title = tempTitle;
 		this.location = tempLoc;
-		this.money = Utils.stringsToIntegers(tempMoney);
+		this.money = tempMoney;
 	}
 	
 	public NPC(final int tempDBREF, final String tempName, final EnumSet<ObjectFlag> tempFlags, final String tempDesc, 
-            final int tempLoc, final String tempTitle, final String tempPStatus, final Integer[] tempStats, final Integer[] tempMoney)
+            final int tempLoc, final String tempTitle, final String tempPStatus, final Integer[] tempStats, final Coins tempMoney)
 	{
 		super(tempDBREF);
 		
