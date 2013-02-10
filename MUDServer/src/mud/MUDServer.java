@@ -7910,7 +7910,11 @@ public class MUDServer implements MUDServerI, LoggerI {
                 }
 				final HashMap<String, Reagent> tReagents = new HashMap<String, Reagent>();
 				for (final String reagentName : args[4].split(",")) {
-                    tReagents.put(reagentName, new Reagent(reagentName));
+                    try {
+                        tReagents.put(reagentName, new Reagent(reagentName));
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 }
 				spells2.put(tName, new Spell("Enchantment", tName, tCastMsg, tType, tEffects, tReagents));
 			}

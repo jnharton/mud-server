@@ -2,4 +2,4 @@ javac -Xlint:unchecked -cp .;classes;C:\Users\Owner\Desktop\junit4.11\junit-4.11
 
 REM java -cp classes;C:\Users\Owner\Desktop\junit4.11\junit-4.11.jar org.junit.runner.JUnitCore mud.net.ClientTest
 
-java -cp classes;C:\Users\Owner\Desktop\junit4.11\junit-4.11.jar mud.MUDServer 7777
+REM java -cp classes;C:\Users\Owner\Desktop\junit4.11\junit-4.11.jar mud.MUDServer 7777
