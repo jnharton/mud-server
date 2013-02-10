@@ -2123,7 +2123,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 									send("Game> No amount specified, no hitpoint (hp) change has been made.", client);
 								}
 								
-								checkState(player);
+								player.updateCurrentState();
 							}
 							catch(NumberFormatException nfe) {
 								nfe.printStackTrace();
@@ -2150,7 +2150,7 @@ public class MUDServer implements MUDServerI, LoggerI {
                                 send("Game> No amount specified, no mana (mana) change has been made.", client);
                             }
                             
-                            checkState(player);
+                            player.updateCurrentState();
 						}
 					}
 					else if ( cmd.equals("setlevel") ) {
@@ -3073,14 +3073,12 @@ public class MUDServer implements MUDServerI, LoggerI {
 			final Player player = new Player(-1, user, startFlags.clone(), start_desc, start_room, "", Utils.hash(pass), start_status, start_stats, start_money);
 			objectDB.addAsNew(player);
 
-            
             try {
                 new Mail(user, "Welcome", "Welcome to " + serverName).saveToFile(DATA_DIR + "mail\\mail-" + user + ".txt");
             } catch (Exception e) {
                 e.printStackTrace();
             }
 
-			// send the welcome message for a new player
 			send("Welcome to the Game, " + user + ", your password is: " + pass, client);
 			
 			// initiate the connection
@@ -5955,7 +5953,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 		client.write(" ");
 		
 		// refresh player state info
-		checkState(player);
+		player.updateCurrentState();
 
 		// indicate whether we're alive or not
 		switch( player.getState() ) {
@@ -8270,7 +8268,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 		//send(Colors.YELLOW + "Connected to " + name + " as " + player.getName() + Colors.WHITE, client);
 		send(colors("Connected to " + serverName + " as " + player.getName(), "yellow"), client);
 
-		/* load the player's mailbox */
         try {
             player.loadMail(DATA_DIR + "mail\\mail-" + player.getName() + "\\");
         } catch (Exception e) {
@@ -8282,11 +8279,14 @@ public class MUDServer implements MUDServerI, LoggerI {
 
 		int messages = player.getMailBox().numUnreadMessages();
 
-		if (messages == 0) { client.writeln("You have no unread messages."); }
-		else { client.writeln("You have " + String.valueOf(messages) + " unread messages."); }
+		if (messages == 0) {
+            client.writeln("You have no unread messages.");
+        }
+		else {
+            client.writeln("You have " + String.valueOf(messages) + " unread messages.");
+        }
 
-		/* load the player's inventory */
-
+		// load the player's inventory
 		ArrayList<Item> inventory = player.getInventory();
 
 		// go through objects array and put references to objects that are located in/on the player in their inventory
@@ -8316,7 +8316,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 		/* look at the current room */
 		final Room current = getRoom(client);   // determine the room they are in
 		look(current, client);                  // show the room
-		
 		current.addListener(player);
 	}
 
@@ -8395,19 +8394,12 @@ public class MUDServer implements MUDServerI, LoggerI {
             objectDB.set( player.getDBRef(), new NullObject( player.getDBRef() ) );  // replace db entry with NULLObjet
         }
         else {
-            // save mail
             send("Saving mail...", player.getClient());
             try {
                 player.saveMail(DATA_DIR + "mail\\mail-" + player.getName() + "\\");
             } catch (Exception e) {
                 e.printStackTrace();
             }
-
-            // export player data to pfile format
-            //exportToPFILE(client);
-
-            // run any disconnect properties specified by the player
-            //dProps(player);
         }
 
         synchronized(players) {
@@ -9865,7 +9857,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 				debug("Game> " + "added " + effect.getName() + " to " + player.getName() + ".");
 			}
 
-			checkState(player); // check and/or modify player state based on changes to player
+			player.updateCurrentState();
 
 			return true;
 		}
@@ -10656,48 +10648,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 		player.getInventory().remove(potion);    // remove from player inventory
 	}
 
-	/**
-	 * Handles player state based on health
-	 * @param player
-	 */
-	public void checkState(final Player player) {
-		final int hp = player.getHP();
-
-		/*
-		 * doesn't handle non-specific health thresholds well,
-		 * revise
-		 */
-
-		switch(player.getState()) {
-		case ALIVE:
-			if (hp <= -10) {
-                player.setState(Player.State.DEAD);
-            }
-			else if (hp <= 0) {
-                player.setState(Player.State.INCAPACITATED);
-            }
-			break;
-		case INCAPACITATED:
-			if ( hp > 0 ) {
-                player.setState(Player.State.ALIVE);
-            }
-			else if ( hp <= -10 ) {
-                player.setState(Player.State.DEAD);
-            }
-			break;
-		case DEAD: // only resurrection spells or divine intervention can bring you back from the dead
-			if ( hp > 0 ) {
-                player.setState(Player.State.ALIVE);
-            }
-			else if ( hp > -10) {
-                player.setState(Player.State.INCAPACITATED);
-            }
-			break;
-		default:
-			break;
-		}
-	}
-	
 	/**
 	 * Checks access/permissions level against the queried
 	 * access and returns true or false depending on whether they meet/exceed

@@ -752,6 +752,39 @@ public class Player extends MUDObject
 	public void setState(State newState) {
 		this.state = newState;
 	}
+    
+    public void updateCurrentState() {
+
+		final int hp = getHP();
+		switch(getState()) {
+            case ALIVE:
+                if (hp <= -10) {
+                    setState(State.DEAD);
+                }
+                else if (hp <= 0) {
+                    setState(State.INCAPACITATED);
+                }
+                break;
+            case INCAPACITATED:
+                if ( hp > 0 ) {
+                    setState(State.ALIVE);
+                }
+                else if ( hp <= -10 ) {
+                    setState(State.DEAD);
+                }
+                break;
+            case DEAD: // only resurrection spells or divine intervention can bring you back from the dead
+                if ( hp > 0 ) {
+                    setState(State.ALIVE);
+                }
+                else if ( hp > -10) {
+                    setState(State.INCAPACITATED);
+                }
+                break;
+            default:
+                break;
+		}
+	}
 
 	/**
 	 * Check to see if the player's is that specified.
