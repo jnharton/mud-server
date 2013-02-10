@@ -249,7 +249,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 	// these must be global variable, so that mud can have top-level control over them in the program
 	private Server s;                      // The server object
 	private Log log;                       // A log file to keep track of user actions
-	private Log connection;                // A log file to keep track of connection/disconnection
 	private Log debugLog;                  // A log file to keep track of debugging messages
 	private Log chatLog;                   // A log file to keep track of chat messages
 	private TimeLoop game_time;            // TimeLoop Object
@@ -283,40 +282,31 @@ public class MUDServer implements MUDServerI, LoggerI {
 	private HashMap<String, Date> holidays = new HashMap<String, Date>(10, 0.75f);               // HashMap that holds an in-game date for a "holiday" name string
 	private HashMap<Integer, String> years = new HashMap<Integer, String>(50, 0.75f);            // HashMap that holds year names for game themes that supply them (static)
 
-	private LinkedHashMap<Character, String> Flags = new LinkedHashMap<Character, String>(8, 0.75f); // HashMap that stores existing MUDObject flags (static)
-
 	/* not used much currently */
 	private LinkedHashMap<String, String> config = new LinkedHashMap<String, String>(11, 0.75f); // LinkedHashMap to track current config instead of using tons of individual integers?
 	//private HashTable<String, Boolean> config;
 
-	private HashMap<Zone, HashMap<Integer, Instance>> ztoi = new HashMap<Zone, HashMap<Integer, Instance>>(1, 0.75f); // HashMap to associate zones with list of their instances
-	private HashMap<Integer, Instance> instanceTable = new HashMap<Integer, Instance>(1, 0.75f);                      // instance numbers of a given zone/dungeon instance
 	private HashMap<Player, Session> sessionMap = new HashMap<Player, Session>(1, 0.75f);                             // player to session mapping
 
 	private int guests = 0;         // the number of guests currently connected
 
 	// Arrays
-	private String[] spells;        // string array of spell info
 	private String[] help;          // string array of help file filenames
-
-	// ArrayList(s)
 
 	// Databases/Data
     private ObjectDB objectDB = new ObjectDB();
-	
+
 	/*
 	 * I don't want to generate these on the fly and they need to stay 'in sync' so to speak.
 	 */
 	private ArrayList<Player> players;       // ArrayList of Player Objects currently in use
 
-	// Stuff
-	private ArrayList<Spell> spells1;         // ArrayList of Spell Objects (all loaded)
+	private HashMap<String, Spell> spells2 = new HashMap<String, Spell>();  // HashMap to lookup spells by index using name as key (static)
 	
     // Help Files stored as string arrays, indexed by name
 	private HashMap<String, String[]> helpMap = new HashMap<String, String[]>();
 
 	private ArrayList<Account> accounts;     // ArrayList of Accounts (UNUSED)
-	private ArrayList<Session> sessions;     // ArrayList of Session  (UNUSED)
 
 	// "Security" Stuff
 	private ArrayList<String> banlist;       // ArrayList of banned ip addresses
@@ -416,11 +406,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 	public Hashtable<Client, ArrayList<Character>> inputBuffers = new Hashtable<Client, ArrayList<Character>>(max_players);
 	
 	private int done = 0;
-
-	// Lookup/Cache Tables
-	private Hashtable<String, Integer> room_lookup = new Hashtable<String, Integer>(10, 0.75f);    //
-	private Hashtable<Integer, Integer> room_lookup2 = new Hashtable<Integer, Integer>(10, 0.75f); //
-	private HashMap<String, Integer> spells2 = new HashMap<String, Integer>(1, 0.75f);             // HashMap to lookup spells by index using name as key (static)
 
 	// static values
 	private static int USER = 0;   // limited permissions, no @commands at all
@@ -557,13 +542,11 @@ public class MUDServer implements MUDServerI, LoggerI {
 		if ( logging ) { // if logging is enabled, create a log object and open it
 			// instantiate log objects
 			this.log = new Log();                      // main log - character actions, etc
-			//this.connection = new Log("connection"); // connection log - connection errors, etc
 			this.debugLog = new Log("debug");          // debug log - any and all debugging
 			this.chatLog = new Log("chat");            // chat log - all chat messages
 
 			// open log files for writing
 			this.log.openLog();
-			//this.connection.openLog();
 			this.debugLog.openLog();
 			this.chatLog.openLog();
 
@@ -589,11 +572,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 		// initialize player array
 		this.players = new ArrayList<Player>(max_players);
 
-		// Initialize the spells array list (where Spell objects are stored)
-		this.spells1 = new ArrayList<Spell>();
-		// Initialize the sessions arraylist
-		this.sessions = new ArrayList<Session>();
-
 		System.out.println("ArrayList(s) Initialized!");
 		
 		// Load Databases/Persistent Data into memory
@@ -602,9 +580,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 		// using a buffered reader and loading objects as it goes? It would be really
 		// wise to implement configurable auto db-saving here
 		//
-
-		// Spell Files (spellDB)
-		this.spells = Utils.loadStrings(spellDB);
 
 		// error message hashmap loading
 		final String[] errors = Utils.loadStrings(errorDB);
@@ -618,8 +593,7 @@ public class MUDServer implements MUDServerI, LoggerI {
             }
 		}
 
-		// load spells
-		loadSpells(this.spells);
+		loadSpells(Utils.loadStrings(spellDB));
 		System.out.println("Spells Loaded!");
 
 		// Load everything from databases by flag
@@ -2219,7 +2193,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 						client.write("-----------------------------------------------------------------\n");
 						if ( arg.equals("#all") ) {
 							// list all the spells, by level?
-							for (final Spell spell : this.spells1) {
+							for (final Spell spell : this.spells2.values()) {
 								client.write(spell.school.toString() + " " + spell.toString() + "\n");
 							}
 						}
@@ -2728,8 +2702,12 @@ public class MUDServer implements MUDServerI, LoggerI {
 
 		Spell spell = null;
 
-		try { spell = spells1.get(spells2.get(args[0])); }
-		catch(NullPointerException npe) { npe.printStackTrace(); }
+		try {
+            spell = spells2.get(args[0]);
+        }
+		catch (NullPointerException npe) {
+            npe.printStackTrace();
+        }
 		//finally { spell = null; }
 
 		if (spell != null) {
@@ -3332,24 +3310,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 			send("Y: " + player.getYCoord(), client);
 			send("Moving: " + player.isMoving(), client);
 		}
-		else if (arg.equals("roomlcache") || arg.equals("rlc") ) {
-			/* indicate size of room lookup tables/caches */
-			send("Room Lookup Cache (table size): " + room_lookup.size(), client);
-			send("Room Lookup Cache 2 (table size): " + room_lookup2.size(), client);
-			
-			send("", client);
-			
-			/* show us the current contents of the room lookup tables/caches */
-			send("Table 1", client);
-			for (final String key : room_lookup.keySet()) {
-				send("\""+ key + "\" -> " + room_lookup.get(key), client);
-			}
-			send("Table 2", client);
-			for (final Integer key : room_lookup2.keySet()) {
-				send(key + " -> " + room_lookup2.get(key), client);
-			}
-
-		}
 		else if ( arg.equals("udbnstack") || arg.equals("unused") ) {
 			client.write("Stack: [ ");
 			/*for (int i = 0; i < unusedDBNs.size(); i++) {
@@ -3881,7 +3841,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 				}
 				else if (args[0].equals("here")) {
 					room.removeFlags(ObjectFlag.getFlagsFromString(args[1]));
-					send(room.getName() + " flagged " + Flags.get(args[1].charAt(0)), client);
+					send(room.getName() + " flagged " + ObjectFlag.fromLetter(args[1].charAt(0)), client);
 				}
 				else {
 				}
@@ -3890,11 +3850,11 @@ public class MUDServer implements MUDServerI, LoggerI {
 				send("Adding Flag(s)", client);
 				if (args[0].equals("me")) {
 					player.setFlags(ObjectFlag.getFlagsFromString(args[1]));
-					send(player.getName() + " flagged " + Flags.get(args[1].charAt(0)), client);
+					send(player.getName() + " flagged " + ObjectFlag.fromLetter(args[1].charAt(0)), client);
 				}
 				else if (args[0].equals("here")) {
 					room.setFlags(ObjectFlag.getFlagsFromString(args[1]));
-					send(room.getName() + " flagged " + Flags.get(args[1].charAt(0)), client);
+					send(room.getName() + " flagged " + ObjectFlag.fromLetter(args[1].charAt(0)), client);
 				}
 				else {
 				}
@@ -6541,7 +6501,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 				/* select takes a spell name as an argument
 				 * 
 				 */
-				getPlayer(client).spellQueue.push(spells1.get(spells2.get(sarg)));
+				getPlayer(client).spellQueue.push(spells2.get(sarg));
 			}
 			else if (scmd.equals("queue")) {
 				send("Queue", client);
@@ -7937,35 +7897,22 @@ public class MUDServer implements MUDServerI, LoggerI {
         return lines.size() < offset ? new ArrayList<String>() : lines.subList(offset, lines.size());
 	}
 
-	public void loadSpells(String[] temp) {
+	public void loadSpells(final String[] temp) {
 		try {
-			for (int s = 0; s < temp.length; s++) {
-				String spellInfo, tName, tCastMsg, tType;
-				String[] args, tEffectList, tReagentList;
-				ArrayList<Effect> tEffects;
-				HashMap<String, Reagent> tReagents;
-
-				spellInfo = temp[s];
-				args = spellInfo.split("#");
-				tName = args[0];
-				tCastMsg = args[1];
-				tType = args[2];
-				tEffectList = args[3].split(",");
-				tEffects = new ArrayList<Effect>();
-				tReagentList = args[4].split(",");
-				tReagents = new HashMap<String, Reagent>(1, 0.75f);
-
-				for (int e = 0; e < tEffectList.length; e++) {
-					tEffects.add(new Effect(tEffectList[e]));
-				}
-
-				for (int re = 0; re < tReagentList.length; re++) {
-					tReagents.put(tReagentList[re], new Reagent(tReagentList[re]));
-				}
-
-				Spell spell = new Spell("Enchantment", tName, tCastMsg, tType, tEffects, tReagents);
-				spells1.add(spell);
-				spells2.put(tName, spells1.size() - 1);
+            for (final String line : temp) {
+                final String[] args = line.split("#");
+				final String tName = args[0];
+				final String tCastMsg = args[1];
+				final String tType = args[2];
+                final ArrayList<Effect> tEffects = new ArrayList<Effect>();
+                for (final String s : args[3].split(",")) {
+                    tEffects.add(new Effect(s));
+                }
+				final HashMap<String, Reagent> tReagents = new HashMap<String, Reagent>();
+				for (final String reagentName : args[4].split(",")) {
+                    tReagents.put(reagentName, new Reagent(reagentName));
+                }
+				spells2.put(tName, new Spell("Enchantment", tName, tCastMsg, tType, tEffects, tReagents));
 			}
 		}
 		catch(NullPointerException npe) {
@@ -8259,7 +8206,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 		session.connect = time;
 
 		sessionMap.put(player, session);
-		sessions.add(session);
 
 		// tell the player that their connection was successful
 		debug("Connected!");
@@ -8384,9 +8330,6 @@ public class MUDServer implements MUDServerI, LoggerI {
         toRemove.disconnect = time;
 
         // store the session info on disk
-
-        // clear session
-        sessions.remove(toRemove);
 
         // if player is a guest
         if (player.getFlags().contains(ObjectFlag.GUEST)) {
@@ -8720,7 +8663,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 		if ( logging ) {
 			System.out.print("Closing logs... ");
 			log.closeLog();
-			//connection.closeLog();
 			debugLog.closeLog();
 			chatLog.closeLog();
 			
@@ -8924,7 +8866,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 		String holiday = "";
 
 		for (Map.Entry<String, Date> me : holidays.entrySet()) {
-			Date d = me.getValue();
+			final Date d = me.getValue();
 			if (d.getDay() == day && d.getMonth() == month) {
 				holiday = me.getKey();
 			}
@@ -9049,28 +8991,13 @@ public class MUDServer implements MUDServerI, LoggerI {
 	}
 	
 	/* Spells specific server methods */
-	
-	public ArrayList<Spell> getSpells() {
-		return spells1;
-	}
-	
 	/**
 	 * Get spell object given the name of the spell
 	 * 
 	 * @param name
 	 * @return
 	 */
-	public Spell getSpell(String name) {
-		return spells1.get( getSpellId(name) );
-	}
-
-	/**
-	 * Gets the integer index in the spell array where the spell with the supplied name resides.
-	 * 
-	 * @param name The name of the spell whose index for the spell object array you want. 
-	 * @return Integer The index of the spell in the list that is mapped to the supplied name.
-	 */
-	public Integer getSpellId(String name) {
+	public Spell getSpell(final String name) {
 		return spells2.get(name);
 	}
 

@@ -22,19 +22,12 @@ public class CastCommand extends Command {
 		Player player = null;
 		Spell spell = null;
 		Effect effect = null;
-		Integer spellId = null;
-		
+
 		player = parent.getPlayer(client);    // get a reference to the player object
-		
+
 		if (player.isCaster()) {
 			try {
 				debug("Argument: " + arg);
-				
-				spellId = parent.getSpellId(arg);        // get spell id based on name
-				debug("Spell Id: " + spellId);
-
-				spell = parent.getSpells().get(spellId); // get the spell based on id
-				debug("Spell Name: " + spell.name);
 
 				spell = parent.getSpell(arg);            // get the spell based on name
 				debug("Spell Name: " + spell.name);
@@ -87,11 +80,6 @@ public class CastCommand extends Command {
 		else {
 			send("What do you think you are anyway? Some kind of wizard? That's just mumbo-jumbo to you!", client);
 		}
-		
-		player = null;
-		spellId = null;
-		spell = null;
-		effect = null;
 	}
 
 	@Override
