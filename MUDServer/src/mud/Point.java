@@ -50,6 +50,23 @@ public class Point {
 	
 	public void incZ(int increment) { this.z += increment; }
 	
+	public boolean equals(Object object)
+	  {
+	    // if the two objects are equal in reference, they are equal
+	    if (this == object) { return true; }
+	    // if the object is a Point, it must have the same coordinates to be equal
+	    else if (object instanceof Point) {
+	      Point point = (Point) object;
+	      
+	      if( ( getX() == point.getX() ) && ( getY() == point.getY() ) && (getZ() == point.getZ() ) ) {
+	    	return true;  
+	      }
+	      else { return false; }
+	    }
+	    // if the object isn't a Point, then it can't be equal to it
+	    else { return false; }
+	  }
+	
 	public String toString() {
 		return "(" + x + "," + y + ")";
 	}

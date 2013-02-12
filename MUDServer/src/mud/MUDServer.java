@@ -8643,14 +8643,9 @@ public class MUDServer implements MUDServerI, LoggerI {
 				objectDB.addAsNew(sword);
 
 				armor.setLocation(player.getDBRef());
-				objectDB.addAsNew(armor);
-				objectDB.addAsNew(sword);
-				// TODO Fix this problem 
-				//addToDB(armor);
-				//addToDB(sword);
 
-				/*player.getInventory().add(armor);
-			player.getInventory().add(sword);*/
+				player.getInventory().add(armor);
+				player.getInventory().add(sword);
 			}
 
 			// get the time
