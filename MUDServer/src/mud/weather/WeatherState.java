@@ -12,7 +12,8 @@ package mud.weather;
  * @author Jeremy Harton
  *
  */
-public class WeatherState {
+public class WeatherState
+{
 	public String name;
 	public String description;               // description of the weather state
 	public String transDownText;

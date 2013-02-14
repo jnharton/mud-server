@@ -4,6 +4,7 @@ import java.util.BitSet;
 import java.util.EnumSet;
 
 import mud.ObjectFlag;
+import mud.Coins;
 
 import mud.MUDObject;
 import mud.SlotType;
@@ -13,13 +14,11 @@ public class Item extends MUDObject
 {
 	public boolean equippable = false; // is the item equippable?
 	public boolean equipped = false;   // is the item equipped?
-	
+
+    private Coins baseCost = Coins.gold(1);
 	public int drinkable = 0; // drinkable? (0 = no, 1 = yes)
-	
-	private Integer[] base_cost = new Integer[] { 0, 10, 0, 0}; // base cost to buy an item (simply a default value)
-	
 	protected double weight = 0;             // the weight in whatever units are used of the equippable object
-	
+
 	// original idea was a multiplying factor for weight when wet such as
 	// 1.0 - normal, 1.25 - damp, 1.50 - soaked, 2.00 - saturated, etc ("feels" x times as heavy)
 	public double reduction_factor = 1.0; // amount of weight reduction (none by default, so 100% == 1)
@@ -114,8 +113,8 @@ public class Item extends MUDObject
 		else { return this.name; }
 	}*/
 
-	public Integer[] getCost() {
-		return this.base_cost;
+	public Coins getCost() {
+		return baseCost;
 	}
 
 	public Double getWeight() {

@@ -145,21 +145,9 @@ public abstract class MUDObject {
         this.flags = tempFlags;
 	}
 
-	public void setFlags(final String str)
+	public void removeFlags(final EnumSet<ObjectFlag> tempFlags)
 	{
-        this.flags.clear();
-        for (final Character ch : str.toCharArray()) {
-            this.flags.add(ObjectFlag.fromLetter(ch));
-        }
-	}
-
-	public void removeFlags(final String str)
-	{
-        for (Character ch : str.toCharArray()) {
-            if (!ch.equals('!')) {
-                this.flags.remove(ObjectFlag.fromLetter(ch));
-            }
-        }
+        this.flags.removeAll(tempFlags);
 	}
 
 	/**

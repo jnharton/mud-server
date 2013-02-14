@@ -8,12 +8,16 @@ import java.util.List;
 import java.util.Set;
 import java.util.EnumSet;
 
+import java.io.File;
+
+import mud.net.Client;
+
 import mud.ObjectFlag;
 import mud.Abilities;
 import mud.Classes;
+import mud.Coins;
 import mud.Editor;
 import mud.MUDObject;
-import mud.MUDServer.State;
 import mud.Point;
 import mud.Races;
 import mud.Races.Subraces;
@@ -36,6 +40,7 @@ import mud.quest.TaskType;
 
 import mud.utils.EditList;
 import mud.utils.MailBox;
+import mud.utils.Mail;
 import mud.utils.Pager;
 import mud.utils.cgData;
 import mud.utils.Utils;
@@ -84,7 +89,8 @@ public class Player extends MUDObject
 	protected String status;                          // The player's status (MU)
 	protected String title;                           // The player's title (for where, MU)
 	protected ArrayList<String> names;                // names of other players that the player actually knows
-	private MailBox mailbox;                          // player mailbox
+
+    final private MailBox mailbox = new MailBox();    // player mailbox
 
 	protected int access = 0;                         // the player's access level (permissions) - 0=player,1=admin (default: 0)
 
@@ -150,14 +156,21 @@ public class Player extends MUDObject
 	protected int totalmana;                // Total Mana
 	protected int speed;                    // Movement Speed (largely pointless without a coordinate system)
 	protected int capacity;                 // Carrying Capacity (pounds/lbs)
-	protected Integer level;                // Level
+	protected int level;                // Level
 	protected int xp;                       // Experience
-	protected Integer[] money;              // Money (D&D, MUD)
+	protected Coins money;              // Money (D&D, MUD)
 
 	protected SpellBook spells;             // spells [null if not a wizard]
 	public LinkedList<Spell> spellQueue;    // spell queue [null if not a wizard]
 
-	protected State state = State.ALIVE;    // character's "state of health" (ALIVE, INCAPACITATED, DEAD)
+	/**
+	 * Player State
+	 * Alive - alive, INCAPACITATED - incapacitated (hp < 0 && hp > -10), DEAD (hp < -10)
+	 * @author Jeremy
+	 */
+    public static enum State { ALIVE, INCAPACITATED, DEAD };
+
+	private State state = State.ALIVE;    // character's "state of health" (ALIVE, INCAPACITATED, DEAD)
 
 	protected LinkedHashMap<Abilities, Integer> stats;             // Player Statistics (D&D, MUD)
 	protected LinkedHashMap<Skill, Integer> skills;                // Player Skills (D&D, MUD)
@@ -187,6 +200,8 @@ public class Player extends MUDObject
 	private String custom_prompt = "< %h/%H  %mv/%MV %m/%M >"; // ACCOUNT DATA?
 
 	private Pager pager = null; // a pager (ex. 'less' for linux), displays a page's/screen's worth of text at a time
+    
+    private Client client;
 
 	/**
 	 * No argument constructor for subclasses
@@ -197,7 +212,9 @@ public class Player extends MUDObject
 	 */
 	public Player() {}
 
-	public Player(int tempDBREF) { super(tempDBREF); }
+	public Player(int tempDBREF) {
+        super(tempDBREF);
+    }
 
 	/**
 	 * Object Loading Constructor
@@ -214,7 +231,7 @@ public class Player extends MUDObject
 	 */
 
 	public Player(final int tempDBREF, final String tempName, final EnumSet<ObjectFlag> tempFlags, final String tempDesc, final int tempLoc, 
-            final String tempTitle, final String tempPass, final String tempPStatus, final Integer[] tempStats, final Integer[] tempMoney)
+            final String tempTitle, final String tempPass, final String tempPStatus, final Integer[] tempStats, final Coins tempMoney)
 	{
 		// use the MUDObject constructor to handle some of the construction?
 		//super(tempDBREF, tempName, tempFlags, tempDesc, tempLoc);
@@ -310,9 +327,6 @@ public class Player extends MUDObject
 		// add an initial quest?
 		this.quests.add(new Quest("Test", "A basic quest for testing purposes", new Task("Obtain dominion jewel", TaskType.RETRIEVE)));
 
-		// instantiate mailbox
-		this.mailbox = new MailBox();
-
 		// instantiate list of known names (memory - names)
 		this.names = new ArrayList<String>(); // we get a new blank list this way, not a loaded state
 
@@ -321,6 +335,14 @@ public class Player extends MUDObject
 
 		// instantiate name reference table
 		this.nameRef = new HashMap<String, Integer>(10, 0.75f); // start out assuming 10 name references
+	}
+
+	public void setClient(final Client c) {
+		client = c;
+	}
+
+	public Client getClient() {
+		return client;
 	}
 
 	public void addName(String tName) {
@@ -336,21 +358,27 @@ public class Player extends MUDObject
 	 * 
 	 * @return integer representing a level of permissions
 	 */
-	public int getAccess() { return this.access; }
+	public int getAccess() {
+        return this.access;
+    }
 
 	/**
 	 * Set Access
 	 * 
 	 * @param newAccessLevel integer representing a level of permissions
 	 */
-	public void setAccess(int newAccessLevel) { this.access = newAccessLevel; }
+	public void setAccess(int newAccessLevel) {
+        this.access = newAccessLevel;
+    }
 
 	/**
 	 * Get Player Class
 	 * 
 	 * @return a Classes object that represents the player's character class
 	 */
-	public Classes getPClass() { return this.pclass; }
+	public Classes getPClass() {
+        return this.pclass;
+    }
 
 	/**
 	 * Set Player Class
@@ -455,32 +483,16 @@ public class Player extends MUDObject
 	 * 
 	 * @return
 	 */
-	public Integer[] getMoney() {
+	public Coins getMoney() {
 		return this.money;
-	}
-
-	public int getMoney(int index) {
-		return this.money[index];
 	}
 
 	// none of this handles player weight, etc
 	// if I want to control money by how much weight you can carry
 	// then I need to determine a standard weight for the money
 	// and calculate that, then decide if the player can hold it
-	public void setMoney(int type, int amount) {
-		this.money[type] += amount;
-	}
-	
-	public void setMoney(int[] money) {
-		for (int i = 0; i < 4; i++) {
-			setMoney(i, money[i]);
-		}
-	}
-	
-	public void setMoney(Integer[] money) {
-		for (int i = 0; i < 4; i++) {
-			setMoney(i, money[i]);
-		}
+	public void setMoney(final Coins c) {
+		this.money = c;
 	}
 
 	/**
@@ -488,14 +500,16 @@ public class Player extends MUDObject
 	 * 
 	 * @return
 	 */
-	public Integer getLevel() { return this.level; }
+	public int getLevel() {
+        return this.level;
+    }
 	
 	/**
 	 * Set the player's level to a new level.
 	 * 
 	 * @param changeLevel
 	 */
-	public void setLevel(Integer changeLevel) {
+	public void changeLevelBy(final int changeLevel) {
 		this.level += changeLevel;
 	}
 
@@ -737,6 +751,39 @@ public class Player extends MUDObject
 	public void setState(State newState) {
 		this.state = newState;
 	}
+    
+    public void updateCurrentState() {
+
+		final int hp = getHP();
+		switch(getState()) {
+            case ALIVE:
+                if (hp <= -10) {
+                    setState(State.DEAD);
+                }
+                else if (hp <= 0) {
+                    setState(State.INCAPACITATED);
+                }
+                break;
+            case INCAPACITATED:
+                if ( hp > 0 ) {
+                    setState(State.ALIVE);
+                }
+                else if ( hp <= -10 ) {
+                    setState(State.DEAD);
+                }
+                break;
+            case DEAD: // only resurrection spells or divine intervention can bring you back from the dead
+                if ( hp > 0 ) {
+                    setState(State.ALIVE);
+                }
+                else if ( hp > -10) {
+                    setState(State.INCAPACITATED);
+                }
+                break;
+            default:
+                break;
+		}
+	}
 
 	/**
 	 * Check to see if the player's is that specified.
@@ -780,7 +827,21 @@ public class Player extends MUDObject
 			return false;
 		}
 	}
-	
+
+    public void loadMail(final String filename) throws Exception {
+        for (final File f : new File(filename).listFiles()) {
+            mailbox.add(new Mail(f));
+        }
+	}
+
+	public void saveMail(final String filename) throws Exception {
+        int i = 0;
+        for (final Mail m : mailbox) {
+            m.saveToFile(filename + "\\" + i + ".txt");
+            i += 1;
+        }
+	}
+
 	/**
 	 * Translate the persistent aspects of the player into the string
 	 * format used by the database
@@ -799,7 +860,7 @@ public class Player extends MUDObject
 				"," + stats.get(Abilities.INTELLIGENCE) +
 				"," + stats.get(Abilities.WISDOM) +
 				"," + stats.get(Abilities.CHARISMA);
-		output[7] = "" + this.getMoney(0) + "," + this.getMoney(1) + "," + this.getMoney(2) + "," + this.getMoney(3); // player money
+		output[7] = getMoney().toString(false); // player money
 		output[8] = this.access + "";        // player permissions level
 		output[9] = race.getId() + "";       // player race
 		output[10] = pclass.getId() + "";    // player class

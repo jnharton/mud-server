@@ -13,94 +13,64 @@ import mud.utils.Message;
 
 public class CastCommand extends Command {
 	
-	public CastCommand(MUDServer mParent) {
+	public CastCommand(final MUDServer mParent) {
 		super(mParent);
 	}
 	
 	@Override
-	public void execute(String arg, Client client) {
-		Player player = null;
-		Spell spell = null;
-		Effect effect = null;
-		Integer spellId = null;
-		
-		player = parent.getPlayer(client);    // get a reference to the player object
-		
-		if (player.isCaster()) {
-			try {
-				debug("Argument: " + arg);
-				
-				spellId = parent.getSpellId(arg);        // get spell id based on name
-				debug("Spell Id: " + spellId);
+	public void execute(final String spellName, final Client client) {
 
-				spell = parent.getSpells().get(spellId); // get the spell based on id
-				debug("Spell Name: " + spell.name);
+        final Player player = parent.getPlayer(client);
+		if (!player.isCaster()) {
+			send("What do you think you are anyway? Some kind of wizard? That's just mumbo-jumbo to you!", client);
+            return;
+		}
 
-				spell = parent.getSpell(arg);            // get the spell based on name
-				debug("Spell Name: " + spell.name);
-			}
-			catch(NullPointerException npe) {
-				npe.printStackTrace();
-				debug("Game> Spell Casting Malfunction.");
-			}
+		final Spell spell = parent.getSpell(spellName);
 
-			if (spell != null) {
-				// level check
-				if ( player.getLevel() < spell.getLevel() ) {
-					// reagents check
-					if ( 1 == 1 ) { // !reagents
+        if (spell == null) {
+            send("You move your fingers and mumble, but nothing happens. Must have been the wrong words.", client);
+            debug("CastCommand spellName: " + spellName);
+            return;
+        }
 
-						// target check, if no target then auto-target self, etc, dependent on spell
-						if (player.getTarget() == null) {
-							player.setTarget(player); // auto-target to self
-						}
-						else {
-							// get target
-							MUDObject target = player.getTarget();
+        // shoudl this be reversed???
+        if (player.getLevel() < spell.getLevel()) {
+            // add reagents check!
 
-							// reduce mana (placeholder), really needs to check the spell's actual cost
-							player.setMana(-spell.getManaCost());
+            // target check, if no target then auto-target self, etc, dependent on spell
+            if (player.getTarget() == null) {
+                player.setTarget(player); // auto-target to self
+            }
 
-							// cast spell
-							send(spell.castMsg.replace("&target", player.getTarget().getName()), client); // send cast msg
+            final MUDObject target = player.getTarget();
 
-							// if our target is a player tell them otherwise don't bother
-							if (target instanceof Player) {
-								Message message1 = new Message(player, player.getName() + " cast " + spell.name + " on you." , (Player) target);
-								parent.addMessage(message1);
-							}
+            // reduce mana (placeholder), really needs to check the spell's actual cost
+            player.setMana(-spell.getManaCost());
 
-							// apply effects
-							for (int e = 0; e < spell.effects.size(); e++) {
-								effect = spell.effects.get(e);
-								
+            // cast spell
+            send(spell.castMsg.replace("&target", player.getTarget().getName()), client);
+
+            // if our target is a player tell them otherwise don't bother
+            if (target instanceof Player) {
+                parent.addMessage(new Message(player, player.getName() + " cast " + spell.name + " on you." , (Player) target));
+            }
+
+            // apply effects to the target
+            for (final Effect e : spell.effects) {
+                parent.applyEffect(target, e);
 								if(target instanceof Player) {
 									parent.applyEffect((Player) target, effect); // apply the effect to the target
 								}
 								else {
-									parent.applyEffect(target, effect); // apply the effect to the target
 								}
-							}	
-						}
-					}
-				}
-			}
-			else {
-				send("You move your fingers and mumble, but nothing happens. Must have been the wrong words.", client);
-			}
-		}
-		else {
-			send("What do you think you are anyway? Some kind of wizard? That's just mumbo-jumbo to you!", client);
-		}
-		
-		player = null;
-		spellId = null;
-		spell = null;
-		effect = null;
+            }	
+        }
 	}
 
 	@Override
 	public int getAccessLevel() {
 		return USER;
 	}
+
 }

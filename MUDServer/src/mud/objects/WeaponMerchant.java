@@ -7,6 +7,7 @@ import java.util.EnumSet;
 import mud.ObjectFlag;
 import mud.Abilities;
 import mud.Classes;
+import mud.Coins;
 import mud.Currency;
 import mud.MUDServer;
 import mud.Races;
@@ -26,7 +27,7 @@ public class WeaponMerchant extends NPC implements Interactive, Vendor {
 	public ArrayList<Item> stock = new ArrayList<Item>();
 
 	public WeaponMerchant(final MUDServer mudServer, final int tempDBRef, final String tempName, final EnumSet<ObjectFlag> tempFlags, 
-            final String tempDesc, final String tempTitle, final String tempPStatus, final int tempLoc, final String[] tempMoney) {
+            final String tempDesc, final String tempTitle, final String tempPStatus, final int tempLoc, final Coins tempMoney) {
 
         super(tempDBRef, tempName, null, tempFlags, tempDesc, tempTitle, tempPStatus, tempLoc, tempMoney);
 
@@ -51,16 +52,8 @@ public class WeaponMerchant extends NPC implements Interactive, Vendor {
 		parent.send("-----< Stock >--------------------", client);
 		for (final Item item : this.stock) {
 			if (item instanceof Weapon) {
-				Weapon w = (Weapon) item;
-				String cost = "";
-				int index = 0;
-				for (Integer i : w.getCost()) {
-					if (i > 0) {
-						cost += i + " " + Currency.fromInt(index).getAbbrev();
-					}
-					index++;
-				}
-				parent.send(parent.colors("+" + w.getMod() + " " + w.weapon.getName() + " " + w.getDesc() + " (" + w.getWeight() + ") Cost: " + cost, "yellow"), client);
+				final Weapon w = (Weapon) item;
+				parent.send(parent.colors("+" + w.getMod() + " " + w.weapon.getName() + " " + w.getDesc() + " (" + w.getWeight() + ") Cost: " + w.getCost(), "yellow"), client);
 			}
 			else {
 				parent.send("?", client);

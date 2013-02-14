@@ -1,4 +1,4 @@
-package mud.magic;
+package mud.objects;
 
 /*
 Copyright (c) 2012 Jeremy N. Harton
@@ -17,38 +17,10 @@ CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTH
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-public class Reagent
+import mud.Coins;
+
+public interface BankerI extends InteractiveI
 {
-	private String name;
-
-	public Reagent(final String tName) throws Exception {
-        if (tName == "" || "".equals(tName)) {
-            throw new Exception("Bad reagent name [" + tName + "].");
-        }
-		this.name = tName;
-	}
-
-	public void setName(final String tName) {
-		this.name = tName;
-	}
-
-	public String getName() {
-		return this.name;
-	}
-
-    @Override
-	public String toString() {
-		return this.name;
-	}
-
-    @Override
-	public boolean equals(Object obj) {
-		return obj instanceof Reagent && ((Reagent) obj).name.equals(name);
-	}
-
-    @Override
-	public int hashCode() {
-		return name.hashCode();
-	}
-
+	public Coins withdraw(final Coins money);
+	public void deposit(final Coins money);
 }

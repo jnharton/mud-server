@@ -24,7 +24,8 @@ package mud;
  * @author Jeremy
  *
  */
-public enum Seasons {
+public enum Seasons
+{
 	SPRING("Spring", 3, 6),
 	SUMMER("Summer", 6, 9),
 	AUTUMN("Autumn", 9, 12),
@@ -47,4 +48,13 @@ public enum Seasons {
 	public String toString() {
 		return this.name;
 	}
+    
+    static public Seasons fromStringLower(final String str) {
+        if ( str.equals("spring") ) {       return SPRING; }
+        else if ( str.equals("summer") ) {  return SUMMER; }
+        else if ( str.equals("autumn") ) {  return AUTUMN; }
+        else if ( str.equals("winter") ) {  return WINTER; }
+        else return null;
+    }
+
 }

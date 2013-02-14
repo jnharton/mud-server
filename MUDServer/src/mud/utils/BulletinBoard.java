@@ -130,4 +130,5 @@ public class BulletinBoard {
 	public void ensureCapacity(int capacity) {
 		this.entries.ensureCapacity(capacity);
 	}
+
 }

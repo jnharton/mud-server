@@ -38,8 +38,7 @@ public class Slot {
 	private ItemType itemType;         // the type of item the slot can hold
 	private ClothingType clothingType; // the type of clothing item the slot can hold
 	private Item item;                 // the item the slot currently holds
-	private boolean full;              // the not full/full state of the slot
-	
+
 	/**
 	 * Constructs a slot based on a single parameter, an
 	 * item type that it can hold.
@@ -47,10 +46,10 @@ public class Slot {
 	 * @param slotType
 	 * @param itemType
 	 */
-	public Slot(SlotType slotType, ItemType itemType) {
+	public Slot(final SlotType slotType, final ItemType itemType) {
 		this(slotType, itemType, null);
 	}
-	
+
 	/**
 	 * Constructs a slot based on two parameters: the
 	 * item type it can hold and an item to place in the
@@ -60,17 +59,15 @@ public class Slot {
 	 * @param itemType
 	 * @param item
 	 */
-	public Slot(SlotType slotType, ItemType itemType, Item item) {
+	public Slot(final SlotType slotType, final ItemType itemType, final Item item) {
 		this.slotType = slotType;
 		this.itemType = itemType;
 		
 		if (item != null) { // ensure that putting null in doesn't register as full
 			this.item = item;
-			this.full = true;
 		}
 		else {
 			this.item = null;
-			this.full = false;
 		}
 	}
 	
@@ -81,7 +78,7 @@ public class Slot {
 	 * @param slotType
 	 * @param clothingType
 	 */
-	public Slot(SlotType slotType, ClothingType clothingType) {
+	public Slot(final SlotType slotType, final ClothingType clothingType) {
 		this(slotType, clothingType, null);
 	}
 	
@@ -94,18 +91,16 @@ public class Slot {
 	 * @param clothingType
 	 * @param clothing
 	 */
-	public Slot(SlotType slotType, ClothingType clothingType, Clothing clothing) {
+	public Slot(final SlotType slotType, final ClothingType clothingType, final Clothing clothing) {
 		this.slotType = slotType;
 		this.itemType = ItemType.CLOTHING;
 		this.clothingType = clothingType;
 		
 		if (clothing != null) { // ensure that putting null in doesn't register as full
 			this.item = clothing;
-			this.full = true;
 		}
 		else {
 			this.item = null;
-			this.full = false;
 		}
 	}
 	
@@ -125,9 +120,8 @@ public class Slot {
 	 * 
 	 * @param item
 	 */
-	public void insert(Item item) {
+	public void insert(final Item item) {
 		this.item = item;
-		this.full = true;
 	}
 	
 	/**
@@ -137,9 +131,8 @@ public class Slot {
 	 * @return item the item that was in the slot
 	 */
 	public Item remove() {
-		Item item = this.item;
+		final Item item = this.item;
 		this.item = null;
-		this.full = false;
 		return item;
 	}
 	
@@ -157,7 +150,7 @@ public class Slot {
 	 * 
 	 * @param newDescription new descriptive text for this slot
 	 */
-	public void setDescription(String newDescription) {
+	public void setDescription(final String newDescription) {
 		this.description = newDescription;
 	}
 	
@@ -186,7 +179,7 @@ public class Slot {
 	 * @param tType the type to check against
 	 * @return a boolean indicative of whether this slot is of that type
 	 */
-	public boolean isType(ItemType iType) {
+	public boolean isType(final ItemType iType) {
 		return this.itemType.equals(iType);
 	}
 	
@@ -199,12 +192,7 @@ public class Slot {
 	 * @return a boolean representing whether the slot is empty or not empty
 	 */
 	public boolean isEmpty() {
-		if ( this.full ) {
-			return false;
-		}
-		else {
-			return true;
-		}
+		return this.item == null;
 	}
 	
 	/**
@@ -213,10 +201,11 @@ public class Slot {
 	 * @return a boolean representing whether the slot is full or not full.
 	 */
 	public boolean isFull() {
-		return this.full;
+		return !isEmpty();
 	}
 	
 	public String toString() {
 		return "no string representation";
 	}
+
 }

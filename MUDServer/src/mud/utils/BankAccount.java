@@ -62,7 +62,6 @@ public class BankAccount {
 				this.money[i] = newMoney[i];
 			}
 		}
-		else { this.money = new int[] { 0, 0, 0, 0 }; }
 	}
 	
 	/**

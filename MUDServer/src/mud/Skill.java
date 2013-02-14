@@ -20,15 +20,14 @@ package mud;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-
 /* Class Array hold classes for whom the skill is a class skill */
-public class Skill {
-	
+public class Skill
+{
 	private String name;       // name of the skill (string)
 	private int id;            // id of the skills (unique integer)
 	private String ability;    // ability that modifies the skill (string)
-	private String skillMod;  //
-	private Classes[] classes; //
+	private String skillMod;
+	private Classes[] classes;
 	
 	/**
 	 * Class Constructor for Skills
@@ -38,11 +37,8 @@ public class Skill {
 	 * @param ability
 	 * @param classes
 	 */
-	public Skill(String name, int id, String ability, Classes[] classes) {
-		this.name = name;
-		this.ability = ability;
-		this.skillMod = null;
-		this.classes = classes;
+	public Skill(final String name, final int id, final String ability, final Classes[] classes) {
+        this(name, id, ability, null, classes);
 	}
 	
 	/**
@@ -54,8 +50,9 @@ public class Skill {
 	 * @param skill_spec
 	 * @param classes
 	 */
-	public Skill(String name, int id, String ability, String skillMod, Classes[] classes) {
+	public Skill(final String name, final int id, final String ability, final String skillMod, final Classes[] classes) {
 		this.name = name;
+		this.id = id;
 		this.ability = ability;
 		this.skillMod = skillMod;
 		this.classes = classes;
@@ -84,7 +81,7 @@ public class Skill {
 		}
 	}*/
 	
-	public int getSkillId(Skill s) {
+	public int getSkillId(final Skill s) {
 		return s.id;
 	}
 	
@@ -100,4 +97,5 @@ public class Skill {
 		//return this.name + " " + Arrays.asList(this.classes);
 		return this.name;
 	}
+
 }

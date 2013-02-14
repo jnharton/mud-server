@@ -18,6 +18,7 @@ package mud;
 */
 
 import mud.net.Client;
+import mud.objects.Player;
 
 /**
  * Class to hold a command and it's state of processing. Used
@@ -29,6 +30,7 @@ import mud.net.Client;
 public class CMD {
 	Status status;
 	private String cmdString;
+	private Player player;
 	private Client client;
 	
 	public enum Status {
@@ -49,14 +51,15 @@ public class CMD {
 
 	private int perm = 0;
 
-	public CMD(String string, Client client) {
+	public CMD(final String string, final Player player, final Client client) {
 		this.status = Status.WAITING;
 		this.cmdString = string;
-		this.client = client;
+		this.player = player;
+        this.client = client;
 	}
 
-	public CMD(String string, Client client, int permission) {
-		this(string, client);
+	public CMD(final String string, final Player player, final Client client, final int permission) {
+		this(string, player, client);
 		this.perm = permission;
 	}
 
@@ -66,6 +69,10 @@ public class CMD {
 
 	public Client getClient() {
 		return this.client;
+	}
+
+	public Player getPlayer() {
+		return this.player;
 	}
 
 	public int getPermissions() {

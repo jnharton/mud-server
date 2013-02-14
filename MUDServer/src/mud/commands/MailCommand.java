@@ -23,9 +23,9 @@ public class MailCommand extends Command {
 	@Override
 	public void execute(String arg, Client client) {
 		
-		Player player = parent.getPlayer(client);
+		final Player player = parent.getPlayer(client);
 		
-		String[] args = arg.split(" ");
+		final String[] args = arg.split(" ");
 		
 		if (!arg.equals("")) {
 			if (args[0].equals("#delete")) {
@@ -41,10 +41,11 @@ public class MailCommand extends Command {
 				client.write("+--------------------------------------------------------------------+\n");
 				client.write("| Mailbox                                                            |\n");
 				client.write("+--------------------------------------------------------------------+\n");
-				
+
+                int i = 0;
 				for (final Mail mail : player.getMailBox()) {
 					client.write("| ");
-					client.write(Utils.padLeft(mail.getId().toString(), 5).substring(0, 5));
+					client.write(Utils.padLeft(i + "", 5).substring(0, 5));
 					client.write(" ");
 					client.write(Utils.padRight(mail.getSubject(), shortSUB).substring(0, shortSUB));
 					client.write(" ");
@@ -89,12 +90,12 @@ public class MailCommand extends Command {
 			else {
 				final int msg = Utils.toInt(args[0], -1);
 
-				if (msg > -1 && msg < player.getMailBox().numMessages()) {
+				if (msg > -1 && msg < player.getMailBox().size()) {
 					client.write("Checking Mail..." + msg + "\n");
 					
 					Mail mail = player.getMailBox().get(msg);
 
-					client.write("Message #: " + mail.getId() + "\n");
+					client.write("Message #: " + msg + "\n");
 					client.write("To: " + mail.getRecipient() + "\n");
 					client.write("Subject: " + mail.getSubject() + "\n");
 					client.write(mail.getMessage() + "\n");

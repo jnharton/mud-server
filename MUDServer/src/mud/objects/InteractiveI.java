@@ -1,4 +1,4 @@
-package mud.magic;
+package mud.objects;
 
 /*
 Copyright (c) 2012 Jeremy N. Harton
@@ -17,38 +17,16 @@ CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTH
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-public class Reagent
+import mud.net.Client;
+
+/**
+ * Defines a interface for npcs, etc that can be interacted with
+ * 
+ * @author Jeremy
+ *
+ */
+public interface InteractiveI
 {
-	private String name;
-
-	public Reagent(final String tName) throws Exception {
-        if (tName == "" || "".equals(tName)) {
-            throw new Exception("Bad reagent name [" + tName + "].");
-        }
-		this.name = tName;
-	}
-
-	public void setName(final String tName) {
-		this.name = tName;
-	}
-
-	public String getName() {
-		return this.name;
-	}
-
-    @Override
-	public String toString() {
-		return this.name;
-	}
-
-    @Override
-	public boolean equals(Object obj) {
-		return obj instanceof Reagent && ((Reagent) obj).name.equals(name);
-	}
-
-    @Override
-	public int hashCode() {
-		return name.hashCode();
-	}
-
+	public abstract void interact(Client client);
+	//public abstract void say(String message, String playerName);
 }

@@ -50,18 +50,17 @@ import mud.objects.Thing;
  * @author Jeremy
  *
  */
+ 
+ public class House
+{
+	final public HashMap<Thing, Point> things = new HashMap<Thing, Point>();
+	final public HashMap<Item,  Point> items  = new HashMap<Item,  Point>();
+	final public ArrayList<Room> rooms = new ArrayList<Room>();
 
-public class House {
 	private Player owner;
 	private int max_rooms;
-	public ArrayList<Room> rooms;
-	public HouseSize house_size;
-	public Integer size;
-	
-	public HashMap<Thing, Point> things;
-	
-	public HashMap<Item, Point> items;
-	
+	public HouseSize houseSize;
+
 	/*
 	 * want to include configurable permissions for the rooms belonging to the house in here,
 	 * especially controlling who can set stuff down, pick stuff up, etc Where stuff goes if dropped without
@@ -73,66 +72,52 @@ public class House {
 	 * # I really, really need a way for rooms to know what Zone, House, etc they belong to,
 	 * that can be fit in the database wihout too much trouble
 	 */
-	
+
 	enum HouseSize {
 		SMALL(1),
 		MEDIUM(2),
 		LARGE(3),
 		CUSTOM(-1);
-		
-		private int size;
-		
-		private HouseSize() {
-		}
-		
+
+		final public int size;
+
 		private HouseSize(int tSize) {
 			this.size = tSize;
 		}
-		
-		public int getSize() {
-			return this.size;
-		}
-		
+
 		public int getMaxRooms() {
 			// rooms have 5 rooms per size grade
 			// size 1, rooms 5
 			// size 2, rooms 10
 			// size 3  rooms 15
-			if (size != -1) {
-				return 5 * size;
-			}
-			else {
-				return size;
-			}
+			return size == -1 ? -1 : 5 * size;
 		}
 	};
-	
-	House(HouseSize hSize) {
-		this.owner = null;
-		this.house_size = hSize;
-		this.size = this.house_size.getSize();
-		this.max_rooms = this.house_size.getMaxRooms();
-		this.rooms = new ArrayList<Room>();
+
+	public House(final HouseSize size) {
+        this(null, size);
 	}
-	
-	House(Player hOwner, HouseSize hSize) {
-		this.owner = hOwner;
-		this.house_size = hSize;
-		this.size = this.house_size.getSize();
-		this.max_rooms = this.house_size.getMaxRooms();
-		this.rooms = new ArrayList<Room>();
+
+	public House(final Player owner, final HouseSize hSize) {
+		this.owner = owner;
+		this.houseSize = hSize;
+		this.max_rooms = this.houseSize.getMaxRooms();
 	}
-	
-	House(Player hOwner, int hMax_Rooms) {
-		this.owner = hOwner;
-		this.max_rooms = hMax_Rooms;
+
+	public House(final Player owner, final int maxRooms) {
+		this.owner = owner;
+		this.max_rooms = maxRooms;
 	}
-	
+
+    public int getSize() {
+        return houseSize.size;
+    }
+
 	public String[] getInfo() {
 		String[] info = new String[4];
 		info[0] = "House";
 		info[1] = "Owner: " + this.owner.getName();
-		info[2] = "Size: " + this.size.toString() + "(" + this.size + ")";
+		info[2] = "Size: " + getSize();
 		info[3] = "Max Rooms: " + this.max_rooms;
 		return info;
 	}
@@ -140,4 +125,5 @@ public class House {
 	// Owner: Nathan
 	// Size: Small (1)
 	// Max. Rooms: 5
+
 }
