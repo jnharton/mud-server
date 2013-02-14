@@ -370,7 +370,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 	// Time & Date - General Variables
 	private final static String[] suffix = { "st", "nd", "rd", "th" }; // day number suffix
 
-	private int day = 30, month = 12, year = 1367;
+	private int day = 2, month = 8, year = 1372;
 
 	private int game_hour = 5;    // 5am
 	private int game_minute = 58; // 55m past 5am
@@ -379,8 +379,8 @@ public class MUDServer implements MUDServerI, LoggerI {
 	private String theme = THEME_DIR + "forgotten_realms.txt";                     // theme file to load
 
 	public static int[] DAYS = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 }; // days in each month
-	public static int months = 12;                                                 // months in a year
-	public static String[] month_names = new String[months];                       // month_names
+	public static int MONTHS = 12;                                                 // months in a year
+	public static String[] MONTH_NAMES = new String[MONTHS];                       // month_names
 	private Seasons season = Seasons.SUMMER; // Possible - Spring, Summer, Autumn, Winter
 
 	private String month_name;
@@ -415,7 +415,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 
 	public ArrayList<Player> moving = new ArrayList<Player>(); // list of players who are currently moving
 
-	private static final int MAX_STACK_SIZE = 25; // generic maxium for all stackable items (should this be in the stackable interface?)
+	private static final int MAX_STACK_SIZE = 25; // generic maximum for all stackable items (should this be in the stackable interface?)
 
 	public MUDServer() {}
 
@@ -560,7 +560,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 
 				// Theme Loading
 				this.loadTheme(theme);
-				this.month_name = month_names[month - 1];
+				this.month_name = MONTH_NAMES[month - 1];
 				this.year_name = years.get(year);
 
 				debug(""); // formatting
@@ -3041,6 +3041,9 @@ public class MUDServer implements MUDServerI, LoggerI {
 						debug(playerControlMap);
 
 						final Player oldSlave = playerControlMap.control(player, npc);
+						
+						player.setController(true); // mark the player as controlling an npc (commented out in PlayerControlMap)
+						oldSlave.setAccess(USER);   // revoke any greater privileges granted
 
 						debug("DM Control Table:");
 						debug(playerControlMap);
@@ -3299,14 +3302,14 @@ public class MUDServer implements MUDServerI, LoggerI {
 					//return this.name + ": " + months[beginMonth - 1] + " to " + months[endMonth - 1];
 
 					for (final Seasons s : Seasons.values()) {
-						send(s + ": " + month_names[s.beginMonth - 1] + " to " + month_names[s.endMonth - 1], client);
+						send(s + ": " + MONTH_NAMES[s.beginMonth - 1] + " to " + MONTH_NAMES[s.endMonth - 1], client);
 					}
 				}
 				else if ( arg.toLowerCase().equals("holidays") ) {
 					/* list the holidays */
 					for (Map.Entry<String, Date> entry : holidays.entrySet()) {
-						debug(entry.getKey() + ": " + month_names[((Date) entry.getValue()).getMonth() - 1] + " " + ((Date) entry.getValue()).getDay());
-						send(entry.getKey() + ": " + month_names[((Date) entry.getValue()).getMonth() - 1] + " " + ((Date) entry.getValue()).getDay(), client);
+						debug(entry.getKey() + ": " + MONTH_NAMES[((Date) entry.getValue()).getMonth() - 1] + " " + ((Date) entry.getValue()).getDay());
+						send(entry.getKey() + ": " + MONTH_NAMES[((Date) entry.getValue()).getMonth() - 1] + " " + ((Date) entry.getValue()).getDay(), client);
 					}
 				}
 				else if ( arg.toLowerCase().equals("client") ) {
@@ -7685,8 +7688,17 @@ public class MUDServer implements MUDServerI, LoggerI {
 			{
 				debug("Searching for player by client...", 3);
 				debug("\"" + client  + "\"", 3);
-
-				return sclients.get(client);
+				
+				Player p = sclients.get(client);
+				
+				if( p != null ) {
+					if( p.isController() ) {
+						return playerControlMap.getSlave(p);
+					}
+				}
+				
+				//return sclients.get(client);
+				return p;
 			}
 
 			/**
@@ -8113,7 +8125,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 						}
 						else if (section1.equals("months")) {
 							final int monthIndex = Utils.toInt(parts[0], -1) - 1;
-							month_names[monthIndex] = parts[1];
+							MONTH_NAMES[monthIndex] = parts[1];
 							debug("Month " + monthIndex + " set to \"" + parts[1] + "\"");
 							System.out.println("Month " + monthIndex + " set to \"" + parts[1] + "\"");
 						}
@@ -8367,7 +8379,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 				// go through objects array and put references to objects that are located in/on the player in their inventory
 				for (final Item item : objectDB.getItemsByLoc(player.getDBRef())) {
 					debug("Item -> " + item.getName() + " (#" + item.getDBRef() + ") @" + item.getLocation());
-					player.getInventory().add(item);
+					//player.getInventory().add(item);
 					//inventory.add(item);
 				}
 
@@ -8994,7 +9006,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 			//"st", "nd", "rd", "th"
 			public String gameDate() {
 				//return <general time of year> - <numerical day> day of <month>, <year> <reckoning> - <year name, if any>
-				month_name = month_names[month - 1];
+				month_name = MONTH_NAMES[month - 1];
 				year_name = years.get(year);
 
 				String holiday = "";
