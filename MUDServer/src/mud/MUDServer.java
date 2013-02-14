@@ -6022,39 +6022,43 @@ public class MUDServer implements MUDServerI, LoggerI {
 						String cname = player.getCName();
 						String title = player.getTitle();                // need to limit title to 8 characters
 						String race = player.getPlayerRace().toString();
+						
+						StringBuilder sb = new StringBuilder();
 
 						// [ level class ] name - specialty/prestige class - group/guild (race)
-						client.write(colors("[", "blue"));
-						client.write(player.getLevel() + "");
-						client.write(' ');
-						client.write(colors(player.getPClass().getAbrv(), player.getPClass().getColor()));
-						client.write(colors("]", "blue"));
-						client.write(' ');
+						sb.append(colors("[", "blue"));
+						sb.append(player.getLevel() + "");
+						sb.append(' ');
+						sb.append(colors(player.getPClass().getAbrv(), player.getPClass().getColor()));
+						sb.append(colors("]", "blue"));
+						sb.append(' ');
 
 						// name
 						if ( loginCheck( client ) ) {
 							if (player.getNames().contains(name) || getPlayer(client).getName().equals(name)) {
-								client.write(name);
+								sb.append(name);
 							}
 							else {
-								client.write(cname);
+								sb.append(cname);
 							}
 						}
 						else {
-							client.write(name);
+							sb.append(name);
 						}
 
 						// title
 						if (!title.equals("")) { // if title isn't empty
-							client.write(' ');
-							client.write("\'" + title + "\'");
+							sb.append(' ');
+							sb.append("\'" + title + "\'");
 						}
 
 						// race
-						client.write(' ');
-						client.write("(" + race + ")");
-						client.write("\r");
-						client.write('\n');
+						sb.append(' ');
+						sb.append("(" + race + ")");
+						sb.append("\r");
+						sb.append('\n');
+						
+						client.write(sb.toString());
 
 						// count players
 						n++;
@@ -8756,8 +8760,8 @@ public class MUDServer implements MUDServerI, LoggerI {
 				for (final Player player : players) {
 					final Player slave = playerControlMap.getSlave(player);
 					if (slave == null) {
-						players.remove(player);
-						debug("Player removed.");
+						//players.remove(player);
+						//debug("Player removed.");
 						return;
 					}
 					else {
