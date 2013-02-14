@@ -191,7 +191,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 	private int multiplay = 0;               // (0=only one character per account is allowed, 1=infinite connects allowed)
 	private int guest_users = 0;             // (0=guests disallowed, 1=guests allowed)
 	private int debug = 1;                   // (0=off,1=on) Debug: server sends debug messages to the console
-	private int debugLevel = 2;              // (1=debug,2=extra debug,3=verbose) priority of debugging information recorded
+	private int debugLevel = 3;              // (1=debug,2=extra debug,3=verbose) priority of debugging information recorded
 	private boolean logging = true;          // logging? (true=yes,false=no)
 	private int logLevel = 3;                // () priority of log information recorded 
 	private boolean prompt_enabled = false;  // show player information bar
@@ -889,7 +889,12 @@ public class MUDServer implements MUDServerI, LoggerI {
 				 * End Testing
 				 */
 			}
-
+			
+			/**
+			 * Immediate Command Processing
+			 * 
+			 * @param newCmd
+			 */
 			private void processCMD(final CMD newCmd) {
 				final String command = newCmd.getCmdString();
 				final Client client = newCmd.getClient();
@@ -908,7 +913,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 				}
 
 				if ( loginCheck( client ) ) {
-					prompt(client); // buggy, especially when you're not logged on yet
+					prompt(client);
 				}
 			}
 
@@ -1022,7 +1027,8 @@ public class MUDServer implements MUDServerI, LoggerI {
 
 						if (!whatClientSaid.trim().equals("")) {  // blocks blank input
 							//System.out.print("Putting comand in command queue...");
-							processCMD(new CMD(whatClientSaid.trim(), sclients.get(client), client, 0)); // put the command in the queue
+							processCMD(new CMD(whatClientSaid.trim(), sclients.get(client), client, -1));
+							// put the command in the queue
 							//cmd(whatClientSaid.trim(), c);
 							//System.out.println("Done.");
 						}
@@ -8052,6 +8058,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 
 				theme1 = new Theme();
 				String section = "";
+				String section1 = "";
 
 				for (final String line : Utils.loadStrings(themeFile)) {
 					if ("".equals(line) || line.trim().startsWith("//")) {  // skip blank lines
@@ -8067,13 +8074,14 @@ public class MUDServer implements MUDServerI, LoggerI {
 					}
 					else if (line.startsWith("[")) {    // start section
 						section = line;
+						section1 = line.substring(line.indexOf('[') + 1, line.indexOf(']'));
 					}
 					else if (line.indexOf(" = ") == -1) {    // start section
 						throw new IllegalStateException("Theme line is not section name, but missing \" = \": " + line);
 					}
 					else {
 						final String[] parts = line.split(" = ", 2);
-						if ( section.equals("theme") ) {
+						if ( section1.equals("theme") ) {
 							if (parts[0].equals("mud_name") ) {
 								theme1.setName(parts[1]);
 								debug(line);
@@ -8082,7 +8090,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 								debug("MOTD File NOT set to " + motd);
 							}
 						}
-						else if ( section.equals("calendar") ) {
+						else if ( section1.equals("calendar") ) {
 							debug(line);
 							if ( parts[0].equals("day") ) {
 								theme1.setDay(Utils.toInt(parts[1], 0));
@@ -8103,12 +8111,13 @@ public class MUDServer implements MUDServerI, LoggerI {
 								throw new IllegalStateException("Theme calendar section, unknown line: " + line);
 							}
 						}
-						else if (section.equals("months")) {
+						else if (section1.equals("months")) {
 							final int monthIndex = Utils.toInt(parts[0], -1) - 1;
 							month_names[monthIndex] = parts[1];
 							debug("Month " + monthIndex + " set to \"" + parts[1] + "\"");
+							System.out.println("Month " + monthIndex + " set to \"" + parts[1] + "\"");
 						}
-						else if (section.equals("holidays")) {
+						else if (section1.equals("holidays")) {
 							debug(line, 2);
 							// day, month = holiday name/day name
 							// dateline is day,month part
@@ -8118,7 +8127,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 							// multi-day holidays not handled very well at all, only one day recorded for now
 							//holidays.put(new Date(Integer.parseInt(trim(dateline[1])), Integer.parseInt(trim(dateline[0]))), trim(line[1]));
 						}
-						else if (section.equals("years")) {
+						else if (section1.equals("years")) {
 							debug(line, 2);
 							years.put(Integer.parseInt(Utils.trim(parts[0])), Utils.trim(parts[1]));
 						}
@@ -10647,8 +10656,12 @@ public class MUDServer implements MUDServerI, LoggerI {
 			 */
 			public boolean checkAccess(final Client client, final int accessLevel) {
 				Player player = getPlayer(client);
-
-				int check = player != null ? player.getAccess() : 0;
+				
+				int check = 0;
+				
+				if(player != null) {
+					check = player.getAccess();
+				}
 
 				return check >= accessLevel;
 			}

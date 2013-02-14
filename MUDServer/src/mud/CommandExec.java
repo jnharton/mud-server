@@ -52,7 +52,7 @@ public class CommandExec implements Runnable {
 		while ( parent1.isRunning() ) {
 			if (!this.cmdQueue.isEmpty()) {
 				try {
-					newCmd = this.cmdQueue.remove();
+					newCmd = this.cmdQueue.poll();
 					
 					newCmd.status = CMD.Status.ACTIVE; // mark command as being processed
 					
