@@ -156,9 +156,9 @@ public class Player extends MUDObject
 	protected int totalmana;                // Total Mana
 	protected int speed;                    // Movement Speed (largely pointless without a coordinate system)
 	protected int capacity;                 // Carrying Capacity (pounds/lbs)
-	protected int level;                // Level
+	protected int level;                    // Level
 	protected int xp;                       // Experience
-	protected Coins money;              // Money (D&D, MUD)
+	protected Coins money;                  // Money (D&D, MUD)
 
 	protected SpellBook spells;             // spells [null if not a wizard]
 	public LinkedList<Spell> spellQueue;    // spell queue [null if not a wizard]

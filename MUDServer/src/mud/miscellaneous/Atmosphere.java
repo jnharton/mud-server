@@ -19,7 +19,7 @@ public class Atmosphere {
 		//this.effects = new ArrayList<Effect>();
 		this.weatherEffects = new ArrayList<WeatherEffect>();
 		//this.weather = new Weather();
-		this.weather = new Weather(Atmosphere.DEFAULT_WEATHER);
+		//this.weather = new Weather(Atmosphere.DEFAULT_WEATHER);
 	}
 
 	public Atmosphere(Atmosphere tParent) {

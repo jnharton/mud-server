@@ -134,8 +134,12 @@ public class TimeLoop implements Runnable
         months += 1;
         if (months >= DAYS.length) {
             months = 0;
-            years += 1;
+            incrementYear();
         }
+    }
+    
+    private void incrementYear() {
+    	years += 1;
     }
 
     public TimeOfDay getTimeOfDay() {

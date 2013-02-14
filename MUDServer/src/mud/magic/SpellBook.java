@@ -23,7 +23,7 @@ import java.util.List;
 
 public class SpellBook {
 
-	private LinkedHashMap<Integer, ArrayList<Spell>> spellTable = new LinkedHashMap<Integer, ArrayList<Spell>>(){
+	private LinkedHashMap<Integer, ArrayList<Spell>> spellTable = new LinkedHashMap<Integer, ArrayList<Spell>>();
 
 	public SpellBook () {
         for (int i = 1; i < 10; i++) {

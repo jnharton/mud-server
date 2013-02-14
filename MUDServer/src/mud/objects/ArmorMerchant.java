@@ -12,15 +12,13 @@ import mud.Currency;
 import mud.MUDServer;
 import mud.Races;
 
+import mud.interfaces.Vendor;
+
 import mud.net.Client;
 import mud.objects.items.Armor;
 import mud.objects.items.ArmorType;
 
-import mud.interfaces.Interactive;
-import mud.interfaces.Vendor;
-
-
-public class ArmorMerchant extends NPC implements Interactive, Vendor {
+public class ArmorMerchant extends NPC implements InteractiveI, Vendor {
 
 	/**
 	 * 

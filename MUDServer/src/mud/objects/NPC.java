@@ -17,7 +17,6 @@ import mud.Skills;
 import mud.Slot;
 import mud.SlotType;
 
-import mud.interfaces.Interactive;
 import mud.interfaces.Vendor;
 
 import mud.net.Client;

@@ -53,17 +53,17 @@ public class CastCommand extends Command {
 
             // if our target is a player tell them otherwise don't bother
             if (target instanceof Player) {
-                parent.addMessage(new Message(player, player.getName() + " cast " + spell.name + " on you." , (Player) target));
+            	parent.addMessage(new Message(player, player.getName() + " cast " + spell.name + " on you." , (Player) target));
             }
 
             // apply effects to the target
             for (final Effect e : spell.effects) {
-                parent.applyEffect(target, e);
-								if(target instanceof Player) {
-									parent.applyEffect((Player) target, effect); // apply the effect to the target
-								}
-								else {
-								}
+            	parent.applyEffect(target, e);
+            	if(target instanceof Player) {
+            		parent.applyEffect((Player) target, e); // apply the effect to the target
+            	}
+            	else {
+            	}
             }	
         }
 	}

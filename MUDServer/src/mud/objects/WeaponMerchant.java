@@ -11,14 +11,14 @@ import mud.Coins;
 import mud.Currency;
 import mud.MUDServer;
 import mud.Races;
-import mud.interfaces.Interactive;
+
 import mud.interfaces.Vendor;
 
 import mud.net.Client;
 import mud.objects.items.Handed;
 import mud.objects.items.Weapon;
 
-public class WeaponMerchant extends NPC implements Interactive, Vendor {
+public class WeaponMerchant extends NPC implements InteractiveI, Vendor {
 
 	/**
 	 * 
