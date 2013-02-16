@@ -2286,8 +2286,8 @@ public class MUDServer implements MUDServerI, LoggerI {
 									// has the user given an action/exit that is linked to something for which no similarly named command exists,
 									// if so, execute link or move user in the direction/to the room specified by the action/exit
 									// handle the command as an exit
-									if (!chatHandler(cmd, arg, client)) {
-										if (!exitHandler(cmd, client)) {
+									if (!exitHandler(cmd, client)) {
+										if (!chatHandler(cmd, arg, client)) {
 											if ( !adminCmd && !wizCmd ) { // not an admin or wizard command
 												send("Huh? That is not a known command.", client);
 												debug("Command> Unknown Command");
