@@ -44,6 +44,8 @@ public class ChatChannel {
 	public ChatChannel(String name) {
 		this.id = -1;
 		this.name = name;
+		this.messages = new ConcurrentLinkedQueue<Message>();
+		this.listeners = new ArrayList<Player>();
 	}
 
 	public ChatChannel(Server parent, MUDServer parent1, int id, String name) {
