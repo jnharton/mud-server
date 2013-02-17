@@ -25,26 +25,30 @@ import mud.net.Client;
 import mud.net.Server;
 import mud.objects.Player;
 
-public class ChatChannel implements Runnable {
-
-	private Server parent;
-	private MUDServer parent1;
+//public class ChatChannel implements Runnable {
+public class ChatChannel {
+	//private Server parent;
+	//private MUDServer parent1;
 	
 	private int id;
-	private String name;                   // the name of the channel
+	private String name;  // the name of the channel
+	private int restrict; // restrict access based on some integer
+	
+	// output format
 	private String chan_color = "magenta"; // channel title color
 	private String text_color = "green";   // the color of the channel text
 	
-	private int restrict;                  // restrict access based on some integer
+	private ArrayList<Player> listeners;             // players who are listening to the channel
+	private ConcurrentLinkedQueue<Message> messages; // messages 'written' to the channel
 	
-	//private ArrayList<Message> messages;   // messages sent to the channel
-	
-	private ConcurrentLinkedQueue<Message> messages;
-	private ArrayList<Player> listeners;   // players who are listening to the channel
+	public ChatChannel(String name) {
+		this.id = -1;
+		this.name = name;
+	}
 
 	public ChatChannel(Server parent, MUDServer parent1, int id, String name) {
-		this.parent = parent;
-		this.parent1 = parent1;
+		//this.parent = parent;
+		//this.parent1 = parent1;
 		this.id = id;
 		this.name = name;
 		this.messages = new ConcurrentLinkedQueue<Message>();
@@ -57,7 +61,7 @@ public class ChatChannel implements Runnable {
 		this.text_color = text_color;
 	}
 
-	@Override
+	/*@Override
 	public void run() {
 		Client client;
 		
@@ -70,7 +74,7 @@ public class ChatChannel implements Runnable {
 					if (1 == 1) { // check for gag?
 						for (Message msg : this.messages) { // for the list of messages
 							try {
-								client = parent1.getClient(player);
+								client = player.getClient();
 
 								client.write("(" + parent1.colors(this.name, this.chan_color) + ") " + "<" + msg.getSender().getName() + "> " + parent1.colors(msg.getMessage(), this.text_color) + "\r\n"); // send the message
 								parent1.debug("(" + this.name + ") " + "<" + msg.getSender().getName() + "> " + msg.getMessage() + "\n");										
@@ -84,8 +88,9 @@ public class ChatChannel implements Runnable {
 					}
 				}
 			}
-
-			/*for (Message msg : this.messages) { // for the list of messages
+			
+			// unused/defunct? code below
+			for (Message msg : this.messages) { // for the list of messages
 				for (Player player : this.listeners) { // for every "listening player
 					if (1 == 1) {
 						try {
@@ -101,52 +106,83 @@ public class ChatChannel implements Runnable {
 						}
 					}
 				}
-			}*/
+			}
 			
-			/*
-			 * maybe instead of doing this I should just process the next message in the queue, and never "clear" it?
-			 */
+			// maybe instead of doing this I should just process the next message in the queue, and never "clear" it?
 			// we've sent all the messages, so clear out the list
 			this.messages.clear();
 		}
 
+	}*/
+	
+	/**
+	 * Set the name of the channel.
+	 * 
+	 * @param chanName
+	 */
+	public void setName(String chanName) {
+		this.name = chanName;
 	}
-
-	public void setName(String newName) {
-		this.name = newName;
-	}
-
+	
+	/**
+	 * Get the name of the channel.
+	 * 
+	 * @return
+	 */
 	public String getName() {
 		return this.name;
 	}
 	
+	public void setID(int newID) {
+		this.id = newID;
+	}
+	
+	public int getID() {
+		return this.id;
+	}
+	
+	public String getChanColor() {
+		return this.chan_color;
+	}
+	
+	public String getTextColor() {
+		return this.text_color;
+	}
+	
+	/**
+	 * Set a restriction based on an integer (access level?)
+	 * 
+	 * @param newRestrict
+	 */
 	public void setRestrict(int newRestrict) {
 		this.restrict = newRestrict;
 	}
 	
+	/**
+	 * Get the integer based restriction data
+	 * 
+	 * @return
+	 */
 	public int getRestrict() {
 		return this.restrict;
 	}
 
 	synchronized public void write(String message) {
-		Message m = new Message(message);
-		this.messages.add(m);
-		parent1.debug("new chat message sent to " + getName());
-		parent1.debug(m.getMessage());
+		this.messages.add( new Message(message) );
+		//parent1.debug("new chat message sent to " + getName());
+		//parent1.debug(message);
 	}
 
 	synchronized public void write(Client client, String message) {
-		Message m = new Message(client, message);
-		this.messages.add(m);
-		parent1.debug("new chat message sent to " + getName());
-		parent1.debug(m.getMessage());
+		this.messages.add( new Message(client, message) );
+		//parent1.debug("new chat message sent to " + getName());
+		//parent1.debug(message);
 	}
 	
 	synchronized public void write(Player player, String message) {
-		Message m = new Message(player, message);
-		this.messages.add(m);
-		parent1.debug("new chat message sent to " + getName());
-		parent1.debug(m.getMessage());
+		this.messages.add( new Message(player, message) );
+		//parent1.debug("new chat message sent to " + getName());
+		//parent1.debug(message);
 	}
 	
 	public ArrayList<Player> getListeners() {
@@ -199,13 +235,5 @@ public class ChatChannel implements Runnable {
 		synchronized(this.listeners) {
 			return this.listeners.remove(p);
 		}
-	}
-	
-	public void setID(int newID) {
-		this.id= newID;
-	}
-	
-	public int getID() {
-		return this.id;
 	}
 }
