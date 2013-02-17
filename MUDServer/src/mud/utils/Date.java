@@ -18,6 +18,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
 import java.io.Serializable;
+import java.util.regex.Pattern;
 
 /**
  * 
@@ -35,6 +36,17 @@ public class Date implements Serializable {
 	private int month; // 0-11 (12 possible months)
 	private int day;   // 0-29 (30 possible days)
 	private int year;  // 0000-9999 (10,000 possible years)
+	
+	// date parsing regexp
+	String re1="(\\d)";	// Any Single Digit 1
+    String re2="(\\d)";	// Any Single Digit 2
+    String re3="(-)";	// Any Single Character 1
+    String re4="(\\d)";	// Any Single Digit 3
+    String re5="(\\d)";	// Any Single Digit 4
+    String re6="(-)";	// Any Single Character 2
+    String re7="((?:(?:[1]{1}\\d{1}\\d{1}\\d{1})|(?:[2]{1}\\d{3})))(?![\\d])";	// Year 1
+	
+	private final String datePattern = re1+re2+re3+re4+re5+re6;
 
 	public Date() {
 	}
@@ -77,6 +89,24 @@ public class Date implements Serializable {
 	 */
 	public int getYear() {
 		return this.year;
+	}
+	
+	class DateFormatException extends IllegalArgumentException {
+		public DateFormatException() {}
+		
+		public DateFormatException(String s) {
+			super(s);
+		}
+	}
+	
+	public Date parseDate(String s) throws DateFormatException {
+		if( s.matches(datePattern) ) {
+			int[] dateData = Utils.stringsToInts(s.split("-"));
+			return new Date(dateData[0], dateData[1], dateData[2]);
+		}
+		else {
+			throw new DateFormatException("Does not match date format: MM-DD-YYYY");
+		}
 	}
 	
 	/**
