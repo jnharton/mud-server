@@ -18,104 +18,33 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
 import java.util.ArrayList;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
-import mud.MUDServer;
 import mud.net.Client;
-import mud.net.Server;
 import mud.objects.Player;
 
-//public class ChatChannel implements Runnable {
-public class ChatChannel {
-	//private Server parent;
-	//private MUDServer parent1;
-	
-	private int id;
-	private String name;  // the name of the channel
+public class ChatChannel { 
+	private String name;  // channel name
 	private int restrict; // restrict access based on some integer
 	
 	// output format
 	private String chan_color = "magenta"; // channel title color
 	private String text_color = "green";   // the color of the channel text
 	
-	private ArrayList<Player> listeners;             // players who are listening to the channel
-	private ConcurrentLinkedQueue<Message> messages; // messages 'written' to the channel
+	private ArrayList<Player> listeners;           // players who are listening to the channel
+	private LinkedBlockingQueue<Message> messages; // messages 'written' to the channel
 	
 	public ChatChannel(String name) {
-		this.id = -1;
 		this.name = name;
-		this.messages = new ConcurrentLinkedQueue<Message>();
+		this.messages = new LinkedBlockingQueue<Message>();
 		this.listeners = new ArrayList<Player>();
 	}
-
-	public ChatChannel(Server parent, MUDServer parent1, int id, String name) {
-		//this.parent = parent;
-		//this.parent1 = parent1;
-		this.id = id;
-		this.name = name;
-		this.messages = new ConcurrentLinkedQueue<Message>();
-		this.listeners = new ArrayList<Player>(10);
-	}
 	
-	public ChatChannel(Server s, MUDServer ms, int id, String name, String channel_color, String text_color) {
-		this(s, ms, id, name);
+	public ChatChannel(String name, String channel_color, String text_color) {
+		this(name);
 		this.chan_color = channel_color;
 		this.text_color = text_color;
 	}
-
-	/*@Override
-	public void run() {
-		Client client;
-		
-		// while the game is running, and the time thread is not suspended
-		while ( parent1.isRunning() ) {
-			// if client is a logged in player, send them any messages queued for them
-			// Send any pages, messages, etc to their respective recipients, or to a list of recipients?
-			synchronized(this.listeners) {
-				for (Player player : this.listeners) { // for every "listening player
-					if (1 == 1) { // check for gag?
-						for (Message msg : this.messages) { // for the list of messages
-							try {
-								client = player.getClient();
-
-								client.write("(" + parent1.colors(this.name, this.chan_color) + ") " + "<" + msg.getSender().getName() + "> " + parent1.colors(msg.getMessage(), this.text_color) + "\r\n"); // send the message
-								parent1.debug("(" + this.name + ") " + "<" + msg.getSender().getName() + "> " + msg.getMessage() + "\n");										
-								parent1.debug("chat message sent successfully"); 
-							}
-							catch(NullPointerException npe) {
-								parent1.debug("Game [chat channel: " + this.getName() + "] > Null Message.");
-								npe.printStackTrace();
-							}
-						}
-					}
-				}
-			}
-			
-			// unused/defunct? code below
-			for (Message msg : this.messages) { // for the list of messages
-				for (Player player : this.listeners) { // for every "listening player
-					if (1 == 1) {
-						try {
-							client = parent1.getClient(player);
-
-							client.write("(" + parent1.colors(this.name, this.chan_color) + ") " + "<" + msg.getSender().getName() + "> " + parent1.colors(msg.getMessage(), this.text_color) + "\r\n"); // send the message
-							parent1.debug("(" + this.name + ") " + "<" + msg.getSender().getName() + "> " + msg.getMessage() + "\n");										
-							parent1.debug("chat message sent successfully");
-						}
-						catch(NullPointerException npe) {
-							parent1.debug("Game [chat channel: " + this.getName() + "] > Null Message.");
-							npe.printStackTrace();
-						}
-					}
-				}
-			}
-			
-			// maybe instead of doing this I should just process the next message in the queue, and never "clear" it?
-			// we've sent all the messages, so clear out the list
-			this.messages.clear();
-		}
-
-	}*/
 	
 	/**
 	 * Set the name of the channel.
@@ -133,14 +62,6 @@ public class ChatChannel {
 	 */
 	public String getName() {
 		return this.name;
-	}
-	
-	public void setID(int newID) {
-		this.id = newID;
-	}
-	
-	public int getID() {
-		return this.id;
 	}
 	
 	public String getChanColor() {
@@ -168,32 +89,30 @@ public class ChatChannel {
 	public int getRestrict() {
 		return this.restrict;
 	}
-
-	synchronized public void write(String message) {
+	
+	public void write(String message) {
 		this.messages.add( new Message(message) );
 		//parent1.debug("new chat message sent to " + getName());
 		//parent1.debug(message);
 	}
-
-	synchronized public void write(Client client, String message) {
+	
+	public void write(Client client, String message) {
 		this.messages.add( new Message(client, message) );
 		//parent1.debug("new chat message sent to " + getName());
 		//parent1.debug(message);
 	}
 	
-	synchronized public void write(Player player, String message) {
+	public void write(Player player, String message) {
 		this.messages.add( new Message(player, message) );
 		//parent1.debug("new chat message sent to " + getName());
 		//parent1.debug(message);
 	}
 	
-	public ArrayList<Player> getListeners() {
-		synchronized(this.listeners) {
-			return this.listeners;
-		}
+	public Message getNextMessage() {
+		return this.messages.poll();
 	}
 	
-	synchronized public ConcurrentLinkedQueue<Message> getMessages() {
+	public LinkedBlockingQueue<Message> getMessages() {
 		return this.messages;
 	}
 	
@@ -206,10 +125,8 @@ public class ChatChannel {
 	 * @param p the player object to add to listeners
 	 * @return whether we succeeded in adding the player to listeners
 	 */
-	public boolean addListener(Player p) {
-		synchronized(this.listeners) {
-			return this.listeners.add(p);
-		}
+	synchronized public boolean addListener(Player p) {
+		return this.listeners.add(p);
 	}
 	
 	/**
@@ -233,9 +150,11 @@ public class ChatChannel {
 	 * @param p the player object to remove from listeners
 	 * @return whether we succeeded in removing the player from listeners
 	 */
-	public boolean removeListener(Player p) {
-		synchronized(this.listeners) {
-			return this.listeners.remove(p);
-		}
+	synchronized public boolean removeListener(Player p) {
+		return this.listeners.remove(p);
+	}
+	
+	synchronized public ArrayList<Player> getListeners() {
+		return this.listeners;
 	}
 }
