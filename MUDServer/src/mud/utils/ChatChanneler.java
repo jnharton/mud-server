@@ -17,6 +17,14 @@ public class ChatChanneler
     public List<Player> getListeners(final String channelName) {
     	return channels.get(channelName).getListeners();
     }
+    
+    public ChatChannel getChatChannel(final String channelName) {
+    	return this.channels.get(channelName);
+    }
+    
+    public Collection<ChatChannel> getChatChannels() {
+    	return channels.values();
+    }
 
     public Collection<String> getChannelNames() {
     	return new ArrayList<String>(channels.keySet());
@@ -52,9 +60,10 @@ public class ChatChanneler
 	public void send(final String channelName, final Player player, final String message) {
 		ChatChannel chan = channels.get(channelName);
 		
-		String name = chan.getName(), chan_color = chan.getChanColor(), text_color = chan.getTextColor();
-		
 		if (chan != null) {
+			//chan.write(player, message); // add message to ChatChannel message queue
+			String name = chan.getName(), chan_color = chan.getChanColor(), text_color = chan.getTextColor();
+			
             player.getClient().write("(" + mud.colors(name, chan_color) + ") " + "<" + player.getName() + "> " + mud.colors(message, text_color) + "\r\n");
             mud.debug("(" + channelName + ") <" + player.getName() + "> " + message + "\n");										
         }
@@ -63,9 +72,11 @@ public class ChatChanneler
 	public void send(final String channelName, final String message) {
 		ChatChannel chan = channels.get(channelName);
 
-		String name = chan.getName(), chan_color = chan.getChanColor(), text_color = chan.getTextColor();
-
 		if (chan != null) {
+			//chan.write(message); // add message to ChatChannel message queue
+
+			String name = chan.getName(), chan_color = chan.getChanColor(), text_color = chan.getTextColor();
+			
 			for (final Player player : channels.get(channelName).getListeners()) {
                 player.getClient().write("(" + mud.colors(name, chan_color) + ") " + mud.colors(message, text_color) + "\r\n");
                 mud.debug("(" + channelName + ") " + message + "\n");										
