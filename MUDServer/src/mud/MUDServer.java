@@ -728,7 +728,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 
 		// Time Loop
 		// cpu: -for now, appears marginal-
-		game_time = new TimeLoop(this, DAYS, month, day, game_hour, game_minute);
+		game_time = new TimeLoop(this, DAYS, year, month, day, game_hour, game_minute);
 		new Thread(game_time, "time").start();
 		System.out.println("Time (Thread) Started!");
 

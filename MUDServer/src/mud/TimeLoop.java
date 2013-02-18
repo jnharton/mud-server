@@ -12,11 +12,11 @@ public class TimeLoop implements Runnable
 {
     private MoonPhase moonPhase = MoonPhase.FULL_MOON;
 
-    private int minutes;
-    private int hours;
-    private int days;
-    private int months;
-    private int years;
+    private int minute;
+    private int hour;
+    private int day;
+    private int month;
+    private int year;
 
     private TimeOfDay timeOfDay = TimeOfDay.MIDNIGHT;
 
@@ -39,13 +39,14 @@ public class TimeLoop implements Runnable
      * Modifications: x:1 timescale
      */
 
-    public TimeLoop(final MUDServer server, final int[] DAYS, final int months, final int days, final int hours, final int mins) {
+    public TimeLoop(final MUDServer server, final int[] DAYS, final int year, final int month, final int day, final int hour, final int min) {
         this.DAYS = DAYS;
         this.server = server;
-        this.minutes = mins;  // the initial number of minutes (start time)
-        this.hours = hours;   // the initial number of hours (start time)
-        this.days = days;     // the initial number of days (start day)
-        this.months = months; // the initial number of months (start month)
+        this.minute = min;  // the initial minute (start time)
+        this.hour = hour;   // the initial hour (start time)
+        this.day = day;       // the initial day (start day)
+        this.month = month;   // the initial month (start month)
+        this.year = year;     // the initial year (start year)
     }
 
     // message sending with specifics needs a loginCheck(client), but it needs to not cause the game to crash
@@ -67,79 +68,79 @@ public class TimeLoop implements Runnable
     }
     
     private void incrementMinute() {
-        minutes += 1;
-        if (minutes > 59) {
-            minutes = 0;
+        minute += 1;
+        if (minute > 59) {
+            minute = 0;
             incrementHour();
         }
-        server.debug("Time loop: " + hours + ":" + minutes);
+        server.debug("Time loop: " + hour + ":" + minute);
         server.handleMovement();
     }
 
     private void incrementHour() {
-        hours += 1;
-        if (hours > 23) {
-            hours = 0;
+        hour += 1;
+        if (hour > 23) {
+            hour = 0;
             incrementDay();
         }
         server.onHourIncrement();
 
-        if (minutes != 0) {
+        if (minute != 0) {
             return;
         }
 
-        if (this.hours == 5) {
+        if (this.hour == 5) {
             setTimeOfDay(TimeOfDay.BEFORE_DAWN, new Message("It is now just before dawn."));
             server.debug("It is now just before dawn.");
         }
-        else if (this.hours == 6) {
+        else if (this.hour == 6) {
             setTimeOfDay(TimeOfDay.DAWN, new Message("It is now dawn."));
             server.debug("It is now dawn.");
         }
-        else if (this.hours == 7) {
+        else if (this.hour == 7) {
             setTimeOfDay(TimeOfDay.MORNING, new Message("It is now morning."));
             server.debug("It is now morning.");
         }
-        else if (this.hours == 12) {
+        else if (this.hour == 12) {
             setTimeOfDay(TimeOfDay.MIDDAY, new Message("It is now midday."));
             server.debug("It is now midday.");
         }
-        else if (this.hours == 13) {
+        else if (this.hour == 13) {
             setTimeOfDay(TimeOfDay.AFTERNOON, new Message("It is now afternoon."));
             server.debug("It is now afternoon.");
         }
-        else if (this.hours == 18) {
+        else if (this.hour == 18) {
             setTimeOfDay(TimeOfDay.DUSK, new Message("It is now dusk."));
             server.debug("It is now dusk.");
         }
-        else if (this.hours == 19) {
+        else if (this.hour == 19) {
             setTimeOfDay(TimeOfDay.NIGHT, new Message("It is now night."));
             server.debug("It is now night.");
         }
-        else if (this.hours == 0) {
+        else if (this.hour == 0) {
             setTimeOfDay(TimeOfDay.MIDNIGHT, new Message("It is now midnight."));
             server.debug("It is now midnight.");
         }
     }
 
     private void incrementDay() {
-        days += 1;
-        if (days >= DAYS[months]) {
-            days = 0;
+        day += 1;
+        if (day >= DAYS[month]) {
+            day = 0;
             incrementMonth();
         }
     }
 
     private void incrementMonth() {
-        months += 1;
-        if (months >= DAYS.length) {
-            months = 0;
+        month += 1;
+        if (month >= DAYS.length) {
+            month = 0;
             incrementYear();
         }
     }
     
     private void incrementYear() {
-    	years += 1;
+    	year += 1;
     }
 
     public TimeOfDay getTimeOfDay() {
@@ -172,20 +173,20 @@ public class TimeLoop implements Runnable
     }
 
     public void setHours(int hour) {
-        this.hours = hour;
-        this.minutes = 0;
+        this.hour = hour;
+        this.minute = 0;
     }
 
     public int getHours() {
-        return this.hours;
+        return this.hour;
     }
 
     public void setMinutes(int minute) {
-        this.minutes = minute;
+        this.minute = minute;
     }
 
     public int getMinutes() {
-        return this.minutes;
+        return this.minute;
     }
 
     public void setScale(int ms) {
