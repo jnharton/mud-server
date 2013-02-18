@@ -20,12 +20,6 @@ public class XMLFile implements Database {
 	}
 
 	@Override
-	public void backup(String filename) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
 	public void open() {
 		// TODO Auto-generated method stub
 
@@ -39,12 +33,6 @@ public class XMLFile implements Database {
 
 	@Override
 	public void load() {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void load(String fileToLoad) {
 		// TODO Auto-generated method stub
 
 	}

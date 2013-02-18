@@ -1,6 +1,5 @@
 package mud.miscellaneous;
 
-import mud.db.Table;
 
 public class Database<T> {
 	Table storage; // Main Storage

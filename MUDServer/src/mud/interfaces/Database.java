@@ -19,23 +19,31 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 public interface Database {
 	
-	// standard database backup
-	public void backup();
-	
-	// backup database to specific filename
-	public void backup(String filename);
-	
-	// open database file
+	/**
+	 * Open a database file/connection
+	 */
 	public void open();
 	
-	// close database file
+	/**
+	 * Close a database file/connection
+	 */
 	public void close();
 	
-	// standard database load
+	/**
+	 * standard database load
+	 * 
+	 * Perform a full load of data/objects stored in the database
+	 * into memory
+	 */
 	public void load();
 	
-	// load database from specific filename
-	public void load(String fileToLoad);
+	/**
+	 * standard database backup
+	 * 
+	 * Perform a full translation of in-memory data/objects over
+	 * to a database file or other mechanism (e.g. MySQL)
+	 */
+	public void backup();
 	
 	// read whatever is in the file at the present index
 	public void read();

@@ -1,9 +1,13 @@
 package mud.db;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import mud.MUDObject;
+import mud.ObjectDB;
+import mud.ObjectLoader;
 import mud.interfaces.Database;
+import mud.utils.Utils;
 
 /**
  * The file
@@ -17,38 +21,32 @@ import mud.interfaces.Database;
  */
 public class FlatFile implements Database {
 
-	String filename;
+	final String mainDB;
 	
-	ArrayList<String> db = new ArrayList<String>();
-
-	public FlatFile() {
-	}
+	private ObjectDB objectDB = new ObjectDB();
 
 	public FlatFile(String filename) {
-		this.filename = filename;
-		load(filename);
+		mainDB = filename;
+	}
+	
+	@Override
+	public void open() {
+		throw new UnsupportedOperationException();
+	}
+	
+	@Override
+	public void close() {
+		throw new UnsupportedOperationException();
+	}
+	
+	@Override
+	public void load() {
+		ObjectLoader.loadObjects(loadListDatabase(mainDB), null, objectDB, null);
 	}
 
 	@Override
 	public void backup() {
 		// save file to some generated name text file
-	}
-
-	@Override
-	public void backup(String filename) {
-		// save data to same file as it was loaded from
-	}
-
-	@Override
-	public void open() {		
-	}
-
-	@Override
-	public void load() {
-	}
-
-	@Override
-	public void load(String fileToLoad) {
 	}
 
 	@Override
@@ -80,10 +78,9 @@ public class FlatFile implements Database {
 	}
 
 	public synchronized void write(MUDObject m) {
-		this.db.set(m.getDBRef(), m.toDB());
 	}
-
-	@Override
-	public void close() {
+	
+	private static ArrayList<String> loadListDatabase(String filename) {		
+		return (ArrayList<String>) Arrays.asList(Utils.loadStrings(filename));
 	}
 }
