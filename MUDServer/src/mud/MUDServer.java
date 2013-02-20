@@ -1108,19 +1108,21 @@ public class MUDServer implements MUDServerI, LoggerI {
 				// get the next message
 				msg = cc.getNextMessage();
 				
+				// if msg is null, break
 				if( msg == null ) {
-					continue;
+					debug(chan_name + ": No Messages", 4);
+					break;
 				}
 				
 				// for each listener, send the message
 				for(Player player : cc.getListeners()) {
-
 					try {
 						client = player.getClient();										
 
 						client.write("(" + colors(chan_name, chan_color) + ") " + "<" + msg.getSender().getName() + "> " + colors(msg.getMessage(), text_color) + "\r\n"); // send the message
-						debug("(" + chan_name + ") " + "<" + msg.getSender().getName() + "> " + msg.getMessage() + "\n");										
-						debug("chat message sent successfully"); 
+						
+						//debug("(" + chan_name + ") " + "<" + msg.getSender().getName() + "> " + msg.getMessage() + "\n");										
+						//debug("chat message sent successfully"); 
 					}
 					catch(NullPointerException npe) {
 						debug("Game [chat channel: " + chan_name + "] > Null Message.");
@@ -2853,10 +2855,12 @@ public class MUDServer implements MUDServerI, LoggerI {
 			// if the channel name is that specified, write the message to the channel
 			else {
 				ChatChannel cc = chan.getChatChannel(channelName); // get ChatChannel by name
-				cc.write(getPlayer(client), msg);                // add message to ChatChannel message queue
+				cc.write(getPlayer(client), msg);                  // add message to ChatChannel message queue
 				
-				chan.send(channelName, getPlayer(client), msg);
-				client.write("wrote " + msg + " to " + channelName + " channel.\n");
+				//chan.send(channelName, getPlayer(client), msg);
+				
+				client.write("wrote " + arg + " to " + channelName + " channel.\n");
+				chatLog.writeln("(" + channelName + ") <" + getPlayer(client).getName() + "> " + arg);
 			}
 		}
 	}
@@ -6517,9 +6521,11 @@ public class MUDServer implements MUDServerI, LoggerI {
 		ChatChannel cc = chan.getChatChannel(channelName); // get ChatChannel by name
 		cc.write(getPlayer(client), arg);                  // add message to ChatChannel message queue
 		
-		chan.send(channelName, getPlayer(client), arg);
+		//chan.send(channelName, getPlayer(client), arg);
+		
 		client.write("wrote " + arg + " to " + channelName + " channel.\n");
 		chatLog.writeln("(" + channelName + ") <" + getPlayer(client).getName() + "> " + arg);
+		
 		return true;
 	}
 
@@ -8431,6 +8437,12 @@ public class MUDServer implements MUDServerI, LoggerI {
 				System.out.println("No staff channel exists!!!");
 			}
 		}
+		
+		try {
+			chan.add(player,  OOC_CHANNEL);
+		} catch (Exception e) {
+			System.out.println("No ooc channel exists!!!");
+		}
 
 		/* add the player to the game */
 		player.setClient(client);
@@ -8490,7 +8502,10 @@ public class MUDServer implements MUDServerI, LoggerI {
 		}
 
 		send("Equipment un-equipped!", client);
-
+		
+		// remove from chat channels
+		removefromStaffChannel(player);
+		chan.remove(player, OOC_CHANNEL);
 
 		debug("initDisconn(" + client.ip()+ ")");
 
