@@ -17,6 +17,11 @@ package mud;
   SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * 
+ * @author joshgit
+ *
+ */
 public class Coins
 {
     static final private int 
