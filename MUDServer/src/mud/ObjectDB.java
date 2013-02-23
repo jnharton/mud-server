@@ -14,12 +14,16 @@ public class ObjectDB {
     // TreeMap allows instant retrieval by id and by name.
     final private TreeMap<String, MUDObject>  objsByName = new TreeMap<String, MUDObject>();
     final private TreeMap<Integer, MUDObject> objsById = new TreeMap<Integer, MUDObject>();
+    
+ // holds unused database references, that exist due to "recycled" objects
+    private Stack<Integer> unusedDBNs = new Stack<Integer>();
 
     /** As long as we construct objects and insert them into this db afterwards as a separate step, getting the next id is somewhat of a hack.
      *  We could easily construct objects with an invalid id or never add them to this db.
      */
     public int peekNextId() {
-        return nextId;
+    	if( !unusedDBNs.empty() ) { return unusedDBNs.peek(); }
+    	else { return nextId; }
     }
 
     public int getSize() {
@@ -27,11 +31,13 @@ public class ObjectDB {
     }
 
     public void addAsNew(final MUDObject item) {
-        item.setDBRef(nextId++);
+    	if( !unusedDBNs.empty() ) { item.setDBRef( unusedDBNs.pop() ); }
+    	else { item.setDBRef(nextId++); }
         add(item);
     }
 
     public void add(final MUDObject item) {
+    	if(item instanceof NullObject) { unusedDBNs.push(item.getDBRef()); } else { nextId++; }
         objsByName.put(item.getName(), item);
         objsById.put(item.getDBRef(), item);
     }
