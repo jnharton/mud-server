@@ -34,7 +34,7 @@ import mud.objects.items.ClothingType;
  */
 public class Slot {
 	private String description;        // descriptive text
-	private SlotType slotType;         // the type of slot this is
+	private SlotType[] slotTypes;       // the type of slot this is
 	private ItemType itemType;         // the type of item the slot can hold
 	private ClothingType clothingType; // the type of clothing item the slot can hold
 	private Item item;                 // the item the slot currently holds
@@ -46,8 +46,8 @@ public class Slot {
 	 * @param slotType
 	 * @param itemType
 	 */
-	public Slot(final SlotType slotType, final ItemType itemType) {
-		this(slotType, itemType, null);
+	public Slot(final SlotType[] slotTypes, final ItemType itemType) {
+		this(slotTypes, itemType, null);
 	}
 
 	/**
@@ -59,8 +59,8 @@ public class Slot {
 	 * @param itemType
 	 * @param item
 	 */
-	public Slot(final SlotType slotType, final ItemType itemType, final Item item) {
-		this.slotType = slotType;
+	public Slot(final SlotType[] slotTypes, final ItemType itemType, final Item item) {
+		this.slotTypes = slotTypes;
 		this.itemType = itemType;
 		
 		if (item != null) { // ensure that putting null in doesn't register as full
@@ -78,8 +78,8 @@ public class Slot {
 	 * @param slotType
 	 * @param clothingType
 	 */
-	public Slot(final SlotType slotType, final ClothingType clothingType) {
-		this(slotType, clothingType, null);
+	public Slot(final SlotType[] slotTypes, final ClothingType clothingType) {
+		this(slotTypes, clothingType, null);
 	}
 	
 	/**
@@ -91,8 +91,8 @@ public class Slot {
 	 * @param clothingType
 	 * @param clothing
 	 */
-	public Slot(final SlotType slotType, final ClothingType clothingType, final Clothing clothing) {
-		this.slotType = slotType;
+	public Slot(final SlotType[] slotTypes, final ClothingType clothingType, final Clothing clothing) {
+		this.slotTypes = slotTypes;
 		this.itemType = ItemType.CLOTHING;
 		this.clothingType = clothingType;
 		
@@ -170,6 +170,10 @@ public class Slot {
 	 */
 	public ClothingType getCType() {
 		return this.clothingType;
+	}
+	
+	public SlotType[] getSlotTypes() {
+		return this.slotTypes;
 	}
 	
 	/**

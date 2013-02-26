@@ -266,25 +266,25 @@ public class Player extends MUDObject
 		this.slots = new LinkedHashMap<String, Slot>(11, 0.75f);
 
 		// initialize slots
-		this.slots.put("helmet", new Slot(SlotType.HEAD, ItemType.HELMET));
-		this.slots.put("necklace", new Slot(SlotType.NECK, ItemType.NECKLACE));
-		this.slots.put("armor", new Slot(SlotType.BODY, ItemType.ARMOR));
-		this.slots.put("cloak", new Slot(SlotType.BODY, ClothingType.CLOAK));
-		this.slots.put("ring1", new Slot(SlotType.FINGER, ItemType.RING));
-		this.slots.put("ring2", new Slot(SlotType.FINGER, ItemType.RING));
-		this.slots.put("ring3", new Slot(SlotType.FINGER, ItemType.RING));
-		this.slots.put("ring4", new Slot(SlotType.FINGER, ItemType.RING));
-		this.slots.put("ring5", new Slot(SlotType.FINGER, ItemType.RING));
-		this.slots.put("ring6", new Slot(SlotType.FINGER, ItemType.RING));
-		this.slots.put("ring7", new Slot(SlotType.FINGER, ItemType.RING));
-		this.slots.put("ring8", new Slot(SlotType.FINGER, ItemType.RING));
-		this.slots.put("ring9", new Slot(SlotType.FINGER, ItemType.RING));
-		this.slots.put("ring10", new Slot(SlotType.FINGER, ItemType.RING));
-		this.slots.put("gloves", new Slot(SlotType.HANDS, ClothingType.GLOVES));
-		this.slots.put("weapon", new Slot(SlotType.RHAND, ItemType.WEAPON));
-		this.slots.put("weapon1", new Slot(SlotType.LHAND, ItemType.WEAPON));
-		this.slots.put("belt", new Slot(SlotType.WAIST, ClothingType.BELT));;
-		this.slots.put("boots", new Slot(SlotType.FEET, ClothingType.BOOTS));
+		this.slots.put("helmet", new Slot(new SlotType[] { SlotType.HEAD }, ItemType.HELMET));
+		this.slots.put("necklace", new Slot(new SlotType[] { SlotType.NECK }, ItemType.NECKLACE));
+		this.slots.put("armor", new Slot(new SlotType[] { SlotType.CHEST }, ItemType.ARMOR));
+		this.slots.put("cloak", new Slot(new SlotType[] { SlotType.BACK }, ClothingType.CLOAK));
+		this.slots.put("ring1", new Slot(new SlotType[] { SlotType.FINGER }, ItemType.RING));
+		this.slots.put("ring2", new Slot(new SlotType[] { SlotType.FINGER }, ItemType.RING));
+		this.slots.put("ring3", new Slot(new SlotType[] { SlotType.FINGER }, ItemType.RING));
+		this.slots.put("ring4", new Slot(new SlotType[] { SlotType.FINGER }, ItemType.RING));
+		this.slots.put("ring5", new Slot(new SlotType[] { SlotType.FINGER }, ItemType.RING));
+		this.slots.put("ring6", new Slot(new SlotType[] { SlotType.FINGER }, ItemType.RING));
+		this.slots.put("ring7", new Slot(new SlotType[] { SlotType.FINGER }, ItemType.RING));
+		this.slots.put("ring8", new Slot(new SlotType[] { SlotType.FINGER }, ItemType.RING));
+		this.slots.put("ring9", new Slot(new SlotType[] { SlotType.FINGER }, ItemType.RING));
+		this.slots.put("ring10", new Slot(new SlotType[] { SlotType.FINGER }, ItemType.RING));
+		this.slots.put("gloves", new Slot(new SlotType[] { SlotType.HANDS }, ClothingType.GLOVES));
+		this.slots.put("weapon", new Slot(new SlotType[] { SlotType.RHAND }, ItemType.WEAPON));
+		this.slots.put("weapon1", new Slot(new SlotType[] { SlotType.LHAND }, ItemType.WEAPON));
+		this.slots.put("belt", new Slot(new SlotType[] { SlotType.WAIST }, ClothingType.BELT));;
+		this.slots.put("boots", new Slot(new SlotType[] { SlotType.FEET }, ClothingType.BOOTS));
 
 		// instantiate stats
 		stats = new LinkedHashMap<Abilities, Integer>(6, 0.75f);
@@ -848,12 +848,12 @@ public class Player extends MUDObject
 	 */
 	public String toDB() {
 		String[] output = new String[12];
-		output[0] = this.getDBRef() + "";    // player database reference number
-		output[1] = this.getName();          // player name
-		output[2] = this.getFlagsAsString();                      // player flags
-		output[3] = this.getDesc();          // player description
-		output[4] = this.getLocation() + ""; // player location
-		output[5] = this.getPass();          // player password
+		output[0] = this.getDBRef() + "";       // player database reference number
+		output[1] = this.getName();             // player name
+		output[2] = this.getFlagsAsString();    // player flags
+		output[3] = this.getDesc();             // player description
+		output[4] = this.getLocation() + "";    // player location
+		output[5] = this.getPass();             // player password
 		output[6] = stats.get(Abilities.STRENGTH) +
 				"," + stats.get(Abilities.DEXTERITY) +
 				"," + stats.get(Abilities.CONSTITUTION) +
@@ -861,10 +861,10 @@ public class Player extends MUDObject
 				"," + stats.get(Abilities.WISDOM) +
 				"," + stats.get(Abilities.CHARISMA);
 		output[7] = getMoney().toString(false); // player money
-		output[8] = this.access + "";        // player permissions level
-		output[9] = race.getId() + "";       // player race
-		output[10] = pclass.getId() + "";    // player class
-		output[11] = this.getStatus();       // player status
+		output[8] = this.access + "";           // player permissions level
+		output[9] = race.getId() + "";          // player race
+		output[10] = pclass.getId() + "";       // player class
+		output[11] = this.getStatus();          // player status
 		return Utils.join(output, "#");
 	}
 

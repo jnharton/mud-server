@@ -15,7 +15,7 @@ public class ObjectDB {
     final private TreeMap<String, MUDObject>  objsByName = new TreeMap<String, MUDObject>();
     final private TreeMap<Integer, MUDObject> objsById = new TreeMap<Integer, MUDObject>();
     
- // holds unused database references, that exist due to "recycled" objects
+    // holds unused database references, that exist due to "recycled" objects
     private Stack<Integer> unusedDBNs = new Stack<Integer>();
 
     /** As long as we construct objects and insert them into this db afterwards as a separate step, getting the next id is somewhat of a hack.

@@ -19,15 +19,17 @@ package mud;
 
 public enum SlotType {
 	NONE,
-	FINGER,
+	HEAD,
 	NECK,
 	BODY,
-	HEAD,
-	LEGS,
-	FEET,
+	CHEST,
+	BACK,
+	ARMS,
 	LHAND,
 	RHAND,
 	HANDS,
-	ARMS,
-	WAIST;
+	FINGER,
+	WAIST,
+	LEGS,
+	FEET;
 }

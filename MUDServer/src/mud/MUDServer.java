@@ -2883,10 +2883,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 		// identify the thing to be climbed, if it's possible
 		Thing thing = objectDB.getThing(getRoom(client).getDBRef(), arg); // ex. box, ladder, building
 
-		/* placeholder junk for checking to see if we are close enough to the object
-		 * to act on it directly
-		 */
-
 		// check distance from object
 		if( distance( player.getCoordinates(), thing.getCoordinates() ) <= 1 ) {
 
@@ -6459,7 +6455,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 							ptList.add(Utils.toPoint(param));
 						}
 
-						return "-Result: " + ptList;
+						return "-Result: " + ptList + "; distance is " + distance(ptList.get(0), ptList.get(1));
 
 					}
 					else { return "PGM: Error!"; }
@@ -10024,15 +10020,27 @@ public class MUDServer implements MUDServerI, LoggerI {
 	 * 
 	 * @param s          the skill "object"
 	 * @param diceRoll   a dice roll specified by a string (ex. '1d4' to roll a single d4 or 4-sided die)
-	 * @param skillValue your ranks in that skill
-	 * @param skillMod   any modification to the skill based on stats, magical enhancement
 	 * @param DC         the DC(difficulty) check you are comparing your skill against
 	 * @return           true (succeeded in passing DC), false (failed to pass DC)
 	 */
 	public boolean skill_check(final Player p, final Skill s, final String diceRoll, final int DC) {
 		return skill_check(s, diceRoll, p.getSkill(s), p.getAbility(s.getAbility()), DC);
 	}
-
+	
+	/**
+	 * skill_check
+	 * 
+	 * perform a skill check
+	 * 
+	 * NOTE: doesn't check against a player, just checks against specified value
+	 * 
+	 * @param s          the skill "object"
+	 * @param diceRoll   a dice roll specified by a string (ex. '1d4' to roll a single d4 or 4-sided die)
+	 * @param skillValue your ranks in that skill
+	 * @param skillMod   any modification to the skill based on stats, magical enhancement
+	 * @param DC         the DC(difficulty) check you are comparing your skill against
+	 * @return           true (succeeded in passing DC), false (failed to pass DC)
+	 */
 	public boolean skill_check(final Skill s, final String diceRoll, final int skillValue, final int skillMod, final int DC) {
 		// ex. 10 skill + 4 mod (via STR) > 25 ?: false (14 < 25)
 
