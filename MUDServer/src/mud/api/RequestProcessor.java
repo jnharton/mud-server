@@ -1,6 +1,10 @@
 package mud.api;
 
+import java.util.List;
 import java.util.LinkedList;
+
+import mud.MUDServer;
+import mud.objects.Player;
 
 /*
 Copyright (c) 2012 Jeremy N. Harton
@@ -23,10 +27,12 @@ public class RequestProcessor implements Runnable {
 	
 	private boolean running;
 	
-	APIServer as;
+	private final APIServer as;
+	private final MUDServer ms;
 	
-	protected RequestProcessor(APIServer parent) {
+	protected RequestProcessor(APIServer parent, MUDServer mudSrv) {
 		as = parent;
+		ms = mudSrv;
 	}
 	
 	@Override
@@ -48,9 +54,21 @@ public class RequestProcessor implements Runnable {
 	}
 	
 	private void processRequest(Request request) {			
-		if( as.validate(request.apiKey) ) {
+		if( as.validate( request.getAPIKey() ) ) {
 			System.out.println("API Key is valid!");
-			request.response = "APIServer> Test Phase -- No Data";
+			
+			if(request.getType() == RequestType.DATA) {
+				if(request.getParam().equals("who")) {
+					List<String> responseData = new LinkedList<String>();
+					for( Player p : ms.getPlayers()) {
+						responseData.add("P(" + p.getName() + "," + p.getPClass().getAbrv() + "," + p.getLevel() + ")"); 
+					}
+					request.response = "response-data " + "for:" + request.getAPIKey() + " " + responseData; 
+				}
+				else {
+					request.response = "APIServer> Invalid Parameter";
+				}
+			}
 		}
 		else {
 			System.out.println("API Key is invalid!");
@@ -58,5 +76,9 @@ public class RequestProcessor implements Runnable {
 		}
 		
 		request.processed = true;
+	}
+	
+	public void stop() {
+		this.running = false;
 	}
 }

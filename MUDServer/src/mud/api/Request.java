@@ -21,11 +21,11 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
 public class Request {
-	RequestType requestType;
-	APIKey apiKey;
-	String param;
+	private RequestType requestType;
+	private APIKey apiKey;
+	private String param;
 
-	Client client;
+	private Client client;
 
 	boolean processed = false;
 	String response = "";
@@ -35,5 +35,21 @@ public class Request {
 		apiKey = new APIKey(requestData[1]);
 		param = requestData[2];
 		client = tClient;
+	}
+	
+	public RequestType getType() {
+		return this.requestType;
+	}
+	
+	public APIKey getAPIKey() {
+		return this.apiKey;
+	}
+	
+	public String getParam() {
+		return this.param;
+	}
+	
+	public Client getClient() {
+		return this.client;
 	}
 }
