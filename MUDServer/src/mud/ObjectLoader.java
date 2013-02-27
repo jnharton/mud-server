@@ -19,13 +19,16 @@ public class ObjectLoader {
 	{
 		for (final String oInfo : in)
 		{	
-			if ( oInfo == null || oInfo.charAt(0) == '&' ) { // means to ignore that line
-				log.debug("`loadObjects` ignoring line: " + oInfo);
-				continue;
-			}
-
 			Integer oDBRef = 0, oLocation = 0;
 			String oName = "", oFlags = "", oDesc = "";
+			
+			if ( oInfo == null || oInfo.charAt(0) == '&' ) { // means to ignore that line
+				log.debug("`loadObjects` ignoring line: " + oInfo);
+				oDBRef = Integer.parseInt(oInfo.split("#")[0].replace('&', ' ').trim());
+				NullObject no = new NullObject(oDBRef);
+				objectDB.add(no);
+				continue;
+			}
 
             try {
                 String[] attr = oInfo.split("#");
@@ -191,7 +194,6 @@ public class ObjectLoader {
                     String roomType = attr[5];
 
                     final Room room = new Room(oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), oDesc, oLocation);
-
 
                     log.debug("log.debug (db entry): " + room.toDB(), 2);
 

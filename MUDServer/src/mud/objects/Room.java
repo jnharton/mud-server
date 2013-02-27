@@ -157,11 +157,14 @@ public class Room extends MUDObject
 	}
 
 	public String getExitNames() {
-        final StringBuilder buf = new StringBuilder();
-        for (final Exit e : exits) {
-            buf.append(", ").append(e.getName());
-        }
-		return buf.toString().substring(2); // clip off the initial, unecessary " ,"
+		if( exits.size() > 0 ) {
+			final StringBuilder buf = new StringBuilder();
+			for (final Exit e : exits) {
+				buf.append(", ").append(e.getName());
+			}
+			return buf.toString().substring(2); // clip off the initial, unecessary " ,"
+		}
+		else { return ""; }
 	}
 
 	public String getVisibleExitNames() {

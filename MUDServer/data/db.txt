@@ -251,3 +251,5 @@
 250#Kobold#C#A filthy kobold.#247#*#*#*#*#9
 251#Clearing#RS#A long-abandoned tower dominates the sky here{RAIN?, its polished-brick facade slick with fallen rain}{CLEAR?{DAY?, gleaming in the sunlight}{NIGHT?, pale moonlight casting it in an unnatural glow}}.#0#O#10,10,10#-1#
 252#Tower#RS#The inside the tower is a dusty space,{DAY? sunbeams cascade in through the hole in the ceiling}{NIGHT? moonlight falls gently across the stone floor}#0#O#10,10,10#-1#
+253#Town Hall#RS#This building is the place that the town is governed from#0#I#10,10,10#-1#
+254#Architect#N#This portly gentleman designs building, such as houses, and forts. Perhaps he can help you with something?#253#null#12,12,12,12,12,12#1000,1000,1000,1000#0#3#13
