@@ -102,10 +102,12 @@ public class ObjectDB {
 
     // Serialize all objects via `toDB` and save array to file.
     public void save(final String filename) {
-		final String[] toSave = new String[objsByName.size()];
+		//final String[] toSave = new String[objsByName.size()];
+    	final String[] toSave = new String[objsById.size()];
 		int index = 0;
-        for (final MUDObject obj : objsByName.values()) {
+        for (final MUDObject obj : objsById.values()) {
             toSave[index] = obj.toDB();
+            index++;
         }
 		Utils.saveStrings(filename, toSave);
     }

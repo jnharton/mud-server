@@ -154,5 +154,4 @@ public class NPC extends Player
 	public void addQuest(Quest newQuest) {
 		this.questList.add(newQuest);
 	}
-
 }

@@ -61,10 +61,7 @@ public class ChatChanneler
 		ChatChannel chan = channels.get(channelName);
 		
 		if (chan != null) {
-			//chan.write(player, message); // add message to ChatChannel message queue
-			String name = chan.getName(), chan_color = chan.getChanColor(), text_color = chan.getTextColor();
-			
-            player.getClient().write("(" + mud.colors(name, chan_color) + ") " + "<" + player.getName() + "> " + mud.colors(message, text_color) + "\r\n");
+			chan.write(player, message); // add message to ChatChannel message queue
             mud.debug("(" + channelName + ") <" + player.getName() + "> " + message + "\n");										
         }
 	}
@@ -73,14 +70,17 @@ public class ChatChanneler
 		ChatChannel chan = channels.get(channelName);
 
 		if (chan != null) {
-			//chan.write(message); // add message to ChatChannel message queue
-
-			String name = chan.getName(), chan_color = chan.getChanColor(), text_color = chan.getTextColor();
-			
-			for (final Player player : channels.get(channelName).getListeners()) {
-                player.getClient().write("(" + mud.colors(name, chan_color) + ") " + mud.colors(message, text_color) + "\r\n");
-                mud.debug("(" + channelName + ") " + message + "\n");										
-            }
+			chan.write(message); // add message to ChatChannel message queue
+			mud.debug("(" + channelName + ") " + message + "\n");
 		}
 	}
+	
+	//String name = chan.getName(), chan_color = chan.getChanColor(), text_color = chan.getTextColor();
+    //player.getClient().write("(" + mud.colors(name, chan_color) + ") " + "<" + player.getName() + "> " + mud.colors(message, text_color) + "\r\n");
+	
+	//String name = chan.getName(), chan_color = chan.getChanColor(), text_color = chan.getTextColor();
+	
+	/*for (final Player player : channels.get(channelName).getListeners()) {
+        player.getClient().write("(" + mud.colors(name, chan_color) + ") " + mud.colors(message, text_color) + "\r\n");										
+    }*/
 }

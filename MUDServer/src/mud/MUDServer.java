@@ -2496,33 +2496,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 	 */
 	private void cmd_backDB(final String arg, final Client client)
 	{
-		/*
-		// tell us that the database is being backed up (supply custom message?)
-		send("Game> Backing up Database!", client);
-
-		// NOTE: for these to work, I need to convert my database to one file so that the database line for an item and it's dbref number are the same
-		client.write("Game> Backing up Players...");
-		client.write("Done.\n");
-		client.write("Game> Backing up Rooms...");
-		client.write("Done.\n");
-		client.write("Game> Backing up Items...");
-		client.write("Done.\n");
-
-		// save databases to disk
-		int index = 0;
-		String[] toSave = new String[main.size()];
-		for (String s : main) {
-			toSave[index] = s;
-			index++;
-		}
-		saveStrings(mainDB, toSave);    // modifies 'real' files
-
-		// tell us that backing up is done (supply custom message?)
-		send("Game> Done.", client);
-		 */
-		send("Backup is buggy, therefore it is disabled", client);
-		//send(backup(), client);
-		//sys_backup2();
+		send(backup(), client);
 	}
 
 	/**
@@ -2854,12 +2828,12 @@ public class MUDServer implements MUDServerI, LoggerI {
 			}
 			// if the channel name is that specified, write the message to the channel
 			else {
-				ChatChannel cc = chan.getChatChannel(channelName); // get ChatChannel by name
-				cc.write(getPlayer(client), msg);                  // add message to ChatChannel message queue
+				//ChatChannel cc = chan.getChatChannel(channelName); // get ChatChannel by name
+				//cc.write(getPlayer(client), msg);                  // add message to ChatChannel message queue
 				
-				//chan.send(channelName, getPlayer(client), msg);
+				chan.send(channelName, getPlayer(client), msg);
 				
-				client.write("wrote " + arg + " to " + channelName + " channel.\n");
+				//client.write("wrote " + arg + " to " + channelName + " channel.\n");
 				chatLog.writeln("(" + channelName + ") <" + getPlayer(client).getName() + "> " + arg);
 			}
 		}
@@ -6514,12 +6488,12 @@ public class MUDServer implements MUDServerI, LoggerI {
 	 * @return did we succeed in writing to the channel? (true/false)
 	 */
 	public boolean chatHandler(final String channelName, final String arg, final Client client) {
-		ChatChannel cc = chan.getChatChannel(channelName); // get ChatChannel by name
-		cc.write(getPlayer(client), arg);                  // add message to ChatChannel message queue
+		//ChatChannel cc = chan.getChatChannel(channelName); // get ChatChannel by name
+		//cc.write(getPlayer(client), arg);                  // add message to ChatChannel message queue
 		
-		//chan.send(channelName, getPlayer(client), arg);
+		//client.write("wrote " + arg + " to " + channelName + " channel.\n");
 		
-		client.write("wrote " + arg + " to " + channelName + " channel.\n");
+		chan.send(channelName, getPlayer(client), arg); // send chat message
 		chatLog.writeln("(" + channelName + ") <" + getPlayer(client).getName() + "> " + arg);
 		
 		return true;
@@ -7872,6 +7846,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 	public void saveDB() {
 		// save databases to disk, modifies 'real' files
 		objectDB.save(mainDB);
+		send("Done");
 	}
 
 	public void saveHelpFiles() {
@@ -8756,47 +8731,13 @@ public class MUDServer implements MUDServerI, LoggerI {
 
 	public String backup() {
 		// tell us that the database is being backed up (supply custom message?)
-		log.writeln("Game> Backing up Database!");
-
-		// Rooms
-		log.writeln("Game> Backing up Rooms...");
-
-		log.writeln("Done.");
-
-		// Exits
-		log.writeln("Game> Backing up Exits...");
-
-		log.writeln("Done.");
-
-		// Players
-		log.writeln("Game> Backing up Players...");
-
-		log.writeln("Game> Backing up Non-Player Characters (NPCs)...");
-
-		// TODO fix/remove
-		// obsoleted or reworking needed?
-		/*
-		synchronized(npcs1) {
-			saveNPCs(); // NOTE: only modifies in memory storage
-		}*/
-		log.writeln("Done.");
-
+		
 		// Accounts
 		log.writeln("Game> Backing up Accounts...");
-
+		
 		synchronized(accounts) {
 			saveAccounts();
 		}
-
-		log.writeln("Done.");
-
-		// Things
-		log.writeln("Game> Backing up Things...");
-
-		log.writeln("Done.");
-
-		// Items
-		log.writeln("Game> Backing up Items...");
 
 		log.writeln("Done.");
 
@@ -8806,7 +8747,8 @@ public class MUDServer implements MUDServerI, LoggerI {
 		saveDB(); // NOTE: real file modification occurs here
 
 		log.writeln("Done.");
-
+		
+		// Help Files
 		log.writeln("Game> Backing up Help Files...");
 
 		saveHelpFiles();
@@ -8817,12 +8759,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 		log.writeln("Database Backup - Done.");
 
 		return "Game> Finished backing up.";
-	}
-
-	// very broken, produces nulls, effectively destroying the database
-	public void backup2() {
-		objectDB.save(mainDB);
-		send("Done");
 	}
 
 	// non-existent player "flush" function
