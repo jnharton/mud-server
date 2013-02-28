@@ -59,17 +59,15 @@ public class Clothing extends Item implements Equippable<Clothing>, Usable<Cloth
 	 * Use this only for testing purposes and loading objects into the
 	 * server database, for anything else, use one of the other constructors
 	 * that has parameters.
-	 *
-	 * 
+	 * @param tempDBREF
 	 * @param tempName
 	 * @param tempDesc
 	 * @param tempLoc
-	 * @param tempDBREF
 	 * @param tCharges
 	 * @param spellName
 	 */
-	public Clothing(String tempName, String tempDesc, int tempLoc, int tempDBREF, int cMod, ClothingType cType) {
-		super(-1, tempName, EnumSet.of(ObjectFlag.ITEM), tempDesc, tempLoc);
+	public Clothing(int tempDBREF, String tempName, String tempDesc, int tempLoc, int cMod, ClothingType cType) {
+		super(tempDBREF, tempName, EnumSet.of(ObjectFlag.ITEM), tempDesc, tempLoc);
 		this.equippable = true;
 		this.equip_type = ItemType.CLOTHING;
 		this.item_type = ItemType.CLOTHING;
@@ -123,9 +121,9 @@ public class Clothing extends Item implements Equippable<Clothing>, Usable<Cloth
 	public String toDB() {
 		String[] output = new String[8];
 		output[0] = this.getDBRef() + "";          // clothing database reference number
-		output[1] = this.getName();                      // clothing name
-		output[2] = this.getFlagsAsString();                     // clothing flags
-		output[3] = this.getDesc();                      // clothing description
+		output[1] = this.getName();                // clothing name
+		output[2] = this.getFlagsAsString();       // clothing flags
+		output[3] = this.getDesc();                // clothing description
 		output[4] = this.getLocation() + "";       // clothing location (a.k.a parent)
 		output[5] = this.item_type.ordinal() + ""; // item type
 		output[6] = this.clothing.ordinal() + "";  // clothing type

@@ -224,7 +224,7 @@ public class ObjectLoader {
                         int clothingType = Integer.parseInt(attr[6]);
                         int mod = Integer.parseInt(attr[7]);
 
-                        final Clothing clothing = new Clothing(oName, oDesc, oLocation, oDBRef, mod, ClothingType.values()[clothingType]);
+                        final Clothing clothing = new Clothing(oDBRef, oName, oDesc, oLocation, mod, ClothingType.values()[clothingType]);
                         clothing.item_type = it;
 
                         objectDB.add(clothing);

@@ -1,13 +1,13 @@
 package mud.objects.items;
 
 public enum ClothingType {
-	BELT("Belt"),
-	BOOTS("Boots"),
-	CLOAK("Cloak"),
-	GLOVES("Gloves"),
-	PANTS("Pants"),	
-	SHIRT("Shirt"),
-	NONE("None");
+	BELT("Belt"),     // 0
+	BOOTS("Boots"),   // 1
+	CLOAK("Cloak"),   // 2
+	GLOVES("Gloves"), // 3
+	PANTS("Pants"),	  // 4
+	SHIRT("Shirt"),   // 5
+	NONE("None");     // 6
 	
 	private String name;
 	
