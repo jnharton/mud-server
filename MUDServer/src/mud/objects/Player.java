@@ -1,6 +1,7 @@
 package mud.objects;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -387,7 +388,7 @@ public class Player extends MUDObject
 	 */
 	public void setPClass(Classes playerClass) { this.pclass = playerClass; }
 
-	public Races getPlayerRace() { return this.race; }
+	public Races getPRace() { return this.race; }
 
 	public void setPlayerRace(Races race) { this.race = race; }
 

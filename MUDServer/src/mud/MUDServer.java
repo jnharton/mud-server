@@ -2767,14 +2767,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 		}
 	}
 
-	public void addToStaffChannel(final Player player) throws Exception {
-		chan.add(player, STAFF_CHANNEL);
-	}
-
-	public void removefromStaffChannel(final Player player) {
-		chan.remove(player, STAFF_CHANNEL);
-	}
-
 	/**
 	 * Chat Command
 	 *
@@ -4995,7 +4987,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 
 		send("------------------------------[ Sheet ]------------------------------", client);
 		send("Character Name: " + Utils.padRight(player.getName(), 16) + " Player Name: " + Utils.padRight("", 8), client);
-		send("Race: " + player.getPlayerRace().getName(), client);
+		send("Race: " + player.getPRace().getName(), client);
 		send("Class: " + player.getPClass().getName(), client);
 		send("Level: " + player.getLevel(), client);
 		if ( player.isLevelUp() ) {
@@ -5600,7 +5592,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 		final Player player = getPlayer(client);
 
 		send("You are " + player.getName() + " " + player.getTitle() + ", level " + player.getLevel(), client);
-		send("Race: " + player.getPlayerRace().getName() + " Sex: " + player.getGender().toString() + " Class: " + player.getPClass().getName(), client);
+		send("Race: " + player.getPRace().getName() + " Sex: " + player.getGender().toString() + " Class: " + player.getPClass().getName(), client);
 		send("Money: " + player.getMoney().toString() + ".", client);
 	}
 
@@ -5994,7 +5986,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 				//String title = player.getTitle(); // need to limit title to 8 characters
 				String playerClass = player.getPClass().getName();
 				String playerGender = player.getGender().toString();
-				String race = player.getPlayerRace().toString();
+				String race = player.getPRace().toString();
 				String ustatus = player.getStatus(); // need to limit status to 3 characters
 				int location = player.getLocation(); // set room # limit to 5 characters (max. 99999)
 				String roomName = getRoom(location).getName(); // truncate to 24 characters?
@@ -6040,7 +6032,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 				String name = player.getName();                  // need to limit name to 10 characters
 				String cname = player.getCName();
 				String title = player.getTitle();                // need to limit title to 8 characters
-				String race = player.getPlayerRace().toString();
+				String race = player.getPRace().toString();
 
 				StringBuilder sb = new StringBuilder();
 
@@ -6127,6 +6119,10 @@ public class MUDServer implements MUDServerI, LoggerI {
 								room = getRoom(room.getLocation()); // get the current room's parent
 								if (room.getFlags().contains("Z")) 
 								{
+									send(getRoom(args[0]).getName() + " added to zone.", client);
+								}
+								else {
+									room.getFlags().add(ObjectFlag.ZONE);
 									send(getRoom(args[0]).getName() + " added to zone.", client);
 								}
 							}
@@ -6773,7 +6769,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 				if (step == 1) {
 					debug("Entering Step " + step);
 					player.setPlayerRace(Races.getRace(answer));
-					send("Player Race set to: " + player.getPlayerRace(), client);
+					send("Player Race set to: " + player.getPRace(), client);
 					send("", client);
 					step++;
 				}
@@ -6852,7 +6848,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 
 					switch(answer) {
 					case 1:
-						client.write("Player Race: " + player.getPlayerRace() + "\n");
+						client.write("Player Race: " + player.getPRace() + "\n");
 						step = 1;
 						break;
 					case 2:
@@ -7520,6 +7516,14 @@ public class MUDServer implements MUDServerI, LoggerI {
 			}
 		}
 		return false;
+	}
+	
+	public void addToStaffChannel(final Player player) throws Exception {
+		chan.add(player, STAFF_CHANNEL);
+	}
+
+	public void removefromStaffChannel(final Player player) {
+		chan.remove(player, STAFF_CHANNEL);
 	}
 
 	// Object "Retrieval" Functions
@@ -9362,6 +9366,8 @@ public class MUDServer implements MUDServerI, LoggerI {
 	public void examine(final Player player, final Client client) {
 		send(player.name + "(#" + player.getDBRef() + ")", client);
 		send("Type: " + ObjectFlag.firstInit(player.getFlags()) + " Flags: " + ObjectFlag.toInitString(player.getFlags()), client);
+		send("Race: " + player.getPRace().getName(), client);
+		send("Class: " + player.getPClass().getName(), client);
 		send("Description: " + player.getDesc(), client);
 		send("Location: " + getRoom(player.getLocation()).getName() + "(#" + player.getLocation() + ")", client);
 

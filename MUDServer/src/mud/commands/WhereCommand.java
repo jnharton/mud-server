@@ -27,7 +27,7 @@ public class WhereCommand extends Command {
 				//String title = player.getTitle(); // need to limit title to 8 characters
 				String playerClass = player.getPClass().getName();
 				String playerGender = player.getGender().toString();
-				String race = player.getPlayerRace().toString();
+				String race = player.getPRace().toString();
 				String ustatus = player.getStatus(); // need to limit status to 3 characters
 				int location = player.getLocation(); // set room # limit to 5 characters (max. 99999)
 				String room = parent.getRoom(location).getName(); // truncate to 24 characters

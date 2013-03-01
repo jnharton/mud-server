@@ -123,24 +123,28 @@ public class Coins
             buf.append(left.numOfPlatinum());
             buf.append(showUnits ? "pp " : ",");
         }
+        else if(!showUnits) { buf.append( 0 + ","); }
 
         left = left.subtractPlatinum(left.numOfPlatinum());
         if (left.numOfGold() > 0) {
             buf.append(left.numOfGold());
             buf.append(showUnits ? "gp " : ",");
         }
+        else if(!showUnits) { buf.append( 0 + ","); }
 
         left = left.subtractGold(left.numOfGold());
         if (left.numOfSilver() > 0) {
             buf.append(left.numOfSilver());
             buf.append(showUnits ? "sp " : ",");
         }
+        else if(!showUnits) { buf.append( 0 + ","); }
 
         left = left.subtractSilver(left.numOfSilver());
         if (left.numOfCopper() > 0) {
             buf.append(left.numOfCopper());
             buf.append(showUnits ? "cp " : ",");
         }
+        else if(!showUnits) { buf.append(0); }
 
         return buf.length() > 0 ? buf.toString().trim() : "0cp";
     }
