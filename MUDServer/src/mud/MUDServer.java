@@ -83,10 +83,7 @@ import java.util.regex.Matcher;
  * Version 0.9.2 ( 2.4.2013 )
  * 
  * - uses Java SDK 1.7
- * 
- * -- No Theme --
- * 
- * - still need to remove theme related stuff from previous forks - 4/21/2011 (DONEish, have theming system now)
+ *  
  * - need to remove MU* stuff and focus on MUD related code
  * 
  * >> Copyright 2010 - Eternity Jeremy N. Harton <<
@@ -102,10 +99,6 @@ import java.util.regex.Matcher;
  * - revision bumped to 0.9.1bF1 for slow change in last six months ( 11.2.2012 )
  * - revision bumped to 0.9.2bF1 for recent changes, especially to database design ( 2.4.2013 )
  * - fork nomenclature dropped 0.9.2bF1 -> 0.9.2
- * 
- * NEED concept for when to increase version number
- * 
- * Just another Java MUD
  *
  * @Last Work: database and flags (contributions by joshgit from github.com)
  * @minor version number should increase by 1: when 5 or more commands are added or modified, significant problem is fixed, etc?
@@ -198,10 +191,13 @@ public class MUDServer implements MUDServerI, LoggerI {
 
 	// Protocols
 	/*
-	 * this section is badly designed. In theory it represents whether support for something is enabled,
+	 * This section is badly designed. In theory it represents whether support for something is enabled,
 	 * but in the case of colors only ANSI -or- XTERM should be possible (one color system).
+	 * 
+	 * Incidentally, the color code generator functions check to see if color is on, if not they return
+	 * the original, unaltered argument.
 	 */
-	private int ansi = 1;        // (0=off,1=on) ANSI Color on/off, default: on [currently only dictates bright or not]
+	private int ansi = 0;        // (0=off,1=on) ANSI Color on/off, default: on [currently only dictates bright or not]
 	private int xterm = 0;       // (0=off,1=on) XTERM Color on/off, default: off [not implemented]
 	private int msp = 0;         // (0=off,1=on) MUD Sound Protocol on/off, default: off
 	private int telnet = 0;      // (0=no telnet: mud client mode, 1=telnet: telnet client mode, 2=telnet: telnet and mud client)
@@ -238,6 +234,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 	private final String start_desc = "There is nothing to see."; // default desc string
 	private final Integer start_room = 9;                         // default starting room
 	private final Integer[] start_stats = { 0, 0, 0, 0, 0, 0 };   // default stats
+	private Coins start_money = new Coins(10, 50, 50, 100);       // default_money
 
 	// Objects (used throughout program in lieu of function scope variables) -- being phased out (April 2012
 	// these must be global variable, so that mud can have top-level control over them in the program
@@ -8646,19 +8643,16 @@ public class MUDServer implements MUDServerI, LoggerI {
 			String mspMsg = MSP.generate();
 			send(mspMsg, someClient);
 		}
+
 		// send data about the server
-
-		// black & white
-		//send(name + " " + version + " -- Running on " + computer + "(" + ip + ")\n");
-		//send(MOTD());
-
-		// colors
 		send(colors(program, "yellow") + colors(" " + version, "yellow") + colors(" -- Running on " + computer, "green"), someClient);
 		send(colors(serverName, "red"), someClient);
-		// send the MOTD to the client in cyan
 		send(colors(MOTD(),"cyan"), someClient);
+
 		// reset color
 		//send(colors("Color Reset to Default!", "white"));
+		
+		// indicate game mode
 		send("Mode: " + mode, someClient);
 	}
 

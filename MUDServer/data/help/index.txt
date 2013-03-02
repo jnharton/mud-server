@@ -1,6 +1,6 @@
 @access.txt
 @accounts.txt
-@alias.txt
+@aliases.txt
 @allocate.txt
 @backdb.txt
 @ban.txt

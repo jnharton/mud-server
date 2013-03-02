@@ -58,6 +58,10 @@ public class Coins
 	private Coins(final int n) {
         copperValue = n;
 	}
+	
+	public Coins(final int platinum, final int gold, final int silver, final int copper) {
+        copperValue = (PLATINUM_RATIO * platinum) + (GOLD_RATIO * gold) + (SILVER_RATIO * silver) + copper;
+	}
 
     // 230 copper coins minus 5 copper coins: Coins.copper(230).subtractCopper(6)
     // 6 silver coins minus 230 copper coins: Coins.silver(6).subtractCopper(230)
