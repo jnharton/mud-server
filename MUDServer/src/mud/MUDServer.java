@@ -347,16 +347,16 @@ public class MUDServer implements MUDServerI, LoggerI {
 	};
 
 	private String[] admin_cmds = new String[] {
-			"@alias", "@allocate", // @alias setup command aliases, @allocate "allocate" dbref space
-			"@ban", "@bb",         // @ban ban player, @bb use bulletin board
-			"@config", "@control", // @config change server configuration options, @control control an NPC
-			"@debug",              // @debug show debug information
-			"@hash", "@hedit",     // @hash see hash of a string, @hedit edit help files
-			"@listprops",          // @listprops list properties on an object          
-			"@nextdb",             // @nextdb get the next unused dbref number
-			"@passwd", "@pgm",     // @passwd change passwords, @pgm interpret a "script" program
-			"@set", "@setskill",   // @set set properties on objects, @setskill set player skill values
-			"@zones"               // @zones setup,configure,modify zones
+			"@aliases", "@allocate", // @alias setup command aliases, @allocate "allocate" dbref space
+			"@ban", "@bb",           // @ban ban player, @bb use bulletin board
+			"@config", "@control",   // @config change server configuration options, @control control an NPC
+			"@debug",                // @debug show debug information
+			"@hash", "@hedit",       // @hash see hash of a string, @hedit edit help files
+			"@listprops",            // @listprops list properties on an object          
+			"@nextdb",               // @nextdb get the next unused dbref number
+			"@passwd", "@pgm",       // @passwd change passwords, @pgm interpret a "script" program
+			"@set", "@setskill",     // @set set properties on objects, @setskill set player skill values
+			"@zones"                 // @zones setup,configure,modify zones
 	};
 
 	private String[] wiz_cmds = new String[] {
@@ -1547,7 +1547,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 							}
 						}
 					}
-					else if ( cmd.equals("@alias") || ( aliasExists && alias.equals("@alias") ) ) {
+					else if ( cmd.equals("@aliases") || ( aliasExists && alias.equals("@aliases") ) ) {
 						adminCmd = true;
 						commandMap.get(cmd).execute(arg, client);
 					}
@@ -1555,6 +1555,10 @@ public class MUDServer implements MUDServerI, LoggerI {
 					else if ( cmd.equals("@allocate") || ( aliasExists && alias.equals("@allocate") ) ) {
 						adminCmd = true;
 						cmd_allocate(arg, client);
+					}
+					else if ( cmd.equals("@areas") || ( aliasExists && alias.equals("@areas") ) ) {
+						adminCmd = true;
+						cmd_areas(arg, client);
 					}
 					// pass arguments to the backup function
 					else if ( cmd.equals("@backdb") || ( aliasExists  && alias.equals("@backdb") ) )
@@ -2420,6 +2424,9 @@ public class MUDServer implements MUDServerI, LoggerI {
 	 */
 	private void cmd_allocate(final String arg, final Client client) {
 		objectDB.allocate(Utils.toInt(arg, 10));
+	}
+	
+	private void cmd_areas(final String arg, final Client client) {
 	}
 
 	/**
