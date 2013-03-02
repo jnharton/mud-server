@@ -300,11 +300,11 @@ public class MUDServer implements MUDServerI, LoggerI {
 	private ArrayList<Account> accounts;     // ArrayList of Accounts (UNUSED)
 
 	// "Security" Stuff
-	private ArrayList<String> banlist;       // ArrayList of banned ip addresses
+	private ArrayList<String> banlist;        // ArrayList of banned ip addresses
 
 	// Other
-	private ArrayList<Effect> effectTable;   // ArrayList of existing effects (can be reused many places)
-	private ArrayList<String> forbiddenNames;//
+	private ArrayList<Effect> effectTable;    // ArrayList of existing effects (can be reused many places)
+	private ArrayList<String> forbiddenNames; // ArrayList of forbidden names for players/characters
 
 	// cmd lists
 	private String[] user_cmds = new String[] {
@@ -740,6 +740,8 @@ public class MUDServer implements MUDServerI, LoggerI {
 		if (accounts.size() == 0) {
 			debug("No accounts.");
 		}
+		
+		loadChannels(CONFIG_DIR + "channels.txt");
 
 		System.out.println("Server> Setup Done.");
 	}
@@ -8090,6 +8092,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 			debug("Not loading theme, filename: " + themeFile);
 			return;
 		}
+		
 		debug("Loading theme, filename: " + themeFile);
 
 		theme1 = new Theme();
@@ -8169,6 +8172,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 				}
 			}
 		}
+		
 		debug("");
 		debug("Theme Loaded.");
 	}
@@ -8213,18 +8217,24 @@ public class MUDServer implements MUDServerI, LoggerI {
 		try {
 			final FileReader fr = new FileReader(new File(filename));
 			final BufferedReader br = new BufferedReader(fr);
+			
 			String line;
-			while ((line = br.readLine()) != null) { 
+			
+			while ((line = br.readLine()) != null) {
+				/* kinda sort defunct
 				// split line in file
 				final String[] cInfo = line.split("#");
 
 				// extract channel information from array of data
 				final int channelId = Integer.parseInt(cInfo[0]);
-				final String channelName = cInfo[1];
+				*/
+				
+				final String channelName = line;
 				chan.makeChannel(channelName);
 
 				debug("Channel Added: " + channelName);
 			}
+			
 			br.close();
 			fr.close();
 		}

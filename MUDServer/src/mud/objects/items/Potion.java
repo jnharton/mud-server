@@ -118,8 +118,6 @@ public class Potion extends Item implements Stackable<Potion>, Usable<Potion> {
 		String effectName = s;
 		this.effect = new Effect(effectName);
 		
-		parent.debug(this.effect.getName());
-		
 		this.effects = new ArrayList<Effect>();
 		this.effects.add(this.effect);
 

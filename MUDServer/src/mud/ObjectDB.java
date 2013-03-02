@@ -55,6 +55,14 @@ public class ObjectDB {
             i += 1;
         }
     }
+    
+    public void dump() {
+    	int i = 0;
+        for (final MUDObject obj : objsByName.values()) {
+        	System.out.println(String.format("%s: %s (#%s)", i, obj.getName(), obj.getDBRef()));
+            i += 1;
+        }
+    }
 
     // Ensure object is in both maps, overwriting any object in the id map.
     public void set(final int n, final MUDObject item) {
