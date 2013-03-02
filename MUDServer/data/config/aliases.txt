@@ -1,7 +1,6 @@
 # Command Aliases File
-alias @backdb:@backup
 alias @check:@chk
-alias @describe:describe,@desc,desc
+alias @describe:@desc
 alias @loaddb:@load
 alias @success:@succ
 alias @osuccess:@osucc

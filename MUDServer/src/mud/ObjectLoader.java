@@ -10,6 +10,7 @@ import mud.Coins;
 import mud.MUDObject;
 import mud.objects.Item;
 import mud.utils.Utils;
+import mud.magic.Spell;
 import mud.net.Client;
 
 public class ObjectLoader {
@@ -236,8 +237,10 @@ public class ObjectLoader {
                     if ( it == ItemType.WAND ) { // Wand
                         String spellName = attr[6];
                         int charges = Integer.parseInt(attr[7]);
+                        
+                        Spell spell = parent.getSpell(spellName);
 
-                        Wand wand = new Wand(oName, oDesc, oLocation, oDBRef, ItemType.values()[itemType], charges, spellName);
+                        Wand wand = new Wand(oName, oDesc, oLocation, oDBRef, ItemType.values()[itemType], charges, spell);
                         //wand.item_type = it; // unnecessary
 
                         objectDB.add(wand);

@@ -32,24 +32,13 @@ public class Wand extends Item implements Equippable<Wand>, Usable<Wand>, Wielda
 	protected Wand() {
 	}
 
-	public Wand(int tCharges, String spellName) {
+	public Wand(int tCharges, String spell) {
 		super(-1, "Wand", EnumSet.noneOf(ObjectFlag.class), "I", 8);
 		this.equippable = true;
 		this.item_type = ItemType.WAND;
 		this.equip_type = ItemType.WEAPON;
 		this.charges = tCharges;
-		this.spell = parent.getSpell(spellName);
-
-		this.name = "Wand of " + this.spell.name;
-	}
-
-	public Wand(int tCharges, Spell tSpell) {
-		super(-1, "Wand", EnumSet.noneOf(ObjectFlag.class), "I", 8);
-		this.equippable = true;
-		this.item_type = ItemType.WAND;
-		this.equip_type = ItemType.WEAPON;
-		this.charges = tCharges;
-		this.spell = tSpell;
+		this.spell = parent.getSpell(spell);
 
 		this.name = "Wand of " + this.spell.name;
 	}
@@ -67,28 +56,18 @@ public class Wand extends Item implements Equippable<Wand>, Usable<Wand>, Wielda
 	 * @param tempLoc
 	 * @param tempDBREF
 	 * @param tCharges
-	 * @param spellName
+	 * @param spell
 	 */
-	public Wand(String tempName, String tempDesc, int tempLoc, int tempDBREF, ItemType itemType, int tCharges, String spellName) {
+	public Wand(String tempName, String tempDesc, int tempLoc, int tempDBREF, ItemType itemType, int tCharges, Spell spell) {
 		super(tempDBREF, tempName, EnumSet.of(ObjectFlag.ITEM), tempDesc, tempLoc);
 		this.equippable = true;
 		this.item_type = ItemType.WAND;
 		this.equip_type = ItemType.WEAPON;
 		this.charges = tCharges;
-		this.spell = parent.getSpell(spellName);
-
+		this.spell = spell;
+		
 		this.name = "Wand of " + this.spell.name;
 	}
-
-	/*public Wand(String tempName, String tempDesc, int tempLoc, int tempDBREF, int tCharges, Spell tSpell) {
-		super(tempDBREF, tempName, tempDesc, "I", tempLoc);
-		this.equippable = true;
-		this.equip_type = ItemType.WEAPON;
-		this.charges = tCharges;
-		this.spell = tSpell;
-
-		this.name = "Wand of " + this.spell.name;
-	}*/
 
 	@Override
 	public String getName() {

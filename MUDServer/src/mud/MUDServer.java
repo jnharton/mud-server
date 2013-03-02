@@ -267,7 +267,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 	private HashMap<String, String> displayColors = new HashMap<String, String>(8, 0.75f);      // HashMap specifying particular colors for parts of text (somewhat static)
 	private HashMap<String, String> colors = new HashMap<String, String>(8, 0.75f);             // HashMap to store ansi/vt100 escape codes for outputting color (static)
 
-	public HashMap<String, String> aliases = new HashMap<String, String>(20, 0.75f);             // HashMap to store command aliases (static)
+	public HashMap<String, String> aliases = new HashMap<String, String>(20, 0.75f);            // HashMap to store command aliases (static)
 	private HashMap<Integer, String> Errors = new HashMap<Integer, String>(5, 0.75f);           // HashMap to store error messages for easy retrieval (static)
 
 	private HashMap<String, Date> holidays = new HashMap<String, Date>(10, 0.75f);               // HashMap that holds an in-game date for a "holiday" name string
@@ -587,7 +587,8 @@ public class MUDServer implements MUDServerI, LoggerI {
 				this.Errors.put(Integer.parseInt(working[0]), working[1]);
 			}
 		}
-
+		
+		// load spells
 		loadSpells(Utils.loadStrings(spellDB));
 		System.out.println("Spells Loaded!");
 
@@ -1560,7 +1561,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 						cmd_areas(arg, client);
 					}
 					// pass arguments to the backup function
-					else if ( cmd.equals("@backdb") || ( aliasExists  && alias.equals("@backdb") ) )
+					else if ( cmd.equals("@backup") || ( aliasExists  && alias.equals("@backup") ) )
 					{
 						adminCmd = true;
 						// run the backup function
@@ -11053,7 +11054,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 				int rise = Math.abs( start.getY() - end.getY() ); // x (a)
 				int run = Math.abs( start.getX() - end.getX() );  // y (b)
 
-				int distance = (int) Math.sqrt( square(run) + square(rise) ); // z (c)
+				int distance = (int) Math.sqrt( square(rise) + square(run) ); // z (c)
 
 				return distance;
 				// calculate travel distance going at right angles
