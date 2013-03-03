@@ -1,6 +1,7 @@
 package mud;
 
 import java.util.*;
+import java.util.Map.Entry;
 
 import mud.objects.Player;
 
@@ -39,9 +40,23 @@ public class PlayerControlMap {
      */
     public void stopControllingAnyone(final Player p) {
         final Player oldSlave = map.get(p);
-        oldSlave.setAccess(0);
-        p.setController(false);
-        map.remove(p);
+        
+        // if player was controlling an NPC
+        if( oldSlave != null ) {
+        	oldSlave.setAccess(0);  // clear permissions
+        	p.setController(false); // clear controller "flag"
+        	map.remove(p);          // remove the mapping
+        }
+    }
+    
+    public Player getController(final Player p) {
+    	for( Entry<Player, Player> e : map.entrySet() ) {
+    		if( e.getValue() == p ) {
+    			return e.getKey();
+    		}
+    	}
+    	
+    	return null;
     }
     
     /**

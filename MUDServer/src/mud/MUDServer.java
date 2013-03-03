@@ -197,7 +197,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 	 * Incidentally, the color code generator functions check to see if color is on, if not they return
 	 * the original, unaltered argument.
 	 */
-	private int ansi = 0;        // (0=off,1=on) ANSI Color on/off, default: on [currently only dictates bright or not]
+	private int ansi = 1;        // (0=off,1=on) ANSI Color on/off, default: on [currently only dictates bright or not]
 	private int xterm = 0;       // (0=off,1=on) XTERM Color on/off, default: off [not implemented]
 	private int msp = 0;         // (0=off,1=on) MUD Sound Protocol on/off, default: off
 	private int telnet = 0;      // (0=no telnet: mud client mode, 1=telnet: telnet client mode, 2=telnet: telnet and mud client)
@@ -3029,15 +3029,25 @@ public class MUDServer implements MUDServerI, LoggerI {
 	 */
 	private void cmd_control(final String arg, final Client client) {
 		final Player player = getPlayer(client);
-
+		
 		if (arg.toLowerCase().equals("#break")) { // NOTE: Looks okay
+			final Player controller = playerControlMap.getController(player);
+			
 			debug("DM Control Table:");
 			debug(playerControlMap);
+			
+			String name = "";
+			
+			if( playerControlMap.getSlave(controller) != null ) {
+				name = playerControlMap.getSlave(controller).getName();
+			}
 
-			playerControlMap.stopControllingAnyone(player);
+			playerControlMap.stopControllingAnyone(controller);
 
 			debug("DM Control Table:");
 			debug(playerControlMap);
+			
+			send("Game> You stop controlling " + name, client);
 		}
 		else { // should not be able to use this to control other players (at least not normally) NOTE: needs work
 			final Player npc = getNPC(arg);
@@ -3052,10 +3062,15 @@ public class MUDServer implements MUDServerI, LoggerI {
 				final Player oldSlave = playerControlMap.control(player, npc);
 
 				player.setController(true); // mark the player as controlling an npc (commented out in PlayerControlMap)
-				oldSlave.setAccess(USER);   // revoke any greater privileges granted
+				
+				if( oldSlave != null ) {
+					oldSlave.setAccess(USER);   // revoke any greater privileges granted
+				}
 
 				debug("DM Control Table:");
 				debug(playerControlMap);
+				
+				send("Game> You are now controlling " + npc.getName(), client);
 			}
 			else {
 				send("Players are not controllable, only NPCs", client);
@@ -3176,7 +3191,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 			}
 			if (getPlayer(client).getAccess() >= WIZARD)
 			{
-				send(colors("admin commands: ", "magenta") + Utils.join(wiz_cmds, ","), client);
+				send(colors("wizard commands: ", "magenta") + Utils.join(wiz_cmds, ","), client);
 			}
 		}
 	}
