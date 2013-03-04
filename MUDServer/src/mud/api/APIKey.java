@@ -17,16 +17,40 @@ CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTH
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * An object that represents an API key.
+ * 
+ * @author Jeremy
+ *
+ */
 public class APIKey {
-	// constants
+	/** Maximum length of an API key */
 	final static private int MAX_KEY_LENGTH = 16;
-		
+	
+	/** An alphanumeric string (0-9, a-Z, A-Z) */
 	private String key;
 	
+	/**
+	 * APIKey
+	 * 
+	 * Construct an APIKey object from an input string
+	 * 
+	 * @param keyString The string to be used as an API key
+	 */
 	public APIKey(String keyString) {
 		this.key = keyString;
 	}
 	
+	/**
+	 * isValid
+	 * 
+	 * Validates this APIKey for basic limiting criteria:
+	 * 
+	 * - is the key less than or equal to the max length
+	 * - does the key contain only alphanumeric characters 
+	 * 
+	 * @return boolean true if the key is valid, false otherwise.
+	 */
 	public boolean isValid() {
 		boolean isValid = false;
 		
@@ -41,6 +65,9 @@ public class APIKey {
 		return isValid;
 	}
 	
+	/**
+	 * Returns the string representation of the key, i.e. the key itself.
+	 */
 	public String toString() {
 		return this.key;
 	}

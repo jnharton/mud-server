@@ -21,8 +21,8 @@ public class DropCommand extends Command {
 	@Override
 	public void execute(String arg, Client client) {
 		// get player, room objects to work with
-		Player player = parent.getPlayer(client);
-		Room room = parent.getRoom(client);
+		Player player = getPlayer(client);
+		Room room = getRoom(client);
 		Item item;
 		
 		ArrayList<Item> inventory = player.getInventory();

@@ -19,7 +19,7 @@ public class AttackCommand extends Command {
 
 	@Override
 	public void execute(String arg, Client client) {
-		Player player = parent.getPlayer(client);
+		Player player = getPlayer(client);
 
 		try {
 			if (!arg.equals("")) {

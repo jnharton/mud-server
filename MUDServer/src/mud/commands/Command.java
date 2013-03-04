@@ -3,6 +3,7 @@ package mud.commands;
 import mud.MUDServer;
 import mud.net.Client;
 import mud.objects.Player;
+import mud.objects.Room;
 
 public abstract class Command {
 	protected static int USER = 0;   // basic user permissions
@@ -73,8 +74,43 @@ public abstract class Command {
 		return this.parent.gameError(source, type);
 	}
 	
-	public Player getPlayer(String name) {
-		return parent.getPlayer(name);
+	/**
+	 * method that calls the parent MUDServer instance's getPlayer
+	 * method on the object provided and returns either a Player object
+	 * or null (when the object can't be used to get a player, or when
+	 * no player was found)
+	 * 
+	 * @param object
+	 * @return
+	 */
+	public Player getPlayer(Object object) {
+		if( object instanceof String ) {
+			return parent.getPlayer((String) object);
+		}
+		else if( object instanceof Client ) {
+			return parent.getPlayer((Client) object);
+		}
+		
+		return null;
 	}
 	
+	/**
+	 * method that calls the parent MUDServer instance's getRoom
+	 * method on the object provided and returns either a Room object
+	 * or null (when the object can't be used to get a room, or when
+	 * no room was found)
+	 * 
+	 * @param object
+	 * @return
+	 */
+	public Room getRoom(Object object) {
+		if( object instanceof String ) {
+			return parent.getRoom((String) object);
+		}
+		else if( object instanceof Client ) {
+			return parent.getRoom((Client) object);
+		}
+		
+		return null;
+	}
 }

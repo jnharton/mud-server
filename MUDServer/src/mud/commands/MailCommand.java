@@ -23,7 +23,7 @@ public class MailCommand extends Command {
 	@Override
 	public void execute(String arg, Client client) {
 		
-		final Player player = parent.getPlayer(client);
+		final Player player = getPlayer(client);
 		
 		final String[] args = arg.split(" ");
 		

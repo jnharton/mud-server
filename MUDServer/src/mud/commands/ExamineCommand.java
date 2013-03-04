@@ -21,11 +21,11 @@ public class ExamineCommand extends Command {
 	@Override
 	public void execute(String arg, Client client) {
 		if ( arg.equals("") || arg.equals("here") ) {
-			Room room = parent.getRoom(client);
+			Room room = getRoom(client);
 			parent.examine(room, client);
 		}
 		else if (arg.equals("me")) {
-			Player player = parent.getPlayer(client);
+			Player player = getPlayer(client);
 			parent.examine(player, client);
 		}
 		else {
@@ -101,14 +101,14 @@ public class ExamineCommand extends Command {
 				}*/
 				
 				// get by string/name
-				final Room room = parent.getRoom(arg);
+				final Room room = getRoom(arg);
 				
 				if (room != null) {
 					parent.examine(room, client);
 					return;
 				}
 				
-				final Player player = parent.getPlayer(arg);
+				final Player player = getPlayer(arg);
 				
 				if (player != null) {
 					parent.examine(player, client);

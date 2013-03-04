@@ -15,9 +15,9 @@ public class GreetCommand extends Command {
 	@Override
 	public void execute(final String arg, final Client client) {
 		debug(arg);
-		final Player current = parent.getPlayer(client);
+		final Player current = getPlayer(client);
 		debug("current: " + current.getName());
-		final Player player1 = parent.getPlayer(arg);
+		final Player player1 = getPlayer(arg);
 		final Client client1 = player1.getClient();
 		debug("player1: " + player1.getName());
 		if (!player1.getNames().contains(current.getName())) {

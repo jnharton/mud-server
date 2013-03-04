@@ -16,11 +16,13 @@ public class AdminCommand extends Command {
 		final String testpass = Utils.hash(arg);
 		final String realpass = MUDServer.admin_pass;
 		
+		final Player player = getPlayer(client);
+		
 		if (testpass.equals(realpass)) {
 			parent.send("Game> correct admin password, changing access to ADMIN", client);
 			
-			final Player player = parent.getPlayer(client);
 			player.setAccess(ADMIN);
+			
             try {
                 parent.addToStaffChannel(player);
             } catch (Exception ex) {
@@ -28,7 +30,6 @@ public class AdminCommand extends Command {
             }
 		}
 		else {
-			final Player player = parent.getPlayer(client);
 			player.setAccess(USER);
 			parent.removefromStaffChannel(player);
 		}

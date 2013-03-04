@@ -36,7 +36,7 @@ public class WhereCommand extends Command {
 				else { locString = room + " (#" + player.getLocation() + ")"; }
 				String idle = player.getIdleString();
 
-				Player current = parent.getPlayer(client);
+				Player current = getPlayer(client);
 
 				if (current.getNames().contains(name) || current.getName().equals(name)) {
 					send(Utils.padRight(name, 10) + " " + Utils.padRight(playerClass, 9) + " " + Utils.padRight(playerGender, 1)

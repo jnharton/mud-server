@@ -39,7 +39,7 @@ public class HelpCommand extends Command {
 		{
 
 			if (helpfile.length > 25) {
-				final Player player = parent.getPlayer(client);
+				final Player player = getPlayer(client);
 				player.setPager( new Pager(helpfile) );
 				player.setStatus("VIEW");
 				

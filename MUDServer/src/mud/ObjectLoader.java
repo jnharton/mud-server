@@ -468,8 +468,7 @@ public class ObjectLoader {
 		debug("Location: " + oLocation);*/
 
 		Integer[] oStats = Utils.stringsToIntegers(os);
-		int[] oMoney = Utils.stringsToInts(om);
-
+		int[] oMoney = Utils.stringsToInts(om);		
 
         NPC npc = new NPC(oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), oDesc, oLocation, "", "IC", oStats, Coins.fromArray(oMoney));
 
@@ -495,5 +494,4 @@ public class ObjectLoader {
 
 		return npc;
 	}
-
 }

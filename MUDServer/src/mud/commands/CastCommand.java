@@ -21,7 +21,8 @@ public class CastCommand extends Command {
 	@Override
 	public void execute(final String spellName, final Client client) {
 
-		final Player player = parent.getPlayer(client);
+		final Player player = getPlayer(client);
+		
 		if (!player.isCaster()) {
 			send("What do you think you are anyway? Some kind of wizard? That's just mumbo-jumbo to you!", client);
 			return;
