@@ -12,6 +12,10 @@ public abstract class Command {
 	protected static int GOD = 3;    // Pff, such arrogant idiots we are! (anyway, max permissions)
 	
 	protected MUDServer parent;
+	
+	public Command() {
+		this(null);
+	}
 
 	/**
 	 * Construct a command object with a parent

@@ -2,6 +2,7 @@ package mud.commands;
 
 import mud.MUDObject;
 import mud.MUDServer;
+import mud.MUDServer.PlayerMode;
 
 import mud.net.Client;
 
@@ -50,6 +51,8 @@ public class AttackCommand extends Command {
 							boolean hit = canHit(player.getTarget());
 
 							if (hit) { // did we hit?
+								
+								player.setMode(PlayerMode.COMBAT); // we are now in combat mode
 
 								boolean criticalHit = false;							
 								int criticalCheckRoll = Utils.roll(1, 20);

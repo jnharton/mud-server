@@ -165,10 +165,10 @@ public class MUDServer implements MUDServerI, LoggerI {
 	private boolean running = true;
 
 	// server information
-	private final static String program = "JavaMUD";  // the server program name
-	private final static String version = "0.9.2"; // the server version number
-	private String computer = "Stardust";             // the name of the server computer
-	private String serverName = "Server";                   // the name of the server (obtained from theme definition)
+	private final static String program = "JavaMUD"; // the server program name
+	private final static String version = "0.9.2";   // the server version number
+	private String computer = "Stardust";            // the name of the server computer
+	private String serverName = "Server";            // the name of the server (obtained from theme definition)
 
 	// server configuration settings
 	private int port = 4202;            // the port on which to listen for client connections
@@ -187,7 +187,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 	private int debugLevel = 3;              // (1=debug,2=extra debug,3=verbose) priority of debugging information recorded
 	private boolean logging = true;          // logging? (true=yes,false=no)
 	private int logLevel = 3;                // () priority of log information recorded 
-	private boolean prompt_enabled = false;  // show player information bar
+	private boolean prompt_enabled = true;  // show player information bar
 
 	// Protocols
 	/*
@@ -357,11 +357,16 @@ public class MUDServer implements MUDServerI, LoggerI {
 	};
 
 	private String[] wiz_cmds = new String[] {
-			"@access",
 			"@backdb",
 			"@flag", "@flush",
 			"@loaddb",
 			"@sethour", "@setminute", "@setmode", "@start", "@shutdown"
+	};
+	
+	private String[] god_cmds = new String[] {
+			"@access",
+			"@load",
+			"@unload"
 	};
 
 	// Time & Date - General Variables
@@ -406,13 +411,14 @@ public class MUDServer implements MUDServerI, LoggerI {
 	private static int GOD = 4;    // Pff, such arrogant idiots we are! (anyway, max permissions)
 	// Corresponding Flags: U,B,A,W,G
 
-	private static int MAX_SKILL = 50;
+	private static final int MAX_SKILL = 50;
+	private static final int MAX_STACK_SIZE = 25; // generic maximum for all stackable items (should this be in the stackable interface?)
+	
+	private ProgramInterpreter pgm;
 
 	public static String admin_pass = Utils.hash("password"); // need to fix the security issues of this (unused, but for admin command
 
 	public ArrayList<Player> moving = new ArrayList<Player>(); // list of players who are currently moving
-
-	private static final int MAX_STACK_SIZE = 25; // generic maximum for all stackable items (should this be in the stackable interface?)
 
 	public MUDServer() {}
 
@@ -681,7 +687,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 		 * to virtually nil if I use existing features. In fact that bit just above doesn't need any
 		 * changing. Although I might need to explicity handle aliases better.
 		 */
-		this.commandMap.put("@access", new AccessCommand(this));  //
+		//this.commandMap.put("@access", new AccessCommand(this));  //
 		this.commandMap.put("@alias", new AliasCommand(this));    //
 		this.commandMap.put("attack", new AttackCommand(this));   //
 		this.commandMap.put("cast", new CastCommand(this));       //
@@ -743,6 +749,8 @@ public class MUDServer implements MUDServerI, LoggerI {
 		}
 		
 		loadChannels(CONFIG_DIR + "channels.txt");
+		
+		pgm = new ProgramInterpreter(this);
 
 		System.out.println("Server> Setup Done.");
 	}
@@ -1356,6 +1364,28 @@ public class MUDServer implements MUDServerI, LoggerI {
 						godCmd = true;
 						s.write("Game> " + getPlayer(client).getName() + " says, " + arg);
 					}
+					else if( cmd.equals("@load") ) {
+						godCmd = true;
+						
+						send("Game> Command Not Implemented!", client);
+						
+						/*boolean success = cmd_loadc(arg, client);
+						
+						if( success ) {
+							send("Game> Loaded " + commandMap.get(arg), client);
+						}
+						else {
+							String[] args = arg.split("=");
+							send("Game> Failed to load " + args[1] + " with command name " + args[0], client);
+						}*/
+					}
+					else if( cmd.equals("@unload") ) {
+						godCmd = true;
+						
+						send("Game> Command Not Implemented!", client);
+						
+						/*cmd_unloadc(arg, client);*/
+					}
 
 					if (godCmd) {
 						return;
@@ -1686,7 +1716,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 						adminCmd = true;
 						// run the program interpreter
 						System.out.println("PGM: <" + arg + ">");
-						send(parse_pgm(arg), client);
+						send(pgm.interpret(arg), client);
 					}
 					// pass arguments to the set function
 					else if ( cmd.equals("@set") || ( aliasExists && alias.equals("@set") ) )
@@ -2986,6 +3016,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 
 			// character check
 			final Player p = objectDB.getPlayer(user);
+			
 			if (p == null || !p.getPass().equals(Utils.hash(pass))) {
 				debug("CONNECT: Fail");
 				send("Either that player does not exist, or has a different password.", client);
@@ -6291,7 +6322,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 	 */
 	public void prompt(final Client client) {
 		if ( prompt_enabled ) {
-			prompt("< %h/%H %m/%M >", client);
+			prompt("< %mode %h/%H %m/%M >", client);
 		}
 	}
 
@@ -6319,7 +6350,11 @@ public class MUDServer implements MUDServerI, LoggerI {
 
 		String mana = ((Integer) player.getMana()).toString();
 		String max_mana = ((Integer) player.getTotalMana()).toString();
-
+		
+		String playerMode = player.getMode().toString();
+		
+		output = output.replace("%mode", playerMode);
+		
 		output = output.replace( "%h", hp );
 		output = output.replace( "%H", max_hp );
 
@@ -8299,7 +8334,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 					System.out.println(test);
 					if ( test.equals("_connect") ) {
 						System.out.println("Connect Property Found!");
-						send(parse_pgm(prop), player.getClient());
+						send(pgm.interpret(prop), player.getClient());
 					}
 				}
 			}
@@ -8333,7 +8368,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 					System.out.println(test);
 					if (test.equals("_disconnect")) {
 						System.out.println("Disconnect Property Found!");
-						send(parse_pgm(prop), player.getClient());
+						send(pgm.interpret(prop), player.getClient());
 					}
 				}
 			}
@@ -10159,6 +10194,46 @@ public class MUDServer implements MUDServerI, LoggerI {
 	 * @return boolean a true/false indicating whether or not the command was loaded.
 	 */
 	public boolean cmd_loadc(String arg, Client client) {
+		String[] args = arg.split("=");
+
+		if( args.length >= 2 ) {
+
+			Command command = null;
+
+			ClassLoader cl = ClassLoader.getSystemClassLoader();
+
+			try {
+				Class<?> newClass = cl.loadClass("mud.commands." + args[1]);
+
+				Class<? extends Command> c2 = (Class<? extends Command>) newClass;
+
+				Object c2Object;
+				
+				try {
+					c2Object = c2.newInstance();
+					
+					command = command.getClass().cast(c2Object);
+					commandMap.put(args[0], command);
+					
+					return true;
+				}
+				catch (InstantiationException e) {
+					e.printStackTrace();
+				}
+				catch (IllegalAccessException e) {
+					e.printStackTrace();
+				}
+
+				//send("(Success) Specified Class is of the type Command or a sub-class of it!", client);
+				//send("(Error) Specified Class is not of the type Command or a sub-class of it!", client);
+			}
+			catch (ClassNotFoundException e) {
+				e.printStackTrace();
+			}
+
+			return false;
+		}
+		
 		return false;
 	}
 
@@ -11084,5 +11159,17 @@ public class MUDServer implements MUDServerI, LoggerI {
 
 	public static int square(int num) {
 		return num * num;
+	}
+	
+	public static String getName() {
+		return program;
+	}
+	
+	public static String getVersion() {
+		return version;
+	}
+	
+	public String getServerName() {
+		return serverName;
 	}
 }
