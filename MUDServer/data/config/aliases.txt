@@ -21,3 +21,5 @@ alias @setskill:@ss
 alias go:approachh
 alias equip:eq
 alias attack:kill
+alias @backdb:@backup
+alias @alias:@aliases

@@ -517,7 +517,7 @@ public final class Utils {
 	 * @param list the arraylist to converted
 	 * @return the converted arraylist (a string array)
 	 */
-	public static String[] arraylistToString(ArrayList<String> list) {
+	public static String[] listToString(List<String> list) {
 		String[] result = new String[list.size()];
 
 		int index = 0;

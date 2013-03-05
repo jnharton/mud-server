@@ -187,7 +187,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 	private int debugLevel = 3;              // (1=debug,2=extra debug,3=verbose) priority of debugging information recorded
 	private boolean logging = true;          // logging? (true=yes,false=no)
 	private int logLevel = 3;                // () priority of log information recorded 
-	private boolean prompt_enabled = true;  // show player information bar
+	private boolean prompt_enabled = false;  // show player information bar
 
 	// Protocols
 	/*
@@ -226,7 +226,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 	private String mainDB = DATA_DIR + "db.txt";                   // database file (ALL) -- will replace all 3 or supersede them
 	private String errorDB = DATA_DIR + "errors_" + lang + ".txt"; // messages file (errors) [localized?]
 	private String spellDB = DATA_DIR + "spells.txt";              // database file (spells) -- contains spell names, messages, and more
-	private String helpDB = DATA_DIR + "help\\index.txt";          // index file (help)
+	//private String helpDB = DATA_DIR + "help\\index.txt";          // index file (help)
 
 	// Default Player Data
 	private final EnumSet<ObjectFlag> startFlags = EnumSet.of(ObjectFlag.PLAYER);                       // default flag string
@@ -636,11 +636,11 @@ public class MUDServer implements MUDServerI, LoggerI {
 		}
 
 		// print out config map
-		debug(config.entrySet());
-
+		debug(config.entrySet());		
+		
 		// help file loading
 		System.out.print("Loading Help Files... ");
-		for (final String helpFileName : Utils.loadStrings(helpDB))
+		for (final String helpFileName : generateHelpFileIndex())
 		{
 			final String[] helpfile = Utils.loadStrings(this.HELP_DIR + helpFileName);
 			helpMap.put(helpfile[0], helpfile);
@@ -1577,7 +1577,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 							}
 						}
 					}
-					else if ( cmd.equals("@aliases") || ( aliasExists && alias.equals("@aliases") ) ) {
+					else if ( cmd.equals("@alias") || ( aliasExists && alias.equals("@alias") ) ) {
 						adminCmd = true;
 						commandMap.get(cmd).execute(arg, client);
 					}
@@ -1591,7 +1591,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 						cmd_areas(arg, client);
 					}
 					// pass arguments to the backup function
-					else if ( cmd.equals("@backup") || ( aliasExists  && alias.equals("@backup") ) )
+					else if ( cmd.equals("@backdb") || ( aliasExists  && alias.equals("@backdb") ) )
 					{
 						adminCmd = true;
 						// run the backup function
@@ -2838,9 +2838,29 @@ public class MUDServer implements MUDServerI, LoggerI {
 			}
 			client.write("--------------------------------\n");
 		}
+		else if( args[0].toLowerCase().equals("#join") ) {
+			if( args.length > 1 ) {
+				String channelName = args[1];
+				
+				if( chan.hasChannel(channelName) ) {
+					try {
+						chan.add(getPlayer(client), channelName);
+						send("ChatChanneler> Joined channel: " + channelName, client);
+					}
+					catch (Exception e) {
+						e.printStackTrace();
+						send("ChatChanneler> cannot join channel: " + channelName, client);
+					}
+				}
+				else {
+					send("ChatChanneler> No such channel.", client);
+				}
+			}
+		}
 		else if (args.length > 1) {
 			String channelName = args[0];
 			String msg = arg.replace(channelName + " ", "");
+			
 			if (!chan.hasChannel(channelName)) {
 				client.write("Game> No such chat channel.");
 				return;
@@ -8780,9 +8800,8 @@ public class MUDServer implements MUDServerI, LoggerI {
 	public void help_reload()
 	{
 		// load helpfiles (basically a duplication of the normal helpfile loading)
-		this.help = Utils.loadStrings(HELP_DIR + "index.txt");       // load the index (list of files named the same as the commands
 		try {
-			for (final String helpFileName : help)
+			for (final String helpFileName : generateHelpFileIndex())
 			{
 				String helpLines[] = Utils.loadStrings(HELP_DIR + helpFileName);
 				this.helpMap.put(helpLines[0], helpLines);
@@ -11171,5 +11190,29 @@ public class MUDServer implements MUDServerI, LoggerI {
 	
 	public String getServerName() {
 		return serverName;
+	}
+	
+	public String[] generateHelpFileIndex() {
+		// Directory path here
+		String path = HELP_DIR;
+
+		List<String> fileList = new ArrayList<String>();
+		
+		System.out.println("Help File Index");
+		System.out.println("----------------------------------------");
+
+		for( File file : Arrays.asList( new File(path).listFiles() ) ) {
+			if( file.isFile() ) {
+				String filename = file.getName();
+
+				if( filename.endsWith(".txt") || filename.endsWith(".TXT") )
+				{
+					System.out.println( filename );
+					fileList.add( filename );
+				}
+			}
+		}
+		
+		return Utils.listToString(fileList);
 	}
 }

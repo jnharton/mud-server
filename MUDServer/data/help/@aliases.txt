@@ -1,8 +1,0 @@
-@alias
-@ALIAS
-
-List the command aliases that are setup.
-
-Syntax: '@alias'
-
-Last Updated: March 1, 2013

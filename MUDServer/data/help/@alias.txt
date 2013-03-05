@@ -1,0 +1,9 @@
+@alias
+@ALIAS
+
+Make a new command alias or list the command aliases that are setup.
+
+Syntax: @alias
+        @alias #list
+
+Last Updated: March 5, 2013
