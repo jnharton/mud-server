@@ -369,5 +369,14 @@ public class ObjectDB {
         }
         return count;
     }
-
+    
+    public List<Player> getPlayersByRoom(final int loc) {
+        final List<Player> acc = new LinkedList<Player>();
+        for (final Player p : players.values()) {
+            if (p.getLocation() == loc) {
+                acc.add(p);
+            }
+        }
+        return acc;
+    }
 }

@@ -4260,8 +4260,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 	{
 		final Player player = getPlayer(client);
 
-		getRoom(client).removeListener(player); // remove listener
-
 		final int dbref = Utils.toInt(arg, -1);
 		boolean success = false;
 
@@ -4274,6 +4272,8 @@ public class MUDServer implements MUDServerI, LoggerI {
 
 		// if we found the room, send the player there
 		if ( success ) {
+			getRoom(client).removeListener(player); // remove listener
+			
 			send("Jumping to " + room.getName() + "... ", client);
 			player.setLocation(room.getDBRef());
 			player.setCoordinates(0, 0);
@@ -4335,86 +4335,89 @@ public class MUDServer implements MUDServerI, LoggerI {
 		for (final String s : args) {
 			debug(s);
 		}
+
+		// if no argument or empty argument, show the room
 		if ( arg.equals("") ) {
+			look(room, client);
+			return;
 		}
 		else {
 			debug("Argument (String): " + arg);
-		}
-
-		// if no argument or empty argument, show the room
-		if (arg.equals("") || arg.toLowerCase().equals("here"))
-		{
-			look(room, client);
-		}
-		else if ( arg.toLowerCase().equals("me")) {
-			look(player, client);
-		}
-		else {
+			
+			if( arg.toLowerCase().equals("here") ) {
+				look(room, client);
+				return;
+			}
+			if ( arg.toLowerCase().equals("me") ) {
+				look(player, client);
+				return;
+			}
+			
 			// decide what else is visible and then find the best match in there
-			//findVisibleObjects(room);
-		}
+			ArrayList<MUDObject> objectsFound = findVisibleObjects(room);
 
-		if (!arg.equals("")) {
+			if (!arg.equals("")) {
 
-			// get properties (I think we should have /visuals "folder" for visual properties
-			// i.e. 'ceiling', 'floor', 'wall(s)'
-			Object o = room.getProps().get(arg);
+				// get properties (I think we should have /visuals "folder" for visual properties
+				// i.e. 'ceiling', 'floor', 'wall(s)'
+				Object o = room.getProps().get(arg);
 
-			if (o != null) {
-				if (o instanceof String) {
-					String result = (String) o;
-					//send("You look at the " + arg, client);
-					//send(result, client);
-					send("You look at the " + arg + ": " + result , client);
+				if (o != null) {
+					if (o instanceof String) {
+						String result = (String) o;
+						//send("You look at the " + arg, client);
+						//send(result, client);
+						send("You look at the " + arg + ": " + result , client);
+					}
 				}
-			}
-			else {
-				send("You look around, but don't see that.", client);
-			}
+				else {
+					send("You look around, but don't see that.", client);
+				}
 
-			int spec = 0;
+				int spec = 0;
 
-			if ( arg.contains(".") ) {
-				spec = Integer.parseInt( arg.substring( arg.indexOf('.') ) );
-				debug("Specifier: " + spec);
-			}
+				if ( arg.contains(".") ) {
+					spec = Integer.parseInt( arg.substring( arg.indexOf('.') ) );
+					debug("Specifier: " + spec);
+				}
 
-			final int dbref = Utils.toInt(arg, -1);
-			MUDObject m = null;
+				final int dbref = Utils.toInt(arg, -1);
+				MUDObject m = null;
 
-			if (dbref != -1) {
-				try {
-					m = getObject(dbref);
+				if (dbref != -1) {
+					try {
+						m = getObject(dbref);
 
-					debug("MUDObject : " + m.getDBRef() + " " + m.getName());
+						debug("MUDObject : " + m.getDBRef() + " " + m.getName());
 
-					if (m instanceof Player) {
-						look((Player) m, client);
+						if (m instanceof Player) {
+							look((Player) m, client);
+						}
+						else if (m instanceof Room) {
+							look((Room) m, client);
+						}
+						else {
+							look(m, client);
+						}
 					}
-					else if (m instanceof Room) {
-						look((Room) m, client);
+					catch (NullPointerException npe) {
+						npe.printStackTrace();
 					}
-					else {
+				}
+				else {
+					try {
+						if (spec == 0) {
+							m = getObject(arg);
+						}
+						//else { MUDObject[] mObjs = getObjects(arg); }
+
+						debug("MUDObject : " + m.getDBRef() + " " + m.getName());
+
 						look(m, client);
 					}
-				}
-				catch (NullPointerException npe) {
-					npe.printStackTrace();
-				}
-			}
-			else {
-				try {
-					if (spec == 0) {
-						m = getObject(arg);
+					catch (NullPointerException npe) {
+						npe.printStackTrace();
 					}
-					//else { MUDObject[] mObjs = getObjects(arg); }
-
-					debug("MUDObject : " + m.getDBRef() + " " + m.getName());
-
-					look(m, client);
-				}
-				catch (NullPointerException npe) {
-					npe.printStackTrace();
 				}
 			}
 		}
@@ -11214,5 +11217,35 @@ public class MUDServer implements MUDServerI, LoggerI {
 		}
 		
 		return Utils.listToString(fileList);
+	}
+	
+	public ArrayList<MUDObject> findVisibleObjects(Room room) {
+		ArrayList<MUDObject> objectsFound = new ArrayList<MUDObject>();
+		
+		for( Thing thing : room.contents ) {
+			if( !thing.flags.contains(ObjectFlag.DARK) ) { // a <object>.hasFlag(<ObjectFlag>) method might be nice
+				objectsFound.add(thing);
+			}
+		}
+		
+		for( Item item : room.contents1 ) {
+			if( !item.flags.contains(ObjectFlag.DARK) ) { // a <object>.hasFlag(<ObjectFlag>) method might be nice
+				objectsFound.add(item);
+			}
+		}
+		
+		for( Player player : objectDB.getPlayersByRoom(room.getDBRef()) ) {
+			if( !player.flags.contains(ObjectFlag.DARK) ) { // a <object>.hasFlag(<ObjectFlag>) method might be nice
+				objectsFound.add(player);
+			}
+		}
+		
+		for( NPC npc : objectDB.getNPCsByRoom(room.getDBRef()) ) {
+			if( !npc.flags.contains(ObjectFlag.DARK) ) { // a <object>.hasFlag(<ObjectFlag>) method might be nice
+				objectsFound.add(npc);
+			}
+		}
+		
+		return objectsFound;
 	}
 }
