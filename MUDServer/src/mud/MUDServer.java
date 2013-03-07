@@ -183,7 +183,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 	private GameMode mode = GameMode.NORMAL; // (0=normal: player connect, 1=wizard: wizard connect only, 2=maintenance: maintenance mode)
 	private int multiplay = 0;               // (0=only one character per account is allowed, 1=infinite connects allowed)
 	private int guest_users = 0;             // (0=guests disallowed, 1=guests allowed)
-	private int debug = 1;                   // (0=off,1=on) Debug: server sends debug messages to the console
+	private int debug = 4;                   // (0=off,1=on) Debug: server sends debug messages to the console
 	private int debugLevel = 3;              // (1=debug,2=extra debug,3=verbose) priority of debugging information recorded
 	private boolean logging = true;          // logging? (true=yes,false=no)
 	private int logLevel = 3;                // () priority of log information recorded 
@@ -1121,6 +1121,8 @@ public class MUDServer implements MUDServerI, LoggerI {
 					debug(chan_name + ": No Messages", 4);
 					break;
 				}
+				
+				debug("Next Message (" + cc.getName() + "): " + msg.getMessage());
 				
 				// for each listener, send the message
 				for(Player player : cc.getListeners()) {
@@ -2857,6 +2859,22 @@ public class MUDServer implements MUDServerI, LoggerI {
 				}
 			}
 		}
+		else if( args[0].toLowerCase().equals("#messages") ) {
+			if( args.length > 1 ) {
+				String channelName = args[1];
+				
+				if( chan.hasChannel(channelName) ) {
+					send("Messages:", client);
+					send("------------------------------", client);
+					for(Message m : chan.getChatChannel(channelName).getMessages()) {
+						send(m.getMessage());
+					}
+					send("------------------------------", client);
+					send("Next Message: " + chan.getChatChannel(channelName).getMessages().peek().getMessage());
+					send("------------------------------", client);
+				}
+			}
+		}
 		else if (args.length > 1) {
 			String channelName = args[0];
 			String msg = arg.replace(channelName + " ", "");
@@ -2881,6 +2899,8 @@ public class MUDServer implements MUDServerI, LoggerI {
 				//cc.write(getPlayer(client), msg);                  // add message to ChatChannel message queue
 				
 				chan.send(channelName, getPlayer(client), msg);
+				
+				debug("New message (" + channelName + "): " + msg);
 				
 				//client.write("wrote " + arg + " to " + channelName + " channel.\n");
 				chatLog.writeln("(" + channelName + ") <" + getPlayer(client).getName() + "> " + arg);
