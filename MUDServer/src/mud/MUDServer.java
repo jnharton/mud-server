@@ -183,7 +183,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 	private GameMode mode = GameMode.NORMAL; // (0=normal: player connect, 1=wizard: wizard connect only, 2=maintenance: maintenance mode)
 	private int multiplay = 0;               // (0=only one character per account is allowed, 1=infinite connects allowed)
 	private int guest_users = 0;             // (0=guests disallowed, 1=guests allowed)
-	private int debug = 4;                   // (0=off,1=on) Debug: server sends debug messages to the console
+	private int debug = 1;                   // (0=off,1=on) Debug: server sends debug messages to the console
 	private int debugLevel = 3;              // (1=debug,2=extra debug,3=verbose) priority of debugging information recorded
 	private boolean logging = true;          // logging? (true=yes,false=no)
 	private int logLevel = 3;                // () priority of log information recorded 
@@ -1110,6 +1110,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 			
 			// for each ChatChannel
 			for(ChatChannel cc : chan.getChatChannels()) {
+				//debug("CHANNEL: " + cc.getName());
 				
 				String chan_name = cc.getName(), chan_color = cc.getChanColor(), text_color = cc.getTextColor();
 				
@@ -1119,13 +1120,15 @@ public class MUDServer implements MUDServerI, LoggerI {
 				// if msg is null, break
 				if( msg == null ) {
 					debug(chan_name + ": No Messages", 4);
-					break;
+					continue;
 				}
 				
-				debug("Next Message (" + cc.getName() + "): " + msg.getMessage());
+				//debug("Next Message (" + cc.getName() + "): " + msg.getMessage());
 				
 				// for each listener, send the message
 				for(Player player : cc.getListeners()) {
+					//debug("PLAYER: " + player.getName());
+					
 					try {
 						client = player.getClient();										
 
