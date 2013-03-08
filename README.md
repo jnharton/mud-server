@@ -34,6 +34,10 @@ Usage: java -jar MUDServer.jar
     --debug               enable debugging messages
 ```
 
+## Help
+
+For help using the code and miscellaneous documentation, see the [Wiki](https://github.com/jnharton/mud-server/wiki) for this project.
+
 ## Updates
 
 December 2012
