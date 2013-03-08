@@ -219,6 +219,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 	private final String MOTD_DIR = DATA_DIR + "motd\\";                   // MOTD Directory
 	private final String SPELL_DIR = DATA_DIR + "spells\\";                // Spell Directory
 	private final String THEME_DIR = DATA_DIR + "theme\\";                 // Help Directory
+	private final String LOG_DIR = DATA_DIR + "logs\\";                    // Log Directory
 
 	/* filename variables used to be final -- i'd like to be able to reload or change them while the game is running though */
 
@@ -516,6 +517,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 		directories.add(new File(MOTD_DIR));
 		directories.add(new File(SPELL_DIR));
 		directories.add(new File(THEME_DIR));
+		directories.add(new File(LOG_DIR));
 
 		// check that the directories exist, if not create them
 		for (final File dir : directories) {
@@ -527,7 +529,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 				}  
 			}
 		}
-
+		
 		// snag this machine's real IP address
 		try {
 			// Get the address and hostname, so you can report it
@@ -542,9 +544,9 @@ public class MUDServer implements MUDServerI, LoggerI {
 		// Logging
 		if ( logging ) { // if logging is enabled, create a log object and open it
 			// instantiate log objects
-			this.log = new Log();                      // main log - character actions, etc
-			this.debugLog = new Log("debug");          // debug log - any and all debugging
-			this.chatLog = new Log("chat");            // chat log - all chat messages
+			this.log = new Log();                 // main log - character actions, etc
+			this.debugLog = new Log("debug");     // debug log - any and all debugging
+			this.chatLog = new Log("chat");       // chat log - all chat messages
 
 			// open log files for writing
 			this.log.openLog();
@@ -605,7 +607,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 		objectDB.loadExits(this);  // load exits (post-room loading)
 
 		// Post-Room Loading
-		//loadExits();          // load exits ( replace? moved? not sure?)
+		//loadExits();        // load exits ( replace? moved? not sure?)
 		//loadThings();       // load thing (old name)
 		placeThingsInRooms(); // load things (new name)
 		loadItems();          // load items
@@ -616,14 +618,14 @@ public class MUDServer implements MUDServerI, LoggerI {
 		// TODO FIX THIS
 		// make sure npcs are added to listeners
 		/*for (NPC npc : npcs1) {
-			getRoom(npc.getLocation()).addListener(npc);	
+			getRoom(npc.getLocation()).addListener(npc);
 		}*/
 
 		// instantiate banned ip list
 		banlist = loadListDatabase(CONFIG_DIR + "banlist.txt");
 
 		// instantiate forbidden names list
-		forbiddenNames = loadListDatabase(CONFIG_DIR + "names.txt");
+		forbiddenNames = loadListDatabase(CONFIG_DIR + "forbidden.txt");
 
 		// load configuration data (file -- default.config)
 		//loadConfiguration(CONFIG_DIR + "config.txt", configs); ?
@@ -2843,70 +2845,74 @@ public class MUDServer implements MUDServerI, LoggerI {
 			}
 			client.write("--------------------------------\n");
 		}
-		else if( args[0].toLowerCase().equals("#join") ) {
-			if( args.length > 1 ) {
-				String channelName = args[1];
+		else if( args.length > 1 ) {
+			String channelName;
+			
+			if(args[0].charAt(0) == '#') { // chat subcommand
+				channelName = args[1];
 				
 				if( chan.hasChannel(channelName) ) {
-					try {
-						chan.add(getPlayer(client), channelName);
-						send("ChatChanneler> Joined channel: " + channelName, client);
+					if( args[0].toLowerCase().equals("#join") ) {
+						try {
+							chan.add(getPlayer(client), channelName);
+							send("ChatChanneler> Joined channel: " + channelName, client);
+						}
+						catch (Exception e) {
+							e.printStackTrace();
+							send("ChatChanneler> cannot join channel: " + channelName, client);
+						}
 					}
-					catch (Exception e) {
-						e.printStackTrace();
-						send("ChatChanneler> cannot join channel: " + channelName, client);
+					else if( args[0].toLowerCase().equals("#leave") ) {
+						try {
+							chan.remove(getPlayer(client), channelName);
+							send("ChatChanneler> Left channel: " + channelName, client);
+						}
+						catch (Exception e) {
+							e.printStackTrace();
+							send("ChatChanneler> cannot leave channel: " + channelName, client);
+						}
+					}
+					else if( args[0].toLowerCase().equals("#listeners") ) { // argument: show listeners on a specific channel
+						client.write("Listeners on Chat Channel: " + channelName.toUpperCase() + "\n");
+						client.write("------------------------------\n");
+						for (final Player p : chan.getListeners(channelName)) {
+							client.write(p.getName() + "\n");
+						}
+						client.write("------------------------------\n");
+					}
+					else if( args[0].toLowerCase().equals("#messages") ) {
+						send("Messages:", client);
+						send("------------------------------", client);
+						for(Message m : chan.getChatChannel(channelName).getMessages()) {
+							send(m.getMessage());
+						}
+						send("------------------------------", client);
+						send("Next Message: " + chan.getChatChannel(channelName).getMessages().peek().getMessage(), client);
+						send("------------------------------", client);
 					}
 				}
 				else {
-					send("ChatChanneler> No such channel.", client);
+					client.write("Game> No such chat channel.");
 				}
 			}
-		}
-		else if( args[0].toLowerCase().equals("#messages") ) {
-			if( args.length > 1 ) {
-				String channelName = args[1];
-				
-				if( chan.hasChannel(channelName) ) {
-					send("Messages:", client);
-					send("------------------------------", client);
-					for(Message m : chan.getChatChannel(channelName).getMessages()) {
-						send(m.getMessage());
-					}
-					send("------------------------------", client);
-					send("Next Message: " + chan.getChatChannel(channelName).getMessages().peek().getMessage());
-					send("------------------------------", client);
-				}
-			}
-		}
-		else if (args.length > 1) {
-			String channelName = args[0];
-			String msg = arg.replace(channelName + " ", "");
-			
-			if (!chan.hasChannel(channelName)) {
-				client.write("Game> No such chat channel.");
-				return;
-			}
+			else { // sending a chat message
+				channelName = args[0];
+				String msg = arg.replace(channelName + " ", "");
 
-			// argument: show listeners on a specific channel
-			if ( args[1].toLowerCase().equals("#listeners") ) {
-				client.write("Listeners on Chat Channel: " + channelName.toUpperCase() + "\n");
-				client.write("------------------------------\n");
-				for (final Player p : chan.getListeners(channelName)) {
-					client.write(p.getName() + "\n");
+				if( chan.hasChannel(channelName) ) {
+					//ChatChannel cc = chan.getChatChannel(channelName); // get ChatChannel by name
+					//cc.write(getPlayer(client), msg);                  // add message to ChatChannel message queue
+
+					chan.send(channelName, getPlayer(client), msg);
+
+					debug("New message (" + channelName + "): " + msg);
+
+					//client.write("wrote " + arg + " to " + channelName + " channel.\n");
+					chatLog.writeln("(" + channelName + ") <" + getPlayer(client).getName() + "> " + arg);
 				}
-				client.write("------------------------------\n");
-			}
-			// if the channel name is that specified, write the message to the channel
-			else {
-				//ChatChannel cc = chan.getChatChannel(channelName); // get ChatChannel by name
-				//cc.write(getPlayer(client), msg);                  // add message to ChatChannel message queue
-				
-				chan.send(channelName, getPlayer(client), msg);
-				
-				debug("New message (" + channelName + "): " + msg);
-				
-				//client.write("wrote " + arg + " to " + channelName + " channel.\n");
-				chatLog.writeln("(" + channelName + ") <" + getPlayer(client).getName() + "> " + arg);
+				else {
+					client.write("Game> No such chat channel.");
+				}
 			}
 		}
 	}
