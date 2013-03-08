@@ -1586,7 +1586,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 					}
 					else if ( cmd.equals("@alias") || ( aliasExists && alias.equals("@alias") ) ) {
 						adminCmd = true;
-						commandMap.get(cmd).execute(arg, client);
+						commandMap.get("@alias").execute(arg, client);
 					}
 					// allocates space to a zone
 					else if ( cmd.equals("@allocate") || ( aliasExists && alias.equals("@allocate") ) ) {
@@ -3272,6 +3272,10 @@ public class MUDServer implements MUDServerI, LoggerI {
 			if (getPlayer(client).getAccess() >= WIZARD)
 			{
 				send(colors("wizard commands: ", "magenta") + Utils.join(wiz_cmds, ","), client);
+			}
+			if (getPlayer(client).getAccess() >= GOD)
+			{
+				send(colors("gods commands: ", "yellow") + Utils.join(god_cmds, ","), client);
 			}
 		}
 	}
@@ -10631,7 +10635,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 	 * @return a string array that contains the file's contents
 	 */
 	public String[] getHelpFile(String name) {
-		return helpMap.containsKey(name) ? helpMap.get(name) : null;
+		return helpMap.containsKey(name) ? helpMap.get(name) : helpMap.containsKey(aliases.get(name)) ? helpMap.get(aliases.get(name)) : null;
 	}
 
 	/**
@@ -10683,11 +10687,13 @@ public class MUDServer implements MUDServerI, LoggerI {
 	public void showDesc(final String description, final int line_limit, final Client client) {
 
 		final StringBuilder result = new StringBuilder(line_limit);
+		
 		for (final String word : description.split(" ")) {
 			debug("result: " + result, 3);
 			debug("result (length): " + result.length(), 3);
 			debug("next: " + word, 3);
 			debug("next (length): " + word.length(), 3);
+			
 			if (result.length() < 1) { // append current word if empty
 				result.append(word);
 			}

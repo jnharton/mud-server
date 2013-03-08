@@ -37,7 +37,7 @@ public class DropCommand extends Command {
 			item = inventory.get(i);
 
 			// if there is a name or dbref match from the argument in the inventory
-			if ( item.getName().equals(arg) || item.getName().contains(arg) || item.getDBRef() == dbref )
+			if ( item.getName().equals(arg) || item.getName().contains(arg) && !arg.equals("") || item.getDBRef() == dbref )
 			{
 				debug(item.getName() + " true");
 				// move object from player inventory to floor
