@@ -54,8 +54,12 @@ public class CastCommand extends Command {
 			
 			// calculate spell failure (basic, just checks armor for now)
 			Armor armor = (Armor) player.getSlots().get("armor").getItem();
-
-			double spellFailure = armor.armor.getSpellFailure();
+			
+			double spellFailure = 0;
+			
+			if( armor != null ) {
+				spellFailure = armor.armor.getSpellFailure();
+			}
 
 			//Create random number 1 - 100
 			int randNumber = (int) ((Math.random() * 100) + 1);

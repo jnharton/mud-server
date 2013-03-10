@@ -184,7 +184,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 	private int multiplay = 0;               // (0=only one character per account is allowed, 1=infinite connects allowed)
 	private int guest_users = 0;             // (0=guests disallowed, 1=guests allowed)
 	private int debug = 1;                   // (0=off,1=on) Debug: server sends debug messages to the console
-	private int debugLevel = 3;              // (1=debug,2=extra debug,3=verbose) priority of debugging information recorded
+	private int debugLevel = 1;              // (1=debug,2=extra debug,3=verbose) priority of debugging information recorded
 	private boolean logging = true;          // logging? (true=yes,false=no)
 	private int logLevel = 3;                // () priority of log information recorded 
 	private boolean prompt_enabled = false;  // show player information bar
@@ -1008,10 +1008,11 @@ public class MUDServer implements MUDServerI, LoggerI {
 					// status: copy and pasted plain telnet handling code
 					if (done == 0) {
 						Character ch;
+						
 						while (whatClientSaid.length() > 0) {
 							ch = whatClientSaid.charAt(0);
 							whatClientSaid = whatClientSaid.substring(1);
-							if (ch != '\010' && ch != '\013') {
+							if (ch != '\010' && ch != '\013') { // linefeed/new line (\010), carriage return (\013)
 								System.out.println("Read: " + ch + "(" + ch.toString() + ")");
 							}
 
@@ -1120,14 +1121,14 @@ public class MUDServer implements MUDServerI, LoggerI {
 			
 			// for each ChatChannel
 			for(ChatChannel cc : chan.getChatChannels()) {
-				//debug("CHANNEL: " + cc.getName());
+				debug("CHANNEL: " + cc.getName(), 4);
 				
 				String chan_name = cc.getName(), chan_color = cc.getChanColor(), text_color = cc.getTextColor();
 				
 				// get the next message
 				msg = cc.getNextMessage();
 				
-				// if msg is null, break
+				// if msg is null, continue
 				if( msg == null ) {
 					debug(chan_name + ": No Messages", 4);
 					continue;
@@ -1137,15 +1138,15 @@ public class MUDServer implements MUDServerI, LoggerI {
 				
 				// for each listener, send the message
 				for(Player player : cc.getListeners()) {
-					//debug("PLAYER: " + player.getName());
+					debug("PLAYER: " + player.getName(), 4);
 					
 					try {
 						client = player.getClient();										
 
 						client.write("(" + colors(chan_name, chan_color) + ") " + "<" + msg.getSender().getName() + "> " + colors(msg.getMessage(), text_color) + "\r\n"); // send the message
 						
-						//debug("(" + chan_name + ") " + "<" + msg.getSender().getName() + "> " + msg.getMessage() + "\n");										
-						//debug("chat message sent successfully"); 
+						debug("(" + chan_name + ") " + "<" + msg.getSender().getName() + "> " + msg.getMessage() + "\n", 4);										
+						debug("chat message sent successfully", 4); 
 					}
 					catch(NullPointerException npe) {
 						debug("Game [chat channel: " + chan_name + "] > Null Message.");
@@ -1182,7 +1183,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 
 		// cut the input into an array of strings separated by spaces
 		final LinkedList<String> inputList = new LinkedList<String>(Arrays.asList(input.split(" ")));
-		//final ArrayList<String> inputList = Utils.stringToArrayList(input, " ");
 
 		if (!inputList.isEmpty()) { // if there was any input
 			cmd = inputList.remove(0);
@@ -1190,19 +1190,25 @@ public class MUDServer implements MUDServerI, LoggerI {
 			debug("Command: \"" + cmd + "\"", 2);       // print command
 			cmd = cmd.trim();                           // trim the command
 			debug("Command(trimmed): \"" + cmd + "\""); // print trimmed command
-			debug("");
 
 			// if there were any arguments then get the argument, which is everything else
 			arg = Utils.join(inputList, " ");  // get the arguments from the input list
 
 			if (inputList.size() > 1) {
-				if (!cmd.toLowerCase().equals("connect") && !cmd.toLowerCase().equals("create")) {
-					debug("Arguments: \"" + arg + "\"");          // print arguments
+				// what's this for, anyway? ignoring it for now
+				/*if (!cmd.toLowerCase().equals("connect") && !cmd.toLowerCase().equals("create")) {
+					debug("Arguments: \"" + arg + "\"", 2);       // print arguments
 					arg = Utils.trim(arg);                        // trim arguments
 					debug("Arguments(trimmed): \"" + arg + "\""); // print trimmed arguments
-				}
+				}*/
+				
+				debug("Arguments: \"" + arg + "\"", 2);       // print arguments
+				arg = Utils.trim(arg);                        // trim arguments
+				debug("Arguments(trimmed): \"" + arg + "\""); // print trimmed arguments
 			}
 		}
+		
+		debug("");
 
 		// check for command alias (so we know there is one for later)
 		boolean aliasExists = false;
@@ -1232,9 +1238,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 						// pass arguments to the player creation function
 						cmd_create(arg, client);
 					}
-					else if ( cmd.equals("help") ) {
-						commandMap.get("help").execute(arg, client);
-					}
 					else if ( cmd.equals("quit") || (aliasExists && alias.equals("quit") ) )
 					{
 						s.disconnect(client); // just kill the client?
@@ -1249,7 +1252,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 						send("Huh? That is not a known command.", client);
 						debug("Command> Unknown Command");
 					}
-
 				}
 				else { send("Sorry. Maximum number of players are connected. Please try back later.", client); }
 			}
@@ -1278,12 +1280,12 @@ public class MUDServer implements MUDServerI, LoggerI {
 			{
 				send("System is in Maintenance Mode.", client); // >configurable message<
 				send("No Logins allowed. Booting Client...", client);
-				s.disconnect(client); // just kill the client?
+				s.disconnect(client); // just kill the client
 			}
 			else { // ? (any other mode number -- may indicate some kind of failure)
 				send("System may be malfunctioning.", client);
 				send("No Logins allowed. Booting Client...", client);
-				s.disconnect(client); // just kill the client?
+				s.disconnect(client); // just kill the client
 			}
 		}
 
@@ -1365,7 +1367,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 				boolean wizCmd = false;
 				boolean godCmd = false;
 
-				//debug("Entering god command loop...");
+				debug("Entering god command loop...", 2);
 
 				// stash god commands inside here
 				if (player.getAccess() >= GOD) {
@@ -1407,9 +1409,9 @@ public class MUDServer implements MUDServerI, LoggerI {
 					}
 				}
 
-				//debug("Exited god command loop.");
+				debug("Exited god command loop.", 2);
 
-				//debug("Entering build command loop...");
+				debug("Entering build command loop...", 2);
 
 				// stash build commands inside here
 				if (player.getAccess() >= BUILD) {
@@ -1551,9 +1553,9 @@ public class MUDServer implements MUDServerI, LoggerI {
 					}
 				}
 
-				//debug("Exited build command loop.");
+				debug("Exited build command loop.", 2);
 
-				//debug("Entering admin command loop...");
+				debug("Entering admin command loop...", 2);
 
 				// stash admin commands inside here
 				if (player.getAccess() >= ADMIN) {
@@ -1786,9 +1788,9 @@ public class MUDServer implements MUDServerI, LoggerI {
 					}
 				}
 
-				//debug("Exited admin command loop.");
+				debug("Exited admin command loop.", 2);
 
-				//debug("Entered wizard command loop.");
+				debug("Entered wizard command loop.", 2);
 
 				// stash wizard commands inside here
 				if (player.getAccess() >= WIZARD) {
@@ -1865,9 +1867,9 @@ public class MUDServer implements MUDServerI, LoggerI {
 					}
 				}
 
-				//debug("Exited wizard command loop.");
+				debug("Exited wizard command loop.", 2);
 
-				//debug("Entering user commmand loop...");
+				debug("Entering user commmand loop...", 2);
 
 				// stash user commands inside here
 				if (player.getAccess() >= USER) {
@@ -2389,7 +2391,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 					}
 				}
 
-				//debug("Exited user commmand loop.");
+				debug("Exited user commmand loop.", 2);
 			}
 		}
 	}
@@ -5209,7 +5211,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 
 	// Function to disconnect player
 	private void cmd_quit(final String arg, final Client client) {
-		initDisconn(client);
+		init_disconn(client);
 	}
 
 	// Object/Room Recycling Function
@@ -8450,10 +8452,11 @@ public class MUDServer implements MUDServerI, LoggerI {
 	{
 		// generate generic name for unknown players based on their class and the number of players with the same class presently on
 		// logged on of a given class
-		debug("Generating generic name for player...");
-		debug("Done");
-
+		System.out.print("Generating generic name for player...");
+		
 		player.setCName(player.getPClass().toString());
+		
+		System.out.println("Done");
 
 		debug("Number of current connected players that share this player's class: " + objectDB.getNumPlayers(player.getPClass()));
 
@@ -8493,7 +8496,9 @@ public class MUDServer implements MUDServerI, LoggerI {
 		sessionMap.put(player, session);
 
 		// tell the player that their connection was successful
+		debug("");
 		debug("Connected!");
+		debug("");
 		//send(Colors.YELLOW + "Connected!" + Colors.WHITE, client);
 		send(colors("Connected!", "yellow"), client);
 		//send(Colors.YELLOW + "Connected to " + name + " as " + player.getName() + Colors.WHITE, client);
@@ -8562,7 +8567,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 	 * @param player
 	 * @param client
 	 */
-	public void initDisconn(final Client client)
+	public void init_disconn(final Client client)
 	{
 		final Player player = getPlayer(client);
 		if (player == null) {
@@ -8605,7 +8610,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 		removefromStaffChannel(player);
 		chan.remove(player, OOC_CHANNEL);
 
-		debug("initDisconn(" + client.ip()+ ")");
+		debug("init_disconn(" + client.ip()+ ")");
 
 		// get time
 		Time time = getTime();
@@ -8907,7 +8912,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 
 		// disconnect any connected clients
 		for (final Client client1 : s.getClients()) {
-			initDisconn(client1);
+			init_disconn(client1);
 		}
 
 		System.out.print("Stopping main game...");
@@ -9817,13 +9822,14 @@ public class MUDServer implements MUDServerI, LoggerI {
 	 * "moonlight falls gently across the stone floor"
 	 * 
 	 * NOTE: non-recursive
+	 * DEBUG: 2
 	 * 
 	 * @param toParse    the description string to parse
 	 * @param CtimeOfDay the current time of day
 	 * @return
 	 */
 	public String parse(final String toParse, final String CtimeOfDay) {
-		debug("start desc parsing");
+		debug("start desc parsing", 2);
 
 		int index = 0;
 
@@ -9901,12 +9907,12 @@ public class MUDServer implements MUDServerI, LoggerI {
 
 			debug("Current Output: " + output, 2);
 
-			debug("end desc parsing");
+			debug("end desc parsing", 2);
 
 			return output;
 		}
 		else {
-			debug("end desc parsing");
+			debug("end desc parsing", 2);
 
 			return input;
 		}
