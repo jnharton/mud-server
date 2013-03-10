@@ -38,30 +38,33 @@ public class MailCommand extends Command {
 				// should these box headers be configurable either on the server end or the client end?
 				
 				client.write("#list function entry\n");
-				client.write("+--------------------------------------------------------------------+\n");
-				client.write("| Mailbox                                                            |\n");
-				client.write("+--------------------------------------------------------------------+\n");
+				client.write("+--------------------------------------------------------------------------+\n");
+				client.write("| Mailbox                                                                  |\n");
+				client.write("+-------+------------+----------------------------------+------------------+\n");
+				client.write("| ID    | Subject    | Brief                            | Date             |\n");
+				client.write("+-------+------------+----------------------------------+------------------+\n");
 
                 int i = 0;
 				for (final Mail mail : player.getMailBox()) {
 					client.write("| ");
 					client.write(Utils.padLeft(i + "", 5).substring(0, 5));
-					client.write(" ");
+					client.write(" | ");
 					client.write(Utils.padRight(mail.getSubject(), shortSUB).substring(0, shortSUB));
-					client.write(" ");
+					client.write(" | ");
 					client.write(Utils.padRight(mail.getMessage(), shortMSG).substring(0, shortMSG));
-					client.write(" ");
+					client.write(" | ");
 					client.write("5/5/2011 12:31PM");
 					client.write(" |");
 					client.write("\n");
 				}
 				
-				client.write("+--------------------------------------------------------------------+\n");
+				client.write("+-------+------------+----------------------------------+------------------+\n");
 			}
 			else if (args[0].equals("#write")) {
+				client.write("#write function entry\n");
 				/* Functionality is not complete */
 				
-				if (arg.indexOf("+") != -1) {
+				/*if (arg.indexOf("+") != -1) {
 					String[] args1 = arg.substring(arg.indexOf("+")).split("=");
 					
 					player.setStatus("EDT");
@@ -85,12 +88,12 @@ public class MailCommand extends Command {
 							"may produce unexpected results");
 				}
 				else {
-				}
+				}*/
 			}
 			else {
 				final int msg = Utils.toInt(args[0], -1);
 
-				if (msg > -1 && msg < player.getMailBox().size()) {
+				if (msg > -1 && msg < player.getMailBox().numMessages()) {
 					client.write("Checking Mail..." + msg + "\n");
 					
 					Mail mail = player.getMailBox().get(msg);

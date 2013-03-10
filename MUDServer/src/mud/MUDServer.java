@@ -3202,13 +3202,24 @@ public class MUDServer implements MUDServerI, LoggerI {
 		{
 			// create a new player object for the new playerm the "" is an empty title, which is not currently persisted
 			final Player player = new Player(-1, user, startFlags.clone(), start_desc, start_room, "", Utils.hash(pass), start_status, start_stats, Coins.copper(0));
+			
 			objectDB.addAsNew(player);
 
-			try {
-				new Mail(user, "Welcome", "Welcome to " + serverName).saveToFile(DATA_DIR + "mail\\mail-" + user + ".txt");
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
+			/*
+			String mail[];        // create the mailbox
+			mail = new String[4]; // size it to make room for one message's worth
+
+			// generate a welcome mail message
+			// by line - user, subject, message, flag
+			// flags: U (unread), R (read), D (delete)
+			mail[0] = user;
+			mail[1] = "Welcome";
+			mail[2] = "Welcome to " + getName();
+			mail[3] = "U";
+			*/
+
+			// save the new player's mailbox
+			Utils.saveStrings(DATA_DIR + "mail\\mail-" + user + ".txt", new String[] { user, "Welcome", "Welcome to " + getName(), "U" });
 
 			send("Welcome to the Game, " + user + ", your password is: " + pass, client);
 
@@ -8496,19 +8507,14 @@ public class MUDServer implements MUDServerI, LoggerI {
 		sessionMap.put(player, session);
 
 		// tell the player that their connection was successful
-		debug("");
-		debug("Connected!");
-		debug("");
+		debug("\nConnected!\n");
 		//send(Colors.YELLOW + "Connected!" + Colors.WHITE, client);
 		send(colors("Connected!", "yellow"), client);
 		//send(Colors.YELLOW + "Connected to " + name + " as " + player.getName() + Colors.WHITE, client);
 		send(colors("Connected to " + serverName + " as " + player.getName(), "yellow"), client);
 
-		try {
-			player.loadMail(DATA_DIR + "mail\\mail-" + player.getName() + "\\");
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+		/* load the player's mailbox */
+		loadMail(player);
 
 		// indicate to the player how much mail/unread mail they have
 		client.writeln("Checking for unread messages...");
@@ -8546,6 +8552,24 @@ public class MUDServer implements MUDServerI, LoggerI {
 		} catch (Exception e) {
 			System.out.println("No ooc channel exists!!!");
 		}
+		
+		/* old dead code
+		// add player to the OOC ChatChannel (testing)
+		ChatChannel ooc = getChatChannel(OOC_CHANNEL);
+		boolean addedOOC = ooc.addListener(player);
+
+		if ( addedOOC ) { client.writeln("OOC chat enabled."); }
+		else { client.writeln("OOC chat enable -- FAILED"); }
+
+		// add player to the STAFF ChatChannel (testing), if they are staff
+		if (player.getAccess() > USER) {
+			ChatChannel staff = getChatChannel(STAFF_CHANNEL);
+			boolean addedSTAFF = staff.addListener(player);
+
+			if ( addedSTAFF ) { client.writeln("STAFF chat enabled."); }
+			else { client.writeln("STAFF chat enable -- FAILED"); }
+		}
+		*/
 
 		/* add the player to the game */
 		player.setClient(client);
@@ -8629,6 +8653,9 @@ public class MUDServer implements MUDServerI, LoggerI {
 		toRemove.disconnect = time;
 
 		// store the session info on disk
+		
+		// clear session
+		sessionMap.remove(player);
 
 		// if player is a guest
 		if (player.getFlags().contains(ObjectFlag.GUEST)) {
@@ -8637,11 +8664,9 @@ public class MUDServer implements MUDServerI, LoggerI {
 		}
 		else {
 			send("Saving mail...", player.getClient());
-			try {
-				player.saveMail(DATA_DIR + "mail\\mail-" + player.getName() + "\\");
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
+			
+			// save mail
+			saveMail(player);
 		}
 
 		synchronized(players) {
@@ -8661,7 +8686,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 
 		ArrayList<String> options = new ArrayList<String>();
 
-		options.add("IAC WILL MCCP");
+		//options.add("IAC WILL MCCP");
 
 		// send some telnet negotiation crap
 		// IAC WILL MCCP1
@@ -8676,7 +8701,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 		// IAC DONT MCCP1
 		// 255 254  85
 		// -- then --
-		// IAC SB  MCCP1 WONT SE/IAC SB COMPRESS WONT SE
+		// IAC SB  MCCP1 WONT SE
 		// 255 250 85    252  250
 
 		for (String optstr : options) { // all the things we wish to check? (i.e. we're going to use these if we can
@@ -11282,5 +11307,83 @@ public class MUDServer implements MUDServerI, LoggerI {
 		}
 		
 		return objectsFound;
+	}
+	
+	/**
+	 * Load a player's mail file into the mailbox structure.
+	 * 
+	 * This consists of dividing the file into "messages", creating
+	 * message objects and putting them in a "mailbox".
+	 * 
+	 * NOTE: Should we return a mailbox to point the player's mailbox reference
+	 * to or continue as is, where we just modify the player's mailbox.
+	 * 
+	 * @param player the player who's mail file we wish to load
+	 */
+	private void loadMail(Player player) {
+		int msg = 0;
+
+		String mailBox = DATA_DIR + "mail\\mail-" + player.getName() + ".txt";
+		String lines[] = null;
+
+		try {
+			// load the file into a string array
+			lines = Utils.loadStrings(mailBox);
+
+			// if the result isn't a string array
+			if (!(lines instanceof String[])) {
+				throw new FileNotFoundException("Invalid File!");
+			}
+		}
+		catch(FileNotFoundException fnfe) {
+			fnfe.printStackTrace();
+		}
+
+		int messages = 0;
+
+		// for each segment which could contain mail
+		for (int m = 0; m < lines.length - 1; m = m + 3) {
+			// create mail object
+			Mail mail = new Mail(msg, lines[m], lines[m + 1], lines[m + 2], lines[m + 3].charAt(0));
+
+			// counting unread messages
+			// need to consider fixing this, I already stored this value in a flag character in the mail object
+			// which happens to be a private variable at the moment
+			if (mail.getFlag() == 'U') {
+				// mark the mail object unread
+				mail.markUnread();
+				// increase the unread count
+				messages++;
+			}
+			// add the mail object to the mailbox
+			player.getMailBox().add(mail);
+		}
+	}
+
+	private void saveMail(Player player) {
+		MailBox mb = player.getMailBox();
+
+		send("Saving mail...", player.getClient());
+
+		try {
+			PrintWriter pw = new PrintWriter(DATA_DIR + "mail\\mail-" + player.getName() + ".txt");
+
+			for (Mail m : mb) {
+				// Recipient
+				pw.println(m.getRecipient());
+				// Subject
+				pw.println(m.getSubject());
+				// Message
+				pw.println(m.getMessage());
+				// Flag (Read/Unread)
+				pw.println(m.getFlag());
+			}
+
+			pw.flush();
+			pw.close();
+		}
+		catch (FileNotFoundException fnfe) {
+			fnfe.printStackTrace();
+		}
 	}
 }

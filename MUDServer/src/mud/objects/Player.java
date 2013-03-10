@@ -829,20 +829,6 @@ public class Player extends MUDObject
 		}
 	}
 
-    public void loadMail(final String filename) throws Exception {
-        for (final File f : new File(filename).listFiles()) {
-            mailbox.add(new Mail(f));
-        }
-	}
-
-	public void saveMail(final String filename) throws Exception {
-        int i = 0;
-        for (final Mail m : mailbox) {
-            m.saveToFile(filename + "\\" + i + ".txt");
-            i += 1;
-        }
-	}
-
 	/**
 	 * Translate the persistent aspects of the player into the string
 	 * format used by the database

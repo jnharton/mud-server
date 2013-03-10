@@ -17,11 +17,6 @@ CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTH
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.util.Properties;
-
 /**
  * Class that defines a unit of mail, a single message with several attributes:
  * id - the order of the letter in the recipient's inbox
@@ -30,59 +25,99 @@ import java.util.Properties;
  * message - the content of the message itself
  * flag - a flag indicating the status of the message [flags: U (unread), R (read), D (delete)]
  * @author Jeremy
- *
  */
-public class Mail extends Properties
-{
-	public Mail(final String tRecipient, final String tSubject, final String tMessage) {
-        setProperty("recipient", tRecipient);
-        setProperty("subject", tSubject);
-        setProperty("message", tMessage);
-        setProperty("flag", "U");
+public class Mail {
+	private Integer id;
+	private String recipient;
+	private String subject;
+	private String message;
+	private Character flag;
+	
+	private boolean isUnread;
+	
+	/**
+	 * Mail message
+	 * 
+	 * @param tId
+	 * @param tRecipient
+	 * @param tSubject
+	 * @param tMessage
+	 * @param tFlag
+	 */
+	public Mail(int tId, String tRecipient, String tSubject, String tMessage, Character tFlag) {
+		this.id = tId;
+		this.recipient = tRecipient;
+		this.subject = tSubject;
+		this.message = tMessage;
+		this.flag = tFlag;
 	}
-
-	public Mail(final File file) throws Exception {
-        loadFromXML(new FileInputStream(file));
+	
+	public Integer getId() {
+		return this.id;
 	}
-
-    public String[] getLines() {
+	
+	public String getRecipient() {
+		return this.recipient;
+	}
+	
+	public String getSubject() {
+		return this.subject;
+	}
+	
+	public String getMessage() {
+		return this.message;
+	}
+	
+	public Character getFlag() {
+		return this.flag;
+	}
+	
+	public void markRead() {
+		this.flag = 'R';
+		this.isUnread = false;
+	}
+	
+	public void markUnread() {
+		this.flag = 'U';
+		this.isUnread = true;
+	}
+	
+	/**
+	 * @author joshgit
+	 */
+	public void markDeleted() {
+		this.flag = 'D';
+	}
+	
+	public boolean isUnread() {
+		return this.isUnread;
+	}
+	
+	/**
+	 * @author joshgit
+	 * 
+	 * @return
+	 */
+	public String[] getLines() {
         return new String[] {
-            "To: " + getProperty("recipient"),
-            "Subject : " + getProperty("subject"),
-            "Message: " + getProperty("message")
+            "To: " + getRecipient(),
+            "Subject : " + getSubject(),
+            "Message: " + getMessage()
         };
     }
-
-	public void markRead() {
-		setProperty("flag", "R");
+	
+	public String[] toStorage() {
+		String[] out = new String[4];
+		
+		out[0] = recipient;
+		out[1] = subject;
+		out[2] = message;
+		out[3] = flag.toString();
+		
+		return out;
 	}
-
-	public void markUnread() {
-		setProperty("flag", "U");
+	
+	public String toString() {
+		return "MAIL " + id + " " + recipient + " " + subject + " " + message + " " + flag;
 	}
-
-	public void markDeleted() {
-		setProperty("flag", "D");
-	}
-
-	public boolean isUnread() {
-		return "U".equals(getProperty("flag"));
-	}
-
-	public String getMessage() {
-		return getProperty("message");
-	}
-
-	public String getRecipient() {
-		return getProperty("recipient");
-	}
-
-	public String getSubject() {
-		return getProperty("subject");
-	}
-
-    public void saveToFile(final String filename) throws Exception {
-        storeToXML(new FileOutputStream(filename), "");
-	}
-
 }
