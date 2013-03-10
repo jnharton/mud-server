@@ -27,6 +27,7 @@ public class ObjectLoader {
 				log.debug("`loadObjects` ignoring line: " + oInfo);
 				oDBRef = Integer.parseInt(oInfo.split("#")[0].replace('&', ' ').trim());
 				NullObject no = new NullObject(oDBRef);
+				no.lock(); // lock the NullObject
 				objectDB.add(no);
 				continue;
 			}

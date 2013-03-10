@@ -230,7 +230,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 	//private String helpDB = DATA_DIR + "help\\index.txt";          // index file (help)
 
 	// Default Player Data
-	private final EnumSet<ObjectFlag> startFlags = EnumSet.of(ObjectFlag.PLAYER);                       // default flag string
+	private final EnumSet<ObjectFlag> startFlags = EnumSet.of(ObjectFlag.PLAYER); // default flag string
 	private final String start_status = "NEW";                    // default status string
 	private final String start_desc = "There is nothing to see."; // default desc string
 	private final Integer start_room = 9;                         // default starting room
@@ -283,7 +283,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 	private int guests = 0;         // the number of guests currently connected
 
 	// Arrays
-	private String[] help;          // string array of help file filenames
+	//private String[] help;          // string array of help file filenames
 
 	// Databases/Data
 	private ObjectDB objectDB = new ObjectDB();
@@ -298,7 +298,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 	// Help Files stored as string arrays, indexed by name
 	private HashMap<String, String[]> helpMap = new HashMap<String, String[]>();
 
-	private ArrayList<Account> accounts;     // ArrayList of Accounts (UNUSED)
+	private ArrayList<Account> accounts;      // ArrayList of Accounts (UNUSED)
 
 	// "Security" Stuff
 	private ArrayList<String> banlist;        // ArrayList of banned ip addresses
@@ -420,6 +420,8 @@ public class MUDServer implements MUDServerI, LoggerI {
 	public static String admin_pass = Utils.hash("password"); // need to fix the security issues of this (unused, but for admin command
 
 	public ArrayList<Player> moving = new ArrayList<Player>(); // list of players who are currently moving
+	
+	public Area area; // test Area
 
 	public MUDServer() {}
 
@@ -894,6 +896,12 @@ public class MUDServer implements MUDServerI, LoggerI {
 		for (final Room room1 : objectDB.getWeatherRooms()) {
 			room1.setWeather(weather);
 		}
+		
+		/**
+		 * Area Testing
+		 */
+		
+		area = new Area();
 
 		/**
 		 * End Testing
@@ -3497,7 +3505,15 @@ public class MUDServer implements MUDServerI, LoggerI {
 			System.out.println("Room Name: " + name);
 			parent = Integer.parseInt(arg.substring(arg.indexOf("=") + 1, arg.length()));
 			System.out.println("Room Parent: " + parent);
-			createRoom(name, parent);
+			
+			Room room = createRoom(name, parent);
+			
+			// add rooms to database (main)
+	        objectDB.addAsNew(room);
+			objectDB.addRoom(room);
+
+			// tell us about it
+			send("Room '" + room.getName() + "' created as #" + room.getDBRef() + ". Parent set to " + room.getParent() + ".", client);
 		}
 		else
 		{
@@ -5505,11 +5521,51 @@ public class MUDServer implements MUDServerI, LoggerI {
 		player.setEditor(Editor.ROOM); // room editor
 
 		edData newEDD = new edData();
+		
+		Room room = null;
+		boolean exist = false;
+		
+		// get a room
+		if ( arg.equals("") ) { // edit current room
+			room = getRoom(player.getLocation());
+			
+			exist = true;
+		}
+		else if ( arg.equals("new") ) { // create new room if no room to edit specified
+			room = createRoom("New Room", 0);
+			
+			// add new room to database
+			objectDB.addAsNew(room);
+			objectDB.addRoom(room);
+			
+			// do not use, yet
+			//room.setDBRef(objectDB.peekNextId());
+			//objectDB.reserveID(); // hold onto the id just in case we decide to keep the room, but don't let anyone else use it
 
-		// create new room if no room to edit specified
-		if ( arg.equals("") ) {
-			Room room = createRoom("name", 0);
+			exist = true;
+		}
+		else {
 
+			if ( arg.toLowerCase().equals("here") ) {
+				room = getRoom(player.getLocation());
+			}
+			else {
+				final int dbref = Utils.toInt(arg, -1);
+
+				if (dbref != -1) {
+					room = getRoom(dbref);
+				}
+				else {
+					room = getRoom(arg);
+				}
+			}
+			
+			if( room != null ) {
+				exist = true;
+			}
+		}
+		
+		if( exist ) {
 			if ( room.Edit_Ok ) {
 				room.Edit_Ok = false; // further edit access not permitted (only one person may access at a time)
 			}
@@ -5517,7 +5573,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 				abortEditor("Game> Room Editor - Error: room not editable (!Edit_Ok)", old_status, client);
 				return;
 			}
-
+			
 			// record prior player status
 			newEDD.addObject("pstatus", old_status);
 
@@ -5528,61 +5584,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 			newEDD.addObject("x", room.x);
 			newEDD.addObject("y", room.y);
 			newEDD.addObject("z", room.z);
-
-			player.setEditorData(newEDD);
-		}
-		else {
-			Room room = null;
-			boolean exist = false;
-
-			if ( arg.toLowerCase().equals("here") ) {
-				room = getRoom(player.getLocation());
-
-				if ( room.Edit_Ok ) {
-					room.Edit_Ok = false; // further edit access not permitted (only one person may access at a time
-				}
-				else { // room is not editable, exit the editor
-					abortEditor("Game> Room Editor - Error: room not editable (!Edit_Ok)", old_status, client);
-					return;
-				}
-
-				exist = true;
-			}
-			else {
-				final int dbref = Utils.toInt(arg, -1);
-				if (dbref != -1) {
-					room = getRoom(dbref);
-					if (room != null) {
-
-						if ( room.Edit_Ok ) {
-							room.Edit_Ok = false; // further edit access not permitted (only one person may access at a time
-						}
-						else { // room is not editable, exit the editor
-							abortEditor("Game> Room Editor - Error: room not editable (!Edit_Ok)", old_status, client);
-							return;
-						}
-
-						exist = true;
-					}
-				}
-			}
-
-			if (exist) {	// room exists
-				// record prior player status
-				newEDD.addObject("pstatus", old_status);
-
-				// room attributes
-				newEDD.addObject("room", room);
-				newEDD.addObject("desc", room.getDesc());
-				newEDD.addObject("name", room.getName());
-				newEDD.addObject("x", room.x);
-				newEDD.addObject("y", room.y);
-				newEDD.addObject("z", room.z);
-			}
-			else { // room doesn't exist (abort)
-				abortEditor("Game> Room Editor - Error: room does not exist", old_status, client);
-				return;
-			}
 
 			player.setEditorData(newEDD);
 		}
@@ -7289,7 +7290,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 
 				if ( m != null ) {
 					if ( m instanceof Room ) {
-						data.setObject("e|" + args[0], new Exit( args[0], ((Room) data.getObject("room")).getDBRef(), destination ));
+						data.addObject("e|" + args[0], new Exit( args[0], ((Room) data.getObject("room")).getDBRef(), destination ));
 						send("Ok.", client);
 					}
 				}
@@ -7350,6 +7351,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 				send("Room Editor -- Help", client);
 				send(Utils.padRight("", '-', 40), client);
 				send("abort", client);
+				send("addexit <name> <destination>", client);
 				send("desc <new description>", client);
 				send("dim <dimension> <size>", client);
 				send("done", client);
@@ -7362,19 +7364,8 @@ public class MUDServer implements MUDServerI, LoggerI {
 				send(Utils.padRight("", '-', 40), client);
 				// test alternate output means
 				/*ArrayList<Message> msgs = new ArrayList<Message>(13);
-				msgs.add(new Message(client, "Room Editor -- Help"));
-				msgs.add(new Message(client, Utils.padRight("", '-', 40)));
-				msgs.add(new Message(client, "abort"));
-				msgs.add(new Message(client, "desc <new description>"));
-				msgs.add(new Message(client, "dim <dimension> <size>"));
-				msgs.add(new Message(client, "done"));
-				msgs.add(new Message(client, "help"));
-				msgs.add(new Message(client, "layout"));
-				msgs.add(new Message(client, "name <new name>"));
-				msgs.add(new Message(client, "open <exit name> <destination>"));
-				msgs.add(new Message(client, "save"));
-				msgs.add(new Message(client, "show"));
-				msgs.add(new Message(client, Utils.padRight("", '-', 40)));
+				msgs.add(new Message(client, "..."));
+				// and so on and so forth
 				addMessages(msgs);*/
 			}
 			else {
@@ -7413,6 +7404,15 @@ public class MUDServer implements MUDServerI, LoggerI {
 			room.x = (Integer) data.getObject("x");
 			room.y = (Integer) data.getObject("y");
 			room.z = (Integer) data.getObject("z");
+			for ( String s : data.getObjects().keySet() ) {
+				if ( s.contains("e|") ) {
+					Exit e = (Exit) data.getObject(s);
+					
+					objectDB.addAsNew(e);
+					objectDB.addExit(e);
+					room.getExits().add(e);
+				}
+			}
 			send("Room saved.", client);
 		}
 		else if ( rcmd.equals("show") ) {
@@ -7430,9 +7430,11 @@ public class MUDServer implements MUDServerI, LoggerI {
 			showDesc((String) data.getObject("desc"), 80, client);
 			send("Exits:", client);
 			for ( String s : data.getObjects().keySet() ) {
+				System.out.println(s);
 				if ( s.contains("e|") ) {
+					System.out.println("Exit Found");
 					Exit e = (Exit) data.getObject(s);
-					send( e.getName() + "(#" + e.getDBRef() + ") - Source: " + e.getDBRef() + " Dest: " + e.getDest(), client );
+					send( e.getName() + "(#" + e.getDBRef() + ") - Source: " + e.getLocation() + " Dest: " + e.getDest(), client );
 				}
 			}
 			send(Utils.padRight("", '-', 80), client);
@@ -10454,14 +10456,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 		// flags are defined statically here, because I'd need to take in more variables and in no
 		// case should this create anything other than a standard room which has 'RS' for flags
 		final Room room = new Room(-1, roomName, EnumSet.of(ObjectFlag.ROOM, ObjectFlag.SILENT), "You see nothing.", roomParent);
-
-		/*
-		// add rooms to database (main)
-        objectDB.addAsNew(room);
-		objectDB.addRoom(room);
-
-		// tell us about it
-		//send("Room '" + roomName + "' created as #" + id + ". Parent set to " + roomParent + ".", );
 
 		/* for use of room editor */
 		return room;

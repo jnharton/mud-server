@@ -18,6 +18,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
 import java.util.HashMap;
+import java.util.LinkedList;
 
 public class edData {
 	private HashMap<String, Object> objects;
@@ -54,5 +55,17 @@ public class edData {
 	
 	public HashMap<String, Object> getObjects() {
 		return this.objects;
+	}
+	
+	public LinkedList<Object> getObjects(String pattern) {
+		LinkedList<Object> objectList = new LinkedList<Object>();
+		
+		for(String key : this.objects.keySet()) {
+			if( key.matches(pattern) ) {
+				objectList.add( this.objects.get(key) );
+			}
+		}
+		
+		return objectList;
 	}
 }

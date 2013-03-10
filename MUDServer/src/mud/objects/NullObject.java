@@ -12,6 +12,8 @@ import mud.utils.Utils;
  */
 public class NullObject extends MUDObject {
 	
+	private boolean locked = false;
+	
 	public NullObject(int dbref) {
 		super(dbref);
 	}
@@ -19,6 +21,19 @@ public class NullObject extends MUDObject {
 	@Override
 	public String getName() {
 		return "$NULLOBJECT$"; 
+	}
+	
+	/**
+	 * use to lock NullObjects that are placeholders for objects explicity marked
+	 * as ignore in the db. This should be used to prevent those NullObjects being reused
+	 * since an item does exist in the db, but isn't loaded.
+	 */
+	public void lock() {
+		this.locked = true;
+	}
+	
+	public boolean isLocked() {
+		return this.locked;
 	}
 	
 	@Override

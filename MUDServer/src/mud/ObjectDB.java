@@ -17,6 +17,7 @@ public class ObjectDB {
     
     // holds unused database references, that exist due to "recycled" objects
     private Stack<Integer> unusedDBNs = new Stack<Integer>();
+    private List<Integer> reservedDBNs = new LinkedList<Integer>();
 
     /** As long as we construct objects and insert them into this db afterwards as a separate step, getting the next id is somewhat of a hack.
      *  We could easily construct objects with an invalid id or never add them to this db.
@@ -26,8 +27,46 @@ public class ObjectDB {
     	else { return nextId; }
     }
 
+    // do not use, yet
+    public void reserveID() {
+    	final int id;
+
+    	if( !unusedDBNs.empty() ) { id = unusedDBNs.pop(); }
+    	else { id = nextId++; }
+
+    	reservedDBNs.add(id);
+    }
+
+    // do not use, yet
+    public void addUnused(int unusedId) {
+    	MUDObject mobj = get(unusedId);
+    	int next = peekNextId();
+
+    	if( reservedDBNs.contains(unusedId) ) {
+    		reservedDBNs.remove(unusedId);
+    		unusedDBNs.push(unusedId);
+    	}
+    	else if( mobj instanceof NullObject ) {
+    		NullObject no = (NullObject) mobj;
+    		
+    		if( !no.isLocked() ) {
+    			System.out.println("dbref isn't in use");
+        		unusedDBNs.push(unusedId);
+    		}
+    		else {
+    			System.out.println("NullObject is locked");
+    		}
+    	}
+    	else if(unusedDBNs.empty() && unusedId == next - 1) { // we just made a new one, but it's the most recent one in the db, just go back one
+    		nextId--;
+    	}
+    	else {
+    		System.out.println("Something is already using that id!");
+    	}
+    }
+
     public int getSize() {
-        return objsByName.size();
+    	return objsByName.size();
     }
 
     public void addAsNew(final MUDObject item) {
