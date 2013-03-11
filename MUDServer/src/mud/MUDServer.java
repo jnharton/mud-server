@@ -361,7 +361,8 @@ public class MUDServer implements MUDServerI, LoggerI {
 			"@backdb",
 			"@flag", "@flush",
 			"@loaddb",
-			"@sethour", "@setminute", "@setmode", "@start", "@shutdown"
+			"@sethour", "@setminute", "@setmode", "@start", "@shutdown",
+			"@teleport"
 	};
 	
 	private String[] god_cmds = new String[] {
@@ -691,17 +692,18 @@ public class MUDServer implements MUDServerI, LoggerI {
 		 * to virtually nil if I use existing features. In fact that bit just above doesn't need any
 		 * changing. Although I might need to explicity handle aliases better.
 		 */
-		//this.commandMap.put("@access", new AccessCommand(this));  //
-		this.commandMap.put("@alias", new AliasCommand(this));    //
-		this.commandMap.put("attack", new AttackCommand(this));   //
-		this.commandMap.put("cast", new CastCommand(this));       //
-		this.commandMap.put("chat", new ChatCommand(this));       //
-		this.commandMap.put("drop", new DropCommand(this));       //
-		this.commandMap.put("examine", new ExamineCommand(this)); //
-		this.commandMap.put("greet", new GreetCommand(this));     //
-		this.commandMap.put("help", new HelpCommand(this));       //
-		this.commandMap.put("mail", new MailCommand(this));       //
-		this.commandMap.put("where", new WhereCommand(this));     // Broken?
+		this.commandMap.put("@access", new AccessCommand(this));     //
+		this.commandMap.put("@alias", new AliasCommand(this));       //
+		this.commandMap.put("attack", new AttackCommand(this));      //
+		this.commandMap.put("cast", new CastCommand(this));          //
+		this.commandMap.put("chat", new ChatCommand(this));          //
+		this.commandMap.put("drop", new DropCommand(this));          //
+		this.commandMap.put("examine", new ExamineCommand(this));    //
+		this.commandMap.put("greet", new GreetCommand(this));        //
+		this.commandMap.put("help", new HelpCommand(this));          //
+		this.commandMap.put("mail", new MailCommand(this));          //
+		this.commandMap.put("@teleport", new TeleportCommand(this)); //
+		this.commandMap.put("where", new WhereCommand(this));        //
 
 		debug("Mapped Commands: " + commandMap.entrySet());       // Print out all the command mappings (DEBUG)
 
@@ -1860,6 +1862,10 @@ public class MUDServer implements MUDServerI, LoggerI {
 					{
 						wizCmd = true;
 						cmd_setmode(arg, client);
+					}
+					else if ( cmd.equals("@teleport") || ( aliasExists && alias.equals("@teleport") ) ) {
+						wizCmd = true;
+						commandMap.get("@teleport").execute(arg, client);
 					}
 
 					if (wizCmd) {
@@ -4018,7 +4024,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 					send(player.getName() + " flagged " + ObjectFlag.fromLetter(args[1].charAt(0)), client);
 				}
 				else if (args[0].equals("here")) {
-					room.setFlags(ObjectFlag.getFlagsFromString(args[1]));
+					room.setFlags(ObjectFlag.getFlagsFromString(room.getFlagsAsString() + args[1]));
 					send(room.getName() + " flagged " + ObjectFlag.fromLetter(args[1].charAt(0)), client);
 				}
 				else {
@@ -9047,7 +9053,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 	{
 		if (client.isRunning()) {
 
-			String newData = data;
 			int lineLimit = 80;
 
 
@@ -9057,7 +9062,24 @@ public class MUDServer implements MUDServerI, LoggerI {
 
 			// if the data to be sent exceeds the line limit
 			/*if (data.length() > lineLimit) {
-				newData = newData.substring(0, lineLimit - 2); // choose a chunk of data that does not exceed the limit
+				String newData = data.substring(0, lineLimit - 1); // choose a chunk of data that does not exceed the limit
+
+				if (telnet == 0) // no telnet
+				{
+					client.write(newData + "\r\n");
+				}
+				else if (telnet == 1 || telnet == 2) {
+					// telnet and mud clients
+					for (int c = 0; c < data.length(); c++)
+					{
+						client.write(newData.charAt(c));
+					}
+					client.write("\r\n");
+				}
+
+				send(data.substring(lineLimit - 1, data.length()), client); // recursively call the function with the remaining data
+
+				return;
 			}*/
 
 
@@ -9073,10 +9095,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 				}
 				client.write("\r\n");
 			}
-
-			/*if (data.length() > lineLimit) {
-				send(data.substring(lineLimit - 2, data.length()), client); // recursively call the function with the remaining data
-			}*/
 		}
 		else {
 			System.out.println("Error: Client is inactive (maybe disconnected), message not sent");
@@ -9631,7 +9649,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 			return;
 		}
 
-		if (!room.getFlags().contains("S")) {
+		if (!room.getFlags().contains(ObjectFlag.SILENT)) {
 			send(colors(room.getName() + " (#" + room.getDBRef() + ")", (String) displayColors.get("room")), client);
 		}
 		else {
@@ -9705,8 +9723,8 @@ public class MUDServer implements MUDServerI, LoggerI {
 		{
 			for (final Thing thing : room.contents)
 			{
-				if (!thing.getFlags().contains("D")) { // only shown non-Dark things
-					if (!room.getFlags().contains("S")) {
+				if (!thing.getFlags().contains(ObjectFlag.DARK)) { // only shown non-Dark things
+					if (!room.getFlags().contains(ObjectFlag.SILENT)) {
 						send(colors(thing.getName() + "(#" + thing.getDBRef() + ")", "yellow"), client);
 					}
 					else {
@@ -9720,7 +9738,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 		{
 			for (final Item item : room.contents1)
 			{
-				if (!room.getFlags().contains("S")) {
+				if (!room.getFlags().contains(ObjectFlag.SILENT)) {
 					send(colors(item.getName() + "(#" + item.getDBRef() + ")", "yellow"), client);
 				}
 				else {
@@ -9732,7 +9750,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 		send("With:", client);
 
 		for (final NPC npc : objectDB.getNPCsByRoom(room.getDBRef())) {
-			if (!room.getFlags().contains("S")) {
+			if (!room.getFlags().contains(ObjectFlag.SILENT)) {
 				send(colors("[" + npc.getStatus() + "] "+ npc.getName() + "(#" + npc.getDBRef() + ")", "cyan"), client);
 			}
 			else {
@@ -9741,7 +9759,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 		}
 
 		for (final Creature creep : objectDB.getCreatureByRoom(room.getDBRef())) {
-			if (!room.getFlags().contains("S")) {
+			if (!room.getFlags().contains(ObjectFlag.SILENT)) {
 				send( colors( creep.getName() + "(#" + creep.getDBRef() + ")", "cyan" ), client );
 			}
 			else {

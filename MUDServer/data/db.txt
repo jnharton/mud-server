@@ -17,8 +17,8 @@
 16#null#null#null#-1#null#null#null#null#null#null
 17#null#null#null#-1#null#null#null#null#null#null
 18#null#null#null#-1#null#null#null#null#null#null
-19#Nathan#PW#This is an admin, it is also a player and a builder.#253#250d8d84cf1ed1e0bd30437498046d02#12,12,12,12,12,12#34,50,0,0#4#3#10#IC
-20#Alisare#N#A pretty elf cleric.#161#null#0,0,0,0,0,0#0,0,0,0#0#1#3
+19#Nathan#PW#This is an admin, it is also a player and a builder.#241#250d8d84cf1ed1e0bd30437498046d02#12,12,12,12,12,12#34,50,0,0#4#3#10#IC
+20#Alisare#N#A pretty elf cleric.#161##0,0,0,0,0,0#0,0,0,0#0#1#3#IC
 21#east#E#You see nothing.#8#9#2
 22#Intersection: The Street of Bells & Lamp Street#RS#intersection of the street of bells and lamp street, first intersection south of suldown street.#53#O#10,10,10#-1#
 23#The Street of Bells#RS#You see nothing.#53#O#10,10,10#-1#
@@ -183,8 +183,8 @@
 182#Lightsinger Theatre#RS#The Lightsinger Theatre (C56)#53#I#10,10,10#-1#
 183#ls#E#You see nothing.#48#182#2
 184#out#E#You see nothing.#182#48#2
-185#Terys#WMV#A weapon merchant.#161#null#12,12,12,12,12,12#1000,1000,1000,1000#0#3#14
-186#Iridan#N#An innkeeper.#4#null#0,0,0,0,0,0#0,0,0,0#0#10#0
+185#Terys#MWV#A weapon merchant.#161#null#12,12,12,12,12,12#1010,10,10,0#0#3#14#VEN
+186#Iridan#N#An innkeeper.#4##0,0,0,0,0,0#0,0,0,0#0#10#0#IC
 187#Potion#I#A potion.#8#8#1#null
 188#out#E#You see nothing.#4#9#2
 189#inn#E#You see nothing.#9#4#2
@@ -238,7 +238,7 @@
 238#Erin#PW#There is nothing to see.#9#28bfaa1c080a7614c887d53d086a9408#0,0,0,0,0,0#127,55,0,0#4#10#0#IC
 239#Potion of Healing#I#A healing potion.#19#8#1#heal+10
 240#A Guide to Waterdeep#I#An infamous guide to Waterdeep, written by the infamous Volothamp Geddarm himself.#19#2#Volothamp Geddarm#A Guide to Waterdeep#0
-241#null#null#null#-1#null#null#null#null#null#null
+241#Oceans' Depths#RS#The large common room of the Oceans' Depths is crowded with tables and chair, and patrons.#0#N#10,10,10#-1#
 242#leave#E#You see nothing.#252#251#2
 243#into#E#You see nothing.#251#252#2
 245#Adventurer's Guild#RS#A roomy, wood paneled room lit by wall sconces spaced regularly throughout. The room is filled with trestle tables and benches. Several men and women circulate to handle the food and drink for anyone who wants it. On the far side of the room there is a man behind a counter, obviously a scribe, taking names down. There is a long line of would be adventurers in front of him. To his left, there is a counter where a smaller number of people are filling out paperwork, and diagonally away from there are several vendors selling basic goods as well as armor and weapons to anyone who can afford them.#0#I#10,10,10#-1#
@@ -250,5 +250,5 @@
 251#Clearing#RS#A long-abandoned tower dominates the sky here{RAIN?, its polished-brick facade slick with fallen rain}{CLEAR?{DAY?, gleaming in the sunlight}{NIGHT?, pale moonlight casting it in an unnatural glow}}.#0#O#10,10,10#-1#
 252#Tower#RS#The inside the tower is a dusty space,{DAY? sunbeams cascade in through the hole in the ceiling}{NIGHT? moonlight falls gently across the stone floor}#0#O#10,10,10#-1#
 253#Town Hall#RS#This building is the place that the town is governed from. <More description here, please?>#0#I#10,10,10#-1#
-254#Architect#N#This portly gentleman designs building, such as houses, and forts. Perhaps he can help you with something?#253#null#12,12,12,12,12,12#0,0,0,0#0#3#13#IC
-255#Ecturun Meshkal#N#Ecturun is a tall human, wearing heavy plate armor scarred from much battle. He stands stiffly.#245#null#14,14,14,14,14,14#0,0,0,0#0#3#16#IC
+254#Architect#N#This portly gentleman designs building, such as houses, and forts. Perhaps he can help you with something?#253##12,12,12,12,12,12#0,0,0,0#0#3#13#IC
+255#Ecturun Meshkal#N#Ecturun is a tall human, wearing heavy plate armor scarred from much battle. He stands stiffly.#245##14,14,14,14,14,14#0,0,0,0#0#3#16#IC

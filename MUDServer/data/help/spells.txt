@@ -5,3 +5,5 @@ List either your spells, or all the spells that exist.
 
 Syntax: 'spells'
         'spells #all'
+        
+Last Update: March 8, 2013

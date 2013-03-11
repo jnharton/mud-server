@@ -1,15 +1,12 @@
 package mud.objects;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.EnumSet;
-
-import java.io.File;
 
 import mud.net.Client;
 
@@ -41,7 +38,6 @@ import mud.quest.TaskType;
 
 import mud.utils.EditList;
 import mud.utils.MailBox;
-import mud.utils.Mail;
 import mud.utils.Pager;
 import mud.utils.cgData;
 import mud.utils.Utils;
