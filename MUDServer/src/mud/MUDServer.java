@@ -1370,6 +1370,13 @@ public class MUDServer implements MUDServerI, LoggerI {
 				boolean godCmd = false;
 
 				debug("Entering god command loop...", 2);
+				
+				if(cmd.charAt(0) == '#') {
+					// chat channel invocation
+					chatHandler(cmd.substring(1, cmd.length()), arg, client);
+					
+					return;
+				}
 
 				// stash god commands inside here
 				if (player.getAccess() >= GOD) {
@@ -2371,7 +2378,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 						// exit handling
 						if (cmd.matches("[a-zA-Z]+")) // no nums
 						{
-
 							// This will print to the console.
 							debug("Found a match in '" + cmd + "'");
 
@@ -2379,12 +2385,8 @@ public class MUDServer implements MUDServerI, LoggerI {
 							// if so, execute link or move user in the direction/to the room specified by the action/exit
 							// handle the command as an exit
 							if (!exitHandler(cmd, client)) {
-								if (!chatHandler(cmd, arg, client)) {
-									if ( !adminCmd && !wizCmd ) { // not an admin or wizard command
-										send("Huh? That is not a known command.", client);
-										debug("Command> Unknown Command");
-									}
-								}
+								send("Huh? That is not a known command.", client);
+								debug("Command> Unknown Command");
 							}
 						}
 						else
