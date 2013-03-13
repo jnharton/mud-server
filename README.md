@@ -4,11 +4,15 @@ mud-server
 A basic MUD server written in Java.
 
 Some of the following directories need to exist before the game starts. '\' is the top directory
-for all the files. I am pretty sure that the current code will not create them itself, so for
-now they'll need to be added manually. Only the IMPORTANT! directories are absolutely essential,
-although the others will probably be important as well in the future.
+for all the files. The code makes an attempt to find these folders and create them while it is setting
+up the game, but it doesn't generate any data in them. That means that if you don't download the data from
+here (effectively test data at some level), then you will need to get find suitable pre-existing data or
+you'll need to add some manually.
+
+**Only the IMPORTANT! directories are absolutely essential, although the others may be important in the future.**
 
 Obviously you need the program itself, so this is just excepting source and compiled .class files
+
 ```
 \data          IMPORTANT! the folder inside of which all game data is stored, server will likely crash without data
 \data\accounts for account files, not really used or important
@@ -20,13 +24,15 @@ Obviously you need the program itself, so this is just excepting source and comp
 \data\spells   spell data, totally unused
 \data\theme    IMPORTANT! sets mud name as well as day/month/year for time, month names etc
 ```
+
 This code is very much in an unfinished state, there may be radical shifts in the inner workings
 in the future. Try not to make too many assumptions about stability and backup the database if you
-play with this as future code may destroy them or use a alternate approach for data storage.
+play with this as future code may corrupt the data and/or utilize an alternate approach for data storage.
 
 This code may require at least Java 7 (1.7)
 
 ## Usage
+
 ```
 Usage: java -jar MUDServer.jar
 
