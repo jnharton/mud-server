@@ -1,6 +1,8 @@
 @debug
 @DEBUG
 
+Syntax:
+
 '@debug <parameter>'
 
 Parameters:
@@ -19,4 +21,4 @@ udbnstack/unused - list information about unused database reference numbers
 
 Turns debug message reporting on/off and display current information about certain chunks of data.
 
-Last Updated: February 4, 2013
+Last Updated: March 14, 2013

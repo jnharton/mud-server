@@ -43,7 +43,7 @@ public class HelpCommand extends Command {
 				player.setPager( new Pager(helpfile) );
 				player.setStatus("VIEW");
 				
-				parent.op_pager("", client);
+				parent.op_pager("view", client);
 			}
 			else {
 				for (final String line : helpfile) {

@@ -1,2 +1,9 @@
 @control
 @CONTROL
+
+Syntax:
+
+@control <npc name> - control an npc
+@control #break     - break out of controlling an npc
+
+Last Updated: March 14, 2013

@@ -183,7 +183,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 	private GameMode mode = GameMode.NORMAL; // (0=normal: player connect, 1=wizard: wizard connect only, 2=maintenance: maintenance mode)
 	private int multiplay = 0;               // (0=only one character per account is allowed, 1=infinite connects allowed)
 	private int guest_users = 0;             // (0=guests disallowed, 1=guests allowed)
-	private int debug = 1;                   // (0=off,1=on) Debug: server sends debug messages to the console
+	private int debug = 0;                   // (0=off,1=on) Debug: server sends debug messages to the console
 	private int debugLevel = 1;              // (1=debug,2=extra debug,3=verbose) priority of debugging information recorded
 	private boolean logging = true;          // logging? (true=yes,false=no)
 	private int logLevel = 3;                // () priority of log information recorded 
@@ -3128,46 +3128,53 @@ public class MUDServer implements MUDServerI, LoggerI {
 	private void cmd_control(final String arg, final Client client) {
 		final Player player = getPlayer(client);
 		
-		if (arg.toLowerCase().equals("#break")) { // NOTE: Looks okay
-			final Player controller = playerControlMap.getController(player);
+		if (arg.toLowerCase().equals("#break")) { // break control, return controlling player to their own body (ha ha)
+			final Player controller = playerControlMap.getController(player); // get the controller
 			
-			debug("DM Control Table:");
-			debug(playerControlMap);
-			
-			String name = "";
-			
-			if( playerControlMap.getSlave(controller) != null ) {
-				name = playerControlMap.getSlave(controller).getName();
-			}
-
-			playerControlMap.stopControllingAnyone(controller);
-
-			debug("DM Control Table:");
-			debug(playerControlMap);
-			
-			send("Game> You stop controlling " + name, client);
-		}
-		else { // should not be able to use this to control other players (at least not normally) NOTE: needs work
-			final Player npc = getNPC(arg);
-
-			debug(player);
-			debug(npc);
-
-			if (npc instanceof NPC) {
+			// if the player is a slave to some controller
+			if( controller != null ) {
+				// show control table state before change
 				debug("DM Control Table:");
 				debug(playerControlMap);
 
-				final Player oldSlave = playerControlMap.control(player, npc);
+				// get name of slave npc
+				String name = playerControlMap.getSlave(controller).getName();
+
+				playerControlMap.stopControllingAnyone(controller); // stop controlling an npc
+
+				// show control table state after change
+				debug("DM Control Table:");
+				debug(playerControlMap);
+
+				// status message, indicate that we have stopped controlling an npc and what its names is
+				send("Game> You stop controlling " + name, client);
+			}
+		}
+		else { // should not be able to use this to control other players (at least not normally) NOTE: needs work
+			final Player npc = getNPC(arg); // get the npc we want to control by name
+
+			debug(player); // print out player as string
+			debug(npc);    // print out npc as string
+
+			if (npc instanceof NPC) {
+				// show control table state before change
+				debug("DM Control Table:");
+				debug(playerControlMap);
+
+				final Player oldSlave = playerControlMap.control(player, npc); // control an npc 
 
 				player.setController(true); // mark the player as controlling an npc (commented out in PlayerControlMap)
 				
+				// if we were already controlling an npc, revoke the privilege escalation (controlled npcs have the same permissions as the controller)
 				if( oldSlave != null ) {
 					oldSlave.setAccess(USER);   // revoke any greater privileges granted
 				}
-
+				
+				// show control table state after change
 				debug("DM Control Table:");
 				debug(playerControlMap);
 				
+				// status message, indicate that we are now controlling an npc and what its names is
 				send("Game> You are now controlling " + npc.getName(), client);
 			}
 			else {

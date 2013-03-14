@@ -31,6 +31,7 @@ public class Pager
 	final private String[] content;
 	private int displayRows = 25;
 	private int topLine;
+	private int bottomLine;
 
 	/**
 	 * Create a new pager with the supplied string
@@ -57,7 +58,12 @@ public class Pager
     }
 
 	public String[] getView() {
-		return Arrays.copyOfRange(content, topLine, getBottom());
+		if( topLine + displayRows > content.length ) {
+			return Arrays.copyOfRange(content, getBottom() - displayRows, getBottom());
+		}
+		else {
+			return Arrays.copyOfRange(content, topLine, getBottom());
+		}
 	}
 	
 	public int getTop() {
@@ -73,10 +79,10 @@ public class Pager
 		return getView();
 	}
 	
-	public String[] scrollDown() {
-		if (topLine <= content.length - displayRows) {
+	public String[] scrollDown() { 
+		if (topLine + displayRows <= content.length) {
 			topLine += displayRows;
-        }
+		}
 
 		// topline, end, view size, amount to scroll down (view range)
 		// 0, 50, 25, 0 (25-50)
