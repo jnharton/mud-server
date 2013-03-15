@@ -1740,8 +1740,8 @@ public class MUDServer implements MUDServerI, LoggerI {
 					else if ( cmd.equals("@pgm") || ( aliasExists && alias.equals("@pgm") ) )
 					{
 						adminCmd = true;
-						// run the program interpreter
-						System.out.println("PGM: <" + arg + ">");
+						
+						// invoke the program interpreter and pass it the argument
 						send(pgm.interpret(arg), client);
 					}
 					// pass arguments to the set function

@@ -1,18 +1,69 @@
 package mud;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 
 import mud.utils.Utils;
 
 public class ProgramInterpreter {
-	
+
 	MUDServer parent;
-	
+
 	public ProgramInterpreter(MUDServer parent) {
 		this.parent = parent;
 	}
 	
+	public List<String> lex(String input) {
+		List<String> tokens = new LinkedList<String>();
+		
+		Character ch;
+		StringBuilder sb = new StringBuilder();
+		
+		for(int c = 0; c < input.length(); c++) {
+			ch = input.charAt(c);
+			
+			switch(ch) {
+			case '{':
+				if(sb.length() > 0) {
+					tokens.add(sb.toString());
+					sb.delete(0, sb.length());
+				}
+				tokens.add("" + ch);
+				break;
+			case '}':
+				if(sb.length() > 0) {
+					tokens.add(sb.toString());
+					sb.delete(0, sb.length());
+				}
+				tokens.add("" + ch);
+				break;
+			case ':':
+				if(sb.length() > 0) {
+					tokens.add(sb.toString());
+					sb.delete(0, sb.length());
+				}
+				tokens.add("" + ch);
+				break;
+			case ',':
+				if(sb.length() > 0) {
+					tokens.add(sb.toString());
+					sb.delete(0, sb.length());
+				}
+				//tokens.add("" + ch);
+				break;
+			default:
+				sb.append(ch);
+				break;
+			}
+		}
+		
+		System.out.println("Tokens: " + tokens);
+		
+		return tokens;
+	}
+
 	/**
 	 * Function to evaluate a script/program
 	 * 
@@ -21,36 +72,32 @@ public class ProgramInterpreter {
 	 */
 	public String interpret(final String pArg)
 	{
+		lex(pArg);
+		
+		System.out.println("PGM: <" + pArg + ">");
 		System.out.println("pArg: " + pArg);
 
-		String[] ca = new String[0];
+		String[] ca = null;
 
-		if (pArg.indexOf(":") != -1)
-		{
+		if (pArg.indexOf(":") != -1) {
 			ca = pArg.split(":");
 
-			for (final String s : ca) {
-				System.out.println(s);
-			}
+			System.out.println("Input: " + Arrays.asList(ca));
 
-			if (pArg.equals("{colors}") || ca[0].equals("{colors")) {
-				if (ca[1] != null)
-				{
-					String[] params = ca[1].substring(0, ca[1].indexOf("}")).split(",");
+			if (ca[0].equals("{colors")) {
+				String[] params = ca[1].substring(0, ca[1].indexOf("}")).split(",");
 
+				System.out.println("Params: " + Arrays.asList(params));
+
+				if (params.length >= 2) {
 					parent.debug("Color: " + params[0]);
+					parent.debug("Text: " + params[1]);
 
-					if (params.length >= 2) {
-						return "-Result: " + parent.colorCode(params[0]) + params[1] + parent.colorCode("white");
-					}
-					else { return "PGM: Error!"; }
+					return "-Result: " + parent.colorCode(params[0]) + params[1] + parent.colorCode("white");
 				}
-				else
-				{
-					return "-Result: Incomplete function statement, no parameters!";
-				}
+				else { return "PGM: Error!"; }
 			}
-			else if (pArg.equals("{rainbow}") || ca[0].equals("{rainbow")) {
+			else if (ca[0].equals("{rainbow")) {
 				if (ca[1] != null)
 				{
 					String param = ca[1].substring(0, ca[1].indexOf("}"));
@@ -65,7 +112,7 @@ public class ProgramInterpreter {
 					return "-Result: Incomplete function statement, no parameters!";
 				}
 			}
-			else if(pArg.equals("{distance}") || ca[0].equals("{distance")) {
+			else if(ca[0].equals("{distance")) {
 
 				/*
 				 * parameters:
@@ -130,7 +177,7 @@ public class ProgramInterpreter {
 							ptList.add(Utils.toPoint(param));
 						}
 
-						return "-Result: " + ptList + "; distance is " + parent.distance(ptList.get(0), ptList.get(1));
+						return "-Result: " + ptList + "; distance is " + MUDServer.distance(ptList.get(0), ptList.get(1));
 
 					}
 					else { return "PGM: Error!"; }
@@ -142,9 +189,24 @@ public class ProgramInterpreter {
 			}
 			else { return "PGM: Error!"; }
 		}
-		else if (pArg != null)
-		{
-			if ( pArg.equals("{name}") )
+		else  if (pArg != null) {
+			switch(pArg) {
+			case "{name}":
+				return "-Result: " + parent.getServerName();
+			case "{version}":
+				return "-Result: " + MUDServer.getName() + " " + MUDServer.getVersion();
+			case "{colors}":
+				return "-Result: Incomplete function statement, no inputs!";
+			case "{tell}":
+				String m = "";
+				String r = "";
+				if (ca[1] != null) { return "-Result: You tell " + m + " to " + ca[1] + "."; }
+				else { return "-Result: You tell " + m + " to " + r + "."; }
+			default:
+				return "PGM: No such function! (1)";
+			}
+
+			/*if ( pArg.equals("{name}") )
 			{
 				return "-Result: " + parent.getServerName();
 			}
@@ -172,9 +234,10 @@ public class ProgramInterpreter {
 			else
 			{
 				return "PGM: No such function! (1)";
-			}
+			}*/
 		}
-
-		return "PGM: Error!";
+		else {			
+			return "PGM: Error!";
+		}
 	}
 }

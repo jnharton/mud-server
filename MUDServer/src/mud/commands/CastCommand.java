@@ -58,13 +58,16 @@ public class CastCommand extends Command {
 			double spellFailure = 0;
 			
 			if( armor != null ) {
-				spellFailure = armor.armor.getSpellFailure();
+				spellFailure = armor.armor.getSpellFailure() * 100; // spellFailure stored as percentage
+				debug("Spell Failure: " + spellFailure);
 			}
 
 			//Create random number 1 - 100
 			int randNumber = (int) ((Math.random() * 100) + 1);
-
-			if( randNumber > spellFailure) {
+			
+			debug("d100 Roll: " + randNumber);
+			
+			if( randNumber > spellFailure ) {
 				// cast spell
 				send(spell.castMsg.replace("&target", player.getTarget().getName()), client);
 

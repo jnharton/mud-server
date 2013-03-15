@@ -1,0 +1,9 @@
+@pgm
+@PGM
+
+Syntax: '@pgm <program string>'
+
+Functions:
+
+colors
+    {colors:<color>,<text>} - output <text> in the ansi color corresponding to <color>
