@@ -11168,12 +11168,15 @@ public class MUDServer implements MUDServerI, LoggerI {
 
 					refString.append(ch);
 
-					if( index == sb.length() - 1 ) {
-						end = index - 1;
+					if( index == sb.length() - 1) {
+						end = index;
 						check = false;
 						eval = true;
 					}
 				}
+				/*else if(ch == '$') {
+					debug("found a $, shouldn't be here, ignore it");
+				}*/
 				else {
 					end = index;
 					check = false;
@@ -11203,13 +11206,16 @@ public class MUDServer implements MUDServerI, LoggerI {
 					debug("Game> (argument eval) tempI: " + refNum); // report number
 
 					debug("");
-					debug("Begin: " + begin + " End: " + end + " Original: " + sb.substring(begin, end) + " Replacement: " + refNum.toString());
+					debug("Begin: " + begin + " End: " + end + " Original: " + sb.substring(begin, end + 1) + " Replacement: " + refNum.toString());
 					debug("");
 
-					sb.replace(begin, end, refNum.toString());
+					sb.replace(begin, end + 1, refNum.toString());
 
 					debug("BUFFER: " + sb.toString());
 					debug("");
+				}
+				else { // modify string to remove potential name reference if not valid
+					sb.replace(begin, end + 1, "");
 				}
 
 				// clear variables
