@@ -2,6 +2,7 @@ package mud.commands;
 
 import mud.MUDServer;
 import mud.net.Client;
+import mud.objects.NPC;
 import mud.objects.Player;
 import mud.objects.Room;
 
@@ -91,8 +92,22 @@ public abstract class Command {
 		if( object instanceof String ) {
 			return parent.getPlayer((String) object);
 		}
+		else if( object instanceof Integer ) {
+			return parent.getPlayer((Integer) object);
+		}
 		else if( object instanceof Client ) {
 			return parent.getPlayer((Client) object);
+		}
+		
+		return null;
+	}
+	
+	public NPC getNPC(Object object) {
+		if( object instanceof String ) {
+			return parent.getNPC((String) object);
+		}
+		else if( object instanceof Integer ) {
+			return parent.getNPC((Integer) object);
 		}
 		
 		return null;

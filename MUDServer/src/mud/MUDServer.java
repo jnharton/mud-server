@@ -313,7 +313,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 			"bash", "buy",
 			"calendar", "cast", "chargen", "connect", "commands", "createItem",
 			"date", "dedit", "describe", "drink", "drop",
-			"effects", "equip", "examine", "exchange", "exits",
+			"effects", "equip", "exchange", "exits",
 			"go","greet",
 			"help", "home", "housing",
 			"interact", "inventory", "install",
@@ -334,6 +334,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 	private String[] build_cmds = new String[] {
 			"@check",                                 // @check check to see what exit props aren't set
 			"@describe", "@dig", "@door", "@dungeon", // @describe describe an object, @dig dig a new room, @door create an arbitrary exit @dungeon dig a new dungeon
+			"@examine",
 			"@fail", "@flags",                        // @fail set exit fail message, @flags see flags on an object
 			"@iedit",                                 // @iedit edit an item
 			"@jump",                                  // @jump jump to a different room
@@ -698,7 +699,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 		this.commandMap.put("cast", new CastCommand(this));          //
 		this.commandMap.put("chat", new ChatCommand(this));          //
 		this.commandMap.put("drop", new DropCommand(this));          //
-		this.commandMap.put("examine", new ExamineCommand(this));    //
+		this.commandMap.put("@examine", new ExamineCommand(this));    //
 		this.commandMap.put("greet", new GreetCommand(this));        //
 		this.commandMap.put("help", new HelpCommand(this));          //
 		this.commandMap.put("mail", new MailCommand(this));          //
@@ -1491,6 +1492,15 @@ public class MUDServer implements MUDServerI, LoggerI {
 							}
 						}
 					}*/
+					// pass arguments to the examine function
+					else if ( cmd.equals("@examine") || (aliasExists && alias.equals("@examine") ) )
+					{
+						buildCmd = true;
+						// run the examine function
+						//cmd_examine(arg, client);
+						commandMap.get("@examine").execute(arg, client);
+						//commandMap.get(cmd).execute(arg, client);
+					}
 					//
 					else if ( cmd.equals("@fail") || (aliasExists && alias.equals("@fail") ) )
 					{
@@ -1983,14 +1993,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 					{
 						// run the effects function
 						cmd_effects(arg, client);
-					}
-					// pass arguments to the examine function
-					else if ( cmd.equals("examine") || (aliasExists && alias.equals("examine") ) )
-					{
-						// run the examine function
-						//cmd_examine(arg, client);
-						commandMap.get("examine").execute(arg, client);
-						//commandMap.get(cmd).execute(arg, client);
 					}
 					else if ( cmd.equals("exchange") ) {
 						cmd_exchange(arg, client);

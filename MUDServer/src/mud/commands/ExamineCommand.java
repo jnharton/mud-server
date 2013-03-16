@@ -4,13 +4,13 @@ import mud.MUDObject;
 import mud.MUDServer;
 import mud.objects.Exit;
 import mud.objects.Item;
+import mud.objects.NPC;
+import mud.objects.Player;
 import mud.objects.Room;
 import mud.objects.Thing;
 
 import mud.net.Client;
 import mud.utils.Utils;
-
-import mud.objects.Player;
 
 public class ExamineCommand extends Command {
 
@@ -20,7 +20,7 @@ public class ExamineCommand extends Command {
 
 	@Override
 	public void execute(String arg, Client client) {
-		if ( arg.equals("") || arg.equals("here") ) {
+		if ( arg.equals("here") ) {
 			Room room = getRoom(client);
 			parent.examine(room, client);
 		}
@@ -35,14 +35,15 @@ public class ExamineCommand extends Command {
 				MUDObject mobj = parent.getObject(dbref);
 
 				if (mobj != null) {
-					if (mobj instanceof Player) {
-						Player player = (Player) mobj;
-						parent.examine(player, client);
-					}
 
-					else if (mobj instanceof Room) {
+					if (mobj instanceof Room) {
 						Room room = (Room) mobj;
 						parent.examine(room, client);
+					}
+					
+					else if (mobj instanceof Item) {
+						Item item = (Item) mobj;
+						parent.examine(item, client);
 					}
 
 					else if (mobj instanceof Exit) {
@@ -54,64 +55,26 @@ public class ExamineCommand extends Command {
 						Thing thing = (Thing) mobj;
 						parent.examine(thing, client);
 					}
-
-					else if (mobj instanceof Item) {
-						Item item = (Item) mobj;
-						parent.examine(item, client);
+					
+					else if (mobj instanceof Player) {
+						Player player = (Player) mobj;
+						parent.examine(player, client);
 					}
 
 					else {
 						parent.examine(mobj, client);
 					}
 				}
+				else {
+					send("That doesn't exist.", client);
+				}
 			}
 			else {
-				
-				/*MUDObject mobj = parent.getObject(dbref);
-
-				if (mobj != null) {
-					if (mobj instanceof Player) {
-						Player player = (Player) mobj;
-						parent.examine(player, client);
-					}
-
-					else if (mobj instanceof Room) {
-						Room room = (Room) mobj;
-						parent.examine(room, client);
-					}
-
-					else if (mobj instanceof Exit) {
-						Exit exit = (Exit) mobj;
-						parent.examine(exit, client);
-					}
-					
-					else if (mobj instanceof Thing) {
-						Thing thing = (Thing) mobj;
-						parent.examine(thing, client);
-					}
-
-					else if (mobj instanceof Item) {
-						Item item = (Item) mobj;
-						parent.examine(item, client);
-					}
-
-					else {
-						parent.examine(mobj, client);
-					}
-				}*/
-				
 				// get by string/name
 				final Room room = getRoom(arg);
 				
 				if (room != null) {
 					parent.examine(room, client);
-					return;
-				}
-				
-				final Player player = getPlayer(arg);
-				
-				if (player != null) {
-					parent.examine(player, client);
 					return;
 				}
 				
@@ -121,6 +84,24 @@ public class ExamineCommand extends Command {
 					parent.examine(exit, client);
 					return;
 				}
+				
+				
+				final Player player = getPlayer(arg);
+				
+				if (player != null) {
+					parent.examine(player, client);
+					return;
+				}
+				
+				final NPC npc = getNPC(arg);
+				
+				if (npc != null) {
+					parent.examine(npc, client);
+					return;
+				}
+				
+				
+				send("That doesn't exist.", client);
 				
 			}
 		}

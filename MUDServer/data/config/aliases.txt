@@ -7,7 +7,7 @@ alias @osuccess:@osucc
 alias @recycle:@rec
 alias @teleport:@tel
 alias commands:cmds
-alias examine:ex,exam
+alias @examine:@ex,@exam,ex,exam
 alias jump:j,jmp
 alias page:p
 alias north:n
