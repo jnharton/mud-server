@@ -63,6 +63,10 @@ public class ProgramInterpreter {
 		
 		return tokens;
 	}
+	
+	private void parse(final String statement) {
+		lex(statement);	
+	}
 
 	/**
 	 * Function to evaluate a script/program
@@ -71,9 +75,7 @@ public class ProgramInterpreter {
 	 * @return
 	 */
 	public String interpret(final String pArg)
-	{
-		lex(pArg);
-		
+	{	
 		System.out.println("PGM: <" + pArg + ">");
 		System.out.println("pArg: " + pArg);
 
@@ -239,5 +241,10 @@ public class ProgramInterpreter {
 		else {			
 			return "PGM: Error!";
 		}
+	}
+	
+	public static void main(String[] args) {
+		ProgramInterpreter p = new ProgramInterpreter(null);
+		p.parse("{distance:(0,0),(1,1)}");
 	}
 }

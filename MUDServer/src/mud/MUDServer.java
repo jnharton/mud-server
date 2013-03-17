@@ -227,7 +227,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 	private String mainDB = DATA_DIR + "db.txt";                   // database file (ALL) -- will replace all 3 or supersede them
 	private String errorDB = DATA_DIR + "errors_" + lang + ".txt"; // messages file (errors) [localized?]
 	private String spellDB = DATA_DIR + "spells.txt";              // database file (spells) -- contains spell names, messages, and more
-	//private String helpDB = DATA_DIR + "help\\index.txt";          // index file (help)
 
 	// Default Player Data
 	private final EnumSet<ObjectFlag> startFlags = EnumSet.of(ObjectFlag.PLAYER); // default flag string
@@ -235,7 +234,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 	private final String start_desc = "There is nothing to see."; // default desc string
 	private final Integer start_room = 9;                         // default starting room
 	private final Integer[] start_stats = { 0, 0, 0, 0, 0, 0 };   // default stats
-	private Coins start_money = new Coins(10, 50, 50, 100);       // default_money
+	private Coins start_money = new Coins(10, 50, 50, 100);       // default_money (10pp, 50gp, 50sp, 100cp)
 
 	// Objects (used throughout program in lieu of function scope variables) -- being phased out (April 2012
 	// these must be global variable, so that mud can have top-level control over them in the program
@@ -435,8 +434,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 		if (args.length < 1)
 		{
 			System.out.println("No port number specified. Exiting...");
-			/* should I have an interactive setup if no arguments are given? */
-			//System.out.println("Which port do you wish to run the MUD on?");
 			System.exit(-1);
 		}
 
@@ -448,7 +445,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 			for (int a = 0; a < args.length; a++) {
 				String s = args[a];
 
-				String param = s.substring(2, s.length());
+				String param =  s.substring(2, s.length());
 
 				if ( s.contains("--") ) {
 					if ( param.equals("port") ) {
@@ -460,8 +457,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 						System.out.println("Debugging Enabled.");
 					}
 					else if ( param.equals("db") ) {
-						// problem with assigning this variable because it is marked 'final'
-						//server.mainDB = server.DATA_DIR + args[a + 1].trim() + ".txt";
+						server.mainDB = server.DATA_DIR + args[a + 1];
 					}
 				}
 			}
@@ -758,109 +754,8 @@ public class MUDServer implements MUDServerI, LoggerI {
 
 		System.out.println("Server> Setup Done.");
 	}
-
+	
 	private void test() {
-		/* Begin TESTING */
-
-		/**
-		 * Miscellaneous Items Testing
-		 */
-
-		int avar = 0;
-
-		if (avar == 1 ) {
-			Arrow a = new Arrow(-1, "Flaming Arrow", "a flaming arrow", 8);
-			objectDB.addAsNew(a);
-			Arrow b = new Arrow(-1, "Flaming Arrow", "a flaming arrow", 8);
-			objectDB.addAsNew(b);
-			a.stack(b);
-
-			Arrow c;
-
-			for (int i = 0; i < 30; i++) {
-				c = new Arrow(-1, "Flaming Arrow", "a flaming arrow", 8);
-				objectDB.addAsNew(c);
-				a.stack(c);
-			}
-
-
-			debug(a);
-
-			getRoom("testing").contents1.add(a.split(16));
-			getRoom("testing").contents1.add(a);
-		}
-
-		/**
-		 * Coordinate System Testing
-		 */
-
-		/*System.out.println("creating a thing: " + nextDB());
-
-		Room r = getRoom(207);
-		Thing thing = new Thing(-1, "slab", "TD", "a large, rectangular stone slab" , 207);
-
-		thing.coord.x = 4;
-		thing.coord.y = 6;
-
-		r.contents.add(thing);
-
-		main.add(thing.toDB());
-		main1.add(thing);
-
-		Thing t = getThing(256); // ladder
-
-		t.coord.setX(4);
-		t.coord.setY(6);
-		t.coord.setZ(1);
-
-		t.attributes.put("height", 10);
-		 */
-
-		/**
-		 * Portal Testing
-		 */
-
-		int pvar = 0;
-
-		if (pvar == 1) {
-			System.out.println("creating a portal: " + objectDB.peekNextId());
-
-			Portal portal = new Portal(WELCOME_ROOM, 5); // a portal connecting two rooms (#8 and #5)
-			portal.name = "portal";           // generic name
-			portal.coord.setX(1);             // x coordinate
-			portal.coord.setY(1);             // y coordinate
-
-			portals.add(portal);              // add to list of portals
-			objectDB.addAsNew(portal);                // add to live game
-
-			System.out.println("creating a portal: " + objectDB.peekNextId());
-
-			Portal portal1 = new Portal(PortalType.RANDOM, WELCOME_ROOM, new int[] { 5, 182, 161, 4 });
-			portal1.name = "portal1";         // generic name
-			portal1.coord.setX(2);            // x coordinate
-			portal1.coord.setY(2);            // y coordinate
-
-			portals.add(portal1);             // add to list of portals
-			objectDB.addAsNew(portal1);               // add to live game
-		}
-
-		/**
-		 * Quest Testing
-		 */
-		System.out.println("NPCs: " + objectDB.getNPCs().size());
-
-		final NPC npc = getNPC("Iridan");
-		if (npc != null) {
-			final Quest quest = new Quest("Clear kobold infestation", "A cave near town is infested with kobolds, " +
-					"whom recently began raiding the town. Kill them all to end the infestation.",
-					new Task("Kill 15 kobolds", TaskType.KILL, 15));
-
-			npc.addQuest(quest);
-		}
-		else {
-			debug("getNPC(\"Iridan\") returned null.");
-		}
-
 		/**
 		 * Weather Testing
 		 */
@@ -896,16 +791,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 		for (final Room room1 : objectDB.getWeatherRooms()) {
 			room1.setWeather(weather);
 		}
-		
-		/**
-		 * Area Testing
-		 */
-		
-		area = new Area();
-
-		/**
-		 * End Testing
-		 */
 	}
 
 	/**
@@ -11193,9 +11078,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 						eval = true;
 					}
 				}
-				/*else if(ch == '$') {
-					debug("found a $, shouldn't be here, ignore it");
-				}*/
 				else {
 					end = index;
 					check = false;
