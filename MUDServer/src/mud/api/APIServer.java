@@ -56,10 +56,10 @@ public class APIServer implements Runnable {
 		    System.exit(-1);
 		}
 		
-		running = true;
-		
 		apiKeys.add( new APIKey("978419ff") );
 		new Thread(rp).start();
+		
+		running = true;
 	}
 	
 	@Override

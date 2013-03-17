@@ -10,8 +10,7 @@ import mud.MUDObject;
 import mud.SlotType;
 import mud.utils.Utils;
 
-public class Item extends MUDObject
-{
+public class Item extends MUDObject {
 	public boolean equippable = false; // is the item equippable?
 	public boolean equipped = false;   // is the item equipped?
 
@@ -26,6 +25,7 @@ public class Item extends MUDObject
 	public boolean isAbsorb = true;       // does this item absorb water? (default: true)
 	public boolean isWet = false;         // defines whether the item is wet or not (default: false)
 	public double wet = 1.0;              // degree of water absorbed
+	public int wear = 0;                  // how much wear and tear the item has been subject to (0 or negative)
 	
 	public ItemType equip_type;           // equip type - armor, shield, jewelry, weapon
 	public ItemType item_type;            // item type - what type of item is this (supersede equip_type?)
@@ -115,6 +115,10 @@ public class Item extends MUDObject
 
 	public Coins getCost() {
 		return baseCost;
+	}
+	
+	public int getWear() {
+		return wear;
 	}
 
 	public Double getWeight() {

@@ -288,9 +288,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 	// Databases/Data
 	private ObjectDB objectDB = new ObjectDB();
 
-	/*
-	 * I don't want to generate these on the fly and they need to stay 'in sync' so to speak.
-	 */
 	private ArrayList<Player> players;       // ArrayList of Player Objects currently in use
 
 	private HashMap<String, Spell> spells2 = new HashMap<String, Spell>();  // HashMap to lookup spells by index using name as key (static)
@@ -319,7 +316,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 			"interact", "inventory", "install",
 			"levelup", "list", "lock", "look",
 			"mail", "map", "money", "motd", "move", "msp",
-			"nameref",
 			"offer",
 			"page", "passwd", "pinfo", "prompt", "push",
 			"quests", "quit",
@@ -340,6 +336,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 			"@jump",                                  // @jump jump to a different room
 			"@lsedit",                                // @lsedit edit a list
 			"@makehouse",                             // @makehouse make a house
+			"nameref",
 			"@ofail", "@open",                        // @ofail set exit ofail message, @open open a new exit (1-way)
 			"@recycle", "@redit",                     // @recycle recycle objects
 			"@osucc", "@success"                      // @osucc set exit osuccess message, @success set exit success message
@@ -1530,6 +1527,11 @@ public class MUDServer implements MUDServerI, LoggerI {
 						buildCmd = true;
 						cmd_lsedit(arg, client); // run the list editor
 					}
+					else if ( cmd.equals("nameref") || ( aliasExists && alias.equals("nameref") ) )
+					{
+						buildCmd = true;
+						cmd_nameref(arg, client);
+					}
 					else if ( cmd.equals("@ofail") || ( aliasExists && alias.equals("@ofail") ) )
 					{
 						buildCmd = true;
@@ -2134,10 +2136,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 							if (msp == 0) { send("Game> MSP: off", client); }
 							else if (msp == 1) { send("Game> MSP: on", client); }
 						}
-					}
-					else if ( cmd.equals("nameref") || ( aliasExists && alias.equals("nameref") ) )
-					{
-						cmd_nameref(arg, client);
 					}
 					// pass arguments to the pgm function
 					else if ( cmd.equals("page") || ( aliasExists && alias.equals("page") ) )
@@ -4071,11 +4069,30 @@ public class MUDServer implements MUDServerI, LoggerI {
 	private void cmd_find(final String arg, final Client client) {
 		final LinkedList<String> matches = new LinkedList<>();
 
-		for (final MUDObject m : objectDB.findByLower(arg)) {
-			// if ( m.getName().toLowerCase().contains( arg.toLowerCase() ) ) {
-			matches.add(m.getName() + " (#" + m.getDBRef() + ")");
-			// }
+		char param = 0;
+		
+		String args[] = arg.split(" ");
+		if(args.length > 1) {
+			param = args[0].charAt(1);
 		}
+
+		switch(param) {
+		case 'p':
+			System.out.println("Find Players");
+			for (final MUDObject m : objectDB.findByLower(arg)) {
+				if( m instanceof Player) {
+					matches.add(m.getName() + " (#" + m.getDBRef() + ")");
+				}
+			}
+			break;
+		default:
+			System.out.println("Find Any");
+			for (final MUDObject m : objectDB.findByLower(arg)) {
+				matches.add(m.getName() + " (#" + m.getDBRef() + ")");
+			}
+			break;
+		}
+
 
 		for (final String s : matches) {
 			send(s, client);
@@ -4850,18 +4867,8 @@ public class MUDServer implements MUDServerI, LoggerI {
 		final Player player = getPlayer(client);
 
 		String[] args = arg.split(" ");
-
-		if (args.length == 2) {
-			try {
-				player.setNameRef(args[0], Integer.parseInt(args[1]));
-				send("nameRef allocated.", client);
-				send(args[0].substring(0, args[0].length()) + " allocated to " + args[1], client);
-			}
-			catch (NumberFormatException nfe) {
-				nfe.printStackTrace();
-			}
-		}
-		else if (arg.toLowerCase().equals("#list")) {
+		
+		if (arg.toLowerCase().equals("#list")) {
 			send("Name Reference Table", client);
 			send("------------------------------------------------", client);
 			for (String str : player.getNameReferences()) {
@@ -4872,6 +4879,22 @@ public class MUDServer implements MUDServerI, LoggerI {
 		else if (arg.toLowerCase().equals("#clear")) {
 			player.clearNameRefs();
 			send("Name Reference Table cleared!", client);
+		}
+		else if (args.length == 2) {
+			if (args[0].equals("#delete")) {
+				player.getNameReferences().remove(args[1]);
+				send("nameRef deleted.", client);
+			}
+			else {
+				try {
+					player.setNameRef(args[0], Integer.parseInt(args[1]));
+					send("nameRef allocated.", client);
+					send(args[0].substring(0, args[0].length()) + " allocated to " + args[1], client);
+				}
+				catch (NumberFormatException nfe) {
+					nfe.printStackTrace();
+				}
+			}
 		}
 	}
 
@@ -8201,6 +8224,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 				final String tName = args[0];
 				final String tCastMsg = args[1];
 				final String tType = args[2];
+				
 				final ArrayList<Effect> tEffects = new ArrayList<Effect>();
 
 				for (final String s : args[3].split(",")) {
@@ -8208,6 +8232,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 				}
 
 				final HashMap<String, Reagent> tReagents = new HashMap<String, Reagent>();
+				
 				for (final String reagentName : args[4].split(",")) {
 					try {
 						tReagents.put(reagentName, new Reagent(reagentName));
@@ -8360,14 +8385,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 			String line;
 			
 			while ((line = br.readLine()) != null) {
-				/* kinda sort defunct
-				// split line in file
-				final String[] cInfo = line.split("#");
-
-				// extract channel information from array of data
-				final int channelId = Integer.parseInt(cInfo[0]);
-				*/
-				
 				final String channelName = line;
 				chan.makeChannel(channelName);
 
@@ -11420,5 +11437,12 @@ public class MUDServer implements MUDServerI, LoggerI {
 		catch (FileNotFoundException fnfe) {
 			fnfe.printStackTrace();
 		}
+	}
+	
+	public void compare(Item item1, Item item2, Object...criteria) {
+		// comparisons:
+		// item type
+		// item wear
+		// item value
 	}
 }
