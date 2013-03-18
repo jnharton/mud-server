@@ -9395,11 +9395,16 @@ public class MUDServer implements MUDServerI, LoggerI {
 	public void examine(final MUDObject m, final Client client) {
 		if ( !(m instanceof NullObject) ) {
 			send(m.getName() + "(#" + m.getDBRef() + ")", client);
-			debug("Flags: " + m.getFlags());
-			debug(ObjectFlag.firstInit(m.getFlags()));
 			send("Type: " + ObjectFlag.firstInit(m.getFlags()) + " Flags: " + ObjectFlag.toInitString(m.getFlags()), client);
 			if (m instanceof Item) {
 				send("Item Type: " + ((Item) m).item_type.toString(), client);
+			}
+			if( m instanceof Thing) {
+				send("Thing Type: " + ((Thing) m).thing_type.toString(), client);
+				send("Coordinates:", client);
+				send("X: " + ((Thing) m).getXCoord(), client);
+				send("Y: " + ((Thing) m).getYCoord(), client);
+				send("Z: " + ((Thing) m).getZCoord(), client);
 			}
 			send("Description: " + m.getDesc(), client);
 			send("Location: " + getObject(m.getLocation()).getName() + "(#" + m.getLocation() + ")", client);
@@ -9408,7 +9413,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 			send("-- NullObject -- (#" + m.getDBRef() + ")", client);
 		}
 	}
-
+	
 	/**
 	 * Examine (MUDObject -> Room)
 	 * 
@@ -9430,6 +9435,11 @@ public class MUDServer implements MUDServerI, LoggerI {
 		final List<Thing> roomThings = objectDB.getThingsForRoom(room.getDBRef());
 		for (final Thing t : roomThings) {
 			send( colors(t.getName(), "yellow") + "(#" + t.getDBRef() + ")", client);
+		}
+		//final List<Item> roomItems = objectDB.getItemsForRoom(room.getDBRef());
+		final List<Item> roomItems = objectDB.getItemsByLoc(room.getDBRef());
+		for (final Item i : roomItems) {
+			send( colors(i.getName(), "yellow") + "(#" + i.getDBRef() + ")", client);
 		}
 		send("Creatures:", client);
 		for (final Creature creep : objectDB.getCreatureByRoom(room.getDBRef())) {
@@ -9497,16 +9507,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 		send("Type: " + ObjectFlag.firstInit(exit.getFlags()) + " Flags: " + ObjectFlag.toInitString(exit.getFlags()), client);
 		send(" Exit Type: " + exit.getExitType().getName(), client);
 		send("Description: " + exit.getDesc(), client);
-	}
-
-	public void examine(Thing thing, Client client) {
-		send(thing.name + "(#" + thing.getDBRef() + ")", client);
-		send("Type: " + ObjectFlag.firstInit(thing.getFlags()) + " Flags: " + ObjectFlag.toInitString(thing.getFlags()), client);
-		send("Description: " + thing.getDesc(), client);
-		send("Coordinates:", client);
-		send("X: " + thing.getXCoord(), client);
-		send("Y: " + thing.getYCoord(), client);
-		send("Z: " + thing.getZCoord(), client);
 	}
 
 	/**

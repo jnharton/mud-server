@@ -385,6 +385,11 @@ public class ObjectDB {
         }
     }
     
+    /**
+     * Get the items held by a specific player
+     * 
+     * @return a map of with key: item, and value: player that holds references to the items the player is holding
+     */
     public Map<Item, Player> getItemsHeld() {
         final Map<Item, Player> acc = new HashMap<Item, Player>();
 		for (final Item item : items) {
@@ -395,7 +400,14 @@ public class ObjectDB {
         }
         return acc;
     }
-
+    
+    /**
+     * Get a List containing references to the items located in the
+     * object with dbref, loc.
+     * 
+     * @param loc the dbref of the object where the items are located
+     * @return list of items located in the object referred to by dbref
+     */
     public List<Item> getItemsByLoc(final int loc) {
         final List<Item> acc = new LinkedList<Item>();
 		for (final Item item : items) {

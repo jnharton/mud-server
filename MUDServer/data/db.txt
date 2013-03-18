@@ -251,3 +251,4 @@
 253#Town Hall#RS#This building is the place that the town is governed from. <More description here, please?>#0#I#10,10,10#-1#
 254#Architect#N#This portly gentleman designs building, such as houses, and forts. Perhaps he can help you with something?#253##12,12,12,12,12,12#0,0,0,0#0#3#13#IC
 255#Ecturun Meshkal#N#Ecturun is a tall human, wearing heavy plate armor scarred from much battle. He stands stiffly.#245##14,14,14,14,14,14#0,0,0,0#0#3#16#IC
+256#Public Chest#T#A chest.#8#1

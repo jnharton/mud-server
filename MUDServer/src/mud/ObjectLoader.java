@@ -4,6 +4,7 @@ import java.util.*;
 
 import mud.objects.*;
 import mud.objects.items.*;
+import mud.objects.things.Chest;
 import mud.quest.*;
 
 import mud.Coins;
@@ -222,7 +223,18 @@ public class ObjectLoader {
                 //Thing(String tempName, String tempFlags, String tempDesc, int tempLoc, int tempDBREF)
                 else if (oFlags.indexOf("T") != -1)
                 {
-                    final Thing thing = new Thing(oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), oDesc, oLocation);
+                	int tType = Utils.toInt(attr[5], 0); // find a type, else TYPE 0 (NONE)
+                    ThingType tt = ThingType.values()[tType];
+                    
+                    final Thing thing;
+                    
+                    if( tt == ThingType.CHEST ) {
+                    	thing = new Chest(oDBRef, oName, oDesc, oLocation);
+                    	//thing.thing_type = ThingType.CHEST; // shouldn't be needed
+                    }
+                    else {
+                    	thing = new Thing(oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), oDesc, oLocation);
+                    }
 
                     log.debug("log.debug (db entry): " + thing.toDB(), 2);
 

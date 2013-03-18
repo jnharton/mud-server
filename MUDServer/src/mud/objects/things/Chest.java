@@ -34,17 +34,18 @@ public class Chest extends Thing implements Lockable<Item>, Storage<Item> {
 	 * Object Loading Constructor
 	 * @param dbref
 	 */
-	public Chest(int dbref) {
-		super(-1, "Public Chest", EnumSet.of(ObjectFlag.THING), "A chest", 8);
+	public Chest(int dbref, String name, String desc, int location) {
+		super(dbref, name, EnumSet.of(ObjectFlag.THING), desc, location);
+		thing_type = ThingType.CHEST;
 	}
 	
 	public Chest(boolean isLocked) {
-		super();
+		this();
 		this.isLocked = isLocked;
 	}
 	
 	public Chest(Item key, boolean isLocked) {
-		super();
+		this();
 		this.key = key;
 		this.isLocked = isLocked;
 	}
