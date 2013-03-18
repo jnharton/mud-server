@@ -4858,7 +4858,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 		room.getExits().add(exit);
 
 		// tell us that we succeeded in creating the exit
-		send("You open an exit called " + exit.getName() + "(#" + exit.getDBRef() + ")" + " from #" + exit.getLocation() + " to #" + exit.getDest() + ".", client);
+		send("You open an exit called " + exit.getName() + "(#" + exit.getDBRef() + ")" + " from #" + exit.getLocation() + " to #" + exit.getDestination() + ".", client);
 	}
 
 	/**
@@ -4919,7 +4919,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 		room.getExits().add(exit);
 
 		// tell us that we succeeded in creating the exit
-		send("You open an exit called " + exit.getName() + "(#" + exit.getDBRef() + ")" + " from #" + exit.getLocation() + " to #" + exit.getDest() + ".", client);
+		send("You open an exit called " + exit.getName() + "(#" + exit.getDBRef() + ")" + " from #" + exit.getLocation() + " to #" + exit.getDestination() + ".", client);
 	}
 
 	/**
@@ -6576,7 +6576,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 					}
 
 					// set player's location
-					player.setLocation(exit.getDest());
+					player.setLocation(exit.getDestination());
 
 					// send other exit properties
 
@@ -7372,7 +7372,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 				if ( s.contains("e|") ) {
 					System.out.println("Exit Found");
 					Exit e = (Exit) data.getObject(s);
-					send( e.getName() + "(#" + e.getDBRef() + ") - Source: " + e.getLocation() + " Dest: " + e.getDest(), client );
+					send( e.getName() + "(#" + e.getDBRef() + ") - Source: " + e.getLocation() + " Dest: " + e.getDestination(), client );
 				}
 			}
 			send(Utils.padRight("", '-', 80), client);

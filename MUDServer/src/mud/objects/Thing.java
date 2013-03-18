@@ -27,6 +27,8 @@ public class Thing extends MUDObject {
 
 	protected double weight = 40; // the weight in whatever units are used of the equippable object
 	
+	public ThingType thing_type;
+	
 	/**
 	 * Thing - no parameters
 	 * 
@@ -68,14 +70,13 @@ public class Thing extends MUDObject {
 
 	public String toDB() {
 		String[] output = new String[6];
-		output[0] = this.getDBRef() + "";         // thing database reference number
-		output[1] = this.getName();               // thing name
-		output[2] = this.getFlagsAsString();               // thing flags
-		output[3] = this.getDesc();               // thing description
-		output[4] = this.getLocation() + "";      // thing location (a.k.a parent)
-		output[5] = "*";                          // "blank" field which is used for something in every other class
-		String output1 = Utils.join(output, "#"); //
-		return output1;
+		output[0] = this.getDBRef() + "";           // thing database reference number
+		output[1] = this.getName();                 // thing name
+		output[2] = this.getFlagsAsString();        // thing flags
+		output[3] = this.getDesc();                 // thing description
+		output[4] = this.getLocation() + "";        // thing location (a.k.a parent)
+		output[5] = this.thing_type.ordinal() + ""; // thing type
+		return Utils.join(output, "#"); 
 	}
 
 	public String toString() {

@@ -195,11 +195,11 @@ public class Container<E extends Item> extends Item implements Storage<E>, Equip
 	@Override
 	public String toDB() {
 		String[] output = new String[8];
-		output[0] = this.getDBRef() + "";          // potion database reference number
-		output[1] = this.getName();                      // potion name
-		output[2] = this.getFlagsAsString();                     // potion flags
-		output[3] = this.getDesc();                      // potion description
-		output[4] = this.getLocation() + "";       // potion location
+		output[0] = this.getDBRef() + "";          // database reference number
+		output[1] = this.getName();                // name
+		output[2] = this.getFlagsAsString();       // flags
+		output[3] = this.getDesc();                // description
+		output[4] = this.getLocation() + "";       // location
 		output[5] = this.item_type.ordinal() + ""; // item type
 		return Utils.join(output, "#");
 	}

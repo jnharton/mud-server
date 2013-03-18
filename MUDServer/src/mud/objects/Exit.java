@@ -26,6 +26,7 @@ public class Exit extends MUDObject implements Lockable<Exit>
 
 	private boolean isLocked;
 
+	private int origin = 0;      // strictly for doors?
 	private int destination = 0;
 	
 	public String succMsg;
@@ -90,11 +91,11 @@ public class Exit extends MUDObject implements Lockable<Exit>
 		this.ofailMsg = ""; // OFailure Message
 	}
 	
-	public void setDest(int newDestination) {
+	public void setDestination(int newDestination) {
 		this.destination = newDestination;
 	}
 
-	public int getDest()
+	public int getDestination()
 	{
 		return destination;
 	}
@@ -144,7 +145,7 @@ public class Exit extends MUDObject implements Lockable<Exit>
 		output[2] = this.getFlagsAsString();                // exit flags
 		output[3] = this.getDesc();                 // exit description
 		output[4] = this.getLocation() + "";  // exit location (a.k.a source)
-		output[5] = this.getDest() + "";      // exit destination
+		output[5] = this.getDestination() + "";      // exit destination
 		output[6] = this.eType.ordinal() + ""; // exit type
 		return Utils.join(output, "#");
 	}

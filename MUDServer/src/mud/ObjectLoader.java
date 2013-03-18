@@ -142,6 +142,17 @@ public class ObjectLoader {
                         objectDB.addExit(exit);
 
                     }
+                    else if( et == ExitType.DOOR ) {
+                    	int oDest = Integer.parseInt(attr[5]);
+
+                        Exit exit = new Exit(oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), oDesc, oLocation, oDest);
+                        exit.setExitType(et);
+
+                        log.debug("log.debug (db entry): " + exit.toDB(), 2);
+
+                        objectDB.add(exit);
+                        objectDB.addExit(exit);
+                    }
                     else if (et == ExitType.PORTAL) {
                         Portal portal;
 

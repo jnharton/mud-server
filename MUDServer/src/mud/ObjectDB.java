@@ -288,11 +288,29 @@ public class ObjectDB {
 	public void loadExits(final MUDServer parent) {
         parent.debug("Loading exits:", 2);
 		for (final Exit e : exitsById.values()) {
-            final Room room = getRoomById(e.getLocation());
-            if (room != null) {
-                room.getExits().add(e);
-                parent.debug("Exit " + e.getDBRef() + " added to room " + room.getDBRef() + ".", 2);
-            }
+			if( e.getExitType() == ExitType.DOOR ) {
+				final Room room = getRoomById(e.getLocation());
+
+				if (room != null) {
+					room.getExits().add(e);
+					parent.debug("Exit " + e.getDBRef() + " added to room " + room.getDBRef() + ".", 2);
+				}
+
+				final Room room1 = getRoomById(e.getDestination());
+
+				if (room1 != null) {
+					room1.getExits().add(e);
+					parent.debug("Exit (Door)" + e.getDBRef() + " added to room " + room1.getDBRef() + ".", 2);
+				}
+			}
+			else {
+				final Room room = getRoomById(e.getLocation());
+				
+				if (room != null) {
+					room.getExits().add(e);
+					parent.debug("Exit " + e.getDBRef() + " added to room " + room.getDBRef() + ".", 2);
+				}
+			}
 		}
         parent.debug("Done loading exits:", 2);
 	}

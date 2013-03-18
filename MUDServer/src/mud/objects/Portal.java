@@ -143,7 +143,18 @@ public class Portal extends Exit {
 	public void setOrigin(int newOrigin) {
 		this.origin = newOrigin;
 	}
-
+	
+	@Override
+	public void setDestination(int newDestination) {
+		if (destinations == null) {
+			this.destination = newDestination;
+		}
+		else {
+			destinations.add(newDestination);
+		}
+	}
+	
+	@Override
 	public int getDestination() {
 		if (this.type == PortalType.RANDOM) {
 			if (destinations != null && destinations.size() > 0) {
@@ -156,15 +167,6 @@ public class Portal extends Exit {
 		}
 		else {
 			return destination;
-		}
-	}
-
-	public void setDestination(int newDestination) {
-		if (destinations == null) {
-			this.destination = newDestination;
-		}
-		else {
-			destinations.add(newDestination);
 		}
 	}
 
