@@ -352,6 +352,18 @@ public class ObjectLoader {
 
                         log.debug("log.debug (db entry): " + potion.toDB(), 2);
                     }
+                    
+                    else if ( it == ItemType.SHIELD ) { // Armor Merchant
+                        int shieldType = Integer.parseInt(attr[6]);
+                        int mod = Integer.parseInt(attr[7]);
+                        
+                        Shield shield = new Shield(oName, oDesc, oLocation, oDBRef, mod, it, ShieldType.values()[shieldType]);
+                        
+                        objectDB.add(shield);
+                        objectDB.addItem(shield);
+
+                        log.debug("log.debug (db entry): " + shield.toDB(), 2);
+                    }
                 }
                 else if (oFlags.equals("null")) {
 

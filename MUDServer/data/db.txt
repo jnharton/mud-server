@@ -183,6 +183,7 @@
 182#Lightsinger Theatre#RS#The Lightsinger Theatre (C56)#53#I#10,10,10#-1#
 183#ls#E#You see nothing.#48#182#2
 184#out#E#You see nothing.#182#48#2
+185#Terys#WMV#A weapon merchant.#161#null#12,12,12,12,12,12#1000,1000,1000,1000#0#3#14
 186#Iridan#N#An innkeeper.#4##0,0,0,0,0,0#0,0,0,0#0#10#0#IC
 187#Potion#I#A potion.#8#8#1#null
 188#out#E#You see nothing.#4#9#2
@@ -234,12 +235,14 @@
 234#leather armor#I#armor#192#0#1#0
 235#leather armor#I#armor#192#0#1#0
 236#leather armor#I#armor#192#0#1#0
+237#null#null#null#-1#null#null#null#null#null#null
 238#Erin#PW#There is nothing to see.#9#28bfaa1c080a7614c887d53d086a9408#0,0,0,0,0,0#127,55,0,0#4#10#0#IC
 239#Potion of Healing#I#A healing potion.#19#8#1#heal+10
 240#A Guide to Waterdeep#I#An infamous guide to Waterdeep, written by the infamous Volothamp Geddarm himself.#19#2#Volothamp Geddarm#A Guide to Waterdeep#0
 241#Oceans' Depths#RS#The large common room of the Oceans' Depths is crowded with tables and chair, and patrons.#0#N#10,10,10#-1#
 242#leave#E#You see nothing.#252#251#2
 243#into#E#You see nothing.#251#252#2
+244#Travelling cloak#I#A durable wool cloak made for travellers to keep them dry and less dusty.#19#3#2#0
 245#Adventurer's Guild#RS#A roomy, wood paneled room lit by wall sconces spaced regularly throughout. The room is filled with trestle tables and benches. Several men and women circulate to handle the food and drink for anyone who wants it. On the far side of the room there is a man behind a counter, obviously a scribe, taking names down. There is a long line of would be adventurers in front of him. To his left, there is a counter where a smaller number of people are filling out paperwork, and diagonally away from there are several vendors selling basic goods as well as armor and weapons to anyone who can afford them.#0#I#10,10,10#-1#
 246#Potion of Healing#I#A healing potion of somewhat dubious veracity.#8#8#1#null
 247#Cavern#RS#A cavern, under a mountain. The space is dimly lit by pitch torches, you can see several moving creatures, probably kobolds.#0#I#10,10,10#-1#
@@ -252,3 +255,4 @@
 254#Architect#N#This portly gentleman designs building, such as houses, and forts. Perhaps he can help you with something?#253##12,12,12,12,12,12#0,0,0,0#0#3#13#IC
 255#Ecturun Meshkal#N#Ecturun is a tall human, wearing heavy plate armor scarred from much battle. He stands stiffly.#245##14,14,14,14,14,14#0,0,0,0#0#3#16#IC
 256#Public Chest#T#A chest.#8#1
+257#Light Wooden Shield#I#A light wooden shield#8#10#1#4

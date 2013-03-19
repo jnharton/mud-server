@@ -12,7 +12,7 @@ public class AccessCommand extends Command {
 
 	@Override
 	public void execute(String arg, Client client) {
-		// syntax: access <player>=<access level denoted by integer -- 0 is none/1 is admin>
+		// syntax: access <player>=<access level> (access level denoted by integer -- see CONSTANTS)
 		String[] args = arg.split("=");
 
 		if (args.length > 0) {

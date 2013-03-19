@@ -1,0 +1,14 @@
+@setxp
+@SETXP
+
+Change your experience by some amount
+
+ADMIN CMD
+
+Syntax: '@setxp [-]<amount>'
+
+Parameters:
+
+amount - integer quantity of experience to add (or remove if prefixed with a -)
+
+Last Updated: March 19, 2013

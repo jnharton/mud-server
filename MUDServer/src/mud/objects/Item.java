@@ -30,7 +30,7 @@ public class Item extends MUDObject {
 	public ItemType equip_type;           // equip type - armor, shield, jewelry, weapon
 	public ItemType item_type;            // item type - what type of item is this (supersede equip_type?)
 	
-	protected SlotType st;                   // the type of slot this fits in (if any)
+	protected SlotType st;                // the type of slot this fits in (if any)
 	protected int mod = 0;                // modifier - +0, +2, +3, +4, ... and so on
 	
 	protected BitSet attributes;          // item attributes: rusty, glowing, etc
@@ -140,6 +140,14 @@ public class Item extends MUDObject {
 	
 	public void setMod(int newMod) {
 		this.mod = newMod;
+	}
+	
+	/**
+	 * Get Effective Item Level (EIL)
+	 * @return
+	 */
+	public int getEIL() {
+		return this.mod;
 	}
 
 	public String toDB() {

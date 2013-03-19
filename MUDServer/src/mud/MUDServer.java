@@ -261,14 +261,14 @@ public class MUDServer implements MUDServerI, LoggerI {
 	private HashMap<String, Command> commandMap = new HashMap<String, Command>(20, 0.75f);       // HashMap that holds an instance of each command currently (dynamic)
 
 	private HashMap<Client, Player> sclients = new HashMap<Client, Player>();
-	private HashMap<Zone, Integer> zones = new HashMap<Zone, Integer>(1, 0.75f);                // HashMap that tracks currently "loaded" zones (dynamic)
+	private HashMap<Zone, Integer> zones = new HashMap<Zone, Integer>(1, 0.75f);                 // HashMap that tracks currently "loaded" zones (dynamic)
 	final private PlayerControlMap playerControlMap = new PlayerControlMap();
 
-	private HashMap<String, String> displayColors = new HashMap<String, String>(8, 0.75f);      // HashMap specifying particular colors for parts of text (somewhat static)
-	private HashMap<String, String> colors = new HashMap<String, String>(8, 0.75f);             // HashMap to store ansi/vt100 escape codes for outputting color (static)
+	private HashMap<String, String> displayColors = new HashMap<String, String>(8, 0.75f);       // HashMap specifying particular colors for parts of text (somewhat static)
+	private HashMap<String, String> colors = new HashMap<String, String>(8, 0.75f);              // HashMap to store ansi/vt100 escape codes for outputting color (static)
 
-	public HashMap<String, String> aliases = new HashMap<String, String>(20, 0.75f);            // HashMap to store command aliases (static)
-	private HashMap<Integer, String> Errors = new HashMap<Integer, String>(5, 0.75f);           // HashMap to store error messages for easy retrieval (static)
+	public HashMap<String, String> aliases = new HashMap<String, String>(20, 0.75f);             // HashMap to store command aliases (static)
+	private HashMap<Integer, String> Errors = new HashMap<Integer, String>(5, 0.75f);            // HashMap to store error messages for easy retrieval (static)
 
 	private HashMap<String, Date> holidays = new HashMap<String, Date>(10, 0.75f);               // HashMap that holds an in-game date for a "holiday" name string
 	private HashMap<Integer, String> years = new HashMap<Integer, String>(50, 0.75f);            // HashMap that holds year names for game themes that supply them (static)
@@ -277,7 +277,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 	private LinkedHashMap<String, String> config = new LinkedHashMap<String, String>(11, 0.75f); // LinkedHashMap to track current config instead of using tons of individual integers?
 	//private HashTable<String, Boolean> config;
 
-	private HashMap<Player, Session> sessionMap = new HashMap<Player, Session>(1, 0.75f);                             // player to session mapping
+	private HashMap<Player, Session> sessionMap = new HashMap<Player, Session>(1, 0.75f);        // player to session mapping
 
 	private int guests = 0;         // the number of guests currently connected
 
@@ -313,15 +313,15 @@ public class MUDServer implements MUDServerI, LoggerI {
 			"go","greet",
 			"help", "home", "housing",
 			"interact", "inventory", "install",
-			"levelup", "list", "lock", "look",
+			"levelup", "list", "look",
 			"mail", "map", "money", "motd", "move", "msp",
 			"offer",
 			"page", "passwd", "pinfo", "prompt", "push",
 			"quests", "quit",
 			"roll",
-			"say", "score", "sell", "sethp", "setlevel", "setmana", "setxp", "sheathe", "skillcheck", "spells", "stats", "status",
+			"say", "score", "sell", "sheathe", "skillcheck", "spells", "stats", "status",
 			"take", "target", "time",
-			"unequip", "uninstall", "unlock", "use",
+			"unequip", "uninstall", "use",
 			"value", "version", "vitals",
 			"where", "who"
 	};
@@ -333,25 +333,26 @@ public class MUDServer implements MUDServerI, LoggerI {
 			"@fail", "@flags",                        // @fail set exit fail message, @flags see flags on an object
 			"@iedit",                                 // @iedit edit an item
 			"@jump",                                  // @jump jump to a different room
-			"@lsedit",                                // @lsedit edit a list
+			"@lock", "@lsedit",                       // @lsedit edit a list
 			"@makehouse",                             // @makehouse make a house
 			"nameref",
 			"@ofail", "@open",                        // @ofail set exit ofail message, @open open a new exit (1-way)
 			"@recycle", "@redit",                     // @recycle recycle objects
+			"unlock",
 			"@osucc", "@success"                      // @osucc set exit osuccess message, @success set exit success message
 	};
 
 	private String[] admin_cmds = new String[] {
-			"@aliases", "@allocate", // @alias setup command aliases, @allocate "allocate" dbref space
-			"@ban", "@bb",           // @ban ban player, @bb use bulletin board
-			"@config", "@control",   // @config change server configuration options, @control control an NPC
-			"@debug",                // @debug show debug information
-			"@hash", "@hedit",       // @hash see hash of a string, @hedit edit help files
-			"@listprops",            // @listprops list properties on an object          
-			"@nextdb",               // @nextdb get the next unused dbref number
-			"@passwd", "@pgm",       // @passwd change passwords, @pgm interpret a "script" program
-			"@set", "@setskill",     // @set set properties on objects, @setskill set player skill values
-			"@zones"                 // @zones setup,configure,modify zones
+			"@aliases", "@allocate",                                          // @alias setup command aliases, @allocate "allocate" dbref space
+			"@ban", "@bb",                                                    // @ban ban player, @bb use bulletin board
+			"@config", "@control",                                            // @config change server configuration options, @control control an NPC
+			"@debug",                                                         // @debug show debug information
+			"@hash", "@hedit",                                                // @hash see hash of a string, @hedit edit help files
+			"@listprops",                                                     // @listprops list properties on an object          
+			"@nextdb",                                                        // @nextdb get the next unused dbref number
+			"@passwd", "@pgm",                                                // @passwd change passwords, @pgm interpret a "script" program
+			"@set", "@setskill", "@sethp", "@setlevel", "@setmana", "@setxp", // @set set properties on objects, @setskill set player skill values
+			"@zones"                                                          // @zones setup,configure,modify zones
 	};
 
 	private String[] wiz_cmds = new String[] {
@@ -1406,6 +1407,10 @@ public class MUDServer implements MUDServerI, LoggerI {
 						buildCmd = true;
 						cmd_jump(arg, client);
 					}
+					else if ( cmd.equals("@lock") ) {
+						buildCmd = true;
+						cmd_lock(arg, client);
+					}
 					// pass arguments to the lsedit function
 					else if ( cmd.equals("@lsedit") )
 					{
@@ -1451,6 +1456,10 @@ public class MUDServer implements MUDServerI, LoggerI {
 					else if ( cmd.equals("@success") || ( aliasExists && alias.equals("@success") ) ) {
 						buildCmd = true;
 						cmd_success(arg, client); // set an exit success message
+					}
+					else if ( cmd.equals("@unlock") ) {
+						buildCmd = true;
+						cmd_unlock(arg, client);
 					}
 
 
@@ -1669,7 +1678,102 @@ public class MUDServer implements MUDServerI, LoggerI {
 						adminCmd = true;
 						cmd_setskill(arg, client);
 					}
-					else if ( cmd.equals("@tune") || ( aliasExists && alias.equals("@tune") ) ) {
+					else if ( cmd.equals("@sethp") || (aliasExists && alias.equals("@sethp") ) )
+					{
+						adminCmd = true;
+						// DM/Debug Command
+						int changeHP = 0;
+						if (!arg.equals("")) {
+							try {
+								System.out.println("ARG: " + arg);
+								changeHP = Integer.parseInt(arg);
+								System.out.println("INTERPRETED VALUE: " + changeHP);
+								System.out.println("SIGN: " + Integer.signum(changeHP));
+								if (Integer.signum(changeHP) > 0) {
+									player.setHP(changeHP);
+									send("Game> Gave " + player.getName() + " " + changeHP + " hitpoints (hp).", client);
+								}
+								else if (Integer.signum(changeHP) < 0) {
+									player.setHP(changeHP);
+									send("Game> Gave " + player.getName() + " " + changeHP + " hitpoints (hp).", client);
+								}
+								else {
+									send("Game> No amount specified, no hitpoint (hp) change has been made.", client);
+								}
+
+								player.updateCurrentState();
+							}
+							catch(NumberFormatException nfe) {
+								nfe.printStackTrace();
+							}
+						}
+					}
+					else if ( cmd.equals("@setmana") || (aliasExists && alias.equals("@setmana") ) )
+					{
+						adminCmd = true;
+						// DM/Debug Command
+						if (!arg.equals("")) {
+							System.out.println("ARG: " + arg);
+							final int changeMANA = Utils.toInt(arg, 0);
+							System.out.println("INTERPRETED VALUE: " + changeMANA);
+							System.out.println("SIGN: " + Integer.signum(changeMANA));
+							if (Integer.signum(changeMANA) > 0) {
+								player.setMana(changeMANA);
+								send("Game> Gave " + player.getName() + " " + changeMANA + " mana (mana).", client);
+							}
+							else if (Integer.signum(changeMANA) < 0) {
+								player.setMana(changeMANA);
+								send("Game> Gave " + player.getName() + " " + changeMANA + " mana (mana).", client);
+							}
+							else {
+								send("Game> No amount specified, no mana (mana) change has been made.", client);
+							}
+
+							player.updateCurrentState();
+						}
+					}
+					else if ( cmd.equals("@setlevel") || (aliasExists && alias.equals("@setlevel") ) )
+					{
+						adminCmd = true;
+						// DM/Debug Command
+						if (!arg.equals("")) {
+							try {
+								System.out.println("ARG: " + arg);
+								final int changeLevel = Integer.parseInt(arg);
+								System.out.println("INTERPRETED VALUE: " + changeLevel);
+								System.out.println("SIGN: " + Integer.signum(changeLevel));
+
+								player.changeLevelBy(changeLevel);
+								send("Game> Gave " + player.getName() + " " + changeLevel + " levels (levels).", client);
+							}
+							catch(NumberFormatException nfe) {
+								nfe.printStackTrace();
+							}
+						}
+						else {
+							send("Game> No amount specified, no experience (xp) change has been made.", client);
+						}
+
+					}
+					else if ( cmd.equals("@setxp") || (aliasExists && alias.equals("@setxp") ) )
+					{
+						adminCmd = true;
+						// DM/Debug Command
+						if (!arg.equals("")) {
+							System.out.println("ARG: " + arg);
+							final int changeXP = Utils.toInt(arg, 0);
+							System.out.println("INTERPRETED VALUE: " + changeXP);
+							System.out.println("SIGN: " + Integer.signum(changeXP));
+
+							player.setXP(changeXP);
+							send("Game> Gave " + player.getName() + " " + changeXP + " experience (xp).", client);
+						}
+						else {
+							send("Game> No amount specified, no experience (xp) change has been made.", client);
+						}
+					}
+					else if ( cmd.equals("@tune") || ( aliasExists && alias.equals("@tune") ) )
+					{
 						adminCmd = true;
 
 						String[] args = arg.split(" ");
@@ -1884,6 +1988,9 @@ public class MUDServer implements MUDServerI, LoggerI {
 					else if ( cmd.equals("exchange") ) {
 						cmd_exchange(arg, client);
 					}
+					else if ( cmd.equals("exp") ) {
+						send(player.getLevel() + " [ "+ player.getXP() + " / " + player.getXPToLevel() + " ] " + (player.getLevel() + 1) , client);
+					}
 					else if ( cmd.equals("exits") ) {
 						cmd_exits(arg, client);
 					}
@@ -1965,10 +2072,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 						else {
 							send("You are not currently read to level-up.", client);
 						}
-
-					}
-					else if ( cmd.equals("lock") ) {
-						cmd_lock(arg, client);
 					}
 					// pass arguments to the look function
 					else if ( cmd.equals("look") || (aliasExists && alias.equals("look") ) )
@@ -2073,95 +2176,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 					else if ( cmd.equals("score") ) {
 						cmd_score(arg, client);
 					}
-					else if ( cmd.equals("sethp") || (aliasExists && alias.equals("sethp") ) )
-					{
-						// DM/Debug Command
-						int changeHP = 0;
-						if (!arg.equals("")) {
-							try {
-								System.out.println("ARG: " + arg);
-								changeHP = Integer.parseInt(arg);
-								System.out.println("INTERPRETED VALUE: " + changeHP);
-								System.out.println("SIGN: " + Integer.signum(changeHP));
-								if (Integer.signum(changeHP) > 0) {
-									player.setHP(changeHP);
-									send("Game> Gave " + player.getName() + " " + changeHP + " hitpoints (hp).", client);
-								}
-								else if (Integer.signum(changeHP) < 0) {
-									player.setHP(changeHP);
-									send("Game> Gave " + player.getName() + " " + changeHP + " hitpoints (hp).", client);
-								}
-								else {
-									send("Game> No amount specified, no hitpoint (hp) change has been made.", client);
-								}
-
-								player.updateCurrentState();
-							}
-							catch(NumberFormatException nfe) {
-								nfe.printStackTrace();
-							}
-						}
-					}
-					else if ( cmd.equals("setmana") || (aliasExists && alias.equals("setmana") ) )
-					{
-						// DM/Debug Command
-						if (!arg.equals("")) {
-							System.out.println("ARG: " + arg);
-							final int changeMANA = Utils.toInt(arg, 0);
-							System.out.println("INTERPRETED VALUE: " + changeMANA);
-							System.out.println("SIGN: " + Integer.signum(changeMANA));
-							if (Integer.signum(changeMANA) > 0) {
-								player.setMana(changeMANA);
-								send("Game> Gave " + player.getName() + " " + changeMANA + " mana (mana).", client);
-							}
-							else if (Integer.signum(changeMANA) < 0) {
-								player.setMana(changeMANA);
-								send("Game> Gave " + player.getName() + " " + changeMANA + " mana (mana).", client);
-							}
-							else {
-								send("Game> No amount specified, no mana (mana) change has been made.", client);
-							}
-
-							player.updateCurrentState();
-						}
-					}
-					else if ( cmd.equals("setlevel") ) {
-						// DM/Debug Command
-						if (!arg.equals("")) {
-							try {
-								System.out.println("ARG: " + arg);
-								final int changeLevel = Integer.parseInt(arg);
-								System.out.println("INTERPRETED VALUE: " + changeLevel);
-								System.out.println("SIGN: " + Integer.signum(changeLevel));
-
-								player.changeLevelBy(changeLevel);
-								send("Game> Gave " + player.getName() + " " + changeLevel + " levels (levels).", client);
-							}
-							catch(NumberFormatException nfe) {
-								nfe.printStackTrace();
-							}
-						}
-						else {
-							send("Game> No amount specified, no experience (xp) change has been made.", client);
-						}
-
-					}
-					else if ( cmd.equals("setxp") || (aliasExists && alias.equals("setxp") ) )
-					{
-						// DM/Debug Command
-						if (!arg.equals("")) {
-							System.out.println("ARG: " + arg);
-							final int changeXP = Utils.toInt(arg, 0);
-							System.out.println("INTERPRETED VALUE: " + changeXP);
-							System.out.println("SIGN: " + Integer.signum(changeXP));
-
-							player.setXP(changeXP);
-							send("Game> Gave " + player.getName() + " " + changeXP + " experience (xp).", client);
-						}
-						else {
-							send("Game> No amount specified, no experience (xp) change has been made.", client);
-						}
-					}
 					else if ( cmd.equals("sheathe") ) {
 						if (player.getSlots().get("weapon").isFull() ) {
 							final Weapon w = (Weapon) player.getSlots().get("weapon").remove();
@@ -2228,9 +2242,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 					{
 						// run the drop function
 						cmd_unequip(arg, client);
-					}
-					else if ( cmd.equals("unlock") ) {
-						cmd_unlock(arg, client);
 					}
 					else if ( cmd.equals("use") || (aliasExists && alias.equals("use") ) )
 					{
@@ -2312,12 +2323,13 @@ public class MUDServer implements MUDServerI, LoggerI {
 	 * @param client
 	 */
 	private void cmd_access(final String arg, final Client client) {
-		// syntax: access <player>=<access level denoted by integer -- 0 is none/1 is admin>
+		// syntax: access <player>=<access level> (access level denoted by integer -- see CONSTANTS)
 		final String[] args = arg.split("=");
 		if (args.length > 0) {
 			Player player = getPlayer(args[0]);
-			if (args.length > 1) {
-				if (player != null) {
+
+			if (player != null) {
+				if (args.length > 1) {
 					try {
 						player.setAccess(Integer.parseInt(args[1]));
 						send(player.getName() + "'s access level set to " + player.getAccess(), client);
@@ -2327,21 +2339,11 @@ public class MUDServer implements MUDServerI, LoggerI {
 					}
 				}
 				else {
-					send("No such player!", client);
+					send(player.getName() + "'s access level is " + player.getAccess(), client);
 				}
 			}
 			else {
-				if (player != null) {
-					try {
-						send(player.getName() + "'s access level is " + player.getAccess(), client);
-					}
-					catch(NumberFormatException nfe) {
-						send("Invalid access level!", client);
-					}
-				}
-				else {
-					send("No such player!", client);
-				}
+				send("No such player!", client);
 			}
 		}
 		else {
@@ -4175,8 +4177,8 @@ public class MUDServer implements MUDServerI, LoggerI {
 				for (final Item item : player.getInventory())
 				{
 					if (item != null) {
-						//send(colors(item.getName(), "yellow") + "(#" + item.getDBRef() + ")", client);
-						send(colors(item.toString(), "yellow") + "(#" + item.getDBRef() + ")", client);
+						//send(colors(item.getName(), "yellow") + " " + "(#" + item.getDBRef() + ")", client);
+						send(colors(item.toString(), "yellow") + " " + "(#" + item.getDBRef() + ")", client);
 
 					}
 					else {
@@ -4242,17 +4244,12 @@ public class MUDServer implements MUDServerI, LoggerI {
 		final Player player = getPlayer(client);
 
 		final int dbref = Utils.toInt(arg, -1);
-		boolean success = false;
-
+		
 		// try to find the room, by dbref or by name
 		Room room = (dbref != -1) ? getRoom(dbref) : getRoom(arg);
 
-		if (room != null) {
-			success = true;
-		}
-
 		// if we found the room, send the player there
-		if ( success ) {
+		if ( room != null ) {
 			getRoom(client).removeListener(player); // remove listener
 			
 			send("Jumping to " + room.getName() + "... ", client);
@@ -4262,7 +4259,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 			room = getRoom(client);
 			look(room, client);
 
-			room.addListener(player); // add listener
+			getRoom(client).addListener(player); // add listener
 		}
 		else {
 			send("Jump failed.", client);
