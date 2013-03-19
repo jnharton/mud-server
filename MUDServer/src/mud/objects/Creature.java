@@ -23,7 +23,7 @@ public class Creature extends MUDObject {
 	// type flag = C
 	public Races race;
 	
-	private boolean ridable; // can this creature be ridden
+	private boolean ridable = false; // can this creature be ridden (default: false)
 	
 	public Creature() {
 	}
@@ -31,13 +31,21 @@ public class Creature extends MUDObject {
 	public Creature(int dbref, String race, String name, String desc) {
 		super(dbref);
 		this.name = name;
-		this.flags = EnumSet.of(ObjectFlag.COMPLEX);
+		this.flags = EnumSet.of(ObjectFlag.CREATURE);
 		this.locks = "";
 		this.desc = desc;
 		this.location = 8;
 	}
-
-	// "normal", but not default, constructor
+	
+	/**
+	 * Object Loading Constructor
+	 * 
+	 * @param tempDBRef
+	 * @param tempName
+	 * @param tempFlags
+	 * @param tempDesc
+	 * @param tempLoc
+	 */
 	public Creature(final int tempDBRef, final String tempName, final EnumSet<ObjectFlag> tempFlags, final String tempDesc, final int tempLoc) {
 		super(tempDBRef);
 		this.name = tempName;
@@ -61,19 +69,18 @@ public class Creature extends MUDObject {
 	 * * - denotes an unused field
 	 */
 	public String toDB() {
-		String[] output = new String[10]; // used to be 8
-		
+		String[] output = new String[10];    // used to be 8
 		output[0] = this.getDBRef() + "";    // creature database reference number
-		output[1] = this.getName();                // creature name
-		output[2] = this.getFlagsAsString();               // creature flags
-		output[3] = this.getDesc();                // creature description
+		output[1] = this.getName();          // creature name
+		output[2] = this.getFlagsAsString(); // creature flags
+		output[3] = this.getDesc();          // creature description
 		output[4] = this.getLocation() + ""; // creature location
-		output[5] = "*";
-		output[6] = "*";
-		output[7] = "*";
-		output[8] = "*";
+		output[5] = "*";                     //
+		output[6] = "*";                     //
+		output[7] = "*";                     //
+		output[8] = "*";                     //
 		//output[9] = race.getId() + "";       // creature race
-		output[9] ="9";
+		output[9] = "9";                     // hard coded race (9=Kobold)
 		
 		return Utils.join(output, "#");
 	}

@@ -6821,6 +6821,19 @@ public class MUDServer implements MUDServerI, LoggerI {
 					debug("Entering Step " + step);
 					player.setPlayerRace(Races.getRace(answer));
 					send("Player Race set to: " + player.getPRace(), client);
+					
+					Abilities[] ab = new Abilities[] {
+							Abilities.STRENGTH, Abilities.DEXTERITY, Abilities.CONSTITUTION,
+							Abilities.INTELLIGENCE, Abilities.WISDOM, Abilities.CHARISMA
+					};
+					
+					int index = 0;
+					
+					for(int i : (Races.getRace(answer)).getStatAdjust()) {
+						player.getStats().put(ab[index], player.getStats().get(ab[index]) + i);
+						index++;
+					}
+					
 					send("", client);
 					step++;
 				}
@@ -10311,7 +10324,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 	 * @param caller the player who looks at a player
 	 * @param player the player being looked at
 	 * @return a string that describes a player's appearance and proposes some assumptions
-	 * based on the calling player's ability to "observer"
+	 * based on the calling player's ability to "observe"
 	 */
 	public String evaluate(Player caller, Player player) {
 		return "";
@@ -10491,6 +10504,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 			items.add(item);
 			initCreatedItem(item);
 		}
+		
 		return items;
 	}
 
@@ -10502,6 +10516,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 			items.add(item);
 			initCreatedItem(item);
 		}
+		
 		return items;
 	}
 
@@ -10513,6 +10528,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 			items.add(item);
 			initCreatedItem(item);
 		}
+		
 		return items;
 	}
 

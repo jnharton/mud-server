@@ -1,10 +1,9 @@
-package mud.miscellaneous;
+package mud.db;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
-import mud.db.TableEntry;
 
 
 public class Table implements Iterable<TableEntry> {

@@ -6,7 +6,7 @@ public enum ObjectFlag
 {
     ADMIN("ADMIN"),
     BUILDER("BUILDER"),
-    COMPLEX("COMPLEX"),
+    CREATURE("CREATURE"),
     DARK("DARK"),
     EXIT("EXIT"),
     GUEST("GUEST"),
@@ -32,7 +32,7 @@ public enum ObjectFlag
         switch (c) {
         case 'A':    return ADMIN;
         case 'B':    return BUILDER;
-        case 'C':    return COMPLEX; // added from Creature, so could actually be CREATURE instead, maybe
+        case 'C':    return CREATURE;
         case 'D':    return DARK;
         case 'E':    return EXIT;
         case 'G':    return GUEST;

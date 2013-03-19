@@ -33,30 +33,9 @@ public class Spell
 	public enum Category { NONE }
 	public enum RangeType { NORMAL, PER_LEVEL, PERSONAL, TOUCH, AREA };
 	public enum RangeClass { CONICAL, LINEAR, PLANAR, SPHERICAL }
-	public enum School {
-		ABJURATION("Abjuration"),
-		CONJURATION("Conjuration"),
-		DIVINATION("Divination"),
-		ENCHANTMENT("Enchantment"),
-		EVOCATION("Evocation"),
-		ILLUSION("Illusion"),
-		INVOCATION("Invocation"),
-		TRANSMUTATION("Transmutation"),
-		NECROMANCY("Necromancy"),
-		OTHER("Other");
-		
-		final private String name;
-		
-		School(String name) {
-			this.name = name;
-		}
-		
-		public String toString() {
-			return this.name;
-		}
-	}
 	public enum SpellClass { CLERIC, DRUID, PALADIN, RANGER, SORCERER, WIZARD };
 	public enum SpellType { ARCANE, DIVINE };
+	
 	int spellLevel;
 	RangeType rangeT;
 	RangeClass rangeC;
@@ -134,11 +113,7 @@ public class Spell
 		return this.school;
 	}
 
-	public void setSchool(School s) {
-		this.school = s;
-	}
-
-	public School getSchool(final String schoolName) {
+	public static School getSchool(final String schoolName) {
 		if (schoolName.toLowerCase().equals("abjuration")) { return School.ABJURATION; }
 		else if (schoolName.toLowerCase().equals("conjuration")) { return School.CONJURATION; }
 		else if (schoolName.toLowerCase().equals("divination")) { return School.DIVINATION; }
@@ -149,6 +124,10 @@ public class Spell
 		else if (schoolName.toLowerCase().equals("transmutation")) { return School.TRANSMUTATION; }
 		else if (schoolName.toLowerCase().equals("necromancy")) { return School.NECROMANCY; }
 		else { return School.OTHER; }
+	}
+	
+	public void setSchool(School s) {
+		this.school = s;
 	}
 
 	public void setSchool(final String schoolName) {

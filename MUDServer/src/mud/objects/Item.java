@@ -20,6 +20,7 @@ public class Item extends MUDObject {
 
 	// original idea was a multiplying factor for weight when wet such as
 	// 1.0 - normal, 1.25 - damp, 1.50 - soaked, 2.00 - saturated, etc ("feels" x times as heavy)
+	
 	public double reduction_factor = 1.0; // amount of weight reduction (none by default, so 100% == 1)
 	
 	public boolean isAbsorb = true;       // does this item absorb water? (default: true)
