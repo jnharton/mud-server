@@ -29,8 +29,10 @@ import mud.MUDServer.PlayerMode;
 import mud.interfaces.Equippable;
 import mud.magic.Spell;
 import mud.magic.SpellBook;
+import mud.objects.items.Armor;
 import mud.objects.items.ClothingType;
 import mud.objects.items.Handed;
+import mud.objects.items.Shield;
 
 import mud.quest.Quest;
 import mud.quest.Task;
@@ -823,6 +825,24 @@ public class Player extends MUDObject
 		else {
 			return false;
 		}
+	}
+	
+	public int getArmorClass() {
+		Armor armor = (Armor) slots.get("armor").getItem();
+		Shield shield = (Shield) slots.get("weapon1").getItem();
+		
+		if( armor != null && armor instanceof Armor ) {
+			if( shield != null && shield instanceof Shield ) {
+				return 10 + armor.getArmorBonus() + shield.getShieldBonus();
+			}
+			
+			return 10 + armor.getArmorBonus();
+		}
+		else if( shield != null && shield instanceof Shield ) {
+			return 10 + shield.getShieldBonus();
+		}
+		
+		return 10;
 	}
 
 	/**

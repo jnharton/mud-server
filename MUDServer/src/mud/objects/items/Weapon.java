@@ -3,6 +3,7 @@ package mud.objects.items;
 import java.util.ArrayList;
 import java.util.EnumSet;
 
+import mud.Coins;
 import mud.ObjectFlag;
 
 import mud.interfaces.Equippable;
@@ -20,7 +21,7 @@ import mud.utils.Utils;
 public class Weapon extends Item implements Equippable<Weapon>, Wieldable<Weapon>
 {	
 	// type - necklace, bracelet, ring, earring, tiara
-	public WeaponType weapon;
+	private WeaponType weapon_type;
 	Handed handed;
 
 	public Weapon() {
@@ -30,7 +31,7 @@ public class Weapon extends Item implements Equippable<Weapon>, Wieldable<Weapon
 		this.item_type = ItemType.WEAPON;
 		this.mod = 0;
 		this.handed = Handed.ONE;
-		this.weapon = WeaponType.LONGSWORD; //
+		this.weapon_type = WeaponType.LONGSWORD; //
 		this.weight = 7.0;                  // the weight of the weapon
 	}
 	
@@ -41,7 +42,7 @@ public class Weapon extends Item implements Equippable<Weapon>, Wieldable<Weapon
 		this.item_type = template.item_type;
 		this.mod = template.mod;
 		this.handed = template.handed;
-		this.weapon = template.weapon;
+		this.weapon_type = template.weapon_type;
 		this.weight = template.weight;
 	}
 
@@ -53,7 +54,7 @@ public class Weapon extends Item implements Equippable<Weapon>, Wieldable<Weapon
 		this.item_type = ItemType.WEAPON;
 		this.mod = wMod;
 		this.handed = handed;
-		this.weapon = wType;   // the actual type of weapon
+		this.weapon_type = wType;   // the actual type of weapon
 		this.weight = wWeight; // the weight of the weapon
 	}
 	
@@ -65,7 +66,7 @@ public class Weapon extends Item implements Equippable<Weapon>, Wieldable<Weapon
 		this.item_type = ItemType.WEAPON;
 		this.mod = wMod;
 		this.handed = handed;
-		this.weapon = wType;   // the actual type of weapon
+		this.weapon_type = wType;   // the actual type of weapon
 		this.weight = wWeight; // the weight of the weapon
 	}
 	
@@ -92,12 +93,17 @@ public class Weapon extends Item implements Equippable<Weapon>, Wieldable<Weapon
 		this.item_type = ItemType.WEAPON;
 		this.mod = wMod;
 		this.handed = handed;
-		this.weapon = wType;        // the actual type of weapon
+		this.weapon_type = wType;        // the actual type of weapon
 		this.weight = wWeight;      // the weight of the weapon
 	}
 
 	public String getName() {
 		return this.name;
+	}
+	
+	@Override
+	public Coins getCost() {
+		return new Coins(weapon_type.getCost());
 	}
 
 	@Override
@@ -143,7 +149,7 @@ public class Weapon extends Item implements Equippable<Weapon>, Wieldable<Weapon
 		output[3] = this.getDesc();                      // weapon description
 		output[4] = this.getLocation() + "";       // weapon location
 		output[5] = this.item_type.ordinal() + ""; // item type
-		output[6] = this.weapon.ordinal() + "";    // weapon type
+		output[6] = this.weapon_type.ordinal() + "";    // weapon type
 		output[7] = this.mod + "";                 // modifier
 		return Utils.join(output, "#");
 	}

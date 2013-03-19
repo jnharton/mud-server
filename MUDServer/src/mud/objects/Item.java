@@ -120,13 +120,28 @@ public class Item extends MUDObject {
 	public int getWear() {
 		return wear;
 	}
-
+	
+	/**
+	 * Calculate weight (in lbs?) as a double. This
+	 * takes into account the weight of the water absorbed
+	 * if the item is both absorbent and wet. Metal armor for
+	 * instance should return it's weight, period, since it doesn't
+	 * absorb water and therefore whether it is wet or not is mostly
+	 * irrelevant to weight.
+	 * 
+	 * @return
+	 */
 	public Double getWeight() {
-		if (isWet) {
-			return (this.weight * wet) * reduction_factor;
+		if(isAbsorb) {
+			if (isWet) {
+				return (this.weight * wet) * reduction_factor;
+			}
+			else {
+				return this.weight * reduction_factor;
+			}
 		}
 		else {
-			return this.weight * reduction_factor;
+			return this.weight;
 		}
 	}
 	

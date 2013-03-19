@@ -6212,14 +6212,16 @@ public class MUDServer implements MUDServerI, LoggerI {
 				for (final Item item : ((Vendor) player.getTarget()).list()) {
 					if (item instanceof Weapon) {
 						final Weapon w = (Weapon) item;
-						send(colors("+" + w.getMod() + " " + w.weapon.getName() + " " + w.getDesc() + " (" + w.getWeight() + ") Cost: " + w.getCost(), "yellow"), client);
+						//send(colors("+" + w.getMod() + " " + w.weapon.getName() + " (" + w.getWeight() + ") Cost: " + w.getCost(), "yellow"), client);
+						send(colors(w.toString() + " (" + w.getWeight() + ") Cost: " + w.getCost(), "yellow"), client);
 					}
 					else if (item instanceof Armor) {
 						final Armor a = (Armor) item;
-						send(colors("+" + a.getMod() + " " + a.armor.getName() + " " + a.getDesc() + " (" + a.getWeight() + ") Cost: " + a.getCost(), "yellow"), client);
+						//send(colors("+" + a.getMod() + " " + a.getName() + " (" + a.getWeight() + ") Cost: " + a.getCost(), "yellow"), client);
+						send(colors(a.toString() + " (" + a.getWeight() + ") Cost: " + a.getCost(), "yellow"), client);
 					}
 					else {
-						send(colors(item.getName() + " " + item.getDesc() + " (" + item.getWeight() + ") Cost: " + item.getCost(), "yellow"), client);
+						send(colors(item.getName() + " (" + item.getWeight() + ") Cost: " + item.getCost(), "yellow"), client);
 					}
 				}
 

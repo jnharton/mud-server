@@ -95,7 +95,8 @@ public class Innkeeper extends NPC implements InteractiveI, Vendor {
 		for (Item item : this.stock) {
 			if (item instanceof Armor) {
 				final Armor a = (Armor) item;
-				parent.send(parent.colors("+" + a.getMod() + " " + a.getName() + " " + a.getDesc() + " (" + a.armor.getWeight() + ") Cost: " + a.getCost(), "yellow"), client);
+				//parent.send(parent.colors("+" + a.getMod() + " " + a.getName() + " " + a.getDesc() + " (" + a.getWeight() + ") Cost: " + a.getCost(), "yellow"), client);
+				parent.send(parent.colors(a.toString() + " " + a.getDesc() + " (" + a.getWeight() + ") Cost: " + a.getCost(), "yellow"), client);
 			}
 			else {
 				parent.send("?", client);

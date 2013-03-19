@@ -3,6 +3,7 @@ package mud.objects.items;
 import java.util.ArrayList;
 import java.util.EnumSet;
 
+import mud.Coins;
 import mud.ObjectFlag;
 
 import mud.interfaces.Equippable;
@@ -31,7 +32,7 @@ public class Armor extends Item implements Equippable<Armor>, Wearable<Armor>
 
 	// weight - light, medium, heavy
 	//private String group = "";
-	public ArmorType armor;
+	private ArmorType armor_type;
 
 	public Armor() {
 	}
@@ -50,7 +51,7 @@ public class Armor extends Item implements Equippable<Armor>, Wearable<Armor>
 		this.equip_type = template.equip_type;
 		this.item_type = template.item_type;
 		this.mod = template.mod;
-		this.armor = template.armor;
+		this.armor_type = template.armor_type;
 		this.weight = template.weight;
 	}
 	
@@ -61,7 +62,7 @@ public class Armor extends Item implements Equippable<Armor>, Wearable<Armor>
 		this.equip_type = ItemType.ARMOR;
 		this.item_type = ItemType.ARMOR;
 		this.mod = aMod;
-		this.armor = armor;
+		this.armor_type = armor;
 		this.weight = armor.getWeight();
 	}
 	
@@ -72,7 +73,7 @@ public class Armor extends Item implements Equippable<Armor>, Wearable<Armor>
 		this.equip_type = ItemType.ARMOR;
 		this.item_type = ItemType.ARMOR;
 		this.mod = aMod;
-		this.armor = armor;
+		this.armor_type = armor;
 		this.weight = armor.getWeight();
 	}
 	
@@ -96,10 +97,27 @@ public class Armor extends Item implements Equippable<Armor>, Wearable<Armor>
 		this.equip_type = ItemType.ARMOR;
 		
 		this.mod = aMod;
-		this.armor = armor;
+		this.armor_type = armor;
 		this.item_type = item;
 		
 		this.weight = armor.getWeight();
+	}
+	
+	public int getArmorBonus() {
+		return this.armor_type.getArmorBonus();
+	}
+	
+	public int getDexBonus() {
+		return this.armor_type.getDexBonus();
+	}
+	
+	public double getSpellFailure() {
+		return this.armor_type.getSpellFailure();
+	}
+	
+	@Override
+	public Coins getCost() {
+		return new Coins(armor_type.getCost());
 	}
 
 	@Override
@@ -132,7 +150,7 @@ public class Armor extends Item implements Equippable<Armor>, Wearable<Armor>
 		output[3] = this.getDesc();                // description
 		output[4] = this.getLocation() + "";       // location
 		output[5] = this.item_type.ordinal() + ""; // item type
-		output[6] = this.armor.ordinal() + "";     // armor type
+		output[6] = this.armor_type.ordinal() + "";     // armor type
 		output[7] = this.mod + "";                 // modifier
 		return Utils.join(output, "#");
 	}

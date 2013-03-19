@@ -53,7 +53,8 @@ public class WeaponMerchant extends NPC implements InteractiveI, Vendor {
 		for (final Item item : this.stock) {
 			if (item instanceof Weapon) {
 				final Weapon w = (Weapon) item;
-				parent.send(parent.colors("+" + w.getMod() + " " + w.weapon.getName() + " " + w.getDesc() + " (" + w.getWeight() + ") Cost: " + w.getCost(), "yellow"), client);
+				//parent.send(parent.colors("+" + w.getMod() + " " + w.getName() + " (" + w.getWeight() + ") Cost: " + w.getCost(), "yellow"), client);
+				parent.send(parent.colors(w.toString()  + " (" + w.getWeight() + ") Cost: " + w.getCost(), "yellow"), client);
 			}
 			else {
 				parent.send("?", client);

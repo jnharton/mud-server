@@ -6,22 +6,24 @@ package mud.objects.items;
  */
 
 public enum WeaponType {
-	LONGSWORD("Long Sword", "1d6", 19, 20, 2, 2.0, AttackType.SLASHING),
-	RAPIER("Rapier", "1d4", 18, 20, 2, 2.0, AttackType.PIERCING),
-	SCIMITAR("Scimitar", "1d4", 18, 20, 2, 4.0, AttackType.SLASHING);
+	LONGSWORD("Long Sword", AttackType.SLASHING, "1d6", 19, 20, 2, 2.0),
+	RAPIER("Rapier", AttackType.PIERCING, "1d4", 18, 20, 2, 2.0),
+	SCIMITAR("Scimitar", AttackType.SLASHING, "1d4", 18, 20, 2, 4.0);
 	
 	public enum AttackType { PIERCING, SLASHING; }
 	
 	private String name;
+	private AttackType aType;  // attack type
+	private int[] cost;        // weapon base cost
 	private String damage;     // damage roll
 	private int critMin;       // minimum roll for a critical hit
 	private int critMax;       // maximum roll for a critical hit
 	private int critical;      // damage multiplier for a critical hit
 	private double weight;     // base weapon weight
-	private AttackType aType;  // attack type
 	
-	WeaponType(String name, String damage, int critMin, int critMax, int critical, double weight, AttackType aType ) {
+	WeaponType(String name, AttackType aType, String damage, int critMin, int critMax, int critical, double weight ) {
 		this.name = name;
+		this.cost = new int[] { 0, 0, 10, 0 };
 		this.damage = damage;
 		this.critMin = critMin;
 		this.critMax = critMax;
@@ -33,6 +35,14 @@ public enum WeaponType {
 	
 	public String getName() {
 		return this.name;
+	}
+	
+	public AttackType getAttackType() {
+		return this.aType;
+	}
+	
+	public int[] getCost() {
+		return this.cost;
 	}
 	
 	public String getDamage() {
@@ -53,9 +63,5 @@ public enum WeaponType {
 	
 	public double getWeight() {
 		return this.weight;
-	}
-	
-	public AttackType getAttackType() {
-		return this.aType;
 	}
 }

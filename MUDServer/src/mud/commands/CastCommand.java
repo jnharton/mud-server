@@ -58,7 +58,7 @@ public class CastCommand extends Command {
 			double spellFailure = 0;
 			
 			if( armor != null ) {
-				spellFailure = armor.armor.getSpellFailure() * 100; // spellFailure stored as percentage
+				spellFailure = armor.getSpellFailure() * 100; // spellFailure stored as percentage
 				debug("Spell Failure: " + spellFailure);
 			}
 

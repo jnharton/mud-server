@@ -3,6 +3,7 @@ package mud.objects.items;
 import java.util.ArrayList;
 import java.util.EnumSet;
 
+import mud.Coins;
 import mud.ObjectFlag;
 import mud.interfaces.Equippable;
 import mud.interfaces.Wieldable;
@@ -17,7 +18,7 @@ import mud.utils.Utils;
 
 public class Shield extends Item implements Equippable<Shield>, Wieldable<Shield>
 {	
-	ShieldType shield_type;
+	private ShieldType shield_type;
 	// weight - light, medium, heavy
 	String size = "";
 	//type - buckler, small shield, medium shield, large shield, tower shield
@@ -57,6 +58,15 @@ public class Shield extends Item implements Equippable<Shield>, Wieldable<Shield
 		this.shield_type = shield;
 		
 		this.weight = 0;
+	}
+	
+	public int getShieldBonus() {
+		return this.shield_type.getShieldBonus();
+	}
+	
+	@Override
+	public Coins getCost() {
+		return new Coins(shield_type.getCost());
 	}
 	
 	public void equip() {
