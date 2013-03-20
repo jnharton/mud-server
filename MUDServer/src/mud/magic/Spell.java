@@ -48,9 +48,14 @@ public class Spell
 	private SpellType st;
 	public String name, castMsg, type;
 	public ArrayList<Effect> effects;  // an arraylist of spell effects (e.g. invisibility, acid resistance)
-	HashMap<String, Reagent> reagents; // a matched set of  reagent:quantity spell requirements
+	public HashMap<String, Reagent> reagents; // a matched set of  reagent:quantity spell requirements
 
 	int manaCost = 5;
+	
+	public Spell() {
+		effects = new ArrayList<Effect>();
+		reagents = new HashMap<String, Reagent>();
+	}
 
 	public Spell(String tName, String tSchool, String tCastMsg, ArrayList<Effect> tEffects)
 	{
@@ -62,7 +67,7 @@ public class Spell
         this(tName, tSchool, tCastMsg, "", tEffects, tReagents);
 	}
 
-	public Spell(String tSchool, String tName, String tCastMsg, String tType, ArrayList<Effect> tEffects, HashMap<String, Reagent> tReagents)
+	public Spell(String tName, String tSchool, String tCastMsg, String tType, ArrayList<Effect> tEffects, HashMap<String, Reagent> tReagents)
 	{
         this(tName, tSchool, tType, Spell.Category.NONE, SpellClass.WIZARD, tCastMsg, tEffects, tReagents);
 	}
@@ -97,16 +102,24 @@ public class Spell
 	public int getLevel() {
 		return this.spellLevel;
 	}
+	
+	public void setManaCost(int manaCost) {
+		this.manaCost = manaCost;
+	}
 
 	public int getManaCost() {
 		return this.manaCost;
+	}
+	
+	public void setSpellClass(SpellClass newSpellClass) {
+		this.sc = newSpellClass;
 	}
 
 	/**
 	 * compare this to the player's class to figure out whether they can use it
 	 */
-	public int spellClass() {
-		return this.sc.ordinal();
+	public SpellClass getSpellClass() {
+		return this.sc;
 	}
 
 	public School getSchool() {
@@ -141,6 +154,10 @@ public class Spell
 		else if (schoolName.toLowerCase().equals("transmutation")) { this.school = School.TRANSMUTATION; }
 		else if (schoolName.toLowerCase().equals("necromancy")) { this.school = School.NECROMANCY; }
 		else { this.school = School.OTHER; }
+	}
+	
+	public void setName(String spellName) {
+		this.name = spellName;
 	}
 
 	public String getName() {

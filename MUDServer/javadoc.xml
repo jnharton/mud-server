@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project default="javadoc">
+    <target name="javadoc">
+        <javadoc access="private" author="true" classpath="lib/gson-2.2.2.jar" destdir="javadoc" doctitle="MUDServer Documentation" nodeprecated="false" nodeprecatedlist="false" noindex="false" nonavbar="false" notree="false" packagenames="mud.interfaces,mud.colors,mud.utils,mud.net,mud.objects.things,mud.api,mud.miscellaneous,mud.commands,mud.quest,mud,mud.protocols,mud.objects,mud.magic,mud.objects.items,mud.db,mud.weather" source="1.7" sourcepath="src" splitindex="true" use="true" version="true"/>
+    </target>
+</project>

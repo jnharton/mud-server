@@ -8138,7 +8138,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 					}
 				}
 
-				spells2.put(tName, new Spell("Enchantment", tName, tCastMsg, tType, tEffects, tReagents));
+				spells2.put(tName, new Spell(tName, "Enchantment", tCastMsg, tType, tEffects, tReagents));
 				debug(tName + " " + tCastMsg + " " + tType + tEffects);
 			}
 		}
