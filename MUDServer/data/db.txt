@@ -206,7 +206,7 @@
 205#Wand of invisibility#I#A wand.#19#11#invisibility#50
 206#Wand of fireball#I#A wand.#19#11#fireball#50
 207#Wand of dispel#I#A wand.#19#11#dispel#50
-208#Cloak#I#A new piece of clothing.#19#3#2#0
+208#Cloak#I#A new piece of clothing.#19#3#3#0
 209#coordinate#RS#A large cave that is dimly lit. In the distance, a large rectangular stone slab juts out from the wall.#0#I#10,10,10#-1#
 210#Sword#I#A nice, shiny steel longsword.#19#12#0#0
 211#Sword#I#A nice, shiny steel longsword.#185#12#0#0
@@ -242,7 +242,7 @@
 241#Oceans' Depths#RS#The large common room of the Oceans' Depths is crowded with tables and chair, and patrons.#0#N#10,10,10#-1#
 242#leave#E#You see nothing.#252#251#2
 243#into#E#You see nothing.#251#252#2
-244#Travelling cloak#I#A durable wool cloak made for travellers to keep them dry and less dusty.#19#3#2#0
+244#Travelling cloak#I#A durable wool cloak made for travellers to keep them dry and less dusty.#19#3#3#0
 245#Adventurer's Guild#RS#A roomy, wood paneled room lit by wall sconces spaced regularly throughout. The room is filled with trestle tables and benches. Several men and women circulate to handle the food and drink for anyone who wants it. On the far side of the room there is a man behind a counter, obviously a scribe, taking names down. There is a long line of would be adventurers in front of him. To his left, there is a counter where a smaller number of people are filling out paperwork, and diagonally away from there are several vendors selling basic goods as well as armor and weapons to anyone who can afford them.#0#I#10,10,10#-1#
 246#Potion of Healing#I#A healing potion of somewhat dubious veracity.#8#8#1#null
 247#Cavern#RS#A cavern, under a mountain. The space is dimly lit by pitch torches, you can see several moving creatures, probably kobolds.#0#I#10,10,10#-1#
