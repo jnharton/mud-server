@@ -421,6 +421,8 @@ public class MUDServer implements MUDServerI, LoggerI {
 	public ArrayList<Player> moving = new ArrayList<Player>(); // list of players who are currently moving
 	
 	public Area area; // test Area
+	
+	public HashMap<Room, List<Player>> listenersLists; // possibly replace per room listener lists?
 
 	public MUDServer() {}
 
@@ -662,12 +664,11 @@ public class MUDServer implements MUDServerI, LoggerI {
 
 		// set up display colors
 		this.displayColors.put("exit", "green");
-		this.displayColors.put("player", "blue");
+		this.displayColors.put("player", "magenta");
 		this.displayColors.put("thing", "yellow");
 		this.displayColors.put("room", "green");
 		debug("Object Colors: " + displayColors.entrySet()); // DEBUG
 
-		// TODO made redundant by ObjectFlag
 		/*
 		 * Command Mapping
 		 * 
@@ -4391,7 +4392,15 @@ public class MUDServer implements MUDServerI, LoggerI {
 
 						debug("MUDObject : " + m.getDBRef() + " " + m.getName());
 
-						look(m, client);
+						if (m instanceof Player) {
+							look((Player) m, client);
+						}
+						else if (m instanceof Room) {
+							look((Room) m, client);
+						}
+						else {
+							look(m, client);
+						}
 					}
 					catch (NullPointerException npe) {
 						npe.printStackTrace();
@@ -5922,7 +5931,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 			Lockable l = (Lockable) m;
 			if (l.isLocked()) {
 				l.unlock();
-				send(m.getName() + " locked.", client);
+				send(m.getName() + " unlocked.", client);
 			}
 		}
 	}
@@ -6564,7 +6573,16 @@ public class MUDServer implements MUDServerI, LoggerI {
 		{
 			if (exit.getName().equals(cmd) || exit.getAliases().contains(cmd)  || exit.getName().equals(aliases.get(cmd)))
 			{
-				if (true) { // exit lock check?
+				boolean canUse = false;
+				
+				if( exit.getExitType() == ExitType.DOOR ) {
+					if( !exit.isLocked() ) { canUse = true; }
+				}
+				else {
+					canUse = true;
+				}
+				
+				if ( canUse ) { // exit lock check?
 					debug("success");
 
 					// send the success message
@@ -6611,7 +6629,9 @@ public class MUDServer implements MUDServerI, LoggerI {
 							// perhaps simply setting a pattern of some kind would be good?
 							// in case we wish to have an ambient background (rain, wind) and an effect sound for lightning (thunder)
 							// ASIDE: some clients only support one sound, so an effect sound should be handled
-							// as the sound, and then ind1the ambient background 
+							// as the sound, and then in the ambient background
+							
+							// get weather, then play related sound
 						}
 					}
 
@@ -6620,9 +6640,12 @@ public class MUDServer implements MUDServerI, LoggerI {
 
 					// tell us we are leaving the exit handler
 					debug("Exiting exit handler...");
-
-					return true;
 				}
+				else {
+					send("The door is locked.", client);
+				}
+				
+				return true;
 			}
 		}
 
@@ -7932,12 +7955,22 @@ public class MUDServer implements MUDServerI, LoggerI {
 	public void loadAccounts() {
 		try {
 			final File dirFile = new File(ACCOUNT_DIR);
-			if (dirFile.isFile()) {
+			if (dirFile.isDirectory()) {
 				for (final File file : dirFile.listFiles()) {
 					if (file.isFile()) {
+						System.out.println("Account File Found: " + file.getName());
+						
+						Account account;
+						
 						ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file));
-						accounts.add((Account) ois.readObject());
+						account = (Account) ois.readObject();
 						ois.close();
+						
+						for(int id : account.playerIds) {
+							account.getCharacters().add(getPlayer(id));
+						}
+						
+						accounts.add(account);
 					}
 				}
 			}
@@ -8422,6 +8455,15 @@ public class MUDServer implements MUDServerI, LoggerI {
 
 		// get the time
 		final Time time = getTime();
+		
+		// account login state
+		Account account = getAccount(player);
+
+		if( account != null ) {
+			account.setClient(client);
+			account.setPlayer(player);
+			account.setOnline(true);
+		}
 
 		// get variables to log
 		String pname = player.getName();
@@ -8569,6 +8611,15 @@ public class MUDServer implements MUDServerI, LoggerI {
 
 		// get time
 		Time time = getTime();
+		
+		// account login state
+		Account account = getAccount(player);
+
+		if( account != null ) {
+			account.setClient(null);
+			account.setPlayer(null);
+			account.setOnline(false);
+		}
 
 		// get variables to log
 		String playerName = player.getName();
@@ -9546,16 +9597,17 @@ public class MUDServer implements MUDServerI, LoggerI {
 	 * @param client caller's client
 	 */
 	public void look(final Player player, final Client client) {
-		send(colors(player.getName() + " (#" + player.getDBRef() + ")", (String) displayColors.get("player")), client);
+		//send(colors(player.getName() + " (#" + player.getDBRef() + ")", displayColors.get("player")), client);
+		send(colors(player.getName(), displayColors.get("player")), client);
 		send(player.getDesc(), client);
-		send("Wearing (visible): ", client);
+		/*send("Wearing (visible): ", client);
 
 		for (Entry<String, Slot> e : player.getSlots().entrySet()) {
 			if (e.getValue() != null) {
 				//send(e.getKey() + ": " + e.getValue().getType() + ", ", client);
 				send(e.getValue().getType() + "(" + e.getKey() + ")" + ", ", client);
 			}
-		}
+		}*/
 	}
 
 	/**
@@ -11035,6 +11087,17 @@ public class MUDServer implements MUDServerI, LoggerI {
 		}
 	}
 	 */
+	
+	
+	public Account getAccount(Player player) {
+		for (final Account account : accounts) {
+			if( account.getCharacters().contains(player) ) {
+				return account;
+			}
+		}
+		
+		return null;
+	}
 
 	public Account getAccount(final String name, final String pass) {
 		for (final Account account : accounts) {

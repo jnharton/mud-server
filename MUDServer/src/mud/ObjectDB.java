@@ -296,12 +296,12 @@ public class ObjectDB {
 					parent.debug("Exit " + e.getDBRef() + " added to room " + room.getDBRef() + ".", 2);
 				}
 
-				final Room room1 = getRoomById(e.getDestination());
+				/*final Room room1 = getRoomById(e.getDestination());
 
 				if (room1 != null) {
 					room1.getExits().add(e);
 					parent.debug("Exit (Door)" + e.getDBRef() + " added to room " + room1.getDBRef() + ".", 2);
-				}
+				}*/
 			}
 			else {
 				final Room room = getRoomById(e.getLocation());

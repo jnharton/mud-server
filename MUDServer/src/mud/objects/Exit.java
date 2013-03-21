@@ -24,7 +24,7 @@ public class Exit extends MUDObject implements Lockable<Exit>
 
 	private ExitType eType = ExitType.STD;
 
-	private boolean isLocked;
+	private boolean isLocked = false;
 
 	private int origin = 0;      // strictly for doors?
 	private int destination = 0;
@@ -140,13 +140,13 @@ public class Exit extends MUDObject implements Lockable<Exit>
 
 	public String toDB() {
 		String[] output = new String[7];
-		output[0] = this.getDBRef() + "";     // exit database reference number
-		output[1] = this.getName();                 // exit name
-		output[2] = this.getFlagsAsString();                // exit flags
-		output[3] = this.getDesc();                 // exit description
-		output[4] = this.getLocation() + "";  // exit location (a.k.a source)
-		output[5] = this.getDestination() + "";      // exit destination
-		output[6] = this.eType.ordinal() + ""; // exit type
+		output[0] = this.getDBRef() + "";       // database reference number
+		output[1] = this.getName();             // name
+		output[2] = this.getFlagsAsString();    // flags
+		output[3] = this.getDesc();             // description
+		output[4] = this.getLocation() + "";    // location (a.k.a source)
+		output[5] = this.getDestination() + ""; // destination
+		output[6] = this.eType.ordinal() + "";  // exit type
 		return Utils.join(output, "#");
 	}
 	

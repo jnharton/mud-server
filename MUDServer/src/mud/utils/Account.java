@@ -13,7 +13,12 @@ import mud.objects.Player;
 
 //public class MUDAccount
 public class Account implements Serializable {
-
+	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	
 	/*
 	 * class to represent a game account, which may contain
 	 * one or more players/characters that are all tied to
@@ -44,7 +49,7 @@ public class Account implements Serializable {
 	 * upon choosing a character, that file will be loaded up
 	 * 
 	 */
-	
+
 	// static constants
 	/*
 	 * STATUS
@@ -68,9 +73,11 @@ public class Account implements Serializable {
 	private String username;              // username
 	private String password;              // password
 	private int charLimit = 3;            // character limit
-	private ArrayList<Player> characters; // all the characters that exist for an account
+	public ArrayList<Integer> playerIds;  // ids of players the account owns
 
 	// active properties (current state)
+	transient private ArrayList<Player> characters; // all the characters that exist for an account
+	
 	transient private Client client;
 	transient private Player player;
 	
@@ -218,15 +225,17 @@ public class Account implements Serializable {
 	 * @param newCharacter the character to link
 	 */
 	public void linkCharacter(Player newCharacter) {
+		this.playerIds.add(newCharacter.getDBRef());
 		this.characters.add(newCharacter);
 	}
 	
 	/**
 	 * Unlink an existing character currently tied to this account
 	 * 
-	 * @param curr Character the character to unlink
+	 * @param currCharacter the character to unlink
 	 */
 	public void unlinkCharacter(Player currCharacter) {
+		this.playerIds.remove(currCharacter.getDBRef());
 		this.characters.remove(currCharacter);
 	}
 	
@@ -288,7 +297,7 @@ public class Account implements Serializable {
 		String id = Utils.padRight(String.valueOf(getId()), 6);
 		String name;
 		if (player != null) { name = Utils.padRight(player.getName(), 40); }
-		else { name = Utils.padRight("null", 40); };
+		else { name = Utils.padRight("- No Player -", 40); };
 		String state = Utils.padRight(isOnline(), 6);
 		String creationDate = Utils.padRight(created.toString(), 10);
 		
