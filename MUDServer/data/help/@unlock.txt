@@ -1,0 +1,8 @@
+@unlock
+@UNLOCK
+
+Unlocks doors (which are a type of exit)
+
+Syntax: '@unlock <exit name>'
+
+Last Updated: March 21, 2013

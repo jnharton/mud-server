@@ -1,8 +1,13 @@
 @accounts
 @ACCOUNTS
 
-Lists some information for all of the existing accounts
+Lists some information for all of the existing accounts, and permits
+the creation of new accounts
 
 Syntax: '@accounts'
+        '@accounts +add <account name> <password>' Creates a new account with
+                                                   the specified name and
+                                                   password, and links the
+                                                   current character to it.
 
-Last Updated: May 30, 2012
+Last Updated: March 21, 2013

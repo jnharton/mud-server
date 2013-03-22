@@ -2,9 +2,14 @@ package mud.objects;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 
 import mud.ObjectFlag;
 import mud.MUDObject;
+import mud.Trigger;
+import mud.Triggers;
 
 //import mud.miscellaneous.Atmosphere;
 
@@ -48,6 +53,18 @@ public class Room extends MUDObject
 	//private Terrain terrain;                                  // terrain type of the room (affects movement speed?)
 	
 	private ArrayList<Player> listeners;
+	
+	private HashMap<Triggers, List<Trigger>> triggers = new HashMap<Triggers, List<Trigger>>() {
+		{
+			put(Triggers.onEnter, new LinkedList<Trigger>());
+			put(Triggers.onLeave, new LinkedList<Trigger>());
+		}
+	};
+	
+	{
+		(triggers.get(Triggers.onEnter)).add( new Trigger("TRIGGER: enter") );
+		(triggers.get(Triggers.onLeave)).add( new Trigger("TRIGGER: leave") );
+	}
 	
 	/**
 	 * Construct a room using only default parameter
@@ -207,6 +224,10 @@ public class Room extends MUDObject
 	
 	public void removeListener(Player player) {
 		listeners.remove(player);
+	}
+	
+	public List<Trigger> getTriggers(Triggers triggerType) {
+		return this.triggers.get(triggerType);
 	}
 	
 	/**

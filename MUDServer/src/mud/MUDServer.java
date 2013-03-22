@@ -745,7 +745,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 		test(); // set up some testing
 
 		accounts = new ArrayList<Account>();
-		loadAccounts();
+		//loadAccounts();
 		if (accounts.size() == 0) {
 			debug("No accounts.");
 		}
@@ -1476,39 +1476,8 @@ public class MUDServer implements MUDServerI, LoggerI {
 				// stash admin commands inside here
 				if (player.getAccess() >= ADMIN) {
 					if ( cmd.equals("@accounts") || ( aliasExists && alias.equals("@accounts") ) ) {
-						if ( arg.equals("") ) {
-							send("Accounts (Online)", client);
-							send("-------------------------------------------------------------------------------------------", client);
-							send("Name     ID     Player                                   Online Created            Age", client);
-							send("-------------------------------------------------------------------------------------------", client);
-							//send("Test     000001 Nathan                                   No     02-11-2011 02:36AM 365 days", client);
-							if (this.accounts != null) {
-								for (Account a : this.accounts) {
-									send(a.display(), client);
-								}
-							}
-							send("-------------------------------------------------------------------------------------------", client);
-						}
-						else {
-							String[] args = arg.split(" ");
-
-							if (args.length >= 3) {
-								if (args[0].equals("+add")) {
-									if (this.accounts != null) {
-										client.write("Adding new account");
-
-										Account account = new Account(this.accounts.size(), args[1], args[2], 5);
-
-										account.linkCharacter(getPlayer(client));
-										account.setPlayer(getPlayer(client));
-										account.setClient(client);
-										account.setOnline(true);
-
-										this.accounts.add(account);
-									}
-								}
-							}
-						}
+						adminCmd = true;
+						cmd_accounts(arg, client);
 					}
 					else if ( cmd.equals("@alias") || ( aliasExists && alias.equals("@alias") ) ) {
 						adminCmd = true;
@@ -1543,31 +1512,8 @@ public class MUDServer implements MUDServerI, LoggerI {
 					}
 					else if ( cmd.equals("@config") || ( aliasExists && alias.equals("@config") ) )
 					{
-						// use this to replace 'ansi' and 'msp' commands?
-						// or possibly alias them to it?
-						// @config ansi = on, @config ansi = off
-						// @config msp = on, @config msp = off
-						if ( arg.contains("=") ) {
-							String[] args = arg.split("=");
-
-							if ( config.containsKey( Utils.trim( args[0] ) ) ) {
-								debug("Config> Setting '" + Utils.trim( args[0] ) + "' to '" + Utils.trim( args[1] ));
-								config.put( Utils.trim( args[0] ), Utils.trim( args[1] ) );
-								send("Game [config]> " + Utils.trim( args[0] ) + ": " + Utils.trim( args[1] ), client);
-							}
-							else {
-								debug("Game [config]> no such configurable setting exists.");
-								send("Game [config]> no such configurable setting exists.", client);
-							}
-						}
-						else {
-							if ( arg.equals("list") ) {
-								send("Configuration Options", client);
-								for (Entry<String, String> e : config.entrySet()) {
-									send(e.getKey() + " : " + e.getValue(), client);
-								}
-							}
-						}
+						adminCmd = true;
+						cmd_config(arg, client);
 					}
 					else if ( cmd.equals("@control") || ( aliasExists && alias.equals("@control") ) )
 					{
@@ -1607,6 +1553,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 					else if ( cmd.equals("@kick") || ( aliasExists && alias.equals("@iedit") ) ) {
 						adminCmd = true;
 						// handle args and pass appropriate parameters to kick function
+						kick(player.getClient());
 					}
 					else if ( cmd.equals("@listprops") || ( aliasExists && alias.equals("@listprops") ) )
 					{
@@ -1664,15 +1611,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 						 * of the specified player
 						 */
 						adminCmd = true;
-						Player p = getPlayer(arg);
-						if (p != null) {
-							Session s = sessionMap.get(p);
-							send("Connected: " + s.connected, client);
-							send("Connect Time: " + s.connect, client);
-							//send("Disconnect Time: " + s.disconnect, client);
-							send("Player: " + s.getPlayer().getName(), client);
-							send("Client (IP): " + s.getClient().ip(), client);
-						}
+						cmd_session(arg, client);
 					}
 					else if ( cmd.equals("@setskill") || ( aliasExists && alias.equals("@setskill") ) )
 					{
@@ -2202,19 +2141,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 					}
 					else if ( cmd.equals("spells") || (aliasExists && alias.equals("spells") ) )
 					{
-						client.write("Spell List\n");
-						client.write("-----------------------------------------------------------------\n");
-						if ( arg.equals("#all") ) {
-							// list all the spells, by level?
-							for (final Spell spell : this.spells2.values()) {
-								client.write(spell.school.toString() + " " + spell.toString() + "\n");
-							}
-						}
-						else {
-							// list your spells, by level?
-						}
-						client.write("-----------------------------------------------------------------\n");
-						System.out.println(spells2.entrySet());
+						cmd_spells(arg, client);
 					}
 					// pass arguments to the stats function
 					else if ( cmd.equals("stats") || (aliasExists && alias.equals("stats") ) )
@@ -2349,6 +2276,42 @@ public class MUDServer implements MUDServerI, LoggerI {
 		}
 		else {
 			send(gameError("@access", 1), client); // Invalid Syntax Error
+		}
+	}
+	
+	private void cmd_accounts(final String arg, final Client client) {
+		if ( arg.equals("") ) {
+			send("Accounts (Online)", client);
+			send("-------------------------------------------------------------------------------------------", client);
+			send("Name     ID     Player                                   Online Created            Age", client);
+			send("-------------------------------------------------------------------------------------------", client);
+			//send("Test     000001 Nathan                                   No     02-11-2011 02:36AM 365 days", client);
+			if (this.accounts != null) {
+				for (Account a : this.accounts) {
+					send(a.display(), client);
+				}
+			}
+			send("-------------------------------------------------------------------------------------------", client);
+		}
+		else {
+			String[] args = arg.split(" ");
+
+			if (args.length >= 3) {
+				if (args[0].equals("+add")) {
+					if (this.accounts != null) {
+						client.write("Adding new account");
+
+						Account account = new Account(this.accounts.size(), args[1], args[2], 5);
+
+						account.linkCharacter(getPlayer(client));
+						account.setPlayer(getPlayer(client));
+						account.setClient(client);
+						account.setOnline(true);
+
+						this.accounts.add(account);
+					}
+				}
+			}
 		}
 	}
 
@@ -2818,6 +2781,34 @@ public class MUDServer implements MUDServerI, LoggerI {
 				}
 				else {
 					client.write("Game> No such chat channel.");
+				}
+			}
+		}
+	}
+	
+	private void cmd_config(final String arg, final Client client) {
+		// use this to replace 'ansi' and 'msp' commands?
+		// or possibly alias them to it?
+		// @config ansi = on, @config ansi = off
+		// @config msp = on, @config msp = off
+		if ( arg.contains("=") ) {
+			String[] args = arg.split("=");
+
+			if ( config.containsKey( Utils.trim( args[0] ) ) ) {
+				debug("Config> Setting '" + Utils.trim( args[0] ) + "' to '" + Utils.trim( args[1] ));
+				config.put( Utils.trim( args[0] ), Utils.trim( args[1] ) );
+				send("Game [config]> " + Utils.trim( args[0] ) + ": " + Utils.trim( args[1] ), client);
+			}
+			else {
+				debug("Game [config]> no such configurable setting exists.");
+				send("Game [config]> no such configurable setting exists.", client);
+			}
+		}
+		else {
+			if ( arg.equals("list") ) {
+				send("Configuration Options", client);
+				for (Entry<String, String> e : config.entrySet()) {
+					send(e.getKey() + " : " + e.getValue(), client);
 				}
 			}
 		}
@@ -5649,6 +5640,44 @@ public class MUDServer implements MUDServerI, LoggerI {
 		send("Race: " + player.getPRace().getName() + " Sex: " + player.getGender().toString() + " Class: " + player.getPClass().getName(), client);
 		send("Money: " + player.getMoney().toString() + ".", client);
 	}
+	
+	private void cmd_session(final String arg, final Client client) {
+		Player p = getPlayer(arg);
+		if (p != null) {
+			Session s = sessionMap.get(p);
+			send("Connected: " + s.connected, client);
+			send("Connect Time: " + s.connect, client);
+			//send("Disconnect Time: " + s.disconnect, client);
+			send("Player: " + s.getPlayer().getName(), client);
+			send("Client (IP): " + s.getClient().ip(), client);
+		}
+	}
+	
+	private void cmd_spells(final String arg, final Client client) {
+		Player player = getPlayer(client);
+		client.write("Spell List\n");
+		client.write("-----------------------------------------------------------------\n");
+		if ( arg.equals("#all") ) {
+			// list all the spells, by level?
+			for (final Spell spell : this.spells2.values()) {
+				client.write(spell.school.toString() + " " + spell.toString() + "\n");
+			}
+		}
+		else {
+			// list your spells, by level?
+			for(int l = 0; l < player.getLevel(); l++) {
+				List<Spell> spells = player.getSpellBook().getSpells(l);
+				client.write("Level " + l + "\n");
+				client.write("--------\n");
+				for(Spell spell : spells) {
+					client.write(spell.getName() + "\n");
+				}
+				
+			}
+		}
+		client.write("-----------------------------------------------------------------\n");
+		System.out.println(spells2.entrySet());
+	}
 
 	private void cmd_success(final String arg, final Client client) {
 		final String[] args = arg.split("=");
@@ -6591,6 +6620,12 @@ public class MUDServer implements MUDServerI, LoggerI {
 						addMessage(msg);
 						//send(exit.succMsg, client);
 					}
+					
+					// execute leave triggers
+					for(Trigger trigger : room.getTriggers(Triggers.onLeave)) {
+						System.out.println(trigger);
+						execTrigger(trigger, client);
+					}
 
 					// set player's location
 					player.setLocation(exit.getDestination());
@@ -6611,6 +6646,12 @@ public class MUDServer implements MUDServerI, LoggerI {
 
 					// add listener to room
 					room.addListener(player);
+					
+					// execute enter triggers
+					for(Trigger trigger : room.getTriggers(Triggers.onEnter)) {
+						System.out.println(trigger);
+						execTrigger(trigger, client);
+					}
 
 					// call msp to play a tune that is the theme for a type of room
 					if (msp == 1) { // MSP is enabled
@@ -8476,6 +8517,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 		// open a new session
 		Session session = new Session(client, player);
 		session.connect = time;
+		session.connected = true;
 
 		sessionMap.put(player, session);
 
@@ -11404,5 +11446,10 @@ public class MUDServer implements MUDServerI, LoggerI {
 		// item type
 		// item wear
 		// item value
+	}
+	
+	private void execTrigger(Trigger trig, Client client) {
+		send(trig.script, client);
+		//send(trig.exec(), client);
 	}
 }

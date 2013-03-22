@@ -12,6 +12,7 @@ public class TimeLoop implements Runnable
 {
     private MoonPhase moonPhase = MoonPhase.FULL_MOON;
 
+    private int second;
     private int minute;
     private int hour;
     private int day;
@@ -64,8 +65,17 @@ public class TimeLoop implements Runnable
     }
     
     private void doLoop() {
-        incrementMinute();
+    	//incrementSecond();
+    	incrementMinute();
     }
+    
+    /*private void incrementSecond() {
+    	second += 1;
+    	if(second > 59) {
+    		second = 0;
+    		incrementMinute();
+    	}
+    }*/
     
     private void incrementMinute() {
         minute += 1;
@@ -208,5 +218,4 @@ public class TimeLoop implements Runnable
     public MoonPhase getMoonPhase() {
         return moonPhase;
     }
-
 }
