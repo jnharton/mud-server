@@ -37,31 +37,31 @@ public class ObjectDB {
     	reservedDBNs.add(id);
     }
 
-    // do not use, yet
     public void addUnused(int unusedId) {
     	MUDObject mobj = get(unusedId);
-    	int next = peekNextId();
+    	int next = peekNextId();{
 
-    	if( reservedDBNs.contains(unusedId) ) {
-    		reservedDBNs.remove(unusedId);
-    		unusedDBNs.push(unusedId);
-    	}
-    	else if( mobj instanceof NullObject ) {
-    		NullObject no = (NullObject) mobj;
-    		
-    		if( !no.isLocked() ) {
-    			System.out.println("dbref isn't in use");
-        		unusedDBNs.push(unusedId);
+    		if( reservedDBNs.contains(unusedId) ) {
+    			reservedDBNs.remove(unusedId);
+    			unusedDBNs.push(unusedId);
+    		}
+    		else if( mobj instanceof NullObject ) {
+    			NullObject no = (NullObject) mobj;
+
+    			if( !no.isLocked() ) {
+    				System.out.println("dbref isn't in use");
+    				unusedDBNs.push(unusedId);
+    			}
+    			else {
+    				System.out.println("NullObject is locked");
+    			}
+    		}
+    		else if(unusedDBNs.empty() && unusedId == next - 1) { // we just made a new one, but it's the most recent one in the db, just go back one
+    			nextId--;
     		}
     		else {
-    			System.out.println("NullObject is locked");
+    			System.out.println("Something is already using that id!");
     		}
-    	}
-    	else if(unusedDBNs.empty() && unusedId == next - 1) { // we just made a new one, but it's the most recent one in the db, just go back one
-    		nextId--;
-    	}
-    	else {
-    		System.out.println("Something is already using that id!");
     	}
     }
 
@@ -76,9 +76,11 @@ public class ObjectDB {
     }
 
     public void add(final MUDObject item) {
-    	if(item instanceof NullObject) { unusedDBNs.push(item.getDBRef()); } else { nextId++; }
         objsByName.put(item.getName(), item);
         objsById.put(item.getDBRef(), item);
+        nextId++;
+        
+        if(item instanceof NullObject) { addUnused(item.getDBRef()); }
     }
 
     public void allocate(final int n) {

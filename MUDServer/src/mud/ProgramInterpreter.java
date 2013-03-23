@@ -191,6 +191,9 @@ public class ProgramInterpreter {
 			}
 			else { return "PGM: Error!"; }
 		}
+		else if(ca[0].equals("{create")) {
+			return "PGM: Error!";
+		}
 		else  if (pArg != null) {
 			switch(pArg) {
 			case "{name}":

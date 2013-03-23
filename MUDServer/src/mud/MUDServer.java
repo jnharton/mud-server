@@ -66,6 +66,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.HashMap;
+import java.util.Timer;
 
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -183,8 +184,8 @@ public class MUDServer implements MUDServerI, LoggerI {
 	private GameMode mode = GameMode.NORMAL; // (0=normal: player connect, 1=wizard: wizard connect only, 2=maintenance: maintenance mode)
 	private int multiplay = 0;               // (0=only one character per account is allowed, 1=infinite connects allowed)
 	private int guest_users = 0;             // (0=guests disallowed, 1=guests allowed)
-	private int debug = 0;                   // (0=off,1=on) Debug: server sends debug messages to the console
-	private int debugLevel = 1;              // (1=debug,2=extra debug,3=verbose) priority of debugging information recorded
+	private int debug = 1;                   // (0=off,1=on) Debug: server sends debug messages to the console
+	private int debugLevel = 3;              // (1=debug,2=extra debug,3=verbose) priority of debugging information recorded
 	private boolean logging = true;          // logging? (true=yes,false=no)
 	private int logLevel = 3;                // () priority of log information recorded 
 	private boolean prompt_enabled = false;  // show player information bar
@@ -423,6 +424,11 @@ public class MUDServer implements MUDServerI, LoggerI {
 	public Area area; // test Area
 	
 	public HashMap<Room, List<Player>> listenersLists; // possibly replace per room listener lists?
+	
+	public Timer timer = new Timer();
+	
+	private HashMap<Player, List<SpellTimer>> spellTimers;   //
+	public HashMap<Player, List<EffectTimer>> effectTimers = new HashMap<Player, List<EffectTimer>>();
 
 	public MUDServer() {}
 
@@ -3360,6 +3366,16 @@ public class MUDServer implements MUDServerI, LoggerI {
 			send("X: " + player.getXCoord(), client);
 			send("Y: " + player.getYCoord(), client);
 			send("Moving: " + player.isMoving(), client);
+		}
+		else if( arg.toLowerCase().equals("timers") ) {
+			send("Timers", client);
+			send(Utils.padRight("", '-', 40));
+			for(EffectTimer etimer : getEffectTimers( getPlayer( client ) )) {
+				send("E " + etimer.getEffect().getName() + " ( " + etimer.getTimeRemaining() + " s )", client);
+			}
+			for(SpellTimer stimer : getSpellTimers( getPlayer( client ) )) {
+				send("S " + stimer.getSpell().getName() + " ( " + stimer.getTimeRemaining() + " s )", client);
+			}
 		}
 		else if( arg.toLowerCase().equals("udbnstack") ) {
 			send("Functionality Removed", client);
@@ -8598,6 +8614,8 @@ public class MUDServer implements MUDServerI, LoggerI {
 		final Room current = getRoom(client);   // determine the room they are in
 		look(current, client);                  // show the room
 		current.addListener(player);
+		
+		effectTimers.put(player, new LinkedList<EffectTimer>());
 	}
 
 	/**
@@ -11451,5 +11469,13 @@ public class MUDServer implements MUDServerI, LoggerI {
 	private void execTrigger(Trigger trig, Client client) {
 		send(trig.script, client);
 		//send(trig.exec(), client);
+	}
+	
+	public List<SpellTimer> getSpellTimers(Player player) {
+		return spellTimers.get(player);
+	}
+	
+	public List<EffectTimer> getEffectTimers(Player player) {
+		return effectTimers.get(player);
 	}
 }

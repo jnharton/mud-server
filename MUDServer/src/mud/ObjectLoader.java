@@ -365,14 +365,13 @@ public class ObjectLoader {
                         log.debug("log.debug (db entry): " + shield.toDB(), 2);
                     }
                 }
-                else if (oFlags.equals("null")) {
+                else if (oFlags.contains("null")) {
 
                     NullObject Null = new NullObject(oDBRef);
+                    
+                    objectDB.add(Null);
 
-                    //log.debug("Found NULLObject");
                     log.debug("log.debug (db entry): " + Null.toDB() + " [Found NULLObject]", 2);
-
-                    objectDB.add(new NullObject(oDBRef));
                 }
             }
             catch(ConcurrentModificationException cme) {

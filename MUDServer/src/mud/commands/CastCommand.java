@@ -10,7 +10,9 @@ import mud.net.Client;
 import mud.objects.Player;
 import mud.objects.items.Armor;
 
+import mud.utils.EffectTimer;
 import mud.utils.Message;
+import mud.utils.SpellTimer;
 
 public class CastCommand extends Command {
 
@@ -74,9 +76,15 @@ public class CastCommand extends Command {
 				// apply effects to the target
 				for (final Effect e : spell.effects) {
 					if(target instanceof Player) {
+						System.out.println("Target is Player.");
 						parent.applyEffect((Player) target, e); // apply the effect to the target
+						EffectTimer etimer = new EffectTimer(e, 30);
+						parent.getEffectTimers(player).add(etimer);
+						parent.timer.scheduleAtFixedRate(etimer, 0, 1000); // create countdown
+						//parent.timer.scheduleAtFixedRate(new EffectTimer(e, 10), 0, 1000); // create countdown
 					}
 					else {
+						System.out.println("Target is Player.");
 						parent.applyEffect(target, e);
 					}
 				}
