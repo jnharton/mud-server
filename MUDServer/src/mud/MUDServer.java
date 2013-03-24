@@ -9517,10 +9517,16 @@ public class MUDServer implements MUDServerI, LoggerI {
 		if ( !(m instanceof NullObject) ) {
 			send(m.getName() + "(#" + m.getDBRef() + ")", client);
 			send("Type: " + ObjectFlag.firstInit(m.getFlags()) + " Flags: " + ObjectFlag.toInitString(m.getFlags()), client);
+			if (m instanceof Room) {
+				send("Room Type: " + ((Room) m).getRoomType().toString(), client);
+			}
+			if (m instanceof Exit) {
+				send("Exit Type: " + ((Exit) m).getExitType().getName(), client);
+			}
 			if (m instanceof Item) {
 				send("Item Type: " + ((Item) m).item_type.toString(), client);
 			}
-			if( m instanceof Thing) {
+			if (m instanceof Thing) {
 				send("Thing Type: " + ((Thing) m).thing_type.toString(), client);
 				send("Coordinates:", client);
 				send("X: " + ((Thing) m).getXCoord(), client);
@@ -9529,42 +9535,29 @@ public class MUDServer implements MUDServerI, LoggerI {
 			}
 			send("Description: " + m.getDesc(), client);
 			send("Location: " + getObject(m.getLocation()).getName() + "(#" + m.getLocation() + ")", client);
+			if (m instanceof Room) {
+				send("Sub-Rooms:", client);
+				for (final Room r : objectDB.getRoomsByLocation(((Room) m).getDBRef())) {
+					send(r.getName() + "(#" + r.getDBRef() + ")", client);
+				}
+				send("Contents:", client);
+				final List<Thing> roomThings = objectDB.getThingsForRoom(((Room) m).getDBRef());
+				for (final Thing t : roomThings) {
+					send( colors(t.getName(), "yellow") + "(#" + t.getDBRef() + ")", client);
+				}
+				send("Items (contents1):", client);
+				final List<Item> roomItems = objectDB.getItemsByLoc(((Room) m).getDBRef());
+				for (final Item i : roomItems) {
+					send( colors(i.getName(), "yellow") + "(#" + i.getDBRef() + ")", client);
+				}
+				send("Creatures:", client);
+				for (final Creature creep : objectDB.getCreatureByRoom(((Room) m).getDBRef())) {
+					send( colors( creep.getName(), "cyan" ), client );
+				}
+			}
 		}
 		else {
 			send("-- NullObject -- (#" + m.getDBRef() + ")", client);
-		}
-	}
-	
-	/**
-	 * Examine (MUDObject -> Room)
-	 * 
-	 * @param room
-	 * @param client
-	 */
-	public void examine(final Room room, final Client client) {
-		send(room.getName() + "(#" + room.getDBRef() + ")", client);
-		send("Type: " + ObjectFlag.firstInit(room.getFlags()) + " Flags: " + ObjectFlag.toInitString(room.getFlags()), client);
-		send("Description: " + room.getDesc(), client);
-		send("Location: " + getRoom(room.getLocation()).getName() + "(#" + room.getLocation() + ")", client);
-
-		send("Sub-Rooms:", client);
-		for (final Room r : objectDB.getRoomsByLocation(room.getDBRef())) {
-			send(r.getName() + "(#" + r.getDBRef() + ")", client);
-		}
-
-		send("Contents:", client);
-		final List<Thing> roomThings = objectDB.getThingsForRoom(room.getDBRef());
-		for (final Thing t : roomThings) {
-			send( colors(t.getName(), "yellow") + "(#" + t.getDBRef() + ")", client);
-		}
-		//final List<Item> roomItems = objectDB.getItemsForRoom(room.getDBRef());
-		final List<Item> roomItems = objectDB.getItemsByLoc(room.getDBRef());
-		for (final Item i : roomItems) {
-			send( colors(i.getName(), "yellow") + "(#" + i.getDBRef() + ")", client);
-		}
-		send("Creatures:", client);
-		for (final Creature creep : objectDB.getCreatureByRoom(room.getDBRef())) {
-			send( colors( creep.getName(), "cyan" ), client );
 		}
 	}
 
@@ -9621,13 +9614,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 				send(colors(tmp, displayColors.get("thing")) + " : null", client);
 			}
 		}
-	}
-
-	public void examine(final Exit exit, final Client client) {
-		send(exit.getName() + "(#" + exit.getDBRef() + ")", client);
-		send("Type: " + ObjectFlag.firstInit(exit.getFlags()) + " Flags: " + ObjectFlag.toInitString(exit.getFlags()), client);
-		send(" Exit Type: " + exit.getExitType().getName(), client);
-		send("Description: " + exit.getDesc(), client);
 	}
 
 	/**
