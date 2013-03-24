@@ -24,7 +24,7 @@ public class ObjectLoader {
 			Integer oDBRef = 0, oLocation = 0;
 			String oName = "", oFlags = "", oDesc = "";
 			
-			if ( oInfo == null || oInfo.charAt(0) == '&' ) { // means to ignore that line
+			if ( oInfo.charAt(0) == '&' ) { // means to ignore that line
 				log.debug("`loadObjects` ignoring line: " + oInfo);
 				oDBRef = Integer.parseInt(oInfo.split("#")[0].replace('&', ' ').trim());
 				NullObject no = new NullObject(oDBRef);

@@ -151,13 +151,34 @@ public class ObjectDB {
 
     // Serialize all objects via `toDB` and save array to file.
     public void save(final String filename) {
-		//final String[] toSave = new String[objsByName.size()];
-    	final String[] toSave = new String[objsById.size()];
-		int index = 0;
-        for (final MUDObject obj : objsById.values()) {
-            toSave[index] = obj.toDB();
+    	final String[] old = Utils.loadStrings(filename);    // old (current in file) database
+    	final String[] toSave = new String[objsById.size()]; // new (save to file) database
+		
+    	int index = 0;
+        
+		for (final MUDObject obj : objsById.values()) {
+        	if(obj instanceof NullObject) {
+        		NullObject no = (NullObject) obj;
+        		
+        		// a locked NullObject means an ignored line whose data we are ignoring (but want to keep)
+        		if( no.isLocked() ) {
+        			System.out.println(index + " Old Data: " + old[index] + " Keeping...");
+        			toSave[index] = old[index]; // keep old data
+        		}
+        		else {
+        			System.out.println(index + " No Previous Data, Overwriting...");
+        			toSave[index] = obj.toDB(); // just save the null object
+        		}
+        		
+        		index++;
+        		continue; // skip to next object
+        	}
+        	
+        	toSave[index] = obj.toDB();
+        	
             index++;
         }
+        
 		Utils.saveStrings(filename, toSave);
     }
 

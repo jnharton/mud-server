@@ -13,18 +13,18 @@
 12#NYC: Grand Central Station#RS#The grandest train station of the olden times, at least a hundred tracks lie unused.#0#I#10,10,10#-1#
 13#Public Chest#T#A chest#8#0
 14#null#null#null#-1#null#null#null#null#null#null
-15#null#null#null#-1#null#null#null#null#null#null
-16#null#null#null#-1#null#null#null#null#null#null
+15#out#E#You see nothing.#18#26#2
+16#cavern#E#You see nothing.#26#18#2
 17#null#null#null#-1#null#null#null#null#null#null
-18#null#null#null#-1#null#null#null#null#null#null
-19#Nathan#PW#This is an admin, it is also a player and a builder.#4#250d8d84cf1ed1e0bd30437498046d02#12,12,12,12,12,12#34,50,0,0#4#3#10#IC
+18#Cavern#RS#A large cavern stretches before you. To your back the cavern's mouth opens into a grassy forest clearing. Here the footsteps of many small creatures with clawed feet are quite evident in the dust spread across the cavern floor.#0#N#10,10,10#-1#
+19#Nathan#PW#This is an admin, it is also a player and a builder.#26#250d8d84cf1ed1e0bd30437498046d02#12,12,12,12,12,12#34,50,0,0#4#3#10#IC
 20#Alisare#N#A pretty elf cleric.#161##0,0,0,0,0,0#0,0,0,0#0#1#3#IC
 21#east#E#You see nothing.#8#9#2
 22#Intersection: The Street of Bells & Lamp Street#RS#intersection of the street of bells and lamp street, first intersection south of suldown street.#53#O#10,10,10#-1#
 23#The Street of Bells#RS#You see nothing.#53#O#10,10,10#-1#
 24#Astropolis: Great Hall#RS#You see nothing.#0#I#10,10,10#-1#
 25#Nathan's Test Room#RS#You see nothing.#0#I#10,10,10#-1#
-26#null#null#null#-1#null#null#null#null#null#null
+26#Forest Clearing#RS#This forest clearing sits in front of the mouth of a large cavern whose depth is uncertain. At a distance of eight feet from the cavern, the grassy clearing gives way to a thick forest into which several hard to distinguish paths run off. To the keen-eyed, there are many small clawed footprints.#0#N#10,10,10#-1#
 27#The Street of Bells#RS#You see nothing.#53#O#10,10,10#-1#
 28#west#E#You see nothing.#9#8#2
 29#west#E#You see nothing.#8#7#2
@@ -183,6 +183,7 @@
 182#Lightsinger Theatre#RS#The Lightsinger Theatre (C56)#53#I#10,10,10#-1#
 183#ls#E#You see nothing.#48#182#2
 184#out#E#You see nothing.#182#48#2
+&185#Terys#WMV#A weapon merchant.#161#null#12,12,12,12,12,12#1000,1000,1000,1000#0#3#14
 186#Iridan#N#An innkeeper.#4##0,0,0,0,0,0#0,0,0,0#0#10#0#IC
 187#Potion#I#A potion.#8#8#1#null
 188#out#E#You see nothing.#4#9#0

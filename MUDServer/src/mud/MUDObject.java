@@ -149,6 +149,10 @@ public abstract class MUDObject {
 	{
         this.flags.removeAll(tempFlags);
 	}
+	
+	public boolean hasFlag(ObjectFlag tempFlag) {
+		return this.flags.contains(tempFlag);
+	}
 
 	/**
 	 * unimplemented

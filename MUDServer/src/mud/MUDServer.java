@@ -31,19 +31,16 @@ import mud.miscellaneous.Atmosphere;
 import mud.miscellaneous.Zone;
 
 import mud.net.*;
-import mud.objects.*;
-//ones I don't need: Banker
+import mud.objects.*; //ones I don't need: Banker
 
-import mud.objects.items.*;
-// ones I don't need: Attribute, Pack
+import mud.objects.items.*; // ones I don't need: Attribute, Pack
 
 // mud.protocols
 import mud.protocols.MSP;
 import mud.protocols.Telnet;
 
 import mud.quest.*;
-import mud.utils.*;
-//ones I don't need here: AreaConverter, Bank, BankAccount, HelpFile
+import mud.utils.*; //ones I don't need here: AreaConverter, Bank, BankAccount, HelpFile
 
 import mud.weather.*;
 
@@ -6093,7 +6090,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 
 				if (player.hasEffect("invisibility")) { locString = "INVISIBLE"; }
 				else {
-					if (!getRoom(player.getLocation()).flags.contains("S")) {
+					if ( !getRoom(player.getLocation()).hasFlag(ObjectFlag.SILENT) ) {
 						locString = roomName + " (#" + location + ")";
 					}
 					else { locString = roomName; }
@@ -8983,8 +8980,16 @@ public class MUDServer implements MUDServerI, LoggerI {
 		}
 
 		System.out.print("Stopping main game...");
-		// indicate that the server is no longer running, should cause the main loop to exit
+		// indicate that the MUD server  is no longer running, should cause the main loop to exit
 		running = false;
+		
+		// stop the server (the network server, the part handling sockets)
+		System.out.print("Stopping server... ");
+		s.stopRunning();
+
+		// run the backup (run before closing logs so any backup problems get logged)
+		System.out.print("Running backup... ");
+		backup();
 
 		// close the logs (closes the file object and saves the data to a file)
 		if ( logging ) {
@@ -8998,12 +9003,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 		else {
 			System.out.println("Logging not enabled.");
 		}
-
-		System.out.print("Stopping server... ");
-		s.stopRunning();
-
-		System.out.print("Running backup... ");
-		backup();
 
 		System.out.println("Done");
 		System.exit(0);
@@ -9090,7 +9089,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 		if (client.isRunning()) {
 
 			int lineLimit = 80;
-
 
 			if ( loginCheck(client) ) {
 				lineLimit = getPlayer(client).getLineLimit();
@@ -11355,25 +11353,25 @@ public class MUDServer implements MUDServerI, LoggerI {
 		ArrayList<MUDObject> objectsFound = new ArrayList<MUDObject>();
 		
 		for( Thing thing : room.contents ) {
-			if( !thing.flags.contains(ObjectFlag.DARK) ) { // a <object>.hasFlag(<ObjectFlag>) method might be nice
+			if( !thing.hasFlag(ObjectFlag.DARK) ) {
 				objectsFound.add(thing);
 			}
 		}
 		
 		for( Item item : room.contents1 ) {
-			if( !item.flags.contains(ObjectFlag.DARK) ) { // a <object>.hasFlag(<ObjectFlag>) method might be nice
+			if( !item.hasFlag(ObjectFlag.DARK) ) {
 				objectsFound.add(item);
 			}
 		}
 		
 		for( Player player : objectDB.getPlayersByRoom(room.getDBRef()) ) {
-			if( !player.flags.contains(ObjectFlag.DARK) ) { // a <object>.hasFlag(<ObjectFlag>) method might be nice
+			if( !player.hasFlag(ObjectFlag.DARK) ) {
 				objectsFound.add(player);
 			}
 		}
 		
 		for( NPC npc : objectDB.getNPCsByRoom(room.getDBRef()) ) {
-			if( !npc.flags.contains(ObjectFlag.DARK) ) { // a <object>.hasFlag(<ObjectFlag>) method might be nice
+			if( !npc.hasFlag(ObjectFlag.DARK) ) {
 				objectsFound.add(npc);
 			}
 		}
