@@ -38,16 +38,18 @@ public class MailCommand extends Command {
 				// should these box headers be configurable either on the server end or the client end?
 				
 				client.write("#list function entry\n");
-				client.write("+--------------------------------------------------------------------------+\n");
-				client.write("| Mailbox                                                                  |\n");
-				client.write("+-------+------------+----------------------------------+------------------+\n");
-				client.write("| ID    | Subject    | Brief                            | Date             |\n");
-				client.write("+-------+------------+----------------------------------+------------------+\n");
+				client.write("+---------------------------------------------------------------------------------+\n");
+				client.write("| Mailbox                                                                         |\n");
+				client.write("+-------+------+------------+----------------------------------+------------------+\n");
+				client.write("| ID    | Flag | Subject    | Brief                            | Date             |\n");
+				client.write("+-------+------+------------+----------------------------------+------------------+\n");
 
                 int i = 0;
 				for (final Mail mail : player.getMailBox()) {
 					client.write("| ");
 					client.write(Utils.padLeft(i + "", 5).substring(0, 5));
+					client.write(" | ");
+					client.write(Utils.padLeft(mail.getFlag() + "", 4).substring(0, 4));
 					client.write(" | ");
 					client.write(Utils.padRight(mail.getSubject(), shortSUB).substring(0, shortSUB));
 					client.write(" | ");
@@ -58,7 +60,7 @@ public class MailCommand extends Command {
 					client.write("\n");
 				}
 				
-				client.write("+-------+------------+----------------------------------+------------------+\n");
+				client.write("+-------+------+------------+----------------------------------+------------------+\n");
 			}
 			else if (args[0].equals("#write")) {
 				client.write("#write function entry\n");

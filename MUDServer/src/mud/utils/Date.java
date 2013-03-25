@@ -99,6 +99,7 @@ public class Date implements Serializable {
 		}
 	}
 	
+	// Date Pattern: MM-DD-YYYY
 	public Date parseDate(String s) throws DateFormatException {
 		if( s.matches(datePattern) ) {
 			int[] dateData = Utils.stringsToInts(s.split("-"));

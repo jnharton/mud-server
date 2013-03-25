@@ -17,7 +17,7 @@
 16#cavern#E#You see nothing.#26#18#2
 17#null#null#null#-1#null#null#null#null#null#null
 18#Cavern#RS#A large cavern stretches before you. To your back the cavern's mouth opens into a grassy forest clearing. Here the footsteps of many small creatures with clawed feet are quite evident in the dust spread across the cavern floor.#0#N#10,10,10#-1#
-19#Nathan#PW#This is an admin, it is also a player and a builder.#26#250d8d84cf1ed1e0bd30437498046d02#12,12,12,12,12,12#34,50,0,0#4#3#10#IC
+19#Nathan#PW#This is an admin, it is also a player and a builder.#4#250d8d84cf1ed1e0bd30437498046d02#12,12,12,12,12,12#34,50,0,0#4#3#10#IC
 20#Alisare#N#A pretty elf cleric.#161##0,0,0,0,0,0#0,0,0,0#0#1#3#IC
 21#east#E#You see nothing.#8#9#2
 22#Intersection: The Street of Bells & Lamp Street#RS#intersection of the street of bells and lamp street, first intersection south of suldown street.#53#O#10,10,10#-1#

@@ -245,7 +245,7 @@ public class Player extends MUDObject
 		this.totalhp = 10;
 		this.mana = 40;
 		this.totalmana = 40;
-		this.speed = 0;
+		this.speed = 1;
 		this.capacity = 200;
 		this.level = 0;
 		this.xp = 0;
@@ -843,6 +843,14 @@ public class Player extends MUDObject
 		}
 		
 		return 10;
+	}
+	
+	public int getSpeed() {
+		return this.speed;
+	}
+	
+	public void setSpeed(int newSpeed) {
+		this.speed = newSpeed;
 	}
 
 	/**

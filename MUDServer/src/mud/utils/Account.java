@@ -61,7 +61,7 @@ public class Account implements Serializable {
 	 * Archived Accounts - accounts archived after 3-6 months of being inactive (inactive timer reset whenever a successful login occurs),
 	 * not usable until unarchived and restored to active status.
 	 */
-	private static enum Status { ACTIVE, INACTIVE, SUSPENDED, FROZEN, LOCKED, ARCHIVED };
+	public static enum Status { ACTIVE, INACTIVE, SUSPENDED, FROZEN, LOCKED, ARCHIVED };
 	private static Calendar calendar;
 
 	// passive properties (might be modified, but not frequently)

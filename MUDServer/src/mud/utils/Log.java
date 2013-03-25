@@ -181,6 +181,9 @@ public class Log
 				if (second() < 10) { second = "0" + str(second()); }
 				else { second = str(second()); }
 				String logString = "[" + hour + ":" + minute + ":" + second + "] " + message;
+				
+				logString.trim();
+				
 				this.output.print(logString);
 				this.output.flush();
 				//this.length++;
@@ -216,6 +219,9 @@ public class Log
 				if (second() < 10) { second = "0" + str(second()); }
 				else { second = str(second()); }
 				String logString = "[" + hour + ":" + minute + ":" + second + "] " + message;
+				
+				logString.trim();
+				
 				this.output.println(logString);
 				this.output.flush();
 				//this.length++;
@@ -254,6 +260,9 @@ public class Log
 				else { second = str(second()); }
 				String logString = "log failure";
 				logString = "[" + hour + ":" + minute + ":" + second + "] (" + playerName + ") {Location: #" + playerLoc +  "}  " + action;
+				
+				logString.trim();
+				
 				this.output.print(logString);
 				this.output.flush();
 				//this.length++;
@@ -293,6 +302,9 @@ public class Log
 					else { second = str(second()); }
 					String logString = "log failure";
 					logString = "[" + hour + ":" + minute + ":" + second + "] (" + playerName + ") {Location: #" + playerLoc +  "}  " + action;
+					
+					logString.trim();
+					
 					this.output.println(logString);
 					this.output.flush();
 					//this.length++;

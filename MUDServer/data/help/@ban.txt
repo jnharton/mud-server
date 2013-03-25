@@ -1,10 +1,12 @@
 @ban
 @BAN
 
-Ban a player you specify. This is an ip address ban.
+Ban a player you specify. This is an ip address ban which doubles as an account
+suspending command.
 
 NOTE: Currently the player needs to be connected.
 
 Syntax: '@ban <player name>'
+        '@ban #list'         List banned ip addresses.
 
-Last Updated: May 30, 2012
+Last Updated: March 25, 2013

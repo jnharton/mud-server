@@ -408,6 +408,10 @@ public class MUDServer implements MUDServerI, LoggerI {
 	private static int WIZARD = 3; // Most permissions
 	private static int GOD = 4;    // Pff, such arrogant idiots we are! (anyway, max permissions)
 	// Corresponding Flags: U,B,A,W,G
+	
+	// speed
+	private static int WALK = 1;
+	private static int RUN = 3;
 
 	private static final int MAX_SKILL = 50;
 	private static final int MAX_STACK_SIZE = 25; // generic maximum for all stackable items (should this be in the stackable interface?)
@@ -2112,6 +2116,10 @@ public class MUDServer implements MUDServerI, LoggerI {
 							nfe.printStackTrace();
 						}
 					}
+					else if ( cmd.equals("run") ) {
+						player.setSpeed(RUN);
+						send("You get ready to run.", client);
+					}
 					else if ( cmd.equals("say") || (aliasExists && alias.equals("say") ) )
 					{
 						cmd_say(arg, client);
@@ -2197,6 +2205,10 @@ public class MUDServer implements MUDServerI, LoggerI {
 					{
 						// run the where function
 						cmd_who(arg, client);
+					}
+					else if ( cmd.equals("walk") ) {
+						player.setSpeed(WALK);
+						send("You slow down to a walking speed.", client);
 					}
 					// if the command doesn't exist say so
 					else
@@ -2430,6 +2442,13 @@ public class MUDServer implements MUDServerI, LoggerI {
 			if (player1 != null) {
 				// add the player's ip address to the banlist (IP address ban)
 				banlist.add(client1.ip());
+				
+				// if they have an account, suspend the account
+				Account acct = getAccount(player1);
+				if(acct != null) {
+					acct.setStatus(Account.Status.SUSPENDED);
+				}
+				
 				cmd_page(arg + ", you have been banned.", client1);
 				kick(client1);
 			}
@@ -2441,12 +2460,11 @@ public class MUDServer implements MUDServerI, LoggerI {
 				debug("That player is not connected");
 				send("That player is not connected", client);
 			}
-
-			/*else if (arg.equals("#list")) {
-				for (String s : banlist) {
-					send(s, client);
-				}
-			}*/
+		}
+		else if (arg.equals("#list")) {
+			for (String s : banlist) {
+				send(s, client);
+			}
 		}
 		else {
 			send("Command> '@ban' : No valid arguments.", client);
