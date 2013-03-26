@@ -430,6 +430,8 @@ public class MUDServer implements MUDServerI, LoggerI {
 	
 	private HashMap<Player, List<SpellTimer>> spellTimers;   //
 	public HashMap<Player, List<EffectTimer>> effectTimers = new HashMap<Player, List<EffectTimer>>();
+	
+	private boolean firstRun = false;
 
 	public MUDServer() {}
 
@@ -468,6 +470,9 @@ public class MUDServer implements MUDServerI, LoggerI {
 					}
 					else if ( param.equals("db") ) {
 						server.mainDB = server.DATA_DIR + args[a + 1];
+					}
+					else if ( param.equals("setup") ) {
+						server.firstRun = true;
 					}
 				}
 			}
@@ -536,7 +541,14 @@ public class MUDServer implements MUDServerI, LoggerI {
 				}  
 			}
 		}
-		
+
+		// if this is the first run (as indicated by setup parameter)
+		if( firstRun ) {
+			System.out.print("Running initial setup...");
+			create_data();
+			System.out.println("Done");
+		}
+
 		// snag this machine's real IP address
 		try {
 			// Get the address and hostname, so you can report it
@@ -762,6 +774,41 @@ public class MUDServer implements MUDServerI, LoggerI {
 		pgm = new ProgramInterpreter(this);
 
 		System.out.println("Server> Setup Done.");
+	}
+	
+	private void create_data() {		
+		// generate blank motd
+		String[] motdData = new String[] {
+				"*** Welcome to:", "",
+				"<insert mud name or initial graphic here>", "",
+				"<other info>", "",
+				"<connection details>", "",
+				"To connect to your character use 'connect <playername> <password>'",
+				"To create a character use 'create <playername> <password>'"
+		};
+
+		Utils.saveStrings(MOTD_DIR + "motd.txt", motdData);
+
+		// generate blank config files
+		Utils.saveStrings(CONFIG_DIR + "aliases.txt", new String[] { "# Command Aliases File" } );
+		Utils.saveStrings(CONFIG_DIR + "banlist.txt", new String[] { "# Banlist" } );
+		Utils.saveStrings(CONFIG_DIR + "channels.txt", new String[] { "Support", "Testing" } );
+		Utils.saveStrings(CONFIG_DIR + "forbidden.txt", new String[] { "# Forbidden names list" } );
+
+
+		//
+		Utils.saveStrings(DATA_DIR + "bboard.txt", new String[] { "0#admin#Welcome#Test Message" } );
+
+		// create empty database
+		String[] dbData = new String[] {
+				"0#Main_Environment_Room#RS#You see nothing.#0#N#10,10,10#-1#",
+				"1#admin#PW#admin character#0#" + Utils.hash("admin") + "#0,0,0,0,0,0#0,0,0,0#4#0#10#OOC",
+		};
+
+		Utils.saveStrings(mainDB, dbData);
+
+		//
+		Utils.saveStrings(DATA_DIR + "errors_en.txt", new String[] { "1:Invalid Syntax!", "2:NaN Not a Number!" });
 	}
 	
 	private void test() {
@@ -7293,6 +7340,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 	 * @param input
 	 * @param client
 	 */
+	@SuppressWarnings("unchecked")
 	public void op_roomedit(final String input, final Client client) {
 		final Player player = getPlayer(client);
 
@@ -7406,6 +7454,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 				send("open <exit name> <destination>", client);
 				send("save", client);
 				send("show", client);
+				send("trigger <type> <data>", client);
 				send(Utils.padRight("", '-', 40), client);
 				// test alternate output means
 				/*ArrayList<Message> msgs = new ArrayList<Message>(13);
@@ -7452,10 +7501,20 @@ public class MUDServer implements MUDServerI, LoggerI {
 			for ( String s : data.getObjects().keySet() ) {
 				if ( s.contains("e|") ) {
 					Exit e = (Exit) data.getObject(s);
-					
+
 					objectDB.addAsNew(e);
 					objectDB.addExit(e);
 					room.getExits().add(e);
+				}
+			}
+			if( data.getObject("onEnter") != null ) {
+				for( Trigger t : (LinkedList<Trigger>) data.getObject("onEnter") ) {
+					room.getTriggers(Triggers.onEnter).add(t);	
+				}
+			}
+			if( data.getObject("onLeave") != null ) {
+				for( Trigger t : (LinkedList<Trigger>) data.getObject("onLeave") ) {
+					room.getTriggers(Triggers.onLeave).add(t);
 				}
 			}
 			send("Room saved.", client);
@@ -7483,7 +7542,38 @@ public class MUDServer implements MUDServerI, LoggerI {
 				}
 			}
 			send(Utils.padRight("", '-', 80), client);
+		}
+		else if ( rcmd.equals("trigger") ) {
+			String[] rargs = rarg.split(" ");
 
+			if( rargs.length >= 2 ) {
+				int type = Utils.toInt(rargs[0], -1);
+
+				if( type == 0 ) {
+					if( data.getObject("onEnter") == null ) {
+						data.addObject("onEnter", new LinkedList<Trigger>());
+					}
+					else {
+						((LinkedList<Trigger>) data.getObject("onEnter")).add(new Trigger(rargs[1]));
+					}
+					send("Ok.", client);
+				}
+				else if( type == 1 ) {
+					if( data.getObject("onLeave") == null ) {
+						data.addObject("onLeave", new LinkedList<Trigger>());
+					}
+					else {
+						((LinkedList<Trigger>) data.getObject("onLeave")).add(new Trigger(rargs[1]));
+					}
+					send("Ok.", client);
+				}
+				else {
+					send("trigger: Bad trigger type.", client);
+				}
+			}
+			else {
+				send("trigger: Bad arguments.", client);
+			}
 		}
 		else {
 			// currently causes a loop effect, where the command gets funneled back
@@ -11002,7 +11092,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 					room.setDesc(value);
 				}
 
-				area.addRoom(room.getDBRef());
+				area.addRoom(room);
 				break;
 			default:
 				break;
@@ -11469,8 +11559,9 @@ public class MUDServer implements MUDServerI, LoggerI {
 	}
 	
 	private void execTrigger(Trigger trig, Client client) {
-		send(trig.script, client);
+		//send(trig.script, client);
 		//send(trig.exec(), client);
+		pgm.interpret(trig.script);
 	}
 	
 	public List<SpellTimer> getSpellTimers(Player player) {

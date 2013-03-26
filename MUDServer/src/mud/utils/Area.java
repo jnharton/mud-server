@@ -61,18 +61,9 @@ public class Area {
 		this.entrance_room = rooms[0].getDBRef(); // use the first room as the entrace
 	}
 	
-	
-	/**
-	 * Does this area contained the specified room
-	 * 
-	 * Time Complexity: O(n)
-	 * 
-	 * @param id
-	 * @return
-	 */
-	public boolean hasRoom(int id) {
-		for (Integer r_id :this.room_ids) {
-			if (id == r_id) {
+	public boolean hasRoom(Room room) {
+		for (Integer r_id : this.room_ids) {
+			if (room.getDBRef() == r_id) {
 				return true;
 			}
 		}
@@ -92,15 +83,7 @@ public class Area {
 		this.room_ids.add(newRoom.getDBRef());
 	}
 	
-	public void addRoom(int dbref) {
-		this.room_ids.add(dbref);
-	}
-	
 	public void deleteRoom(Room oldRoom) {
 		this.room_ids.remove((Integer) oldRoom.getDBRef());
-	}
-	
-	public void deleteRoom(int dbref) {
-		this.room_ids.remove((Integer) dbref);
 	}
 }
