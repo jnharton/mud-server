@@ -92,6 +92,8 @@ public class Account implements Serializable {
 		this.id = 0;
 		this.status = Status.ACTIVE;
 		this.created = new Date(Account.calendar.get(Calendar.MONTH), Account.calendar.get(Calendar.DATE), Account.calendar.get(Calendar.YEAR));
+		
+		this.playerIds = new ArrayList<Integer>();
 	}
 	
 	/**
@@ -105,6 +107,8 @@ public class Account implements Serializable {
 		this.modified = new Date(Account.calendar.get(Calendar.MONTH), Account.calendar.get(Calendar.DATE), Account.calendar.get(Calendar.YEAR));
 		this.id = aId;
 		this.status = Status.ACTIVE;
+		
+		this.playerIds = new ArrayList<Integer>();
 	}
 	
 	/**
@@ -122,6 +126,8 @@ public class Account implements Serializable {
 		this.password = aPassword;
 		this.charLimit = aCharLimit;
 		this.characters = new ArrayList<Player>(aCharLimit);
+		
+		this.playerIds = new ArrayList<Integer>();
 	}
 	
 	/**
@@ -147,6 +153,8 @@ public class Account implements Serializable {
 		for (Player player : aCharacters) {
 			this.characters.add(player);
 		}
+		
+		this.playerIds = new ArrayList<Integer>();
 	}
 	
 	/**

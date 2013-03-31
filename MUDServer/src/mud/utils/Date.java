@@ -60,10 +60,7 @@ public class Date implements Serializable {
 	}
 	
 	public Date(int month, int day, int year) {
-		if (month > 12) { this.month = 11; }
-		else { this.month = month; }
-		if (day > 30) { this.day = 29; }
-		else { this.day = day; }
+		this(month, day);
 		if (year > 9999) { this.year = 9999; }
 		else { this.year = year; }
 	}

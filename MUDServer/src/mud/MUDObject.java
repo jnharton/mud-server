@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.EnumSet;
 
+import mud.objects.Player;
 import mud.utils.Utils;
 
 /**
@@ -34,12 +35,12 @@ public abstract class MUDObject {
 	public static MUDServer parent;
 
 	/* object data - persistent */
-	private int dbref = 0;       // database reference number (an index of sorts), private so nothing can change it
-	protected String name = "";  // object name
-	protected String desc = "";  // object description
-	protected EnumSet<ObjectFlag> flags = EnumSet.noneOf(ObjectFlag.class);
-	protected Object locks = ""; // object locks
-	protected int location = 0;  // object location
+	private int dbref = 0;                                                  // database reference number
+	protected String name = "";                                             // object name
+	protected String desc = "";                                             // object description
+	protected EnumSet<ObjectFlag> flags = EnumSet.noneOf(ObjectFlag.class); // object flags
+	protected Object locks = "";                                            // object locks
+	protected int location = 0;                                             // object location
 	
 	protected LinkedHashMap<String, Object> props = new LinkedHashMap<String, Object>(1, 0.75f);
 	
@@ -47,7 +48,7 @@ public abstract class MUDObject {
 
 	protected ArrayList<Effect> effects = new ArrayList<Effect>(); // Effects set on the object
 
-	public Point coord = new Point(0, 0); // the coordinate point specifying the location on a cartesian plain within a room
+	public Point coord = new Point(0, 0); // object's' location on a cartesian plain within a room?
 	public Point pos = new Point(0, 0);   //
 	
 	/* object state - transient? */
@@ -326,9 +327,20 @@ public abstract class MUDObject {
 		this.coord.setX(x);
 		this.coord.setY(y);
 	}
+	
+	public int getOwner() {
+		return this.owner;
+	}
+	
+	public void setOwner(Player player) {
+		this.owner = player.getDBRef();
+	}
+	
+	public boolean isOwnedBy(Player player) {
+		return this.owner == player.getDBRef() ? true : false;
+	}
 
 	public abstract String toDB();
 	
 	public abstract String toJSON();
-
 }

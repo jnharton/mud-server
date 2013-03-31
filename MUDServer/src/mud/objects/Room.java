@@ -70,10 +70,27 @@ public class Room extends MUDObject
 	 * Construct a room using only default parameter
 	 */
 	public Room() {
+		super(-1);
 		this.flags = EnumSet.of(ObjectFlag.ROOM, ObjectFlag.SILENT);
 		this.locks = "";            // Set the locks
 		this.location = 0;          // Set the location
 		
+		this.listeners = new ArrayList<Player>();
+	}
+	
+	
+	// copy constructor
+	public Room(Room toCopy)
+	{
+		super(toCopy.getDBRef());
+		//this.dbref = toCopy.getDBRef();   // Set the dbref (database reference)
+		this.name = toCopy.getName();       // Set the name
+		this.desc = toCopy.getDesc();       // Set the description to the default
+		this.parent = toCopy.getParent();   // Set the parent room
+		this.flags = toCopy.getFlags();     // Set the flags
+		this.locks = "";                    // Set the locks
+		this.location = toCopy.getParent(); // Set the location
+
 		this.listeners = new ArrayList<Player>();
 	}
 
@@ -81,28 +98,13 @@ public class Room extends MUDObject
 	public Room(int tempDBREF, String tempName, final EnumSet<ObjectFlag> tempFlagsNotUsed, String tempDesc, int tempParent)
 	{
 		super(tempDBREF);
-		//this.dbref = tempDBREF;     // Set the dbref (database reference)
-		this.name = tempName;       // Set the name
-		this.desc = tempDesc;       // Set the description to the default
-		this.parent = tempParent;   // Set the parent room
-		this.flags = EnumSet.of(ObjectFlag.ROOM, ObjectFlag.SILENT);
-		this.locks = "";            // Set the locks
-		this.location = tempParent; // Set the location
-		
-		this.listeners = new ArrayList<Player>();
-	}
-
-	// copy constructor
-	public Room(Room toCopy)
-	{
-		super(toCopy.getDBRef());
-		//this.dbref = toCopy.getDBRef();     // Set the dbref (database reference)
-		this.name = toCopy.getName();       // Set the name
-		this.desc = toCopy.getDesc();       // Set the description to the default
-		this.parent = toCopy.getParent();   // Set the parent room
-		this.flags = toCopy.getFlags();     // Set the flags
-		this.locks = "";                    // Set the locks
-		this.location = toCopy.getParent(); // Set the location
+		//this.dbref = tempDBREF;                                    // Set the dbref (database reference)
+		this.name = tempName;                                        // Set the name
+		this.desc = tempDesc;                                        // Set the description
+		this.parent = tempParent;                                    // Set the parent room
+		this.flags = EnumSet.of(ObjectFlag.ROOM, ObjectFlag.SILENT); // Set room flags
+		this.locks = "";                                             // Set the locks
+		this.location = tempParent;                                  // Set the location
 		
 		this.listeners = new ArrayList<Player>();
 	}
@@ -236,15 +238,15 @@ public class Room extends MUDObject
 	 */
 	public String toDB() {
 		String[] output = new String[9];
-		output[0] = this.getDBRef() + "";                 // room database reference number
-		output[1] = this.getName();                       // room name
-		output[2] = this.getFlagsAsString();                      // room flags
-		output[3] = this.getDesc();                       // room description
-		output[4] = this.getLocation() + "";              // room location (a.k.a parent)
-		output[5] = this.getRoomType().toString().substring(0, 1);                   // room type
-		output[6] = this.x + "," + this.y + "," + this.z; // room dimensions (x,y,z)
-		output[7] = "-1";                                 // room terrain
-		output[8] = "";                                   //
+		output[0] = this.getDBRef() + "";                         // database reference number
+		output[1] = this.getName();                               // name
+		output[2] = this.getFlagsAsString();                      // flags
+		output[3] = this.getDesc();                               // description
+		output[4] = this.getLocation() + "";                      // location (a.k.a parent)
+		output[5] = "" + this.getRoomType().toString().charAt(0); // room type
+		output[6] = this.x + "," + this.y + "," + this.z;         // room dimensions (x,y,z)
+		output[7] = "-1";                                         // room terrain
+		output[8] = "";                                           //
 		
 		return Utils.join(output, "#");
 	}

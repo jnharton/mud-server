@@ -373,7 +373,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 	private int day = 2, month = 8, year = 1372;
 
 	private int game_hour = 5;    // 5am
-	private int game_minute = 58; // 55m past 5am
+	private int game_minute = 58; // 58m past 5am
 
 	//Theme Related Variables
 	private String theme = THEME_DIR + "forgotten_realms.txt";                     // theme file to load
@@ -795,11 +795,10 @@ public class MUDServer implements MUDServerI, LoggerI {
 		Utils.saveStrings(CONFIG_DIR + "channels.txt", new String[] { "Support", "Testing" } );
 		Utils.saveStrings(CONFIG_DIR + "forbidden.txt", new String[] { "# Forbidden names list" } );
 
-
-		//
+		// generate an single, default message for the mud-wide bulletin board
 		Utils.saveStrings(DATA_DIR + "bboard.txt", new String[] { "0#admin#Welcome#Test Message" } );
 
-		// create empty database
+		// create plain, mostly empty database (contains a single room and an admin player)
 		String[] dbData = new String[] {
 				"0#Main_Environment_Room#RS#You see nothing.#0#N#10,10,10#-1#",
 				"1#admin#PW#admin character#0#" + Utils.hash("admin") + "#0,0,0,0,0,0#0,0,0,0#4#0#10#OOC",
@@ -1085,9 +1084,9 @@ public class MUDServer implements MUDServerI, LoggerI {
 						client = player.getClient();										
 
 						client.write("(" + colors(chan_name, chan_color) + ") " + "<" + msg.getSender().getName() + "> " + colors(msg.getMessage(), text_color) + "\r\n"); // send the message
+						chatLog.writeln("(" + chan_name + ") " + "<" + msg.getSender().getName() + "> " + msg.getMessage() + "\n");
 						
-						debug("(" + chan_name + ") " + "<" + msg.getSender().getName() + "> " + msg.getMessage() + "\n", 4);										
-						debug("chat message sent successfully", 4); 
+						debug("chat message sent successfully", 4);
 					}
 					catch(NullPointerException npe) {
 						debug("Game [chat channel: " + chan_name + "] > Null Message.");
@@ -1136,16 +1135,13 @@ public class MUDServer implements MUDServerI, LoggerI {
 			arg = Utils.join(inputList, " ");  // get the arguments from the input list
 
 			if (inputList.size() > 1) {
-				// what's this for, anyway? ignoring it for now
-				/*if (!cmd.toLowerCase().equals("connect") && !cmd.toLowerCase().equals("create")) {
+				// don't display/log the arguments to connect or create, since they contain sensitive user information,
+				// including their name and password
+				if (!cmd.toLowerCase().equals("connect") && !cmd.toLowerCase().equals("create")) {
 					debug("Arguments: \"" + arg + "\"", 2);       // print arguments
 					arg = Utils.trim(arg);                        // trim arguments
 					debug("Arguments(trimmed): \"" + arg + "\""); // print trimmed arguments
-				}*/
-				
-				debug("Arguments: \"" + arg + "\"", 2);       // print arguments
-				arg = Utils.trim(arg);                        // trim arguments
-				debug("Arguments(trimmed): \"" + arg + "\""); // print trimmed arguments
+				}
 			}
 		}
 		
@@ -1179,6 +1175,9 @@ public class MUDServer implements MUDServerI, LoggerI {
 						// pass arguments to the player creation function
 						cmd_create(arg, client);
 					}
+					else if( cmd.equals("help") ) {
+						send("Available Commands: connect, create, help, quit, who", client);
+					}
 					else if ( cmd.equals("quit") || (aliasExists && alias.equals("quit") ) )
 					{
 						s.disconnect(client); // just kill the client?
@@ -1206,6 +1205,9 @@ public class MUDServer implements MUDServerI, LoggerI {
 				else if ( cmd.equals("create") || ( aliasExists && alias.equals("create") ) )
 				{
 					send("Sorry, only Wizards are allowed to login at this time.", client);
+				}
+				else if( cmd.equals("help") ) {
+					send("Available Commands: connect, create, help, quit, who", client);
 				}
 				else if ( cmd.equals("quit") || ( aliasExists && alias.equals("quit") ) )
 				{
@@ -2341,6 +2343,15 @@ public class MUDServer implements MUDServerI, LoggerI {
 		}
 	}
 	
+	/**
+	 * Command: @accounts
+	 * 
+	 * List details of existing accounts. Also permits adding a new account,
+	 * specifiying the name and password
+	 * 
+	 * @param arg
+	 * @param client
+	 */
 	private void cmd_accounts(final String arg, final Client client) {
 		if ( arg.equals("") ) {
 			send("Accounts (Online)", client);
@@ -2364,13 +2375,18 @@ public class MUDServer implements MUDServerI, LoggerI {
 						client.write("Adding new account");
 
 						Account account = new Account(this.accounts.size(), args[1], args[2], 5);
+						
+						account.linkCharacter(getPlayer(client)); // link current character to account
+						account.setPlayer(getPlayer(client));     // mark it as the active player
+						account.setClient(client);                // mark current client as active client
+						account.setOnline(true);                  // mark us as being online
 
-						account.linkCharacter(getPlayer(client));
-						account.setPlayer(getPlayer(client));
-						account.setClient(client);
-						account.setOnline(true);
-
-						this.accounts.add(account);
+						this.accounts.add(account);               // add the account to the arraylist
+					}
+				}
+				else if (args[0].equals("+menu")) {
+					if (this.accounts != null) {
+						account_menu(getAccount(getPlayer(client)), client);
 					}
 				}
 			}
@@ -2768,16 +2784,12 @@ public class MUDServer implements MUDServerI, LoggerI {
 				client.write(Utils.padRight(chanName, 8));
 				client.write(" ");
 				if (chan.isPlayerListening(chanName, getPlayer(client))) {
-					client.write(Colors.GREEN.toString());
-					client.write("Enabled");
-					client.write(Colors.WHITE.toString());
-					client.write("\n");
+					client.write(Colors.GREEN.toString() + "Enabled" + Colors.WHITE.toString() + "\n");
+					//client.write(colors("Enabled", "green") + "\n"); // alternate method
 				}
 				else {
-					client.write(Colors.RED.toString());
-					client.write("Disabled");
-					client.write(Colors.WHITE.toString());
-					client.write("\n");
+					client.write(Colors.RED.toString() + "Disabled" + Colors.WHITE.toString() + "\n");
+					//client.write(colors("Disabled", "red") + "\n"); // alternate method
 				}
 			}
 			client.write("--------------------------------\n");
@@ -9248,6 +9260,13 @@ public class MUDServer implements MUDServerI, LoggerI {
 	 * A wrapper function for System.out.println that can be "disabled" by setting an integer.
 	 * Used to turn "on"/"off" printing debug messages to the console.
 	 * 
+	 * Each debug level includes the levels below it
+	 * 
+	 * e.g.
+	 * debug level 3 includes levels 3, 2, 1
+	 * debug level 2 includes levels 2, 1
+	 * debug level 1 includes levels 1
+	 * 
 	 * Uses an Object parameter and a call to toString so that I can pass objects to it
 	 * 
 	 * @param data
@@ -9256,13 +9275,10 @@ public class MUDServer implements MUDServerI, LoggerI {
 	{
 		if (debug == 1) // debug enabled
 		{
-			// debug level 3 includes levels 3, 2, 1
-			// debug level 2 includes levels 2, 1
-			// debug level 1 includes levels 1
 			if (debugLevel >= tDebugLevel) {
 				System.out.println(data);
 				if ( logging ) {
-					debugLog.writeln("" + data);
+					debugLog.writeln(("" + data).trim()); // convert to string and strip extra whitespace
 				}
 			}
 		}
@@ -9625,6 +9641,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 		if ( !(m instanceof NullObject) ) {
 			send(m.getName() + "(#" + m.getDBRef() + ")", client);
 			send("Type: " + ObjectFlag.firstInit(m.getFlags()) + " Flags: " + ObjectFlag.toInitString(m.getFlags()), client);
+			
 			if (m instanceof Room) {
 				send("Room Type: " + ((Room) m).getRoomType().toString(), client);
 			}
@@ -9634,6 +9651,10 @@ public class MUDServer implements MUDServerI, LoggerI {
 			if (m instanceof Item) {
 				send("Item Type: " + ((Item) m).item_type.toString(), client);
 			}
+			if (m instanceof Player) {
+				send("Race: " + ((Player) m).getPRace().getName(), client);
+				send("Class: " + ((Player) m).getPClass().getName(), client);
+			}
 			if (m instanceof Thing) {
 				send("Thing Type: " + ((Thing) m).thing_type.toString(), client);
 				send("Coordinates:", client);
@@ -9641,8 +9662,10 @@ public class MUDServer implements MUDServerI, LoggerI {
 				send("Y: " + ((Thing) m).getYCoord(), client);
 				send("Z: " + ((Thing) m).getZCoord(), client);
 			}
+			
 			send("Description: " + m.getDesc(), client);
 			send("Location: " + getObject(m.getLocation()).getName() + "(#" + m.getLocation() + ")", client);
+			
 			if (m instanceof Room) {
 				send("Sub-Rooms:", client);
 				for (final Room r : objectDB.getRoomsByLocation(((Room) m).getDBRef())) {
@@ -9663,64 +9686,40 @@ public class MUDServer implements MUDServerI, LoggerI {
 					send( colors( creep.getName(), "cyan" ), client );
 				}
 			}
+			if (m instanceof Player) {
+				Player player = (Player) m;
+				// helmet, necklace, armor, cloak, rings, gloves, weapons, belt, boots
+
+				debug("RING1: " + player.getSlots().get("ring1").getItem() +
+						"\t" + "RING2: " + player.getSlots().get("ring2").getItem());
+				debug("RING3: " + player.getSlots().get("ring3").getItem() +
+						"\t" + "RING4: " + player.getSlots().get("ring4").getItem());
+				debug("RING5: " + player.getSlots().get("ring5").getItem() +
+						"\t" + "RING6: " + player.getSlots().get("ring6").getItem());
+				debug("RING7: " + player.getSlots().get("ring7").getItem() +
+						"\t" + "RING8: " + player.getSlots().get("ring8").getItem());
+				debug("RING9: " + player.getSlots().get("ring9").getItem() +
+						"\t" + "RING10: " + player.getSlots().get("ring10").getItem());
+				
+				for(int i = 1; i < 10; i = i + 2) {
+					send("RING" + i + ": " + player.getSlots().get("ring" + i).getItem() + "\t" + "RING" + (i + 1) + ": " + player.getSlots().get("ring" + (i + 1)).getItem(), client); 
+				}
+
+				for (Slot slot : player.getSlots().values()) {
+					String tmp;
+
+					if (slot.getType() == ItemType.CLOTHING) { tmp = slot.getCType().toString().toUpperCase(); }
+					else { tmp = slot.getType().toString().toUpperCase(); }
+					
+					Item item = slot.getItem();
+
+					if (item != null) { send(colors(tmp, displayColors.get("thing")) + " : " + item + " *" + item.getWeight() + "lbs.", client); }
+					else { send(colors(tmp, displayColors.get("thing")) + " : null", client); }
+				}
+			}
 		}
 		else {
 			send("-- NullObject -- (#" + m.getDBRef() + ")", client);
-		}
-	}
-
-	/**
-	 * Examine (MUDObject -> Player)
-	 * 
-	 * @param player
-	 * @param client
-	 */
-	public void examine(final Player player, final Client client) {
-		send(player.name + "(#" + player.getDBRef() + ")", client);
-		send("Type: " + ObjectFlag.firstInit(player.getFlags()) + " Flags: " + ObjectFlag.toInitString(player.getFlags()), client);
-		send("Race: " + player.getPRace().getName(), client);
-		send("Class: " + player.getPClass().getName(), client);
-		send("Description: " + player.getDesc(), client);
-		send("Location: " + getRoom(player.getLocation()).getName() + "(#" + player.getLocation() + ")", client);
-
-		// helmet
-		// necklace
-		// armor
-		// cloak
-		// rings
-		// gloves
-		// weapons
-		// belt
-		// boots
-
-		debug("RING1: " + player.getSlots().get("ring1").getItem() +
-				"\t" + "RING2: " + player.getSlots().get("ring2").getItem());
-		debug("RING3: " + player.getSlots().get("ring3").getItem() +
-				"\t" + "RING4: " + player.getSlots().get("ring4").getItem());
-		debug("RING5: " + player.getSlots().get("ring5").getItem() +
-				"\t" + "RING6: " + player.getSlots().get("ring6").getItem());
-		debug("RING7: " + player.getSlots().get("ring7").getItem() +
-				"\t" + "RING8: " + player.getSlots().get("ring8").getItem());
-		debug("RING9: " + player.getSlots().get("ring9").getItem() +
-				"\t" + "RING10: " + player.getSlots().get("ring10").getItem());
-
-		for (Slot slot : player.getSlots().values()) {
-			String tmp;
-
-			if (slot.getType() == ItemType.CLOTHING) {
-				tmp = slot.getCType().toString().toUpperCase();
-			}
-			else {
-				tmp = slot.getType().toString().toUpperCase();
-			}
-
-			if (slot.getItem() != null) {
-				send(colors(tmp, displayColors.get("thing")) + " : " + slot.getItem() + " *" + slot.getItem().getWeight() + "lbs.", client);
-			}
-			else
-			{
-				send(colors(tmp, displayColors.get("thing")) + " : null", client);
-			}
 		}
 	}
 
