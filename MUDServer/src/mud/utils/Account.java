@@ -73,7 +73,8 @@ public class Account implements Serializable {
 	private String username;              // username
 	private String password;              // password
 	private int charLimit = 3;            // character limit
-	public ArrayList<Integer> playerIds;  // ids of players the account owns
+	
+	public ArrayList<Integer> playerIds = new ArrayList<Integer>();  // ids of players the account owns
 
 	// active properties (current state)
 	transient private ArrayList<Player> characters; // all the characters that exist for an account
@@ -84,9 +85,10 @@ public class Account implements Serializable {
 	transient private boolean online;
 
 	/**
-	 * 
+	 * create account without a valid account number
 	 */
 	public Account() {
+<<<<<<< Updated upstream
 		Account.calendar = Calendar.getInstance(TimeZone.getTimeZone("America/New_York"), new Locale("ENGLISH", "US"));
 		
 		this.id = 0;
@@ -94,6 +96,9 @@ public class Account implements Serializable {
 		this.created = new Date(Account.calendar.get(Calendar.MONTH), Account.calendar.get(Calendar.DATE), Account.calendar.get(Calendar.YEAR));
 		
 		this.playerIds = new ArrayList<Integer>();
+=======
+		this(-1);
+>>>>>>> Stashed changes
 	}
 	
 	/**
@@ -103,12 +108,15 @@ public class Account implements Serializable {
 	public Account(int aId) {
 		Account.calendar = Calendar.getInstance(TimeZone.getTimeZone("America/New_York"), new Locale("ENGLISH", "US"));
 		
-		this.created = new Date(Account.calendar.get(Calendar.MONTH), Account.calendar.get(Calendar.DATE), Account.calendar.get(Calendar.YEAR));
-		this.modified = new Date(Account.calendar.get(Calendar.MONTH), Account.calendar.get(Calendar.DATE), Account.calendar.get(Calendar.YEAR));
 		this.id = aId;
 		this.status = Status.ACTIVE;
 		
+<<<<<<< Updated upstream
 		this.playerIds = new ArrayList<Integer>();
+=======
+		this.created = new Date(Account.calendar.get(Calendar.MONTH), Account.calendar.get(Calendar.DATE), Account.calendar.get(Calendar.YEAR));
+		this.modified = new Date(Account.calendar.get(Calendar.MONTH), Account.calendar.get(Calendar.DATE), Account.calendar.get(Calendar.YEAR));
+>>>>>>> Stashed changes
 	}
 	
 	/**
@@ -116,12 +124,8 @@ public class Account implements Serializable {
 	 * @param aId
 	 */
 	public Account(int aId, String aUsername, String aPassword, int aCharLimit) {
-		Account.calendar = Calendar.getInstance(TimeZone.getTimeZone("America/New_York"), new Locale("ENGLISH", "US"));
+		this(aId);
 		
-		this.created = new Date(Account.calendar.get(Calendar.MONTH), Account.calendar.get(Calendar.DATE), Account.calendar.get(Calendar.YEAR));
-		this.modified = new Date(Account.calendar.get(Calendar.MONTH), Account.calendar.get(Calendar.DATE), Account.calendar.get(Calendar.YEAR));
-		this.id = aId;
-		this.status = Status.ACTIVE;
 		this.username = aUsername;
 		this.password = aPassword;
 		this.charLimit = aCharLimit;
@@ -131,38 +135,37 @@ public class Account implements Serializable {
 	}
 	
 	/**
-	 * 
-	 * @param aCreated
-	 * @param aModified
+	 * Account Loading constructor...
 	 * @param aId
 	 * @param aStatus
+	 * @param aCreated
+	 * @param aModified
 	 * @param aUsername
 	 * @param aPassword
 	 * @param aCharLimit
 	 * @param aCharacters
 	 */
-	public Account(Date aCreated, Date aModified, int aId, Status aStatus, String aUsername, String aPassword, int aCharLimit, Player...aCharacters) {
-		this.created = aCreated;
-		this.modified = aModified;
-		this.id = aId;
-		this.status = aStatus;
+	public Account(int aId, Status aStatus, Date aCreated, Date aModified, String aUsername, String aPassword, int aCharLimit, Player...aCharacters) {
+		this.id = aId;             // the account id
+		this.status = aStatus;     // the status of the account
+		
+		this.created = aCreated;   // account's creation date
+		this.modified = aModified; // account's last modification date
+		
 		this.username = aUsername;
 		this.password = aPassword;
+		
 		this.charLimit = aCharLimit;
+		
 		this.characters = new ArrayList<Player>(aCharacters.length);
+		this.playerIds = new ArrayList<Integer>();
+		
 		for (Player player : aCharacters) {
 			this.characters.add(player);
+			this.playerIds.add(player.getDBRef());
 		}
 		
 		this.playerIds = new ArrayList<Integer>();
-	}
-	
-	/**
-	 * 
-	 * @param newId
-	 */
-	public void setId(int newId) {
-		this.id = newId;
 	}
 	
 	/**
@@ -189,15 +192,6 @@ public class Account implements Serializable {
 	 */
 	public Status getStatus() {
 		return this.status;
-	}
-
-	/**
-	 * Set username
-	 * 
-	 * @param tUsername the username to change this account to
-	 */
-	public void setUsername(String tUsername) {
-		this.username = tUsername;
 	}
 	
 	/**
@@ -312,13 +306,6 @@ public class Account implements Serializable {
 		return username + " " + id + " " + name + " " + state + " " + creationDate;
 	}
 	
-	/**
-	 * 
-	 */
-	public String toString() {
-		return "";
-	}
-	
 	public static void main(String[] args) {
 		Account a = new Account();
 		Account b = new Account(5);
@@ -329,6 +316,5 @@ public class Account implements Serializable {
 		System.out.println("Created " + b.created);
 		System.out.println("Id: " + c.id);
 		System.out.println("Created " + c.created);
-		
 	}
 }

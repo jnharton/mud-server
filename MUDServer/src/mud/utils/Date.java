@@ -29,49 +29,81 @@ import java.util.regex.Pattern;
  *
  */
 public class Date implements Serializable {
+	
 	/**
 	 * 
 	 */
+	private static final long serialVersionUID = 1L;
+
+	private static int MAX_YEAR = 9999;
 	
-	private int month; // 0-11 (12 possible months)
-	private int day;   // 0-29 (30 possible days)
+	private int month; // 1-12 (12 possible months)
+	private int day;   // 1-31 (31 possible days)
 	private int year;  // 0000-9999 (10,000 possible years)
 	
 	// date parsing regexp
-	String re1="(\\d)";	// Any Single Digit 1
-    String re2="(\\d)";	// Any Single Digit 2
-    String re3="(-)";	// Any Single Character 1
-    String re4="(\\d)";	// Any Single Digit 3
-    String re5="(\\d)";	// Any Single Digit 4
-    String re6="(-)";	// Any Single Character 2
-    String re7="((?:(?:[1]{1}\\d{1}\\d{1}\\d{1})|(?:[2]{1}\\d{3})))(?![\\d])";	// Year 1
+	transient static private String re1="(\\d)";	// Any Single Digit 1
+	transient static private String re2="(\\d)";	// Any Single Digit 2
+	transient static private String re3="(-)";	// Any Single Character 1
+	transient static private String re4="(\\d)";	// Any Single Digit 3
+    transient static private String re5="(\\d)";	// Any Single Digit 4
+    transient static private String re6="(-)";	// Any Single Character 2
+    transient static private String re7="((?:(?:[1]{1}\\d{1}\\d{1}\\d{1})|(?:[2]{1}\\d{3})))(?![\\d])";	// Year 1
 	
-	private final String datePattern = re1+re2+re3+re4+re5+re6;
+    //transient static private final String datePattern = re1+re2+re3+re4+re5+re6;
+    transient static private final String datePattern = 
+    		"(\\d)(\\d)(-)(\\d)(\\d)(-)((?:(?:[1]{1}\\d{1}\\d{1}\\d{1})|(?:[2]{1}\\d{3})))(?![\\d])";
 
 	public Date() {
 	}
 	
 	// assume 1 index day and month input 
 	public Date(int month, int day) {
-		if (month > 12) { this.month = 11; }
-		else { this.month = month; }
-		if (day > 30) { this.day = 29; }
-		else { this.day = day; }
+		if( month >= 1 && month <= 12 ) {
+			this.month = month;
+		}
+		else {
+			if( month < 1 ) { this.month = 1; }
+			else if( month > 12 ) { this.month = 11; } 
+		}
+		
+		if( day >= 1 && day <= 31 ) {
+			this.day = day;
+		}
+		else {
+			if( day < 1 ) { this.day = 1; }
+			else if( day > 31 ) { this.day = 31; }
+		}
 	}
 	
 	public Date(int month, int day, int year) {
 		this(month, day);
+<<<<<<< Updated upstream
 		if (year > 9999) { this.year = 9999; }
 		else { this.year = year; }
+=======
+		
+		if( year >= 0 && year <= MAX_YEAR ) {
+			this.year = year;
+		}
+		else {
+			if( year > MAX_YEAR ) { this.year = MAX_YEAR; }
+			else if( year < 0 ) { this.year = 0; }
+		}
+>>>>>>> Stashed changes
 	}
-
-	// returns a number between 0 and 29 (1 and 30)
+	
+	/**
+	 * returns a number between 1 and 30
+	 * 
+	 * @return
+	 */
 	public int getDay() {
 		return this.day;
 	}
 
 	/**
-	 * returns a number between 0 and 11 (1 and 12)
+	 * returns a number between 1 and 12
 	 * 
 	 * @return
 	 */
@@ -80,7 +112,7 @@ public class Date implements Serializable {
 	}
 	
 	/**
-	 * returns a number between 0 and 9999 (1 and 10000)
+	 * returns a number between 0 and MAX_YEAR
 	 *  
 	 * @return
 	 */

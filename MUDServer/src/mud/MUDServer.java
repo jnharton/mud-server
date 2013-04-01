@@ -2372,7 +2372,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 			if (args.length >= 3) {
 				if (args[0].equals("+add")) {
 					if (this.accounts != null) {
-						client.write("Adding new account");
+						client.write("Adding new account (+add)");
 
 						Account account = new Account(this.accounts.size(), args[1], args[2], 5);
 						
@@ -2384,6 +2384,30 @@ public class MUDServer implements MUDServerI, LoggerI {
 						this.accounts.add(account);               // add the account to the arraylist
 					}
 				}
+<<<<<<< Updated upstream
+=======
+				else if (args[0].equals("+new")) {
+					client.write("Adding new account (+new)");
+					
+					Account account = new Account(this.accounts.size(), "test", "password", 5);
+
+					this.accounts.add(account);               // add the account to the arraylist
+				}
+				else if (args[0].equals("+info")) {
+					Account account = getAccount(args[0], args[1]);
+					
+					if( account != null ) {
+						client.write( account.display() );
+						int index = 1;
+						for(Player p : account.getCharacters()) {
+							client.write(index + ") " + p.getName() + "( " +  p.getPClass().getAbrv() + " )");
+						}
+					}
+					else {
+						client.write("No Such Account Exists!");
+					}
+				}
+>>>>>>> Stashed changes
 				else if (args[0].equals("+menu")) {
 					if (this.accounts != null) {
 						account_menu(getAccount(getPlayer(client)), client);
@@ -8121,6 +8145,9 @@ public class MUDServer implements MUDServerI, LoggerI {
 				Utils.saveStrings(HELP_DIR + he.getKey() + ".txt", he.getValue());
 			}
 		}
+	}
+	
+	public void saveSpells() {
 	}
 
 	// Data Loading Functions
