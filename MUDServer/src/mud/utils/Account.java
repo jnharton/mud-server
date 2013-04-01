@@ -13,12 +13,12 @@ import mud.objects.Player;
 
 //public class MUDAccount
 public class Account implements Serializable {
-	
+
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-	
+
 	/*
 	 * class to represent a game account, which may contain
 	 * one or more players/characters that are all tied to
@@ -73,67 +73,52 @@ public class Account implements Serializable {
 	private String username;              // username
 	private String password;              // password
 	private int charLimit = 3;            // character limit
-	
+
 	public ArrayList<Integer> playerIds = new ArrayList<Integer>();  // ids of players the account owns
 
 	// active properties (current state)
 	transient private ArrayList<Player> characters; // all the characters that exist for an account
-	
+
 	transient private Client client;
 	transient private Player player;
-	
+
 	transient private boolean online;
 
 	/**
 	 * create account without a valid account number
 	 */
 	public Account() {
-<<<<<<< Updated upstream
-		Account.calendar = Calendar.getInstance(TimeZone.getTimeZone("America/New_York"), new Locale("ENGLISH", "US"));
-		
-		this.id = 0;
-		this.status = Status.ACTIVE;
-		this.created = new Date(Account.calendar.get(Calendar.MONTH), Account.calendar.get(Calendar.DATE), Account.calendar.get(Calendar.YEAR));
-		
-		this.playerIds = new ArrayList<Integer>();
-=======
 		this(-1);
->>>>>>> Stashed changes
 	}
-	
+
 	/**
 	 * 
 	 * @param aId
 	 */
 	public Account(int aId) {
 		Account.calendar = Calendar.getInstance(TimeZone.getTimeZone("America/New_York"), new Locale("ENGLISH", "US"));
-		
+
 		this.id = aId;
 		this.status = Status.ACTIVE;
-		
-<<<<<<< Updated upstream
-		this.playerIds = new ArrayList<Integer>();
-=======
+
 		this.created = new Date(Account.calendar.get(Calendar.MONTH), Account.calendar.get(Calendar.DATE), Account.calendar.get(Calendar.YEAR));
 		this.modified = new Date(Account.calendar.get(Calendar.MONTH), Account.calendar.get(Calendar.DATE), Account.calendar.get(Calendar.YEAR));
->>>>>>> Stashed changes
 	}
-	
+
 	/**
 	 * 
 	 * @param aId
 	 */
 	public Account(int aId, String aUsername, String aPassword, int aCharLimit) {
 		this(aId);
-		
+
 		this.username = aUsername;
 		this.password = aPassword;
+		
 		this.charLimit = aCharLimit;
 		this.characters = new ArrayList<Player>(aCharLimit);
-		
-		this.playerIds = new ArrayList<Integer>();
 	}
-	
+
 	/**
 	 * Account Loading constructor...
 	 * @param aId
@@ -148,26 +133,22 @@ public class Account implements Serializable {
 	public Account(int aId, Status aStatus, Date aCreated, Date aModified, String aUsername, String aPassword, int aCharLimit, Player...aCharacters) {
 		this.id = aId;             // the account id
 		this.status = aStatus;     // the status of the account
-		
+
 		this.created = aCreated;   // account's creation date
 		this.modified = aModified; // account's last modification date
-		
+
 		this.username = aUsername;
 		this.password = aPassword;
-		
+
 		this.charLimit = aCharLimit;
-		
 		this.characters = new ArrayList<Player>(aCharacters.length);
-		this.playerIds = new ArrayList<Integer>();
-		
+
 		for (Player player : aCharacters) {
 			this.characters.add(player);
 			this.playerIds.add(player.getDBRef());
 		}
-		
-		this.playerIds = new ArrayList<Integer>();
 	}
-	
+
 	/**
 	 * 
 	 * @return
@@ -175,7 +156,7 @@ public class Account implements Serializable {
 	public int getId() {
 		return this.id;
 	}
-	
+
 	/**
 	 * Set account status
 	 * 
@@ -184,7 +165,7 @@ public class Account implements Serializable {
 	public void setStatus(Status newStatus) {
 		this.status = newStatus;
 	}
-	
+
 	/**
 	 * Get account status
 	 * 
@@ -193,7 +174,7 @@ public class Account implements Serializable {
 	public Status getStatus() {
 		return this.status;
 	}
-	
+
 	/**
 	 * Get username
 	 * 
@@ -202,7 +183,7 @@ public class Account implements Serializable {
 	public String getUsername() {
 		return this.username;
 	}
-	
+
 	/**
 	 * Set account password
 	 * 
@@ -211,7 +192,7 @@ public class Account implements Serializable {
 	public void setPassword(String newPassword) {
 		this.password = newPassword;
 	}
-	
+
 	/**
 	 * Get account password
 	 * 
@@ -220,7 +201,7 @@ public class Account implements Serializable {
 	public String getPassword() {
 		return this.password;
 	}
-	
+
 	/**
 	 * Link an existing character to this account
 	 * 
@@ -230,7 +211,7 @@ public class Account implements Serializable {
 		this.playerIds.add(newCharacter.getDBRef());
 		this.characters.add(newCharacter);
 	}
-	
+
 	/**
 	 * Unlink an existing character currently tied to this account
 	 * 
@@ -240,7 +221,7 @@ public class Account implements Serializable {
 		this.playerIds.remove(currCharacter.getDBRef());
 		this.characters.remove(currCharacter);
 	}
-	
+
 	/**
 	 * 
 	 * @param tClient
@@ -248,7 +229,7 @@ public class Account implements Serializable {
 	public void setClient(Client newClient) {
 		this.client = newClient;
 	}
-	
+
 	/**
 	 * 
 	 * @return
@@ -256,7 +237,7 @@ public class Account implements Serializable {
 	public Client getClient() {
 		return this.client;
 	}
-	
+
 	/**
 	 * 
 	 * @param tPlayer
@@ -264,7 +245,7 @@ public class Account implements Serializable {
 	public void setPlayer(Player newPlayer) {
 		this.player = newPlayer;
 	}
-	
+
 	/**
 	 * 
 	 * @return
@@ -272,19 +253,19 @@ public class Account implements Serializable {
 	public Player getPlayer() {
 		return this.player;
 	}
-	
+
 	public ArrayList<Player> getCharacters() {
 		return this.characters;
 	}
-	
+
 	public void setOnline(boolean online) {
 		this.online = online;
 	}
-	
+
 	/*public boolean isOnline() {
 		return online;
 	}*/
-	
+
 	public String isOnline() {
 		if( online ) {
 			return "Yes";
@@ -293,7 +274,7 @@ public class Account implements Serializable {
 			return "No";
 		}
 	}
-	
+
 	public String display() {
 		String username = Utils.padRight(getUsername(), 8);
 		String id = Utils.padRight(String.valueOf(getId()), 6);
@@ -302,10 +283,10 @@ public class Account implements Serializable {
 		else { name = Utils.padRight("- No Player -", 40); };
 		String state = Utils.padRight(isOnline(), 6);
 		String creationDate = Utils.padRight(created.toString(), 10);
-		
+
 		return username + " " + id + " " + name + " " + state + " " + creationDate;
 	}
-	
+
 	public static void main(String[] args) {
 		Account a = new Account();
 		Account b = new Account(5);
