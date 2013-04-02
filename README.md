@@ -5,7 +5,7 @@ A basic MUD server written in Java.
 
 Some of the following directories need to exist before the game starts. '\' is the top directory
 for all the files. The code makes an attempt to find these folders and create them while it is setting
-up the game, and generates some basic date like an empty database and configuration files. That means
+up the game, and generates some basic data like an empty database and configuration files. That means
 that if you don't download the data from here (effectively test data at some level), then you will need
 to get find suitable pre-existing data or you'll need to add some manually.
 
