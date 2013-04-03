@@ -5,9 +5,9 @@ A basic MUD server written in Java.
 
 Some of the following directories need to exist before the game starts. '\' is the top directory
 for all the files. The code makes an attempt to find these folders and create them while it is setting
-up the game, but it doesn't generate any data in them. That means that if you don't download the data from
-here (effectively test data at some level), then you will need to get find suitable pre-existing data or
-you'll need to add some manually.
+up the game, and generates some basic data like an empty database and configuration files. That means
+that if you don't download the data from here (effectively test data at some level), then you will need
+to get find suitable pre-existing data or you'll need to add some manually.
 
 **Only the IMPORTANT! directories are absolutely essential, although the others may be important in the future.**
 
@@ -29,7 +29,7 @@ This code is very much in an unfinished state, there may be radical shifts in th
 in the future. Try not to make too many assumptions about stability and backup the database if you
 play with this as future code may corrupt the data and/or utilize an alternate approach for data storage.
 
-This code may require at least Java 7 (1.7)
+This code requires at least Java 7 (1.7)
 
 ## Usage
 
