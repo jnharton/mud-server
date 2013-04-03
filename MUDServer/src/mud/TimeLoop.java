@@ -27,7 +27,7 @@ public class TimeLoop implements Runnable
     private boolean paused = false;
     private boolean running = true;
 
-    private int ms_per_minute = 10 * 1000; // 10k ms (10 s) 
+    private int ms_per_minute = 10 * 1000; // 10k ms (10 s) , runs 1/6 normal time
     
     final private MUDServer server;
     final private int[] DAYS;
@@ -198,6 +198,13 @@ public class TimeLoop implements Runnable
 
     public int getMinutes() {
         return this.minute;
+    }
+    
+    public void setSeconds(int second) {
+    	this.second = second;
+    }
+    public int getSeconds() {
+    	return this.second;
     }
 
     public void setScale(int ms) {

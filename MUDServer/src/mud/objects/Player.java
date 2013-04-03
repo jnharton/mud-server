@@ -10,6 +10,7 @@ import java.util.EnumSet;
 
 import mud.net.Client;
 
+import mud.Alignments;
 import mud.ObjectFlag;
 import mud.Abilities;
 import mud.Classes;
@@ -148,6 +149,7 @@ public class Player extends MUDObject
 	protected Races race;                   // Race
 	protected Character gender;             // Gender
 	protected Classes pclass;               // Class
+	protected Alignments alignment;         // Alignment
 	protected Handed handed = Handed.RIGHT; // which hand is dominant (irr. but enum encompasses that and weapons hand req.)
 	protected int hp;                       // Hit Points
 	protected int totalhp;                  // Total Hit Points
@@ -239,7 +241,7 @@ public class Player extends MUDObject
 		this.race = Races.NONE;
 		this.gender = 'N';
 		this.pclass = Classes.NONE;
-		this.pclass = Classes.NONE;
+		this.alignment = Alignments.NONE;
 
 		this.hp = 10;
 		this.totalhp = 10;
@@ -851,6 +853,18 @@ public class Player extends MUDObject
 	
 	public void setSpeed(int newSpeed) {
 		this.speed = newSpeed;
+	}
+	
+	public Alignments getAlignment() {
+		return this.alignment;
+	}
+	
+	public void setAlignment(Alignments alignment) {
+		this.alignment = alignment;
+	}
+	
+	public void setAlignment(int newAlignment) {
+		this.alignment = Alignments.values()[newAlignment];
 	}
 
 	/**

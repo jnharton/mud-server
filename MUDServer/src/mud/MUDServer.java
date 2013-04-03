@@ -1281,7 +1281,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 				}
 			}
 			else if( player.getStatus().equals("INPUT") ) { // handling interactive input (ex. account logins)
-
 			}
 			else if ( player.getStatus().equals("VIEW") ) { // viewing help files
 				op_pager(input, client);
@@ -1303,6 +1302,14 @@ public class MUDServer implements MUDServerI, LoggerI {
 				// log command
 				log.writeln(playerName, playerLoc, Utils.trim(input));
 				System.out.println("Command Logged!");
+				
+				/* */
+				if(cmd.charAt(0) == '#') {
+					// chat channel invocation
+					chatHandler(cmd.substring(1, cmd.length()), arg, client);
+
+					return;
+				}
 
 				/* Command Evaluation */
 
@@ -1312,13 +1319,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 				boolean godCmd = false;
 
 				debug("Entering god command loop...", 2);
-
-				if(cmd.charAt(0) == '#') {
-					// chat channel invocation
-					chatHandler(cmd.substring(1, cmd.length()), arg, client);
-
-					return;
-				}
 
 				// stash god commands inside here
 				if (player.getAccess() >= GOD) {
@@ -1390,7 +1390,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 					else if ( cmd.equals("@door") || ( aliasExists && alias.equals("@door") ) )
 					{
 						buildCmd = true;
-						// run the open function
+						// run the door function
 						cmd_door(arg, client);
 					}
 					// pass arguments to the dungeon function
@@ -1398,14 +1398,20 @@ public class MUDServer implements MUDServerI, LoggerI {
 					/*else if ( cmd.equals("@dungeon") || ( aliasExists && alias.equals("@dungeon") ) )
 					{
 						buildCmd = true;
+						
 						int dX = 2;
 						int dY = 2;
+						
 						Dungeon d = new Dungeon(arg, dX, dY);
+						
 						cmd_jump(d.dRooms[0][0].getDBRef() + "", client);
 						cmd_look("", client);
+						
 						int dXc = 0;
 						int dYc = 0;
+						
 						System.out.println(d.dRooms.length);
+						
 						for (int r = 0; r < dX * dY; r++)
 						{
 							if (dXc == 0)
@@ -2406,10 +2412,13 @@ public class MUDServer implements MUDServerI, LoggerI {
 						client.write("No Such Account Exists!");
 					}
 				}
-				else if (args[0].equals("+menu")) {
-					if (this.accounts != null) {
-						account_menu(getAccount(getPlayer(client)), client);
-					}
+			}
+			if (args[0].equals("+menu")) {
+				if (this.accounts != null) {
+					Account acct = getAccount(getPlayer(client));
+
+					if(acct != null) { account_menu(acct, client); }
+					else { send("Invalid Account.", client); }
 				}
 			}
 		}
@@ -6914,7 +6923,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 		cgd = player.getCGData();
 
 		if (input.equals("start")) {
-			cgd = new cgData(0, 1, 0);
+			cgd = new cgData(0, 1, 0, false);
 			debug("T: " + cgd.t + " Step: " + cgd.step + " Answer: " + cgd.answer);
 
 			player.setCGData( op_chargen("", client, cgd) );
@@ -6936,11 +6945,12 @@ public class MUDServer implements MUDServerI, LoggerI {
 		int t = cgd.t;
 		int step = cgd.step;
 		int answer = cgd.answer;
+		boolean edit = cgd.edit;
 
 		debug("Start: T is now " + t);
 
 		if (t == 0) {
-			send("Step: " + step, client);
+			//send("Step: " + step, client);
 			debug("Step: " + step);
 
 			switch(step)
@@ -6949,12 +6959,12 @@ public class MUDServer implements MUDServerI, LoggerI {
 				send("Please choose a race:", client);
 				send("1) " + Utils.padRight("" + Races.ELF, 6) +  " 2) " + Utils.padRight("" + Races.DROW, 6) + " 3) " + Utils.padRight("" + Races.HUMAN, 6), client);
 				send("4) " + Utils.padRight("" + Races.DWARF, 6) + " 5) " + Utils.padRight("" + Races.GNOME, 6) + " 6) " + Utils.padRight("" + Races.ORC, 6), client);
-				send(">", client);
+				send("> ", client);
 				break;
 			case 2:
 				send("Please choose a gender:", client);
 				send("1) Female 2) Male 3) Other 4) Neuter (no gender)", client);
-				send(">", client);
+				send("> ", client);
 				break;
 			case 3:
 				send("Please choose a class:", client);
@@ -6962,15 +6972,21 @@ public class MUDServer implements MUDServerI, LoggerI {
 				send(" 4) " + Utils.padRight("" + Classes.DRUID, 12) + " 5) " + Utils.padRight("" + Classes.FIGHTER, 12) + " 6) " + Utils.padRight("" + Classes.MONK, 12), client);
 				send(" 7) " + Utils.padRight("" + Classes.PALADIN, 12) + " 8) " + Utils.padRight("" + Classes.RANGER, 12) + " 9) " + Utils.padRight("" + Classes.ROGUE, 12), client);
 				send("10) " + Utils.padRight("" + Classes.SORCERER, 12) + "11) " + Utils.padRight("" + Classes.WIZARD, 12) + " 0) " + Utils.padRight("" + Classes.NONE, 12), client);
-				send(">", client);
+				send("> ", client);
 				break;
 			case 4:
+				for(int i = 1; i < 9; i = i + 3) {
+					send("" + i + ") " + Alignments.values()[i] + " " + (i+1) + ") " + Alignments.values()[i+1] + " " + (i+2) + ") " + Alignments.values()[i+2], client);
+				}
+				send("> ", client);
+				break;
+			case 5:
 				send("Options:", client);
 				send(" 1) Reset 2) Edit 3) Exit", client);
 				break;
-			case 5:
+			case 6:
 				send("Edit What:", client);
-				send("1) Race 2) Gender 3) Class", client);
+				send("1) Race 2) Gender 3) Class 4) Alignment 5) Abort", client);
 				break;
 			default:
 				break;
@@ -6989,11 +7005,13 @@ public class MUDServer implements MUDServerI, LoggerI {
 					return cgd;
 				}
 
-				send("Answer: " + answer, client);
+				//send("Answer: " + answer, client);
 				debug("Answer: " + answer);
+				
+				//send("Entering Step " + step, client);
+				debug("Entering Step " + step);
 
 				if (step == 1) {
-					debug("Entering Step " + step);
 					player.setPlayerRace(Races.getRace(answer));
 					send("Player Race set to: " + player.getPRace(), client);
 
@@ -7003,17 +7021,20 @@ public class MUDServer implements MUDServerI, LoggerI {
 					};
 
 					int index = 0;
-
-					for(int i : (Races.getRace(answer)).getStatAdjust()) {
-						player.getStats().put(ab[index], player.getStats().get(ab[index]) + i);
+					
+					// apply permanent status adjustments according to race
+					for(int value : (Races.getRace(answer)).getStatAdjust()) {
+						player.getStats().put(ab[index], player.getStats().get(ab[index]) + value);
 						index++;
 					}
 
 					send("", client);
+					
 					step++;
+					
+					if( edit ) { edit = false; step = 5; }
 				}
 				else if (step == 2) {
-					debug("Entering Step " + step);
 					switch(answer) {
 					case 1:
 						player.setGender('F');
@@ -7034,20 +7055,38 @@ public class MUDServer implements MUDServerI, LoggerI {
 					send("Player Gender set to: " + player.getGender(), client);
 					send("", client);
 					step++;
+					
+					if( edit ) { edit = false; step = 5; }
 				}
 				else if (step == 3) {
-					debug("Entering Step " + step);
 					player.setPClass(Classes.getClass(answer));
 					send("Player Class set to: " + player.getPClass(), client);
 					send("", client);
 					step++;
+					
+					if( edit ) { edit = false; step = 5; }
 				}
-				else if (step == 4) {
-					debug("Entering Step " + step);
+				else if(step == 4) {
+					
+					if( answer >= 1 && answer <= 9 ) {
+						player.setAlignment(Alignments.values()[answer]);
+						send("Player Alignment set to: " + player.getAlignment(), client);
+						send("", client);
+						step++;
+						
+						if( edit ) { edit = false; step = 5; }
+					}
+					else {
+						send("Invalid Alignment Selection. Try Again.", client);
+						send("", client);
+					}
+				}
+				else if (step == 5) {
 					if (answer == 1) {      // Reset
 						player.setPlayerRace(Races.NONE);
 						player.setGender('N');
 						player.setPClass(Classes.NONE);
+						player.setAlignment(Alignments.NONE);
 
 						//reset_character(player); // reset character data to defaults
 
@@ -7057,14 +7096,16 @@ public class MUDServer implements MUDServerI, LoggerI {
 						step = 1;
 					}
 					else if (answer == 2) { // Edit
-						step = 5;
+						step = 6;
 					}
 					else if (answer == 3) { // Exit
 						// not sure whether I should do the above steps on the spot
 						// or in this function below, by passing it the appropriate classes
 						// I suppose either is doable
-
+						
+						client.write("Generating player stats, etc...");
 						//generate_character(player); // generate basic character data based on choices
+						client.write("Done.\n");
 
 						step = 0;
 						answer = 0;
@@ -7079,29 +7120,40 @@ public class MUDServer implements MUDServerI, LoggerI {
 
 						send("Exiting...", client);
 
-						return new cgData(-1, -1, -1);
+						return new cgData(-1, -1, -1, false);
 					}
 				}
-				else if (step == 5) {
-					debug("Entering Step " + step);
-
+				else if (step == 6) {
 					switch(answer) {
 					case 1:
 						client.write("Player Race: " + player.getPRace() + "\n");
+						edit = true;
 						step = 1;
 						break;
 					case 2:
 						client.write("Player Gender: " + player.getGender() + "\n");
+						edit = true;
 						step = 2;
 						break;
 					case 3:
 						client.write("Player Class: " + player.getPClass() + "\n");
+						edit = true;
 						step = 3;
 						break;
+					case 4:
+						client.write("Player Alignment: " + player.getAlignment() + "\n");
+						edit = true;
+						step = 4;
+						break;
+					case 5:
+						client.write("Abort Edit\n");
+						edit = false;
+						step = 5;
 					default:
 						break;
 					}
 				}
+				
 				t = 0;
 				debug("T is now " + t);
 			}
@@ -7110,7 +7162,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 			}
 		}
 
-		return new cgData(t, step, answer);
+		return new cgData(t, step, answer, edit);
 	}
 
 	/**
@@ -9299,7 +9351,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 	{
 		if (debug == 1) // debug enabled
 		{
-			if (debugLevel >= tDebugLevel) {
+			if (debugLevel >= tDebugLevel) { // current debug level is to the specified one
 				System.out.println(data);
 				if ( logging ) {
 					debugLog.writeln(("" + data).trim()); // convert to string and strip extra whitespace
@@ -9391,8 +9443,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 	}
 
 	/**
-                                broadcast("", r);
-                                debug("message sent");
 	 * Mode setting for players to indicate a state.
 	 * 
 	 * Normal - normal play

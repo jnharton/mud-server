@@ -31,10 +31,12 @@ public class cgData {
 	public int t;
 	public int step;
 	public int answer;
+	public boolean edit;
 
-	public cgData(int t, int step, int answer) {
+	public cgData(int t, int step, int answer, boolean edit) {
 		this.t = t;
 		this.step = step;
 		this.answer = answer;
+		this.edit = edit;
 	}
 }
