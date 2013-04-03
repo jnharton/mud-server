@@ -66,6 +66,18 @@ public class Portal extends Exit {
 		this.destination = pDestination;
 		this.active = false;
 	}
+	
+	public Portal(PortalType pType, int pOrigin, int pDestination) {
+		super(ExitType.PORTAL);
+		this.type = pType;
+		this.key = null;
+		
+		this.location = pOrigin;
+		
+		this.origin = pOrigin;
+		this.destination = pDestination;
+		this.active = true;
+	}
 
 	// typed portal (default is active)
 	public Portal(PortalType pType, int pOrigin, int[] pDestinations) {
@@ -212,11 +224,11 @@ public class Portal extends Exit {
 	@Override
 	public String toDB() {
 		String[] output = new String[8];
-		output[0] = this.getDBRef() + "";    // portal database reference number
-		output[1] = this.getName();                // portal name
-		output[2] = this.getFlagsAsString();               // portal flags
-		output[3] = this.getDesc();                // portal description
-		output[4] = this.getLocation() + ""; // portal location (a.k.a source)
+		output[0] = this.getDBRef() + "";      // database reference number
+		output[1] = this.getName();            // name
+		output[2] = this.getFlagsAsString();   // flags
+		output[3] = this.getDesc();            // description
+		output[4] = this.getLocation() + "";   // portal location (a.k.a source)
 		if (this.type == PortalType.STD) {
 			output[5] = this.destination + ""; // portal destination
 		}
@@ -230,7 +242,6 @@ public class Portal extends Exit {
 		output[6] = this.getExitType().ordinal() + ""; // exit type
 		output[7] = type.ordinal() + "";               // portal type
 		
-		String output1 = Utils.join(output, "#");  //
-		return output1;
+		return Utils.join(output, "#");
 	}
 }

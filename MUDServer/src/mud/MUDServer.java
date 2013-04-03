@@ -64,6 +64,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.HashMap;
 import java.util.Timer;
+import java.util.TimerTask;
 
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -3423,8 +3424,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 			/*
 			 * list all the seasons
 			 */
-			//return this.name + ": " + months[beginMonth - 1] + " to " + months[endMonth - 1];
-
 			for (final Seasons s : Seasons.values()) {
 				send(s + ": " + MONTH_NAMES[s.beginMonth - 1] + " to " + MONTH_NAMES[s.endMonth - 1], client);
 			}
@@ -3468,9 +3467,10 @@ public class MUDServer implements MUDServerI, LoggerI {
 			for(EffectTimer etimer : getEffectTimers( getPlayer( client ) )) {
 				send("E " + etimer.getEffect().getName() + " ( " + etimer.getTimeRemaining() + " s )", client);
 			}
-			for(SpellTimer stimer : getSpellTimers( getPlayer( client ) )) {
+			checkTimers();
+			/*for(SpellTimer stimer : getSpellTimers( getPlayer( client ) )) {
 				send("S " + stimer.getSpell().getName() + " ( " + stimer.getTimeRemaining() + " s )", client);
-			}
+			}*/
 		}
 		else if( arg.toLowerCase().equals("udbnstack") ) {
 			send("Functionality Removed", client);
@@ -11593,5 +11593,54 @@ public class MUDServer implements MUDServerI, LoggerI {
 
 	public List<EffectTimer> getEffectTimers(Player player) {
 		return effectTimers.get(player);
+	}
+	
+	// check for expired timers and clear them (player)
+	public void checkTimers(Player player) {
+		List<EffectTimer> etl = getEffectTimers(player);
+
+		List<EffectTimer> eff_timers = new LinkedList<EffectTimer>();
+
+		for(EffectTimer etimer : etl) {
+			if( etimer.getTimeRemaining() <= 0 ) {
+				eff_timers.add(etimer);
+			}
+		}
+
+		for(EffectTimer etimer : eff_timers) {
+			player.removeEffect(etimer.getEffect().getName());
+			send(etimer.getEffect().getName() + " effect removed.", player.getClient());
+			etl.remove(etimer);
+		}
+
+		eff_timers.clear();
+	}
+
+	// check for expired timers and clear them
+	public void checkTimers() {
+		List<EffectTimer> eff_timers = new LinkedList<EffectTimer>();
+
+		for(Entry<Player, List<EffectTimer>> entry : effectTimers.entrySet()) {
+			Player player = entry.getKey();
+			List<EffectTimer> etl = entry.getValue();
+			
+			for(EffectTimer etimer : etl) {
+				if( etimer.getTimeRemaining() <= 0 ) {
+					eff_timers.add(etimer);
+				}
+			}
+			
+			for(EffectTimer etimer : eff_timers) {
+				player.removeEffect(etimer.getEffect().getName());
+				send(etimer.getEffect().getName() + " effect removed.", player.getClient());
+				etl.remove(etimer);
+			}
+			
+			eff_timers.clear();
+		}
+	}
+	
+	public void scheduleTask(TimerTask task) {
+		timer.schedule(task, 0L); // immediate scheduling
 	}
 }

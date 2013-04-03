@@ -52,7 +52,7 @@
 51#The Street of Bells#RS#You see nothing.#53#O#10,10,10#-1#
 52#up#E#You see nothing.#7#8#2
 53#Region Parent: Trades Ward#RS#You see nothing.#57#N#10,10,10#-1#
-&54#portal1#E##8#5,182,161,4#1#1
+54#portal1#E##8#5,182,161,4#1#1
 55#down#E#You see nothing.#8#7#2
 56#Region Parent: Forgotten Realms#RS#You see nothing.#2#N#10,10,10#-1#
 57#Region Parent: City of Waterdeep#RS#You see nothing.#56#N#10,10,10#-1#
@@ -235,7 +235,7 @@
 234#leather armor#I#armor#192#0#1#0
 235#leather armor#I#armor#192#0#1#0
 236#leather armor#I#armor#192#0#1#0
-&237#portal#E##8#5#1#0
+237#portal#E##8#5#1#0
 238#Erin#PW#There is nothing to see.#9#28bfaa1c080a7614c887d53d086a9408#12,14,10,12,12,12#127,55,0,0#4#1#8#IC
 239#Potion of Healing#I#A healing potion.#19#8#1#heal+10
 240#A Guide to Waterdeep#I#An infamous guide to Waterdeep, written by the infamous Volothamp Geddarm himself.#19#2#Volothamp Geddarm#A Guide to Waterdeep#0
@@ -256,3 +256,6 @@
 255#Ecturun Meshkal#N#Ecturun is a tall human, wearing heavy plate armor scarred from much battle. He stands stiffly.#245##14,14,14,14,14,14#0,0,0,0#0#3#16#IC
 256#Public Chest#T#A chest.#8#1#*#*
 257#+4 Light Wooden Shield#I#A light wooden shield#8#10#1#4
+258#Planar Parent#RS#The parent room for planar regions#0#N#10,10,10#-1#
+259#Astral Plane#RS#A wide open, evenly lit area of infinite space. It is unnervingly quiet and the view goes on forever.#258#N#10,10,10#-1#
+260#portal#E##259#4#1#0

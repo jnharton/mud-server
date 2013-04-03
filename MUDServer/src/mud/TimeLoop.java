@@ -65,17 +65,18 @@ public class TimeLoop implements Runnable
     }
     
     private void doLoop() {
-    	//incrementSecond();
-    	incrementMinute();
+    	incrementSecond();
+    	//incrementMinute();
     }
     
-    /*private void incrementSecond() {
+    private void incrementSecond() {
     	second += 1;
     	if(second > 59) {
     		second = 0;
     		incrementMinute();
     	}
-    }*/
+    	server.checkTimers();
+    }
     
     private void incrementMinute() {
         minute += 1;

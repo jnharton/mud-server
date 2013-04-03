@@ -156,37 +156,50 @@ public class ObjectLoader {
                     }
                     else if (et == ExitType.PORTAL) {
                         Portal portal;
-
-                        String oPortalType = attr[6];
+                        
+                        int pType = Utils.toInt(attr[7], -1);
+                        PortalType oPortalType = PortalType.values()[pType];
 
                         // here we assume a typed but unkeyed portal
                         //public Portal(PortalType pType, int pOrigin, int[] pDestinations) 
-                        if (oPortalType.equals("S")) { // Standard Portal
+                        if (oPortalType == PortalType.STD) { // Standard Portal
                             int oDestination = Integer.parseInt(attr[5]);
-
+                            
                             portal = new Portal(PortalType.STD, oLocation, oDestination);
+                            portal.setDBRef(oDBRef);          // NOTE: ought to handle this in the constructor
                             portal.setExitType(et);
                             
                             portal.name = attr[1];            // name
-                            portal.coord.setX(1);             // x coordinate
-                            portal.coord.setY(1);             // y coordinate
+                            portal.coord.setX(0);             // x coordinate
+                            portal.coord.setY(0);             // y coordinate
+                            
+                            log.debug("log.debug (db entry): " + portal.toDB(), 2);
                             
                             objectDB.add(portal);
                             objectDB.addExit(portal);
                         }
-                        else if (oPortalType.equals("R")) { // Random Portal
+                        else if (oPortalType == PortalType.RANDOM) { // Random Portal
                             int[] oDestinations = Utils.stringsToInts(attr[5].split(",")); 
 
                             portal = new Portal(PortalType.RANDOM, oLocation, oDestinations);
+                            portal.setDBRef(oDBRef);          // NOTE: ought to handle this in the constructor
                             portal.setExitType(et);
                             
                             portal.name = attr[1];            // name
-                            portal.coord.setX(1);             // x coordinate
-                            portal.coord.setY(1);             // y coordinate
+                            portal.coord.setX(0);             // x coordinate
+                            portal.coord.setY(0);             // y coordinate
+                            
+                            log.debug("log.debug (db entry): " + portal.toDB(), 2);
 
                             objectDB.add(portal);
                             objectDB.addExit(portal);
                         }
+                        else {
+                        	log.debug("log.debug (error): Problem with object #" + oDBRef +  " - invalid PortalType", 2);
+                        }
+                    }
+                    else {
+                    	log.debug("log.debug (error): Problem with object #" + oDBRef, 2);
                     }
                 }
                 // NPC(int tempDBRef, String tempName, String tempDesc, int tempLoc, String tempTitle)
