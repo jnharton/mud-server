@@ -3372,6 +3372,11 @@ public class MUDServer implements MUDServerI, LoggerI {
 			debug = 0;
 			send("Game> Debugging: Off", client);
 		}
+		else if ( arg.toLowerCase().equals("client") ) {
+			/* tell us about ourselves (i.e. which client object we are and our ip address) */
+			send(client, client);
+			send(client.ip(), client);
+		}
 		else if ( arg.toLowerCase().equals("clients") ) {
 			int cn = 0;
 			for (Client c : s.getClients()) {
@@ -3404,6 +3409,51 @@ public class MUDServer implements MUDServerI, LoggerI {
 			 */
 			objectDB.dump(client, this);
 		}
+		else if ( arg.toLowerCase().equals("holidays") ) {
+			/* list the holidays */
+			for (Map.Entry<String, Date> entry : holidays.entrySet()) {
+				debug(entry.getKey() + ": " + MONTH_NAMES[((Date) entry.getValue()).getMonth() - 1] + " " + ((Date) entry.getValue()).getDay());
+				send(entry.getKey() + ": " + MONTH_NAMES[((Date) entry.getValue()).getMonth() - 1] + " " + ((Date) entry.getValue()).getDay(), client);
+			}
+		}
+		else if ( args2[0].toLowerCase().equals("listen") ) {
+			final int dbref = Utils.toInt(args2[1], -1);
+			final Room room = dbref != -1 ? getRoom(dbref) : getRoom(args2[1]);
+
+			if (room != null) {
+				StringBuffer listenList = new StringBuffer();
+
+				for (final Player player : room.getListeners()) {
+					listenList.append(player.getName() + ", ");
+				}
+
+				send("Listeners: " + listenList.toString(), client);
+			}
+		}
+		else if ( arg.toLowerCase().equals("position") || arg.toLowerCase().equals("pos") ) {
+			Player player = getPlayer(client);
+
+			send("X: " + player.getXCoord(), client);
+			send("Y: " + player.getYCoord(), client);
+			send("Moving: " + player.isMoving(), client);
+		}
+		else if( arg.toLowerCase().equals("portals") ) {
+			send("--- " + Utils.padRight("Portals", '-', 68), client);
+			for (final Portal portal : portals) {
+				String state = "inactive";
+				if( portal.isActive() ) { state = "active"; }
+				send("P " + portal.getName() + " (#" + portal.getDBRef() + ") [ " + state + " ]", client);
+			}
+			//send("" + Utils.padRight("", '-', 78), client);
+		}
+		else if ( arg.toLowerCase().equals("seasons") ) {
+			/*
+			 * list all the seasons
+			 */
+			for (final Seasons s : Seasons.values()) {
+				send(s + ": " + MONTH_NAMES[s.beginMonth - 1] + " to " + MONTH_NAMES[s.endMonth - 1], client);
+			}
+		}
 		else if ( arg.toLowerCase().equals("timedata") ) {
 			// get current data
 			Calendar rightNow = Calendar.getInstance();
@@ -3428,47 +3478,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 
 			// Time Scale (the relative number of seconds to an-game minute)
 			send("Time Scale: 1 minute/" + (game_time.getScale() / 1000) + " seconds", client);
-		}
-		else if ( arg.toLowerCase().equals("seasons") ) {
-			/*
-			 * list all the seasons
-			 */
-			for (final Seasons s : Seasons.values()) {
-				send(s + ": " + MONTH_NAMES[s.beginMonth - 1] + " to " + MONTH_NAMES[s.endMonth - 1], client);
-			}
-		}
-		else if ( arg.toLowerCase().equals("holidays") ) {
-			/* list the holidays */
-			for (Map.Entry<String, Date> entry : holidays.entrySet()) {
-				debug(entry.getKey() + ": " + MONTH_NAMES[((Date) entry.getValue()).getMonth() - 1] + " " + ((Date) entry.getValue()).getDay());
-				send(entry.getKey() + ": " + MONTH_NAMES[((Date) entry.getValue()).getMonth() - 1] + " " + ((Date) entry.getValue()).getDay(), client);
-			}
-		}
-		else if ( arg.toLowerCase().equals("client") ) {
-			/* tell us about ourselves (i.e. which client object we are and our ip address) */
-			send(client, client);
-			send(client.ip(), client);
-		}
-		else if ( args2[0].toLowerCase().equals("listen") ) {
-			final int dbref = Utils.toInt(args2[1], -1);
-			final Room room = dbref != -1 ? getRoom(dbref) : getRoom(args2[1]);
-
-			if (room != null) {
-				StringBuffer listenList = new StringBuffer();
-
-				for (final Player player : room.getListeners()) {
-					listenList.append(player.getName() + ", ");
-				}
-
-				send("Listeners: " + listenList.toString(), client);
-			}
-		}
-		else if ( arg.toLowerCase().equals("position") || arg.toLowerCase().equals("pos") ) {
-			Player player = getPlayer(client);
-
-			send("X: " + player.getXCoord(), client);
-			send("Y: " + player.getYCoord(), client);
-			send("Moving: " + player.isMoving(), client);
 		}
 		else if( arg.toLowerCase().equals("timers") ) {
 			send("Timers", client);
@@ -9678,6 +9687,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 			debug("addMessage, sent message");
 		}
 		else {
+			getRoom(msg.getLocation()).fireEvent(msg.getMessage());
 			for (final Player bystander : players) {
 				if (bystander.getLocation() == msg.getLocation())
 				{
@@ -10202,80 +10212,86 @@ public class MUDServer implements MUDServerI, LoggerI {
 		 */
 
 		try {
-			if (effect.getName().contains("heal")) {
-				Integer amount;
-				String work = effect.getName().substring(effect.getName().indexOf("+") + 1, effect.getName().length());
-
-				try {
-					amount = Integer.parseInt(work);
-					debug("Amount of Healing: " + amount);
-					debug("Hitpoints: " + player.getHP());
-					debug("Hitpoints (total): " + player.getTotalHP());
-
-					// if max is 10 and have 10, then no healing
-					int diff = player.getTotalHP() - player.getHP();
-
-					if (diff > amount) {
-						player.setHP(amount);
-						send("Healing (+" + amount + ") effect applied!\nYou gained " + amount + " hit points.", client);
-					}
-
-					else if (diff < amount) {
-						player.setHP(diff);
-						if (diff < amount) {
-							send("Healing " + "(+" + amount + ") effect applied!\nYou gained "  + diff + " hit points.", client);
-						}
-					}
-					else if (diff == amount) {
-						player.setHP(amount);
-						send("Healing (+" + amount + ") effect applied!\nYou gained " + amount + " hit points.", client);
-					}
-				}
-				catch( NumberFormatException nfe ) {
-					debug(nfe.getMessage()); // send a debug message
-					amount = 0;
-				}
-			}
-			else if (effect.getName().contains("dam")) {
-				int damage;
-				String work = effect.getName().substring(effect.getName().indexOf("-") + 1, effect.getName().length());
-				try {
-					damage = Integer.parseInt(work);
-					debug("Amount of Damage: " + damage);
-					debug("Hitpoints: " + player.getHP());
-					debug("Hitpoints (total): " + player.getTotalHP());
-
-					player.setHP(damage);
-					send("Damage " + "(-" + damage + ") effect applied!\nYou lost "  + damage + " hit points.", client);
-				}
-				catch( NumberFormatException nfe ) {
-					debug(nfe.getMessage()); // send a debug message
-					damage = 0;
-				}
-			}
-			// covers dispel case for now
-			// will need serious work later
-			else if (effect.getName().contains("!any")) {
-				/*
-				 * if I mean to use this for different kinds
-				 * of dispelling I need a rule
-				 */
-				player.removeEffects();
-				send("All Effects removed!", client);
-			}
 			// remove effect if ! is prefixed to it
-			else if (effect.getName().contains("!")) {
-				String work = effect.getName();
-				String effectName = work.substring(work.indexOf("!") + 1, work.length());
-				//String effectName = effect.getName().substring(effect.getName().indexOf("!") + 1, effect.getName().length());
+			if (effect.getName().contains("!")) {
+				// covers dispel case for now
+				// will need serious work later
+				if ( effect.getName().equals("!any") ) {
+					/*
+					 * if I mean to use this for different kinds
+					 * of dispelling I need a rule
+					 */
+					player.removeEffects();
+					send("All Effects removed!", client);
+				}
+
+				String temp = effect.getName();
+				String effectName = temp.substring(temp.indexOf("!") + 1, temp.length());
 				player.removeEffect(effectName);
 				send(effectName + " effect removed!", client);
 			}
-			// add effects
 			else {
-				player.addEffect(effect.getName());
-				send(effect.getName() + " Effect applied to " + player.getName(), client);
-				debug("Game> " + "added " + effect.getName() + " to " + player.getName() + ".");
+				if ( effect.getName().contains("heal") ) {
+					Integer amount;
+					String temp = effect.getName().substring(effect.getName().indexOf("+") + 1, effect.getName().length());
+
+					try {
+						amount = Integer.parseInt(temp);
+						debug("Amount of Healing: " + amount);
+						debug("Hitpoints: " + player.getHP());
+						debug("Hitpoints (total): " + player.getTotalHP());
+
+						// if max is 10 and have 10, then no healing
+						int diff = player.getTotalHP() - player.getHP();
+
+						if (diff >= amount) {
+							player.setHP(amount);
+							send("Healing (+" + amount + ") effect applied!\nYou gained " + amount + " hit points.", client);
+						}
+						else if (diff < amount) {
+							player.setHP(diff);
+							if (diff < amount) {
+								send("Healing " + "(+" + amount + ") effect applied!\nYou gained "  + diff + " hit points.", client);
+							}
+						}
+						/*else if (diff == amount) {
+							player.setHP(amount);
+							send("Healing (+" + amount + ") effect applied!\nYou gained " + amount + " hit points.", client);
+						}*/
+					}
+					catch( NumberFormatException nfe ) {
+						debug(nfe.getMessage()); // send a debug message
+						amount = 0;
+					}
+				}
+				else if (effect.getName().contains("dam")) {
+					Integer damage;
+					String work = effect.getName().substring(effect.getName().indexOf("-") + 1, effect.getName().length());
+					
+					try {
+						damage = Integer.parseInt(work);
+						debug("Amount of Damage: " + damage);
+						debug("Hitpoints: " + player.getHP());
+						debug("Hitpoints (total): " + player.getTotalHP());
+
+						player.setHP(damage);
+						send("Damage " + "(-" + damage + ") effect applied!\nYou lost "  + damage + " hit points.", client);
+					}
+					catch( NumberFormatException nfe ) {
+						debug(nfe.getMessage()); // send a debug message
+						damage = 0;
+					}
+				}
+				// add effects
+				else {
+					String effectName = effect.getName();
+					if( player.hasEffect( effectName ) ) {
+						player.removeEffect( effectName );
+					}
+					player.addEffect( effectName );
+					send(effectName + " Effect applied to " + player.getName(), client);
+					debug("Game> " + "added " + effectName + " to " + player.getName() + ".");
+				}
 			}
 
 			player.updateCurrentState();
@@ -11577,23 +11593,22 @@ public class MUDServer implements MUDServerI, LoggerI {
 		}
 
 		int messages = 0;
+		
+		MailBox mb = player.getMailBox();
 
 		// for each segment which could contain mail
 		for (int m = 0; m < lines.length - 1; m = m + 3) {
 			// create mail object
 			Mail mail = new Mail(msg, lines[m], lines[m + 1], lines[m + 2], lines[m + 3].charAt(0));
 
-			// counting unread messages
 			// need to consider fixing this, I already stored this value in a flag character in the mail object
 			// which happens to be a private variable at the moment
 			if (mail.getFlag() == 'U') {
-				// mark the mail object unread
-				mail.markUnread();
-				// increase the unread count
-				messages++;
+				mail.markUnread(); // mark the mail object unread
+				messages++;        // increase the unread count
 			}
-			// add the mail object to the mailbox
-			player.getMailBox().add(mail);
+			
+			mb.add(mail); // add the mail object to the mailbox
 		}
 	}
 
@@ -11624,11 +11639,12 @@ public class MUDServer implements MUDServerI, LoggerI {
 		}
 	}
 
-	public void compare(Item item1, Item item2, Object...criteria) {
+	public Item compare(Item item1, Item item2, Object...criteria) {
 		// comparisons:
 		// item type
 		// item wear
 		// item value
+		return null;
 	}
 
 	private void execTrigger(Trigger trig, Client client) {
@@ -11692,5 +11708,9 @@ public class MUDServer implements MUDServerI, LoggerI {
 	
 	public void scheduleTask(TimerTask task) {
 		timer.schedule(task, 0L); // immediate scheduling
+	}
+	
+	public List<Portal> getPortals() {
+		return this.portals;
 	}
 }

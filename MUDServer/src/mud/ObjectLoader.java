@@ -175,6 +175,8 @@ public class ObjectLoader {
                             
                             log.debug("log.debug (db entry): " + portal.toDB(), 2);
                             
+                            parent.getPortals().add(portal);
+                            
                             objectDB.add(portal);
                             objectDB.addExit(portal);
                         }
@@ -190,7 +192,9 @@ public class ObjectLoader {
                             portal.coord.setY(0);             // y coordinate
                             
                             log.debug("log.debug (db entry): " + portal.toDB(), 2);
-
+                            
+                            parent.getPortals().add(portal);
+                            
                             objectDB.add(portal);
                             objectDB.addExit(portal);
                         }

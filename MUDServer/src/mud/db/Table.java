@@ -45,6 +45,10 @@ public class Table implements Iterable<TableEntry> {
 			this.entries.add(te);
 		}
 	}
+	
+	public TableEntry get(int index) {
+		return this.entries.get(index);
+	}
 
 	@Override
 	public Iterator<TableEntry> iterator() {
@@ -74,5 +78,11 @@ public class Table implements Iterable<TableEntry> {
 		public void remove() {
 			throw new UnsupportedOperationException();
 		}
+	}
+	
+	public static void main(String[] args) {
+		Table table = new Table();
+		table.add(new TableEntry(0, "test", "test", "test", "test"));
+		System.out.println(table.get(0));
 	}
 }

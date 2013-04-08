@@ -3,6 +3,8 @@ package mud.objects;
 import java.util.ArrayList;
 import java.util.Random;
 
+import mud.events.SayEvent;
+import mud.events.SayEventListener;
 import mud.objects.Player;
 import mud.utils.Utils;
 
@@ -29,7 +31,7 @@ import mud.utils.Utils;
  *
  */
 //public class Portal extends Exit implements Usable<Portal> {
-public class Portal extends Exit {
+public class Portal extends Exit implements SayEventListener {
 	private PortalType type;                        // type of portal
 	private Object key;                             // if it's locked with a key what is it
 	private int origin;                             // portal origin
@@ -140,22 +142,48 @@ public class Portal extends Exit {
 		}
 	}
 	
+	/**
+	 * Get the Portal's key
+	 * 
+	 * @return
+	 */
 	public Object getKey() {
 		return this.key;
 	}
 	
+	/**
+	 * Set the Portal's key
+	 * 
+	 * @param newKey
+	 */
 	public void setKey(Object newKey) {
 		this.key = newKey;
 	}
-
+	
+	/**
+	 * Get the origin of the portal
+	 * 
+	 * @return
+	 */
 	public int getOrigin() {
 		return this.origin;
 	}
-
+	
+	/**
+	 * Set the origin of the portal
+	 * 
+	 * @param newOrigin
+	 */
 	public void setOrigin(int newOrigin) {
 		this.origin = newOrigin;
 	}
 	
+	/**
+	 * Set the Portal's destination, or add the destination
+	 * to the list of possible destination
+	 * 
+	 * @param newDestination
+	 */
 	@Override
 	public void setDestination(int newDestination) {
 		if (destinations == null) {
@@ -166,6 +194,11 @@ public class Portal extends Exit {
 		}
 	}
 	
+	/**
+	 * Get the portal's or a destination
+	 * 
+	 * @return
+	 */
 	@Override
 	public int getDestination() {
 		if (this.type == PortalType.RANDOM) {
@@ -243,5 +276,10 @@ public class Portal extends Exit {
 		output[7] = type.ordinal() + "";               // portal type
 		
 		return Utils.join(output, "#");
+	}
+
+	@Override
+	public void handleSayEvent(SayEvent se) {
+		activate(se.getMessage());
 	}
 }

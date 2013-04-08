@@ -1,8 +1,10 @@
 package mud.objects;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -13,6 +15,8 @@ import mud.Triggers;
 
 //import mud.miscellaneous.Atmosphere;
 
+import mud.events.SayEvent;
+import mud.events.SayEventListener;
 import mud.objects.Thing;
 import mud.utils.Utils;
 import mud.weather.Weather;
@@ -52,6 +56,7 @@ public class Room extends MUDObject
 	//private Atmosphere atmosphere = new Atmosphere();         // the atmosphere of the room (weather related)
 	//private Terrain terrain;                                  // terrain type of the room (affects movement speed?)
 	
+	private List<SayEventListener> _listeners = new ArrayList<SayEventListener>();
 	private ArrayList<Player> listeners;
 	
 	private HashMap<Triggers, List<Trigger>> triggers = new HashMap<Triggers, List<Trigger>>() {
@@ -227,7 +232,15 @@ public class Room extends MUDObject
 	public void removeListener(Player player) {
 		listeners.remove(player);
 	}
-	
+
+
+	public synchronized void addSayEventListener(SayEventListener listener)  {
+		_listeners.add(listener);
+	}
+	public synchronized void removeSayEventListener(SayEventListener listener)   {
+		_listeners.remove(listener);
+	}
+
 	public List<Trigger> getTriggers(Triggers triggerType) {
 		return this.triggers.get(triggerType);
 	}
@@ -257,5 +270,16 @@ public class Room extends MUDObject
 
 	public String toString() {
 		return "";
+	}
+
+
+	// call this method whenever you want to notify
+	//the event listeners of the particular event
+	public synchronized void fireEvent(String message) {
+		SayEvent event = new SayEvent(this, message);
+		Iterator<SayEventListener> i = _listeners.iterator();
+		while(i.hasNext())  {
+			 i.next().handleSayEvent(event);
+		}
 	}
 }

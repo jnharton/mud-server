@@ -1,5 +1,7 @@
 package mud.db;
 
+import java.util.Arrays;
+
 public class TableEntry implements Comparable<TableEntry>{
 	public Integer id;
 	int cols;
@@ -22,5 +24,10 @@ public class TableEntry implements Comparable<TableEntry>{
 		else { // implied that this.id < arg0.id
 			return -1;
 		}
+	}
+	
+	@Override
+	public String toString() {
+		return this.id + " " + Arrays.asList(this.columns);
 	}
 }

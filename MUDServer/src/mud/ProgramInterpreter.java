@@ -39,6 +39,20 @@ public class ProgramInterpreter {
 				}
 				tokens.add("" + ch);
 				break;
+			case '(':
+				if(sb.length() > 0) {
+					tokens.add(sb.toString());
+					sb.delete(0, sb.length());
+				}
+				tokens.add("" + ch);
+				break;
+			case ')':
+				if(sb.length() > 0) {
+					tokens.add(sb.toString());
+					sb.delete(0, sb.length());
+				}
+				tokens.add("" + ch);
+				break;
 			case ':':
 				if(sb.length() > 0) {
 					tokens.add(sb.toString());
@@ -51,7 +65,7 @@ public class ProgramInterpreter {
 					tokens.add(sb.toString());
 					sb.delete(0, sb.length());
 				}
-				//tokens.add("" + ch);
+				tokens.add("" + ch);
 				break;
 			default:
 				sb.append(ch);
@@ -249,5 +263,6 @@ public class ProgramInterpreter {
 	public static void main(String[] args) {
 		ProgramInterpreter p = new ProgramInterpreter(null);
 		p.parse("{distance:(0,0),(1,1)}");
+		p.parse("{rainbow:output this string in rainbow colors}");
 	}
 }
