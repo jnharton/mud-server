@@ -15,6 +15,7 @@ import mud.Triggers;
 
 //import mud.miscellaneous.Atmosphere;
 
+import mud.events.EventSource;
 import mud.events.SayEvent;
 import mud.events.SayEventListener;
 import mud.objects.Thing;
@@ -27,7 +28,7 @@ import mud.weather.Weather;
  * @author Jeremy N. Harton
  * 
  */
-public class Room extends MUDObject
+public class Room extends MUDObject implements EventSource
 {
 	private enum Terrain { FOREST, MARSH, HILLS, MOUNTAIN, DESERT, PLAINS, AQUATIC };
 

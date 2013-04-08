@@ -6129,13 +6129,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 				System.out.println("MUDObject: " + m.getName());
 
 				if (m instanceof Potion) { use_potion( (Potion) m, client); }      // potion handling
-				else if (m instanceof Portal) {
-					use_portal( (Portal) m, client); // portal handling
-
-					int location = getPlayer(client).getLocation();
-					Room room = getRoom(location);
-					look(room, client);
-				}
+				else if (m instanceof Portal) { use_portal( (Portal) m, client); } // portal handling
 				else if (m instanceof Wand) { use_wand( (Wand) m , client); }      // wand handling
 			}
 			catch(NullPointerException npe) {
@@ -8140,7 +8134,11 @@ public class MUDServer implements MUDServerI, LoggerI {
 	 */
 	public Room getRoom(final Integer dbref)
 	{
-		return objectDB.getRoomById(dbref);
+		return objectDB.getRoomById( dbref );
+	}
+	
+	public Room getRoom(Player player) {
+		return objectDB.getRoomById( player.getLocation() );
 	}
 
 	/**
@@ -10996,8 +10994,12 @@ public class MUDServer implements MUDServerI, LoggerI {
 		final int portalDest = portal.getDestination();
 		final boolean playerAtPortal = portal.coord.getX() == player.coord.getX() && portal.coord.getY() == player.coord.getY();
 		final boolean missingRequiredKey = portal.requiresKey() && !portal.hasKey( player );
+		
+		boolean success = false;
 
 		System.out.println("Portal: " + portal.getName());
+		
+		debug("Old Location: " + player.getLocation());
 
 		// if the portal is keyed and is some kind of thing/item, then I need to check before permitting use
 		if (!playerAtPortal || missingRequiredKey) {
@@ -11008,11 +11010,28 @@ public class MUDServer implements MUDServerI, LoggerI {
 			player.setLocation(portalDest);
 
 			debug("Portal( " + player.getName() + ", " + portalOrigin + ", " + portalDest + " ): success");
+			
+			success = true;
 		}
 		else if (portalDest == room.getDBRef()) {
 			player.setLocation(portalOrigin);
 
 			debug("Portal( " + player.getName() + ", " + portalDest + ", " + portalOrigin + " ): success");
+			
+			success = true;
+		}
+		
+		if( success ) {
+			send("You use the portal.");
+			// tell us about the new location
+			int location = getPlayer(client).getLocation();
+			debug("New Location: " + location);
+			
+			Room room1 = getRoom(location);
+			look(room1, client);
+		}
+		else {
+			send("This portal isn't active?", client);
 		}
 	}
 

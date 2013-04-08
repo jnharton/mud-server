@@ -1,14 +1,12 @@
 package mud.events;
 
 import java.util.EventObject;
-import mud.objects.Room;
 
-public class SayEvent extends EventObject {
+public class PortalEvent extends EventObject {
 	private String message;
 	
-	public SayEvent(Room source, String message) {
+	public PortalEvent(Object source) {
 		super(source);
-		this.message = message;
 	}
 	
 	public String getMessage() {

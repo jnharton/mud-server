@@ -175,7 +175,11 @@ public class ObjectLoader {
                             
                             log.debug("log.debug (db entry): " + portal.toDB(), 2);
                             
+                            portal.setKey("test");
+                            
                             parent.getPortals().add(portal);
+                            parent.getRoom(portal.getOrigin()).addSayEventListener(portal);
+                            parent.getRoom(portal.getDestination()).addSayEventListener(portal);
                             
                             objectDB.add(portal);
                             objectDB.addExit(portal);
@@ -191,9 +195,12 @@ public class ObjectLoader {
                             portal.coord.setX(0);             // x coordinate
                             portal.coord.setY(0);             // y coordinate
                             
+                            portal.setKey("test");
+                            
                             log.debug("log.debug (db entry): " + portal.toDB(), 2);
                             
                             parent.getPortals().add(portal);
+                            parent.getRoom(portal.getOrigin()).addSayEventListener(portal);
                             
                             objectDB.add(portal);
                             objectDB.addExit(portal);

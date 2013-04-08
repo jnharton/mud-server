@@ -1,10 +1,16 @@
 package mud.objects;
 
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Random;
 
+import mud.events.EventSource;
+import mud.events.PortalEvent;
+import mud.events.PortalEventListener;
 import mud.events.SayEvent;
 import mud.events.SayEventListener;
+
 import mud.objects.Player;
 import mud.utils.Utils;
 
@@ -31,7 +37,7 @@ import mud.utils.Utils;
  *
  */
 //public class Portal extends Exit implements Usable<Portal> {
-public class Portal extends Exit implements SayEventListener {
+public class Portal extends Exit implements EventSource, SayEventListener {
 	private PortalType type;                        // type of portal
 	private Object key;                             // if it's locked with a key what is it
 	private int origin;                             // portal origin
@@ -41,6 +47,8 @@ public class Portal extends Exit implements SayEventListener {
 	private boolean requiresKey = false;            // does it require a key?
 
 	private static Random generator = new Random();
+	
+	private List<PortalEventListener> _listeners = new ArrayList<PortalEventListener>();
 
 	// standard, "always open" portal (default is active)
 	public Portal(int pOrigin, int pDestination) {
@@ -257,20 +265,20 @@ public class Portal extends Exit implements SayEventListener {
 	@Override
 	public String toDB() {
 		String[] output = new String[8];
-		output[0] = this.getDBRef() + "";      // database reference number
-		output[1] = this.getName();            // name
-		output[2] = this.getFlagsAsString();   // flags
-		output[3] = this.getDesc();            // description
-		output[4] = this.getLocation() + "";   // portal location (a.k.a source)
+		output[0] = this.getDBRef() + "";              // database reference number
+		output[1] = this.getName();                    // name
+		output[2] = this.getFlagsAsString();           // flags
+		output[3] = this.getDesc();                    // description
+		output[4] = this.getLocation() + "";           // portal location (a.k.a source)
 		if (this.type == PortalType.STD) {
-			output[5] = this.destination + ""; // portal destination
+			output[5] = this.destination + "";         // portal destination
 		}
 		else if (this.type == PortalType.RANDOM) {
 			final ArrayList<String> d = new ArrayList<String>();
 			for (int dest : this.destinations) {
 				d.add(dest + "");
 			}
-			output[5] = Utils.join(d, ","); // portal destination(s)
+			output[5] = Utils.join(d, ",");            // portal destination(s)
 		}
 		output[6] = this.getExitType().ordinal() + ""; // exit type
 		output[7] = type.ordinal() + "";               // portal type
@@ -280,6 +288,20 @@ public class Portal extends Exit implements SayEventListener {
 
 	@Override
 	public void handleSayEvent(SayEvent se) {
-		activate(se.getMessage());
+		if( active ) {
+			deactivate(se.getMessage() );
+		}
+		else {
+			activate(se.getMessage());
+		}
+	}
+
+	@Override
+	public void fireEvent(String message) {
+		PortalEvent event = new PortalEvent(this);
+		Iterator<PortalEventListener> i = _listeners.iterator();
+		while(i.hasNext())  {
+			 i.next().handlePortalEvent(event);
+		}
 	}
 }
