@@ -292,15 +292,16 @@ public class MUDServer implements MUDServerI, LoggerI {
 
 	// Help Files stored as string arrays, indexed by name
 	private HashMap<String, String[]> helpMap = new HashMap<String, String[]>();
+	private HashMap<String, String[]> topicMap = new HashMap<String, String[]>();
 
 	private ArrayList<Account> accounts;      // ArrayList of Accounts (UNUSED)
 
 	// "Security" Stuff
-	private ArrayList<String> banlist;        // ArrayList of banned ip addresses
+	private ArrayList<String> banlist;        // ArrayList of banned IP addresses
+	private ArrayList<String> forbiddenNames; // ArrayList of forbidden names for players/characters
 
 	// Other
 	private ArrayList<Effect> effectTable;    // ArrayList of existing effects (can be reused many places)
-	private ArrayList<String> forbiddenNames; // ArrayList of forbidden names for players/characters
 
 	// cmd lists
 	private String[] user_cmds = new String[] {
@@ -669,6 +670,15 @@ public class MUDServer implements MUDServerI, LoggerI {
 		}
 		System.out.println("Help Files Loaded!");
 
+		// topic file loading
+		System.out.print("Loading Topic Files... ");
+		for (final String topicFileName : generateTopicFileIndex())
+		{
+			final String[] topicfile = Utils.loadStrings(this.HELP_DIR + topicFileName);
+			topicMap.put(topicfile[0], topicfile);
+		}
+		System.out.println("Topic Files Loaded!");
+
 		// Set Up Colors
 
 		// set up the ANSI color hashmap, color name -> ansi escape code
@@ -685,6 +695,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 		// set up display colors
 		this.displayColors.put("exit", "green");
 		this.displayColors.put("player", "magenta");
+		this.displayColors.put("npc", "cyan");
 		this.displayColors.put("thing", "yellow");
 		this.displayColors.put("room", "green");
 		debug("Object Colors: " + displayColors.entrySet()); // DEBUG
@@ -2531,16 +2542,19 @@ public class MUDServer implements MUDServerI, LoggerI {
 	 */
 	private void cmd_ban(final String arg, final Client client) {
 		if (!arg.equals("")) {
-			final Player player1 = getPlayer(arg); // player name based search (banning a player should ban his account as well
-			final Client client1 = player1.getClient();
-			if (player1 != null) {
+			final Player player = getPlayer(arg); // player name based search (banning a player should ban his account as well
+			final Client client1 = player.getClient();
+			if (player != null) {
 				// add the player's ip address to the banlist (IP address ban)
-				banlist.add(client1.ip());
+				//banlist.add(client1.ip());
 
 				// if they have an account, suspend the account
-				Account acct = getAccount(player1);
+				Account acct = getAccount(player);
 				if(acct != null) {
 					acct.setStatus(Account.Status.SUSPENDED);
+				}
+				else {
+					player.setPStatus(Player.Status.SUSPENDED);
 				}
 
 				cmd_page(arg + ", you have been banned.", client1);
@@ -3073,6 +3087,13 @@ public class MUDServer implements MUDServerI, LoggerI {
 
 			// character check
 			final Player p = objectDB.getPlayer(user);
+			
+			if(p.getPStatus() != Player.Status.ACTIVE) {
+				debug("CONNECT: Fail");
+				debug("Player " + p.getName() + " is banned!");
+				send("Player is banned.", client);
+				return;
+			}
 
 			if (p == null || !p.getPass().equals(Utils.hash(pass))) {
 				debug("CONNECT: Fail");
@@ -3284,8 +3305,10 @@ public class MUDServer implements MUDServerI, LoggerI {
 				if (out.equals("")) { out += key; }
 				else { out += ", " + key; }
 			}
-			send(colors("mapped: ", "yellow") + out, client);
-			send(colors("user commands: ", "green") + Utils.join(user_cmds, ","), client);
+			//send(colors("mapped: ", "yellow") + out, client);
+			showDesc(colors("mapped: ", "yellow") + out, client);
+			//send(colors("user commands: ", "green") + Utils.join(user_cmds, ","), client);
+			showDesc(colors("user commands: ", "green") + Utils.join(user_cmds, ","), client);
 
 			if (getPlayer(client).getAccess() >= BUILD)
 			{
@@ -8204,6 +8227,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 	}
 
 	public void saveSpells() {
+		System.out.println("Not Implemented!");
 	}
 
 	// Data Loading Functions
@@ -9142,6 +9166,13 @@ public class MUDServer implements MUDServerI, LoggerI {
 		saveDB(); // NOTE: real file modification occurs here
 
 		log.writeln("Done.");
+		
+		// Spells
+		log.writeln("Game> Backing up Spells...");
+		
+		saveSpells();
+		
+		log.writeln("Done.");
 
 		// Help Files
 		log.writeln("Game> Backing up Help Files...");
@@ -9731,7 +9762,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 				send("Exit Type: " + ((Exit) m).getExitType().getName(), client);
 			}
 			if (m instanceof Item) {
-				send("Item Type: " + ((Item) m).item_type.toString(), client);
+				send("Item Type: " + ((Item) m).getItemType().toString(), client);
 			}
 			if (m instanceof Player) {
 				send("Race: " + ((Player) m).getPRace().getName(), client);
@@ -9811,36 +9842,33 @@ public class MUDServer implements MUDServerI, LoggerI {
 	 * Look at any MUDObject (basically anything), this is a stopgap to prevent anything being
 	 * unlookable.
 	 * 
+	 * For players: Looking t a player, should show a description (based on what they're wearing and
+	 * what parts of them are visible).
+	 * 
+	 * NOTE: I shouldn't be able to see the dagger or swords that are hidden under a cloak
+	 * 
 	 * @param mo
 	 * @param client
 	 */
 	public void look(final MUDObject mo, final Client client) {
-		send(mo.getName() + " (#" + mo.getDBRef() + ")", client);
+		String objectType = ObjectFlag.fromLetter(mo.getFlagsAsString().charAt(0)).toString().toLowerCase();
+		
+		if( !mo.hasFlag(ObjectFlag.DARK) ) {
+			send(colors(mo.getName() + " (#" + mo.getDBRef() + ")", displayColors.get(objectType)), client);
+		}
+		else { send(colors(mo.getName(), displayColors.get(objectType)), client); }
 		send(mo.getDesc(),  client);
-	}
-
-	/**
-	 * Look (MUDObject -> Player)
-	 * 
-	 * Look at a player, should show a description (based on what they're wearing and what of them is visible.
-	 * 
-	 * NOTE: I shouldn't be able to see the dagger or swords that are hidden under a cloak
-	 * 
-	 * @param player player to look at
-	 * @param client caller's client
-	 */
-	public void look(final Player player, final Client client) {
-		//send(colors(player.getName() + " (#" + player.getDBRef() + ")", displayColors.get("player")), client);
-		send(colors(player.getName(), displayColors.get("player")), client);
-		send(player.getDesc(), client);
-		/*send("Wearing (visible): ", client);
-
-		for (Entry<String, Slot> e : player.getSlots().entrySet()) {
-			if (e.getValue() != null) {
-				//send(e.getKey() + ": " + e.getValue().getType() + ", ", client);
-				send(e.getValue().getType() + "(" + e.getKey() + ")" + ", ", client);
+		
+		if( mo instanceof Player) {
+			send("Wearing (visible): ", client);
+			
+			for (Entry<String, Slot> e : ((Player) mo).getSlots().entrySet()) {
+				if (e.getValue() != null) {
+					//send(e.getKey() + ": " + e.getValue().getType() + ", ", client);
+					send(e.getValue().getType() + "(" + e.getKey() + ")" + ", ", client);
+				}
 			}
-		}*/
+		}
 	}
 
 	/**
@@ -10899,6 +10927,10 @@ public class MUDServer implements MUDServerI, LoggerI {
 	public String[] getHelpFile(String name) {
 		return helpMap.containsKey(name) ? helpMap.get(name) : helpMap.containsKey(aliases.get(name)) ? helpMap.get(aliases.get(name)) : null;
 	}
+	
+	public String[] getTopicFile(String name) {
+		return topicMap.containsKey(name) ? topicMap.get(name) : null;
+	}
 
 	/**
 	 * Load a newly created thing into the database.
@@ -10950,7 +10982,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 
 		final StringBuilder result = new StringBuilder(line_limit);
 
-		for (final String word : description.split(" ")) {
+		for (final String word : description.split(" ")) { //^[a-zA-Z]$ ^\\b$
 			debug("result: " + result, 3);
 			debug("result (length): " + result.length(), 3);
 			debug("next: " + word, 3);
@@ -10963,6 +10995,15 @@ public class MUDServer implements MUDServerI, LoggerI {
 				debug("add", 3);
 				result.append(" ").append(word);
 			}
+			/*// interesting idea, but not very good results
+			else if (result.length() + word.length() + 1 > line_limit) {
+				// split the word so it fits
+				int max = line_limit - result.length() - 1;
+				debug("add", 3);
+				if( max < word.length() ) {
+					result.append(" ").append(word.substring(0, max - 1)).append("-");
+				}
+			}*/
 			else { // if it will overflow, send and clear, and append current word
 				debug("send", 3);
 				send(result, client);
@@ -11052,7 +11093,9 @@ public class MUDServer implements MUDServerI, LoggerI {
 			debug("Game> Casting..." + wand.spell.name);
 
 			try {
-				cmd_cast(wand.spell.name, client);
+				//cmd_cast(wand.spell.name, client);
+				//commandMap.get("cast").execute(wand.spell.name, client);
+				cmd("cast " + wand.spell.name, client);
 			}
 			catch(Exception e) {
 				e.printStackTrace();
@@ -11533,8 +11576,8 @@ public class MUDServer implements MUDServerI, LoggerI {
 
 		List<String> fileList = new ArrayList<String>();
 
-		System.out.println("Help File Index");
-		System.out.println("----------------------------------------");
+		//System.out.println("Help File Index");
+		//System.out.println("----------------------------------------");
 
 		for( File file : Arrays.asList( new File(path).listFiles() ) ) {
 			if( file.isFile() ) {
@@ -11542,7 +11585,32 @@ public class MUDServer implements MUDServerI, LoggerI {
 
 				if( filename.endsWith(".txt") || filename.endsWith(".TXT") )
 				{
-					System.out.println( filename );
+					//System.out.println( filename );
+					fileList.add( filename );
+				}
+			}
+		}
+
+		return Utils.listToString(fileList);
+	}
+	
+	/* not currently used, for future expansion of help system to 'topics' */
+	public String[] generateTopicFileIndex() {
+		// Directory path here
+		String path = HELP_DIR;
+
+		List<String> fileList = new ArrayList<String>();
+
+		//System.out.println("Help File Index");
+		//System.out.println("----------------------------------------");
+
+		for( File file : Arrays.asList( new File(path).listFiles() ) ) {
+			if( file.isFile() ) {
+				String filename = file.getName();
+
+				if( filename.endsWith(".topic") || filename.endsWith(".TOPIC") )
+				{
+					//System.out.println( filename );
 					fileList.add( filename );
 				}
 			}

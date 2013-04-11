@@ -15,7 +15,7 @@ import mud.interfaces.*;
 import mud.net.Client;
 import mud.objects.items.Armor;
 
-public class Innkeeper extends NPC implements InteractiveI, Vendor {
+public class Innkeeper extends NPC implements Vendor {
 
 	private MUDServer parent;
 	public ArrayList<Item> stock;

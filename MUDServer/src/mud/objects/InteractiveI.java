@@ -28,5 +28,5 @@ import mud.net.Client;
 public interface InteractiveI
 {
 	public abstract void interact(Client client);
-	//public abstract void say(String message, String playerName);
+	public abstract void say(String message);
 }

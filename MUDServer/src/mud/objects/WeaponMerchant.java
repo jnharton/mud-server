@@ -18,7 +18,7 @@ import mud.net.Client;
 import mud.objects.items.Handed;
 import mud.objects.items.Weapon;
 
-public class WeaponMerchant extends NPC implements InteractiveI, Vendor {
+public class WeaponMerchant extends NPC implements Vendor {
 
 	/**
 	 * 

@@ -21,5 +21,4 @@ public enum TimeOfDay {
     public String toString() {
         return timeOfDay;
     }
-
 }

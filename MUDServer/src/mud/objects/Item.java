@@ -29,7 +29,7 @@ public class Item extends MUDObject {
 	public int wear = 0;                  // how much wear and tear the item has been subject to (0 or negative)
 	
 	public ItemType equip_type;           // equip type - armor, shield, jewelry, weapon
-	public ItemType item_type;            // item type - what type of item is this (supersede equip_type?)
+	protected ItemType item_type;           // item type - what type of item is this (supersede equip_type?)
 	
 	protected SlotType st;                // the type of slot this fits in (if any)
 	protected int mod = 0;                // modifier - +0, +2, +3, +4, ... and so on
@@ -66,27 +66,6 @@ public class Item extends MUDObject {
 	public Item(int tempDBREF, String tempName, final EnumSet<ObjectFlag> tempFlags, String tempDesc, int tempLoc)
 	{
 		super(tempDBREF, tempName, tempFlags, tempDesc, tempLoc);
-	}
-
-	public void examine() {
-        /*
-		String temp = "";
-		for (int f = 1; f < this.flags.length(); f++) {
-			if (f < this.flags.length() - 1) { temp = temp + Flags.get(this.flags.charAt(f)) + " "; }
-			else { temp = temp + Flags.get(this.flags.charAt(f)); }
-		}
-        */
-		//send(this.name + "(#" + this.dbref + ")");
-		//send("Type: " + Flags.get(this.flags.charAt(0)) + " Flags: " + temp);
-		//send(this.desc);
-	}
-	
-	public String[] examine1() {
-		String dbrefString = this.name + "(#" + getDBRef() + ")";
-        // just get first one..............
-		String typeInfoString = "Type: " + ObjectFlag.firstInit(flags) + " Flags: " + ObjectFlag.toInitString(flags);
-		String descString = this.desc;
-		return new String[] { dbrefString, typeInfoString, descString };
 	}
 	
 	public ItemType getItemType() {
@@ -135,14 +114,14 @@ public class Item extends MUDObject {
 	public Double getWeight() {
 		if(isAbsorb) {
 			if (isWet) {
-				return (this.weight * wet) * reduction_factor;
+				return (this.weight * reduction_factor) * wet;
 			}
 			else {
 				return this.weight * reduction_factor;
 			}
 		}
 		else {
-			return this.weight;
+			return this.weight * reduction_factor;
 		}
 	}
 	

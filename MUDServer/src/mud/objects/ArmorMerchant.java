@@ -18,7 +18,7 @@ import mud.net.Client;
 import mud.objects.items.Armor;
 import mud.objects.items.ArmorType;
 
-public class ArmorMerchant extends NPC implements InteractiveI, Vendor {
+public class ArmorMerchant extends NPC implements Vendor {
 
 	/**
 	 * 

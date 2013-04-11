@@ -64,15 +64,16 @@ public class ObjectLoader {
                     objectDB.addCreature(cre);
                 }
                 else if (oFlags.indexOf("P") != -1) {
+                	final int USER = 0; // stole this constant from MUDServer.
                     
-                    final String oPassword = attr[5];       // 5 - password
-                    // int access;                       // 8 - permissions
+                    final String oPassword = attr[5];                                     // 5 - password
                     final Integer[] oStats = Utils.stringsToIntegers(attr[6].split(",")); // 6 - stats
-                    final int[] oMoney = Utils.stringsToInts(attr[7].split(",")); // 7 - money
+                    final int[] oMoney = Utils.stringsToInts(attr[7].split(","));         // 7 - money
+                    int access = Utils.toInt(attr[8], USER);                              // 8 - permission
+                    String status = attr[11];                                             // 11 - status
 
-                    final Player player = new Player(oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), oDesc, oLocation, "", oPassword, "IC", oStats, Coins.fromArray(oMoney));
-                    final int USER = 0; // stole this constant from MUDServer.
-                    player.setAccess(Utils.toInt(attr[8], USER));
+                    final Player player = new Player(oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), oDesc, oLocation, "", oPassword, status, oStats, Coins.fromArray(oMoney));
+                    player.setAccess(access);
 
                     // set race
                     try {
@@ -90,6 +91,15 @@ public class ObjectLoader {
                     catch(NumberFormatException nfe) {
                         nfe.printStackTrace();
                         player.setPClass(Classes.NONE);
+                    }
+                    
+                    // set Player Status
+                    try {
+                    	player.setPStatus(Player.Status.values()[Integer.parseInt(attr[12])]);
+                    }
+                    catch(NumberFormatException nfe) {
+                        nfe.printStackTrace();
+                        player.setPStatus(Player.Status.LOCKED);
                     }
 
                     //log.debug("log.debug (db entry): " + player.toDB(), 2);
@@ -274,7 +284,7 @@ public class ObjectLoader {
                         int mod = Integer.parseInt(attr[7]);
 
                         final Clothing clothing = new Clothing(oDBRef, oName, oDesc, oLocation, mod, ClothingType.values()[clothingType]);
-                        clothing.item_type = it;
+                        clothing.setItemType(it);
 
                         objectDB.add(clothing);
                         objectDB.addItem(clothing);
@@ -302,7 +312,7 @@ public class ObjectLoader {
                         int mod = Integer.parseInt(attr[7]);
 
                         Weapon weapon = new Weapon(oName, oDesc, oLocation, oDBRef, mod, Handed.ONE, WeaponType.values()[weaponType], 15.0);
-                        weapon.item_type = it;
+                        weapon.setItemType(it);
 
                         objectDB.add(weapon);
                         objectDB.addItem(weapon);
@@ -315,7 +325,7 @@ public class ObjectLoader {
                         int mod = Integer.parseInt(attr[7]);
 
                         Armor armor = new Armor(oName, oDesc, (int) oLocation, (int) oDBRef, mod , ArmorType.values()[armorType], ItemType.values()[itemType]);
-                        armor.item_type = it;
+                        armor.setItemType(it);
 
                         objectDB.add(armor);
                         objectDB.addItem(armor);
@@ -327,7 +337,7 @@ public class ObjectLoader {
                         int stackID = Integer.parseInt(attr[7]);
 
                         Arrow arrow = new Arrow(oDBRef, oName, oDesc, oLocation);
-                        arrow.item_type = it;
+                        arrow.setItemType(it);
 
                         objectDB.add(arrow);
                         objectDB.addItem(arrow);
@@ -341,7 +351,7 @@ public class ObjectLoader {
                         int pages = Integer.parseInt(attr[8]);
 
                         Book book = new Book(oName, oDesc, oLocation, oDBRef);
-                        book.item_type = it;
+                        book.setItemType(it);
 
                         book.setAuthor(author);
                         book.setTitle(title);
@@ -366,7 +376,7 @@ public class ObjectLoader {
 
                         for (int i = 1; i < stack_size; i++) {
                             Potion potion1 = new Potion(oDBRef, oName, EnumSet.of(ObjectFlag.ITEM), oDesc, oLocation, sn);
-                            potion.item_type = ItemType.POTION;
+                            potion.setItemType(ItemType.POTION);
 
                             potion.stack(potion1);
                         }

@@ -74,6 +74,20 @@ public class Player extends MUDObject
 	// levels: 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
 	private static int[] levelXP = { 0, 1000, 3000, 6000, 10000, 15000, 21000, 28000, 36000, 45000, 55000, 66000 };
 	
+	/*
+	 * STATUS
+	 * Active Accounts - normal state
+	 * Inactive Accounts - haven't been played recently, flagged as inactive
+	 * Suspended Accounts - temporarily banned or suspended for the time being for behavioral infractions
+	 * Frozen Accounts - permanently banned and not yet purged (PURGE)
+	 * Locked Accounts - accounts that are locked out and cannot be logged into (for instance, in the case of a hacked account)
+	 * Archived Accounts - accounts archived after 3-6 months of being inactive (inactive timer reset whenever a successful login occurs),
+	 * not usable until unarchived and restored to active status.
+	 */
+	public static enum Status { ACTIVE, INACTIVE, SUSPENDED, FROZEN, LOCKED, ARCHIVED };
+	
+	private Status pstatus;
+	
 	/**
 	 * private variable are those that are intended only for the player class
 	 * protected variable are those that are intended to be inherited by sub-classes
@@ -464,6 +478,15 @@ public class Player extends MUDObject
 
 	// set the player's status
 	public void setStatus(String arg) { this.status = arg; }
+	
+	
+	public Status getPStatus() {
+		return this.pstatus;
+	}
+	
+	public void setPStatus( Status newStatus ) {
+		this.pstatus = newStatus;
+	}
 
 	public MUDObject getTarget() {
 		if (this.target instanceof NPC) {
@@ -872,24 +895,25 @@ public class Player extends MUDObject
 	 * format used by the database
 	 */
 	public String toDB() {
-		String[] output = new String[12];
-		output[0] = this.getDBRef() + "";       // player database reference number
-		output[1] = this.getName();             // player name
-		output[2] = this.getFlagsAsString();    // player flags
-		output[3] = this.getDesc();             // player description
-		output[4] = this.getLocation() + "";    // player location
-		output[5] = this.getPass();             // player password
+		String[] output = new String[13];
+		output[0] = this.getDBRef() + "";              // player database reference number
+		output[1] = this.getName();                    // player name
+		output[2] = this.getFlagsAsString();           // player flags
+		output[3] = this.getDesc();                    // player description
+		output[4] = this.getLocation() + "";           // player location
+		output[5] = this.getPass();                    // player password
 		output[6] = stats.get(Abilities.STRENGTH) +
 				"," + stats.get(Abilities.DEXTERITY) +
 				"," + stats.get(Abilities.CONSTITUTION) +
 				"," + stats.get(Abilities.INTELLIGENCE) +
 				"," + stats.get(Abilities.WISDOM) +
 				"," + stats.get(Abilities.CHARISMA);
-		output[7] = getMoney().toString(false); // player money
-		output[8] = this.access + "";           // player permissions level
-		output[9] = race.getId() + "";          // player race
-		output[10] = pclass.getId() + "";       // player class
-		output[11] = this.getStatus();          // player status
+		output[7] = getMoney().toString(false);        // player money
+		output[8] = this.access + "";                  // player permissions level
+		output[9] = race.getId() + "";                 // player race
+		output[10] = pclass.getId() + "";              // player class
+		output[11] = this.getStatus();                 // player status
+		output[12] = "" + this.getPStatus().ordinal(); //
 		return Utils.join(output, "#");
 	}
 

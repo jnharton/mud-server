@@ -44,7 +44,7 @@ import mud.utils.Utils;
  * @author Jeremy N. Harton
  * 
  */
-public class NPC extends Player
+public class NPC extends Player implements InteractiveI
 {
 	/**
 	 * 
@@ -81,7 +81,6 @@ public class NPC extends Player
 		super(tempDBRef, tempName, tempFlags, tempDesc, tempLoc, tempTitle, "", tempPStatus, tempStats, tempMoney);
 	}
 	
-	//@Override
 	public void say(String message) {
 		parent.addMessage(new Message(this, message));
 	}
@@ -153,5 +152,37 @@ public class NPC extends Player
 
 	public void addQuest(Quest newQuest) {
 		this.questList.add(newQuest);
+	}
+	
+	/**
+	 * Translate the persistent aspects of the player into the string
+	 * format used by the database
+	 */
+	public String toDB() {
+		String[] output = new String[12];
+		output[0] = this.getDBRef() + "";              // player database reference number
+		output[1] = this.getName();                    // player name
+		output[2] = this.getFlagsAsString();           // player flags
+		output[3] = this.getDesc();                    // player description
+		output[4] = this.getLocation() + "";           // player location
+		output[5] = this.getPass();                    // player password
+		output[6] = stats.get(Abilities.STRENGTH) +
+				"," + stats.get(Abilities.DEXTERITY) +
+				"," + stats.get(Abilities.CONSTITUTION) +
+				"," + stats.get(Abilities.INTELLIGENCE) +
+				"," + stats.get(Abilities.WISDOM) +
+				"," + stats.get(Abilities.CHARISMA);
+		output[7] = getMoney().toString(false);        // player money
+		output[8] = this.access + "";                  // player permissions level
+		output[9] = race.getId() + "";                 // player race
+		output[10] = pclass.getId() + "";              // player class
+		output[11] = this.getStatus();                 // player status
+		return Utils.join(output, "#");
+	}
+
+	@Override
+	public void interact(Client client) {
+		// TODO Auto-generated method stub
+		
 	}
 }
