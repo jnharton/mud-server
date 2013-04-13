@@ -20,6 +20,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 
 import mud.Effect;
@@ -56,7 +57,7 @@ public class Spell
 	}
 	
 	public enum RangeClass { CONICAL, LINEAR, PLANAR, SPHERICAL }
-	public enum SpellClass { CLERIC, DRUID, PALADIN, RANGER, SORCERER, WIZARD };
+	public enum SpellClass { NONE, CLERIC, DRUID, PALADIN, RANGER, SORCERER, WIZARD };
 	public enum SpellType { ARCANE, DIVINE };
 	
 	protected int spellLevel;
@@ -66,18 +67,19 @@ public class Spell
 	protected int duration; // duration of the spell 
 	protected int range;    // range of the spell in feet (spherical, radius length?)
 	protected School school;
-	private Category cat;
-	private List<SpellClass> sc;
-	private SpellType sType;
-	public String name, castMsg;
-	public ArrayList<Effect> effects;  // an arraylist of spell effects (e.g. invisibility, acid resistance)
-	public HashMap<String, Reagent> reagents; // a matched set of reagent:quantity spell requirements?
+	protected Category cat;
+	protected List<SpellClass> sc;
+	protected SpellType sType;
+	protected String name, castMsg;
+	protected ArrayList<Effect> effects;  // an arraylist of spell effects (e.g. invisibility, acid resistance)
+	protected HashMap<String, Reagent> reagents; // a matched set of reagent:quantity spell requirements?
 
-	int manaCost = 5;
+	protected int manaCost = 5;
 	
 	public Spell() {
 		effects = new ArrayList<Effect>();
 		reagents = new HashMap<String, Reagent>();
+		sc = new LinkedList<SpellClass>();
 	}
 
 	public Spell(String tName, String tSchool, String tCastMsg, ArrayList<Effect> tEffects)
@@ -92,7 +94,7 @@ public class Spell
 
 	public Spell(String tName, String tSchool, String tCastMsg, SpellType sType, ArrayList<Effect> tEffects, HashMap<String, Reagent> tReagents)
 	{
-        this(tName, tSchool, sType, Spell.Category.NONE, SpellClass.WIZARD, tCastMsg, tEffects, tReagents);
+        this(tName, tSchool, sType, Spell.Category.NONE, SpellClass.NONE, tCastMsg, tEffects, tReagents);
 	}
 
 	//Spell spell = new Spell("Teleport", School.CONJURATION, "", Spell.Category.NONE, Spell.SpellClass.WIZARD, 5, "You cast teleport.", null, null);
@@ -111,7 +113,7 @@ public class Spell
 		this.spellLevel = tLevel;
 		//this.cat = tCategory;
 		this.sc = new ArrayList<SpellClass>();
-		this.sc.add(tSpellClass);
+		if( tSpellClass != SpellClass.NONE) { this.sc.add(tSpellClass); };
 		this.castMsg = tCastMsg;
 		this.effects = tEffects;
 		this.reagents = tReagents;
@@ -126,6 +128,18 @@ public class Spell
 	 */
 	public int getLevel() {
 		return this.spellLevel;
+	}
+	
+	public String getCastMessage() {
+		return this.castMsg;
+	}
+	
+	public void setCastMessage(String newCastMsg) {
+		this.castMsg = newCastMsg;
+	}
+	
+	public List<Effect> getEffects() {
+		return this.effects;
 	}
 	
 	public void setManaCost(int manaCost) {

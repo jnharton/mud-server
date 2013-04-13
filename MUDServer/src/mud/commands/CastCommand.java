@@ -82,10 +82,10 @@ public class CastCommand extends Command {
 			
 			if( randNumber > spellFailure ) {
 				// cast spell
-				send(spell.castMsg.replace("&target", player.getTarget().getName()), client);
+				send(spell.getCastMessage().replace("&target", player.getTarget().getName()), client);
 
 				// apply effects to the target
-				for (final Effect e : spell.effects) {
+				for (final Effect e : spell.getEffects()) {
 					if(target instanceof Player) {
 						System.out.println("Target is Player.");
 						parent.applyEffect((Player) target, e);            // apply the effect to the target
@@ -104,7 +104,7 @@ public class CastCommand extends Command {
 
 				// if our target is a player tell them otherwise don't bother
 				if (target instanceof Player) {
-					parent.addMessage(new Message(player, player.getName() + " cast " + spell.name + " on you." , (Player) target));
+					parent.addMessage(new Message(player, player.getName() + " cast " + spell.getName() + " on you." , (Player) target));
 				}
 			}
 			else {

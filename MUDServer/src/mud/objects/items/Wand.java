@@ -40,7 +40,7 @@ public class Wand extends Item implements Equippable<Wand>, Usable<Wand>, Wielda
 		this.charges = tCharges;
 		this.spell = parent.getSpell(spell);
 
-		this.name = "Wand of " + this.spell.name;
+		this.name = "Wand of " + this.spell.getName();
 	}
 	
 	/**
@@ -66,7 +66,7 @@ public class Wand extends Item implements Equippable<Wand>, Usable<Wand>, Wielda
 		this.charges = tCharges;
 		this.spell = spell;
 		
-		this.name = "Wand of " + this.spell.name;
+		this.name = "Wand of " + this.spell.getName();
 	}
 
 	@Override
@@ -119,18 +119,18 @@ public class Wand extends Item implements Equippable<Wand>, Usable<Wand>, Wielda
 
 	public String toDB() {
 		String[] output = new String[8];
-		output[0] = this.getDBRef() + "";          // wand database reference number
-		output[1] = this.getName();                      // wand name
-		output[2] = this.getFlagsAsString();                     // wand flags
-		output[3] = this.getDesc();                      // wand description
-		output[4] = this.getLocation() + "";       // wand location
+		output[0] = this.getDBRef() + "";          // database reference number
+		output[1] = this.getName();                // name
+		output[2] = this.getFlagsAsString();       // flags
+		output[3] = this.getDesc();                // description
+		output[4] = this.getLocation() + "";       // location
 		output[5] = this.item_type.ordinal() + ""; // item type
-		output[6] = this.spell.name;                     // wand spell name
-		output[7] = this.charges + "";             // wand spell charges
+		output[6] = this.spell.getName();          // spell name
+		output[7] = this.charges + "";             // spell charges
 		return Utils.join(output, "#");
 	}
 
 	public String toString() {
-		return "Wand of " + this.spell.name;
+		return "Wand of " + this.spell.getName();
 	}
 }

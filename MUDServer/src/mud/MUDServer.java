@@ -2761,58 +2761,103 @@ public class MUDServer implements MUDServerI, LoggerI {
 	 * 
 	 * Cast a spell
 	 * 
-	 * COMMAND OBJECT EXISTS
+	 * COMMAND OBJECT EXISTS (current code reintegrated from that command -- 4/13/2013)
 	 * 
 	 * @param arg
 	 * @param client
 	 */
 	private void cmd_cast(final String arg, final Client client)
 	{
-		String[] args = arg.split(" ");
+		final String spellName = arg;
+		final Player player = getPlayer(client);
 
-		Player player = getPlayer(client);
-
-		Spell spell = null;
-
-		try {
-			spell = spells2.get(args[0]);
+		if (!player.isCaster()) {
+			send("What do you think you are anyway? Some kind of wizard? That's just mumbo-jumbo to you!", client);
+			return;
 		}
-		catch (NullPointerException npe) {
-			npe.printStackTrace();
-		}
-		//finally { spell = null; }
 
-		if (spell != null) {
-			// reagents check
-			// cast spell
-			// send cast msg
-			send(spell.castMsg, client);
-			// apply effects
-			for (int e = 0; e < spell.effects.size(); e++) {
-				Effect effect = spell.effects.get(e);
-				// covers dispel case for now
-				// will need serious work later
-				if (effect.getName().contains("!any")) {
-					player.removeEffects();
-					send("All Effects removed!", client);
-				}
-				// remove effect it ! is present
-				else if (effect.getName().contains("!")) {
-					String effectName = effect.getName().substring(effect.getName().indexOf("!") + 1, effect.getName().length());
-					player.removeEffect(effectName);
-					send(effectName + " effect removed!", client);
-				}
-				// add effects
-				else {
-					applyEffect(player, effect);
-					//player.addEffect(effect.getName());
-					send(effect.getName() + " Effect applied to " + player.getName(), client);
-					debug("Game> " + "added " + effect.getName() + " to " + serverName + ".");
+		final Spell spell = getSpell(spellName);
+
+		if (spell == null) {
+			send("You move your fingers and mumble, but nothing happens. Must have been the wrong words.", client);
+			debug("CastCommand spellName: " + spellName);
+			return;
+		}
+
+		// should this be reversed???
+		// ^No, but the player's level and effective caster level is not equivalent to the spell's level
+		// PL -> SL: 0 -> 0, 1,2 -> 1, 3,4 -> 2, 5,6 -> 3, 7 -> 4...
+		if (player.getLevel() < spell.getLevel()) {
+			// add reagents check!
+			if( spell.getReagents() != null ) {
+				for(Reagent r : spell.getReagents().values()) {
+					if( player.getInventory().contains(r) ) {
+					}
+					else {
+						send("Insufficient spell components", client);
+						return;
+					}
 				}
 			}
-		}
-		else {
-			send("You move your fingers and mumble, but nothing happens. Must have been the wrong words.", client);
+
+			// target check, if no target then auto-target self, etc, dependent on spell
+			if (player.getTarget() == null) {
+				player.setTarget(player); // auto-target to self
+			}
+
+			final MUDObject target = player.getTarget();
+
+			// reduce mana (placeholder), really needs to check the spell's actual cost
+			player.setMana(-spell.getManaCost());
+
+			// calculate spell failure (basic, just checks armor for now)
+			Armor armor = (Armor) player.getSlots().get("armor").getItem();
+
+			double spellFailure = 0;
+
+			if( armor != null ) {
+				spellFailure = armor.getSpellFailure() * 100; // spellFailure stored as percentage
+				debug("Spell Failure: " + spellFailure);
+			}
+
+			//Create random number 1 - 100
+			int randNumber = (int) ((Math.random() * 100) + 1);
+
+			debug("d100 Roll: " + randNumber);
+
+			if( randNumber > spellFailure ) {
+				// cast spell
+				send(spell.getCastMessage().replace("&target", player.getTarget().getName()), client);
+
+				// apply effects to the target
+				for (final Effect e : spell.getEffects()) {
+					if(target instanceof Player) {
+						System.out.println("Target is Player.");
+						
+						applyEffect((Player) target, e);               // apply the effect to the target
+						
+						SpellTimer sTimer = new SpellTimer(spell, 60); // spell timer with default (60 sec) cooldown
+						getSpellTimers(player).add(sTimer);
+						timer.scheduleAtFixedRate(sTimer, 0, 1000);
+						
+						EffectTimer etimer = new EffectTimer(e, 30);
+						getEffectTimers(player).add(etimer);
+						timer.scheduleAtFixedRate(etimer, 0, 1000); // create countdown timer
+					}
+					else {
+						System.out.println("Target is Player.");
+						applyEffect(target, e);
+					}
+				}
+
+				// if our target is a player tell them otherwise don't bother
+				if (target instanceof Player) {
+					addMessage(new Message(player, player.getName() + " cast " + spell.getName() + " on you." , (Player) target));
+				}
+			}
+			else {
+				send("A bit of magical energy sparks off you briefly, then fizzles out. Drat!", client);
+			}
 		}
 	}
 
@@ -6928,7 +6973,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 				send("Queue", client);
 				send("---------------------", client);
 				for (Spell spell : getPlayer(client).getSpellQueue()) {
-					send(spell.name, client);
+					send(spell.getName(), client);
 				}
 				send("---------------------", client);
 			}
@@ -6940,7 +6985,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 					send("-----------------", client);
 					send("Level: " + level, client);
 					for(Spell spell : spells) {
-						send(" " + spell.name, client); // space for indenting purposes
+						send(" " + spell.getName(), client); // space for indenting purposes
 					}
 					send("-----------------", client);
 
@@ -10295,8 +10340,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 					send("All Effects removed!", client);
 				}
 
-				String temp = effect.getName();
-				String effectName = temp.substring(temp.indexOf("!") + 1, temp.length());
+				String effectName = effect.getName().substring(effect.getName().indexOf("!") + 1, effect.getName().length());
 				player.removeEffect(effectName);
 				send(effectName + " effect removed!", client);
 			}
@@ -11132,14 +11176,14 @@ public class MUDServer implements MUDServerI, LoggerI {
 	 */
 	private void use_wand(final Wand wand, final Client client) {		
 		if (wand.charges > 0) {
-			send("You use your Wand of " + wand.spell.name + " to cast " + wand.spell.name + " on yourself.", client);
+			send("You use your Wand of " + wand.spell.getName() + " to cast " + wand.spell.getName() + " on yourself.", client);
 
-			debug("Game> Casting..." + wand.spell.name);
+			debug("Game> Casting..." + wand.spell.getName());
 
 			try {
 				//cmd_cast(wand.spell.name, client);
 				//commandMap.get("cast").execute(wand.spell.name, client);
-				cmd("cast " + wand.spell.name, client);
+				cmd("cast " + wand.spell.getName(), client);
 			}
 			catch(Exception e) {
 				e.printStackTrace();
@@ -11171,9 +11215,9 @@ public class MUDServer implements MUDServerI, LoggerI {
 		}
 
 		if (potion.getSpell() != null) {
-			send("You use a Potion of " + potion.getSpell().name + " on yourself.", client);
+			send("You use a Potion of " + potion.getSpell().getName() + " on yourself.", client);
 			player.setTarget(player); // target yourself
-			cmd_cast(potion.getSpell().name, client);
+			cmd_cast(potion.getSpell().getName(), client);
 		}
 		else if (potion.getEffect() != null) {
 			send("You use a Potion of " + potion.getEffect().getName() + " on yourself.", client);

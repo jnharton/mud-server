@@ -75,7 +75,7 @@ public class Potion extends Item implements Stackable<Potion>, Usable<Potion> {
 	}
 
 	public Potion(Spell spell) {
-		super(-1, "Potion", EnumSet.of(ObjectFlag.ITEM), "A potion of " + spell.name, 8);
+		super(-1, "Potion", EnumSet.of(ObjectFlag.ITEM), "A potion of " + spell.getName(), 8);
 		
 		this.item_type = ItemType.POTION;
 		this.drinkable = 1;
@@ -209,22 +209,22 @@ public class Potion extends Item implements Stackable<Potion>, Usable<Potion> {
 	@Override
 	public String toDB() {
 		String[] output = new String[8];
-		output[0] = this.getDBRef() + "";          // potion database reference number
-		output[1] = this.getName();                      // potion name
-		output[2] = this.getFlagsAsString();                     // potion flags
-		output[3] = this.getDesc();                      // potion description
-		output[4] = this.getLocation() + "";       // potion location
-		output[5] = this.item_type.ordinal() + ""; // item type
-		output[6] = this.stackSize() + "";         // how many potion are stacked together
+		output[0] = this.getDBRef() + "";           // database reference number
+		output[1] = this.getName();                 // name
+		output[2] = this.getFlagsAsString();        // flags
+		output[3] = this.getDesc();                 // description
+		output[4] = this.getLocation() + "";        // location
+		output[5] = this.item_type.ordinal() + "";  // item type
+		output[6] = this.stackSize() + "";          // how many potion are stacked together
 		if (this.effect == null) {
 			if (this.spell != null) {
-				output[7] = this.spell.name;             // spell	
+				output[7] = this.spell.getName();   // spell	
 			}
 			else {
                 output[7] ="null";
             }
 		}
-		else { output[7] = this.effect.getName(); }      // effect
+		else { output[7] = this.effect.getName(); } // effect
 		return Utils.join(output, "#");
 	}
 	
