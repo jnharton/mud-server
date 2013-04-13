@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.EnumSet;
 
@@ -115,7 +116,7 @@ public class Player extends MUDObject
 	private int lineLimit = 80;                       // how wide the client's screen is in columns (shouldn't be in Player class)
 	public int invDispWidth = 60;                     // display width for the complex version of inventory display
 	private Character invType = 'C';                  // S = simple, C = Complex (candidate for being a config option, not a single variable)
-	private LinkedHashMap<String, String> config;     // player preferences for player configurable options
+	private LinkedHashMap<String, Boolean> config;     // player preferences for player configurable options
 	
 	// utility
 	private HashMap<String, Integer> nameRef;         // store name references to dbref numbers (i.e. $this->49)
@@ -347,7 +348,10 @@ public class Player extends MUDObject
 
 		// initialize list editor variables
 		this.editor = Editor.NONE;
-
+		
+		this.config = new LinkedHashMap<String, Boolean>();
+		this.config.put("global-nameref-table", true);
+		
 		// instantiate name reference table
 		this.nameRef = new HashMap<String, Integer>(10, 0.75f); // start out assuming 10 name references
 	}
@@ -888,6 +892,10 @@ public class Player extends MUDObject
 	
 	public void setAlignment(int newAlignment) {
 		this.alignment = Alignments.values()[newAlignment];
+	}
+	
+	public Map<String, Boolean> getConfig() {
+		return this.config;
 	}
 
 	/**

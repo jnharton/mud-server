@@ -18,9 +18,12 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 
 import mud.Effect;
+import mud.magic.Spell.SpellType;
 
 /**
  * class to implement Dungeons and Dragons spells
@@ -45,26 +48,30 @@ public class Spell
 		private int range, rangeIncrement, casterLevels;
 		
 		RangeType(String typename, int range, int rInc, int casterlevels) {
-			this.typeName = typename; this.range = range; this.rangeIncrement = rInc; this.casterLevels = casterlevels;
+			this.typeName = typename;
+			this.range = range;
+			this.rangeIncrement = rInc;
+			this.casterLevels = casterlevels;
 		}
 	}
+	
 	public enum RangeClass { CONICAL, LINEAR, PLANAR, SPHERICAL }
 	public enum SpellClass { CLERIC, DRUID, PALADIN, RANGER, SORCERER, WIZARD };
 	public enum SpellType { ARCANE, DIVINE };
 	
-	int spellLevel;
-	RangeType rangeT;
-	RangeClass rangeC;
-	int castTime; // time taken to cast the spell
-	int duration; // duration of the spell 
-	int range;    // range of the spell in feet (spherical, radius length?)
-	public School school;
+	protected int spellLevel;
+	protected RangeType rangeT;
+	protected RangeClass rangeC;
+	protected int castTime; // time taken to cast the spell
+	protected int duration; // duration of the spell 
+	protected int range;    // range of the spell in feet (spherical, radius length?)
+	protected School school;
 	private Category cat;
-	private SpellClass sc;
-	private SpellType st;
-	public String name, castMsg, type;
+	private List<SpellClass> sc;
+	private SpellType sType;
+	public String name, castMsg;
 	public ArrayList<Effect> effects;  // an arraylist of spell effects (e.g. invisibility, acid resistance)
-	public HashMap<String, Reagent> reagents; // a matched set of  reagent:quantity spell requirements
+	public HashMap<String, Reagent> reagents; // a matched set of reagent:quantity spell requirements?
 
 	int manaCost = 5;
 	
@@ -80,29 +87,31 @@ public class Spell
 
 	public Spell(String tName, String tSchool, String tCastMsg, ArrayList<Effect> tEffects, HashMap<String, Reagent> tReagents)
 	{
-        this(tName, tSchool, tCastMsg, "", tEffects, tReagents);
+        this(tName, tSchool, tCastMsg, SpellType.ARCANE, tEffects, tReagents);
 	}
 
-	public Spell(String tName, String tSchool, String tCastMsg, String tType, ArrayList<Effect> tEffects, HashMap<String, Reagent> tReagents)
+	public Spell(String tName, String tSchool, String tCastMsg, SpellType sType, ArrayList<Effect> tEffects, HashMap<String, Reagent> tReagents)
 	{
-        this(tName, tSchool, tType, Spell.Category.NONE, SpellClass.WIZARD, tCastMsg, tEffects, tReagents);
+        this(tName, tSchool, sType, Spell.Category.NONE, SpellClass.WIZARD, tCastMsg, tEffects, tReagents);
 	}
 
 	//Spell spell = new Spell("Teleport", School.CONJURATION, "", Spell.Category.NONE, Spell.SpellClass.WIZARD, 5, "You cast teleport.", null, null);
-    public Spell(String tName, String tSchool, String tType, Category tCategory, SpellClass tSpellClass, String tCastMsg, ArrayList<Effect> tEffects, HashMap<String, Reagent> tReagents)
+    public Spell(String tName, String tSchool, SpellType sType, Category tCategory, SpellClass tSpellClass, String tCastMsg, ArrayList<Effect> tEffects, HashMap<String, Reagent> tReagents)
     {
-        this(tName, tSchool, tType, tCategory, tSpellClass, 1, tCastMsg, tEffects, tReagents);
+        this(tName, tSchool, sType, tCategory, tSpellClass, 1, tCastMsg, tEffects, tReagents);
     }
 
 	//Spell spell = new Spell("Teleport", School.CONJURATION, "", Spell.Category.NONE, Spell.SpellClass.WIZARD, 5, "You cast teleport.", null, null);
-	public Spell(String tName, String tSchool, String tType, Category tCategory, SpellClass tSpellClass, int tLevel, String tCastMsg, ArrayList<Effect> tEffects, HashMap<String, Reagent> tReagents)
+	public Spell(String tName, String tSchool, SpellType sType, Category tCategory, SpellClass tSpellClass, int tLevel, String tCastMsg, ArrayList<Effect> tEffects, HashMap<String, Reagent> tReagents)
 	{
+		this();
 		this.name = tName;
 		this.school = getSchool(tSchool);
-		this.type = tType;
+		this.sType = sType;
 		this.spellLevel = tLevel;
 		//this.cat = tCategory;
-		//this.sc = tSpellClass;
+		this.sc = new ArrayList<SpellClass>();
+		this.sc.add(tSpellClass);
 		this.castMsg = tCastMsg;
 		this.effects = tEffects;
 		this.reagents = tReagents;
@@ -128,14 +137,20 @@ public class Spell
 	}
 	
 	public void setSpellClass(SpellClass newSpellClass) {
-		this.sc = newSpellClass;
+		if( !this.sc.contains(newSpellClass) ) {
+			this.sc.add(newSpellClass);
+		}
 	}
 
 	/**
 	 * compare this to the player's class to figure out whether they can use it
 	 */
-	public SpellClass getSpellClass() {
+	public List<SpellClass> getSpellClasses() {
 		return this.sc;
+	}
+	
+	public SpellClass getSpellClass(int index) {
+		return this.sc.get(index);
 	}
 
 	public School getSchool() {
@@ -143,15 +158,17 @@ public class Spell
 	}
 
 	public static School getSchool(final String schoolName) {
-		if (schoolName.toLowerCase().equals("abjuration")) { return School.ABJURATION; }
-		else if (schoolName.toLowerCase().equals("conjuration")) { return School.CONJURATION; }
-		else if (schoolName.toLowerCase().equals("divination")) { return School.DIVINATION; }
-		else if (schoolName.toLowerCase().equals("enchantment")) { return School.ENCHANTMENT; }
-		else if (schoolName.toLowerCase().equals("evocation")) { return School.EVOCATION; }
-		else if (schoolName.toLowerCase().equals("illusion")) { return School.ILLUSION; }
-		else if (schoolName.toLowerCase().equals("invocation")) { return School.INVOCATION; }
-		else if (schoolName.toLowerCase().equals("transmutation")) { return School.TRANSMUTATION; }
-		else if (schoolName.toLowerCase().equals("necromancy")) { return School.NECROMANCY; }
+		final String sN = schoolName.toLowerCase();
+		
+		if (sN.equals("abjuration") || sN.equals("abj")) { return School.ABJURATION; }
+		else if (sN.equals("conjuration") || sN.equals("con")) { return School.CONJURATION; }
+		else if (sN.equals("divination") || sN.equals("div")) { return School.DIVINATION; }
+		else if (sN.equals("enchantment") || sN.equals("enc")) { return School.ENCHANTMENT; }
+		else if (sN.equals("evocation") || sN.equals("evo")) { return School.EVOCATION; }
+		else if (sN.equals("illusion") || sN.equals("ill")) { return School.ILLUSION; }
+		else if (sN.equals("invocation") || sN.equals("inv")) { return School.INVOCATION; }
+		else if (sN.equals("transmutation") || sN.equals("tra")) { return School.TRANSMUTATION; }
+		else if (sN.equals("necromancy") || sN.equals("nec")) { return School.NECROMANCY; }
 		else { return School.OTHER; }
 	}
 	
@@ -178,6 +195,10 @@ public class Spell
 
 	public String getName() {
 		return this.name;
+	}
+	
+	public HashMap<String, Reagent> getReagents() {
+		return this.reagents;
 	}
 
     @Override

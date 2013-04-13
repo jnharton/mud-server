@@ -26,6 +26,7 @@ import mud.commands.*;
 import mud.interfaces.*;
 
 import mud.magic.*;
+import mud.magic.Spell.SpellType;
 
 import mud.miscellaneous.Atmosphere;
 import mud.miscellaneous.Zone;
@@ -61,6 +62,7 @@ import java.util.Hashtable;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.Map.Entry;
 import java.util.HashMap;
 import java.util.Timer;
@@ -434,6 +436,9 @@ public class MUDServer implements MUDServerI, LoggerI {
 	public HashMap<Player, List<EffectTimer>> effectTimers = new HashMap<Player, List<EffectTimer>>();
 
 	private boolean firstRun = false;
+	
+	// global nameref table
+	private HashMap<String, Integer> nameRef = new HashMap<String, Integer>(); // store name references to dbref numbers (i.e. $this->49)
 
 	public MUDServer() {}
 
@@ -996,13 +1001,15 @@ public class MUDServer implements MUDServerI, LoggerI {
 					}
 				}
 
-				if (!whatClientSaid.trim().equals("")) {  // blocks blank input
+				processCMD(new CMD(whatClientSaid.trim(), sclients.get(client), client, -1));
+				
+				/*if (!whatClientSaid.trim().equals("")) {  // blocks blank input
 					//System.out.print("Putting comand in command queue...");
 					processCMD(new CMD(whatClientSaid.trim(), sclients.get(client), client, -1));
 					// put the command in the queue
 					//cmd(whatClientSaid.trim(), c);
 					//System.out.println("Done.");
-				}
+				}*/
 
 				//getPlayer(c).idle_state = false; 
 				//pulse(c);
@@ -1950,7 +1957,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 						cmd_calendar("", client);
 					}
 					else if ( cmd.equals("chargen") ) {
-						player.setStatus("EDT");     // Status set to -Edit-
+						player.setStatus("EDT");          // Status set to -Edit-
 						player.setEditor(Editor.CHARGEN);
 
 						op_chargen("start", client);
@@ -4901,32 +4908,73 @@ public class MUDServer implements MUDServerI, LoggerI {
 		final Player player = getPlayer(client);
 
 		String[] args = arg.split(" ");
+		
+		boolean globalNameRefs = false;
 
-		if (arg.toLowerCase().equals("#list")) {
-			send("Name Reference Table", client);
-			send("------------------------------------------------", client);
-			for (String str : player.getNameReferences()) {
-				send(str + " -> " + player.getNameRef(str), client);
+		if( player.getConfig() != null)
+		{
+			if( player.getConfig().get("global-nameref-table") ) {
+				globalNameRefs = true;
 			}
-			send("------------------------------------------------", client);
 		}
-		else if (arg.toLowerCase().equals("#clear")) {
-			player.clearNameRefs();
-			send("Name Reference Table cleared!", client);
-		}
-		else if (args.length == 2) {
-			if (args[0].equals("#delete")) {
-				player.getNameReferences().remove(args[1]);
-				send("nameRef deleted.", client);
-			}
-			else {
-				try {
-					player.setNameRef(args[0], Integer.parseInt(args[1]));
-					send("nameRef allocated.", client);
-					send(args[0].substring(0, args[0].length()) + " allocated to " + args[1], client);
+
+		if( !globalNameRefs) {
+			if (arg.toLowerCase().equals("#list")) {
+				send("Name Reference Table", client);
+				send("------------------------------------------------", client);
+				for (String str : player.getNameReferences()) {
+					send(str + " -> " + player.getNameRef(str), client);
 				}
-				catch (NumberFormatException nfe) {
-					nfe.printStackTrace();
+				send("------------------------------------------------", client);
+			}
+			else if (arg.toLowerCase().equals("#clear")) {
+				player.clearNameRefs();
+				send("Name Reference Table cleared!", client);
+			}
+			else if (args.length == 2) {
+				if (args[0].equals("#delete")) {
+					player.getNameReferences().remove(args[1]);
+					send("nameRef deleted.", client);
+				}
+				else {
+					try {
+						player.setNameRef(args[0], Integer.parseInt(args[1]));
+						send("nameRef allocated.", client);
+						send(args[0].substring(0, args[0].length()) + " allocated to " + args[1], client);
+					}
+					catch (NumberFormatException nfe) {
+						nfe.printStackTrace();
+					}
+				}
+			}
+		}
+		else {
+			if (arg.toLowerCase().equals("#list")) {
+				send("Name Reference Table (Global)", client);
+				send("------------------------------------------------", client);
+				for (String str : getNameReferences()) {
+					send(str + " -> " + getNameRef(str), client);
+				}
+				send("------------------------------------------------", client);
+			}
+			else if (arg.toLowerCase().equals("#clear")) {
+				clearNameRefs();
+				send("Name Reference Table cleared!", client);
+			}
+			else if (args.length == 2) {
+				if (args[0].equals("#delete")) {
+					getNameReferences().remove(args[1]);
+					send("nameRef deleted.", client);
+				}
+				else {
+					try {
+						setNameRef(args[0], Integer.parseInt(args[1]));
+						send("nameRef allocated.", client);
+						send(args[0].substring(0, args[0].length()) + " allocated to " + args[1], client);
+					}
+					catch (NumberFormatException nfe) {
+						nfe.printStackTrace();
+					}
 				}
 			}
 		}
@@ -5812,7 +5860,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 		if ( arg.equals("#all") ) {
 			// list all the spells, by level?
 			for (final Spell spell : this.spells2.values()) {
-				client.write(spell.school.toString() + " " + spell.toString() + "\n");
+				client.write(spell.getSchool().toString() + " " + spell.toString() + "\n");
 			}
 		}
 		else {
@@ -6985,12 +7033,12 @@ public class MUDServer implements MUDServerI, LoggerI {
 				send("Please choose a race:", client);
 				send("1) " + Utils.padRight("" + Races.ELF, 6) +  " 2) " + Utils.padRight("" + Races.DROW, 6) + " 3) " + Utils.padRight("" + Races.HUMAN, 6), client);
 				send("4) " + Utils.padRight("" + Races.DWARF, 6) + " 5) " + Utils.padRight("" + Races.GNOME, 6) + " 6) " + Utils.padRight("" + Races.ORC, 6), client);
-				send("> ", client);
+				client.write("> ");
 				break;
 			case 2:
 				send("Please choose a gender:", client);
 				send("1) Female 2) Male 3) Other 4) Neuter (no gender)", client);
-				send("> ", client);
+				client.write("> ");
 				break;
 			case 3:
 				send("Please choose a class:", client);
@@ -6998,21 +7046,23 @@ public class MUDServer implements MUDServerI, LoggerI {
 				send(" 4) " + Utils.padRight("" + Classes.DRUID, 12) + " 5) " + Utils.padRight("" + Classes.FIGHTER, 12) + " 6) " + Utils.padRight("" + Classes.MONK, 12), client);
 				send(" 7) " + Utils.padRight("" + Classes.PALADIN, 12) + " 8) " + Utils.padRight("" + Classes.RANGER, 12) + " 9) " + Utils.padRight("" + Classes.ROGUE, 12), client);
 				send("10) " + Utils.padRight("" + Classes.SORCERER, 12) + "11) " + Utils.padRight("" + Classes.WIZARD, 12) + " 0) " + Utils.padRight("" + Classes.NONE, 12), client);
-				send("> ", client);
+				client.write("> ");
 				break;
 			case 4:
 				for(int i = 1; i < 9; i = i + 3) {
 					send("" + i + ") " + Alignments.values()[i] + " " + (i+1) + ") " + Alignments.values()[i+1] + " " + (i+2) + ") " + Alignments.values()[i+2], client);
 				}
-				send("> ", client);
+				client.write("> ");
 				break;
 			case 5:
 				send("Options:", client);
 				send(" 1) Reset 2) Edit 3) Exit", client);
+				client.write("> ");
 				break;
 			case 6:
 				send("Edit What:", client);
 				send("1) Race 2) Gender 3) Class 4) Alignment 5) Abort", client);
+				client.write("> ");
 				break;
 			default:
 				break;
@@ -7209,24 +7259,21 @@ public class MUDServer implements MUDServerI, LoggerI {
 	 * @param client
 	 */
 	public void op_hedit(final String input, final Client client) {
-		/*
-		 * need to convert all this to work on help files
-		 */
-
-		final Player player = getPlayer(client);
+		final Player player = getPlayer(client);    // get Player
+		final EditList list = player.getEditList(); // get EditList
 
 		debug("input: " + input);
 
 		String hcmd = "";
 		String harg = "";
 
-		if (input.indexOf(".") == 0)
+		if (input.indexOf(".") == 0) // Is it an editor commans?
 		{
-			if (input.indexOf(" ") != -1) {
+			if (input.indexOf(" ") != -1) { // Arguments
 				hcmd = input.substring(input.indexOf(".") + 1, input.indexOf(" "));
 				harg = input.substring(input.indexOf(" ") + 1, input.length());
 			}
-			else {
+			else { // No Arguments
 				hcmd = input.substring(input.indexOf(".") + 1, input.length());
 			}
 
@@ -7243,8 +7290,8 @@ public class MUDServer implements MUDServerI, LoggerI {
 				player.setEditor(Editor.NONE);
 				player.setStatus("OOC");
 			}
-			else if ( hcmd.equals("del") || hcmd.equals("d") ) {
-				final EditList list = player.getEditList();
+			else if ( hcmd.equals("del") || hcmd.equals("d") )
+			{
 				if (list != null) {
 					final int toDelete = Utils.toInt(harg, -1);
 					list.removeLine(toDelete);
@@ -7267,14 +7314,13 @@ public class MUDServer implements MUDServerI, LoggerI {
 			}
 			else if ( hcmd.equals("insert") || hcmd.equals("i") )
 			{
-				final EditList list = player.getEditList();
 				if (list != null) {
 					list.setLineNum(Utils.toInt(harg, 0));
+					debug("Line changed to: " + Utils.toInt(harg, 0));
 				}
 			}
 			else if ( hcmd.equals("list") || hcmd.equals("l") )
 			{
-				final EditList list = player.getEditList();
 				if (list != null) {
 					int i = 0;
 					for (String s : list.getLines())
@@ -7287,7 +7333,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 			}
 			else if ( hcmd.equals("print") || hcmd.equals("p") )
 			{
-				final EditList list = player.getEditList();
 				if (list != null) {
 					for (String s : list.getLines())
 					{
@@ -7309,7 +7354,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 
 			else if ( hcmd.equals("save") || hcmd.equals("s") )
 			{
-				final EditList list = player.getEditList();
 				if (list != null) {
 					// convert the list to a string array
 					this.helpMap.put(list.name, list.getLines().toArray(new String[0]));
@@ -7319,19 +7363,19 @@ public class MUDServer implements MUDServerI, LoggerI {
 				}
 			}
 			else if ( hcmd.equals("stat") || hcmd.equals("st") ) {
-				final EditList list = player.getEditList();
 				if (list != null) {
 					String header = "< Help File: " + list.name + ".txt" + " Line: " + list.getLineNum() + " Lines: " + list.getNumLines() + "  >";
 					send(header, client);
 				}
 			}
-
-			System.out.println(getPlayer(client).getStatus());
 		}
 		else {
-			final EditList list = player.getEditList();
 			if (list != null) {
-				list.addLine(input);
+				debug("Line: " + list.getLineNum() + " Input: " + input);
+				if( list.getLineNum() < list.getNumLines() ) {
+					list.setLine(list.getLineNum(), input);
+				}
+				else { list.addLine(input); }
 				debug(list.getLineNum() + ": " + list.getCurrentLine());
 			}
 		}
@@ -8452,7 +8496,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 					}
 				}
 
-				spells2.put(tName, new Spell(tName, "Enchantment", tCastMsg, tType, tEffects, tReagents));
+				spells2.put(tName, new Spell(tName, "Enchantment", tCastMsg, SpellType.ARCANE, tEffects, tReagents));
 				debug(tName + " " + tCastMsg + " " + tType + tEffects);
 			}
 		}
@@ -9324,12 +9368,12 @@ public class MUDServer implements MUDServerI, LoggerI {
 
 			int lineLimit = 80;
 
-			if ( loginCheck(client) ) {
+			/*if ( loginCheck(client) ) {
 				lineLimit = getPlayer(client).getLineLimit();
 			}
 
 			// if the data to be sent exceeds the line limit
-			/*if (data.length() > lineLimit) {
+			if (data.length() > lineLimit) {
 				String newData = data.substring(0, lineLimit - 1); // choose a chunk of data that does not exceed the limit
 
 				if (telnet == 0) // no telnet
@@ -11481,7 +11525,12 @@ public class MUDServer implements MUDServerI, LoggerI {
 				debug("Game> (argument eval) reference: " + refString.toString());
 
 				// try to get number from nameref table
-				refNum = getPlayer(client).getNameRef(refString.toString());
+				if( getPlayer(client).getConfig().get("global-nameref-table") ) {
+					refNum = getNameRef(refString.toString());
+				}
+				else {
+					refNum = getPlayer(client).getNameRef(refString.toString());
+				}
 
 				// modify string, if we got a valid reference (i.e. could be in database, a NULLObject is a valid reference
 				if(refNum != null && refNum < objectDB.getSize()) {
@@ -11799,5 +11848,22 @@ public class MUDServer implements MUDServerI, LoggerI {
 	
 	public List<Portal> getPortals() {
 		return this.portals;
+	}
+	
+	// global nameref access functions
+	public Integer getNameRef(String key) {
+		return this.nameRef.get(key);
+	}
+
+	public Set<String> getNameReferences() {
+		return this.nameRef.keySet();
+	}
+
+	public void setNameRef(String key, Integer value) {
+		this.nameRef.put(key, value);
+	}
+
+	public void clearNameRefs() {
+		this.nameRef.clear();
 	}
 }

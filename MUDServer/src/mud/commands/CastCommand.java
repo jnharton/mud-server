@@ -4,6 +4,7 @@ import mud.Effect;
 import mud.MUDObject;
 import mud.MUDServer;
 
+import mud.magic.Reagent;
 import mud.magic.Spell;
 import mud.net.Client;
 
@@ -43,6 +44,16 @@ public class CastCommand extends Command {
 		// PL -> SL: 0 -> 0, 1,2 -> 1, 3,4 -> 2, 5,6 -> 3, 7 -> 4...
 		if (player.getLevel() < spell.getLevel()) {
 			// add reagents check!
+			if( spell.getReagents() != null ) {
+				for(Reagent r : spell.getReagents().values()) {
+					if( player.getInventory().contains(r) ) {
+					}
+					else {
+						send("Insufficient spell components", client);
+						return;
+					}
+				}
+			}
 
 			// target check, if no target then auto-target self, etc, dependent on spell
 			if (player.getTarget() == null) {
@@ -77,11 +88,13 @@ public class CastCommand extends Command {
 				for (final Effect e : spell.effects) {
 					if(target instanceof Player) {
 						System.out.println("Target is Player.");
-						parent.applyEffect((Player) target, e); // apply the effect to the target
+						parent.applyEffect((Player) target, e);            // apply the effect to the target
+						SpellTimer sTimer = new SpellTimer(spell, 60);     // spell timer with default (60 sec) cooldown
+						parent.getSpellTimers(player).add(sTimer);
+						parent.timer.scheduleAtFixedRate(sTimer, 0, 1000);
 						EffectTimer etimer = new EffectTimer(e, 30);
 						parent.getEffectTimers(player).add(etimer);
-						parent.timer.scheduleAtFixedRate(etimer, 0, 1000); // create countdown
-						//parent.timer.scheduleAtFixedRate(new EffectTimer(e, 10), 0, 1000); // create countdown
+						parent.timer.scheduleAtFixedRate(etimer, 0, 1000); // create countdown timer
 					}
 					else {
 						System.out.println("Target is Player.");

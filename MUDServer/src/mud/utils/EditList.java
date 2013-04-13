@@ -45,6 +45,11 @@ public class EditList {
         lines.add(line);
         currentLine = lines.size() - 1;
     }
+    
+    public void setLine(final int lineNum, final String line) {
+    	lines.set(lineNum, line);
+    	if( currentLine < lines.size() ) { currentLine += 1; }
+    }
 
     public void removeLine(final int n) {
         if (n >= 0 && n < lines.size()) {

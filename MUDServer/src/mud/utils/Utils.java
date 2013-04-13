@@ -36,6 +36,7 @@ import java.security.spec.KeySpec;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 
+import mud.MUDServer;
 import mud.Point;
 
 public final class Utils {
@@ -649,6 +650,66 @@ public final class Utils {
     		}
     	}
 
+    	return null;
+    }
+    
+    public static List<Point> toPoints(final String ptData) {
+    	// params - two points in the form '(x,y)' separated by a ';'.
+		// ex. (1,1),(4,4)
+    	
+    	List<String> params = new ArrayList<String>();
+
+		StringBuffer sb = new StringBuffer();
+
+		boolean check = true;
+    	
+    	// isolate coordinate points
+		for(int c = 0; c < ptData.length(); c++) {
+			char ch = ptData.charAt(c);
+
+			if( check ) {
+				if(ch == ')') {
+					System.out.println("Current: " + sb.toString());
+					System.out.println("Added character to sb");
+					sb.append(ch);
+					System.out.println("Final: " + sb.toString());
+					System.out.println("finished point dec");
+					check = false;
+					params.add(sb.toString());
+					sb.delete(0, sb.length());
+				}
+				else {
+					System.out.println("Current: " + sb.toString());
+					System.out.println("Added character to sb");
+					sb.append(ch);
+				}
+			}
+			else {
+				if(ch == '(') {
+					sb.delete(0, sb.length());
+					System.out.println("started point dec");
+					System.out.println("Current: " + sb.toString());
+					System.out.println("Added character to sb");
+					sb.append(ch);
+					check = true;
+				}
+				else if(ch == ',') {
+
+				}
+			}
+		}
+		
+		if(params.size() > 0) {
+
+			List<Point> ptList = new ArrayList<>();
+
+			for(String param : params) {
+				ptList.add(Utils.toPoint(param));
+			}
+			
+			return ptList;
+		}
+		
     	return null;
     }
 }
