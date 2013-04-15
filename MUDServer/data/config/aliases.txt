@@ -23,3 +23,4 @@ alias equip:eq
 alias attack:kill
 alias @backdb:@backup
 alias @alias:@aliases
+alias condition:cond

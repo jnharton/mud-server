@@ -23,7 +23,7 @@ public class WeatherState
 	public boolean Precipitation;            // Is precipitation possible? (true/false)
 	public boolean Wind;                     // Is wind a possibility? (true/false)
 	public boolean Clouds;                   // Are clouds a possibility? (true/false)
-	public boolean Storm;                    // Is a storm possible? (true/false
+	public boolean Storm;                    // Is a storm possible? (true/false)
 	
 	public int upDown = 0;
 	

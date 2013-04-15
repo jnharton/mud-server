@@ -47,11 +47,6 @@ import mud.utils.cgData;
 import mud.utils.Utils;
 import mud.utils.edData;
 
-
-//Player Class
-// need to weed out usage of send() and debugP() since they make
-// this class dependent on the existence of my code to work
-// in particular in the functions: look(), examine(), equip(...), and unequip(...)
 /**
  * Player Class
  * 
@@ -711,7 +706,16 @@ public class Player extends MUDObject
 	public ArrayList<String> getNames() {
 		return this.names;
 	}
-
+	
+	/**
+	 * Get Class Name
+	 * 
+	 * Returns the name and number combination assigned to the
+	 * Player on login that indicates that they are the Xth player
+	 * of that class who is currently connected
+	 * 
+	 * @return
+	 */
 	public String getCName() {
 		return this.cName;
 	}
@@ -801,12 +805,12 @@ public class Player extends MUDObject
                 }
                 break;
             case DEAD: // only resurrection spells or divine intervention can bring you back from the dead
-                if ( hp > 0 ) {
+                /*if ( hp > 0 ) {
                     setState(State.ALIVE);
                 }
                 else if ( hp > -10) {
                     setState(State.INCAPACITATED);
-                }
+                }*/
                 break;
             default:
                 break;
@@ -904,30 +908,29 @@ public class Player extends MUDObject
 	 */
 	public String toDB() {
 		String[] output = new String[13];
-		output[0] = this.getDBRef() + "";              // player database reference number
-		output[1] = this.getName();                    // player name
-		output[2] = this.getFlagsAsString();           // player flags
-		output[3] = this.getDesc();                    // player description
-		output[4] = this.getLocation() + "";           // player location
-		output[5] = this.getPass();                    // player password
+		output[0] = getDBRef() + "";                // database reference number
+		output[1] = getName();                      // name
+		output[2] = getFlagsAsString();             // flags
+		output[3] = getDesc();                      // description
+		output[4] = getLocation() + "";             // location
+		output[5] = getPass();                      // password
 		output[6] = stats.get(Abilities.STRENGTH) +
 				"," + stats.get(Abilities.DEXTERITY) +
 				"," + stats.get(Abilities.CONSTITUTION) +
 				"," + stats.get(Abilities.INTELLIGENCE) +
 				"," + stats.get(Abilities.WISDOM) +
 				"," + stats.get(Abilities.CHARISMA);
-		output[7] = getMoney().toString(false);        // player money
-		output[8] = this.access + "";                  // player permissions level
-		output[9] = race.getId() + "";                 // player race
-		output[10] = pclass.getId() + "";              // player class
-		output[11] = this.getStatus();                 // player status
-		output[12] = "" + this.getPStatus().ordinal(); //
+		output[7] = getMoney().toString(false);      // money
+		output[8] = access + "";                     // permissions level
+		output[9] = race.getId() + "";               // race
+		output[10] = pclass.getId() + "";            // class
+		output[11] = status;                         // status
+		output[12] = pstatus.ordinal() + "";         //
 		return Utils.join(output, "#");
 	}
 
 	@Override
 	public String toJSON() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 }

@@ -259,3 +259,5 @@
 258#Planar Parent#RS#The parent room for planar regions#0#N#10,10,10#-1#
 259#Astral Plane#RS#A wide open, evenly lit area of infinite space. It is unnervingly quiet and the view goes on forever.#258#N#10,10,10#-1#
 260#portal#E##259#4#1#0
+261#Combat Practice Room#RS#A room in which to test the combat system and practice with it#0#N#10,10,10#-1#
+262#combat dummy#N#A wooden combat dummy#261#null#12,12,12,12,12,12#0,0,0,0#0#3#16

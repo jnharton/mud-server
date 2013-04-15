@@ -67,8 +67,14 @@ public class AttackCommand extends Command {
 								}
 
 								// damage the target
+								MUDObject target = player.getTarget();
+								if(target instanceof Player) {
+									((Player) target).setHP(-damage);
+									((Player) target).updateCurrentState();
+									
+								}
 
-								// tell us what happened
+								// tell us what 
 								parent.send("A solid hit! (" + damage + " damage )", client);
 							}
 							else {

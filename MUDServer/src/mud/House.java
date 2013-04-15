@@ -19,6 +19,7 @@ package mud;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 
 import mud.objects.Item;
 import mud.objects.Player;
@@ -53,8 +54,12 @@ import mud.objects.Thing;
  
  public class House
 {
-	final public HashMap<Thing, Point> things = new HashMap<Thing, Point>();
-	final public HashMap<Item,  Point> items  = new HashMap<Item,  Point>();
+	final public HashMap<Thing, Point> thingPos = new HashMap<Thing, Point>();
+	final public HashMap<Item,  Point> itemPos  = new HashMap<Item,  Point>();
+	
+	final public LinkedList<Thing> things = new LinkedList<Thing>();
+	final public LinkedList<Item> items = new LinkedList<Item>();
+	
 	final public ArrayList<Room> rooms = new ArrayList<Room>();
 
 	private Player owner;
@@ -73,7 +78,7 @@ import mud.objects.Thing;
 	 * that can be fit in the database wihout too much trouble
 	 */
 
-	enum HouseSize {
+	private enum HouseSize {
 		SMALL(1),
 		MEDIUM(2),
 		LARGE(3),
@@ -121,9 +126,37 @@ import mud.objects.Thing;
 		info[3] = "Max Rooms: " + this.max_rooms;
 		return info;
 	}
+	
+	public void addItem(Item item) {
+		items.add(item);
+		placeItem(item, new Point(0,0));
+	}
+	
+	public void placeItem(Item item, Point point) {
+		itemPos.put(item, point);
+	}
+	
+	public void removeItem(Item item) {
+		items.remove(item);
+		itemPos.remove(item);
+	}
+	
+	public void addThing(Thing thing) {
+		things.add(thing);
+		placeThing(thing, new Point(0,0));
+	}
+	
+	public void placeThing(Thing thing, Point point) {
+		thingPos.put(thing, point);
+	}
+	
+	public void removeThing(Thing thing) {
+		things.remove(thing);
+		thingPos.remove(thing);
+	}
+	
 	// House
 	// Owner: Nathan
 	// Size: Small (1)
 	// Max. Rooms: 5
-
 }

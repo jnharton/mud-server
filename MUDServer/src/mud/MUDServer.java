@@ -432,7 +432,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 
 	public Timer timer = new Timer();
 
-	private HashMap<Player, List<SpellTimer>> spellTimers;   //
+	private HashMap<Player, List<SpellTimer>> spellTimers = new HashMap<Player, List<SpellTimer>>();
 	public HashMap<Player, List<EffectTimer>> effectTimers = new HashMap<Player, List<EffectTimer>>();
 
 	private boolean firstRun = false;
@@ -1974,6 +1974,9 @@ public class MUDServer implements MUDServerI, LoggerI {
 					{
 						cmd_commands(arg, client);
 					}
+					else if ( cmd.equals("condition") || (aliasExists && alias.equals("condition") ) ) {
+						cmd_condition(arg, client);
+					}
 					else if ( cmd.equals("date") )
 					{
 						send(gameDate(), client);
@@ -2364,7 +2367,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 			}
 		}
 		else {
-			send(gameError("@access", 1), client); // Invalid Syntax Error
+			send(gameError("@access", ErrorCodes.INVALID_SYNTAX), client); // Invalid Syntax Error
 		}
 	}
 
@@ -2625,7 +2628,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 					bb.write(subject, message, client);
 				}
 				else {
-					send(gameError("@bb", 1), client);
+					send(gameError("@bb", ErrorCodes.INVALID_SYNTAX), client);
 				}
 			}
 			else if (args[0].equals("+delete")) {
@@ -3423,6 +3426,14 @@ public class MUDServer implements MUDServerI, LoggerI {
 			send("Item named " + item.getName() + "(#" + item.getDBRef() + ") created. " + item.getName() + " has been placed in your location.", client);
 		}
 	}*/
+	
+	private void cmd_condition(final String arg, final Client client) {
+		NPC npc = getNPC(arg);
+		
+		if( npc != null ) {
+			send(npc.getName() + " " + "HP: " + npc.getHP() + "/" + npc.getTotalHP() + " " + npc.getState(), client);
+		}
+	}
 
 	/**
 	 * Command: @debug
@@ -3628,7 +3639,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 		}
 		else
 		{
-			send(gameError("@dig", 1), client); // Invalid Syntax Error
+			send(gameError("@dig", ErrorCodes.INVALID_SYNTAX), client); // Invalid Syntax Error
 		}
 	}
 
@@ -3658,7 +3669,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 		// if no argument or empty argument, fail with an error
 		if (arg.equals("") || arg.equals(null))
 		{
-			send(gameError("@describe", 1), client); // Invalid Syntax Error
+			send(gameError("@describe", ErrorCodes.INVALID_SYNTAX), client); // Invalid Syntax Error
 		}
 		else {
 			if (ref.toLowerCase().equals("here") || room.getName().equals(ref) || room.getDBRef() == Integer.parseInt(ref) ) {
@@ -5078,7 +5089,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 				else { destination = Integer.parseInt(args[1]); }
 			}
 			else {
-				send( "open : " + gameError("@open", 1), client);
+				send( "open : " + gameError("@open", ErrorCodes.INVALID_SYNTAX), client);
 				return;
 			}
 		}
@@ -5139,7 +5150,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 				}
 			}
 			else {
-				send( "@door : " + gameError("@open", 1), client);
+				send( "@door : " + gameError("@open", ErrorCodes.INVALID_SYNTAX), client);
 				return;
 			}
 		}
@@ -6448,7 +6459,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 									send(getRoom(args[0]).getName() + " added to zone.", client);
 								}
 							}
-							catch(NumberFormatException nfe) { send(gameError("@zones", 2), client); }
+							catch(NumberFormatException nfe) { send(gameError("@zones", ErrorCodes.NOT_A_NUMBER), client); }
 							catch(NullPointerException npe) { send("One or more invalid rooms given.", client); }
 						}
 					}
@@ -6912,6 +6923,16 @@ public class MUDServer implements MUDServerI, LoggerI {
 							// as the sound, and then in the ambient background
 
 							// get weather, then play related sound
+							switch(room.getWeather().ws.name) {
+							case "Rain":
+								MSP.play("rain.wav", "", 25, -1);
+								String msg = MSP.generate();      // generate MSP message
+								send(msg, client);                // send the message
+								MSP.reset();
+								break;
+							default:
+								break;
+							}
 						}
 					}
 
@@ -7026,10 +7047,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 
 	/**
 	 * Character "Creator"
-	 * 
-	 * NOTE(?): character generation menu logic needs to be fixed, still getting number format exceptions, etc and
-	 * I broke the editing to some extent
-	 * 
 	 * 
 	 * @param input input to the editor
 	 * @param client the client to which output will be sent
@@ -7442,15 +7459,25 @@ public class MUDServer implements MUDServerI, LoggerI {
 	public void op_lsedit(final String input, final Client client)
 	{
 		final Player player = getPlayer(client);
+		final EditList list = player.getEditList();
 
 		debug("input: " + input);
+		
+		String lcmd = "";
+		String larg = "";
 
-		if (input.indexOf(".") != -1)
+		if (input.indexOf(".") == 0)
 		{
+			if (input.indexOf(" ") != -1) { // Arguments
+				lcmd = input.substring(input.indexOf(".") + 1, input.indexOf(" "));
+				larg = input.substring(input.indexOf(" ") + 1, input.length());
+			}
+			else { // No Arguments
+				lcmd = input.substring(input.indexOf(".") + 1, input.length());
+			}
+			
 			debug("LSEDIT CMD");
-			String lcmd = input.substring(input.indexOf(".") + 1, input.length());
 			debug("lcmd: " + lcmd);
-			debug(lcmd.equals("end"));
 
 			if ( lcmd.equals("quit") )
 			{
@@ -7476,7 +7503,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 			}
 			else if ( lcmd.equals("print") )
 			{
-				final EditList list = player.getEditList();
 				if (list != null) {
 					for (String s : list.getLines())
 					{
@@ -7488,7 +7514,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 			else if ( lcmd.equals("list") )
 			{
 				int i = 0;
-				final EditList list = player.getEditList();
 				if (list != null) {
 					for (String s : list.getLines())
 					{
@@ -7505,7 +7530,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 				send("< List Saved. >", client);
 			}
 			else if ( lcmd.equals("stat") ) {
-				final EditList list = player.getEditList();
 				if (list != null) {
 					String header = "< List: " + list.name + " Line: " + list.getLineNum() + " Lines: " + list.getNumLines() + " >";
 					send(header, client);
@@ -7524,7 +7548,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 			System.out.println(getPlayer(client).getStatus());
 		}
 		else {
-			final EditList list = player.getEditList();
 			if (list != null) {
 				list.addLine(input);
 				debug(list.getNumLines() + ": " + input);
@@ -8808,9 +8831,9 @@ public class MUDServer implements MUDServerI, LoggerI {
 		// NOTE: I should probably add a mapping here somewhere that ties the player to their account, if they have one
 
 		if ( newCharacter ) { // if new, do some setup
-			player.setMoney(Coins.platinum(10).add(Coins.gold(50)).add(Coins.silver(50)));
-
 			// give basic equipment (testing purposes)
+			// so far, this means: leather armor, long sword,
+			// future? class-based starter equipment?
 			final Armor armor = new Armor("Leather Armor", "A brand new set of leather armor, nice and smooth, but a bit stiff still.", -1, -1, 0, ArmorType.LEATHER, ItemType.ARMOR);
 			final Weapon sword = new Weapon("Long Sword", "A perfectly ordinary longsword.", 0, Handed.ONE, WeaponType.LONGSWORD, 15.0);
 
@@ -8821,6 +8844,9 @@ public class MUDServer implements MUDServerI, LoggerI {
 
 			player.getInventory().add(armor);
 			player.getInventory().add(sword);
+			
+			// starting money?
+			player.setMoney(Coins.platinum(10).add(Coins.gold(50)).add(Coins.silver(50)));
 		}
 
 		// get the time
@@ -8919,6 +8945,10 @@ public class MUDServer implements MUDServerI, LoggerI {
 		player.setClient(client);
 		sclients.put(client, player);
 		players.add(player);
+		
+		/* create timer lists for the player */
+		effectTimers.put(player, new LinkedList<EffectTimer>());
+		spellTimers.put(player, new LinkedList<SpellTimer>());
 
 		/* run any connect properties specified by the player */
 		//cProps(player);
@@ -8927,8 +8957,6 @@ public class MUDServer implements MUDServerI, LoggerI {
 		final Room current = getRoom(client);   // determine the room they are in
 		look(current, client);                  // show the room
 		current.addListener(player);
-
-		effectTimers.put(player, new LinkedList<EffectTimer>());
 	}
 
 	/**
@@ -8940,6 +8968,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 	public void init_disconn(final Client client)
 	{
 		final Player player = getPlayer(client);
+		
 		if (player == null) {
 			debug("Player not found for client: " + client);
 			s.disconnect(client);
@@ -8969,7 +8998,7 @@ public class MUDServer implements MUDServerI, LoggerI {
 		for (final Slot slot : player.getSlots().values()) {
 			if (slot.isFull()) {
 				if (slot.getItem() != null) {
-					inventory.add(slot.getItem());
+					inventory.add(slot.remove());
 				}
 			}
 		}
@@ -9352,6 +9381,10 @@ public class MUDServer implements MUDServerI, LoggerI {
 		}
 
 		return "Game> Error ( " + funcName + " ): " + errorString;
+	}
+	
+	public String gameError(String funcName, ErrorCodes errorCode) {
+		return gameError(funcName, errorCode);
 	}
 
 	/**
