@@ -20,6 +20,7 @@ package mud;
 // MUD Libraries
 
 //mud.colors
+import mud.api.MUDServerAPI;
 import mud.colors.XTERM256;
 
 import mud.commands.*;
@@ -106,7 +107,7 @@ import java.util.regex.Matcher;
  * Last Worked On: 2.4.2013
  **/
 
-public class MUDServer implements MUDServerI, LoggerI {
+public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	// Libraries
 	// Processing Network Library (a modified version, link?)
 

@@ -36,7 +36,7 @@ public class APIServer implements Runnable {
     
     final private Vector<Client> clients = new Vector<Client>();
 	
-	final private MUDServer parent;
+	final private MUDServerAPI parent;
 	final private RequestProcessor rp;
 	
 	final public LinkedList<Request> requests = new LinkedList<Request>();
@@ -64,10 +64,10 @@ public class APIServer implements Runnable {
 	
 	@Override
 	public void run() {
+		
 		while( running ) {
 			if( !processed.isEmpty() ) { // send response if there are any
 				Request request = processed.poll();
-				//request.getClient().write(request.response);
 				System.out.println(request.response);
 			}
 			
@@ -85,17 +85,14 @@ public class APIServer implements Runnable {
 		}
 		
 		rp.stop();
+		System.exit(0);
 	}
 	
 	public boolean validate(APIKey tKey) {
-		//return tKey.isValid() && apiKeys.contains(tKey); // neither of these currently returns true when expected
-		return true;
+		return tKey.isValid() && apiKeys.contains(tKey); // neither of these currently returns true when expected
 	}
 	
-	public static void main(String[] args) {
-		//MUDServer ms = new MUDServer("localhost", 4201);
-		//ms.init();
-		
+	public static void main(String[] args) {		
 		APIServer as = new APIServer(null, 4240);
 		
 		System.out.println(as.apiKeys);
@@ -103,5 +100,9 @@ public class APIServer implements Runnable {
 		as.requests.add( new Request(new String[] { "request-data", "978419ff", "test" } , null) );
 		
 		new Thread(as).start();
+	}
+	
+	public void stop() {
+		this.running = false;
 	}
 }

@@ -57,12 +57,36 @@ public class APIKey {
 		// check input data to be sure that it contains only alphanumeric data (no symbols)
 		// also, check max size and possible range of keys
 		if( key.length() <= MAX_KEY_LENGTH ) { // is it the right length
-			if( key.matches("^[A-Za-z0-9]$") ) {
+			if( key.matches("[A-Za-z0-9]*") ) {
 				isValid = true;
 			}
 		}
 		
 		return isValid;
+	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		if( obj instanceof APIKey ) {
+			APIKey key = (APIKey) obj;
+			return equals(key);
+		}
+		else { return false; }
+	}
+	
+	public boolean equals(APIKey apikey) {
+		if( this.key.equals( apikey.toString() ) ) {
+			return true;
+		}
+		else { return false; }
+	}
+	
+	@Override
+	public int hashCode() {
+		/* just give us the hashcode of the internal string, this should
+		 * ensure that any "key" that is this string is considered the same object.
+		 */
+		return System.identityHashCode(key);
 	}
 	
 	/**

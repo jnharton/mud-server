@@ -3,7 +3,6 @@ package mud.api;
 import java.util.List;
 import java.util.LinkedList;
 
-import mud.MUDServer;
 import mud.objects.Player;
 
 /*
@@ -28,11 +27,11 @@ public class RequestProcessor implements Runnable {
 	private boolean running;
 	
 	private final APIServer as;
-	private final MUDServer ms;
+	private final MUDServerAPI msa;
 	
-	protected RequestProcessor(APIServer parent, MUDServer mudSrv) {
+	protected RequestProcessor(APIServer parent, MUDServerAPI mudSrv) {
 		as = parent;
-		ms = mudSrv;
+		msa = mudSrv;
 	}
 	
 	@Override
@@ -43,9 +42,17 @@ public class RequestProcessor implements Runnable {
 			Request request = as.requests.poll();
 
 			if(request != null) {
-				System.out.println("Processing Request...");
-				processRequest(request);
-				System.out.println("Done");
+				if( as.validate( request.getAPIKey() ) ) {
+					System.out.println("API Key is valid!");
+					
+					System.out.println("Processing Request...");
+					processRequest(request);
+					System.out.println("Done");
+				}
+				else {
+					System.out.println("API Key is invalid!");
+					request.response = "APIServer> Invalid API Key!";
+				}
 				
 				as.processed.add(request);
 				System.out.println("Added processed request to processed queue!");
@@ -54,30 +61,22 @@ public class RequestProcessor implements Runnable {
 	}
 	
 	private void processRequest(Request request) {			
-		if( as.validate( request.getAPIKey() ) ) {
-			System.out.println("API Key is valid!");
-			
-			if(request.getType() == RequestType.DATA) {
-				if(request.getParam().equals("who")) {
-					List<String> responseData = new LinkedList<String>();
-					for( Player p : ms.getPlayers()) {
-						responseData.add("P(" + p.getName() + "," + p.getPClass().getAbrv() + "," + p.getLevel() + ")"); 
-					}
-					request.response = "response-data " + "for:" + request.getAPIKey() + " " + responseData; 
+		if(request.getType() == RequestType.DATA) {
+			if(request.getParam().equals("who")) {
+				List<String> responseData = new LinkedList<String>();
+				for( Player p : msa.getPlayers()) {
+					responseData.add("P(" + p.getName() + "," + p.getPClass().getAbrv() + "," + p.getLevel() + ")"); 
 				}
-				else {
-					request.response = "APIServer> Invalid Parameter";
-				}
+				request.response = "response-data " + "for:" + request.getAPIKey() + " " + responseData; 
+			}
+			else {
+				request.response = "APIServer> Invalid Parameter";
 			}
 		}
-		else {
-			System.out.println("API Key is invalid!");
-			request.response = "APIServer> Invalid API Key!";
-		}
-		
+
 		request.processed = true;
 	}
-	
+
 	public void stop() {
 		this.running = false;
 	}
