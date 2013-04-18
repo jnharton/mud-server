@@ -1,6 +1,7 @@
 package mud.objects;
 
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -111,7 +112,7 @@ public class Player extends MUDObject
 	private int lineLimit = 80;                       // how wide the client's screen is in columns (shouldn't be in Player class)
 	public int invDispWidth = 60;                     // display width for the complex version of inventory display
 	private Character invType = 'C';                  // S = simple, C = Complex (candidate for being a config option, not a single variable)
-	private LinkedHashMap<String, Boolean> config;     // player preferences for player configurable options
+	private LinkedHashMap<String, Boolean> config;    // player preferences for player configurable options
 	
 	// utility
 	private HashMap<String, Integer> nameRef;         // store name references to dbref numbers (i.e. $this->49)
@@ -155,24 +156,25 @@ public class Player extends MUDObject
 	private edData edd = null;
 
 	// Game Stuff (most set 'protected' so that an npc can basically have player characteristics
-	protected MUDObject target;             // Target -- player/npc that will be used for generic interaction
-	protected Races race;                   // Race
-	protected Character gender;             // Gender
-	protected Classes pclass;               // Class
-	protected Alignments alignment;         // Alignment
-	protected Handed handed = Handed.RIGHT; // which hand is dominant (irr. but enum encompasses that and weapons hand req.)
-	protected int hp;                       // Hit Points
-	protected int totalhp;                  // Total Hit Points
-	protected int mana;                     // Mana
-	protected int totalmana;                // Total Mana
-	protected int speed;                    // Movement Speed (largely pointless without a coordinate system)
-	protected int capacity;                 // Carrying Capacity (pounds/lbs)
-	protected int level;                    // Level
-	protected int xp;                       // Experience
-	protected Coins money;                  // Money (D&D, MUD)
+	protected MUDObject target;                    // Target -- player/npc that will be used for generic interaction
+	protected Races race;                          // Race
+	protected Character gender;                    // Gender
+	protected Classes pclass;                      // Class
+	protected Alignments alignment;                // Alignment
+	protected Handed handed = Handed.RIGHT;        // which hand is dominant (irr. but enum encompasses that and weapons hand req.)
+	protected int hp;                              // Hit Points
+	protected int totalhp;                         // Total Hit Points
+	protected int mana;                            // Mana
+	protected int totalmana;                       // Total Mana
+	protected int speed;                           // Movement Speed (largely pointless without a coordinate system)
+	protected int capacity;                        // Carrying Capacity (pounds/lbs)
+	protected int level;                           // Level
+	protected int xp;                              // Experience
+	protected Coins money;                         // Money (D&D, MUD)
 
-	protected SpellBook spells;             // spells [null if not a wizard]
-	public LinkedList<Spell> spellQueue;    // spell queue [null if not a wizard]
+	protected SpellBook spells = null;             // spells [null if not a wizard]
+	protected LinkedList<Spell> spellQueue = null; // spell queue [null if not a wizard]
+	protected Spell lastSpell = null;              // last spell cast [null if not a wizard]
 
 	/**
 	 * Player State
@@ -196,11 +198,16 @@ public class Player extends MUDObject
 	protected Point destination;
 
 	// leveling up
-	public boolean levelup = false;         // is this player ready to "level up" (true=yes,false=no)
-	private int featPts;                     // points available for selecting new feats (unused)
-	//private int skillPts; // points available for increasing skills (unused)
+	private boolean levelup = false;  // is this player ready to "level up" (true=yes,false=no)
+	private int featPts;             // points available for selecting new feats (unused)
+	private int skillPts;            // points available for increasing skills (unused)
 	//*in some ways i'd rather not assign skill points for leveling up, but i also don't like classless system
 	//*i'm thinking that feats make sense at a level, but gaining skills ought to be by what you use the most (hence, 'acquiring' the skill)
+	
+	// BitSet to record what item creation feats this player has:
+	// Brew Potion (0) Craft Magic Arms And Armor (1) Craft Rod  (2) Craft Staff  (3)
+	// Craft Wand  (4) Craft Wondrous Item        (5) Forge Ring (6) Scribe Scroll(7)
+	private BitSet item_creation_feats = new BitSet(8);
 	
 	private int[] statMod = new int[] { 0, 0, 0, 0, 0, 0 }; // current modifications to stats (i.e. stat drains, etc)
 	
@@ -399,7 +406,16 @@ public class Player extends MUDObject
 	 * 
 	 * @param playerClass the character class to set on the player
 	 */
-	public void setPClass(Classes playerClass) { this.pclass = playerClass; }
+	public void setPClass(Classes playerClass) {
+		this.pclass = playerClass;
+		
+		// do some initialization
+		if( playerClass.isCaster() ) {
+			this.spells = new SpellBook();
+			this.spellQueue = new LinkedList<Spell>();
+			this.lastSpell = null;
+		}
+	}
 
 	public Races getPRace() { return this.race; }
 

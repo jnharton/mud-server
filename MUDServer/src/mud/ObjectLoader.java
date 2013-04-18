@@ -64,12 +64,10 @@ public class ObjectLoader {
                     objectDB.addCreature(cre);
                 }
                 else if (oFlags.indexOf("P") != -1) {
-                	final int USER = 0; // stole this constant from MUDServer.
-                    
                     final String oPassword = attr[5];                                     // 5 - password
                     final Integer[] oStats = Utils.stringsToIntegers(attr[6].split(",")); // 6 - stats
                     final int[] oMoney = Utils.stringsToInts(attr[7].split(","));         // 7 - money
-                    int access = Utils.toInt(attr[8], USER);                              // 8 - permission
+                    int access = Utils.toInt(attr[8], Constants.USER);                    // 8 - permission
                     String status = attr[11];                                             // 11 - status
 
                     final Player player = new Player(oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), oDesc, oLocation, "", oPassword, status, oStats, Coins.fromArray(oMoney));
@@ -468,10 +466,8 @@ public class ObjectLoader {
 
 		Player player = new Player(oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), oDesc, oLocation, "", oPassword, "IC", oStats, Coins.fromArray(oMoney));
 		
-		final int USER = 0; // stole this constant from MUDServer.
-		
 		/* Set Player Permissions */
-		player.setAccess(Utils.toInt(attr[8], USER));
+		player.setAccess(Utils.toInt(attr[8], Constants.USER));
 
 		/* Set Player Race */
 		try {

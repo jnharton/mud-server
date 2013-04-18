@@ -381,7 +381,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	private int game_minute = 58; // 58m past 5am
 
 	//Theme Related Variables
-	private String theme = THEME_DIR + "forgotten_realms.txt";                     // theme file to load
+	private String themeFile = THEME_DIR + "forgotten_realms.txt";                 // theme file to load
 
 	public static int[] DAYS = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 }; // days in each month
 	public static int MONTHS = 12;                                                 // months in a year
@@ -392,7 +392,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	private String year_name;
 	private String reckoning;
 
-	private Theme theme1;
+	private Theme theme;
 
 	// Testing
 	private BulletinBoard bb;
@@ -413,13 +413,6 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	private static int WIZARD = 3; // Most permissions
 	private static int GOD = 4;    // Pff, such arrogant idiots we are! (anyway, max permissions)
 	// Corresponding Flags: U,B,A,W,G
-
-	// speed
-	private static int WALK = 1;
-	private static int RUN = 3;
-
-	private static final int MAX_SKILL = 50;
-	private static final int MAX_STACK_SIZE = 25; // generic maximum for all stackable items (should this be in the stackable interface?)
 
 	private ProgramInterpreter pgm;
 
@@ -591,7 +584,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		debug(""); // formatting
 
 		// Theme Loading
-		this.loadTheme(theme);
+		this.loadTheme(themeFile);
 		this.month_name = MONTH_NAMES[month - 1];
 		this.year_name = years.get(year);
 
@@ -2195,7 +2188,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 						}
 					}
 					else if ( cmd.equals("run") ) {
-						player.setSpeed(RUN);
+						player.setSpeed(Constants.RUN);
 						send("You get ready to run.", client);
 					}
 					else if ( cmd.equals("say") || (aliasExists && alias.equals("say") ) )
@@ -2285,7 +2278,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 						cmd_who(arg, client);
 					}
 					else if ( cmd.equals("walk") ) {
-						player.setSpeed(WALK);
+						player.setSpeed(Constants.WALK);
 						send("You slow down to a walking speed.", client);
 					}
 					// if the command doesn't exist say so
@@ -5878,7 +5871,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 				if (skill.toString().toLowerCase().equals(skillName.toLowerCase())) {
 
-					if (skillValue < MAX_SKILL) {
+					if (skillValue < Constants.MAX_SKILL) {
 						send("Set " + skill.toString() + " skill to " + skillValue, client);
 						System.out.println(p.getSkills().put(skill, skillValue));
 					}
@@ -6103,7 +6096,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 							if ( getItem(item.getName(), player) != null ) {
 								debug("stackable - have a stack already");
 								Stackable sItem1 = (Stackable) getItem(item.getName(), player);
-								if (sItem1.stackSize() < MAX_STACK_SIZE) {
+								if (sItem1.stackSize() < Constants.MAX_STACK_SIZE) {
 									sItem1.stack(sItem);
 								}
 								else {
@@ -6989,7 +6982,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 				/* select takes a spell name as an argument
 				 * 
 				 */
-				getPlayer(client).spellQueue.push(spells2.get(sarg));
+				getPlayer(client).getSpellQueue().push(spells2.get(sarg));
 			}
 			else if (scmd.equals("queue")) {
 				send("Queue", client);
@@ -8583,7 +8576,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 		debug("Loading theme, filename: " + themeFile);
 
-		theme1 = new Theme();
+		theme = new Theme();
 		String section = "";
 		String section1 = "";
 
@@ -8610,7 +8603,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 				final String[] parts = line.split(" = ", 2);
 				if ( section1.equals("theme") ) {
 					if (parts[0].equals("mud_name") ) {
-						theme1.setName(parts[1]);
+						theme.setName(parts[1]);
 						debug(line);
 					}
 					else if ( parts[0].equals("motd_file") ) {
@@ -8620,13 +8613,13 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 				else if ( section1.equals("calendar") ) {
 					debug(line);
 					if ( parts[0].equals("day") ) {
-						theme1.setDay(Utils.toInt(parts[1], 0));
+						theme.setDay(Utils.toInt(parts[1], 0));
 					}
 					else if ( parts[0].equals("month") ) {
-						theme1.setMonth(Utils.toInt(parts[1], 0));
+						theme.setMonth(Utils.toInt(parts[1], 0));
 					}
 					else if ( parts[0].equals("year") ) {
-						theme1.setYear(Utils.toInt(parts[1], 0));
+						theme.setYear(Utils.toInt(parts[1], 0));
 					}
 					else if ( parts[0].equals("season") ) {
 						season = Seasons.fromStringLower(parts[1]);
