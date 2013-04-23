@@ -917,6 +917,23 @@ public class Player extends MUDObject
 	public Map<String, Boolean> getConfig() {
 		return this.config;
 	}
+	
+	public void setLastSpell(Spell last) {
+		if( this.isCaster() ) {
+			this.lastSpell = last;
+		}
+	}
+	
+	/**
+	 * 
+	 * @return
+	 */
+	public Spell getLastSpell() {
+		if( this.isCaster() ) {
+			return this.lastSpell;
+		}
+		else { return null; }
+	}
 
 	/**
 	 * Translate the persistent aspects of the player into the string

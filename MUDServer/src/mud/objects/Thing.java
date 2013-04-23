@@ -29,12 +29,20 @@ public class Thing extends MUDObject {
 	
 	public ThingType thing_type = ThingType.NONE;
 	
+	protected ArrayList<Item> contents = null;
+	
 	/**
 	 * Thing - no parameters
 	 * 
 	 * A no-argument constructor for making a sub-class of Thing
 	 */
 	public Thing() {
+	}
+	
+	public Thing(boolean isContainer) {
+		if( isContainer ) {
+			this.contents = new ArrayList<Item>();
+		}
 	}
 
 	// usual constructor
@@ -59,13 +67,6 @@ public class Thing extends MUDObject {
 	
 	public double getWeight() {
 		return this.weight;
-	}
-	
-	public ArrayList<String> look() {
-		ArrayList<String> result = new ArrayList<String>();
-		result.add(name + " (#" + getDBRef() + ")");
-		result.add(this.desc);
-		return result;
 	}
 
 	public String toDB() {

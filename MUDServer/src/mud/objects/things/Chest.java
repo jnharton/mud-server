@@ -19,8 +19,6 @@ public class Chest extends Thing implements Lockable<Item>, Storage<Item> {
 	private boolean isLocked = false;
 	private boolean full = false;
 	
-	private final ArrayList<Item> contents = new ArrayList<Item>();
-	
 	public Chest() {
 		this("Public Chest", "A chest");
 	}
@@ -69,20 +67,17 @@ public class Chest extends Thing implements Lockable<Item>, Storage<Item> {
 	}
 	
 	@Override
-	public void insert(Item i) {
-		// TODO Auto-generated method stub
-		
+	public void insert(Item item) {
+		contents.add(item);
 	}
 	
 	@Override
 	public Item retrieve(int index) {
-		// TODO Auto-generated method stub
-		return null;
+		return contents.get(index);
 	}
 
 	@Override
 	public Item retrieve(String tName) {
-		// TODO Auto-generated method stub
 		return null;
 	}
 

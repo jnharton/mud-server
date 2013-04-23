@@ -217,6 +217,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	private final String BACKUP_DIR = DATA_DIR + "backup\\";               // Data Sub-Directory
 	private final String CONFIG_DIR = DATA_DIR + "config\\";               // Config Directory
 	private final String HELP_DIR = DATA_DIR + "help\\";                   // Help Directory
+	private final String TOPIC_DIR = HELP_DIR + "topics\\";                // Help Directory
 	private final String MAP_DIR = DATA_DIR + "maps\\";                    // MAP Directory
 	private final String MOTD_DIR = DATA_DIR + "motd\\";                   // MOTD Directory
 	private final String SPELL_DIR = DATA_DIR + "spells\\";                // Spell Directory
@@ -269,7 +270,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	private HashMap<String, String> displayColors = new HashMap<String, String>(8, 0.75f);       // HashMap specifying particular colors for parts of text (somewhat static)
 	private HashMap<String, String> colors = new HashMap<String, String>(8, 0.75f);              // HashMap to store ansi/vt100 escape codes for outputting color (static)
 
-	public HashMap<String, String> aliases = new HashMap<String, String>(20, 0.75f);             // HashMap to store command aliases (static)
+	public LinkedHashMap<String, String> aliases = new LinkedHashMap<String, String>(20, 0.75f); // HashMap to store command aliases (static)
 	private HashMap<Integer, String> Errors = new HashMap<Integer, String>(5, 0.75f);            // HashMap to store error messages for easy retrieval (static)
 
 	private HashMap<String, Date> holidays = new HashMap<String, Date>(10, 0.75f);               // HashMap that holds an in-game date for a "holiday" name string
@@ -362,13 +363,15 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			"@backdb",
 			"@flag", "@flush",
 			"@loaddb",
-			"@sethour", "@setminute", "@setmode", "@start", "@shutdown",
+			"@sethour", "@setminute", "@setminute", "@setmode", "@start",
 			"@teleport"
 	};
 
 	private String[] god_cmds = new String[] {
 			"@access",
+			"@broadcast",
 			"@load",
+			"@shutdown",
 			"@unload"
 	};
 
@@ -658,7 +661,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		}
 
 		// print out config map
-		debug(config.entrySet());		
+		debug(config.entrySet());
 
 		// help file loading
 		System.out.print("Loading Help Files... ");
@@ -670,10 +673,10 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		System.out.println("Help Files Loaded!");
 
 		// topic file loading
-		System.out.print("Loading Topic Files... ");
+		System.out.println("Loading Topic Files... ");
 		for (final String topicFileName : generateTopicFileIndex())
 		{
-			final String[] topicfile = Utils.loadStrings(this.HELP_DIR + topicFileName);
+			final String[] topicfile = Utils.loadStrings(this.TOPIC_DIR + topicFileName);
 			topicMap.put(topicfile[0], topicfile);
 		}
 		System.out.println("Topic Files Loaded!");
@@ -734,6 +737,11 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		debug("Mapped Commands: " + commandMap.entrySet());       // Print out all the command mappings (DEBUG)
 
 		loadAliases(this.CONFIG_DIR + "aliases.txt");
+		
+		for(String alias : aliases.keySet()) {
+			String command = aliases.get(alias);
+			debug(alias + " -> " + command);
+		}
 
 		/* bulletin board(s) */
 		this.bb = new BulletinBoard(serverName);
@@ -1366,6 +1374,12 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 						/*cmd_unloadc(arg, client);*/
 					}
+					// pass arguments to the shutdown function
+					else if ( cmd.equals("@shutdown") || ( aliasExists && alias.equals("@shutdown") ) )
+					{
+						godCmd = true;
+						cmd_shutdown(arg, client);
+					}
 
 					if (godCmd) {
 						return;
@@ -1874,12 +1888,6 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 							nfe.printStackTrace();
 							send("Game> Invalid minute", client);
 						}
-					}
-					// pass arguments to the shutdown function
-					else if ( cmd.equals("@shutdown") || ( aliasExists && alias.equals("@shutdown") ) )
-					{
-						wizCmd = true;
-						cmd_shutdown(arg, client);
 					}
 					else if ( cmd.equals("@setmode") || ( aliasExists && alias.equals("@setmode") ) )
 					{
@@ -8380,7 +8388,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			final String command = struct[0];
 			for (final String alias : struct[1].split(",")) {   // split by ',' to look for multiple aliases, e.g. "alias1,alias2"
 				aliases.put(alias, command);
-				debug(alias + " -> " + command);
+				//debug(alias + " -> " + command);
 			}
 		}
 		debug("Aliases loaded.");
@@ -11717,12 +11725,12 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	/* not currently used, for future expansion of help system to 'topics' */
 	public String[] generateTopicFileIndex() {
 		// Directory path here
-		String path = HELP_DIR;
+		String path = TOPIC_DIR;
 
 		List<String> fileList = new ArrayList<String>();
 
-		//System.out.println("Help File Index");
-		//System.out.println("----------------------------------------");
+		System.out.println("Topic File Index");
+		System.out.println("----------------------------------------");
 
 		for( File file : Arrays.asList( new File(path).listFiles() ) ) {
 			if( file.isFile() ) {
@@ -11730,7 +11738,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 				if( filename.endsWith(".topic") || filename.endsWith(".TOPIC") )
 				{
-					//System.out.println( filename );
+					System.out.println( filename );
 					fileList.add( filename );
 				}
 			}
@@ -11936,5 +11944,15 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 	public void clearNameRefs() {
 		this.nameRef.clear();
+	}
+	
+	public void handleDeath(Player player) {
+		if( player.getState() == Player.State.DEAD ) {
+			Room room = getRoom( player.getLocation() );
+			Thing corpse = new Thing();
+			room.contents.add(corpse);
+			//Ghost ghost = new Ghost( player ); // ghosts?
+			players.remove(player);
+		}
 	}
 }
