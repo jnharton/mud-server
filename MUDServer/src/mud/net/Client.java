@@ -35,7 +35,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class Client implements Runnable {
 
-    public boolean tn;
+    public boolean tn = true;
 
 	final private Socket socket;
 	final private InputStream input;
@@ -74,6 +74,7 @@ public class Client implements Runnable {
             // which won't be followed by a newline
             final byte buf[] = new byte[BUF_SIZE];
             int numRead = 0;
+            
             while (running) {
                 final int lastNumRead = input.read(buf, numRead, BUF_SIZE - numRead);
                 numRead += lastNumRead;

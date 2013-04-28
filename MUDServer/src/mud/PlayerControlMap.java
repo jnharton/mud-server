@@ -9,7 +9,9 @@ import mud.objects.Player;
  * A class to handle mapping players to an NPC they are currently
  * in control of (instead of their Player).
  * 
- * @author Jeremy
+ * replaced original DMControlMap (an ordinary hashmap) in MUDServer
+ * 
+ * @author joshgit
  *
  */
 public class PlayerControlMap {

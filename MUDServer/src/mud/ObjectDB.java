@@ -7,6 +7,14 @@ import mud.objects.*;
 import mud.utils.Utils;
 import mud.net.Client;
 
+/**
+ * 
+ * This replaces ArrayList(s) for object types in MUDServer
+ * 
+ * @author joshgit
+ *
+ */
+
 public class ObjectDB {
 
     private static int nextId = 0;

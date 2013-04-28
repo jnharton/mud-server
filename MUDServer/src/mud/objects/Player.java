@@ -531,7 +531,7 @@ public class Player extends MUDObject
 	// then I need to determine a standard weight for the money
 	// and calculate that, then decide if the player can hold it
 	public void setMoney(final Coins c) {
-		this.money = c;
+		this.money.add(c);
 	}
 
 	/**

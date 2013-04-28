@@ -1,20 +1,20 @@
 package mud;
 
 /*
-  Copyright (c) 2012 Jeremy N. Harton
-
-  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
-  documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
-  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit
-  persons to whom the Software is furnished to do so, subject to the following conditions:
-
-  The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
-  Software.
-
-  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
-  CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * Copyright (c) 2012 Jeremy N. Harton
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit
+ * persons to whom the Software is furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
+ * Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+ * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
 // MUD Libraries
@@ -202,7 +202,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	private int ansi = 1;        // (0=off,1=on) ANSI Color on/off, default: on [currently only dictates bright or not]
 	private int xterm = 0;       // (0=off,1=on) XTERM Color on/off, default: off [not implemented]
 	private int msp = 0;         // (0=off,1=on) MUD Sound Protocol on/off, default: off
-	private int telnet = 0;      // (0=no telnet: mud client mode, 1=telnet: telnet client mode, 2=telnet: telnet and mud client)
+	private int telnet = 2;      // (0=no telnet: mud client mode, 1=telnet: telnet client mode, 2=telnet: telnet and mud client)
 
 	// Language/Localization
 	// en for English (US), fr for French (France?) are currently "supported",
@@ -433,7 +433,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	public HashMap<Player, List<EffectTimer>> effectTimers = new HashMap<Player, List<EffectTimer>>();
 
 	private boolean firstRun = false;
-	
+
 	// global nameref table
 	private HashMap<String, Integer> nameRef = new HashMap<String, Integer>(); // store name references to dbref numbers (i.e. $this->49)
 
@@ -737,7 +737,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		debug("Mapped Commands: " + commandMap.entrySet());       // Print out all the command mappings (DEBUG)
 
 		loadAliases(this.CONFIG_DIR + "aliases.txt");
-		
+
 		for(String alias : aliases.keySet()) {
 			String command = aliases.get(alias);
 			debug(alias + " -> " + command);
@@ -897,15 +897,28 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	private void runHelper(final Client client) {
 		String whatClientSaid = client.getInput();
 
+		// telnet negotiation
+		if (client.tn) { // if the client is using telnet
+			final byte[] clientBytes = whatClientSaid.getBytes();
+
+			Telnet.send("IAC WILL MCCP", client);
+
+			if (clientBytes[0] == 255) { // Telnet.IAC
+				String telnetString = Telnet.translate(Arrays.copyOfRange(clientBytes, 0, 2));
+				System.out.println("Telnet: " + telnetString);
+				//processTelnetCommand(clientBytes);
+
+			}
+
+			//System.out.println( new String(clientBytes) );
+
+			//if (clientBytes.length >= 3)    client.tn = false;
+		}
+
 		// If the client is not null and has something to say
 		try {
 			if (whatClientSaid == null || "".equals(whatClientSaid)) {
 				return;
-			}
-			// telnet negotiation
-			if (client.tn) { // if the client is using telnet
-				final byte[] clientBytes = whatClientSaid.getBytes();
-				if (clientBytes.length >= 3)    client.tn = false;
 			}
 			// all the rest
 			else {
@@ -924,8 +937,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 				if (telnet == 0) { /* using mud client (no TELNET support) */
 					// handle whatever was sent
 				}
-				else if (telnet == 1) { // using telnet exclusively, not concerned w/mud clients						
-
+				else if (telnet == 1) { // using telnet exclusively, not concerned w/mud clients
 					if (done == 0) {
 						final Character ch = whatClientSaid.charAt(0);
 
@@ -1004,7 +1016,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 				}
 
 				processCMD(new CMD(whatClientSaid.trim(), sclients.get(client), client, -1));
-				
+
 				/*if (!whatClientSaid.trim().equals("")) {  // blocks blank input
 					//System.out.print("Putting comand in command queue...");
 					processCMD(new CMD(whatClientSaid.trim(), sclients.get(client), client, -1));
@@ -1322,7 +1334,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 				// log command
 				log.writeln(playerName, playerLoc, Utils.trim(input));
 				System.out.println("Command Logged!");
-				
+
 				/* */
 				if(cmd.charAt(0) == '#') {
 					// chat channel invocation
@@ -1424,20 +1436,20 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 					/*else if ( cmd.equals("@dungeon") || ( aliasExists && alias.equals("@dungeon") ) )
 					{
 						buildCmd = true;
-						
+
 						int dX = 2;
 						int dY = 2;
-						
+
 						Dungeon d = new Dungeon(arg, dX, dY);
-						
+
 						cmd_jump(d.dRooms[0][0].getDBRef() + "", client);
 						cmd_look("", client);
-						
+
 						int dXc = 0;
 						int dYc = 0;
-						
+
 						System.out.println(d.dRooms.length);
-						
+
 						for (int r = 0; r < dX * dY; r++)
 						{
 							if (dXc == 0)
@@ -2838,13 +2850,13 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 				for (final Effect e : spell.getEffects()) {
 					if(target instanceof Player) {
 						System.out.println("Target is Player.");
-						
+
 						applyEffect((Player) target, e);               // apply the effect to the target
-						
+
 						SpellTimer sTimer = new SpellTimer(spell, 60); // spell timer with default (60 sec) cooldown
 						getSpellTimers(player).add(sTimer);
 						timer.scheduleAtFixedRate(sTimer, 0, 1000);
-						
+
 						EffectTimer etimer = new EffectTimer(e, 30);
 						getEffectTimers(player).add(etimer);
 						timer.scheduleAtFixedRate(etimer, 0, 1000); // create countdown timer
@@ -3144,7 +3156,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 			// character check
 			final Player p = objectDB.getPlayer(user);
-			
+
 			if(p.getPStatus() != Player.Status.ACTIVE) {
 				debug("CONNECT: Fail");
 				debug("Player " + p.getName() + " is banned!");
@@ -3428,10 +3440,10 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			send("Item named " + item.getName() + "(#" + item.getDBRef() + ") created. " + item.getName() + " has been placed in your location.", client);
 		}
 	}*/
-	
+
 	private void cmd_condition(final String arg, final Client client) {
 		NPC npc = getNPC(arg);
-		
+
 		if( npc != null ) {
 			send(npc.getName() + " " + "HP: " + npc.getHP() + "/" + npc.getTotalHP() + " " + npc.getState(), client);
 		}
@@ -4966,7 +4978,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		final Player player = getPlayer(client);
 
 		String[] args = arg.split(" ");
-		
+
 		boolean globalNameRefs = false;
 
 		if( player.getConfig() != null)
@@ -7147,7 +7159,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 				//send("Answer: " + answer, client);
 				debug("Answer: " + answer);
-				
+
 				//send("Entering Step " + step, client);
 				debug("Entering Step " + step);
 
@@ -7161,7 +7173,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 					};
 
 					int index = 0;
-					
+
 					// apply permanent status adjustments according to race
 					for(int value : (Races.getRace(answer)).getStatAdjust()) {
 						player.getStats().put(ab[index], player.getStats().get(ab[index]) + value);
@@ -7169,9 +7181,9 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 					}
 
 					send("", client);
-					
+
 					step++;
-					
+
 					if( edit ) { edit = false; step = 5; }
 				}
 				else if (step == 2) {
@@ -7195,7 +7207,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 					send("Player Gender set to: " + player.getGender(), client);
 					send("", client);
 					step++;
-					
+
 					if( edit ) { edit = false; step = 5; }
 				}
 				else if (step == 3) {
@@ -7203,17 +7215,17 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 					send("Player Class set to: " + player.getPClass(), client);
 					send("", client);
 					step++;
-					
+
 					if( edit ) { edit = false; step = 5; }
 				}
 				else if(step == 4) {
-					
+
 					if( answer >= 1 && answer <= 9 ) {
 						player.setAlignment(Alignments.values()[answer]);
 						send("Player Alignment set to: " + player.getAlignment(), client);
 						send("", client);
 						step++;
-						
+
 						if( edit ) { edit = false; step = 5; }
 					}
 					else {
@@ -7242,7 +7254,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 						// not sure whether I should do the above steps on the spot
 						// or in this function below, by passing it the appropriate classes
 						// I suppose either is doable
-						
+
 						client.write("Generating player stats, etc...");
 						//generate_character(player); // generate basic character data based on choices
 						client.write("Done.\n");
@@ -7293,7 +7305,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 						break;
 					}
 				}
-				
+
 				t = 0;
 				debug("T is now " + t);
 			}
@@ -7464,7 +7476,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		final EditList list = player.getEditList();
 
 		debug("input: " + input);
-		
+
 		String lcmd = "";
 		String larg = "";
 
@@ -7477,7 +7489,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			else { // No Arguments
 				lcmd = input.substring(input.indexOf(".") + 1, input.length());
 			}
-			
+
 			debug("LSEDIT CMD");
 			debug("lcmd: " + lcmd);
 
@@ -8273,7 +8285,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	{
 		return objectDB.getRoomById( dbref );
 	}
-	
+
 	public Room getRoom(Player player) {
 		return objectDB.getRoomById( player.getLocation() );
 	}
@@ -8846,7 +8858,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 			player.getInventory().add(armor);
 			player.getInventory().add(sword);
-			
+
 			// starting money?
 			player.setMoney(Coins.platinum(10).add(Coins.gold(50)).add(Coins.silver(50)));
 		}
@@ -8909,6 +8921,16 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			//inventory.add(item);
 		}
 
+		/*Map<Item, Player> itemsHeld = objectDB.getItemsHeld();
+
+		for(Item item : itemsHeld.keySet()) {
+			if(item.getLocation() == player.getDBRef()) {
+				debug("Item -> " + item.getName() + " (#" + item.getDBRef() + ") @" + item.getLocation());	
+			}
+		}*/
+
+		debug("");
+
 		/* ChatChannel Setup */
 		// add player to the STAFF ChatChannel (testing), if they are staff
 		if (player.getAccess() > USER) {
@@ -8947,7 +8969,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		player.setClient(client);
 		sclients.put(client, player);
 		players.add(player);
-		
+
 		/* create timer lists for the player */
 		effectTimers.put(player, new LinkedList<EffectTimer>());
 		spellTimers.put(player, new LinkedList<SpellTimer>());
@@ -8970,7 +8992,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	public void init_disconn(final Client client)
 	{
 		final Player player = getPlayer(client);
-		
+
 		if (player == null) {
 			debug("Player not found for client: " + client);
 			s.disconnect(client);
@@ -9072,7 +9094,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 		ArrayList<String> options = new ArrayList<String>();
 
-		//options.add("IAC WILL MCCP");
+		options.add("IAC WILL MCCP");
 
 		// send some telnet negotiation crap
 		// IAC WILL MCCP1
@@ -9286,12 +9308,12 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		saveDB(); // NOTE: real file modification occurs here
 
 		log.writeln("Done.");
-		
+
 		// Spells
 		log.writeln("Game> Backing up Spells...");
-		
+
 		saveSpells();
-		
+
 		log.writeln("Done.");
 
 		// Help Files
@@ -9384,7 +9406,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 		return "Game> Error ( " + funcName + " ): " + errorString;
 	}
-	
+
 	public String gameError(String funcName, ErrorCodes errorCode) {
 		return gameError(funcName, errorCode);
 	}
@@ -9976,16 +9998,16 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	 */
 	public void look(final MUDObject mo, final Client client) {
 		String objectType = ObjectFlag.fromLetter(mo.getFlagsAsString().charAt(0)).toString().toLowerCase();
-		
+
 		if( !mo.hasFlag(ObjectFlag.DARK) ) {
 			send(colors(mo.getName() + " (#" + mo.getDBRef() + ")", displayColors.get(objectType)), client);
 		}
 		else { send(colors(mo.getName(), displayColors.get(objectType)), client); }
 		send(mo.getDesc(),  client);
-		
+
 		if( mo instanceof Player) {
 			send("Wearing (visible): ", client);
-			
+
 			for (Entry<String, Slot> e : ((Player) mo).getSlots().entrySet()) {
 				if (e.getValue() != null) {
 					//send(e.getKey() + ": " + e.getValue().getType() + ", ", client);
@@ -10416,7 +10438,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 				else if (effect.getName().contains("dam")) {
 					Integer damage;
 					String work = effect.getName().substring(effect.getName().indexOf("-") + 1, effect.getName().length());
-					
+
 					try {
 						damage = Integer.parseInt(work);
 						debug("Amount of Damage: " + damage);
@@ -11050,7 +11072,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	public String[] getHelpFile(String name) {
 		return helpMap.containsKey(name) ? helpMap.get(name) : helpMap.containsKey(aliases.get(name)) ? helpMap.get(aliases.get(name)) : null;
 	}
-	
+
 	public String[] getTopicFile(String name) {
 		return topicMap.containsKey(name) ? topicMap.get(name) : null;
 	}
@@ -11158,11 +11180,11 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		final int portalDest = portal.getDestination();
 		final boolean playerAtPortal = portal.coord.getX() == player.coord.getX() && portal.coord.getY() == player.coord.getY();
 		final boolean missingRequiredKey = portal.requiresKey() && !portal.hasKey( player );
-		
+
 		boolean success = false;
 
 		System.out.println("Portal: " + portal.getName());
-		
+
 		debug("Old Location: " + player.getLocation());
 
 		// if the portal is keyed and is some kind of thing/item, then I need to check before permitting use
@@ -11174,23 +11196,23 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			player.setLocation(portalDest);
 
 			debug("Portal( " + player.getName() + ", " + portalOrigin + ", " + portalDest + " ): success");
-			
+
 			success = true;
 		}
 		else if (portalDest == room.getDBRef()) {
 			player.setLocation(portalOrigin);
 
 			debug("Portal( " + player.getName() + ", " + portalDest + ", " + portalOrigin + " ): success");
-			
+
 			success = true;
 		}
-		
+
 		if( success ) {
 			send("You use the portal.");
 			// tell us about the new location
 			int location = getPlayer(client).getLocation();
 			debug("New Location: " + location);
-			
+
 			Room room1 = getRoom(location);
 			look(room1, client);
 		}
@@ -11721,7 +11743,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 		return Utils.listToString(fileList);
 	}
-	
+
 	/* not currently used, for future expansion of help system to 'topics' */
 	public String[] generateTopicFileIndex() {
 		// Directory path here
@@ -11808,7 +11830,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		}
 
 		int messages = 0;
-		
+
 		MailBox mb = player.getMailBox();
 
 		// for each segment which could contain mail
@@ -11822,7 +11844,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 				mail.markUnread(); // mark the mail object unread
 				messages++;        // increase the unread count
 			}
-			
+
 			mb.add(mail); // add the mail object to the mailbox
 		}
 	}
@@ -11875,7 +11897,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	public List<EffectTimer> getEffectTimers(Player player) {
 		return effectTimers.get(player);
 	}
-	
+
 	// check for expired timers and clear them (player)
 	public void checkTimers(Player player) {
 		List<EffectTimer> etl = getEffectTimers(player);
@@ -11904,31 +11926,31 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		for(Entry<Player, List<EffectTimer>> entry : effectTimers.entrySet()) {
 			Player player = entry.getKey();
 			List<EffectTimer> etl = entry.getValue();
-			
+
 			for(EffectTimer etimer : etl) {
 				if( etimer.getTimeRemaining() <= 0 ) {
 					eff_timers.add(etimer);
 				}
 			}
-			
+
 			for(EffectTimer etimer : eff_timers) {
 				player.removeEffect(etimer.getEffect().getName());
 				send(etimer.getEffect().getName() + " effect removed.", player.getClient());
 				etl.remove(etimer);
 			}
-			
+
 			eff_timers.clear();
 		}
 	}
-	
+
 	public void scheduleTask(TimerTask task) {
 		timer.schedule(task, 0L); // immediate scheduling
 	}
-	
+
 	public List<Portal> getPortals() {
 		return this.portals;
 	}
-	
+
 	// global nameref access functions
 	public Integer getNameRef(String key) {
 		return this.nameRef.get(key);
@@ -11945,7 +11967,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	public void clearNameRefs() {
 		this.nameRef.clear();
 	}
-	
+
 	public void handleDeath(Player player) {
 		if( player.getState() == Player.State.DEAD ) {
 			Room room = getRoom( player.getLocation() );
@@ -11954,5 +11976,8 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			//Ghost ghost = new Ghost( player ); // ghosts?
 			players.remove(player);
 		}
+	}
+
+	private void processTelnetCommand() {
 	}
 }

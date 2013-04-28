@@ -37,7 +37,10 @@ public class Telnet  {
 	public static final byte DONT = (byte) 254; // server/client don't do X (imperative)
 	public static final byte IAC  = (byte) 255; // Is A Command (Indicates a command)
 	
-	// custom options for other protocols
+	// custom options for other protocols (general)
+	public static final byte LINEMODE = (byte) 34;
+	
+	// custom options for other protocols (MUD specific)
 	public static final byte MCCP = (byte) 85;   // MUD Client Compression Protocol 1 (zlib compressed stream)
 	public static final byte MCCP1 = MCCP;       // MCCP alias
 	public static final byte COMPRESS = MCCP;    // MCCP alias
@@ -58,6 +61,8 @@ public class Telnet  {
 			put("EL", EL);       put("GA", GA);               put("SB", SB);     put("WILL", WILL);
 			put("WONT", WONT);   put("DO", DO);               put("DONT", DONT); put("IAC", IAC);
 			
+			put("LINEMODE", LINEMODE);
+			
 			put("MCCP", MCCP);   put("MCCP1", MCCP1);         put("COMPRESS", COMPRESS);
 			put("MCCP2", MCCP2); put("COMPRESS2", COMPRESS2);
 			put("MSP", MSP);
@@ -71,6 +76,8 @@ public class Telnet  {
 			put(IP, "IP");       put(AO, "AO");               put(AYT, "AYT");   put(EC, "EC");
 			put(EL, "EL");       put(GA, "GA");               put(SB, "SB");     put(WILL, "WILL");
 			put(WONT, "WONT");   put(DO, "DO");               put(DONT, "DONT"); put(IAC, "IAC");
+			
+			put(LINEMODE, "LINEMODE");
 			
 			put(MCCP, "MCCP");   put(MCCP1, "MCCP1");         put(COMPRESS, "COMPRESS");
 			put(MCCP2, "MCCP2"); put(COMPRESS2, "COMPRESS2");

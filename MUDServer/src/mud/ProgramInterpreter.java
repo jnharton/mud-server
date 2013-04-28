@@ -6,6 +6,11 @@ import java.util.List;
 
 import mud.utils.Utils;
 
+/**
+ * 
+ * @author Jeremy
+ *
+ */
 public class ProgramInterpreter {
 
 	MUDServer parent;
