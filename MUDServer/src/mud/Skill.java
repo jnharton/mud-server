@@ -19,6 +19,7 @@ package mud;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 
 /* Class Array hold classes for whom the skill is a class skill */
 public class Skill
@@ -28,6 +29,17 @@ public class Skill
 	private String ability;    // ability that modifies the skill (string)
 	private String skillMod;
 	private Classes[] classes;
+	
+	private static final HashMap<String, Abilities> abilityMap = new HashMap<String, Abilities>() {
+		{
+			put("STR", Abilities.STRENGTH);
+			put("DEX", Abilities.DEXTERITY);
+			put("CON", Abilities.CONSTITUTION);
+			put("INT", Abilities.INTELLIGENCE);
+			put("WIS", Abilities.WISDOM);
+			put("CHA", Abilities.CHARISMA);
+		}
+	};
 	
 	/**
 	 * Class Constructor for Skills
@@ -62,27 +74,12 @@ public class Skill
 		return this.name;
 	}
 	
-	public String getAbility() {
-		return this.ability;
+	public Abilities getAbility() {
+		return Skill.abilityMap.get(this.ability);
 	}
 	
-	/**
-	 * 
-	 * @param skillId
-	 * @return
-	 */
-	/*public Skills getSkill(int skillId) {
-		for (Classes c : temp) {
-			if (temp.id == skillId) {
-				return  temp;
-			}
-			else {
-			}
-		}
-	}*/
-	
-	public int getSkillId(final Skill s) {
-		return s.id;
+	public int getId() {
+		return this.id;
 	}
 	
 	public String getSpec() {
@@ -97,5 +94,4 @@ public class Skill
 		//return this.name + " " + Arrays.asList(this.classes);
 		return this.name;
 	}
-
 }

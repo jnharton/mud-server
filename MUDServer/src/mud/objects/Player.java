@@ -1,6 +1,7 @@
 package mud.objects;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.BitSet;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -209,7 +210,10 @@ public class Player extends MUDObject
 	// Craft Wand  (4) Craft Wondrous Item        (5) Forge Ring (6) Scribe Scroll(7)
 	private BitSet item_creation_feats = new BitSet(8);
 	
-	private int[] statMod = new int[] { 0, 0, 0, 0, 0, 0 }; // current modifications to stats (i.e. stat drains, etc)
+	// temporary states
+	private int[] statMod = new int[6];   // temporary modifications to stats (i.e. stat drains, etc)
+	private int[] skillMod = new int[43]; // temporary modifications to skills
+	private int negativeLevels = 0;
 	
 	// borrowed from DIKU -> ROM, etc?
 	// h - hitpoints, H - max hitpoints
@@ -356,6 +360,10 @@ public class Player extends MUDObject
 		
 		// instantiate name reference table
 		this.nameRef = new HashMap<String, Integer>(10, 0.75f); // start out assuming 10 name references
+		
+		// initialize modification counters to 0
+		Arrays.fill(statMod, 0);
+	    Arrays.fill(skillMod, 0);
 	}
 
 	public void setClient(final Client c) {
@@ -537,10 +545,12 @@ public class Player extends MUDObject
 	/**
 	 * Get and return the player's current level
 	 * 
+	 * NOTE: affected by negative levels
+	 * 
 	 * @return
 	 */
 	public int getLevel() {
-        return this.level;
+        return this.level - negativeLevels;
     }
 	
 	/**
@@ -614,15 +624,27 @@ public class Player extends MUDObject
 	}
 
 	public int getAbility(Abilities ability) {
-		return stats.get(ability) + statMod[ability.ordinal()];
+		return this.stats.get(ability) + statMod[ability.ordinal()];
 	}
 	
-	public int getAbility(String abilityName) {
-		return stats.get(abilityName);
+	public void setAbility(Abilities ability, int abilityValue) {
+		this.stats.put(ability, abilityValue);
 	}
+	
+	public void setAbilityMod(Abilities ability, int abilityMod) {
+		this.statMod[ability.ordinal()] = abilityMod;
+	} 
 
 	public int getSkill(Skill skill) {
-		return skills.get(skill);
+		return this.skills.get(skill) + skillMod[skill.getId()];
+	}
+	
+	public void setSkill(Skill skill, int skillValue) {
+		this.skills.put(skill, skillValue);
+	}
+	
+	public void setSkillMod(Skill skill, int skillMod) {
+		this.skillMod[skill.getId()] = skillMod;
 	}
 
 	public ArrayList<Item> getInventory() {

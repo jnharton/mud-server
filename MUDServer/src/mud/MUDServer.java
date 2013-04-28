@@ -202,7 +202,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	private int ansi = 1;        // (0=off,1=on) ANSI Color on/off, default: on [currently only dictates bright or not]
 	private int xterm = 0;       // (0=off,1=on) XTERM Color on/off, default: off [not implemented]
 	private int msp = 0;         // (0=off,1=on) MUD Sound Protocol on/off, default: off
-	private int telnet = 2;      // (0=no telnet: mud client mode, 1=telnet: telnet client mode, 2=telnet: telnet and mud client)
+	private int telnet = 0;      // (0=no telnet: mud client mode, 1=telnet: telnet client mode, 2=telnet: telnet and mud client)
 
 	// Language/Localization
 	// en for English (US), fr for French (France?) are currently "supported",
@@ -898,7 +898,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		String whatClientSaid = client.getInput();
 
 		// telnet negotiation
-		if (client.tn) { // if the client is using telnet
+		/*if (client.tn) { // if the client is using telnet
 			final byte[] clientBytes = whatClientSaid.getBytes();
 
 			Telnet.send("IAC WILL MCCP", client);
@@ -913,7 +913,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			//System.out.println( new String(clientBytes) );
 
 			//if (clientBytes.length >= 3)    client.tn = false;
-		}
+		}*/
 
 		// If the client is not null and has something to say
 		try {
@@ -3037,18 +3037,17 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 			// evaluate results
 			if (canClimb) {
-				//Integer height = (Integer) thing.attributes.get("height");
-				Integer height = 1;
-				if( height != null ) {
-					if(height > 1) {
-						send("You start climbing <direction> the " + thing.getName().toLowerCase(), client);
-					}
-					else if(height == 1) {
-						send("You climb the " + thing.getName().toLowerCase(), client);
-						player.setXCoord(thing.getXCoord());
-						player.setYCoord(thing.getXCoord());
-						player.coord.incZ(1);
-					}
+				Integer height = Utils.toInt(thing.attributes.get("height"), 1);
+				
+				if(height > 1) {
+					send("You start climbing <direction> the " + thing.getName().toLowerCase(), client);
+				}
+				else if(height == 1) {
+					send("You climb <up/onto> the " + thing.getName().toLowerCase(), client);
+					player.setXCoord(thing.getXCoord());
+					player.setYCoord(thing.getXCoord());
+					player.coord.incZ(1);
+
 				}
 			}
 			// answer dependent on how badly check was failed
@@ -5876,29 +5875,44 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		// setskill <skill name> = <int value < max skill value>
 		// setskill <player>:<skill name> = <int value < max skill value>
 		final String[] args = arg.split("=");
+		
 		System.out.println("@setskill args: ");
+		
 		for (final String s : args) {
 			System.out.println(s);
 		}
+		
+		Player player = getPlayer(client);
+		
 		if (args.length > 1) {
 			String skillName = args[0];
 			Integer skillValue = Integer.parseInt(args[1].replaceAll(" ", ""));
-			Player p = getPlayer(client);
+			
+			Skill skill = Skills.getSkill(skillName);
 
-			for (final Skill skill : p.getSkills().keySet()) {
+			if( skill != null ) {
 				System.out.println(skillName);
 				System.out.println(skill.toString());
 
-				if (skill.toString().toLowerCase().equals(skillName.toLowerCase())) {
-
-					if (skillValue < Constants.MAX_SKILL) {
-						send("Set " + skill.toString() + " skill to " + skillValue, client);
-						System.out.println(p.getSkills().put(skill, skillValue));
-					}
-					else {
-						send("Setting exceeds maximum skill value, change aborted.", client);
-					}
+				if (skillValue < Constants.MAX_SKILL) {
+					send("Set " + skill.toString() + " skill to " + skillValue, client);
+					player.setSkill(skill, skillValue);
 				}
+				else {
+					send("Setting exceeds maximum skill value, change aborted.", client);
+				}
+			}
+			else {
+				send("No such skill!");
+			}
+		}
+		else {
+			String skillName = args[0];
+			
+			Skill skill = Skills.getSkill(skillName);
+
+			if( skill != null ) {
+				send(skill.getName() + " = " + player.getSkill(skill));
 			}
 		}
 	}

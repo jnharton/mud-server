@@ -2,6 +2,7 @@ package mud.objects;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.Hashtable;
 
 import mud.ObjectFlag;
 import mud.MUDObject;
@@ -29,6 +30,8 @@ public class Thing extends MUDObject {
 	
 	public ThingType thing_type = ThingType.NONE;
 	
+	public Hashtable<String, String> attributes; 
+	
 	protected ArrayList<Item> contents = null;
 	
 	/**
@@ -37,12 +40,15 @@ public class Thing extends MUDObject {
 	 * A no-argument constructor for making a sub-class of Thing
 	 */
 	public Thing() {
+		attributes = new Hashtable<String, String>();
 	}
 	
 	public Thing(boolean isContainer) {
 		if( isContainer ) {
 			this.contents = new ArrayList<Item>();
 		}
+		
+		attributes = new Hashtable<String, String>();
 	}
 
 	// usual constructor
@@ -62,7 +68,9 @@ public class Thing extends MUDObject {
 		this.dbref = tempDBRef;
 		// Set the location
 		this.location = tempLoc;
-		*/		
+		*/
+		
+		attributes = new Hashtable<String, String>();
 	}
 	
 	public double getWeight() {

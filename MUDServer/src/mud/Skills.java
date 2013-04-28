@@ -10,6 +10,8 @@ package mud;
  * changes are made to the one referred to.
  */
 
+import java.util.HashMap;
+
 public final class Skills {
 	public static final Skill APPRAISE = new Skill("Appraise", 0, "INT", new Classes[] { Classes.BARD, Classes.ROGUE });
 	public static final Skill BALANCE = new Skill("Balance", 1, "DEX", new Classes[] { Classes.BARD, Classes.MONK, Classes.ROGUE });
@@ -56,4 +58,38 @@ public final class Skills {
 	
 	public static final Skill NAVIGATION = new Skill("Navigation", 42, "", null);
 	public static final Skill TRACKING = new Skill("Tracking", 43, "", null);
+	
+	private static final HashMap<String, Skill> skillMap = new HashMap<String, Skill>(43, 0.75f) {
+		{
+			put("appraise", Skills.APPRAISE);
+			put("balance", Skills.BALANCE);
+			put("bluff", Skills.BLUFF);
+			put("climb", Skills.CLIMB);
+			put("concentration", Skills.CONCENTRATION);
+			put("craft", Skills.CRAFT);
+			put("deciper script", Skills.DECIPHER_SCRIPT);
+			put("diplomacy", Skills.DIPLOMACY);
+			put("disguise", Skills.DISGUISE);
+			put("escape artist", Skills.ESCAPE_ARTIST);
+			put("ea", Skills.ESCAPE_ARTIST);                      // 'escape artist' alias
+			put("gather information", Skills.GATHER_INFORMATION);
+			put("gi", Skills.GATHER_INFORMATION);                 // 'gather information' alias
+			//...
+			put("use magic device", Skills.USE_MAGIC_DEVICE);
+			put("umd", Skills.USE_MAGIC_DEVICE);                  // 'use magic device' alias
+			put("use rope", Skills.USE_ROPE);
+			put("ur", Skills.USE_ROPE);                           // 'use rope' alias
+			
+			put("navigation", Skills.NAVIGATION);
+			put("tracking", Skills.TRACKING);
+		}
+	};
+	
+	public static Skill getSkill(final String skillName) {
+		return skillMap.get(skillName);
+	}
+	
+	public static int getSkillId(final Skill s) {
+		return s.getId();
+	}
 }
