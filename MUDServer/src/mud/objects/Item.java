@@ -2,12 +2,15 @@ package mud.objects;
 
 import java.util.BitSet;
 import java.util.EnumSet;
+import java.util.List;
 
+import mud.Effect;
 import mud.ObjectFlag;
 import mud.Coins;
 
 import mud.MUDObject;
 import mud.SlotType;
+import mud.magic.Spell;
 import mud.utils.Utils;
 
 public class Item extends MUDObject {
@@ -35,6 +38,8 @@ public class Item extends MUDObject {
 	protected int mod = 0;                // modifier - +0, +2, +3, +4, ... and so on
 	
 	protected BitSet attributes;          // item attributes: rusty, glowing, etc
+	
+	protected List<Spell> spells;
 	
 	/**
 	 * Only for creating test items and then setting their properties/attributes
@@ -142,9 +147,17 @@ public class Item extends MUDObject {
 	 * @return
 	 */
 	public int getEIL() {
-		return this.mod;
+		return this.mod * 2;
+	}
+	
+	public Spell getSpell() {
+		return null;
 	}
 
+	public List<Spell> getSpells() {
+		return this.spells;
+	}
+	
 	public String toDB() {
 		String[] output = new String[8];
 		output[0] = this.getDBRef() + "";          // database reference number

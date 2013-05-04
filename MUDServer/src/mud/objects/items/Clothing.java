@@ -21,7 +21,7 @@ import mud.objects.Player;
 import mud.utils.Utils;
 
 public class Clothing extends Item implements Equippable<Clothing>, Usable<Clothing>, Wearable<Clothing>
-{	
+{
 	/**
 	 * Additional stuff that I need to figure into the persistence:
 	 * - modifiers
@@ -90,31 +90,15 @@ public class Clothing extends Item implements Equippable<Clothing>, Usable<Cloth
 	
 	public void wear(String arg, Client client) {
 		// TODO Auto-generated method stub
-
+	}
+	
+	public Effect getEffect() {
+		return null;
 	}
 	
 	@Override
 	public String getName() {
 		return this.name;
-	}
-	
-	public ArrayList<String> look() {
-		return null;
-	}
-	
-	public Spell getSpell() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	public List<Spell> getSpells() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	public Effect getEffect() {
-		// TODO Auto-generated method stub
-		return null;
 	}
 	
 	@Override

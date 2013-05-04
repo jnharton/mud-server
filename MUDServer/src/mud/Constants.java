@@ -10,7 +10,7 @@ package mud;
  * changes are made to the one referred to.
  */
 
-public class Constants {
+public final class Constants {
 	// Configuration Values
 	public static final int MAX_SKILL = 50;
 	public static final int MAX_STACK_SIZE = 25; // generic maximum for all Stackable items (should this be in the stackable interface?)

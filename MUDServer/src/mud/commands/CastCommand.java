@@ -45,14 +45,15 @@ public class CastCommand extends Command {
 		if (player.getLevel() < spell.getLevel()) {
 			// add reagents check!
 			if( spell.getReagents() != null ) {
-				for(Reagent r : spell.getReagents().values()) {
+				/*for(Reagent r : spell.getReagents().values()) {
+					System.out.println(r.getName());
 					if( player.getInventory().contains(r) ) {
 					}
 					else {
 						send("Insufficient spell components", client);
 						return;
 					}
-				}
+				}*/
 			}
 
 			// target check, if no target then auto-target self, etc, dependent on spell

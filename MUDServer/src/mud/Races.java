@@ -17,21 +17,21 @@ package mud;
   SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-public enum Races {
-	DRAGON("Dragon", 0, true),
-	DROW("Drow", 2, true),
-	DWARF("Dwarf", 4, new Integer[]{ 0, 0, 2, 0, -2, 0 }, false),
-	ELF("Elf", 1, new Integer[]{ 0, 2, -2, 0, 0, 0 }, false),
-	GNOME("Gnome", 5, new Integer[]{ -2, 0, 2, 0, 0, 0 }, false),
-	HALF_ELF("Half-Elf", 7, true),
-	HALF_ORC("Half-Orc", 12, new Integer[]{ 2, 0, 0, -2, -2, 0 }, true),
-	HALFLING("Halfling", 13, true),
-	HUMAN("Human", 3, false),
-	ORC("Orc", 6, false),
-	ILLITHID("Illithid", 8, true),
-	KOBOLD("Kobold", 9, true),
-	NONE("None", 10, true),
-	UNKNOWN("Unknown", 11, true);
+public final class Races {
+	public static final Race DRAGON = new Race("Dragon", 0, true);
+	public static final Race DROW = new Race("Drow", 2, true);
+	public static final Race DWARF = new Race("Dwarf", 4, new Integer[]{ 0, 0, 2, 0, -2, 0 }, false);
+	public static final Race ELF = new Race("Elf", 1, new Integer[]{ 0, 2, -2, 0, 0, 0 }, false);
+	public static final Race GNOME = new Race("Gnome", 5, new Integer[]{ -2, 0, 2, 0, 0, 0 }, false);
+	public static final Race HALF_ELF = new Race("Half-Elf", 7, true);
+	public static final Race HALF_ORC = new Race("Half-Orc", 12, new Integer[]{ 2, 0, 0, -2, -2, 0 }, true);
+	public static final Race HALFLING = new Race("Halfling", 13, true);
+	public static final Race HUMAN = new Race("Human", 3, false);
+	public static final Race ORC = new Race("Orc", 6, false);
+	public static final Race ILLITHID = new Race("Illithid", 8, true);
+	public static final Race KOBOLD = new Race("Kobold", 9, true);
+	public static final Race NONE = new Race("None", 10, true);
+	public static final Race UNKNOWN = new Race("Unknown", 11, true);
 
 	/*
 	 * Strength
@@ -41,37 +41,12 @@ public enum Races {
 	 * Charisma
 	 * Wisdom
 	 */
-
-	private String name;
-	private Subraces sub;
-	private int id;
-	private Integer[] statAdj;
-	private boolean restricted;
-
-	static private final Races[] myValues = {
+	
+	static private final Race[] myValues = {
 		DRAGON, ELF, DROW, HUMAN, DWARF, GNOME, ORC, HALF_ELF, ILLITHID, KOBOLD, NONE, UNKNOWN, HALF_ORC, HALFLING
 	};
 
-	private Races(String name, int id, boolean restricted) {
-		this(name, id, new Integer[] { 0, 0, 0, 0 , 0, 0 }, restricted);
-	}
-
-	private Races(String name, int id, Integer[] statAdj, boolean restricted) {
-		this.name = name;
-		this.id = id;
-		this.statAdj = statAdj;
-		this.restricted = restricted;
-	}
-
-	public int getId() {
-		return this.id;
-	}
-
-	public Integer[] getStatAdjust() {
-		return this.statAdj;
-	}
-
-	public static Races getRace(int id) {
+	public static Race getRace(int id) {
 		if (Races.ELF.getId() == id) { return Races.ELF; }
 		else if (Races.DROW.getId() == id) { return Races.DROW; }
 		else if (Races.HUMAN.getId() == id) { return Races.HUMAN; }
@@ -82,30 +57,6 @@ public enum Races {
 		else { return null; }
 	}
 
-	public Subraces getSubrace() {
-		return this.sub;
-	}
-
-	public void setSubrace(Subraces sub) {
-		this.sub = sub;
-	}
-
-	public String getName() {
-		return this.name;
-	}
-
-	public boolean isRestricted() {
-		return this.restricted;
-	}
-
-	public String toString() {
-		if (sub == null) {
-			return this.name;
-		}
-		else {
-			return this.sub.name;
-		}
-	}
 
 	public enum Subraces{
 		MOON_ELF(Races.ELF, "Moon Elf", "Gray Elf"),
@@ -114,11 +65,11 @@ public enum Races {
 		WILD_ELF(Races.ELF, "Wild Elf", ""),
 		WOOD_ELF(Races.ELF, "Wood Elf", "");
 
-		public Races parentRace;
+		public Race parentRace;
 		public String name;
 		public String alt;
 
-		Subraces(Races r, String name, String alt) {
+		Subraces(Race r, String name, String alt) {
 			this.parentRace = r;
 			this.name = name;
 			this.alt = alt;

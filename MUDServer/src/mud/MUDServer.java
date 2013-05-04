@@ -430,7 +430,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	public Timer timer = new Timer();
 
 	private HashMap<Player, List<SpellTimer>> spellTimers = new HashMap<Player, List<SpellTimer>>();
-	public HashMap<Player, List<EffectTimer>> effectTimers = new HashMap<Player, List<EffectTimer>>();
+	private HashMap<Player, List<EffectTimer>> effectTimers = new HashMap<Player, List<EffectTimer>>();
 
 	private boolean firstRun = false;
 
@@ -2031,6 +2031,9 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 					}
 					else if ( cmd.equals("exits") ) {
 						cmd_exits(arg, client);
+					}
+					else if ( cmd.equals("feats") ) {
+						cmd_feats(arg, client);
 					}
 					else if ( cmd.equals("go") ) {
 						cmd_go(arg, client);
@@ -4103,6 +4106,21 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 				// copper silver gold platinum
 			}
 	}
+	
+	private void cmd_feats(final String arg, final Client client) {
+		Player player = getPlayer(client);
+		
+		List<Feat> feats = new ArrayList<Feat>();
+		
+		feats.add(Feat.ap_chainmail);
+		feats.add(new Feat("test"));
+		feats.add(new Feat("test1"));
+		feats.add(new Feat("test2"));
+		
+		for(Feat feat : feats) {
+			send(feat.data, client);
+		}
+	}
 
 	/**
 	 * Command: @flag
@@ -5327,12 +5345,16 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			send(colors("Ready to Level-Up!", "green"), client);
 		}
 		send("XP: " + Utils.padRight("" + player.getXP(), 7) + " XP to next Level: " + Utils.padRight("" + (player.getXPToLevel() - player.getXP()), 7), client);
+		
 		send("Strength: " + player.getStats().get(Abilities.STRENGTH), client);
 		send("Dexterity: " + player.getStats().get(Abilities.DEXTERITY), client);
 		send("Constitution: " + player.getStats().get(Abilities.CONSTITUTION), client);
 		send("Intelligence: " + player.getStats().get(Abilities.INTELLIGENCE), client);
 		send("Charisma: " + player.getStats().get(Abilities.CHARISMA), client);
 		send("Wisdom: " + player.getStats().get(Abilities.WISDOM), client);
+		
+		send("AC: " + player.getAC(), client);
+		
 		int si = 0;
 		send("------------------------------[ Skills ]------------------------------", client);
 		for (final Object o : player.getSkills().keySet()) {
@@ -6323,6 +6345,9 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 		// FULL, HIGH, MED, LOW, DEPLETED
 	}
+	
+	private void cmd_wear(final String arg, final Client client) {}
+	private void cmd_wield(final String arg, final Client client) {}
 
 	/**
 	 * list player locations
@@ -9975,7 +10000,12 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 						"\t" + "RING10: " + player.getSlots().get("ring10").getItem());
 
 				for(int i = 1; i < 10; i = i + 2) {
-					send("RING" + i + ": " + player.getSlots().get("ring" + i).getItem() + "\t" + "RING" + (i + 1) + ": " + player.getSlots().get("ring" + (i + 1)).getItem(), client); 
+					String color = displayColors.get("thing");
+					String r1 = colors("RING" + i, color);
+					String r2 = colors("RING" + (i + 1), color);
+					
+					//send("RING" + i + ": " + player.getSlots().get("ring" + i).getItem() + "\t" + "RING" + (i + 1) + ": " + player.getSlots().get("ring" + (i + 1)).getItem(), client);
+					send(r1 + ": " + player.getSlots().get("ring" + i).getItem() + "\t" + r2 + ": " + player.getSlots().get("ring" + (i + 1)).getItem(), client);
 				}
 
 				for (Slot slot : player.getSlots().values()) {

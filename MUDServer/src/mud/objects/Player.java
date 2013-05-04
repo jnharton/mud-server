@@ -21,6 +21,7 @@ import mud.Coins;
 import mud.Editor;
 import mud.MUDObject;
 import mud.Point;
+import mud.Race;
 import mud.Races;
 import mud.Races.Subraces;
 import mud.Skill;
@@ -158,7 +159,7 @@ public class Player extends MUDObject
 
 	// Game Stuff (most set 'protected' so that an npc can basically have player characteristics
 	protected MUDObject target;                    // Target -- player/npc that will be used for generic interaction
-	protected Races race;                          // Race
+	protected Race race;                          // Race
 	protected Character gender;                    // Gender
 	protected Classes pclass;                      // Class
 	protected Alignments alignment;                // Alignment
@@ -425,9 +426,9 @@ public class Player extends MUDObject
 		}
 	}
 
-	public Races getPRace() { return this.race; }
+	public Race getPRace() { return this.race; }
 
-	public void setPlayerRace(Races race) { this.race = race; }
+	public void setPlayerRace(Race race) { this.race = race; }
 
 	public Character getGender() { return this.gender; }
 
@@ -896,6 +897,10 @@ public class Player extends MUDObject
 		else {
 			return false;
 		}
+	}
+	
+	public int getAC() {
+		return getArmorClass();
 	}
 	
 	public int getArmorClass() {

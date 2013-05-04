@@ -1,8 +1,10 @@
 package mud.objects;
 
 import mud.MUDObject;
+import mud.Race;
 import mud.Races;
 import mud.ObjectFlag;
+import mud.Skills;
 
 import mud.utils.Utils;
 
@@ -21,11 +23,27 @@ import java.util.EnumSet;
 public class Creature extends MUDObject {
 
 	// type flag = C
-	public Races race;
+	private Race race;
 	
 	private boolean ridable = false; // can this creature be ridden (default: false)
 	
 	public Creature() {
+	}
+	
+	/**
+	 * Copy Constructor
+	 */
+	public Creature(final Creature template) {
+		super(-1);
+		
+		this.name = template.name;
+		this.flags = template.flags;
+		this.locks = template.locks;
+		this.desc = template.desc;
+		this.location = template.location;
+		
+		this.race = template.race;
+		this.ridable = template.ridable;
 	}
 	
 	public Creature(int dbref, String race, String name, String desc) {
@@ -35,6 +53,8 @@ public class Creature extends MUDObject {
 		this.locks = "";
 		this.desc = desc;
 		this.location = 8;
+		
+		this.race = Races.KOBOLD;
 	}
 	
 	/**
@@ -53,6 +73,16 @@ public class Creature extends MUDObject {
 		this.locks = ""; // should take tempLocks argument  
 		this.desc = tempDesc;
 		this.location = tempLoc;
+		
+		this.race = Races.KOBOLD;
+	}
+	
+	public void setRace(Race newRace) {
+		this.race = newRace;
+	}
+	
+	public Race getRace() {
+		return this.race;
 	}
 	
 	/**
@@ -79,8 +109,7 @@ public class Creature extends MUDObject {
 		output[6] = "*";                     //
 		output[7] = "*";                     //
 		output[8] = "*";                     //
-		//output[9] = race.getId() + "";       // creature race
-		output[9] = "9";                     // hard coded race (9=Kobold)
+		output[9] = race.getId() + "";       // creature race
 		
 		return Utils.join(output, "#");
 	}

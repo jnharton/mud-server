@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.EnumSet;
+import java.util.List;
 
 import mud.objects.Player;
 import mud.utils.Utils;
@@ -251,7 +252,7 @@ public abstract class MUDObject {
 	}
 
 	// get effect
-	public ArrayList<Effect> getEffects() {
+	public List<Effect> getEffects() {
 		return this.effects;
 	}
 

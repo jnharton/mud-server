@@ -76,11 +76,11 @@ public class ObjectLoader {
 
                     // set race
                     try {
-                        cre.race = Races.getRace(Integer.parseInt(attr[9]));    // 9 - race number (enum ordinal)
+                        cre.setRace( Races.getRace(Integer.parseInt(attr[9])) );    // 9 - race number (enum ordinal)
                     }
                     catch(NumberFormatException nfe) {
                         nfe.printStackTrace();
-                        cre.race = Races.NONE;
+                        cre.setRace( Races.NONE );
                     }
 
                     // add the creature to the in-memory database and to the list of creatures
