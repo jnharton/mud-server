@@ -22,12 +22,13 @@ public class Effect
 	public static enum Type { ACID, BURN, HEAL, INVIS, POISON };
 	public static enum DurationType { INSTANTANEOUS, PERMANENT, ROUNDS, SPECIAL };
 	
+	private static int lastId = 0; // the id of the last effect created
+	
 	private int id;                // int
-	private static int lastId = 0; //
 	private String name;           // name of effect (ex. 'invisibility', 'acid')
 	private Type type;             // damage, visibility, resistance, etc
 	private String durationType;   // temporary vs. permanent, etc
-	private int duration;          // effects duration in seconds
+	private int duration;          // effects duration in seconds (mask rounds by using a uniform length of round, in seconds)
 
 	// explicit super constructor for subclassing
 	protected Effect() {

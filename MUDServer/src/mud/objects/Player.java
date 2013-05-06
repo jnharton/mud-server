@@ -22,8 +22,8 @@ import mud.Editor;
 import mud.MUDObject;
 import mud.Point;
 import mud.Race;
+import mud.Race.Subraces;
 import mud.Races;
-import mud.Races.Subraces;
 import mud.Skill;
 import mud.Skills;
 import mud.Slot;
@@ -213,7 +213,7 @@ public class Player extends MUDObject
 	
 	// temporary states
 	private int[] statMod = new int[6];   // temporary modifications to stats (i.e. stat drains, etc)
-	private int[] skillMod = new int[43]; // temporary modifications to skills
+	private int[] skillMod = new int[44]; // temporary modifications to skills
 	private int negativeLevels = 0;
 	
 	// borrowed from DIKU -> ROM, etc?
@@ -642,6 +642,10 @@ public class Player extends MUDObject
 	
 	public void setSkill(Skill skill, int skillValue) {
 		this.skills.put(skill, skillValue);
+	}
+	
+	public int getSkillMod(Skill skill) {
+		return this.skillMod[skill.getId()];
 	}
 	
 	public void setSkillMod(Skill skill, int skillMod) {

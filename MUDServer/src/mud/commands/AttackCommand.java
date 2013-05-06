@@ -12,6 +12,16 @@ import mud.objects.Player;
 import mud.objects.items.WeaponType;
 import mud.utils.Utils;
 
+/*
+ * Copyright (c) 2012 Jeremy N. Harton
+ * 
+ * Released under the MIT License:
+ * LICENSE.txt, http://opensource.org/licenses/MIT
+ * 
+ * NOTE: license provided with code controls, if any
+ * changes are made to the one referred to.
+ */
+
 public class AttackCommand extends Command {
 
 	public AttackCommand(MUDServer mParent) {
@@ -76,6 +86,12 @@ public class AttackCommand extends Command {
 
 								// tell us what 
 								parent.send("A solid hit! (" + damage + " damage )", client);
+								
+								if(target instanceof Player) {
+									if( ((Player) target).getHP() <= 0 ) {
+										parent.handleDeath( (Player) target );
+									}
+								}
 							}
 							else {
 								// reason we didn't hit? (this should determine our message)

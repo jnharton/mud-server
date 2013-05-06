@@ -74,6 +74,34 @@ public final class Skills {
 			put("ea", Skills.ESCAPE_ARTIST);                      // 'escape artist' alias
 			put("gather information", Skills.GATHER_INFORMATION);
 			put("gi", Skills.GATHER_INFORMATION);                 // 'gather information' alias
+			put("handle animal", Skills.HANDLE_ANIMAL);
+			put("ha", Skills.HANDLE_ANIMAL);                      // 'handle animal' alias
+			put("heal", Skills.HEAL);
+			put("hide", Skills.HIDE);
+			put("intimidate", Skills.INTIMIDATE);
+			put("jump", Skills.JUMP);
+			put("knowledge", Skills.KNOWLEDGE);
+			put("knowledge arcana", Skills.KNOWLEDGE_ARCANA);
+			put("ka", Skills.KNOWLEDGE_ARCANA);
+			put("knowledge dungeoneering", Skills.KNOWLEDGE_DUNGEONEERING);
+			put("kd", Skills.KNOWLEDGE_DUNGEONEERING);
+			put("knowledge geography", Skills.KNOWLEDGE_GEOGRAPHY);
+			put("kg", Skills.KNOWLEDGE_GEOGRAPHY);
+			put("knowledge history", Skills.KNOWLEDGE_HISTORY);
+			put("kh", Skills.KNOWLEDGE_HISTORY);
+			put("knowledge local", Skills.KNOWLEDGE_LOCAL);
+			put("kl", Skills.KNOWLEDGE_LOCAL);
+			put("knowledge nature", Skills.KNOWLEDGE_NATURE);
+			put("kna", Skills.KNOWLEDGE_NATURE);
+			put("knowledge nobility", Skills.KNOWLEDGE_NOBILITY);
+			put("kno", Skills.KNOWLEDGE_NOBILITY);
+			put("knowledge planar", Skills.KNOWLEDGE_PLANAR);
+			put("kp", Skills.KNOWLEDGE_PLANAR);
+			put("knowledge religion", Skills.KNOWLEDGE_RELIGION);
+			put("kr", Skills.KNOWLEDGE_RELIGION);
+			put("listen", Skills.LISTEN);
+			put("move silently", Skills.MOVE_SILENTLY);
+			put("ms", Skills.MOVE_SILENTLY);
 			//...
 			put("use magic device", Skills.USE_MAGIC_DEVICE);
 			put("umd", Skills.USE_MAGIC_DEVICE);                  // 'use magic device' alias

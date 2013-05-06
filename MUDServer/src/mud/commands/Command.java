@@ -6,6 +6,16 @@ import mud.objects.NPC;
 import mud.objects.Player;
 import mud.objects.Room;
 
+/*
+ * Copyright (c) 2012 Jeremy N. Harton
+ * 
+ * Released under the MIT License:
+ * LICENSE.txt, http://opensource.org/licenses/MIT
+ * 
+ * NOTE: license provided with code controls, if any
+ * changes are made to the one referred to.
+ */
+
 public abstract class Command {
 	protected static int USER = 0;   // basic user permissions
 	protected static int ADMIN = 1;  //

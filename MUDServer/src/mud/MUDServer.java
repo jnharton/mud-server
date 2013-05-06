@@ -277,7 +277,8 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	private HashMap<Integer, String> years = new HashMap<Integer, String>(50, 0.75f);            // HashMap that holds year names for game themes that supply them (static)
 
 	/* not used much currently */
-	private LinkedHashMap<String, String> config = new LinkedHashMap<String, String>(11, 0.75f); // LinkedHashMap to track current config instead of using tons of individual integers?
+	private Map<String, String> config = new LinkedHashMap<String, String>(11, 0.75f); // LinkedHashMap to track current config instead of using tons of individual integers?
+	//private LinkedHashMap<String, String> config = new LinkedHashMap<String, String>(11, 0.75f); // LinkedHashMap to track current config instead of using tons of individual integers?
 	//private HashTable<String, Boolean> config;
 
 	private HashMap<Player, Session> sessionMap = new HashMap<Player, Session>(1, 0.75f);        // player to session mapping
@@ -2990,7 +2991,8 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		// @config msp = on, @config msp = off
 		if ( arg.contains("=") ) {
 			String[] args = arg.split("=");
-
+			String[] test = { "on", "off" }; 
+			
 			if ( config.containsKey( Utils.trim( args[0] ) ) ) {
 				debug("Config> Setting '" + Utils.trim( args[0] ) + "' to '" + Utils.trim( args[1] ));
 				config.put( Utils.trim( args[0] ), Utils.trim( args[1] ) );
@@ -3005,8 +3007,11 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			if ( arg.equals("list") ) {
 				send("Configuration Options", client);
 				for (Entry<String, String> e : config.entrySet()) {
-					send(e.getKey() + " : " + e.getValue(), client);
+					send( Utils.padRight( e.getKey(), ' ', 10 ) + " : " + e.getValue(), client);
 				}
+			}
+			else {
+				send( gameError("@config", ErrorCodes.INVALID_SYNTAX), client );
 			}
 		}
 	}
@@ -5355,21 +5360,13 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		
 		send("AC: " + player.getAC(), client);
 		
-		int si = 0;
+		int si = 1;
+		int columns = 2;
+		
+		StringBuilder row = new StringBuilder();
+		
 		send("------------------------------[ Skills ]------------------------------", client);
-		for (final Object o : player.getSkills().keySet()) {
-			Integer value = player.getSkills().get(o);
-			String color = "";
-			if (value == -1) {
-				color = "red";
-			}
-			else if (value == 0) {
-				color = "yellow";
-			}
-			else if (value > 0) {
-				color = "green";
-			}
-
+		for (final Skill s : player.getSkills().keySet()) {
 			// FIX: I would like to make the output 2 or 3 columns wide to minimize screen use
 			// if possible make this configurable by the end user
 			// let them decided how many columns and how they are sorted
@@ -5380,19 +5377,34 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			//send(((Skills) o).toString() + Colors.WHITE + " : " + (Integer) temp.skills.get(o));
 			// ?? FIXED ??
 
-			String skill = ((Skill) o).toString(); 
+			String skill = s.toString();
+			Integer value = player.getSkills().get(s);
+			Integer mod = player.getSkillMod(s);
+			
+			String color = "";
+			
+			if (value == -1) {
+				color = "red";
+			}
+			else if (value == 0) {
+				color = "yellow";
+			}
+			else if (value > 0) {
+				color = "green";
+			}
+			
 			String output = "";
 
-			output = colors(skill, color) + " : " + value;
+			output = Utils.padRight( colors(skill, color), 35 ) + " : " + Utils.padLeft("" + value, ' ', 2) + " (" + mod + ")";
 
-			if (si < 3) {
+			if (si > columns) {
+				client.write(row.toString() + '\n');
+				row.delete(0, row.length());
+				si = 1;
 			}
-			else {
-				client.write('\n');
-				si = 0;
-			}
-
-			client.write(Utils.padRight(output, 37));
+			
+			row.append( Utils.padRight( output, 46 ) );
+			
 			si++;
 		}
 		client.write('\n');
@@ -5925,7 +5937,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 				}
 			}
 			else {
-				send("No such skill!");
+				send("No such skill!", client);
 			}
 		}
 		else {
@@ -7146,8 +7158,8 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			{
 			case 1:
 				send("Please choose a race:", client);
-				send("1) " + Utils.padRight("" + Races.ELF, 6) +  " 2) " + Utils.padRight("" + Races.DROW, 6) + " 3) " + Utils.padRight("" + Races.HUMAN, 6), client);
-				send("4) " + Utils.padRight("" + Races.DWARF, 6) + " 5) " + Utils.padRight("" + Races.GNOME, 6) + " 6) " + Utils.padRight("" + Races.ORC, 6), client);
+				send("1) " + Utils.padRight("" + Races.ELF, 6) +  " 2) " + Utils.padRight("" + Races.HUMAN, 6) + " 3) " + Utils.padRight("" + Races.DWARF, 6), client);
+				send("4) " + Utils.padRight("" + Races.GNOME, 6) + " 5) " + Utils.padRight("" + Races.ORC, 6) + " 6) " + Utils.padRight("" + Races.HALF_ELF, 6), client);
 				client.write("> ");
 				break;
 			case 2:
@@ -9447,7 +9459,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	}
 
 	public String gameError(String funcName, ErrorCodes errorCode) {
-		return gameError(funcName, errorCode);
+		return gameError(funcName, errorCode.ordinal());
 	}
 
 	/**
@@ -11919,6 +11931,28 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			fnfe.printStackTrace();
 		}
 	}
+	
+	public Item compare(Item item1, Item item2) {
+		// comparisons:
+		
+		// item type -- if not same type, return null as they are not comparable?
+		//if( item1.getItemType() == item2.getItemType() )	
+		
+		// item value -- compare value in terms of money, copper pieces specifically
+		if( item1.getCost().numOfCopper() > item2.getCost().numOfCopper() ) {
+			// item wear
+			if( ( item1.durability - item1.getWear() ) <  ( item2.durability - item2.getWear() ) ) {
+				return item1;
+			}
+			else {
+				return item2;
+			}
+		}
+		else if( item1.getCost().numOfCopper() == item2.getCost().numOfCopper() ) {
+			return item1;
+		}
+		else { return item2; }
+	}
 
 	public Item compare(Item item1, Item item2, Object...criteria) {
 		// comparisons:
@@ -11996,6 +12030,13 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	}
 
 	// global nameref access functions
+	
+	/**
+	 * Get a value for a Name Reference from the global table.
+	 * 
+	 * @param key
+	 * @return
+	 */
 	public Integer getNameRef(String key) {
 		return this.nameRef.get(key);
 	}
@@ -12003,11 +12044,20 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	public Set<String> getNameReferences() {
 		return this.nameRef.keySet();
 	}
-
+	
+	/**
+	 * Set a Name Reference in the global table.
+	 * 
+	 * @param key
+	 * @param value
+	 */
 	public void setNameRef(String key, Integer value) {
 		this.nameRef.put(key, value);
 	}
-
+	
+	/**
+	 * Clear the global Name Reference Table
+	 */
 	public void clearNameRefs() {
 		this.nameRef.clear();
 	}

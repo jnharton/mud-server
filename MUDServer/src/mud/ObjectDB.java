@@ -7,6 +7,16 @@ import mud.objects.*;
 import mud.utils.Utils;
 import mud.net.Client;
 
+/*
+ * Copyright (c) 2012 Jeremy N. Harton, joshgit?
+ * 
+ * Released under the MIT License:
+ * LICENSE.txt, http://opensource.org/licenses/MIT
+ * 
+ * NOTE: license provided with code controls, if any
+ * changes are made to the one referred to.
+ */
+
 /**
  * 
  * This replaces ArrayList(s) for object types in MUDServer

@@ -5,6 +5,16 @@ import java.util.Map.Entry;
 import mud.MUDServer;
 import mud.net.Client;
 
+/*
+ * Copyright (c) 2012 Jeremy N. Harton
+ * 
+ * Released under the MIT License:
+ * LICENSE.txt, http://opensource.org/licenses/MIT
+ * 
+ * NOTE: license provided with code controls, if any
+ * changes are made to the one referred to.
+ */
+
 public class AliasCommand extends Command {
 
 	public AliasCommand(MUDServer mParent) {

@@ -11,6 +11,16 @@ import mud.utils.MailBox;
 import mud.utils.Utils;
 import mud.net.Client;
 
+/*
+ * Copyright (c) 2012 Jeremy N. Harton
+ * 
+ * Released under the MIT License:
+ * LICENSE.txt, http://opensource.org/licenses/MIT
+ * 
+ * NOTE: license provided with code controls, if any
+ * changes are made to the one referred to.
+ */
+
 public class MailCommand extends Command {
 
 	private final int shortSUB = 10;

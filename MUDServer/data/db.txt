@@ -17,7 +17,7 @@
 16#cavern#E#You see nothing.#26#18#2
 17#null#null#null#-1#null#null#null#null#null#null
 18#Cavern#RS#A large cavern stretches before you. To your back the cavern's mouth opens into a grassy forest clearing. Here the footsteps of many small creatures with clawed feet are quite evident in the dust spread across the cavern floor.#0#N#10,10,10#-1#
-19#Nathan#PW#This is an admin, it is also a player and a builder.#4#250d8d84cf1ed1e0bd30437498046d02#12,12,12,12,12,12#34,50,0,0#4#3#10#IC#0
+19#Nathan#PW#This is an admin, it is also a player and a builder.#4#250d8d84cf1ed1e0bd30437498046d02#12,12,12,12,12,12#34,50,0,0#4#2#10#IC#0
 20#Alisare#N#A pretty elf cleric.#161##0,0,0,0,0,0#0,0,0,0#0#1#3#IC
 21#east#E#You see nothing.#8#9#2
 22#Intersection: The Street of Bells & Lamp Street#RS#intersection of the street of bells and lamp street, first intersection south of suldown street.#53#O#10,10,10#-1#
@@ -183,14 +183,14 @@
 182#Lightsinger Theatre#RS#The Lightsinger Theatre (C56)#53#I#10,10,10#-1#
 183#ls#E#You see nothing.#48#182#2
 184#out#E#You see nothing.#182#48#2
-&185#Terys#WMV#A weapon merchant.#161#null#12,12,12,12,12,12#1000,1000,1000,1000#0#3#14
-186#Iridan#N#An innkeeper.#4##0,0,0,0,0,0#0,0,0,0#0#10#0#IC
+&185#Terys#WMV#A weapon merchant.#161#null#12,12,12,12,12,12#1000,1000,1000,1000#0#2#14#
+186#Iridan#N#An innkeeper.#4##0,0,0,0,0,0#0,0,0,0#0#2#0#IC
 187#Potion#I#A potion.#8#8#1#null
 188#out#E#You see nothing.#4#9#0
 189#inn#E#You see nothing.#9#4#0
 190#Fountain#RS#A small clearing in the forest, paved, strangely, with smooth granite tiles and at the center is a large marble fountain with jets of water bursting forth and then falling into the pool beneath.#0#N#10,10,10#-1#
 191#Table#T#A wooden table.#4#0
-192#Aran#AMV#An armor merchant.#161#null#12,12,12,12,12,12#1010,10,10,0#0#3#14#VEN
+192#Aran#AMV#An armor merchant.#161#null#12,12,12,12,12,12#1010,10,10,0#0#2#14#VEN
 193#Potion#I#A potion.#8#8#1#null
 194#test#RS#You see nothing.#5#N#10,10,10#-1#
 195#test1#RS#You see nothing.#5#N#10,10,10#-1#
@@ -246,14 +246,14 @@
 245#Adventurer's Guild#RS#A roomy, wood paneled room lit by wall sconces spaced regularly throughout. The room is filled with trestle tables and benches. Several men and women circulate to handle the food and drink for anyone who wants it. On the far side of the room there is a man behind a counter, obviously a scribe, taking names down. There is a long line of would be adventurers in front of him. To his left, there is a counter where a smaller number of people are filling out paperwork, and diagonally away from there are several vendors selling basic goods as well as armor and weapons to anyone who can afford them.#0#I#10,10,10#-1#
 246#Potion of Healing#I#A healing potion of somewhat dubious veracity.#8#8#1#null
 247#Cavern#RS#A cavern, under a mountain. The space is dimly lit by pitch torches, you can see several moving creatures, probably kobolds.#0#I#10,10,10#-1#
-248#Kobold#C#A filthy kobold.#247#*#*#*#*#9
-249#Kobold#C#A filthy kobold.#247#*#*#*#*#9
-250#Kobold#C#A filthy kobold.#247#*#*#*#*#9
+248#Kobold#C#A filthy kobold.#247#*#*#*#*#8
+249#Kobold#C#A filthy kobold.#247#*#*#*#*#8
+250#Kobold#C#A filthy kobold.#247#*#*#*#*#8
 251#Clearing#RS#A long-abandoned tower dominates the sky here{RAIN?, its polished-brick facade slick with fallen rain}{CLEAR?{DAY?, gleaming in the sunlight}{NIGHT?, pale moonlight casting it in an unnatural glow}}.#0#O#10,10,10#-1#
 252#Tower#RS#The inside the tower is a dusty space,{DAY? sunbeams cascade in through the hole in the ceiling}{NIGHT? moonlight falls gently across the stone floor}#0#O#10,10,10#-1#
 253#Town Hall#RS#This building is the place that the town is governed from. <More description here, please?>#0#I#10,10,10#-1#
 254#Architect#N#This portly gentleman designs building, such as houses, and forts. Perhaps he can help you with something?#253##12,12,12,12,12,12#0,0,0,0#0#3#13#IC
-255#Ecturun Meshkal#N#Ecturun is a tall human, wearing heavy plate armor scarred from much battle. He stands stiffly.#245##14,14,14,14,14,14#0,0,0,0#0#3#16#IC
+255#Ecturun Meshkal#N#Ecturun is a tall human, wearing heavy plate armor scarred from much battle. He stands stiffly.#245##14,14,14,14,14,14#0,0,0,0#0#2#16#IC
 256#Public Chest#T#A chest.#8#1#*#*
 257#+4 Light Wooden Shield#I#A light wooden shield#8#10#1#4
 258#Planar Parent#RS#The parent room for planar regions#0#N#10,10,10#-1#

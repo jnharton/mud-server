@@ -54,15 +54,16 @@ public class CommandExec implements Runnable {
 				try {
 					newCmd = this.cmdQueue.poll();
 					
-					newCmd.status = CMD.Status.ACTIVE; // mark command as being processed
-					
-					//System.out.println(newCmd.getCmdString() + ": " + newCmd.status); // tell us about it 
+					newCmd.status = CMD.Status.ACTIVE; // mark command as being processed 
 					
 					// parse out stored data
 					final String command = newCmd.getCmdString();
 					final Client client = newCmd.getClient();
 					
 					// verify that client is still connected
+					if( !client.isRunning() ) {
+						return;
+					}
 					
 					// try to capture errors
 					try {
@@ -81,8 +82,6 @@ public class CommandExec implements Runnable {
 					}
 					
 					newCmd.status = CMD.Status.FINISHED;
-					
-					//System.out.println(newCmd.getCmdString() + ": " + newCmd.status);
 					
 					// clear the processed command
 					newCmd = null;
