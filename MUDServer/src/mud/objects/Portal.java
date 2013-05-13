@@ -15,6 +15,19 @@ import mud.objects.Player;
 import mud.utils.Utils;
 
 /*
+ * Copyright (c) 2012 Jeremy N. Harton
+ * 
+ * Released under the MIT License:
+ * LICENSE.txt, http://opensource.org/licenses/MIT
+ * 
+ * NOTE: license provided with code controls, if any
+ * changes are made to the one referred to.
+ */
+
+/**
+ * 
+ * public class Portal extends Exit implements Usable<Portal> ?
+ * 
  * currently this class does not support keyed portals that require a physical key object to pass
  * potentially I could implement the following kinds of locks:
  * 	- time of day (sun's position)
@@ -29,14 +42,9 @@ import mud.utils.Utils;
  * Do I keep a giant portal table?
  * 
  * I assume herein that all portal are two-way (despite wanting to code for either)
- */
-
-/**
- * 
  * @author Jeremy
  *
  */
-//public class Portal extends Exit implements Usable<Portal> {
 public class Portal extends Exit implements EventSource, SayEventListener {
 	private PortalType type;                        // type of portal
 	private Object key;                             // if it's locked with a key what is it

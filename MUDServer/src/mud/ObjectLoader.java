@@ -88,43 +88,9 @@ public class ObjectLoader {
                     objectDB.addCreature(cre);
                 }
                 else if (oFlags.indexOf("P") != -1) {
-                    final String oPassword = attr[5];                                     // 5 - password
-                    final Integer[] oStats = Utils.stringsToIntegers(attr[6].split(",")); // 6 - stats
-                    final int[] oMoney = Utils.stringsToInts(attr[7].split(","));         // 7 - money
-                    int access = Utils.toInt(attr[8], Constants.USER);                    // 8 - permission
-                    String status = attr[11];                                             // 11 - status
-
-                    final Player player = new Player(oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), oDesc, oLocation, "", oPassword, status, oStats, Coins.fromArray(oMoney));
-                    player.setAccess(access);
-
-                    // set race
-                    try {
-                        player.setPlayerRace(Races.getRace(Integer.parseInt(attr[9])));   // 9 - race number (enum ordinal)
-                    }
-                    catch(NumberFormatException nfe) {
-                        nfe.printStackTrace();
-                        player.setPlayerRace(Races.NONE);
-                    }
-
-                    // set class
-                    try {
-                        player.setPClass(Classes.getClass(Integer.parseInt(attr[10]))); // 10 - class number (enum ordinal)
-                    }
-                    catch(NumberFormatException nfe) {
-                        nfe.printStackTrace();
-                        player.setPClass(Classes.NONE);
-                    }
-                    
-                    // set Player Status
-                    try {
-                    	player.setPStatus(Player.Status.values()[Integer.parseInt(attr[12])]);
-                    }
-                    catch(NumberFormatException nfe) {
-                        nfe.printStackTrace();
-                        player.setPStatus(Player.Status.LOCKED);
-                    }
-
-                    //log.debug("log.debug (db entry): " + player.toDB(), 2);
+                	Player player = loadPlayer( oInfo );
+                	
+                	//log.debug("log.debug (db entry): " + player.toDB(), 2);
 
                     objectDB.add(player);
                     objectDB.addPlayer(player);
@@ -458,60 +424,61 @@ public class ObjectLoader {
 	 * @param playerData
 	 * @return a player object
 	 */
-	public Player loadPlayer(String playerData) {
+	public static Player loadPlayer(String playerData) {
 
 		String[] attr = playerData.split("#");
+		
+		// 0 - player database reference number
+		// 1 - player name
+		// 2 - player flags
+		// 3 - player description
+		// 4 - player location
+		// 5 - player password
+		// 6 - player stats
+		// 7 - player money
+		// 8 - player permissions
+		// 9 - player race number (enum ordinal)
+		// 10 - player class number (enum ordinal)
 
-		Integer oDBRef = 0, oLocation = 0;
-		String oName = "", oFlags = "", oDesc = "", oPassword = "";
-		String[] os, om;
-
-		oDBRef = Integer.parseInt(attr[0]);    // 0 - player database reference number
-		oName = attr[1];                       // 1 - player name
-		oFlags = attr[2];                      // 2 - player flags
-		oDesc = attr[3];                       // 3 - player description
-		oLocation = Integer.parseInt(attr[4]); // 4 - player location
-
-		oPassword = attr[5];                   // 5 - player password
-		os = attr[6].split(",");               // 6 - player stats
-		om = attr[7].split(",");               // 7 - player money
-		int access;                            // 8 - player permissions
-		int raceNum;                           // 9 - player race number (enum ordinal)
-		int classNum;                          // 10 - player class number (enum ordinal)
+		Integer oDBRef = Utils.toInt(attr[0], -1);
+		String oName = attr[1];
+		String oFlags = attr[2];
+		String oDesc = attr[3];
+		Integer oLocation = Utils.toInt(attr[4], Constants.WELCOME_ROOM);
 
 		/*debug("Database Reference Number: " + oDBRef);
 		debug("Name: " + oName);
 		debug("Flags: " + oFlags);
 		debug("Description: " + oDesc);
 		debug("Location: " + oLocation);*/
+		
+		String oPassword = attr[5];
 
-		Integer[] oStats = Utils.stringsToIntegers(os);
-		int[] oMoney = Utils.stringsToInts(om);;
+		Integer[] oStats = Utils.stringsToIntegers( attr[6].split(",") );
+		int[] oMoney = Utils.stringsToInts( attr[7].split(",") );
 
 		Player player = new Player(oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), oDesc, oLocation, "", oPassword, "IC", oStats, Coins.fromArray(oMoney));
 		
+		int access, raceNum, classNum, player_status;
+		
 		/* Set Player Permissions */
-		player.setAccess(Utils.toInt(attr[8], Constants.USER));
+		access = Utils.toInt(attr[8], Constants.USER);
+		player.setAccess(access);
 
 		/* Set Player Race */
-		try {
-			raceNum = Integer.parseInt(attr[9]);
-			player.setPlayerRace(Races.getRace(raceNum));
-		}
-		catch(NumberFormatException nfe) {
-			nfe.printStackTrace();
-			player.setPlayerRace(Races.NONE);
-		}
+		raceNum = Utils.toInt(attr[9], 9);
+		player.setPlayerRace(Races.getRace(raceNum));
 
 		/* Set Player Class */
-		try {
-			classNum = Integer.parseInt(attr[10]);
-			player.setPClass(Classes.getClass(classNum));
-		}
-		catch(NumberFormatException nfe) {
-			nfe.printStackTrace();
-			player.setPClass(Classes.NONE);
-		}
+		classNum = Utils.toInt(attr[10], 0);
+		player.setPClass(Classes.getClass(classNum));
+		
+		/* Set Status */
+        player.setStatus(attr[11]);
+        
+        /* Set Player Status */
+        player_status = Utils.toInt(attr[12], Player.Status.LOCKED.ordinal());
+        player.setPStatus(Player.Status.values()[player_status]);
 
 		return player;
 	}

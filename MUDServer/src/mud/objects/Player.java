@@ -50,6 +50,16 @@ import mud.utils.cgData;
 import mud.utils.Utils;
 import mud.utils.edData;
 
+/*
+ * Copyright (c) 2012 Jeremy N. Harton
+ * 
+ * Released under the MIT License:
+ * LICENSE.txt, http://opensource.org/licenses/MIT
+ * 
+ * NOTE: license provided with code controls, if any
+ * changes are made to the one referred to.
+ */
+
 /**
  * Player Class
  * 
@@ -989,7 +999,7 @@ public class Player extends MUDObject
 		output[9] = race.getId() + "";               // race
 		output[10] = pclass.getId() + "";            // class
 		output[11] = status;                         // status
-		output[12] = pstatus.ordinal() + "";         //
+		output[12] = pstatus.ordinal() + "";         // ALIVE/INCAPACITATED/DEAD
 		return Utils.join(output, "#");
 	}
 

@@ -26,6 +26,9 @@ public final class Constants {
 	public static final int WIZARD = 3; // Most permissions
 	public static final int GOD = 4;    // Pff, such arrogant idiots we are! (anyway, max permissions)
 	
+	// Named Rooms
+	public static final int WELCOME_ROOM = 8; // welcome room
+	
 	// Channel Names/IDs? (move to another constants class - ChanID?)
 	public static final String OOC_CHANNEL = "ooc";
 	public static final String STAFF_CHANNEL = "staff";

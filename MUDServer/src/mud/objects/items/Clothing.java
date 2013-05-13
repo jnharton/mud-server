@@ -36,6 +36,8 @@ public class Clothing extends Item implements Equippable<Clothing>, Usable<Cloth
 	// type - cloak, boots, pants, shirt, undergarment
 	public ClothingType clothing;
 	
+	private Effect effect = null;
+	
 	/**
 	 * default constructor for subclassing?
 	 */
@@ -93,7 +95,7 @@ public class Clothing extends Item implements Equippable<Clothing>, Usable<Cloth
 	}
 	
 	public Effect getEffect() {
-		return null;
+		return this.effect;
 	}
 	
 	@Override

@@ -3,6 +3,17 @@ package mud.objects;
 import mud.MUDObject;
 import mud.utils.Utils;
 
+/*
+ * Copyright (c) 2012 Jeremy N. Harton
+ * 
+ * Released under the MIT License:
+ * LICENSE.txt, http://opensource.org/licenses/MIT
+ * 
+ * NOTE: license provided with code controls, if any
+ * changes are made to the one referred to.
+ */
+
+
 /**
  * This object exists solely as a place-holder type to represent destroyed objects. It has
  * a dbref value, a default location of 0 and the rests of the fields are "null"

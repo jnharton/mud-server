@@ -192,5 +192,6 @@ public class ProgramInterpreter {
 		p.parse("{distance:(0,0),(1,1)}");
 		p.parse("{rainbow:output this string in rainbow colors}");
 		System.out.println(p.interpret("{distance:(0,0),(2,3)}"));
+		System.out.println(p.interpret("{rainbow:output this string in rainbow colors}"));
 	}
 }

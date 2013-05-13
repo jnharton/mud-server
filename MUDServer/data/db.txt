@@ -261,3 +261,7 @@
 260#portal#E##259#4#1#0
 261#Combat Practice Room#RS#A room in which to test the combat system and practice with it#0#N#10,10,10#-1#
 262#combat dummy#N#A wooden combat dummy#261#null#12,12,12,12,12,12#0,0,0,0#0#3#16
+263#Castle: Gates#RS#A stone arch hangs high above, the points of a portcullis protuding from a dark slot on the side leading out of the castle#0#O#10,10,10#-1
+264#Castle: Courtyard#RS#An open courtyard in the midst of a castle.#0#O#10,10,10#-1#
+265#gates#E#the castle gates lie ahead#264#263#2
+266#courtyard#E#just inside the gates is the main courtyard of the castle#263#264#2

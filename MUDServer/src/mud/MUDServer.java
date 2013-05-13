@@ -174,7 +174,6 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 	// server configuration settings
 	private int port = 4202;            // the port on which to listen for client connections
-	private int WELCOME_ROOM = 8;       // welcome room
 	private int max_log_size = 5000;    // max length of a log file (in lines)
 	private int max_levels = 20;        // maximum player level
 	private int max_players = 15;       // maximum number of players (adustable, but exceeding 100/1000 may cause other code to break down catastrophically)
@@ -188,7 +187,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	private int debug = 1;                   // (0=off,1=on) Debug: server sends debug messages to the console
 	private int debugLevel = 3;              // (1=debug,2=extra debug,3=verbose) priority of debugging information recorded
 	private boolean logging = true;          // logging? (true=yes,false=no)
-	private int logLevel = 3;                // () priority of log information recorded 
+	private int logLevel = 3;                // (higher is more) priority of log information recorded 
 	private boolean prompt_enabled = false;  // show player information bar
 
 	// Protocols
@@ -3108,14 +3107,14 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		// NOTE: my problem is related to guest not being findable somehow, all this needs a major revamp
 		if ((user.toLowerCase().equals("guest")) && (pass.toLowerCase().equals("guest"))) {
 			if (guest_users == 1) {
-				final Player player = new Player(-1, "Guest" + guests, EnumSet.of(ObjectFlag.PLAYER, ObjectFlag.GUEST), "A guest player.", WELCOME_ROOM, "", Utils.hash("password"), "OOC", new Integer[] { 0, 0, 0, 0, 0, 0 }, Coins.copper(0));
+				final Player player = new Player(-1, "Guest" + guests, EnumSet.of(ObjectFlag.PLAYER, ObjectFlag.GUEST), "A guest player.", Constants.WELCOME_ROOM, "", Utils.hash("password"), "OOC", new Integer[] { 0, 0, 0, 0, 0, 0 }, Coins.copper(0));
 				objectDB.addAsNew(player);
 				init_conn(player, client, false);
 				guests++;
 			}
 		}
 		else if (user.toLowerCase().equals("new")) {
-			final Player player = new Player(-1, "randomName", startFlags.clone(), "New player.", WELCOME_ROOM, "", Utils.hash("randomPass"), "NEW", new Integer[] { 0, 0, 0, 0, 0, 0 }, Coins.copper(0));
+			final Player player = new Player(-1, "randomName", startFlags.clone(), "New player.", Constants.WELCOME_ROOM, "", Utils.hash("randomPass"), "NEW", new Integer[] { 0, 0, 0, 0, 0, 0 }, Coins.copper(0));
 			objectDB.addAsNew(player);
 			init_conn(player, client, false);
 		}
@@ -10964,7 +10963,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		final Item item = new Item();
 
 		item.setFlags(EnumSet.of(ObjectFlag.ITEM));
-		item.setLocation(WELCOME_ROOM);
+		item.setLocation(Constants.WELCOME_ROOM);
 
 		item.setItemType(ItemType.NONE);
 
@@ -10987,19 +10986,19 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	 */
 	private Item createItem(Weapon template) {
 		final Item item = createItems(template, 1).get(0);
-		item.setLocation(WELCOME_ROOM);
+		item.setLocation(Constants.WELCOME_ROOM);
 		return item;
 	}
 
 	private Item createItem(Book template) {
 		final Item item = createItems(template, 1).get(0);
-		item.setLocation(WELCOME_ROOM);
+		item.setLocation(Constants.WELCOME_ROOM);
 		return item;
 	}
 
 	private Item createItem(Armor template) {
 		final Item item = createItems(template, 1).get(0);
-		item.setLocation(WELCOME_ROOM);
+		item.setLocation(Constants.WELCOME_ROOM);
 		return item;
 	}
 
@@ -12040,7 +12039,12 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	public Integer getNameRef(String key) {
 		return this.nameRef.get(key);
 	}
-
+	
+	/**
+	 * Get the whole set of Name Reference(s) from the global table
+	 * 
+	 * @return
+	 */
 	public Set<String> getNameReferences() {
 		return this.nameRef.keySet();
 	}

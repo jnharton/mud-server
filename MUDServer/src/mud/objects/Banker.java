@@ -8,6 +8,16 @@ import mud.Currency;
 import mud.net.Client;
 import mud.utils.Bank;
 
+/*
+ * Copyright (c) 2012 Jeremy N. Harton
+ * 
+ * Released under the MIT License:
+ * LICENSE.txt, http://opensource.org/licenses/MIT
+ * 
+ * NOTE: license provided with code controls, if any
+ * changes are made to the one referred to.
+ */
+
 public class Banker extends NPC implements BankerI {
 	
 	private Bank bank;

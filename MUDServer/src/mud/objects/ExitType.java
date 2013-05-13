@@ -1,6 +1,17 @@
 package mud.objects;
 
-/* Exit Types include Door, Portal, and Standard and work as follows:
+/*
+ * Copyright (c) 2012 Jeremy N. Harton
+ * 
+ * Released under the MIT License:
+ * LICENSE.txt, http://opensource.org/licenses/MIT
+ * 
+ * NOTE: license provided with code controls, if any
+ * changes are made to the one referred to.
+ */
+
+/**
+ * Exit Types include Door, Portal, and Standard and work as follows:
  * 
  * Door - any kind of door, such as a shaped piece of wood, metal, or some other material that
  * is used to block an entrance, usually into an enclosed space like a building or cave. May also
@@ -13,7 +24,6 @@ package mud.objects;
  * may have no physical representation of any kind (i.e. kind of like the border between two countries,
  * which exists, but rarely has a physical presence.
  */
-
 public enum ExitType {
 	DOOR("DOOR"),     // 0
 	PORTAL("PORTAL"), // 1
