@@ -144,19 +144,8 @@ public class Weapon extends Item implements Equippable<Weapon>, Wieldable<Weapon
 	public WeaponType getWeaponType() {
 		return this.weapon_type;
 	}
-
-	public String toString() {
-		if (this.mod > 0) {
-			return "+" + this.mod + " " + this.getName();
-		}
-		else if (this.mod < 0) {
-			return this.mod + " " + this.getName();
-		}
-		else {
-			return this.getName();
-		}
-	}
-
+	
+	@Override
 	public String toDB() {
 		String[] output = new String[8];
 		output[0] = this.getDBRef() + "";            // database reference number
@@ -168,5 +157,18 @@ public class Weapon extends Item implements Equippable<Weapon>, Wieldable<Weapon
 		output[6] = this.weapon_type.ordinal() + ""; // weapon type
 		output[7] = this.mod + "";                   // modifier
 		return Utils.join(output, "#");
+	}
+	
+	@Override
+	public String toString() {
+		if (this.mod > 0) {
+			return "+" + this.mod + " " + this.getName();
+		}
+		else if (this.mod < 0) {
+			return this.mod + " " + this.getName();
+		}
+		else {
+			return this.getName();
+		}
 	}
 }

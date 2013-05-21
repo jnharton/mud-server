@@ -26,7 +26,7 @@ import java.util.EnumSet;
  * @author Jeremy N. Harton
  * 
  */
-public class Exit extends MUDObject implements Lockable<Exit>
+public class Exit extends MUDObject implements Lockable
 {
 	/**
 	 * 

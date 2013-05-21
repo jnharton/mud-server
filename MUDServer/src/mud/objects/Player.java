@@ -169,7 +169,7 @@ public class Player extends MUDObject
 
 	// Game Stuff (most set 'protected' so that an npc can basically have player characteristics
 	protected MUDObject target;                    // Target -- player/npc that will be used for generic interaction
-	protected Race race;                          // Race
+	protected Race race;                           // Race
 	protected Character gender;                    // Gender
 	protected Classes pclass;                      // Class
 	protected Alignments alignment;                // Alignment
@@ -184,9 +184,9 @@ public class Player extends MUDObject
 	protected int xp;                              // Experience
 	protected Coins money;                         // Money (D&D, MUD)
 
-	protected SpellBook spells = null;             // spells [null if not a wizard]
-	protected LinkedList<Spell> spellQueue = null; // spell queue [null if not a wizard]
-	protected Spell lastSpell = null;              // last spell cast [null if not a wizard]
+	protected SpellBook spells = null;             // spells [null if not a spellcaster]
+	protected LinkedList<Spell> spellQueue = null; // spell queue [null if not a spellcaster]
+	protected Spell lastSpell = null;              // last spell cast [null if not a spellcaster]
 
 	/**
 	 * Player State
@@ -368,6 +368,8 @@ public class Player extends MUDObject
 		
 		this.config = new LinkedHashMap<String, Boolean>();
 		this.config.put("global-nameref-table", true);
+		this.config.put("pinfo-brief", true);
+		this.config.put("prompt_enabled", true);
 		
 		// instantiate name reference table
 		this.nameRef = new HashMap<String, Integer>(10, 0.75f); // start out assuming 10 name references

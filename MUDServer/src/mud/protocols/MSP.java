@@ -43,8 +43,8 @@ package mud.protocols;
 public class MSP {
 	static enum Type{ MUSIC, SOUND };
 
-	static public String fileName;           /* name of the file to be played [default is the empty string (none)] */
-	static public String fileType;           /* type extensions of the file - unused and not specified in protocol [default is the empty string (none)] */
+	static public String fileName;    /* name of the file to be played [default is the empty string (none)] */
+	static public String fileType;    /* type extensions of the file - unused and not specified in protocol [default is the empty string (none)] */
 	static int volume = 25;           /* desired volume for the sound to be played [default is 25] */
 	static int repeats = 1;           /* desired volume for the sound to be played [default is 25] */
 	static int priority = 1;          /* number of times to repeat [default is 1] */

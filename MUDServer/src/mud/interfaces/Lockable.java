@@ -24,7 +24,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  * @param <L> Some object type that will implement Lockable
  */
-public interface Lockable<L> {
+public interface Lockable {
 	public void lock();
 	public void unlock();
 	

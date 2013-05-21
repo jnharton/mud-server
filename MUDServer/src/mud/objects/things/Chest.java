@@ -2,6 +2,8 @@ package mud.objects.things;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.Map;
 
 import mud.ObjectFlag;
 import mud.interfaces.Lockable;
@@ -13,11 +15,13 @@ import mud.objects.ThingType;
 
 import mud.utils.Utils;
 
-public class Chest extends Thing implements Lockable<Item>, Storage<Item> {
+public class Chest extends Thing implements Lockable, Storage<Item> {
 	
 	private Item key = null;
 	private boolean isLocked = false;
 	private boolean full = false;
+	
+	private Map<String, Integer> contentMap = new HashMap<String, Integer>();
 	
 	public Chest() {
 		this("Public Chest", "A chest");
@@ -25,15 +29,6 @@ public class Chest extends Thing implements Lockable<Item>, Storage<Item> {
 	
 	public Chest(String name, String desc) {
 		super(-1, name, EnumSet.of(ObjectFlag.THING), desc, 8);
-		thing_type = ThingType.CHEST;
-	}
-	
-	/**
-	 * Object Loading Constructor
-	 * @param dbref
-	 */
-	public Chest(int dbref, String name, String desc, int location) {
-		super(dbref, name, EnumSet.of(ObjectFlag.THING), desc, location);
 		thing_type = ThingType.CHEST;
 	}
 	
@@ -46,6 +41,15 @@ public class Chest extends Thing implements Lockable<Item>, Storage<Item> {
 		this();
 		this.key = key;
 		this.isLocked = isLocked;
+	}
+	
+	/**
+	 * Object Loading Constructor
+	 * @param dbref
+	 */
+	public Chest(int dbref, String name, String desc, int location) {
+		super(dbref, name, EnumSet.of(ObjectFlag.THING), desc, location);
+		thing_type = ThingType.CHEST;
 	}
 	
 	public Chest(int tempDBRef, String tempName, String tempFlags, String tempDesc, int tempLoc) {
@@ -66,22 +70,24 @@ public class Chest extends Thing implements Lockable<Item>, Storage<Item> {
 		return this.isLocked;
 	}
 	
-	@Override
 	public void insert(Item item) {
-		contents.add(item);
+		if( !full ) {
+			contents.add( item );
+			contentMap.put( item.getName(), contents.indexOf(item) );
+		}
 	}
 	
-	@Override
 	public Item retrieve(int index) {
 		return contents.get(index);
 	}
 
-	@Override
 	public Item retrieve(String tName) {
-		return null;
+		if( contentMap.containsKey(tName) ) {
+			return contents.get( contentMap.get(tName) );
+		}
+		else { return null; }
 	}
 
-	@Override
 	public boolean isFull() {
 		return this.full;
 	}

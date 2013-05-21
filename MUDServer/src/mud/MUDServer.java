@@ -263,7 +263,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	private HashMap<String, Command> commandMap = new HashMap<String, Command>(20, 0.75f);       // HashMap that holds an instance of each command currently (dynamic)
 
 	private HashMap<Client, Player> sclients = new HashMap<Client, Player>();
-	private HashMap<Zone, Integer> zones = new HashMap<Zone, Integer>(1, 0.75f);                 // HashMap that tracks currently "loaded" zones (dynamic)
+	protected HashMap<Zone, Integer> zones = new HashMap<Zone, Integer>(1, 0.75f);               // HashMap that tracks currently "loaded" zones (dynamic)
 	final private PlayerControlMap playerControlMap = new PlayerControlMap();
 
 	private HashMap<String, String> displayColors = new HashMap<String, String>(8, 0.75f);       // HashMap specifying particular colors for parts of text (somewhat static)
@@ -544,6 +544,9 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 					System.out.println("Directory: " + dir.getAbsolutePath() + " created");
 				}  
 			}
+			else {
+				System.out.println("Directory: " + dir.getAbsolutePath() + " exists.");
+			}
 		}
 
 		// if this is the first run (as indicated by setup parameter)
@@ -788,7 +791,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			debug("No accounts.");
 		}
 
-		loadChannels(CONFIG_DIR + "channels.txt");
+		loadChannels(CONFIG_DIR + "channels.txt"); // load chat channels
 
 		pgm = new ProgramInterpreter(this);
 
@@ -1990,6 +1993,9 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 					}
 					else if ( cmd.equals("condition") || (aliasExists && alias.equals("condition") ) ) {
 						cmd_condition(arg, client);
+					}
+					else if( cmd.equals("config") ) {
+						cmd_pconfig(arg, client);
 					}
 					else if ( cmd.equals("date") )
 					{
@@ -5332,6 +5338,31 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			send("Your password has been changed to: '" +  tmp[0] + "' hash: " + player.getPass(), client);
 		}
 	}
+	
+	private void cmd_pconfig(final String arg, final Client client) {
+		String[] args = arg.split("=");
+		
+		if( args.length > 0 ) {
+			if( args.length > 1 ) {
+				switch( args[1] ) {
+				case "true":
+					getPlayer(client).getConfig().put(args[0], true);
+					send("set " + args[0] + " to TRUE.", client);
+					break;
+				case "false":
+					getPlayer(client).getConfig().put(args[0], false);
+					send("set " + args[0] + " to FALSE.", client);
+					break;
+				default:
+					send("Invalid config setting!", client);
+					break;
+				}
+			}
+			else {
+				send(args[0] + " = " + getPlayer(client).getConfig().get(args[0]), client);
+			}
+		}
+	}
 
 	private void cmd_pinfo(final String arg, final Client client) {
 		final Player player = getPlayer(client);
@@ -5341,14 +5372,19 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		send("Race: " + player.getPRace().getName(), client);
 		send("Class: " + player.getPClass().getName(), client);
 		send("Level: " + player.getLevel(), client);
+		
+		send("", client);
+		
 		if ( player.isLevelUp() ) {
-			/*client.write("" + Colors.GREEN);
-			client.write("Ready to Level-Up!");
-			client.write("" + Colors.WHITE);
-			client.write('\n');*/
+			//client.write(Colors.GREEN + "Ready to Level-Up!" + Colors.WHITE + '\n');
 			send(colors("Ready to Level-Up!", "green"), client);
 		}
+		
+		send("", client);
+		
 		send("XP: " + Utils.padRight("" + player.getXP(), 7) + " XP to next Level: " + Utils.padRight("" + (player.getXPToLevel() - player.getXP()), 7), client);
+		
+		send("", client);
 		
 		send("Strength: " + player.getStats().get(Abilities.STRENGTH), client);
 		send("Dexterity: " + player.getStats().get(Abilities.DEXTERITY), client);
@@ -5357,56 +5393,61 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		send("Charisma: " + player.getStats().get(Abilities.CHARISMA), client);
 		send("Wisdom: " + player.getStats().get(Abilities.WISDOM), client);
 		
+		send("", client);
+		
 		send("AC: " + player.getAC(), client);
 		
-		int si = 1;
-		int columns = 2;
-		
-		StringBuilder row = new StringBuilder();
-		
-		send("------------------------------[ Skills ]------------------------------", client);
-		for (final Skill s : player.getSkills().keySet()) {
-			// FIX: I would like to make the output 2 or 3 columns wide to minimize screen use
-			// if possible make this configurable by the end user
-			// let them decided how many columns and how they are sorted
-			// ie 1,2,3 down then 3,4,5, or 1,2,3 across then 3,4,5 across
-			// 1, 4, 7 or 1, 2, 3
-			// 2, 5, 8    4, 5, 6
-			// 3. 6, 9    7, 8, 9
-			//send(((Skills) o).toString() + Colors.WHITE + " : " + (Integer) temp.skills.get(o));
-			// ?? FIXED ??
+		if( player.getConfig().get("pinfo-brief") == false || arg.equals("#skills")  ) {
 
-			String skill = s.toString();
-			Integer value = player.getSkills().get(s);
-			Integer mod = player.getSkillMod(s);
-			
-			String color = "";
-			
-			if (value == -1) {
-				color = "red";
-			}
-			else if (value == 0) {
-				color = "yellow";
-			}
-			else if (value > 0) {
-				color = "green";
-			}
-			
-			String output = "";
+			int si = 1;
+			int columns = 2;
 
-			output = Utils.padRight( colors(skill, color), 35 ) + " : " + Utils.padLeft("" + value, ' ', 2) + " (" + mod + ")";
+			StringBuilder row = new StringBuilder();
 
-			if (si > columns) {
-				client.write(row.toString() + '\n');
-				row.delete(0, row.length());
-				si = 1;
+			send("------------------------------[ Skills ]------------------------------", client);
+			for (final Skill s : player.getSkills().keySet()) {
+				// FIX: I would like to make the output 2 or 3 columns wide to minimize screen use
+				// if possible make this configurable by the end user
+				// let them decided how many columns and how they are sorted
+				// ie 1,2,3 down then 3,4,5, or 1,2,3 across then 3,4,5 across
+				// 1, 4, 7 or 1, 2, 3
+				// 2, 5, 8    4, 5, 6
+				// 3. 6, 9    7, 8, 9
+				//send(((Skills) o).toString() + Colors.WHITE + " : " + (Integer) temp.skills.get(o));
+				// ?? FIXED ??
+
+				String skill = s.toString();
+				Integer value = player.getSkills().get(s);
+				Integer mod = player.getSkillMod(s);
+
+				String color = "";
+
+				if (value == -1) {
+					color = "red";
+				}
+				else if (value == 0) {
+					color = "yellow";
+				}
+				else if (value > 0) {
+					color = "green";
+				}
+
+				String output = "";
+
+				output = Utils.padRight( colors(skill, color), 35 ) + " : " + Utils.padLeft("" + value, ' ', 2) + " (" + mod + ")";
+
+				if (si > columns) {
+					client.write(row.toString() + '\n');
+					row.delete(0, row.length());
+					si = 1;
+				}
+
+				row.append( Utils.padRight( output, 46 ) );
+
+				si++;
 			}
-			
-			row.append( Utils.padRight( output, 46 ) );
-			
-			si++;
+			client.write('\n');
 		}
-		client.write('\n');
 	}
 
 	private void cmd_quests(final String arg, final Client client) {
@@ -6358,6 +6399,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	}
 	
 	private void cmd_wear(final String arg, final Client client) {}
+	
 	private void cmd_wield(final String arg, final Client client) {}
 
 	/**
@@ -6372,9 +6414,12 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	{
 		int n = 0;
 
-		send("Player     Class     S Race      Idle Status Location", client);
+		//send("Player     Class     S Race      Idle Status Location", client);
+		send("Player     Class     S Race      Idle Location", client);
 		// 10+1+9+1+(1)+1+9+1+4+1+6+1+24 = 69
-		send(Utils.padRight("", '-', 69), client);
+		//send(Utils.padRight("", '-', 69), client);
+		// 10+1+9+1+(1)+1+9+1+4+1+24 = 62
+		send(Utils.padRight("", '-', 62), client);
 		for (Player player : players)
 		{
 			try {
@@ -6384,7 +6429,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 				String playerClass = player.getPClass().getName();
 				String playerGender = player.getGender().toString();
 				String race = player.getPRace().toString();
-				String ustatus = player.getStatus(); // need to limit status to 3 characters
+				//String ustatus = player.getStatus(); // need to limit status to 3 characters
 				int location = player.getLocation(); // set room # limit to 5 characters (max. 99999)
 				String roomName = getRoom(location).getName(); // truncate to 24 characters?
 				String locString;
@@ -6402,10 +6447,12 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 				Player current = getPlayer(client);
 
 				if (current.getNames().contains(name) || current.getName().equals(name)) {
-					send(Utils.padRight(name, 10) + " " + Utils.padRight(playerClass, 9) + " " + Utils.padRight(playerGender, 1) + " " + Utils.padRight(race, 9) + " " + Utils.padRight(idle, 4) + " " + Utils.padRight(ustatus, 6) + " " + locString, client);
+					//send(Utils.padRight(name, 10) + " " + Utils.padRight(playerClass, 9) + " " + Utils.padRight(playerGender, 1) + " " + Utils.padRight(race, 9) + " " + Utils.padRight(idle, 4) + " " + Utils.padRight(ustatus, 6) + " " + locString, client);
+					send(Utils.padRight(name, 10) + " " + Utils.padRight(playerClass, 9) + " " + Utils.padRight(playerGender, 1) + " " + Utils.padRight(race, 9) + " " + Utils.padRight(idle, 4) + " " + locString, client);
 				}
 				else {
-					send(Utils.padRight(cname, 10) + " "+ Utils.padRight(playerClass, 9) + " " +  Utils.padRight(playerGender, 1) + " " + Utils.padRight(race, 9) + " " + Utils.padRight(idle, 4) + " " + Utils.padRight(ustatus, 6) + " " + locString, client);
+					//send(Utils.padRight(cname, 10) + " "+ Utils.padRight(playerClass, 9) + " " +  Utils.padRight(playerGender, 1) + " " + Utils.padRight(race, 9) + " " + Utils.padRight(idle, 4) + " " + Utils.padRight(ustatus, 6) + " " + locString, client);
+					send(Utils.padRight(cname, 10) + " "+ Utils.padRight(playerClass, 9) + " " +  Utils.padRight(playerGender, 1) + " " + Utils.padRight(race, 9) + " " + Utils.padRight(idle, 4) + " " + locString, client);
 				}
 
 				n++;
@@ -6414,7 +6461,8 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 				npe.printStackTrace();
 			}
 		}
-		send(Utils.padRight("", '-', 69), client);
+		//send(Utils.padRight("", '-', 69), client);
+		send(Utils.padRight("", '-', 62), client);
 		send(n + " players currently online.", client);
 	}
 
@@ -6667,8 +6715,8 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	 * @param client
 	 */
 	public void prompt(final Client client) {
-		if ( prompt_enabled ) {
-			prompt("< %mode %h/%H %m/%M >", client);
+		if ( prompt_enabled && getPlayer(client).getConfig().get("prompt_enabled") ) {
+			prompt("< %mode %h/%H %m/%M %state >", client);
 		}
 	}
 
@@ -6706,6 +6754,10 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 		output = output.replace( "%m", mana );
 		output = output.replace( "%M", max_mana );
+		
+		String playerState = player.getState().toString();
+		
+		output = output.replace( "%state", playerState );
 
 		//send(output, client);
 		addMessage(new Message(output, player));
@@ -9246,9 +9298,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		}
 		// MSP (Mud Sound Protocol) Test -- only if msp is on (redundant unless configured otherwise, default: 0 (Off)
 		if (msp == 1) {
-			MSP.play("intro.wav", "sound");
-			String mspMsg = MSP.generate();
-			send(mspMsg, someClient);
+			playSound("intro.wav", someClient);
 		}
 
 		// send data about the server
@@ -11085,10 +11135,10 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	 * @param exits the lists of exits to filter
 	 * @param filters the filters to apply
 	 * @return the filtered list of exits
+	 */
 	public ArrayList<Exit> filter(ArrayList<Exit> exits, Filter...filters) {
 		return null;
 	}
-	 */
 
 	/**
 	 * Run a weather update.
@@ -12067,15 +12117,30 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	}
 
 	public void handleDeath(Player player) {
-		if( player.getState() == Player.State.DEAD ) {
+		if( player.getState() == Player.State.DEAD ) { // Player/NPC Death
 			Room room = getRoom( player.getLocation() );
 			Thing corpse = new Thing();
 			room.contents.add(corpse);
 			//Ghost ghost = new Ghost( player ); // ghosts?
 			players.remove(player);
 		}
+		else if( 1 == 1 ) { // Mobile/Creature Death?
+			
+		}
 	}
 
 	private void processTelnetCommand() {
+	}
+	
+	private void playSound(String soundFile, Client client) {
+		MSP.play(soundFile, "sound");
+		String mspMsg = MSP.generate();
+		send(mspMsg, client);
+	}
+	
+	private void playMusic(String musicFile, Client client) {
+		MSP.play(musicFile, "music");
+		String mspMsg = MSP.generate();
+		send(mspMsg, client);
 	}
 }

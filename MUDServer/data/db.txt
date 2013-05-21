@@ -55,7 +55,7 @@
 54#portal1#E##8#5,182,161,4#1#1
 55#down#E#You see nothing.#8#7#2
 56#Region Parent: Forgotten Realms#RS#You see nothing.#2#N#10,10,10#-1#
-57#Region Parent: City of Waterdeep#RS#You see nothing.#56#N#10,10,10#-1#
+57#Region Parent: City of Waterdeep#RSZ#You see nothing.#56#N#10,10,10#-1#
 58#Region Parent: Castle Ward#RS#You see nothing.#57#N#10,10,10#-1#
 59#Keltarn Street#RS#You see nothing.#58#O#10,10,10#-1#
 60#Keltarn Street#RS#You see nothing.#58#O#10,10,10#-1#
