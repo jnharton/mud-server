@@ -37,6 +37,9 @@ public class Creature extends MUDObject {
 	
 	private boolean ridable = false; // can this creature be ridden (default: false)
 	
+	int hp = 10;
+	int maxhp = 10;
+	
 	public Creature() {
 	}
 	
@@ -93,6 +96,14 @@ public class Creature extends MUDObject {
 	
 	public Race getRace() {
 		return this.race;
+	}
+	
+	public void setHP(int change) {
+		this.hp += change;
+	}
+	
+	public int getHP() {
+		return this.hp;
 	}
 	
 	/**

@@ -3,6 +3,7 @@ package mud.quest;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import mud.miscellaneous.Zone;
 import mud.objects.Player;
 import mud.utils.Date;
 
@@ -27,14 +28,21 @@ public class Quest {
 	private Date issueDate;             // the in-game date the quest was given
 	private boolean isComplete = false; // is the quest completed? (this should put it in a deletion queue if we delete completed quests)
 	
-	final public String location = "Quest Loc"; // quest location
+	private Zone location;
+	
+	public boolean Edit_Ok = true;
 
 	final private ArrayList<Task> tasks;      // a list of tasks that must be completed to finish the quest
+	
+	public Quest() {
+		this.tasks = new ArrayList<Task>();
+	}
 
-	public Quest( String qName, String qDescription, Task...tasks ) {
+	public Quest( String qName, String qDescription, Zone qLocation, Task...tasks ) {
 		this.id = lastId++;
 		this.name = qName;
 		this.description = qDescription;
+		this.location = qLocation;
 		this.tasks = new ArrayList<Task>(Arrays.asList(tasks));
 	}
 	
@@ -151,6 +159,10 @@ public class Quest {
 	public boolean isComplete() {
 		return this.isComplete;
 	}
+	
+	public Zone getLocation() {
+		return this.location;
+	}
 
     @Override
 	public String toString() {
@@ -160,7 +172,7 @@ public class Quest {
 	public String toDisplay() {
         final StringBuilder buf = new StringBuilder();
         buf.append(Colors.YELLOW).append("   o ").append(getName());
-        buf.append(Colors.MAGENTA).append(" ( ").append(location).append(" ) ").append(Colors.CYAN);
+        buf.append(Colors.MAGENTA).append(" ( ").append(location.getName()).append(" ) ").append(Colors.CYAN);
         buf.append("\n");
         for (final Task task : getTasks()) {
             buf.append(task.toDisplay());

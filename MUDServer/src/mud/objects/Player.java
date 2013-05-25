@@ -357,9 +357,6 @@ public class Player extends MUDObject
 		// instantiate quest list
 		this.quests = new ArrayList<Quest>();
 
-		// add an initial quest?
-		this.quests.add(new Quest("Test", "A basic quest for testing purposes", new Task("Obtain dominion jewel", TaskType.RETRIEVE)));
-
 		// instantiate list of known names (memory - names)
 		this.names = new ArrayList<String>(); // we get a new blank list this way, not a loaded state
 

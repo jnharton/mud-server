@@ -153,6 +153,7 @@ public class NPC extends Player implements InteractiveI
                 suitable.add( new Quest( quest ) );	
             }
         }
+        
         return suitable;
 	}
 

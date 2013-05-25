@@ -218,7 +218,7 @@ public class ObjectLoader {
                     NPC npc = loadNPC(oInfo);
                     npc.setCName("npc");
 
-                    npc.addQuest(new Quest("Test", "Test", new Task("Test")));
+                    //npc.addQuest(new Quest("Test", "Test", new Task("Test")));
 
                     log.debug("log.debug (db entry): " + npc.toDB(), 2);
 

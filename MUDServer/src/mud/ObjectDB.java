@@ -109,7 +109,8 @@ public class ObjectDB {
     // Send all objects
     public void dump(final Client client, final MUDServer server) {
         int i = 0;
-        for (final MUDObject obj : objsByName.values()) {
+        //for (final MUDObject obj : objsByName.values()) {
+        for (final MUDObject obj : objsById.values()) {
             server.send(String.format("%s: %s (#%s)", i, obj.getName(), obj.getDBRef()), client);
             i += 1;
         }
@@ -117,7 +118,8 @@ public class ObjectDB {
     
     public void dump() {
     	int i = 0;
-        for (final MUDObject obj : objsByName.values()) {
+        //for (final MUDObject obj : objsByName.values()) {
+    	for (final MUDObject obj : objsById.values()) {
         	System.out.println(String.format("%s: %s (#%s)", i, obj.getName(), obj.getDBRef()));
             i += 1;
         }
@@ -154,8 +156,10 @@ public class ObjectDB {
     public int[] getFlagCounts(final String[] letters) {
         final int[] counts = new int[letters.length];
         Arrays.fill(counts, 0);
+        
+        // objsById returns more objects than objsByName
 
-        for (final MUDObject obj : objsByName.values()) {
+        for (final MUDObject obj : objsById.values()) {
             for (final ObjectFlag f : obj.getFlags()) {
                 for (int i = 0; i < letters.length; i++) {
                     if (f.toString().startsWith(letters[i])) {
@@ -488,5 +492,28 @@ public class ObjectDB {
             }
         }
         return acc;
+    }
+    
+    public void clear() {
+    	items.clear();
+    	
+    	creeps.clear();
+    	
+    	npcsById.clear();
+    	npcsByName.clear();
+    	
+    	players.clear();
+    	
+    	roomsById.clear();
+    	roomsByName.clear();
+    	
+    	exitsById.clear();
+    	exitsByName.clear();
+    	
+    	objsById.clear();
+    	objsByName.clear();
+    	
+    	unusedDBNs.clear();
+    	reservedDBNs.clear();
     }
 }

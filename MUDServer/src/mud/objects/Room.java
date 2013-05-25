@@ -2,6 +2,7 @@ package mud.objects;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -67,6 +68,8 @@ public class Room extends MUDObject implements EventSource
 	//private Atmosphere atmosphere = new Atmosphere();         // the atmosphere of the room (weather related)
 	//private Terrain terrain;                                  // terrain type of the room (affects movement speed?)
 	
+	private BitSet[][] tiles;
+			
 	private List<SayEventListener> _listeners = new ArrayList<SayEventListener>();
 	private ArrayList<Player> listeners;
 	
@@ -91,6 +94,8 @@ public class Room extends MUDObject implements EventSource
 		this.locks = "";            // Set the locks
 		this.location = 0;          // Set the location
 		
+		this.tiles = new BitSet[x][y];
+		
 		this.listeners = new ArrayList<Player>();
 	}
 	
@@ -106,21 +111,25 @@ public class Room extends MUDObject implements EventSource
 		this.flags = toCopy.getFlags();     // Set the flags
 		this.locks = "";                    // Set the locks
 		this.location = toCopy.getParent(); // Set the location
-
+		
+		this.tiles = toCopy.getTiles();
+		
 		this.listeners = new ArrayList<Player>();
 	}
 
 	// misc note: parent == location
-	public Room(int tempDBREF, String tempName, final EnumSet<ObjectFlag> tempFlagsNotUsed, String tempDesc, int tempParent)
+	public Room(int tempDBREF, String tempName, final EnumSet<ObjectFlag> tempFlags, String tempDesc, int tempParent)
 	{
 		super(tempDBREF);
 		//this.dbref = tempDBREF;                                    // Set the dbref (database reference)
 		this.name = tempName;                                        // Set the name
 		this.desc = tempDesc;                                        // Set the description
 		this.parent = tempParent;                                    // Set the parent room
-		this.flags = EnumSet.of(ObjectFlag.ROOM, ObjectFlag.SILENT); // Set room flags
+		this.flags = tempFlags;                                      // Set room flags
 		this.locks = "";                                             // Set the locks
 		this.location = tempParent;                                  // Set the location
+		
+		this.tiles = new BitSet[x][y];
 		
 		this.listeners = new ArrayList<Player>();
 	}
@@ -232,6 +241,14 @@ public class Room extends MUDObject implements EventSource
 		}
 	}
 	
+	public void setTiles(BitSet[][] newTiles) {
+		this.tiles = newTiles;
+	}
+	
+	public BitSet[][] getTiles() {
+		return this.tiles;
+	}
+	
 	public ArrayList<Player> getListeners() {
 		return this.listeners;
 	}
@@ -254,6 +271,16 @@ public class Room extends MUDObject implements EventSource
 
 	public List<Trigger> getTriggers(Triggers triggerType) {
 		return this.triggers.get(triggerType);
+	}
+	
+	public void addItem(Item item) {
+		this.contents1.add(item);
+	}
+	
+	public void addItems(List<Item> items) {
+		for(Item item : items) {
+			addItem(item);
+		}
 	}
 	
 	/**

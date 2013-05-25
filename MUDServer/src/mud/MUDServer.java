@@ -260,25 +260,21 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	// static  - the contents of the hashmap are currently loaded once at startup and not modified thereafter
 	// class static - identical for every instances of the class
 	// pna - per name association?
-	private HashMap<String, Command> commandMap = new HashMap<String, Command>(20, 0.75f);       // HashMap that holds an instance of each command currently (dynamic)
-
-	private HashMap<Client, Player> sclients = new HashMap<Client, Player>();
-	protected HashMap<Zone, Integer> zones = new HashMap<Zone, Integer>(1, 0.75f);               // HashMap that tracks currently "loaded" zones (dynamic)
-	final private PlayerControlMap playerControlMap = new PlayerControlMap();
-
 	private HashMap<String, String> displayColors = new HashMap<String, String>(8, 0.75f);       // HashMap specifying particular colors for parts of text (somewhat static)
 	private HashMap<String, String> colors = new HashMap<String, String>(8, 0.75f);              // HashMap to store ansi/vt100 escape codes for outputting color (static)
-
 	public LinkedHashMap<String, String> aliases = new LinkedHashMap<String, String>(20, 0.75f); // HashMap to store command aliases (static)
 	private HashMap<Integer, String> Errors = new HashMap<Integer, String>(5, 0.75f);            // HashMap to store error messages for easy retrieval (static)
 
 	private HashMap<String, Date> holidays = new HashMap<String, Date>(10, 0.75f);               // HashMap that holds an in-game date for a "holiday" name string
 	private HashMap<Integer, String> years = new HashMap<Integer, String>(50, 0.75f);            // HashMap that holds year names for game themes that supply them (static)
-
-	/* not used much currently */
+	
+	private HashMap<String, Command> commandMap = new HashMap<String, Command>(20, 0.75f);       // HashMap that holds an instance of each command currently (dynamic)
+	protected HashMap<Zone, Integer> zones = new HashMap<Zone, Integer>(1, 0.75f);               // HashMap that tracks currently "loaded" zones (dynamic)
+	
+	private HashMap<Client, Player> sclients = new HashMap<Client, Player>();
+	final private PlayerControlMap playerControlMap = new PlayerControlMap();
+	
 	private Map<String, String> config = new LinkedHashMap<String, String>(11, 0.75f); // LinkedHashMap to track current config instead of using tons of individual integers?
-	//private LinkedHashMap<String, String> config = new LinkedHashMap<String, String>(11, 0.75f); // LinkedHashMap to track current config instead of using tons of individual integers?
-	//private HashTable<String, Boolean> config;
 
 	private HashMap<Player, Session> sessionMap = new HashMap<Player, Session>(1, 0.75f);        // player to session mapping
 
@@ -425,7 +421,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 	public Area area; // test Area
 
-	public HashMap<Room, List<Player>> listenersLists; // possibly replace per room listener lists?
+	public HashMap<Room, List<Player>> listenersLists; // possibly replace per room listener lists? (UNUSED)
 
 	public Timer timer = new Timer();
 
@@ -643,9 +639,9 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 		// TODO FIX THIS
 		// make sure npcs are added to listeners
-		/*for (NPC npc : npcs1) {
+		for (NPC npc : objectDB.getNPCs()) {
 			getRoom(npc.getLocation()).addListener(npc);
-		}*/
+		}
 
 		// instantiate banned ip list
 		banlist = loadListDatabase(CONFIG_DIR + "banlist.txt");
@@ -796,6 +792,8 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		pgm = new ProgramInterpreter(this);
 
 		System.out.println("Server> Setup Done.");
+		
+		objectDB.getPlayer("Nathan").getQuests().add(new Quest("Test", "A basic quest for testing purposes", new Zone("default", new Room()), new Task("Obtain dominion jewel", TaskType.RETRIEVE)));
 	}
 
 	private void create_data() {		
@@ -1073,6 +1071,8 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			 * - start threads
 			 * 
 			 */
+			
+			s.write("Game> Fatal Exception! Shutting down...");
 
 			// restart?
 			MUDServer.main(new String[] {"--port=4202", "--debug"} );
@@ -4187,8 +4187,12 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	 */
 	private void cmd_flags(final String arg, final Client client) {
 		final MUDObject m = getObject(arg);
-		client.write("Flags: ");
-		client.write(ObjectFlag.toInitString(m.getFlags()));
+		if( m != null ) {
+			client.write("Flags: ");
+			debug(m.getFlags());
+			debug(m.getDBRef());
+			client.writeln(ObjectFlag.toInitString(m.getFlags()));
+		}
 	}
 
 	/**
@@ -4295,7 +4299,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	/**
 	 * Command: greet
 	 * 
-	 * Greet another player (this tells them your name with some specifity).
+	 * Greet another player (this tells them your name with some specificity).
 	 * 
 	 * COMMAND OBJECT EXISTS
 	 * 
@@ -4525,7 +4529,9 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	{	
 		// tell us that the database is being loaded (supply custom message?)
 		send("Game> Loading Database!", client);
-
+		
+		// clear database, etc
+		
 		// load objects from databases
 
 		// load databases from disk
@@ -5458,7 +5464,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		for (Quest quest : player.getQuests()) {
 			if ( !quest.isComplete() ) {
 				client.write(Colors.YELLOW + "   o " + quest.getName());
-				client.write(Colors.MAGENTA + " ( " + quest.location + " ) " + Colors.CYAN);
+				client.write(Colors.MAGENTA + " ( " + quest.getLocation().getName() + " ) " + Colors.CYAN);
 				client.write('\n');
 				for (Task task : quest.getTasks()) {
 					if ( task.isComplete() ) {
@@ -5773,6 +5779,129 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		}
 
 		op_iedit("show", client); // print out the info page
+	}
+	
+	/**
+	 * qedit - quest editor
+	 * 
+	 * qedit <quest_name>, qedit <quest_id>, qedit
+	 * 
+	 * @param arg
+	 * @param client
+	 */
+	private void cmd_qedit(final String arg, final Client client) {
+		final Player player = getPlayer(client);
+		final String old_status = player.getStatus();
+
+		player.setStatus("EDT");
+		player.setEditor(Editor.QUEST);
+
+		edData newEDD = new edData();
+
+		// create new item if no item to edit specified
+		if ( arg.equals("") ) {
+			Quest quest = new Quest();
+			quest.setName("New Quest");
+
+			if ( quest.Edit_Ok ) {
+				quest.Edit_Ok = false; // further edit access not permitted (only one person may access at a time)
+			}
+			else { // item is not editable, exit the editor
+				// reset player, and clear edit flag and editor setting
+				player.setStatus(old_status);
+				player.setEditor(Editor.NONE);
+
+				// clear editor data
+				player.setEditorData(null);
+
+				send("Game> Quest Editor - Error: quest not editable (!Edit_Ok)", client);
+
+				return;
+			}
+
+			// record prior player status
+			newEDD.addObject("pstatus", old_status);
+
+			// add quest and it's constituent parts to the editor data
+			newEDD.addObject("quest", quest);
+			newEDD.addObject("name", quest.getName());
+
+			player.setEditorData(newEDD);
+		}
+		else {
+			Quest quest = null;
+			boolean exist = false;
+
+			try {
+				int id = Integer.parseInt(arg);
+				//quest = getQuest(id);
+
+				if ( quest.Edit_Ok ) {
+					quest.Edit_Ok = false; // further edit access not permitted (only one person may access at a time
+				}
+				else { // item is not editable, exit the editor
+					// reset player, and clear edit flag and editor setting
+					player.setStatus(old_status);
+					player.setEditor(Editor.NONE);
+
+					// clear editor data
+					player.setEditorData(null);
+
+					send("Game> Quest Editor - Error: quest not editable (!Edit_Ok)", client);
+
+					return;
+				}
+
+				exist = true;
+			}
+			catch(NumberFormatException nfe) { // no item with that dbref, cannot edit (abort)
+				nfe.printStackTrace();
+
+				// reset player, and clear edit flag and editor setting
+				player.setStatus(old_status);
+				player.setEditor(Editor.NONE);
+
+				// clear editor data
+				player.setEditorData(null);
+
+				send("Game> Quest Editor - Unexpected error caused abort (number format exception)", client);
+			}
+			catch(NullPointerException npe) { // null item, cannot edit (abort)
+				// reset player, and clear edit flag and editor setting
+				player.setStatus(old_status);
+				player.setEditor(Editor.NONE);
+
+				// clear editor data
+				player.setEditorData(null);
+
+				send("Game> Quest Editor - Unexpected error caused abort (null pointer exception)", client);
+			}
+
+			if (exist) {	// quest exists
+				// record prior player status
+				newEDD.addObject("pstatus", old_status);
+
+				// add item and it's constituent parts to the editor data
+				newEDD.addObject("quest", quest);
+				newEDD.addObject("name", quest.getName());
+			}
+			else { // quest doesn't exist (abort)
+				// reset player, and clear edit flag and editor setting
+				player.setStatus(old_status);
+				player.setEditor(Editor.NONE);
+
+				// clear editor data
+				player.setEditorData(null);
+
+				send("Game> Quest Editor - Error: quest does not exist", client);
+
+				return;
+			}
+
+			player.setEditorData(newEDD);
+		}
+		
+		// show the current state of the quest
 	}
 
 	/**
@@ -6103,14 +6232,15 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	{
 		System.out.println(objectDB.getSize());
 
-		final int[] counts = objectDB.getFlagCounts(new String[]{ "P", "N", "E", "R", "T" });
+		final int[] counts = objectDB.getFlagCounts(new String[]{ "P", "N", "E", "R", "I", "T" });
 		final int usersCount = counts[0];
 		final int npcsCount = counts[1];
 		final int exitsCount = counts[2];
 		final int roomsCount = counts[3];
-		final int thingsCount = counts[4];
+		final int itemsCount = counts[4];
+		final int thingsCount = counts[5];
 
-		int total = usersCount + npcsCount + exitsCount + roomsCount + thingsCount;
+		int total = usersCount + npcsCount + exitsCount + roomsCount + itemsCount + thingsCount;
 
 		send(serverName + " Statistics", client);
 		send("-----------------------", client);
@@ -6118,6 +6248,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		send(String.format("NPCS:    %s   %s%%", npcsCount,   npcsCount   * 100.0 / total), client);
 		send(String.format("Exits:   %s   %s%%", exitsCount,  exitsCount  * 100.0 / total), client);
 		send(String.format("Rooms:   %s   %s%%", roomsCount,  roomsCount  * 100.0 / total), client);
+		send(String.format("Items:   %s   %s%%", itemsCount,  itemsCount  * 100.0 / total), client);
 		send(String.format("Things:  %s   %s%%", thingsCount, thingsCount * 100.0 / total), client);
 		send("Total:   " + total, client);
 		send("-----------------------", client);
@@ -10049,7 +10180,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 				Player player = (Player) m;
 				// helmet, necklace, armor, cloak, rings, gloves, weapons, belt, boots
 
-				debug("RING1: " + player.getSlots().get("ring1").getItem() +
+				/*debug("RING1: " + player.getSlots().get("ring1").getItem() +
 						"\t" + "RING2: " + player.getSlots().get("ring2").getItem());
 				debug("RING3: " + player.getSlots().get("ring3").getItem() +
 						"\t" + "RING4: " + player.getSlots().get("ring4").getItem());
@@ -10058,7 +10189,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 				debug("RING7: " + player.getSlots().get("ring7").getItem() +
 						"\t" + "RING8: " + player.getSlots().get("ring8").getItem());
 				debug("RING9: " + player.getSlots().get("ring9").getItem() +
-						"\t" + "RING10: " + player.getSlots().get("ring10").getItem());
+						"\t" + "RING10: " + player.getSlots().get("ring10").getItem());*/
 
 				for(int i = 1; i < 10; i = i + 2) {
 					String color = displayColors.get("thing");
@@ -10072,13 +10203,23 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 				for (Slot slot : player.getSlots().values()) {
 					String tmp;
 
-					if (slot.getType() == ItemType.CLOTHING) { tmp = slot.getCType().toString().toUpperCase(); }
-					else { tmp = slot.getType().toString().toUpperCase(); }
+					if (slot.getType() == ItemType.CLOTHING) { tmp = slot.getCType().toString(); }
+					else { tmp = slot.getType().toString(); }
+					
+					tmp = tmp.toUpperCase();
 
 					Item item = slot.getItem();
 
-					if (item != null) { send(colors(tmp, displayColors.get("thing")) + " : " + item + " *" + item.getWeight() + "lbs.", client); }
-					else { send(colors(tmp, displayColors.get("thing")) + " : null", client); }
+					if (!tmp.contains("RING")) {
+						if (item != null) {
+							send(colors(tmp, displayColors.get("thing"))
+									+ " : " + item + " *" + item.getWeight()
+									+ "lbs.", client);
+						} else {
+							send(colors(tmp, displayColors.get("thing"))
+									+ " : null", client);
+						}
+					}
 				}
 			}
 		}
@@ -12128,6 +12269,15 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			
 		}
 	}
+	
+	public void handleDeath(Creature creature) {
+		if( creature.getHP() <= 0 ) {
+			Room room = getRoom( creature.getLocation() );
+			creature.setLocation(-1);
+			List<Item> loot = generateLoot(creature);
+			room.addItems(loot);
+		}
+	}
 
 	private void processTelnetCommand() {
 	}
@@ -12142,5 +12292,15 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		MSP.play(musicFile, "music");
 		String mspMsg = MSP.generate();
 		send(mspMsg, client);
+	}
+	
+	private List<Item> generateLoot( Creature creature ) {
+		List<Item> loot = new LinkedList<Item>();
+		
+		Weapon weapon = new Weapon();
+		
+		loot.add( weapon );
+		
+		return loot;
 	}
 }

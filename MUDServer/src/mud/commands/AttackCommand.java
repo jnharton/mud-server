@@ -6,6 +6,7 @@ import mud.MUDServer.PlayerMode;
 
 import mud.net.Client;
 
+import mud.objects.Creature;
 import mud.objects.NPC;
 import mud.objects.Player;
 
@@ -81,7 +82,9 @@ public class AttackCommand extends Command {
 								if(target instanceof Player) {
 									((Player) target).setHP(-damage);
 									((Player) target).updateCurrentState();
-									
+								}
+								else if(target instanceof Creature) {
+									((Creature) target).setHP(-damage);
 								}
 
 								// tell us what 
@@ -89,7 +92,15 @@ public class AttackCommand extends Command {
 								
 								if(target instanceof Player) {
 									if( ((Player) target).getHP() <= 0 ) {
+										parent.send("You killed " + ((Player) target).getName() + ".", client);
 										parent.handleDeath( (Player) target );
+									}
+								}
+								else {
+									debug("Creature HP: " + ((Creature) target).getHP());
+									if( ((Creature) target).getHP() <= 0 ) {
+										parent.send("You killed " + ((Creature) target).getName() + ".", client);
+										parent.handleDeath( (Creature) target );
 									}
 								}
 							}

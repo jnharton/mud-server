@@ -19,6 +19,7 @@ public enum Editor {
 	ITEM("Item Editor"),
 	LIST("List Editor"),
 	MAIL("Mail Editor"),
+	QUEST("Quest Editor"),
 	ROOM("Room Editor"),
 	NONE("None");
 	
