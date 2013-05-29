@@ -621,12 +621,22 @@ public final class Utils {
 		
 		return result;
 	}*/
-    
+	
+	/**
+	 * A safe way to parse an integer elsewhere in the code. A default 
+	 * value is specified in the parameters, which will be returned if
+	 * a valid integer cannot be parsed from the input string. This
+	 * catches and handles the exception that may arise
+	 * 
+	 * @param str the input string, which should contain a parsable integer
+	 * @param alt the integer to return if the string does not contain a parsable integer
+	 * @return
+	 */
     public static int toInt(final String str, final int alt) {
         try {
             return Integer.parseInt(str);
-        } catch (Exception e) {
-            return alt;
+        } catch(NumberFormatException nfe) {
+        	return alt;
         }
     }
     

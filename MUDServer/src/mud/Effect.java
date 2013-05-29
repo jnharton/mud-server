@@ -29,6 +29,8 @@ public class Effect
 	private Type type;             // damage, visibility, resistance, etc
 	private String durationType;   // temporary vs. permanent, etc
 	private int duration;          // effects duration in seconds (mask rounds by using a uniform length of round, in seconds)
+	
+	private boolean permanent = false;
 
 	// explicit super constructor for subclassing
 	protected Effect() {
@@ -104,6 +106,14 @@ public class Effect
 
 	public static int nextID() {
 		return lastId++;
+	}
+	
+	public boolean getPermanent() {
+		return this.permanent;
+	}
+	
+	public void setPermanent(boolean state) {
+		this.permanent = state;
 	}
 
 	public String toString() {

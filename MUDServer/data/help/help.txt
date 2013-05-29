@@ -10,7 +10,7 @@ help     - this page
 license  - the license for this software
 policies - in-game, and out-of-game policy information
 
-'help <topic>' Show the help for the given topic/command.
+'help <topic/command>' Show the help for the given topic/command.
 'help @reload' Reload the help files while the game is running.
                Suitable for updating help after manually editing a help file
                without a shutdown and restart.

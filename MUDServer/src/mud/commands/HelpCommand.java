@@ -44,6 +44,8 @@ public class HelpCommand extends Command {
         }
 
         final String[] helpfile = parent.getHelpFile(arg);
+        final String[] topicfile = parent.getTopicFile(arg);
+        
 		if (helpfile != null)
 		{
 
@@ -60,8 +62,11 @@ public class HelpCommand extends Command {
 				}
 			}
 		}
-		/*else if ( parent.topics.containsKey(arg) ) {
-		}*/
+		else if (topicfile != null) {
+			for (final String line : topicfile) {
+				client.write(line + "\r\n");
+			}
+		}
 		else
 		{
 			client.write("No such help file!\r\n");

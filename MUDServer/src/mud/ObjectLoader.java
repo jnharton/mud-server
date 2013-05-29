@@ -236,6 +236,14 @@ public class ObjectLoader {
 
                     room.setRoomType(RoomType.fromLetter(roomType.charAt(0)));
                     
+                    // set room dimensions
+                    int[] dimensions = Utils.stringsToInts(attr[6].split(","));
+                    
+                    room.x = dimensions[0];
+                    room.y = dimensions[1];
+                    room.z = dimensions[2];
+                    
+                    // create zones where flags exist
                     if( oFlags.contains("Z") ) {
                     	parent.zones.put(new Zone("zone", room), 1);
                     }

@@ -1,0 +1,8 @@
+passwd
+PASSWD
+
+Change your password.
+
+Syntax: 'passwd <new password>'
+
+Last Updated: May 29th, 2013

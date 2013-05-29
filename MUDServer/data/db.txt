@@ -12,10 +12,10 @@
 11#NYC: Times Square#RS#The famous Times Square, NYC, USA. It's a big open plaza.#0#O#10,10,10#-1#
 12#NYC: Grand Central Station#RS#The grandest train station of the olden times, at least a hundred tracks lie unused.#0#I#10,10,10#-1#
 13#Public Chest#T#A chest#8#0
-14#null#null#null#-1#null#null#null#null#null#null
+14#down#E#You see nothing.#17#4#2
 15#out#E#You see nothing.#18#26#2
 16#cavern#E#You see nothing.#26#18#2
-17#null#null#null#-1#null#null#null#null#null#null
+17#Red Dragon Inn - Upstairs Hallway#RS#You see nothing.#0#N#10,10,10#-1#
 18#Cavern#RS#A large cavern stretches before you. To your back the cavern's mouth opens into a grassy forest clearing. Here the footsteps of many small creatures with clawed feet are quite evident in the dust spread across the cavern floor.#0#N#10,10,10#-1#
 19#Nathan#PW#This is an admin, it is also a player and a builder.#4#250d8d84cf1ed1e0bd30437498046d02#12,12,12,12,12,12#34,50,0,0#4#2#10#IC#0
 20#Alisare#N#A pretty elf cleric.#161##0,0,0,0,0,0#0,0,0,0#0#1#3#IC
@@ -260,8 +260,10 @@
 259#Astral Plane#RS#A wide open, evenly lit area of infinite space. It is unnervingly quiet and the view goes on forever.#258#N#10,10,10#-1#
 260#portal#E##259#4#1#0
 261#Combat Practice Room#RS#A room in which to test the combat system and practice with it#0#N#10,10,10#-1#
-262#combat dummy#N#A wooden combat dummy#261#null#12,12,12,12,12,12#0,0,0,0#0#3#16
-263#Castle: Gates#RS#A stone arch hangs high above, the points of a portcullis protuding from a dark slot on the side leading out of the castle#0#O#10,10,10#-1
+262#combat dummy#N#A wooden combat dummy#261##12,12,12,12,12,12#0,0,0,0#0#3#16#IC
+263#Castle: Gates#RS#A stone arch hangs high above, the points of a portcullis protuding from a dark slot on the side leading out of the castle#0#O#10,10,10#-1#
 264#Castle: Courtyard#RS#An open courtyard in the midst of a castle.#0#O#10,10,10#-1#
-265#gates#E#the castle gates lie ahead#264#263#2
-266#courtyard#E#just inside the gates is the main courtyard of the castle#263#264#2
+265#gates#E#You see nothing.#264#263#2
+266#courtyard#E#You see nothing.#263#264#2
+267#The Yawning Portal - Common Room#RS##0#I#11,9,8#-1#
+270#up#E#You see nothing.#4#17#2

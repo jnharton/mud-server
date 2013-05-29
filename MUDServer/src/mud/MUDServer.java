@@ -350,7 +350,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			"@hash", "@hedit",                                                // @hash see hash of a string, @hedit edit help files
 			"@listprops",                                                     // @listprops list properties on an object          
 			"@nextdb",                                                        // @nextdb get the next unused dbref number
-			"@passwd", "@pgm",                                                // @passwd change passwords, @pgm interpret a "script" program
+			"@pgm",                                                           // @pgm interpret a "script" program
 			"@set", "@setskill", "@sethp", "@setlevel", "@setmana", "@setxp", // @set set properties on objects, @setskill set player skill values
 			"@zones"                                                          // @zones setup,configure,modify zones
 	};
@@ -396,6 +396,8 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	// Testing
 	private BulletinBoard bb;
 	private ArrayList<Portal> portals = new ArrayList<Portal>();
+	
+	private ArrayList<Party> parties = new ArrayList<Party>();
 
 	// for use with telnet clients
 	private byte[] byteBuffer = new byte[1024]; // a byte buffer to deal with telnet (characters are sent to the server as they are typed, so need to buffer input until a particular key is pressed
@@ -666,6 +668,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		System.out.print("Loading Help Files... ");
 		for (final String helpFileName : generateHelpFileIndex())
 		{
+			debug(helpFileName);
 			final String[] helpfile = Utils.loadStrings(this.HELP_DIR + helpFileName);
 			helpMap.put(helpfile[0], helpfile);
 		}
@@ -793,7 +796,6 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 		System.out.println("Server> Setup Done.");
 		
-		objectDB.getPlayer("Nathan").getQuests().add(new Quest("Test", "A basic quest for testing purposes", new Zone("default", new Room()), new Task("Obtain dominion jewel", TaskType.RETRIEVE)));
 	}
 
 	private void create_data() {		
@@ -866,6 +868,19 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		for (final Room room1 : objectDB.getWeatherRooms()) {
 			room1.setWeather(weather);
 		}
+		
+		/**
+		 * MISC
+		 */
+		
+		objectDB.getPlayer("Nathan").getQuests().add(new Quest("Test", "A basic quest for testing purposes", new Zone("default", new Room()), new Task("Obtain dominion jewel", TaskType.RETRIEVE)));
+		Room room1 = objectDB.getRoomByName("The Yawning Portal - Common Room");
+		java.util.BitSet[][] tiles = room.getTiles();
+		
+		java.util.BitSet b = new java.util.BitSet(6);
+		b.set(0, 5);
+		tiles[0][0] = b;
+		tiles[0][1] = b;
 	}
 
 	/**
@@ -1305,6 +1320,9 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 					break;
 				case MAIL:
 					break;
+				case QUEST:
+					op_qedit(input, client);
+					break;
 				case ROOM:
 					op_roomedit(input, client);
 					break;
@@ -1546,6 +1564,17 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 						//
 						cmd_osuccess(arg, client);
 					}
+					// pass arguments to the questedit function
+					else if ( cmd.equals("@qedit") || ( aliasExists && alias.equals("@qedit") ) )
+					{
+						buildCmd = true;
+
+						//
+						debug("Command Parser: @qedit");
+
+						// run the list editor
+						cmd_questedit(arg, client);
+					}
 					// pass arguments to the roomedit function
 					else if ( cmd.equals("@redit") || ( aliasExists && alias.equals("@redit") ) )
 					{
@@ -1686,13 +1715,6 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 						if ( arg.equals("") ) {
 							send("Next Database Reference Number (DBRef/DBRN): " + objectDB.peekNextId(), client);
 						}
-					}
-					// pass arguments to the @passwd function
-					else if ( cmd.equals("@passwd") || ( aliasExists && alias.equals("@passwd") ) )
-					{
-						adminCmd = true;
-						// run the password change function
-						cmd_passwd(arg, client);
 					}
 					// pass arguments to the pgm function
 					else if ( cmd.equals("@pgm") || ( aliasExists && alias.equals("@pgm") ) )
@@ -2177,6 +2199,12 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 					{
 						// run the page function
 						cmd_page(arg, client);
+					}
+					// pass arguments to the passwd function
+					else if ( cmd.equals("passwd") || ( aliasExists && alias.equals("passwd") ) )
+					{
+						// run the password change function
+						cmd_passwd(arg, client);
 					}
 					else if ( cmd.equals("pinfo") || ( aliasExists && alias.equals("pinfo") ) )
 					{
@@ -2926,8 +2954,13 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 				if( chan.hasChannel(channelName) ) {
 					if( args[0].toLowerCase().equals("#join") ) {
 						try {
-							chan.add(getPlayer(client), channelName);
-							send("ChatChanneler> Joined channel: " + channelName, client);
+							if( !chan.isPlayerListening(channelName, getPlayer(client)) ) {
+								chan.add(getPlayer(client), channelName);
+								send("ChatChanneler> Joined channel: " + channelName, client);
+							}
+							else {
+								send("ChatChanneler> You are already listening to that channel.", client);
+							}
 						}
 						catch (Exception e) {
 							e.printStackTrace();
@@ -2936,8 +2969,13 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 					}
 					else if( args[0].toLowerCase().equals("#leave") ) {
 						try {
-							chan.remove(getPlayer(client), channelName);
-							send("ChatChanneler> Left channel: " + channelName, client);
+							if( chan.isPlayerListening(channelName, getPlayer(client)) ) {
+								chan.remove(getPlayer(client), channelName);
+								send("ChatChanneler> Left channel: " + channelName, client);
+							}
+							else {
+								send("ChatChanneler> You aren't listening to that channel.", client);
+							}
 						}
 						catch (Exception e) {
 							e.printStackTrace();
@@ -2972,14 +3010,10 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 				String msg = arg.replace(channelName + " ", "");
 
 				if( chan.hasChannel(channelName) ) {
-					//ChatChannel cc = chan.getChatChannel(channelName); // get ChatChannel by name
-					//cc.write(getPlayer(client), msg);                  // add message to ChatChannel message queue
-
 					chan.send(channelName, getPlayer(client), msg);
 
 					debug("New message (" + channelName + "): " + msg);
-
-					//client.write("wrote " + arg + " to " + channelName + " channel.\n");
+					
 					chatLog.writeln("(" + channelName + ") <" + getPlayer(client).getName() + "> " + arg);
 				}
 				else {
@@ -5297,52 +5331,28 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			}
 		}
 	}
+	
+	private void cmd_party(final String arg, final Client client) {
+		// party: list the members of your party if you are in one)
+		// party #invite <player>: invite a player to the party
+		// party #join: join the party you were most recently invited to
+		// party #leave: leave your current party
+		
+	}
 
 	/**
-	 * Command to change passwords
-	 * 
-	 * NOTE: right now this is an admin command, which is problematic since
-	 * I want anyone to be able to change their password, but not those
-	 * for other players, unless they have admin.
+	 * Command to change your password
 	 * 
 	 * @param arg
 	 * @param client
 	 */
 	private void cmd_passwd(final String arg, final Client client)
 	{
-		// @passwd test          change my password to test       (user)
-		// @passwd @reset        reset my password                (user)
-		// @passwd Nathan=test   change Nathan's password to test (wizard)
-		// @passwd @reset Nathan reset Nathan's password          (wizard)
-		String[] tmp = arg.split("=");  // split the arguments
-
+		// passwd test          change my password to test       (user)
 		Player player = getPlayer(client);    // get the current player
-
-		if ( arg.equals("@reset") ) {
-			send("Reset Password Code", client);
-			send("Game> (@passwd @reset) functionality incomplete", client);
-		}
-		else if (tmp.length > 1) { // if there is more than one argument
-
-			if (player.getAccess() >= WIZARD) {
-				Player player1 = getPlayer(tmp[0]); // get the player whose name was give
-				if (player1 instanceof Player) {
-					player1.setPass(tmp[1]);
-					send(player1.getName() + "'s password has been changed to: '" + tmp[1] + "' hash: '" + player1.getPass() + "'", client);
-				}
-				else {
-					send("Game> Invalid Player.", client);
-				}
-			}
-			else {
-				send("Game> Insufficient Permissions.", client);
-			}
-
-		}
-		else { // if there is only one argument (i.e. new password for current player)
-			player.setPass(arg);
-			send("Your password has been changed to: '" +  tmp[0] + "' hash: " + player.getPass(), client);
-		}
+		
+		player.setPass(arg);
+		send("Your password has been changed to: '" + arg, client);
 	}
 	
 	private void cmd_pconfig(final String arg, final Client client) {
@@ -5392,12 +5402,12 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		
 		send("", client);
 		
-		send("Strength: " + player.getStats().get(Abilities.STRENGTH), client);
-		send("Dexterity: " + player.getStats().get(Abilities.DEXTERITY), client);
-		send("Constitution: " + player.getStats().get(Abilities.CONSTITUTION), client);
-		send("Intelligence: " + player.getStats().get(Abilities.INTELLIGENCE), client);
-		send("Charisma: " + player.getStats().get(Abilities.CHARISMA), client);
-		send("Wisdom: " + player.getStats().get(Abilities.WISDOM), client);
+		send(Utils.padRight("Strength: ", ' ', 14) + player.getStats().get(Abilities.STRENGTH), client);
+		send(Utils.padRight("Dexterity: ", ' ', 14) + player.getStats().get(Abilities.DEXTERITY), client);
+		send(Utils.padRight("Constitution: ", ' ', 14) + player.getStats().get(Abilities.CONSTITUTION), client);
+		send(Utils.padRight("Intelligence: ", ' ', 14) + player.getStats().get(Abilities.INTELLIGENCE), client);
+		send(Utils.padRight("Charisma: ", ' ', 14) + player.getStats().get(Abilities.CHARISMA), client);
+		send(Utils.padRight("Wisdom: ", ' ', 14) + player.getStats().get(Abilities.WISDOM), client);
 		
 		send("", client);
 		
@@ -5780,7 +5790,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 		op_iedit("show", client); // print out the info page
 	}
-	
+
 	/**
 	 * qedit - quest editor
 	 * 
@@ -5789,24 +5799,28 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	 * @param arg
 	 * @param client
 	 */
-	private void cmd_qedit(final String arg, final Client client) {
+	private void cmd_questedit(final String arg, final Client client) {
 		final Player player = getPlayer(client);
 		final String old_status = player.getStatus();
 
 		player.setStatus("EDT");
 		player.setEditor(Editor.QUEST);
+		
+		boolean exist = false;
 
 		edData newEDD = new edData();
 
-		// create new item if no item to edit specified
-		if ( arg.equals("") ) {
-			Quest quest = new Quest();
+		Quest quest;
+
+		if ( arg.equals("") ) { // create new quest if no quest to edit specified
+			quest = new Quest();
 			quest.setName("New Quest");
 
 			if ( quest.Edit_Ok ) {
 				quest.Edit_Ok = false; // further edit access not permitted (only one person may access at a time)
 			}
-			else { // item is not editable, exit the editor
+			else {
+				// quest is not editable, exit the editor
 				// reset player, and clear edit flag and editor setting
 				player.setStatus(old_status);
 				player.setEditor(Editor.NONE);
@@ -5818,28 +5832,21 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 				return;
 			}
-
-			// record prior player status
-			newEDD.addObject("pstatus", old_status);
-
-			// add quest and it's constituent parts to the editor data
-			newEDD.addObject("quest", quest);
-			newEDD.addObject("name", quest.getName());
-
-			player.setEditorData(newEDD);
+			
+			exist = true;
 		}
-		else {
-			Quest quest = null;
-			boolean exist = false;
+		else { // otherwise, try to find the specified quest
+			quest = null;
 
 			try {
-				int id = Integer.parseInt(arg);
-				//quest = getQuest(id);
+				int id = Utils.toInt(arg, -1);
+				quest = getQuest(id);
 
 				if ( quest.Edit_Ok ) {
 					quest.Edit_Ok = false; // further edit access not permitted (only one person may access at a time
 				}
-				else { // item is not editable, exit the editor
+				else {
+					// quest is not editable, exit the editor
 					// reset player, and clear edit flag and editor setting
 					player.setStatus(old_status);
 					player.setEditor(Editor.NONE);
@@ -5866,7 +5873,8 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 				send("Game> Quest Editor - Unexpected error caused abort (number format exception)", client);
 			}
-			catch(NullPointerException npe) { // null item, cannot edit (abort)
+			catch(NullPointerException npe) {
+				// null quest, cannot edit (abort)
 				// reset player, and clear edit flag and editor setting
 				player.setStatus(old_status);
 				player.setEditor(Editor.NONE);
@@ -5876,31 +5884,32 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 				send("Game> Quest Editor - Unexpected error caused abort (null pointer exception)", client);
 			}
-
-			if (exist) {	// quest exists
-				// record prior player status
-				newEDD.addObject("pstatus", old_status);
-
-				// add item and it's constituent parts to the editor data
-				newEDD.addObject("quest", quest);
-				newEDD.addObject("name", quest.getName());
-			}
-			else { // quest doesn't exist (abort)
-				// reset player, and clear edit flag and editor setting
-				player.setStatus(old_status);
-				player.setEditor(Editor.NONE);
-
-				// clear editor data
-				player.setEditorData(null);
-
-				send("Game> Quest Editor - Error: quest does not exist", client);
-
-				return;
-			}
-
-			player.setEditorData(newEDD);
 		}
 		
+		// quest exists
+		if (exist) {
+			// record prior player status
+			newEDD.addObject("pstatus", old_status);
+
+			// add quest and it's constituent parts to the editor data
+			newEDD.addObject("quest", quest);
+			newEDD.addObject("name", quest.getName());
+		}
+		else { // quest doesn't exist (abort)
+			// reset player, and clear edit flag and editor setting
+			player.setStatus(old_status);
+			player.setEditor(Editor.NONE);
+
+			// clear editor data
+			player.setEditorData(null);
+
+			send("Game> Quest Editor - Error: quest does not exist", client);
+
+			return;
+		}
+
+		player.setEditorData(newEDD);
+
 		// show the current state of the quest
 	}
 
@@ -6708,6 +6717,9 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 					}
 				}
 			}
+			else if(params[0].equals("+info")) {
+				
+			}
 		}
 		else {
 			send("Zones:", client);
@@ -6737,29 +6749,29 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 		if (player.getStatus().equals("INT")) {
 			if (player.getTarget() instanceof Vendor) {
+				if(arg.equals("")) {
+					send("-----< Stock >--------------------", client);
 
-				send("-----< Stock >--------------------", client);
+					for (final Item item : ((Vendor) player.getTarget()).list()) {
+						if (item instanceof Weapon) {
+							final Weapon w = (Weapon) item;
+							//send(colors("+" + w.getMod() + " " + w.weapon.getName() + " (" + w.getWeight() + ") Cost: " + w.getCost(), "yellow"), client);
+							send(colors(w.toString() + " (" + w.getWeight() + ") Cost: " + w.getCost(), "yellow"), client);
+						}
+						else if (item instanceof Armor) {
+							final Armor a = (Armor) item;
+							//send(colors("+" + a.getMod() + " " + a.getName() + " (" + a.getWeight() + ") Cost: " + a.getCost(), "yellow"), client);
+							send(colors(a.toString() + " (" + a.getWeight() + ") Cost: " + a.getCost(), "yellow"), client);
+						}
+						else {
+							send(colors(item.getName() + " (" + item.getWeight() + ") Cost: " + item.getCost(), "yellow"), client);
+						}
+					}
 
-				for (final Item item : ((Vendor) player.getTarget()).list()) {
-					if (item instanceof Weapon) {
-						final Weapon w = (Weapon) item;
-						//send(colors("+" + w.getMod() + " " + w.weapon.getName() + " (" + w.getWeight() + ") Cost: " + w.getCost(), "yellow"), client);
-						send(colors(w.toString() + " (" + w.getWeight() + ") Cost: " + w.getCost(), "yellow"), client);
-					}
-					else if (item instanceof Armor) {
-						final Armor a = (Armor) item;
-						//send(colors("+" + a.getMod() + " " + a.getName() + " (" + a.getWeight() + ") Cost: " + a.getCost(), "yellow"), client);
-						send(colors(a.toString() + " (" + a.getWeight() + ") Cost: " + a.getCost(), "yellow"), client);
-					}
-					else {
-						send(colors(item.getName() + " (" + item.getWeight() + ") Cost: " + item.getCost(), "yellow"), client);
-					}
+					send("----------------------------------", client);
 				}
-
-				send("----------------------------------", client);
 			}
 		}
-
 	}
 
 	private void cmd_add(String arg, Client client) {
@@ -8166,7 +8178,98 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			//cmdQueue.add(new CMD(input, client, 0));
 		}
 	}
+	
+	/**
+	 * Quest Editor
+	 * 
+	 * @param input
+	 * @param client
+	 */
+	public void op_qedit(final String input, final Client client) {
+		final Player player = getPlayer(client);
 
+		String qcmd = "";
+		String qarg = "";
+
+		edData data = player.getEditorData();
+
+		if (input.indexOf(" ") != -1) {
+			qcmd = input.substring(0, input.indexOf(" ")).toLowerCase();
+			qarg = input.substring(input.indexOf(" ") + 1, input.length());
+		}
+		else {
+			qcmd = input.substring(0, input.length()).toLowerCase();
+		}
+
+		debug("QEDIT CMD");
+		debug("qcmd: \"" + qcmd + "\"");
+		debug("qarg: \"" + qarg + "\"");
+
+		if( qcmd.equals("abort") ) {
+			// exit
+			send("< Exiting... >", client);
+
+			// reset editor and player status
+			player.setStatus( (String) data.getObject("pstatus") );
+			player.setEditor(Editor.NONE);
+		}
+		else if ( qcmd.equals("done") ) {
+			// save changes
+			op_qedit("save", client);
+
+			// clear edit flag
+			((Quest) data.getObject("item")).Edit_Ok = true;
+
+			// reset editor and player status
+			player.setStatus( (String) data.getObject("pstatus") );
+			player.setEditor(Editor.NONE);
+
+			// clear editor data
+			player.setEditorData(null);
+
+			// exit
+			send("< Exiting... >", client);
+		}
+		else if( qcmd.equals("help") ) {
+			send("Quest Editor -- Help", client);
+			send(Utils.padRight("", '-', 40), client);
+			//send("abort", client);
+			//send("desc <new description>", client);
+			//send("done", client);
+			send("help", client);
+			send("name <new name>", client);
+			send("save", client);
+			send("show", client);
+		}
+		else if( qcmd.equals("name") ) {
+			data.setObject("name", qarg);
+			send("Ok.", client);
+		}
+		else if( qcmd.equals("save") ) {
+		}
+		else if( qcmd.equals("show") ) {
+			final Quest quest = (Quest) data.getObject("quest");
+
+			// will be a little like examine, just here to show changes
+			send(Utils.padRight("", '-', 80), client);
+			//send("----------------------------------------------------", client);
+			send("Quest ID#: " + quest.getId(), client);
+			send("Name: " + data.getObject("name"), client);
+			send("Description:", client);
+			//showDesc((String) data.getObject("desc"), 80, client);
+			//send("----------------------------------------------------", client);
+			send(Utils.padRight("", '-', 80), client);
+		}
+		else if( qcmd.equals("zones") ) {
+			for(Entry<Zone, Integer> zoneData : zones.entrySet()) {
+				Zone zone = zoneData.getKey();
+				send(zone.getInstanceId() + " - " + zone.getName(), client);
+			}
+		}
+		else {
+		}
+	}
+	
 	/**
 	 * The input handler for a Pager, of which each Player has one
 	 * that holds the contents of a file (usually help files) they are currently
@@ -8606,8 +8709,10 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 						account = (Account) ois.readObject();
 						ois.close();
 
-						for(int id : account.playerIds) {
-							account.getCharacters().add(getPlayer(id));
+						if( account.playerIds != null ) {
+							for(int id : account.playerIds) {
+								account.getCharacters().add(getPlayer(id));
+							}
 						}
 
 						accounts.add(account);
@@ -8955,18 +9060,22 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			String line;
 
 			while ((line = br.readLine()) != null) {
-				final String channelName = line;
+				String[] channelData = line.split(",");
+				
+				final String channelName = channelData[0];
+				final int channel_perm = Utils.toInt(channelData[1], Constants.USER);
+				
 				chan.makeChannel(channelName);
-
+				
 				debug("Channel Added: " + channelName);
+				
+				chan.getChatChannel(channelName).setRestrict(channel_perm);
 			}
-
+			
 			br.close();
 			fr.close();
 		}
-		catch (Exception e) {
-			e.printStackTrace();
-		}
+		catch (Exception e) { e.printStackTrace(); }
 	}
 
 	/**
@@ -12166,7 +12275,11 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		return effectTimers.get(player);
 	}
 
-	// check for expired timers and clear them (player)
+	/**
+	 * check for expired timers and clear them (player)
+	 *  
+	 * @param player
+	 */
 	public void checkTimers(Player player) {
 		List<EffectTimer> etl = getEffectTimers(player);
 
@@ -12186,8 +12299,10 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 		eff_timers.clear();
 	}
-
-	// check for expired timers and clear them
+	
+	/**
+	 * check for expired timers and clear them
+	 */
 	public void checkTimers() {
 		List<EffectTimer> eff_timers = new LinkedList<EffectTimer>();
 
@@ -12294,6 +12409,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		send(mspMsg, client);
 	}
 	
+	// presumably this would utilize a loot table or similar construct
 	private List<Item> generateLoot( Creature creature ) {
 		List<Item> loot = new LinkedList<Item>();
 		
@@ -12302,5 +12418,10 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		loot.add( weapon );
 		
 		return loot;
+	}
+	
+	// dummy function right now, since it should only return a quest if the global quest table exists and has one with that id/index
+	private Quest getQuest(int questId) {
+		return new Quest();
 	}
 }
