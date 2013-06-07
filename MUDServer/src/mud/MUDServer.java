@@ -881,6 +881,20 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		b.set(0, 5);
 		tiles[0][0] = b;
 		tiles[0][1] = b;
+		
+		List<Integer> test = new LinkedList<Integer>();
+		test.add(10);
+		test.add(4);
+		test.add(5);
+		test.add(0);
+		test.add(12);
+		test.add(3);
+		test.add(2);
+		test.add(18);
+		
+		System.out.println(test);
+		test = Utils.merge_sort(test);
+		System.out.println(test);
 	}
 
 	/**
@@ -4177,6 +4191,8 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	 * @param client
 	 */
 	private void cmd_flag(final String arg, final Client client) {
+		// @flag <object> = <flags
+		// ex. @flag me=D, should add the dark flag
 		final String[] args = arg.split("=");
 
 		final Player player = getPlayer(client);
@@ -4198,7 +4214,9 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			else {
 				send("Adding Flag(s)", client);
 				if (args[0].equals("me")) {
-					player.setFlags(ObjectFlag.getFlagsFromString(args[1]));
+					debug("New FlagString: " + args[1] + player.getFlagsAsString());
+					debug("New FlagString(reversed): " + Utils.reverseString( args[1] + player.getFlagsAsString() ) );
+					player.setFlags( ObjectFlag.getFlagsFromString( args[1] + player.getFlagsAsString() ) );
 					send(player.getName() + " flagged " + ObjectFlag.fromLetter(args[1].charAt(0)), client);
 				}
 				else if (args[0].equals("here")) {
@@ -7312,23 +7330,31 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	 */
 	public void op_chargen(final String input, final Client client) {
 		final Player player = getPlayer(client);
+		
+		if( player.getStatus().equals("NEW") ) {
+			cgData cgd;
 
-		cgData cgd;
+			cgd = player.getCGData();
 
-		cgd = player.getCGData();
+			if (input.equals("start")) {
+				cgd = new cgData(0, 1, 0, false);
+				debug("T: " + cgd.t + " Step: " + cgd.step + " Answer: " + cgd.answer);
 
-		if (input.equals("start")) {
-			cgd = new cgData(0, 1, 0, false);
-			debug("T: " + cgd.t + " Step: " + cgd.step + " Answer: " + cgd.answer);
+				player.setCGData( op_chargen("", client, cgd) );
+			}
+			else {
+				player.setCGData( op_chargen(Utils.trim(input), client, player.getCGData()) );
+			}
 
-			player.setCGData( op_chargen("", client, cgd) );
+			if (cgd != null) {
+				player.setCGData( op_chargen("", client, player.getCGData()) );
+			}
 		}
 		else {
-			player.setCGData( op_chargen(Utils.trim(input), client, player.getCGData()) );
-		}
-
-		if (cgd != null) {
-			player.setCGData( op_chargen("", client, player.getCGData()) );
+			send("Game> You have already completed and finalized character generation.");
+			
+			player.setStatus("IC");
+			player.setEditor(Editor.NONE);
 		}
 	}
 

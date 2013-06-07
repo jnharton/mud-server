@@ -27,6 +27,7 @@ import java.io.PrintWriter;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 import java.util.Scanner;
@@ -163,7 +164,7 @@ public final class Utils {
 	{
         final StringBuilder buf = new StringBuilder();
         
-		for (int j = temp.length(); j >= 0; j--) {
+		for (int j = temp.length() - 1; j >= 0; j--) {
             buf.append(temp.charAt(j));
 		}
 		return buf.toString();
@@ -721,5 +722,83 @@ public final class Utils {
 		}
 		
     	return null;
+    }
+    
+    /**
+     * Merge Sort (operates on lists)
+     * 
+     * "translated" from pseudo-code at the site below
+     * https://en.wikipedia.org/wiki/Merge_sort
+     * 
+     * text comments from the site copied as well
+     * 
+     * @param list
+     * @return
+     */
+    public static List<Integer> merge_sort(List<Integer> list) {
+    	// if list size is 0 (empty) or 1, consider it sorted and return it
+        // (using less than or equal prevents infinite recursion for a zero length m)
+    	if( list.size() <= 1) return list;
+    	
+    	// else list size is > 1, so split the list into two sublists
+    	List<Integer> left = new LinkedList<Integer>();
+    	List<Integer> right = new LinkedList<Integer>();
+    	int middle = list.size() / 2;
+    	
+    	int counter = 0;
+    	
+    	for(Integer i : list) {
+    		if( counter < middle ) left.add(i);
+    		else right.add(i);
+    		counter++;
+    	}
+    	
+    	// recursively call merge_sort() to further split each sublist
+        // until sublist size is 1
+    	left = merge_sort(left);
+    	right = merge_sort(right);
+    	
+    	// merge the sublists returned from prior calls to merge_sort()
+        // and return the resulting merged sublist
+    	return merge(left, right);
+    }
+    
+    /**
+     * Merge (merges lists of integers)
+     * 
+     * "translated" from pseudo-code at the site below
+     * https://en.wikipedia.org/wiki/Merge_sort
+     * 
+     * text comments from the site copied as well
+     * 
+     * @param leftList
+     * @param rightList
+     * @return
+     */
+    public static List<Integer> merge(List<Integer> leftList, List<Integer> rightList) {
+    	List<Integer> result = new LinkedList<Integer>();
+    	
+    	while( leftList.size() > 0 || rightList.size() > 0 ) {
+    		if( leftList.size() > 0 && rightList.size() > 0 ) {
+    			if( leftList.get(0) <= rightList.get(0) ) {
+    				result.add( leftList.get(0) );
+    				leftList = leftList.subList(1, leftList.size());
+    			}
+    			else {
+    				result.add( rightList.get(0) );
+    				rightList = rightList.subList(1, rightList.size());
+    			}
+    		}
+    		else if( leftList.size() > 0 ) {
+				result.add( leftList.get(0) );
+				leftList = leftList.subList(1, leftList.size());
+			}
+    		else if( rightList.size() > 0 ) {
+				result.add( rightList.get(0) );
+				rightList = rightList.subList(1, rightList.size());
+			}
+    	}
+    	
+    	return result;
     }
 }
