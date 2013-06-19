@@ -280,9 +280,6 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 	private int guests = 0;         // the number of guests currently connected
 
-	// Arrays
-	//private String[] help;          // string array of help file filenames
-
 	// Databases/Data
 	private ObjectDB objectDB = new ObjectDB();
 
@@ -294,18 +291,18 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	private HashMap<String, String[]> helpMap = new HashMap<String, String[]>();
 	private HashMap<String, String[]> topicMap = new HashMap<String, String[]>();
 
-	private ArrayList<Account> accounts;      // ArrayList of Accounts (UNUSED)
-
 	// "Security" Stuff
 	private ArrayList<String> banlist;        // ArrayList of banned IP addresses
 	private ArrayList<String> forbiddenNames; // ArrayList of forbidden names for players/characters
 
 	// Other
 	private ArrayList<Effect> effectTable;    // ArrayList of existing effects (can be reused many places)
+	private ArrayList<Account> accounts;      // ArrayList of Accounts (UNUSED)
+	private ArrayList<Auction> auctions;
 
 	// cmd lists
 	private String[] user_cmds = new String[] {
-			"add", "ansi", "ask", "attack",
+			"add", "ansi", "ask", "attack", "auction",
 			"bash", "buy",
 			"calendar", "cast", "chargen", "connect", "commands", "createItem",
 			"date", "dedit", "describe", "drink", "drop",
@@ -765,6 +762,9 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 				nfe.printStackTrace();
 			}
 		}
+		
+		/* auctions ? */
+		auctions = new ArrayList<Auction>();
 
 		/* Server Initialization */
 
@@ -881,6 +881,8 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		b.set(0, 5);
 		tiles[0][0] = b;
 		tiles[0][1] = b;
+		
+		System.out.println("Merge Sort (Integers) Test");
 		
 		List<Integer> test = new LinkedList<Integer>();
 		test.add(10);
@@ -2593,6 +2595,28 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	 */
 	private void cmd_assign(final String arg, final Client client) {
 	}
+	
+	/**
+	 * Command: Auction
+	 * 
+	 * auction an item
+	 * 
+	 * @param arg
+	 * @param client
+	 */
+	private void cmd_auction(final String arg, final Client client) {
+		// ideas:
+		// auction <item> <time> <price> <buyout>
+		// ex. auction longsword 2d 50gp 100gp
+		// ex. auction longsword for 2d at 50gp
+		Player player = getPlayer(client);
+		
+		String[] args = arg.split(" ");
+				
+		Item item = getItem(args[0], player);
+		
+		//new Auction(item, , ,);
+	}
 
 	/**
 	 * Command: @backdb
@@ -3940,18 +3964,6 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		final Player player = getPlayer(client);
 		final int i = Utils.toInt(arg, -1);
 
-		/*if (arg.equals("") && i == -1) { send("Equip what?"); }
-		else {
-			for (int e = 0; e < player.getInventory().size(); e++) {
-				Item item = player.getInventory().get(e);
-				if (arg.equals(item.getName()) || i == item.getDBRef()) {
-					if (item.equippable) { player.equip(item); }
-					else { send("You can't equip that. (Not Equippable)"); }
-					return;
-				}
-			}
-		}*/
-
 		Item item = null;
 
 		if (arg.equals("") && i == -1) {
@@ -3965,6 +3977,15 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 					break;
 				}
 			}
+			
+			/*
+			 * Item item = player.getInventory().get(e);
+				if (arg.equals(item.getName()) || i == item.getDBRef()) {
+					if (item.equippable) { player.equip(item); }
+					else { send("You can't equip that. (Not Equippable)"); }
+					return;
+				}
+			 */
 		}
 
 		if ( item != null) {
@@ -10221,6 +10242,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		// no recipient, so we'll assume it was 'said' out loud
 		if (msg.getSender() == null) {
 			send(msg.getMessage());
+			msg.markSent();
 		}
 		else if (players.contains(recip)) {
 			send(msg.getMessage(), recip.getClient());
@@ -10233,10 +10255,10 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 				if (bystander.getLocation() == msg.getLocation())
 				{
 					send(msg.getSender().getName() + " says, \"" + msg.getMessage() + "\".", bystander.getClient());
+					msg.markSent();
 				}
 			}
 		}
-		msg.markSent();
 		debug("sent message");
 	}
 
@@ -10380,11 +10402,13 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	public void look(final MUDObject mo, final Client client) {
 		String objectType = ObjectFlag.fromLetter(mo.getFlagsAsString().charAt(0)).toString().toLowerCase();
 
-		if( !mo.hasFlag(ObjectFlag.DARK) ) {
+		if( !mo.hasFlag(ObjectFlag.DARK) && !mo.hasFlag(ObjectFlag.SILENT) ) {
 			send(colors(mo.getName() + " (#" + mo.getDBRef() + ")", displayColors.get(objectType)), client);
 		}
 		else { send(colors(mo.getName(), displayColors.get(objectType)), client); }
-		send(mo.getDesc(),  client);
+		
+		//send(mo.getDesc(),  client);
+		showDesc(mo.getDesc(),  client);
 
 		if( mo instanceof Player) {
 			send("Wearing (visible): ", client);

@@ -113,6 +113,10 @@ public class Coins
         coins[0] = subtractPlatinum(coins[3]).subtractGold(coins[2]).subtractSilver(coins[1]).numOfCopper();
         return coins;
     }
+    
+    public Coins fromString() {
+    	return null;
+    }
 
     // false -> comma separated for saving to db
     // true -> units separated

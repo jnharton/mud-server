@@ -315,9 +315,9 @@ public class Room extends MUDObject implements EventSource
 	//the event listeners of the particular event
 	public synchronized void fireEvent(String message) {
 		SayEvent event = new SayEvent(this, message);
-		Iterator<SayEventListener> i = _listeners.iterator();
-		while(i.hasNext())  {
-			 i.next().handleSayEvent(event);
+		Iterator<SayEventListener> iter = _listeners.iterator();
+		while(iter.hasNext())  {
+			 iter.next().handleSayEvent(event);
 		}
 	}
 }

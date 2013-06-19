@@ -307,9 +307,9 @@ public class Portal extends Exit implements EventSource, SayEventListener {
 	@Override
 	public void fireEvent(String message) {
 		PortalEvent event = new PortalEvent(this);
-		Iterator<PortalEventListener> i = _listeners.iterator();
-		while(i.hasNext())  {
-			 i.next().handlePortalEvent(event);
+		Iterator<PortalEventListener> iter = _listeners.iterator();
+		while(iter.hasNext())  {
+			 iter.next().handlePortalEvent(event);
 		}
 	}
 }

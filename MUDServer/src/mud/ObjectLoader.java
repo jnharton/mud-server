@@ -124,7 +124,7 @@ public class ObjectLoader {
                     objectDB.addNPC(ik);
                 }
                 //Exit(String tempName, String tempFlags, String tempDesc, int tempLoc, int tempDBREF, int tempDestination)
-                else if (oFlags.equals("E"))
+                else if (oFlags.indexOf("E") == 0)
                 {
                     int eType = Integer.parseInt(attr[6]);
 
@@ -167,6 +167,7 @@ public class ObjectLoader {
                             portal = new Portal(PortalType.STD, oLocation, oDestination);
                             portal.setDBRef(oDBRef);          // NOTE: ought to handle this in the constructor
                             portal.setExitType(et);
+                            portal.setDesc(oDesc);
                             
                             portal.name = attr[1];            // name
                             portal.coord.setX(0);             // x coordinate

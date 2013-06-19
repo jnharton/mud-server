@@ -258,7 +258,7 @@
 257#+4 Light Wooden Shield#I#A light wooden shield#8#10#1#4
 258#Planar Parent#RS#The parent room for planar regions#0#N#10,10,10#-1#
 259#Astral Plane#RS#A wide open, evenly lit area of infinite space. It is unnervingly quiet and the view goes on forever.#258#N#10,10,10#-1#
-260#portal#E##259#4#1#0
+260#portal#E#A swirling, blue circle hanging in mid air. The portal is very pretty, but with an unknown destination it represents real dangers to any would-be travellers.#259#4#1#0
 261#Combat Practice Room#RS#A room in which to test the combat system and practice with it#0#N#10,10,10#-1#
 262#combat dummy#N#A wooden combat dummy#261##12,12,12,12,12,12#0,0,0,0#0#3#16#IC
 263#Castle: Gates#RS#A stone arch hangs high above, the points of a portcullis protuding from a dark slot on the side leading out of the castle#0#O#10,10,10#-1#
