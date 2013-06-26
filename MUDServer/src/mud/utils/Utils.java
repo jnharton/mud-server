@@ -462,6 +462,29 @@ public final class Utils {
 	public static String padLeft(String s, char padChar, int n) {
 		return String.format("%1$" + n + "s", s).replace(' ', padChar);
 	}
+	
+	public static String center(final String s, final int n) {
+		String work = s;
+		int str = work.length();
+		int remain = n - work.length();
+		
+		System.out.println("str: " + str + " remain: " + remain);
+		
+		int left = 0;
+		int right = 0;
+		if( remain > 0 ) {
+			left = (int) (0.5 * remain);
+			right = (int) (0.5 * remain);
+			return padLeft("", ' ', left) +  s + padRight("", ' ', right);
+		}
+		else {
+			return truncate(s, n);
+		}
+	}
+	
+	public static String truncate(final String s, final int n) {
+		return s.substring(0, n);
+	}
 
 	public static <T> T[] expand(T[] objects) {
 		return Arrays.copyOfRange(objects, 0, objects.length + 10);

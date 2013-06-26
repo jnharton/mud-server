@@ -29,5 +29,4 @@ public enum MoonPhase {
     public String toString() {
         return this.name;
     }
-
 }

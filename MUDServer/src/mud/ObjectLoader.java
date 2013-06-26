@@ -144,9 +144,13 @@ public class ObjectLoader {
                     }
                     else if( et == ExitType.DOOR ) {
                     	int oDest = Integer.parseInt(attr[5]);
+                    	int lockState = Integer.parseInt(attr[6]);
 
                         Exit exit = new Exit(oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), oDesc, oLocation, oDest);
                         exit.setExitType(et);
+                        
+                        if( lockState == 1 ) { exit.lock(); }
+                        else { exit.unlock(); }
 
                         log.debug("log.debug (db entry): " + exit.toDB(), 2);
 

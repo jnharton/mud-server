@@ -1,14 +1,16 @@
 help
-aSimpleMU v0.6.9b Help System
+aSimpleMU Help System
 
 Topics:
 
-commands - list of all the available commands and their permission requirements
-movement - how moving around works in this game
-olc      - the online creation system
-help     - this page
-license  - the license for this software
-policies - in-game, and out-of-game policy information
+auction_house -
+commands      - list of all the available commands and their permission requirements
+movement      - how moving around works in this game
+olc           - the online creation system
+help          - this page
+license       - the license for this software
+policies      - in-game, and out-of-game policy information
+test          -
 
 'help <topic/command>' Show the help for the given topic/command.
 'help @reload' Reload the help files while the game is running.
@@ -16,3 +18,5 @@ policies - in-game, and out-of-game policy information
                without a shutdown and restart.
                
 * topic names, etc are case sensitive and are usually lowercase
+
+Last Updated: June 21st, 2013

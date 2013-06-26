@@ -5,9 +5,9 @@ motd_file = motd-wd-edit.txt
 [/theme]
 
 [calendar]
-day = 2
-month = 8
-year = 1372
+day = 30
+month = 7
+year = 1332
 reckon = DR
 season = summer
 [/calendar]

@@ -123,7 +123,7 @@ public class ProgramInterpreter {
 					parent.debug("Color: " + params[0]);
 					parent.debug("Text: " + params[1]);
 
-					return "-Result: " + parent.colorCode(params[0]) + params[1] + parent.colorCode("white");
+					return parent.colorCode(params[0]) + params[1] + parent.colorCode("white");
 				}
 				else { return "PGM: Error!"; }
 			}
@@ -141,13 +141,13 @@ public class ProgramInterpreter {
 					List<Point> ptList = Utils.toPoints(ca[1]);
 
 					if( ptList != null ) {
-						return "-Result: " + ptList + "; distance is " + MUDServer.distance(ptList.get(0), ptList.get(1));
+						return ptList + "; distance is " + MUDServer.distance(ptList.get(0), ptList.get(1));
 					}
 					else { return "PGM: Error!"; }
 				}
 				else
 				{
-					return "-Result: Incomplete function statement, no parameters!";
+					return "Incomplete function statement, no parameters!";
 				}
 			}
 			else if (ca[0].equals("{rainbow")) {
@@ -156,13 +156,14 @@ public class ProgramInterpreter {
 					String param = ca[1].substring(0, ca[1].indexOf("}"));
 
 					if (param != null) {
-						return "-Result: " + parent.rainbow(param) + parent.colorCode("white");
+						System.out.println(param);
+						return parent.rainbow(param) + parent.colorCode("white");
 					}
 					else { return "PGM: Error!"; }
 				}
 				else
 				{
-					return "-Result: Incomplete function statement, no parameters!";
+					return "Incomplete function statement, no parameters!";
 				}
 			}
 			else { return "PGM: Error!"; }
@@ -173,11 +174,12 @@ public class ProgramInterpreter {
 		else  if (pArg != null) {
 			switch(pArg) {
 			case "{name}":
-				return "-Result: " + parent.getServerName();
+				return parent.getServerName();
 			case "{version}":
-				return "-Result: " + MUDServer.getName() + " " + MUDServer.getVersion();
+				//return "-Result: " + MUDServer.getName() + " " + MUDServer.getVersion();
+				return MUDServer.getVersion();
 			case "{colors}":
-				return "-Result: Incomplete function statement, no inputs!";
+				return "Incomplete function statement, no inputs!";
 			default:
 				return "PGM: No such function! (1)";
 			}
@@ -192,6 +194,5 @@ public class ProgramInterpreter {
 		p.parse("{distance:(0,0),(1,1)}");
 		p.parse("{rainbow:output this string in rainbow colors}");
 		System.out.println(p.interpret("{distance:(0,0),(2,3)}"));
-		System.out.println(p.interpret("{rainbow:output this string in rainbow colors}"));
 	}
 }

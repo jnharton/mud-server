@@ -19,7 +19,7 @@ import mud.objects.Item;
 public class Auction {
 	private int duration;
 	private Item item;
-	private Coins initial_price;
+	public Coins initial_price;
 	private Coins buyout_price;
 	
 	private Bid currentBid;
@@ -54,6 +54,15 @@ public class Auction {
 		this(auctionItem, initial);
 		
 		this.buyout_price = buyout;
+	}
+	
+	public boolean hasBids() {
+		if( bids.size() > 0 ) { return true; }
+		else { return false; }
+	}
+	
+	public Item getItem() {
+		return this.item;
 	}
 	
 	public List<Bid> getBids() {

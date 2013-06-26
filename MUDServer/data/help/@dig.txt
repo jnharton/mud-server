@@ -1,4 +1,4 @@
-dig
-DIG
+@dig
+@DIG
 
-Syntax: 'dig <name>=<parent>'
+Syntax: '@dig <name>=<parent>'

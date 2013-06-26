@@ -1,0 +1,13 @@
+@listprops
+@LISTPROPS
+
+Lists object properties.
+
+NOTE: At the moment, here always uses the current room, and me always
+uses the current player. Nothing else is implemented at the moment.
+
+Syntax: '@listprops <object name/keyword>'
+
+keywords: here, me
+
+Last Updated: June 25th, 2013

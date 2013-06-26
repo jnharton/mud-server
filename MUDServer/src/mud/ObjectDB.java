@@ -307,13 +307,23 @@ public class ObjectDB {
     /////////////// EXITS
     final Map<Integer, Exit> exitsById   = new HashMap<Integer, Exit>();
     final Map<String, Exit>  exitsByName = new HashMap<String, Exit>();
-
+    
+    public Exit getExit(final String name) {
+        return exitsByName.get(name);
+    }
+    
     public Exit getExit(final int dbref) {
         return exitsById.get(dbref);
     }
-
-    public Exit getExit(final String name) {
-        return exitsByName.get(name);
+    
+    public List<Exit> getExitsByRoom(final int loc) {
+    	final List<Exit> acc = new LinkedList<Exit>();
+    	for (final Exit e : exitsById.values()) {
+            if (e.getLocation() == loc) {
+                acc.add(e);
+            }
+        }
+        return acc;
     }
 
     public void addExit(final Exit e) {

@@ -245,6 +245,15 @@ public abstract class MUDObject {
 		}
 		return false;
 	}
+	
+	public boolean hasEffectType(Effect.Type effectType)
+	{
+		for (Effect effect : this.effects) {
+			if ( effect.getType() == effectType ) { return true; }
+		}
+		
+		return false;
+	}
 
 	// get effect
 	public Effect getEffect(int id) {

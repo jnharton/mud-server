@@ -124,8 +124,6 @@ public class Weapon extends Item implements Equippable<Weapon>, Wieldable<Weapon
 
 	@Override
 	public void equip(Player p) {
-		// TODO Auto-generated method stub
-
 	}
 
 	@Override

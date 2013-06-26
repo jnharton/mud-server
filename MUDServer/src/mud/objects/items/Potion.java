@@ -46,7 +46,7 @@ public class Potion extends Item implements Stackable<Potion>, Usable<Potion> {
 	public Potion() {
 		super(-1, "Potion", EnumSet.of(ObjectFlag.ITEM), "An empty glass potion bottle.", 8);
 		this.item_type = ItemType.POTION;
-		this.drinkable = 1;
+		this.drinkable = true;
 		this.spell = null;
 		this.effect = null;
 		this.weight = 0.5;
@@ -66,7 +66,7 @@ public class Potion extends Item implements Stackable<Potion>, Usable<Potion> {
 		super(-1, "Potion", EnumSet.of(ObjectFlag.ITEM), "A potion of " + effect.getName(), 8);
 		
 		this.item_type = ItemType.POTION;
-		this.drinkable = 1;
+		this.drinkable = true;
 		this.effect = effect;
 		this.weight = 0.5;
 		
@@ -78,7 +78,7 @@ public class Potion extends Item implements Stackable<Potion>, Usable<Potion> {
 		super(-1, "Potion", EnumSet.of(ObjectFlag.ITEM), "A potion of " + spell.getName(), 8);
 		
 		this.item_type = ItemType.POTION;
-		this.drinkable = 1;
+		this.drinkable = true;
 		this.spell = spell;
 		this.weight = 0.5;
 		
@@ -122,7 +122,7 @@ public class Potion extends Item implements Stackable<Potion>, Usable<Potion> {
 		this.effects.add(this.effect);
 
 		this.item_type = ItemType.POTION;
-		this.drinkable = 1;
+		this.drinkable = true;
 		
 		this.weight = 0.5;
 	}

@@ -26,9 +26,11 @@ import mud.utils.Utils;
 public class Item extends MUDObject {
 	public boolean equippable = false; // is the item equippable?
 	public boolean equipped = false;   // is the item equipped?
+	
+	boolean canAuction = true;
 
     private Coins baseCost = Coins.gold(1);
-	public int drinkable = 0; // drinkable? (0 = no, 1 = yes)
+	public boolean drinkable = false;        // drinkable? (0 = no, 1 = yes)
 	protected double weight = 0;             // the weight in whatever units are used of the equippable object
 
 	// original idea was a multiplying factor for weight when wet such as
@@ -39,8 +41,9 @@ public class Item extends MUDObject {
 	public boolean isAbsorb = true;       // does this item absorb water? (default: true)
 	public boolean isWet = false;         // defines whether the item is wet or not (default: false)
 	public double wet = 1.0;              // degree of water absorbed
+	
 	public int durability = 100;          // how durable the material is (100 is a test value)
-	public int wear = 0;                  // how much wear and tear the item has been subject to (0 or negative)
+	public int wear = 0;                  // how much wear and tear the item has been subject to
 	
 	public ItemType equip_type;           // equip type - armor, shield, jewelry, weapon
 	protected ItemType item_type;           // item type - what type of item is this (supersede equip_type?)

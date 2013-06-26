@@ -1,4 +1,0 @@
-dig
-DIG
-
-Syntax: 'dig <name>=<parent>'

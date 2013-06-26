@@ -48,7 +48,6 @@ public class HelpCommand extends Command {
         
 		if (helpfile != null)
 		{
-
 			if (helpfile.length > 25) {
 				final Player player = getPlayer(client);
 				player.setPager( new Pager(helpfile) );
@@ -58,7 +57,7 @@ public class HelpCommand extends Command {
 			}
 			else {
 				for (final String line : helpfile) {
-					client.write(line + "\r\n");
+					client.write(check(line) + "\r\n");
 				}
 			}
 		}
@@ -71,6 +70,54 @@ public class HelpCommand extends Command {
 		{
 			client.write("No such help file!\r\n");
 		}
+	}
+	
+	private String check(final String in) {
+		boolean doEval = false;
+		
+		StringBuilder result = new StringBuilder();
+		StringBuilder work = new StringBuilder();
+		
+		char ch;
+		
+		for( int c = 0; c < in.length(); c++ ) {
+			ch = in.charAt(c);
+			
+			switch(ch) {
+			case '{':
+				if( !doEval ) {
+					doEval = true;
+					work.append(ch);
+				}
+				else {
+					work.delete(0, work.length());
+					doEval = true;
+					work.append(ch);
+				}
+				break;
+			case '}':
+				if( doEval ) {
+					doEval = false;
+					work.append(ch);
+					result.append( evaluate( work.toString() ) );
+				}
+				break;
+			default:
+				if( doEval ) {
+					work.append(ch);
+				}
+				else {
+					result.append(ch);
+				}
+				break;
+			}
+		}
+		
+		return result.toString();
+	}
+	
+	private String evaluate(String test) {
+		return parent.getProgInt().interpret(test);
 	}
 
 	@Override
