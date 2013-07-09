@@ -22,6 +22,12 @@ public enum Alignments {
 	NEUTRAL_EVIL("Neutral Evil"),       // 8
 	CHAOTIC_EVIL("Chaotic Evil");       // 9
 	
+	//       Good
+	//         |
+	// Lawful --- Chaotic
+	//         |
+    //       Evil
+	
 	private String stringRep;
 	
 	private Alignments(String stringRep) {

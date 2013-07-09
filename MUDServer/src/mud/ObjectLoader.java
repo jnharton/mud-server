@@ -404,6 +404,16 @@ public class ObjectLoader {
 
                         log.debug("log.debug (db entry): " + shield.toDB(), 2);
                     }
+                    
+                    else if ( it == ItemType.RING ) {
+                    	
+                    	Item ring = new Item(oDBRef, oName, EnumSet.of(ObjectFlag.ITEM), oDesc, oLocation);
+                    	
+                    	ring.setItemType( ItemType.RING );
+                    	
+                    	objectDB.add(ring);
+                    	objectDB.addItem(ring);
+                    }
                 }
                 else if (oFlags.contains("null")) {
 

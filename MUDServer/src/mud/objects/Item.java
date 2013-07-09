@@ -46,7 +46,7 @@ public class Item extends MUDObject {
 	public int wear = 0;                  // how much wear and tear the item has been subject to
 	
 	public ItemType equip_type;           // equip type - armor, shield, jewelry, weapon
-	protected ItemType item_type;           // item type - what type of item is this (supersede equip_type?)
+	protected ItemType item_type;         // item type - what type of item is this (supersede equip_type?)
 	
 	protected SlotType st;                // the type of slot this fits in (if any)
 	protected int mod = 0;                // modifier - +0, +2, +3, +4, ... and so on

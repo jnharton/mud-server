@@ -270,3 +270,4 @@
 269#Red Dragon Inn - Room#RS#You see nothing.#0#N#10,10,10#-1#
 270#in#E#You see nothing.#17#269#0#1
 271#out#E#You see nothing.#269#17#0#1
+272#Ring of Invisibility#I#A medium-sized gold ring with a smooth, unmarked surface.#8#9#*#*

@@ -4627,9 +4627,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 				for (final Item item : player.getInventory())
 				{
 					if (item != null) {
-						//send(colors(item.getName(), "yellow") + " " + "(#" + item.getDBRef() + ")", client);
-						send(colors(item.toString(), "yellow") + " " + "(#" + item.getDBRef() + ")", client);
-
+						send(colors(item.getName(), "yellow") + " " + "(#" + item.getDBRef() + ")", client);
 					}
 					else {
 						debug("Item is null");
@@ -4659,8 +4657,8 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 						}
 						else {
 							//String itemString = colors(item.getName(), "yellow") + "(#" + item.getDBRef() + ")";
-							//String itemString = item.getName() + "(#" + item.getDBRef() + ")";
-							String itemString = item.toString() + "(#" + item.getDBRef() + ")";
+							String itemString = item.getName() + "(#" + item.getDBRef() + ")";
+							
 							String padded = Utils.padRight(itemString);
 
 							StringBuffer sb = new StringBuffer(padded);
@@ -8287,6 +8285,9 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		if ( rcmd.equals("abort") ) {
 			// exit
 			send("< Exiting... >", client);
+			
+			/// clear edit flag
+			((Item) data.getObject("item")).Edit_Ok = true;
 
 			// reset editor and player status
 			player.setStatus( (String) data.getObject("pstatus") );
