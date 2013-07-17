@@ -1,5 +1,7 @@
 package mud;
 
+import java.util.HashMap;
+
 /*
   Copyright (c) 2012 Jeremy N. Harton
   
@@ -17,121 +19,61 @@ package mud;
   SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-public enum Classes {
-	NONE("None", "NON", 0, "", false, false, "red"),                 // ANY
-	ADEPT("Adept", "ADP", 12, "d6", true, false, "green"),           // NPC Class
-	ARISTOCRAT("Aristocrat", "ARC", 13, "d8", true, false, "green"), // NPC Class
-	BARBARIAN("Barbarian", "BAR", 1, "d12", false, false, "red"),    // PC Class
-	BARD("Bard", "BRD", 2, "d6", false, true, "yellow"),             // PC Class
-	COMMONER("Commoner", "COM", 14, "d4", true, false, "green"),     // NPC Class
-	CLERIC("Cleric", "CLR", 3, "d8", false, true, "yellow"),         // PC Class
-	DRUID("Druid", "DRD", 4, "d8", false, true, "yellow"),           // PC Class
-	EXPERT("Expert", "EXP", 15, "d6", true, false, "green"),         // NPC Class
-	FIGHTER("Fighter", "FTR", 5, "d10", false, false, "red"),        // PC Class
-	MONK("Monk", "MON", 6, "d8", false, false, "red"),               // PC Class
-	PALADIN("Paladin", "PAL", 7, "d10", false, true, "yellow"),      // PC Class
-	RANGER("Ranger", "RGR", 8, "d8", false, true, "yellow"),         // PC Class
-	ROGUE("Rogue", "ROG", 9, "d6", false, false, "red"),             // PC Class
-	SORCERER("Sorcerer", "SOR", 10, "d4", false, true, "yellow"),    // PC Class
-	WARRIOR("Warrior", "WAR", 16, "d8", true, false, "green"),       // NPC Class
-	WIZARD("Wizard", "WIZ", 11, "d4", false, true, "yellow");        // PC Class
-
-	private String name;
-	private String abrv;
-	private int id;
-	private String hit_dice;
-	private boolean npc;
-	private boolean caster;
-	private String color;
+public class Classes {
+	// Name, Abbreviation (3 chars), ID, hitdice string, npc class?, caster class? color
+	public static PClass NONE = new PClass("None", "NON", 0, "", false, false, "red");                 // ANY
+	public static PClass ADEPT = new PClass("Adept", "ADP", 12, "d6", true, false, "green");           // NPC Class
+	public static PClass ARISTOCRAT = new PClass("Aristocrat", "ARC", 13, "d8", true, false, "green"); // NPC Class
+	public static PClass BARBARIAN = new PClass("Barbarian", "BAR", 1, "d12", false, false, "red");    // PC Class
+	public static PClass BARD = new PClass("Bard", "BRD", 2, "d6", false, true, "yellow");             // PC Class
+	public static PClass COMMONER = new PClass("Commoner", "COM", 14, "d4", true, false, "green");     // NPC Class
+	public static PClass CLERIC = new PClass("Cleric", "CLR", 3, "d8", false, true, "yellow");         // PC Class
+	public static PClass DRUID = new PClass("Druid", "DRD", 4, "d8", false, true, "yellow");           // PC Class
+	public static PClass EXPERT = new PClass("Expert", "EXP", 15, "d6", true, false, "green");         // NPC Class
+	public static PClass FIGHTER = new PClass("Fighter", "FTR", 5, "d10", false, false, "red");        // PC Class
+	public static PClass MONK = new PClass("Monk", "MON", 6, "d8", false, false, "red");               // PC Class
+	public static PClass PALADIN = new PClass("Paladin", "PAL", 7, "d10", false, true, "yellow");      // PC Class
+	public static PClass RANGER = new PClass("Ranger", "RGR", 8, "d8", false, true, "yellow");         // PC Class
+	public static PClass ROGUE = new PClass("Rogue", "ROG", 9, "d6", false, false, "red");             // PC Class
+	public static PClass SORCERER = new PClass("Sorcerer", "SOR", 10, "d4", false, true, "yellow");    // PC Class
+	public static PClass WARRIOR = new PClass("Warrior", "WAR", 16, "d8", true, false, "green");       // NPC Class
+	public static PClass WIZARD = new PClass("Wizard", "WIZ", 11, "d4", false, true, "yellow");        // PC Class
+	
+	// green - npc class
+	// yellow - spell caster
+	// red - melee/ranged fighting
     
-    //static private final Classes[] myValues = values();
-	static private final Classes[] myValues = {
+	private static final PClass[] myValues = {
 		NONE,
 		BARBARIAN, BARD, CLERIC, DRUID, FIGHTER, MONK, PALADIN, RANGER, ROGUE, SORCERER, WIZARD,
 		ADEPT, ARISTOCRAT, COMMONER, EXPERT, WARRIOR
 	};
 	
-	/**
-	 * The constructor for a enum class that represent D&D-like Player Classes
-	 * 
-	 * @param name the name of the class
-	 * @param id the unique numerical id of the class (essentially meaningless)
-	 * @param hit_dice the hit dice (D&D multi-sided dice, in multiples of 2)
-	 * @param npc a boolean value indicating whether the class is an NPC class
-	 * @param caster a boolean value indicating whether the class is a caster (spell-casting) class
-	 * @param color the name of an ansi color used in some certain circumstances when printing the class abbreviation
-	 */
-	private Classes(String name, String abrv, int id, String hit_dice, boolean npc, boolean caster, String color) {
-		this.name = name;
-		this.abrv = abrv;
-		this.id = id;
-		this.hit_dice = hit_dice;
-		this.npc = npc;
-		this.caster = caster;
-		this.color = color;
-	}
+	private static final HashMap<String, PClass> classMap = new HashMap<String, PClass>() {
+		{
+			put("ADEPT", Classes.ADEPT);
+			put("ARISTOCRAT", Classes.ARISTOCRAT);
+			put("BARBARIAN", Classes.BARBARIAN);
+			put("BARD", Classes.BARD);
+			put("COMMONER", Classes.COMMONER);
+			put("CLERIC", Classes.CLERIC);
+			put("DRUID", Classes.DRUID);
+			put("FIGHTER", Classes.FIGHTER);
+			put("MONK", Classes.MONK);
+			put("PALADIN", Classes.PALADIN);
+			put("RANGER", Classes.RANGER);
+			put("ROGUE", Classes.ROGUE);
+			put("SORCEROR", Classes.SORCERER);
+			put("WARRIOR", Classes.WARRIOR);
+			put("WIZARD", Classes.WIZARD);
+		}
+	};
 	
-	/**
-	 * 
-	 * @return String the name of the class
-	 */
-	public String getName() {
-		return this.name;
-	}
-	
-	/**
-	 * 
-	 * @return String hit dice string for the class
-	 */
-	public String getHDString() { // HD = hit dice
-		return this.hit_dice;
-	}
-	
-	/**
-	 * 
-	 * @return Integer hit dice integer for the class (the number of sides the class' hit dice has)
-	 */
-	public Integer getHD() {
-		return Integer.parseInt(this.hit_dice.substring(1,-1));
-	}
-	
-	public String getAbrv() {
-		return this.abrv;
-	}
-	
-	/**
-	 * 
-	 * @return int the 'id' of the class, which is just a meaningless number representing it
-	 */
-	public int getId() {
-		return this.id;
-	}
-	
-	public static Classes getClass(int id) {
+	public static PClass getClass(int id) {
         return myValues[id];
 	}
 	
-	/**
-	 * 
-	 * @return boolean true/false value indicates whether a class is an NPC class or not.
-	 */
-	public boolean isNPC() {
-		return this.npc;
-	}
-	
-	/**
-	 * 
-	 * @return boolean true/false value indicates whether a class is a caster (spell-casting) class or not.
-	 */
-	public boolean isCaster() {
-		return this.caster;
-	}
-	
-	public String getColor() {
-		return this.color;
-	}
-	
-	public String toString() {
-		return this.name;
+	public static PClass getClass(String className) {
+		return classMap.get( className.toUpperCase() );
 	}
 }

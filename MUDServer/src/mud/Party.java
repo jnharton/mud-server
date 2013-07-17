@@ -61,4 +61,16 @@ public class Party {
 		
 		return members.remove(player);
 	}
+	
+	public boolean removePlayer(final Player player) {
+		return this.members.remove(player);
+	}
+	
+	public boolean hasPlayer(final Player player) {
+		return this.members.contains(player);
+	}
+	
+	public List<Player> getPlayers() {
+		return this.members;
+	}
 }

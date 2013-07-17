@@ -428,6 +428,8 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	private HashMap<Player, List<EffectTimer>> effectTimers = new HashMap<Player, List<EffectTimer>>();
 
 	private boolean firstRun = false;
+	
+	private HashMap<Player, Party> partyInvites = new HashMap<Player, Party>();
 
 	// global nameref table
 	private HashMap<String, Integer> nameRef = new HashMap<String, Integer>(); // store name references to dbref numbers (i.e. $this->49)
@@ -2279,6 +2281,9 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 					{
 						// run the page function
 						cmd_page(arg, client);
+					}
+					else if ( cmd.equals("party") ) {
+						cmd_party(arg, client);
 					}
 					// pass arguments to the passwd function
 					else if ( cmd.equals("passwd") || ( aliasExists && alias.equals("passwd") ) )
@@ -5502,10 +5507,72 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	
 	private void cmd_party(final String arg, final Client client) {
 		// party: list the members of your party if you are in one)
-		// party #invite <player>: invite a player to the party
+		// party #invite <player name> ...: invite a player or players to the party
 		// party #join: join the party you were most recently invited to
 		// party #leave: leave your current party
 		
+		Player player = getPlayer(client);
+		
+		if( arg.equals("") ) {
+			Party party = getPartyContainingPlayer( player );
+			
+			if( party != null ) {
+				send("- Party -------- ", client);
+				
+				for( Player player1 : party.getPlayers() ) {
+					send( player1.getName() , client);
+				}
+			}
+			else {
+				send("You are not in a party.", client);
+			}
+		}
+		else if( arg.charAt(0) == '#' ) {
+			String arg1;
+			String[] params = null;
+			
+			if( arg.indexOf(' ') == -1 ) { arg1 = arg.substring(1); }
+			else {
+				arg1 = arg.substring(1, arg.indexOf(' ') );
+				params = arg.substring(arg.indexOf(' ')).split(" ");
+			}
+			
+			debug(arg1);
+			
+			if( arg1.equalsIgnoreCase("create") ) {
+				// create a new party where you are the leader
+				Party party = getPartyContainingPlayer( player );
+				if( party != null) {
+					party.removePlayer( player );
+				}
+				parties.add( new Party( player ) );
+			}
+			else if( arg1.equalsIgnoreCase("invite") ) {
+				// send an invite to join a party to one or more players
+				if( params.length > 0 ) {
+					for(String playerName : params) {
+						Player player1 = getPlayer( playerName );
+						// send invite to named player
+						partyInvites.put(player, getPartyContainingPlayer( player ));
+						String message = player.getName() + " has invited you to their party!";
+						addMessage( new Message( player, message, player1 ) );
+					}
+				}
+			}
+			else if( arg1.equalsIgnoreCase("join") ) {
+				// accept a standing invite to join a party
+				Party party = partyInvites.get(player);
+				if( party != null ) {
+					party.addPlayer(player);
+				}
+				partyInvites.remove(player);
+			}
+			else if( arg1.equalsIgnoreCase("leave") ) {
+				// leave your current party, if you're in one
+				Party party = getPartyContainingPlayer( player );
+				if( party != null) { party.removePlayer( player ); }
+			}
+		}
 	}
 
 	/**
@@ -10390,18 +10457,22 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	 */
 	public void addMessage(final Message msg) {
 		// if this client's player is the intended recipient
+		final Player sender = msg.getSender();
 		final Player recip = msg.getRecipient();
-		// no recipient, so we'll assume it was 'said' out loud
-		if (msg.getSender() == null) {
+		
+		// no sender, so this must be a MUD-wide tell/broadcast
+		if ( sender == null ) {
 			send(msg.getMessage());
 			msg.markSent();
 		}
-		else if (players.contains(recip)) {
+		// has a recipient, so it was sent to someone specifically
+		else if ( players.contains(recip) ) {
 			send(msg.getMessage(), recip.getClient());
 			msg.markSent();
 			debug("addMessage, sent message");
 		}
-		else {
+		// no recipient, so we'll assume it was 'said' out loud
+		else if( recip == null ){
 			getRoom(msg.getLocation()).fireEvent(msg.getMessage());
 			for (final Player bystander : players) {
 				if (bystander.getLocation() == msg.getLocation())
@@ -12647,5 +12718,15 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		timer.scheduleAtFixedRate(aTimer, 0, 1000);
 		
 		return auction;
+	}
+	
+	private Party getPartyContainingPlayer( final Player player ) {
+		for( Party party : parties ) {
+			if( party.hasPlayer(player) ) {
+				return party;
+			}
+		}
+		
+		return null;
 	}
 }

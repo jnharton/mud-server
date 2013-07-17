@@ -484,7 +484,7 @@ public class ObjectDB {
         return players.get(name);
     }
 
-    public int getNumPlayers(final Classes c) {
+    public int getNumPlayers(final PClass c) {
         int count = 0;
         for (final Player p : players.values()) {
             if (c.equals(p.getPClass())) {

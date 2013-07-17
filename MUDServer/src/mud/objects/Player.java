@@ -14,12 +14,13 @@ import java.util.EnumSet;
 import mud.net.Client;
 
 import mud.Alignments;
+import mud.Classes;
 import mud.ObjectFlag;
 import mud.Abilities;
-import mud.Classes;
 import mud.Coins;
 import mud.Editor;
 import mud.MUDObject;
+import mud.PClass;
 import mud.Point;
 import mud.Race;
 import mud.Race.Subraces;
@@ -171,7 +172,7 @@ public class Player extends MUDObject
 	protected MUDObject target;                    // Target -- player/npc that will be used for generic interaction
 	protected Race race;                           // Race
 	protected Character gender;                    // Gender
-	protected Classes pclass;                      // Class
+	protected PClass pclass;                       // Class
 	protected Alignments alignment;                // Alignment
 	protected Handed handed = Handed.RIGHT;        // which hand is dominant (irr. but enum encompasses that and weapons hand req.)
 	protected int hp;                              // Hit Points
@@ -415,7 +416,7 @@ public class Player extends MUDObject
 	 * 
 	 * @return a Classes object that represents the player's character class
 	 */
-	public Classes getPClass() {
+	public PClass getPClass() {
         return this.pclass;
     }
 
@@ -424,7 +425,7 @@ public class Player extends MUDObject
 	 * 
 	 * @param playerClass the character class to set on the player
 	 */
-	public void setPClass(Classes playerClass) {
+	public void setPClass(PClass playerClass) {
 		this.pclass = playerClass;
 		
 		// do some initialization
