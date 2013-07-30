@@ -3,7 +3,7 @@ package mud.quest;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import mud.miscellaneous.Zone;
+import mud.misc.Zone;
 import mud.objects.Player;
 import mud.utils.Date;
 

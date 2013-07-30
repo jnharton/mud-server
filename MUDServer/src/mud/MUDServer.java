@@ -29,8 +29,8 @@ import mud.interfaces.*;
 import mud.magic.*;
 import mud.magic.Spell.SpellType;
 
-import mud.miscellaneous.Atmosphere;
-import mud.miscellaneous.Zone;
+import mud.misc.Atmosphere;
+import mud.misc.Zone;
 
 import mud.net.*;
 import mud.objects.*; //ones I don't need: Banker
@@ -912,34 +912,11 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			room1.setWeather(weather);
 		}
 		
-		/**
-		 * MISC
-		 */
-		
-		objectDB.getPlayer("Nathan").getQuests().add(new Quest("Test", "A basic quest for testing purposes", new Zone("default", new Room()), new Task("Obtain dominion jewel", TaskType.RETRIEVE)));
-		Room room1 = objectDB.getRoomByName("The Yawning Portal - Common Room");
-		java.util.BitSet[][] tiles = room.getTiles();
-		
-		java.util.BitSet b = new java.util.BitSet(6);
-		b.set(0, 5);
-		tiles[0][0] = b;
-		tiles[0][1] = b;
-		
-		System.out.println("Merge Sort (Integers) Test");
-		
-		List<Integer> test = new LinkedList<Integer>();
-		test.add(10);
-		test.add(4);
-		test.add(5);
-		test.add(0);
-		test.add(12);
-		test.add(3);
-		test.add(2);
-		test.add(18);
-		
-		System.out.println(test);
-		test = Utils.merge_sort(test);
-		System.out.println(test);
+		// Item Testing
+		Jewelry ring = new Jewelry(ItemType.RING, "Ring of Invisibility", "A medium-sized gold ring with a smooth, unmarked surface.", new Effect("invisibility"));
+		ring.setItemType(ItemType.RING);
+		initCreatedItem(ring);
+		getRoom(0).contents1.add(ring);
 	}
 
 	/**
@@ -2863,13 +2840,24 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		// bid 'staff of the archmagi' 600pp
 		String[] args = arg.split(" ");
 		
+		Auction auction;
 		String itemName;
 		String money;
 		
 		if( args.length >= 2 ) {
-			itemName = args[0];
-			money = args[1];
-					
+			int id = Utils.toInt(args[0], -1);
+			
+			if( id != -1 ) {
+				auction = getAuction(id);
+			}
+			else {
+				itemName = args[0];
+				money = args[1];
+				
+				auction = getAuction(itemName);
+			}
+			
+			//send("You successfully placed a bid of " + "" + " on " + )
 		}
 	}
 
@@ -5489,8 +5477,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			if (in.length == 2) {
 				ms = in[1];
 
-				Message msg = new Message("You page, " + "\"" + Utils.trim(ms) + "\" to " + in[0] + ".", getPlayer(client));
-				addMessage(msg);
+				send("You page, " + "\"" + Utils.trim(ms) + "\" to " + in[0] + ".", client);
 
 				for (final String recipName : recipients)
 				{
@@ -5512,10 +5499,9 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		// party #leave: leave your current party
 		
 		Player player = getPlayer(client);
+		Party party = getPartyContainingPlayer( player );
 		
 		if( arg.equals("") ) {
-			Party party = getPartyContainingPlayer( player );
-			
 			if( party != null ) {
 				send("- Party -------- ", client);
 				
@@ -5541,36 +5527,58 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			
 			if( arg1.equalsIgnoreCase("create") ) {
 				// create a new party where you are the leader
-				Party party = getPartyContainingPlayer( player );
 				if( party != null) {
 					party.removePlayer( player );
 				}
 				parties.add( new Party( player ) );
 			}
+			else if( arg1.equalsIgnoreCase("delete") ) {
+				if( party != null && party.isLeader(player) ) {
+					parties.remove(party);
+				}
+			}
 			else if( arg1.equalsIgnoreCase("invite") ) {
 				// send an invite to join a party to one or more players
-				if( params.length > 0 ) {
-					for(String playerName : params) {
-						Player player1 = getPlayer( playerName );
-						// send invite to named player
-						partyInvites.put(player, getPartyContainingPlayer( player ));
-						String message = player.getName() + " has invited you to their party!";
-						addMessage( new Message( player, message, player1 ) );
+				if( party.isLeader(player) ) {
+					if( params.length > 0 ) {
+						for(String playerName : params) {
+							Player player1 = getPlayer( playerName );
+
+							if( player1 != null ) {
+								// send invite to named player
+								partyInvites.put(player1, getPartyContainingPlayer( player ));
+								String message = player.getName() + " has invited you to their party!";
+								addMessage( new Message( player, message, player1 ) );
+							}
+						}
 					}
+					else {
+						send("No players to invite specified.", client);
+					}
+				}
+				else {
+					send("Only the party leader may invite players!", client);
 				}
 			}
 			else if( arg1.equalsIgnoreCase("join") ) {
 				// accept a standing invite to join a party
-				Party party = partyInvites.get(player);
-				if( party != null ) {
-					party.addPlayer(player);
+				Party party1 = partyInvites.get(player);
+				
+				if( party1 != null ) {
+					// need to check if we're in a party and either remove us from that party or require us
+					// to leave it before joining another
+					if( party != null ) {
+						party.removePlayer( player );
+					}
+					
+					party1.addPlayer(player);
 				}
+				
 				partyInvites.remove(player);
 			}
 			else if( arg1.equalsIgnoreCase("leave") ) {
 				// leave your current party, if you're in one
-				Party party = getPartyContainingPlayer( player );
-				if( party != null) { party.removePlayer( player ); }
+				if( party != null ) { party.removePlayer( player ); }
 			}
 		}
 	}
@@ -5718,17 +5726,15 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 						if ( task.getType().equals(TaskType.KILL) ) {
 							client.write(" [ " + task.kills + " / " + task.toKill + " ]");
 						}
-						client.write(Colors.MAGENTA + " ( " + task.location + " ) " + Colors.CYAN);
-						client.write('\n');
 					}
 					else {
 						client.write(Colors.CYAN + "      o " + task.getDescription());
 						if ( task.getType().equals(TaskType.KILL) ) {
 							client.write(" [ " + task.kills + " / " + task.toKill + " ]");
 						}
-						client.write(Colors.MAGENTA + " ( " + task.location + " ) " + Colors.CYAN);
-						client.write('\n');
 					}
+					client.write(Colors.MAGENTA + " ( " + task.location + " ) " + Colors.CYAN);
+					client.write('\n');
 				}
 			}
 		}
@@ -7629,6 +7635,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 				client.write("> ");
 				break;
 			case 4:
+				send("Please select an alignment:", client);
 				for(int i = 1; i < 9; i = i + 3) {
 					send("" + i + ") " + Alignments.values()[i] + " " + (i+1) + ") " + Alignments.values()[i+1] + " " + (i+2) + ") " + Alignments.values()[i+2], client);
 				}
@@ -8819,6 +8826,9 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 		for (final Player player : players) {
 			if (player.getName().equals(name) || player.getCName().equals(name)) {
+				/*debug(name);
+				debug(player.getName());
+				debug(player.getCName());*/
 				return player;
 			}
 		}
@@ -12311,7 +12321,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	 * @param end   Point to end at
 	 * @return
 	 */
-	public static int distance(Point start, Point end) {
+	public static float distance(Point start, Point end) {
 		if( start != null && end != null) {
 			if( start != end ) {
 				// use pythagorean theorem to get straight line distance
@@ -12319,7 +12329,8 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 				int rise = Math.abs( start.getY() - end.getY() ); // x (a)
 				int run = Math.abs( start.getX() - end.getX() );  // y (b)
 
-				int distance = (int) Math.sqrt( square(rise) + square(run) ); // z (c)
+				//int distance = (int) Math.sqrt( square(rise) + square(run) ); // z (c)
+				float distance = (float) Math.sqrt( square(rise) + square(run) ); // z (c)
 
 				return distance;
 				// calculate travel distance going at right angles
@@ -12718,6 +12729,14 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		timer.scheduleAtFixedRate(aTimer, 0, 1000);
 		
 		return auction;
+	}
+	
+	public Auction getAuction(int auctionId) {
+		return null;
+	}
+	
+	public Auction getAuction(String itemName) {
+		return null;
 	}
 	
 	private Party getPartyContainingPlayer( final Player player ) {

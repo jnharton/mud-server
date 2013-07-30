@@ -21,7 +21,7 @@ import mud.net.Client;
  * 
  * This replaces ArrayList(s) for object types in MUDServer
  * 
- * @author joshgit
+ * @author joshgit, jnharton
  *
  */
 
@@ -37,8 +37,10 @@ public class ObjectDB {
     private Stack<Integer> unusedDBNs = new Stack<Integer>();
     private List<Integer> reservedDBNs = new LinkedList<Integer>();
 
-    /** As long as we construct objects and insert them into this db afterwards as a separate step, getting the next id is somewhat of a hack.
-     *  We could easily construct objects with an invalid id or never add them to this db.
+    /**
+     * As long as we construct objects and insert them into this db afterwards as a separate step,
+     * getting the next id is somewhat of a hack. We could easily construct objects with an invalid id
+     * or never add them to this db.
      */
     public int peekNextId() {
     	if( !unusedDBNs.empty() ) { return unusedDBNs.peek(); }
@@ -46,6 +48,13 @@ public class ObjectDB {
     }
 
     // do not use, yet
+    /**
+     * Reserve a database reference number (or ID) for future use.
+     * 
+     * Takes a new dbref number ands adds it to the reserved list,
+     * unless there is an unused number already, in which case it
+     * reserves that one.
+     */
     public void reserveID() {
     	final int id;
 
@@ -54,7 +63,13 @@ public class ObjectDB {
 
     	reservedDBNs.add(id);
     }
-
+    
+    /**
+     * Add an unused database reference number to the list
+     * of numbers to reuse, but only if it is not reserved.
+     * 
+     * @param unusedId
+     */
     public void addUnused(int unusedId) {
     	MUDObject mobj = get(unusedId);
     	int next = peekNextId();{

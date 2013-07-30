@@ -64,6 +64,14 @@ public class Effect
 		}
 	}
 	
+	public Effect(String eName, Type eType, String eDurationType, int eDuration, boolean ePermanent)
+	{
+		this(eName, eType, eDurationType, eDuration);
+		
+		permanent = ePermanent;
+	}
+	
+	
 	public String getName() {
 		return this.name;
 	}
@@ -104,7 +112,7 @@ public class Effect
 		this.id = id;
 	}
 
-	public static int nextID() {
+	private static int nextID() {
 		return lastId++;
 	}
 	
@@ -112,6 +120,11 @@ public class Effect
 		return this.permanent;
 	}
 	
+	/**
+	 * Mark this effect as a permanent effect
+	 * 
+	 * @param state
+	 */
 	public void setPermanent(boolean state) {
 		this.permanent = state;
 	}

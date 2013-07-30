@@ -1,6 +1,5 @@
 package mud.objects;
 
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.EnumSet;
@@ -54,9 +53,9 @@ public class Room extends MUDObject implements EventSource
 	
 	public String exitNames;                                    // formatted string containing the usable exit names
 
-	private RoomType roomType = RoomType.NONE;                   // the type of room (I = Inside, O = Outside, P = Protected, N = None)
+	private RoomType roomType = RoomType.NONE;                  // the type of room (I = Inside, O = Outside, P = Protected, N = None)
 
-	public String music;                                        // the ambient background music for this room
+	public String music;                                        // the ambient background music for this room (filename, probably a wav file)
 	public String timeOfDay = "DAY";                            // replace this with an enum with one type per each or a hashmap string, boolean?
 	// DAY or NIGHT
 	

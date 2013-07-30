@@ -12,7 +12,7 @@ import mud.MUDObject;
 import mud.objects.Item;
 import mud.utils.Utils;
 import mud.magic.Spell;
-import mud.miscellaneous.Zone;
+import mud.misc.Zone;
 import mud.net.Client;
 
 /*

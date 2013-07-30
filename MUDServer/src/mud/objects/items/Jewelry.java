@@ -1,6 +1,7 @@
 package mud.objects.items;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 
 import mud.Effect;
@@ -21,25 +22,36 @@ import mud.ObjectFlag;
 
 public class Jewelry extends Item implements Equippable<Jewelry>, Usable<Jewelry>, Wearable<Jewelry>
 {
-	/**
-	 * Flag: IJEW
-	 */
 
 	// type - necklace, bracelet, ring, earring, tiara
 	String type = "";
 
-	Effect e = new Effect("invisibility");
+	Effect effect;
 
 	public Jewelry() {
+	}
+	
+	// ex. new Jewelry(ItemType.RING, "Ring of Invisibility", "A medium-sized gold ring with a smooth, unmarked surface.", new Effect("invisibility"))
+	public Jewelry(final ItemType jType, final String jName, final String jDesc, final Effect jEffect) {
+		super(-1);
+		this.name = jName;
+		this.desc = jDesc;
+		this.flags = EnumSet.of(ObjectFlag.ITEM);
+		this.location = 8;
+		
+		this.equippable = true;
+	}
+	
+	public Jewelry(final ItemType jType, final String jName, final String jDesc, final String jEffectString) {
+		this(jType, jName, jDesc, new Effect(jEffectString));
 	}
 
 	public Jewelry(int jMod, String jType, double jWeight)
 	{
-		//super(getNextDB(), "Ring of Invisibility", "A medium-sized gold ring with a smooth, unmarked surface.", "IJEW", 8);
 		super(-1);
 		this.name = "Ring of Invisibility";
 		this.desc = "A medium-sized gold ring with a smooth, unmarked surface.";
-		this.flags = ObjectFlag.getFlagsFromString("IJEW");
+		this.flags = ObjectFlag.getFlagsFromString("I");
 		this.location = 8;
 
 		this.equippable = true;
@@ -70,7 +82,7 @@ public class Jewelry extends Item implements Equippable<Jewelry>, Usable<Jewelry
 		if (this.equip_type == ItemType.RING) {
 			Player player = parent.getPlayer(client);
 			parent.debug(player);
-			System.out.println(parent.applyEffect(player, e));
+			System.out.println(parent.applyEffect(player, effect));
 		}
 	}
 

@@ -1,4 +1,4 @@
-package mud.miscellaneous;
+package mud.misc;
 
 import mud.objects.Room;
 

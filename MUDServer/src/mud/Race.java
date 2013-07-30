@@ -14,8 +14,8 @@ public class Race {
 	private String name;
 	private Subrace sub;
 	private int id;
-	private Integer[] statAdj;
-	private boolean restricted;
+	private Integer[] statAdj;  // stats adjustments pertaining to a particular race
+	private boolean restricted; // is the race restricted (not available from normal selection)
 	
 	public Race(String name, int id, boolean restricted) {
 		this(name, id, new Integer[] { 0, 0, 0, 0 , 0, 0 }, restricted);
@@ -74,11 +74,11 @@ public class Race {
 	}
 	
 	public final class Subraces {
-		Subrace DARK_ELF = new Subrace(Races.ELF, "Dark Elf", "Drow");
-		Subrace MOON_ELF = new Subrace(Races.ELF, "Moon Elf", "Gray Elf");
-		Subrace SEA_ELF = new Subrace(Races.ELF, "Sea Elf", "");
-		Subrace SUN_ELF = new Subrace(Races.ELF, "Sun Elf", "Gold Elf");
-		Subrace WILD_ELF = new Subrace(Races.ELF, "Wild Elf", "");
-		Subrace WOOD_ELF = new Subrace(Races.ELF, "Wood Elf", "");
+		public final Subrace DARK_ELF = new Subrace(Races.ELF, "Dark Elf", "Drow");
+		public final Subrace MOON_ELF = new Subrace(Races.ELF, "Moon Elf", "Gray Elf");
+		public final Subrace SEA_ELF = new Subrace(Races.ELF, "Sea Elf", "");
+		public final Subrace SUN_ELF = new Subrace(Races.ELF, "Sun Elf", "Gold Elf");
+		public final Subrace WILD_ELF = new Subrace(Races.ELF, "Wild Elf", "");
+		public final Subrace WOOD_ELF = new Subrace(Races.ELF, "Wood Elf", "");
 	}
 }
