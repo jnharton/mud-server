@@ -116,6 +116,10 @@ public class Effect
 		return lastId++;
 	}
 	
+	public boolean isPermanent() {
+		return this.permanent;
+	}
+	
 	public boolean getPermanent() {
 		return this.permanent;
 	}

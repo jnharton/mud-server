@@ -36,7 +36,7 @@ public class Shield extends Item implements Equippable<Shield>, Wieldable<Shield
 		this.type = sType;                 // the actual type of shield
 		this.weight = sWeight;             // the weight of the shield
 	}
-	
+
 	/**
 	 * Object Loading Constructor
 	 * 

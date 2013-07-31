@@ -467,6 +467,8 @@ public class ObjectLoader {
 		// 8 - player permissions
 		// 9 - player race number (enum ordinal)
 		// 10 - player class number (enum ordinal)
+		// 11 - player status
+		// 12 - player state (ALIVE/DEAD/INCAPACITATED/etc)
 
 		Integer oDBRef = Utils.toInt(attr[0], -1);
 		String oName = attr[1];

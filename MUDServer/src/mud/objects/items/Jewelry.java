@@ -40,6 +40,9 @@ public class Jewelry extends Item implements Equippable<Jewelry>, Usable<Jewelry
 		this.location = 8;
 		
 		this.equippable = true;
+		
+		this.effect = jEffect;
+		this.effect.setPermanent(true);
 	}
 	
 	public Jewelry(final ItemType jType, final String jName, final String jDesc, final String jEffectString) {

@@ -183,7 +183,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	// server state settings
 	private GameMode mode = GameMode.NORMAL; // (0=normal: player connect, 1=wizard: wizard connect only, 2=maintenance: maintenance mode)
 	private int multiplay = 0;               // (0=only one character per account is allowed, 1=infinite connects allowed)
-	private int guest_users = 0;             // (0=guests disallowed, 1=guests allowed)
+	private int guest_users = 1;             // (0=guests disallowed, 1=guests allowed)
 	private int debug = 1;                   // (0=off,1=on) Debug: server sends debug messages to the console
 	private int debugLevel = 3;              // (1=debug,2=extra debug,3=verbose) priority of debugging information recorded
 	private boolean logging = true;          // logging? (true=yes,false=no)
@@ -511,10 +511,15 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	}
 
 	private void setup() {
+		System.out.println("");
+		
 		// Tell Us where the program is running from
 		System.out.println("Current Working Directory: " + new File("").getAbsolutePath());
 		System.out.println("MAIN_DIR: " + MAIN_DIR);
-		System.out.println("Important: The two above should be the same if the top is where you have the program and it's data");
+		
+		System.out.println("");
+		
+		System.out.println("Important!: The two above should be the same if the top is where you have the program AND it's data");
 		
 		System.out.println("");
 
@@ -915,8 +920,24 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		// Item Testing
 		Jewelry ring = new Jewelry(ItemType.RING, "Ring of Invisibility", "A medium-sized gold ring with a smooth, unmarked surface.", new Effect("invisibility"));
 		ring.setItemType(ItemType.RING);
+		ring.equip_type = ItemType.RING; // the type of equipment it is
+		debug("Item Type: " + ring.getItemType() + " Equip Type: " + ring.equip_type );
 		initCreatedItem(ring);
 		getRoom(0).contents1.add(ring);
+		
+		
+		// ex. ansi, true
+		// ex. prompt, "< %mode %h/%H %m/%M %state >"
+		// ex. prompt_enabled, true
+		
+		// ConfigObject(s)
+		ConfigObject one = new ConfigObject("prompt_enabled", true);
+		ConfigObject two = new ConfigObject("prompt", "< %mode %h/%H %m/%M %state >");
+		
+		System.out.println("CfgObj 1 (String): " + one.getString());
+		System.out.println("CfgObj 1 (Boolean): " + one.getBoolean());
+		System.out.println("CfgObj 2 (String): " + two.getString());
+		System.out.println("CfgObj 2 (Boolean): " + two.getBoolean());
 	}
 
 	/**
@@ -2400,6 +2421,11 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 						player.setSpeed(Constants.WALK);
 						send("You slow down to a walking speed.", client);
 					}
+					else if ( cmd.equals("write") ) {
+						// check for something to write in/on (writable things -- paper, books, scrolls?)
+						// check for writing tool and ink
+						// get stuff and "write" it down
+					}
 					// if the command doesn't exist say so
 					else
 					{
@@ -3275,34 +3301,47 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	{
 		// Trim the argument of any additional whitespace
 		final String[] args = Utils.trim(arg).split(" ");
-
-		if (args.length < 1 || args.length > 2) {
+		
+		debug(args.length);
+		
+		if (args.length < 1 || args.length > 2 || args[0].equals("")) {
 			// unless I get accounts working the way I want that last line will be a lie.
 			/*send("Enter a valid character creation or connection string\n" +
 					"such as 'create <character name> <password>' or 'connect <character name> <password>'" +
 					"NOTE: Using an valid account name and password will trigger the account options menu");*/
 			send("Enter a valid character creation or connection string\n" +
-					"such as 'create <character name> <password>' or 'connect <character name> <password>'", client);
+					"such as 'create <character name> <password>' or 'connect <character name> <password>'\n" +
+					"To connect as a guest simply type 'connect guest'", client);
 			return;
 		}
 
 		final String user = Utils.trim(args[0]);
-		final String pass = args.length > 1 ? Utils.trim(args[1]) : "";
+		final String pass = args.length > 1 ? Utils.trim(args[1]) : " ";
 
 		debug("User?: " + user);
-		debug("Password?: " + Utils.padRight("", '*',pass.length()) );
+		debug("Password?: " + Utils.padRight("", '*', pass.length()) );
 		debug("");
 
 		// Guest Player
 		// SERIOUS: got a problem here, system does not seem to know guests are connected
 		// or something like that, cannot use QUIT command for some reason
 		// NOTE: my problem is related to guest not being findable somehow, all this needs a major revamp
-		if ((user.toLowerCase().equals("guest")) && (pass.toLowerCase().equals("guest"))) {
+		if ( user.toLowerCase().equals("guest") ) {
 			if (guest_users == 1) {
-				final Player player = new Player(-1, "Guest" + guests, EnumSet.of(ObjectFlag.PLAYER, ObjectFlag.GUEST), "A guest player.", Constants.WELCOME_ROOM, "", Utils.hash("password"), "OOC", new Integer[] { 0, 0, 0, 0, 0, 0 }, Coins.copper(0));
-				objectDB.addAsNew(player);
+				Player player;
+				
+				player = getNextGuest();
+				
+				if( player == null ) {
+					player = new Player(-1, "Guest" + guests, EnumSet.of(ObjectFlag.PLAYER, ObjectFlag.GUEST), "A guest player.", Constants.WELCOME_ROOM, "", Utils.hash("password"), "OOC", new Integer[] { 0, 0, 0, 0, 0, 0 }, Coins.copper(0));
+					objectDB.addAsNew(player);
+				}
+				
 				init_conn(player, client, false);
 				guests++;
+			}
+			else {
+				send("Sorry. Guest users have been disabled.", client);
 			}
 		}
 		else if (user.toLowerCase().equals("new")) {
@@ -3358,16 +3397,15 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			// character check
 			final Player p = objectDB.getPlayer(user);
 
+			if (p == null || !p.getPass().equals(Utils.hash(pass))) {
+				debug("CONNECT: Fail");
+				return;
+			}
+			
 			if(p.getPStatus() != Player.Status.ACTIVE) {
 				debug("CONNECT: Fail");
 				debug("Player " + p.getName() + " is banned!");
 				send("Player is banned.", client);
-				return;
-			}
-
-			if (p == null || !p.getPass().equals(Utils.hash(pass))) {
-				debug("CONNECT: Fail");
-				send("Either that player does not exist, or has a different password.", client);
 				return;
 			}
 
@@ -4120,6 +4158,8 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 								/*
 								 * handle any OnEquip effects/events
 								 */
+								
+								debug("Equip Type " + item.equip_type + " matches " + slot.getType());
 
 								slot.insert(item);                  // put item in the slot
 								player.getInventory().remove(item); // remove it from the inventory
@@ -7570,7 +7610,9 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	public void op_chargen(final String input, final Client client) {
 		final Player player = getPlayer(client);
 		
-		if( player.getStatus().equals("NEW") ) {
+		debug("STATUS: -" + player.getStatus() + "-");
+
+		if( player.getStatus().equals("NEW") && !player.getName().startsWith("Guest") ) {
 			cgData cgd;
 
 			cgd = player.getCGData();
@@ -11097,7 +11139,8 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 					if( player.hasEffect( effectName ) ) {
 						player.removeEffect( effectName );
 					}
-					player.addEffect( effectName );
+					//player.addEffect( effectName );
+					player.addEffect( effect );
 					send(effectName + " Effect applied to " + player.getName(), client);
 					debug("Game> " + "added " + effectName + " to " + player.getName() + ".");
 				}
@@ -12570,7 +12613,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		List<EffectTimer> eff_timers = new LinkedList<EffectTimer>();
 
 		for(EffectTimer etimer : etl) {
-			if( etimer.getTimeRemaining() <= 0 ) {
+			if( etimer.getTimeRemaining() <= 0 && !etimer.getEffect().isPermanent() ) {
 				eff_timers.add(etimer);
 			}
 		}
@@ -12743,6 +12786,20 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		for( Party party : parties ) {
 			if( party.hasPlayer(player) ) {
 				return party;
+			}
+		}
+		
+		return null;
+	}
+	
+	private Player getNextGuest() {
+		Player temp;
+		
+		for(int i = 0; i < guests; i++) {
+			temp = objectDB.getPlayer("Guest" + i);
+			
+			if( temp != null && !sclients.values().contains(temp) ) {
+				return temp;
 			}
 		}
 		
