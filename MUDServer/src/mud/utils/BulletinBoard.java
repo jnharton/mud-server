@@ -49,6 +49,10 @@ public class BulletinBoard {
 	public ArrayList<BBEntry> getEntries() {
 		return this.entries;
 	}
+	
+	public BBEntry getEntry(int messageNum) {
+		return this.entries.get(messageNum);
+	}
 
 	public void addEntry(BBEntry entry) {
 		this.entries.add(entry);
@@ -63,16 +67,18 @@ public class BulletinBoard {
 	 * string array or arraylist of strings
 	 * instead of directly using send?
 	 */
-	public ArrayList<String> read() {
+	public ArrayList<String> scan() {
 		ArrayList<String> out = new ArrayList<String>();
 		
 		out.add(mudName + " Bulletin Board");
-		out.add("+-------------------------------------------------+");
-		out.add("| Topics:                                         |");
+		//out.add("+-------------------------------------------------+");
+		out.add("+--------------------------------------------------------------------------------+");
+		out.add("| Topics:                                                                        |");
 		for (BBEntry entry : this.entries) {
-			out.add("| " + Utils.padRight(entry.toView(), 80) + " |");
+			out.add("| " + Utils.padRight(entry.toView(), 78) + " |");
 		}
-		out.add("+-------------------------------------------------+");
+		out.add("+--------------------------------------------------------------------------------+");
+		//out.add("+-------------------------------------------------+");
 		
 		return out;
 	}

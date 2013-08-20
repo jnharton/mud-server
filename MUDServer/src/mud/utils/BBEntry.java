@@ -59,6 +59,10 @@ public class BBEntry {
 	public void setAuthor(String newAuthor) {
 		this.author = newAuthor;
 	}
+	
+	public String getMessage() {
+		return this.message;
+	}
 
 	public String toDB() {
 		return this.id + "#" + this.author + "#" + this.message;

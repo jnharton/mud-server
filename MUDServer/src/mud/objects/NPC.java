@@ -132,16 +132,19 @@ public class NPC extends Player implements InteractiveI
         if (questNum < 0) {
             return null;
         }
+        
         int foundQuests = -1;
 
         for (final Quest q : questList) {
-            if ( q.isSuitable(player) ) {
+            //if ( q.isSuitable(player) ) {
+        	if( true ) {
                 foundQuests += 1;
                 if (foundQuests == questNum) {
                     return q;
                 }
             }
         }
+        
         return null;
 	}
 
@@ -150,7 +153,8 @@ public class NPC extends Player implements InteractiveI
 
         for (final Quest quest : questList) {
             if ( quest.isSuitable(player) ) {
-                suitable.add( new Quest( quest ) );	
+                //suitable.add( new Quest( quest ) );
+            	suitable.add(quest);
             }
         }
         

@@ -66,11 +66,11 @@ public class ObjectLoader {
                 oDesc = attr[3];
                 oLocation = Integer.parseInt(attr[4]);
 
-                /*log.debug("Database Reference Number: " + oDBRef);
+                log.debug("Database Reference Number: " + oDBRef);
                 log.debug("Name: " + oName);
                 log.debug("Flags: " + oFlags);
                 log.debug("Description: " + oDesc);
-                log.debug("Location: " + oLocation);*/
+                log.debug("Location: " + oLocation);
 
                 if (oFlags.indexOf("C") == 0) {
                     final Creature cre = new Creature(oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), oDesc, oLocation);
@@ -88,7 +88,7 @@ public class ObjectLoader {
                     objectDB.add(cre);
                     objectDB.addCreature(cre);
                 }
-                else if (oFlags.indexOf("P") != -1) {
+                else if (oFlags.indexOf("P") == 0) {
                 	Player player = loadPlayer( oInfo );
                 	
                 	//log.debug("log.debug (db entry): " + player.toDB(), 2);
@@ -218,7 +218,7 @@ public class ObjectLoader {
                     }
                 }
                 // NPC(int tempDBRef, String tempName, String tempDesc, int tempLoc, String tempTitle)
-                else if (oFlags.equals("N")) {
+                else if (oFlags.indexOf("N") == 0) {
                     //NPC npc = new NPC(oDBRef, oName, oDesc, oLocation, "npc");
                     NPC npc = loadNPC(oInfo);
                     npc.setCName("npc");
@@ -261,7 +261,7 @@ public class ObjectLoader {
                     objectDB.addRoom(room);
                 }
                 //Thing(String tempName, String tempFlags, String tempDesc, int tempLoc, int tempDBREF)
-                else if (oFlags.indexOf("T") != -1)
+                else if (oFlags.indexOf("T") == 0)
                 {
                 	int tType = Utils.toInt(attr[5], 0); // find a type, else TYPE 0 (NONE)
                     ThingType tt = ThingType.values()[tType];
@@ -536,7 +536,7 @@ public class ObjectLoader {
 
 		oDBRef = Integer.parseInt(attr[0]);    // 0 - npc database reference number
 		oName = attr[1];                       // 1 - npc name
-		oFlags = attr[2];                      // 2 - npc flags
+		oFlags = attr[2].substring(1);         // 2 - npc flags
 		oDesc = attr[3];                       // 3 - npc description
 		oLocation = Integer.parseInt(attr[4]); // 4 - npc location
 

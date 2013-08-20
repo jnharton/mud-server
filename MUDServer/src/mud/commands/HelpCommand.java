@@ -60,6 +60,8 @@ public class HelpCommand extends Command {
 					client.write(check(line) + "\r\n");
 				}
 			}
+			
+			//client.write("ALIASES: " + parent.aliases.get(arg));
 		}
 		else if (topicfile != null) {
 			for (final String line : topicfile) {

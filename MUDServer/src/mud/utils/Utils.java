@@ -735,7 +735,7 @@ public final class Utils {
 		
 		if(params.size() > 0) {
 
-			List<Point> ptList = new ArrayList<>();
+			List<Point> ptList = new ArrayList<Point>();
 
 			for(String param : params) {
 				ptList.add(Utils.toPoint(param));

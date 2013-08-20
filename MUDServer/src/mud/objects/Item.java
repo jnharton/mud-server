@@ -7,6 +7,7 @@ import java.util.List;
 import mud.Effect;
 import mud.ObjectFlag;
 import mud.Coins;
+import mud.TypeFlag;
 
 import mud.MUDObject;
 import mud.SlotType;
@@ -76,6 +77,7 @@ public class Item extends MUDObject {
 	 */
 	public Item(Item template) {
 		super(template.getDBRef());
+		
 		this.name = template.name;
 		this.flags = template.flags;
 		this.desc = template.desc;

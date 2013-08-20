@@ -36,9 +36,9 @@ public class Party {
 	}
 	
 	public boolean removePlayer(final Player player) {
-		if( members.size() > 0 ) {
+		if( members.size() > 1 ) {
 			if( leader == player ) {
-				leader = members.get(0);
+				leader = members.get(1);
 			}
 			
 			return this.members.remove(player);
@@ -50,8 +50,8 @@ public class Party {
 	public boolean hasPlayer(final Player player) {
 		return this.members.contains(player);
 	}
-
-	public Player getLeader(final Player player) {
+	
+	public Player getLeader() {
 		return this.leader;
 	}
 

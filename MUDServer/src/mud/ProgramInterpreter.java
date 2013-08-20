@@ -113,8 +113,10 @@ public class ProgramInterpreter {
 			ca = pArg.split(":");
 
 			System.out.println("Input: " + Arrays.asList(ca));
+			
+			String functionName = ca[0];
 
-			if (ca[0].equals("{colors")) {
+			if (functionName.equals("{colors")) {
 				String[] params = ca[1].substring(0, ca[1].indexOf("}")).split(",");
 
 				System.out.println("Params: " + Arrays.asList(params));
@@ -127,7 +129,7 @@ public class ProgramInterpreter {
 				}
 				else { return "PGM: Error!"; }
 			}
-			else if(ca[0].equals("{distance")) {
+			else if(functionName.equals("{distance")) {
 
 				/*
 				 * parameters:
@@ -150,7 +152,7 @@ public class ProgramInterpreter {
 					return "Incomplete function statement, no parameters!";
 				}
 			}
-			else if (ca[0].equals("{rainbow")) {
+			else if (functionName.equals("{rainbow")) {
 				if (ca[1] != null)
 				{
 					String param = ca[1].substring(0, ca[1].indexOf("}"));
@@ -165,6 +167,9 @@ public class ProgramInterpreter {
 				{
 					return "Incomplete function statement, no parameters!";
 				}
+			}
+			else if(functionName.equals("prop")) {
+				return null;
 			}
 			else { return "PGM: Error!"; }
 		}
@@ -187,6 +192,10 @@ public class ProgramInterpreter {
 		else {			
 			return "PGM: Error!";
 		}
+	}
+	
+	private String getParam(int pnum) {
+		return null;
 	}
 
 	public static void main(String[] args) {

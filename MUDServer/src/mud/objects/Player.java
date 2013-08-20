@@ -23,6 +23,7 @@ import mud.MUDObject;
 import mud.PClass;
 import mud.Point;
 import mud.Race;
+import mud.TypeFlag;
 import mud.Race.Subraces;
 import mud.Races;
 import mud.Skill;
@@ -248,6 +249,7 @@ public class Player extends MUDObject
 
 	public Player(int tempDBREF) {
         super(tempDBREF);
+        type = TypeFlag.PLAYER;
     }
 
 	/**
@@ -270,6 +272,7 @@ public class Player extends MUDObject
 		// use the MUDObject constructor to handle some of the construction?
 		//super(tempDBREF, tempName, tempFlags, tempDesc, tempLoc);
 		super(tempDBREF);
+		type = TypeFlag.PLAYER;
 
 		this.race = Races.NONE;
 		this.gender = 'N';

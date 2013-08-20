@@ -1,0 +1,12 @@
+config
+CONFIG
+
+Set a configuration option for the current player.
+
+Syntax: @config #<param>
+        @config <option>=<true/false>
+        
+Params:
+options - list available config options and their current setting
+
+Last Updated: August 19, 2013

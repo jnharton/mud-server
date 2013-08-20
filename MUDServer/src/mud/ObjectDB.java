@@ -99,7 +99,7 @@ public class ObjectDB {
     }
 
     public int getSize() {
-    	return objsByName.size();
+    	return objsById.size();
     }
 
     public void addAsNew(final MUDObject item) {

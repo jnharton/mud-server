@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import mud.MUDObject;
 import mud.ObjectFlag;
+import mud.TypeFlag;
 
 import mud.interfaces.Lockable;
 import mud.utils.Utils;
@@ -73,7 +74,7 @@ public class Exit extends MUDObject implements Lockable
 		this.name = name;
 		// Set the description to the default
 		this.desc = "You see nothing.";
-		// Set the flags
+		// Set flags
 		this.flags = EnumSet.of(ObjectFlag.EXIT);
 		// Set the locks
 		this.locks = "";
@@ -94,12 +95,13 @@ public class Exit extends MUDObject implements Lockable
 	{
 		// Set the dbref (database reference)
 		super(tempDBRef);
+		
 		// Set the name
 		this.name = tempName;
 		// Set the description to the default
 		this.desc = "You see nothing.";
-		// Set the flags
-		this.flags = EnumSet.of(ObjectFlag.EXIT);;
+		// Set flags
+		this.flags = EnumSet.of(ObjectFlag.EXIT);
 		// Set the locks
 		this.locks = "";
 		// Set the location

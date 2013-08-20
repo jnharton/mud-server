@@ -3,7 +3,7 @@
 
 Make a new command alias or list the command aliases that are setup.
 
-Syntax: @alias
-        @alias #list
+Syntax: @alias       - make a new alias (not coded)
+        @alias #list - list existing commandaliases
 
-Last Updated: March 5, 2013
+Last Updated: August 19, 2013

@@ -7,7 +7,7 @@ alias @osuccess:@osucc
 alias @recycle:@rec
 alias @teleport:@tel
 alias commands:cmds
-alias @examine:@ex,@exam,ex,exam
+alias @examine:@ex,@exam
 alias jump:j,jmp
 alias page:p
 alias north:n
@@ -24,3 +24,4 @@ alias attack:kill
 alias @backdb:@backup
 alias @alias:@aliases
 alias condition:cond
+alias pinfo:sheet

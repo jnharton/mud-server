@@ -39,6 +39,7 @@ public abstract class MUDObject {
 	private int dbref = 0;                                                  // database reference number
 	protected String name = "";                                             // object name
 	protected String desc = "";                                             // object description
+	protected TypeFlag type = TypeFlag.NONE;                                // object type
 	protected EnumSet<ObjectFlag> flags = EnumSet.noneOf(ObjectFlag.class); // object flags
 	protected Object locks = "";                                            // object locks
 	protected int location = 0;                                             // object location

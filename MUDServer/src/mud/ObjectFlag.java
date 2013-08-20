@@ -22,12 +22,12 @@ public enum ObjectFlag
     ADMIN("ADMIN"),
     BUILDER("BUILDER"),
     CREATURE("CREATURE"),
-    DARK("DARK"),
     EXIT("EXIT"),
+    DARK("DARK"),
     GUEST("GUEST"),
     HOUSE("HOUSE"),
     ITEM("ITEM"),
-    MAINTENANCE("MAINTENANCE"),
+    MERCHANT("MERCHANT"),
     NPC("NPC"),
     PLAYER("PLAYER"),
     ROOM("ROOM"),
@@ -49,16 +49,16 @@ public enum ObjectFlag
         case 'B':    return BUILDER;
         case 'C':    return CREATURE;
         case 'D':    return DARK;
-        case 'E':    return EXIT;
+        case 'E':	 return EXIT;
         case 'G':    return GUEST;
         case 'H':    return HOUSE;
-        case 'I':    return ITEM;
-        case 'M':    return MAINTENANCE;
-        case 'N':    return NPC;
-        case 'P':    return PLAYER;
-        case 'R':    return ROOM;
+        case 'I':	 return ITEM;
+        case 'M':	 return MERCHANT;
+        case 'N':	 return NPC;
+        case 'P':	 return PLAYER;
+        case 'R':	 return ROOM;
         case 'S':    return SILENT;
-        case 'T':    return THING;
+        case 'T':	 return THING;
         case 'W':    return WIZARD;
         case 'V':    return VENDOR;
         case 'Z':    return ZONE;
