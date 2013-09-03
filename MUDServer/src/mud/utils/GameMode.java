@@ -19,6 +19,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 public enum GameMode {
 	NORMAL("Normal"),
+	DEVELOPMENT("Development"),
 	WIZARD("Wizard"),
 	MAINTENANCE("Maintenance");
 
@@ -30,15 +31,18 @@ public enum GameMode {
 
     static public boolean isValidString(final char c) {
 		switch (c) {
-            case 'n':
-            case 'm':
+            case 'n':   return true;
+            case 'd':   return true;
             case 'w':   return true;
+            case 'm':   return true;
             default:    return false;
         }
     }
 
     static public GameMode fromString(final char c) {
 		switch (c) {
+			case 'n':   return GameMode.NORMAL;
+			case 'd':   return GameMode.DEVELOPMENT;
             case 'w':   return GameMode.WIZARD;
             case 'm':   return GameMode.MAINTENANCE;
             default:    return GameMode.NORMAL;

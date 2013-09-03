@@ -17,6 +17,8 @@ package mud;
   SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+/* Stat modifiers used from Hypertext d20SRD */
+
 public final class Races {
 	public static final Race DRAGON = new Race("Dragon", 0, true);
 	public static final Race DWARF = new Race("Dwarf", 3, new Integer[]{ 0, 0, 2, 0, -2, 0 }, false);
@@ -27,10 +29,9 @@ public final class Races {
 	public static final Race HALFLING = new Race("Halfling", 12, true);
 	public static final Race HUMAN = new Race("Human", 2, false);
 	public static final Race ORC = new Race("Orc", 5, false);
-	public static final Race ILLITHID = new Race("Illithid", 7, true);
-	public static final Race KOBOLD = new Race("Kobold", 8, true);
-	public static final Race NONE = new Race("None", 9, true);
-	public static final Race UNKNOWN = new Race("Unknown", 10, true);
+	public static final Race KOBOLD = new Race("Kobold", 7, new Integer[] { -4, 2, -2, 0, 0, 0 } , true);
+	public static final Race NONE = new Race("None", 8, true);
+	public static final Race UNKNOWN = new Race("Unknown", 9, true);
 
 	/*
 	 * Strength
@@ -42,10 +43,20 @@ public final class Races {
 	 */
 	
 	static private final Race[] myValues = {
-		DRAGON, ELF, HUMAN, DWARF, GNOME, ORC, HALF_ELF, ILLITHID, KOBOLD, NONE, UNKNOWN, HALF_ORC, HALFLING
+		DRAGON, ELF, HUMAN, DWARF, GNOME, ORC, HALF_ELF, KOBOLD, NONE, UNKNOWN, HALF_ORC, HALFLING
 	};
 
 	public static Race getRace(int id) {
 		return myValues[id];
+	}
+	
+	public static Race getRace(String name) {
+		for(int r = 0; r < myValues.length; r++) {
+			if( myValues[r].getName().equalsIgnoreCase(name) ) {
+				return myValues[r];
+			}
+		}
+		
+		return null;
 	}
 }

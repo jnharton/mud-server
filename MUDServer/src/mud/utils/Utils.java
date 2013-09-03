@@ -25,6 +25,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.math.BigInteger;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -823,5 +825,20 @@ public final class Utils {
     	}
     	
     	return result;
+    }
+    
+    /**
+     * unixToDate
+     * 
+     * 
+     * @param unix_timestamp
+     * @return
+     * @throws ParseException 
+     */
+    public static String unixToDate(final long timestamp) throws ParseException {
+        SimpleDateFormat sdf = new SimpleDateFormat("MMMM d, yyyy 'at' h:mm a");
+        String date = sdf.format(timestamp);
+
+        return date.toString();
     }
 }

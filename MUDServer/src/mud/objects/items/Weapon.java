@@ -18,9 +18,8 @@ import mud.objects.Player;
 import mud.objects.items.Handed;
 import mud.utils.Utils;
 
-public class Weapon extends Item implements Equippable<Weapon>, Wieldable<Weapon>
-{	
-	// type - necklace, bracelet, ring, earring, tiara
+public class Weapon extends Item implements Equippable<Weapon>, Wieldable
+{
 	private WeaponType weapon_type;
 	Handed handed;
 

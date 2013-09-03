@@ -30,10 +30,14 @@ public class Area {
 	//
 	private ArrayList<Integer> room_ids; // ids for the rooms in this are
 	
+	public Area() {
+	}
+	
 	/**
 	 * create a completely empty new area
 	 */
-	public Area() {
+	public Area(final String name) {
+		this.name = name;
 		this.room_ids = new ArrayList<Integer>();
 	}
 	
@@ -72,11 +76,19 @@ public class Area {
 	}
 	
 	public void setName(String newName) {
-		this.name = newName;
+		if( name == null ) this.name = newName;
 	}
 	
 	public String getName() {
 		return this.name;
+	}
+	
+	public void setSize(int size) {
+		if( room_ids == null ) this.room_ids = new ArrayList<Integer>(size);
+	}
+	
+	public int getSize() {
+		return this.room_ids.size();
 	}
 	
 	public void addRoom(Room newRoom) {

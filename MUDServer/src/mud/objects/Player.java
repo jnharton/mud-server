@@ -97,7 +97,7 @@ public class Player extends MUDObject
 	 */
 	public static enum Status { ACTIVE, INACTIVE, SUSPENDED, FROZEN, LOCKED, ARCHIVED };
 	
-	private Status pstatus;
+	private Status pstatus = Status.ACTIVE;
 	
 	/**
 	 * private variable are those that are intended only for the player class
@@ -118,6 +118,8 @@ public class Player extends MUDObject
     final private MailBox mailbox = new MailBox();    // player mailbox
 
 	protected int access = 0;                         // the player's access level (permissions) - 0=player,1=admin (default: 0)
+	
+	private boolean isNew = true;
 
 	private boolean controller = false;               // place to indicate if we are controlling an npc (by default, we are not)
 	private HashMap<String, EditList> editorsMap = new HashMap<String, EditList>(); // array of lists belonging to this player
@@ -368,9 +370,12 @@ public class Player extends MUDObject
 		this.editor = Editor.NONE;
 		
 		this.config = new LinkedHashMap<String, Boolean>();
-		this.config.put("global-nameref-table", true);
-		this.config.put("pinfo-brief", true);
-		this.config.put("prompt_enabled", true);
+		this.config.put("global-nameref-table", true); // use the global name reference table instead of a local one
+		this.config.put("pinfo-brief", true);          // make your player info output brief/complete (default: true)
+		this.config.put("prompt_enabled", true);       // enable/disable the prompt (default: true)
+		this.config.put("msp_enabled", false);         // enable/disable MUD Sound Protocol, a.k.a. MSP (default: false)
+		this.config.put("complex-inventory", true);    // use/don't use complex inventory display (default: true)
+		this.config.put("pager_enabled", false);       // enabled/disable the help pager view (default: false)
 		
 		// instantiate name reference table
 		this.nameRef = new HashMap<String, Integer>(10, 0.75f); // start out assuming 10 name references
@@ -977,6 +982,10 @@ public class Player extends MUDObject
 			return this.lastSpell;
 		}
 		else { return null; }
+	}
+	
+	public boolean isNew() {
+		return isNew;
 	}
 
 	/**

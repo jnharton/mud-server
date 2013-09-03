@@ -53,6 +53,15 @@ public class Thing extends MUDObject {
 		attributes = new Hashtable<String, String>();
 	}
 	
+	public Thing(String name) {
+		super(-1);
+		this.name = name;
+		this.location = -1;
+		attributes = new Hashtable<String, String>();
+		
+		this.flags.add(ObjectFlag.THING);
+	}
+	
 	public Thing(boolean isContainer) {
 		if( isContainer ) {
 			this.contents = new ArrayList<Item>();

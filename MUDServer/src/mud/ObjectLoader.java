@@ -75,15 +75,6 @@ public class ObjectLoader {
                 if (oFlags.indexOf("C") == 0) {
                     final Creature cre = new Creature(oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), oDesc, oLocation);
 
-                    // set race
-                    try {
-                        cre.setRace( Races.getRace(Integer.parseInt(attr[9])) );    // 9 - race number (enum ordinal)
-                    }
-                    catch(NumberFormatException nfe) {
-                        nfe.printStackTrace();
-                        cre.setRace( Races.NONE );
-                    }
-
                     // add the creature to the in-memory database and to the list of creatures
                     objectDB.add(cre);
                     objectDB.addCreature(cre);
@@ -368,6 +359,21 @@ public class ObjectLoader {
 
                         log.debug("log.debug (db entry): " + book.toDB(), 2);
                     }
+                    
+                    if( it == ItemType.CONTAINER ) { // Container
+                    	Container container = new Container(oName);
+                    	
+                    	container.setDesc(oDesc);
+                    	container.setLocation(oLocation);
+                    	container.setDBRef(oDBRef);
+                    	
+                    	container.setItemType(it);
+                    	
+                    	objectDB.add(container);
+                    	objectDB.addItem(container);
+                    	
+                    	log.debug("log.debug (db entry): " + container.toDB(), 2);
+                    }
 
                     if ( it == ItemType.POTION ) {
                         int stack_size = Integer.parseInt(attr[6]);
@@ -536,7 +542,7 @@ public class ObjectLoader {
 
 		oDBRef = Integer.parseInt(attr[0]);    // 0 - npc database reference number
 		oName = attr[1];                       // 1 - npc name
-		oFlags = attr[2].substring(1);         // 2 - npc flags
+		oFlags = attr[2];                      // 2 - npc flags
 		oDesc = attr[3];                       // 3 - npc description
 		oLocation = Integer.parseInt(attr[4]); // 4 - npc location
 

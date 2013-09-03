@@ -159,7 +159,8 @@ public class AttackCommand extends Command {
 	}
 
 	public boolean canAttack(Player target) {
-		return true;
+		if( target.getState() != Player.State.DEAD ) return true;
+		else return false;
 	}
 
 	public boolean canHit(MUDObject Target) {

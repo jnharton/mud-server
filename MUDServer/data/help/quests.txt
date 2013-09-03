@@ -1,0 +1,14 @@
+quests
+QUESTS
+
+List your current quests and also share them with other players
+or abandon them to start over.
+
+Syntax: quests [#<param>]
+
+Params:
+share <player name> - share the quest with another player
+abandon <quest id>  - abandon the indicated quest (only works/matters
+                      if you have the quest)
+
+Last Updated: September 3rd, 2013

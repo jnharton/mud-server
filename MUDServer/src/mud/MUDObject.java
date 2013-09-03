@@ -18,13 +18,11 @@ package mud;
 */
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.EnumSet;
 import java.util.List;
 
 import mud.objects.Player;
-import mud.utils.Utils;
 
 /**
  * MUDObject Class
@@ -147,18 +145,41 @@ public abstract class MUDObject {
 	{
         this.flags = tempFlags;
 	}
-
+	
+	/**
+	 * Remove a single ObjectFlag from the MUDObject (EnumSet flags)
+	 * 
+	 * @param flag
+	 */
+	public void removeFlag(final ObjectFlag flag) {
+		this.flags.remove(flag);
+	}
+	
+	/**
+	 * Remove several ObjectFlags from the MUDObject (EnumSet flags)
+	 * 
+	 * @param tempFlags
+	 */
 	public void removeFlags(final EnumSet<ObjectFlag> tempFlags)
 	{
         this.flags.removeAll(tempFlags);
 	}
 	
+	/**
+	 * Does this MUDObject have the indicated ObjectFlag?
+	 * 
+	 * @param tempFlag
+	 * @return
+	 */
 	public boolean hasFlag(ObjectFlag tempFlag) {
 		return this.flags.contains(tempFlag);
 	}
 
 	/**
-	 * unimplemented
+	 * Return the "lock string" set on this object.
+	 * 
+	 * <br><br>
+	 * <b>NOTE:</b> Not currently used for anything.
 	 * 
 	 * @return
 	 */
@@ -167,11 +188,15 @@ public abstract class MUDObject {
 	}
 
 	/**
-	 * unimplemented
+	 * Set the "lock string" on this object.
+	 * 
+	 * <br><br>
+	 * <b>NOTE:</b> Not currently used for anything.
 	 * 
 	 * @param newLocks
 	 */
 	public void setLocks(String newLocks) {
+		this.locks = newLocks;
 	}
 
 	public void lock(String tempLock, String tempLockString)
@@ -208,33 +233,76 @@ public abstract class MUDObject {
 	{
 		return this.location;
 	}
-
-	// set the player object's location
+	
+	/**
+	 * Set this object's location. Generally speaking, this
+	 * should be a integer that is a valid database reference
+	 * in that it refers to an existing object. Generally speaking,
+	 * appropriate object types whose dbrefs should be used here
+	 * include: <b>Players, NPCs, Things, Items, Rooms</b>
+	 * 
+	 * <br><br>
+	 * The sole exception to the principle stated above is using -1 to indicate
+	 * that the object is not in the world and/or does not have a valid location.
+	 * 
+	 * @param newLocation integer (database reference) of another MUDObject
+	 */
 	public void setLocation(int newLocation)
 	{
 		this.location = newLocation;
 	}
-
+	
+	/**
+	 * Get the Properties HashMap, a mutable hashmap of strings and objects
+	 * that can be used to store "properties" (a.k.a. "props) of the object.
+	 * 
+	 * @return
+	 */
 	public LinkedHashMap<String, Object> getProps() {
 		return this.props;
 	}
-
-	//public abstract void examine();
-
+	
 	//public abstract ArrayList<String> look();
 
 	// set an effect (string, the simple version)
+	/**
+	 * Set an effect (simple)
+	 * 
+	 * <br><br>
+	 * This sets an Effect on the objects (generally adding it
+	 * to the list of current affects). This simple form of the method
+	 * makes a brand new Effect object, passing it the input string. It
+	 * is very simple and is not useful for complex effects.
+	 * 
+	 * @param effect
+	 */
 	public void addEffect(String effect)
 	{
 		effects.add(new Effect(effect));
 	}
-
-	// set an effect (effect, the more complicated version)
+	
+	/**
+	 * Set an effect (complex)
+	 * 
+	 * <br><br>
+	 * This sets an Effect on the object in question. This more complicated
+	 * form of the method makes takes a pre-existing Effect object and sets
+	 * it on the object . It is very simple and is not useful for complex 
+	 * effects (generally adding it to the list of current affects).
+	 * 
+	 * @param effect
+	 */
 	public void addEffect(Effect effect)
 	{
 		effects.add(effect);
 	}
-
+	
+	/**
+	 * Is an effect with the name specified set on the object?
+	 * 
+	 * @param arg      name of the effect (String)
+	 * @return does the object have this effect, yes/no? (boolean)
+	 */
 	public boolean hasEffect(String arg)
 	{
 		for (int e = 0; e < this.effects.size(); e++)
@@ -247,6 +315,12 @@ public abstract class MUDObject {
 		return false;
 	}
 	
+	/**
+	 * Is an effect with the specified type set on the object?
+	 * 
+	 * @param arg      type of the effect (Effect.Type)
+	 * @return does the object have this effect, yes/no? (boolean)
+	 */
 	public boolean hasEffectType(Effect.Type effectType)
 	{
 		for (Effect effect : this.effects) {
@@ -339,19 +413,45 @@ public abstract class MUDObject {
 		this.coord.setY(y);
 	}
 	
+	/**
+	 * Get the ownership of this object
+	 * @return
+	 */
 	public int getOwner() {
 		return this.owner;
 	}
 	
+	/**
+	 * Set ownership of this object
+	 * 
+	 * @param player
+	 */
 	public void setOwner(Player player) {
 		this.owner = player.getDBRef();
 	}
 	
+	/**
+	 * Does the specified player own this object?
+	 * 
+	 * @param player
+	 * @return
+	 */
 	public boolean isOwnedBy(Player player) {
 		return this.owner == player.getDBRef() ? true : false;
 	}
-
+	
+	/**
+	 * Convert the object to a String based representation
+	 * for storage in the plain text database.
+	 * 
+	 * @return
+	 */
 	public abstract String toDB();
 	
+	/**
+	 * Convert the object to a JSON based representation
+	 * for storage in some kind of database system
+	 * @return
+	 */
 	public abstract String toJSON();
 }

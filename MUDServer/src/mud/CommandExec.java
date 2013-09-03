@@ -68,7 +68,7 @@ public class CommandExec implements Runnable {
 					// try to capture errors
 					try {
 						// handle command permissions
-						if ( parent1.checkAccess( client, newCmd.getPermissions() ) )
+						if ( parent1.checkAccess( parent1.getPlayer(client), newCmd.getPermissions() ) )
 						{
 							// interpret command
 							parent1.cmd(command, client);

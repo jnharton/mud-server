@@ -1,9 +1,13 @@
 package mud.commands;
 
+import java.io.File;
+import java.text.ParseException;
+
 import mud.MUDServer;
 import mud.net.Client;
 import mud.objects.Player;
 import mud.utils.Pager;
+import mud.utils.Utils;
 
 /*
  * Copyright (c) 2012 Jeremy N. Harton
@@ -61,7 +65,14 @@ public class HelpCommand extends Command {
 				}
 			}
 			
-			//client.write("ALIASES: " + parent.aliases.get(arg));
+			client.writeln("ALIASES: " + parent.aliases.get(arg));
+			
+			/*System.out.println(parent.HELP_DIR + arg + ".txt");
+			File file = new File(parent.HELP_DIR + arg + ".txt");
+			try {
+				client.writeln("Last Updated: " + Utils.unixToDate( file.lastModified() ));
+			}
+			catch (ParseException pe) { pe.printStackTrace(); }*/
 		}
 		else if (topicfile != null) {
 			for (final String line : topicfile) {

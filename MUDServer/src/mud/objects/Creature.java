@@ -33,7 +33,7 @@ import java.util.EnumSet;
 public class Creature extends MUDObject {
 
 	// type flag = C
-	private Race race;
+	String race = "kobold";
 	
 	private boolean ridable = false; // can this creature be ridden (default: false)
 	
@@ -55,7 +55,6 @@ public class Creature extends MUDObject {
 		this.desc = template.desc;
 		this.location = template.location;
 		
-		this.race = template.race;
 		this.ridable = template.ridable;
 	}
 	
@@ -66,8 +65,6 @@ public class Creature extends MUDObject {
 		this.locks = "";
 		this.desc = desc;
 		this.location = 8;
-		
-		this.race = Races.KOBOLD;
 	}
 	
 	/**
@@ -86,16 +83,6 @@ public class Creature extends MUDObject {
 		this.locks = ""; // should take tempLocks argument  
 		this.desc = tempDesc;
 		this.location = tempLoc;
-		
-		this.race = Races.KOBOLD;
-	}
-	
-	public void setRace(Race newRace) {
-		this.race = newRace;
-	}
-	
-	public Race getRace() {
-		return this.race;
 	}
 	
 	public void setHP(int change) {
@@ -130,9 +117,16 @@ public class Creature extends MUDObject {
 		output[6] = "*";                     //
 		output[7] = "*";                     //
 		output[8] = "*";                     //
-		output[9] = race.getId() + "";       // creature race
 		
 		return Utils.join(output, "#");
+	}
+	
+	public void setRace(Race race) {
+		this.race = race.getName();
+	}
+	
+	public Race getRace() {
+		return Races.getRace(this.race);
 	}
 	
 	public String toJSON() {

@@ -1,0 +1,12 @@
+@flag
+@FLAG
+
+Set or unset flags on an object
+
+Syntax: @flag <object dbref/name>=<flagstring>
+
+A flag string consists of a series of letters and numbers. To remove a single flag, simply
+put an '!' character in front of a single character that represents the flag to be removed.
+Multiple flags may be added, but only one flag can be removed at a time.
+
+Last Updated: August 20, 2013

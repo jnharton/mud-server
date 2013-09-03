@@ -18,20 +18,18 @@ import mud.objects.Player;
 
 import mud.utils.Utils;
 
-public class Container<E extends Item> extends Item implements Storage<E>, Equippable<Item>, Wearable<Item> {
-	
-	Class contentType;
+public class Container extends Item implements Storage<Item>, Equippable<Item>, Wearable<Item> {
 	
 	private int size = 5;
 	private boolean accessible;
 	private boolean full;
 	
-	private ArrayList<E> contents;
+	private ArrayList<Item> contents;
 
-	private int dispWidth = 30; // the width for the container display box (check whenever something added)
-	private String top = "------------------------------";
-	private String side = "|";
-	private String bottom = "------------------------------";
+	private int displayWidth = 30; // the width for the container display box (check whenever something added)
+	private Character top = '-';
+	private Character side = '|';
+	private Character bottom = '-';
 
 	public Container() {
 		super(-1, "Container", EnumSet.of(ObjectFlag.ITEM), "A generic container", 4);
@@ -45,7 +43,7 @@ public class Container<E extends Item> extends Item implements Storage<E>, Equip
 		this.accessible = true;
 		this.full = false;
 		
-		this.contents = new ArrayList<E>(5);
+		this.contents = new ArrayList<Item>(5);
 	}
 	
 	// initial size
@@ -65,6 +63,17 @@ public class Container<E extends Item> extends Item implements Storage<E>, Equip
 	public Container(String name) {
 		this(5, 0.0);
 		this.name = name;
+		
+		this.equippable = false;
+		this.equip_type = ItemType.CONTAINER; // the type of equipment it is
+		this.item_type = ItemType.CONTAINER;
+		
+		this.weight = 1.0;
+		
+		this.accessible = true;
+		this.full = false;
+		
+		this.contents = new ArrayList<Item>(5);
 	}
 	
 	public Container(String name, int size) {
@@ -82,19 +91,19 @@ public class Container<E extends Item> extends Item implements Storage<E>, Equip
 		
 		result.add(name + " (#" + getDBRef() + ")");
 		result.add(this.desc);
-		for (E item : contents) {
+		for (Item item : contents) {
 			result.add(item.getName() + " (#" + item.getName() + ")");
 		}
 		
 		return result;
 	}
 	
-	public E retrieve(int index) {
+	public Item retrieve(int index) {
 		/*check display width, change if necessary (shorten)
 		 * this means each item must track how wide it's name/string version is
 		 * note: will retrieve only the first item if no specifier
 		 */
-		for (E item : this.contents) {
+		for (Item item : this.contents) {
 			if (item.getDBRef() == index) {
 				return this.contents.get(index);
 			}
@@ -104,11 +113,11 @@ public class Container<E extends Item> extends Item implements Storage<E>, Equip
 	}
 
 	
-	public E retrieve(String itemName) {
+	public Item retrieve(String itemName) {
 		// check display width, change if necessary (shorten)
 		// this means each item must track how wide it's name/string version is
 		// note: will retrieve only the first item if no specifier
-		for (E item : this.contents) {
+		for (Item item : this.contents) {
 			if (item.getName().equals(itemName)) {
 				this.weight -= item.getWeight();
 				return this.contents.remove(this.contents.indexOf(item));
@@ -117,10 +126,10 @@ public class Container<E extends Item> extends Item implements Storage<E>, Equip
 		return null;
 	}
 	
-	public void insert(E i) {
+	public void insert(Item item) {
 		// check display width, change if necessary (shorten/lengthen)
-		this.contents.add(i);
-		this.weight += i.getWeight();
+		this.contents.add(item);
+		this.weight += item.getWeight();
 	}
 
 	@Override
@@ -139,26 +148,26 @@ public class Container<E extends Item> extends Item implements Storage<E>, Equip
 	}
 
 	@Override
-	public Container<E> unequip() {
+	public Container unequip() {
 		// TODO Auto-generated method stub
 		return null;
 	}
 	
 	/* internal ArrayList wrapper functions */
 	
-	public void add(E element) {
+	public void add(Item element) {
 		this.contents.add(element);
 	}
 	
-	public E remove(int index) {
+	public Item remove(int index) {
 		return this.contents.remove(index);
 	}
 	
-	public boolean contains(E element) {
+	public boolean contains(Item element) {
 		return this.contents.contains(element);
 	}
 	
-	public int indexOf(E element) {
+	public int indexOf(Item element) {
 		return this.contents.indexOf(element);
 	}
 
@@ -167,22 +176,22 @@ public class Container<E extends Item> extends Item implements Storage<E>, Equip
 	}
 	
 	public String getTop() {
-		return top;
+		return Utils.padRight("", top, displayWidth);
 	}
 	
 	public String getSide() {
-		return side;
+		return side.toString();
 	}
 	
 	public String getBottom() {
-		return bottom;
+		return Utils.padRight("", bottom, displayWidth);
 	}
 	
 	public int getDisplayWidth() {
-		return this.dispWidth;
+		return this.displayWidth;
 	}
 	
-	public ArrayList<E> getContents() {
+	public ArrayList<Item> getContents() {
 		return this.contents;
 	}
 
@@ -206,7 +215,6 @@ public class Container<E extends Item> extends Item implements Storage<E>, Equip
 
 	@Override
 	public String getName() {
-		// TODO Auto-generated method stub
-		return null;
+		return this.name;
 	}
 }

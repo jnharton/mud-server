@@ -197,11 +197,28 @@ public class ProgramInterpreter {
 	private String getParam(int pnum) {
 		return null;
 	}
+	
+	class Script {
+		List<String> lines;
+		
+		public List<String> getLines() {
+			return this.lines;
+		}
+	}
+	
+	private void execute(Script s) {
+		for(String string : s.getLines()) {
+			interpret(string);
+		}
+	}
+	
+	private void evaluate(String functionName, String[] params) {
+	}
 
 	public static void main(String[] args) {
 		ProgramInterpreter p = new ProgramInterpreter(null);
 		p.parse("{distance:(0,0),(1,1)}");
 		p.parse("{rainbow:output this string in rainbow colors}");
-		System.out.println(p.interpret("{distance:(0,0),(2,3)}"));
+		//System.out.println(p.interpret("{distance:(0,0),(2,3)}"));
 	}
 }

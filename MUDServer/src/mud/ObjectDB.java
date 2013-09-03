@@ -4,6 +4,7 @@ import java.util.*;
 
 import mud.MUDObject;
 import mud.objects.*;
+import mud.objects.items.Container;
 import mud.utils.Utils;
 import mud.net.Client;
 
@@ -441,9 +442,28 @@ public class ObjectDB {
 
     ////////////////// ITEMS
     private ArrayList<Item> items = new ArrayList<Item>();
+    
+    // these are not presently loaded with anything by the code (8-23-2013)
+    final Map<Integer, Item> itemsById   = new HashMap<Integer, Item>();
+    //final Map<String, Item>  itemsByName = new HashMap<String, Item>();
 
-    public void addItem(final Item i) {
-        items.add(i);
+    public void addItem(final Item item) {
+    	itemsById.put(item.getDBRef(), item);
+        items.add(item);
+    }
+    
+    // somewhat pointless, since items are more likely to have the same name than most other objects
+    /*public Item getItem(final String name) {
+        return itemsByName.get(name);
+    }*/
+
+    public Item getItem(final int dbref) {
+
+    	return itemsById.get(dbref);
+    }
+
+    public List<Item> getItems() {
+        return new ArrayList<Item>(itemsById.values());
     }
 
     public void addItemsToRooms() {
@@ -452,6 +472,18 @@ public class ObjectDB {
             if (r != null) {
                 r.contents1.add(item);
             }
+        }
+    }
+    
+    public void addItemsToContainers() {
+    	for (final Item item : items) {
+    		if( item instanceof Container ) {
+    			Container c = (Container) item;
+    			List<Item> items1 = getItemsByLoc(item.getDBRef());
+    			for(Item item2 : items1) {
+    				c.insert(item2);
+    			}
+    		}
         }
     }
     
@@ -519,6 +551,9 @@ public class ObjectDB {
         return acc;
     }
     
+    /**
+     * Erase the entire database
+     */
     public void clear() {
     	items.clear();
     	
