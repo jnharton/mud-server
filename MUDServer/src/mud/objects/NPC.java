@@ -150,11 +150,10 @@ public class NPC extends Player implements InteractiveI
 
 	public List<Quest> getQuestsFor(final Player player) {
         final ArrayList<Quest> suitable = new ArrayList<Quest>();
-
+        
         for (final Quest quest : questList) {
-            if ( quest.isSuitable(player) ) {
-                //suitable.add( new Quest( quest ) );
-            	suitable.add(quest);
+        	if ( quest.isSuitable(player) ) {
+        		suitable.add( quest );
             }
         }
         

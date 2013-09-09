@@ -25,3 +25,4 @@ alias @backdb:@backup
 alias @alias:@aliases
 alias condition:cond
 alias pinfo:sheet
+alias pconfig:pconf

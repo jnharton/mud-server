@@ -100,7 +100,7 @@ public class AttackCommand extends Command {
 									debug("Creature HP: " + ((Creature) target).getHP());
 									if( ((Creature) target).getHP() <= 0 ) {
 										parent.send("You killed " + ((Creature) target).getName() + ".", client);
-										parent.handleDeath( (Creature) target );
+										parent.handleDeath( (Creature) target, client );
 									}
 								}
 							}

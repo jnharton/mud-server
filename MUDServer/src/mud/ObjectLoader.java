@@ -321,7 +321,7 @@ public class ObjectLoader {
                         int armorType = Integer.parseInt(attr[6]);
                         int mod = Integer.parseInt(attr[7]);
 
-                        Armor armor = new Armor(oName, oDesc, (int) oLocation, (int) oDBRef, mod , ArmorType.values()[armorType], ItemType.values()[itemType]);
+                        Armor armor = new Armor(oName, oDesc, (int) oLocation, (int) oDBRef, mod , ArmorType.values()[armorType]);
                         armor.setItemType(it);
 
                         objectDB.add(armor);

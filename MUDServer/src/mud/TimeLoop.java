@@ -37,15 +37,17 @@ public class TimeLoop implements Runnable
     private boolean paused = false;
     private boolean running = true;
 
-    private int ms_per_minute = 10 * 1000; // 10k ms (10 s) , runs 1/6 normal time
+    private int ms_per_second = 166;       // 166 ms (1/6 s), runs 6x normal time
+    private int ms_per_minute = 10 * 1000; // 10k ms (10 s) , runs 6x normal time
     
     final private MUDServer server;
     final private int[] DAYS;
 
     /**
      * This uses a 6:1 timescale. That is, 6 minutes of game time is equal to 1 minute
-     * of real time. To adjust that simply change the ms_per_minute variable to the of seconds
-     * to adjust how much real time (in seconds) is equal to 1 minute of game time.
+     * of real time. To adjust that simply change the ms_per_second variable to the desired
+     * number of milliseconds/second to adjust how much real time (in seconds) is equal to
+     * 1 minute of game time.
      * 
      * Modifications: x:1 timescale
      */
@@ -65,7 +67,8 @@ public class TimeLoop implements Runnable
     public void run() {
         while (running) {
             try {
-                Thread.sleep(ms_per_minute);
+                //Thread.sleep(ms_per_minute);
+            	Thread.sleep(ms_per_second);
             }
             catch(InterruptedException ie) {
                 ie.printStackTrace();
@@ -111,35 +114,35 @@ public class TimeLoop implements Runnable
         }
 
         if (this.hour == 5) {
-            setTimeOfDay(TimeOfDay.BEFORE_DAWN, new Message("It is now just before dawn."));
+            setTimeOfDay(TimeOfDay.BEFORE_DAWN, new Message("It is now just before dawn.", 0));
             server.debug("It is now just before dawn.");
         }
         else if (this.hour == 6) {
-            setTimeOfDay(TimeOfDay.DAWN, new Message("It is now dawn."));
+            setTimeOfDay(TimeOfDay.DAWN, new Message("It is now dawn.", 0));
             server.debug("It is now dawn.");
         }
         else if (this.hour == 7) {
-            setTimeOfDay(TimeOfDay.MORNING, new Message("It is now morning."));
+            setTimeOfDay(TimeOfDay.MORNING, new Message("It is now morning.", 0));
             server.debug("It is now morning.");
         }
         else if (this.hour == 12) {
-            setTimeOfDay(TimeOfDay.MIDDAY, new Message("It is now midday."));
+            setTimeOfDay(TimeOfDay.MIDDAY, new Message("It is now midday.", 0));
             server.debug("It is now midday.");
         }
         else if (this.hour == 13) {
-            setTimeOfDay(TimeOfDay.AFTERNOON, new Message("It is now afternoon."));
+            setTimeOfDay(TimeOfDay.AFTERNOON, new Message("It is now afternoon.", 0));
             server.debug("It is now afternoon.");
         }
         else if (this.hour == 18) {
-            setTimeOfDay(TimeOfDay.DUSK, new Message("It is now dusk."));
+            setTimeOfDay(TimeOfDay.DUSK, new Message("It is now dusk.", 0));
             server.debug("It is now dusk.");
         }
         else if (this.hour == 19) {
-            setTimeOfDay(TimeOfDay.NIGHT, new Message("It is now night."));
+            setTimeOfDay(TimeOfDay.NIGHT, new Message("It is now night.", 0));
             server.debug("It is now night.");
         }
         else if (this.hour == 0) {
-            setTimeOfDay(TimeOfDay.MIDNIGHT, new Message("It is now midnight."));
+            setTimeOfDay(TimeOfDay.MIDNIGHT, new Message("It is now midnight.", 0));
             server.debug("It is now midnight.");
         }
     }
@@ -150,6 +153,8 @@ public class TimeLoop implements Runnable
             day = 0;
             incrementMonth();
         }
+        
+        server.onDayIncrement();
     }
 
     private void incrementMonth() {

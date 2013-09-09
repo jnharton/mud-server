@@ -58,6 +58,7 @@ public class Quest {
 		this.id = lastId++;
 		this.name = template.name;
 		this.description = template.description;
+		this.location = template.location;
 		this.tasks = new ArrayList<Task>(template.getTasks());
 	}
 	
@@ -179,7 +180,19 @@ public class Quest {
         }
         return buf.toString();
 	}
-
+	
+	/**
+	 * Perform a series of check to determine the suitability
+	 * of this quest for the specified player.
+	 * 
+	 * - level range?
+	 * - alignment?
+	 * - class?
+	 * - party? party size?
+	 * 
+	 * @param player
+	 * @return
+	 */
 	public boolean isSuitable(final Player player) {
 		return true;
 	}

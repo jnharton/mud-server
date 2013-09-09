@@ -98,6 +98,20 @@ public class ObjectDB {
     		}
     	}
     }
+    
+    public Stack<Integer> getUnused() {
+    	return this.unusedDBNs;
+    }
+    
+    /*public List<Integer> getUnused() {
+    	List<Integer> result = new LinkedList<Integer>();
+    	
+    	for(Integer i : unusedDBNs) {
+    		result.add(i);
+    	}
+    	
+    	return result;
+    }*/
 
     public int getSize() {
     	return objsById.size();
@@ -105,7 +119,7 @@ public class ObjectDB {
 
     public void addAsNew(final MUDObject item) {
     	if( !unusedDBNs.empty() ) { item.setDBRef( unusedDBNs.pop() ); }
-    	else { item.setDBRef(nextId++); }
+    	else { item.setDBRef(nextId + 1); }
         add(item);
     }
 

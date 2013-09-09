@@ -197,8 +197,7 @@ public class Container extends Item implements Storage<Item>, Equippable<Item>, 
 
 	@Override
 	public String toString() {
-		// TODO Auto-generated method stub
-		return null;
+		return getName();
 	}
 
 	@Override

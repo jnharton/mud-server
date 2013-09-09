@@ -8,17 +8,20 @@ Syntax:
 Parameters:
 
 on/off           - turn debugging on and off
-cmdDelay         - tell us the current command delay (how long the program waits between interpreting commands)
-dbdump           - list out the whole database (<index>: <object name> <object dbref>)
-timedata         - tell us the current real world time and in-game time
-seasons          - list the defined seasons
-holidays         - list the defined holidays
-chat             - list unsent chat messages (per specified channel?)
 client           - tell us about the client object that represents us
+clients          - tell us general info about all connected clients (ip address and object name)
+creatures        -
+dbdump           - list out the whole database (<index>: <object name> <object dbref>)
+holidays         - list the defined holidays
+listen <room id> - tell us who is listening to that room (generally that would be players and npcs in it)
 position/pos     - tell us our position data (for currently connected player, cartesian coordinate system)
+portals          - list all portals and their current state (active/inactive)
+seasons          - list the defined seasons
+timedata         - tell us the current real world time and in-game time
+timers           - list all current running timers
 udbnstack/unused - list information about unused database reference numbers
 <a number>       - change the debug level (how much and what gets sent to us)
 
 Turns debug message reporting on/off and display current information about certain chunks of data.
 
-Last Updated: March 14, 2013
+Last Updated: September 4, 2013

@@ -315,10 +315,6 @@ public class Player extends MUDObject
 		this.slots.put("ring4", new Slot(new SlotType[] { SlotType.FINGER }, ItemType.RING));
 		this.slots.put("ring5", new Slot(new SlotType[] { SlotType.FINGER }, ItemType.RING));
 		this.slots.put("ring6", new Slot(new SlotType[] { SlotType.FINGER }, ItemType.RING));
-		this.slots.put("ring7", new Slot(new SlotType[] { SlotType.FINGER }, ItemType.RING));
-		this.slots.put("ring8", new Slot(new SlotType[] { SlotType.FINGER }, ItemType.RING));
-		this.slots.put("ring9", new Slot(new SlotType[] { SlotType.FINGER }, ItemType.RING));
-		this.slots.put("ring10", new Slot(new SlotType[] { SlotType.FINGER }, ItemType.RING));
 		this.slots.put("gloves", new Slot(new SlotType[] { SlotType.HANDS }, ClothingType.GLOVES));
 		this.slots.put("weapon", new Slot(new SlotType[] { SlotType.RHAND }, ItemType.WEAPON));
 		this.slots.put("weapon1", new Slot(new SlotType[] { SlotType.LHAND }, ItemType.WEAPON));

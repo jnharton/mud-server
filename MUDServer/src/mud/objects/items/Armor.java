@@ -50,7 +50,10 @@ public class Armor extends Item implements Equippable<Armor>, Wearable<Armor>
 		this.equippable = true;
 		this.equip_type = template.equip_type;
 		this.item_type = template.item_type;
-		this.mod = template.mod;
+		
+		//this.mod = template.mod;
+		this.mod = 0;
+		
 		this.armor_type = template.armor_type;
 		this.weight = template.weight;
 	}
@@ -61,7 +64,10 @@ public class Armor extends Item implements Equippable<Armor>, Wearable<Armor>
 		this.equippable = true;
 		this.equip_type = ItemType.ARMOR;
 		this.item_type = ItemType.ARMOR;
-		this.mod = aMod;
+		
+		//this.mod = aMod;
+		this.mod = 0;
+		
 		this.armor_type = armor;
 		this.weight = armor.getWeight();
 	}
@@ -72,7 +78,10 @@ public class Armor extends Item implements Equippable<Armor>, Wearable<Armor>
 		this.equippable = true;
 		this.equip_type = ItemType.ARMOR;
 		this.item_type = ItemType.ARMOR;
-		this.mod = aMod;
+		
+		//this.mod = aMod;
+		this.mod = 0;
+		
 		this.armor_type = armor;
 		this.weight = armor.getWeight();
 	}
@@ -83,24 +92,29 @@ public class Armor extends Item implements Equippable<Armor>, Wearable<Armor>
 	 * Use this only for testing purposes and loading objects into the
 	 * server database, for anything else, use one of the other two constructors
 	 * that have parameters.
-	 *
-	 * 
 	 * @param tempName
 	 * @param tempDesc
 	 * @param tempLoc
 	 * @param tempDBREF
 	 */
-	public Armor(String wName, String wDesc, int wLoc, int wDBREF, int aMod, ArmorType armor, ItemType item)
+	public Armor(String wName, String wDesc, int wLoc, int wDBREF, int aMod, ArmorType armor)
 	{
 		super(wDBREF, wName, EnumSet.of(ObjectFlag.ITEM), wDesc, wLoc);
 		this.equippable = true;
 		this.equip_type = ItemType.ARMOR;
 		
-		this.mod = aMod;
+		//this.mod = aMod;
+		this.mod = 0;
+		
+		this.item_type = ItemType.ARMOR;
 		this.armor_type = armor;
-		this.item_type = item;
 		
 		this.weight = armor.getWeight();
+	}
+	
+	@Override
+	public String getName() {
+		return this.armor_type.getName() + " Armor";
 	}
 	
 	public int getArmorBonus() {
@@ -119,16 +133,13 @@ public class Armor extends Item implements Equippable<Armor>, Wearable<Armor>
 	public Coins getCost() {
 		return new Coins(armor_type.getCost());
 	}
-
-	@Override
+	
 	public void equip() {
 	}
 
-	@Override
 	public void equip(Player p) {
 	}
 
-	@Override
 	public Armor unequip() {
 		return null;
 	}
@@ -137,7 +148,6 @@ public class Armor extends Item implements Equippable<Armor>, Wearable<Armor>
 		return null;
 	}
 
-	@Override
 	public void wear(String arg, Client client) {
 	}
 	

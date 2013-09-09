@@ -19,6 +19,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 import mud.net.Client;
 import mud.objects.Player;
+import mud.objects.Room;
 
 /**
  * really should consider reverting back to string names, but Player objects
@@ -38,9 +39,12 @@ public class Message
 	private Player sender;    // player who sent the message
 	private Player recipient; // player the message was sent to.
 	private String message;   // String to store the body or content of the message.
-	private Integer location; //
+	private Integer location;    //
 	
+	private MessageType type; //
 	private Boolean wasSent;  // has this message been sent
+	
+	public enum MessageType { BROADCAST, BROADCAST_PLAYER, BROADCAST_LOCAL, SYSTEM, NORMAL, NONE };
 
 	/**
 	 * Basic message unit, useful only for holding a message;
@@ -49,37 +53,25 @@ public class Message
 	 */
 	public Message(String tempMessage) {
 		this.message = Utils.trim(tempMessage);
+		
+		this.type = MessageType.NONE;
 	}
 	
 	/**
-	 * A message without a sender, but which is intended for a particular recipient
-	 * 
-	 * system message?
+	 * this is a kludge.
 	 * 
 	 * @param tempMessage
-	 * @param tempRecipient
+	 * @param type
 	 */
-	public Message(final String tempMessage, final Player tempRecipient) {
-		this.recipient = tempRecipient;
-		this.message = Utils.trim(tempMessage);
-	}
-	
-	/**
-	 * A message without a recipient, implying that it is meant for some general group of recipients.
-	 * 
-	 * Broadcast?
-	 * 
-	 * @param tempSender
-	 * @param tempMessage
-	 */
-	public Message(final Player tempSender, final String tempMessage) {
-		this.sender = tempSender;
+	public Message(String tempMessage, int type) {
 		this.message = tempMessage;
-		this.location = tempSender.getLocation();
+		
+		this.type = MessageType.values()[type];
 	}
 	
 	/**
-	 * "Normal" message, which has both a sender and a recipient
+	 * "Normal" message, which has both a sender and a recipient in
+	 * addition to the message.
 	 * 
 	 * @param tempMessage
 	 * @param tempRecipient
@@ -88,24 +80,55 @@ public class Message
 		this.sender = tempSender;
 		this.message = Utils.trim(tempMessage);
 		this.recipient = tempRecipient;
+		
+		this.type = MessageType.NORMAL;
 	}
 	
 	/**
-	 * A message intended to be sent to a whole room, but which
-	 * originates from some non-player/non-client sender
+	 * Broadcast (Local) -- initiated by server
 	 * 
 	 * @param tempSender
 	 * @param tempMessage
 	 * @param tRoom
 	 */
-	public Message(final String tempMessage, final Integer tLocation) {
+	public Message(final String tempMessage, final Room tLocation) {
 		this.message = Utils.trim(tempMessage);
-		this.location = tLocation;
+		this.location = tLocation.getDBRef();
+		
+		this.type = MessageType.BROADCAST_LOCAL;
 	}
 	
-	public Message(final Client tempClient, final String tempMessage) {
-		this.client = tempClient;
+	/**
+	 * Direct Message (Say)
+	 * 
+	 * @param tempSender
+	 * @param tempMessage
+	 */
+	public Message(final Player tempSender, final String tempMessage) {
+		this.sender = tempSender;
 		this.message = tempMessage;
+		this.location = tempSender.getLocation();
+		
+		this.client = sender.getClient();
+		
+		this.type = MessageType.BROADCAST_PLAYER;
+	}
+	
+	/**
+	 * System Message -- for a particular player
+	 * 
+	 * @param tempMessage
+	 * @param tempRecipient
+	 */
+	public Message(final String tempMessage, final Player tempRecipient) {
+		this.recipient = tempRecipient;
+		this.message = Utils.trim(tempMessage);
+		
+		this.type = MessageType.SYSTEM;
+	}
+	
+	public MessageType getType() {
+		return this.type;
 	}
 	
 	public Client getClient() {
@@ -154,5 +177,10 @@ public class Message
 	
 	public void markSent() {
 		this.wasSent = true;
+	}
+	
+	@Override
+	public String toString() {
+		return this.message;
 	}
 }
