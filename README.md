@@ -1,7 +1,10 @@
 mud-server
 ==========
 
-A basic MUD server written in Java.
+A MUD server written in Java. Elements of the D&D/d20 system are used to implement the 'game' aspect of the
+server code with regards to things like player and item stats, etc.
+
+## Notes
 
 Some of the following directories need to exist before the game starts. '\' is the top directory
 for all the files. The code makes an attempt to find these folders and create them while it is setting
