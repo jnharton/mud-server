@@ -14,10 +14,10 @@ package mud.weather;
  */
 public class WeatherState
 {
-	public String name;
+	public String name;                      // name/type of weather state
 	public String description;               // description of the weather state
-	public String transDownText;
-	public String transUpText;
+	public String transDownText;             // the text describing the weather shift if it transitioned down to this
+	public String transUpText;               // the text describing the weather shift if it transitione up to this
 	
 	public double TransitionDownProbability; // How likely the weather is to transition "down a state" (worse weather)
 	public boolean Precipitation;            // Is precipitation possible? (true/false)
@@ -25,7 +25,7 @@ public class WeatherState
 	public boolean Clouds;                   // Are clouds a possibility? (true/false)
 	public boolean Storm;                    // Is a storm possible? (true/false)
 	
-	public int upDown = 0;
+	public int upDown = 0;                   // indicator of in which direction (up/down) the weather transitioned, if it changed
 	
 	public WeatherState(double tdp, boolean precip, boolean wind, boolean clouds, boolean storm) {
 		this.TransitionDownProbability = tdp;

@@ -18,7 +18,6 @@ package mud.objects;
  *
  */
 public enum RoomType {
-    PLAYER('P', "PLAYER"),
 	OUTSIDE('O', "OUTSIDE"), // Affected by all weather
 	EXPOSED('E', "EXPOSED"), // Exposed to some weather
 	INSIDE('I', "INSIDE"),   // Not affected by any weather

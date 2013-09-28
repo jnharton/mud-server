@@ -24,7 +24,6 @@ import java.util.LinkedList;
 import java.util.List;
 
 import mud.Effect;
-import mud.magic.Spell.SpellType;
 
 /**
  * class to implement Dungeons and Dragons spells
@@ -34,19 +33,18 @@ import mud.magic.Spell.SpellType;
  */
 public class Spell
 {
-	public enum Category { NONE }
 	//public enum RangeType {NORMAL, PER_LEVEL, PERSONAL, TOUCH, AREA };
 	public enum RangeType {
 		STD("Standard", 0, -1, -1),         // ?
-		PERSONAL("Personal", 0, 0, -1),     // ?
-		TOUCH("Touch", 0, 0, 0),            // ?
+		PERSONAL("Personal", 0, 0, -1),     // yourself only, no increment, no caster level
+		TOUCH("Touch", 0, 0, 0),            // requires touch (0ft.), no increment, no caster level
 		CLOSE("Close", 25, 5, 2),           // close range (25ft.), increment of 5ft./2 caster levels
 		MEDIUM("Medium", 100, 10, 1),       // medium range (100ft.), increment of 10ft./caster level
 		LONG("Long", 400, 40, 1),           // long range (400ft.), increment of 40ft./caster level
 		UNLIMITED("Unlimited", -1, -1, -1); // no limit on range, no increment, not affected by caster level
 		
-		private String typeName;
-		private int range, rangeIncrement, casterLevels;
+		public String typeName;
+		public int range, rangeIncrement, casterLevels;
 		
 		RangeType(String typename, int range, int rInc, int casterlevels) {
 			this.typeName = typename;
@@ -57,8 +55,6 @@ public class Spell
 	}
 	
 	public enum RangeClass { CONICAL, LINEAR, PLANAR, SPHERICAL }
-	public enum SpellClass { NONE, CLERIC, DRUID, PALADIN, RANGER, SORCERER, WIZARD };
-	public enum SpellType { ARCANE, DIVINE };
 	
 	protected int spellLevel;
 	protected RangeType rangeT;
@@ -67,7 +63,6 @@ public class Spell
 	protected int duration; // duration of the spell 
 	protected int range;    // range of the spell in feet (spherical, radius length?)
 	protected School school;
-	protected Category cat;
 	protected List<SpellClass> sc;
 	protected SpellType sType;
 	protected String name, castMsg;
@@ -82,41 +77,42 @@ public class Spell
 		sc = new LinkedList<SpellClass>();
 	}
 
-	public Spell(String tName, String tSchool, String tCastMsg, ArrayList<Effect> tEffects)
+	public Spell(String tName, School tSchool, String tCastMsg, ArrayList<Effect> tEffects)
 	{
         this(tName, tSchool, tCastMsg, tEffects, new HashMap<String, Reagent>());
 	}
 
-	public Spell(String tName, String tSchool, String tCastMsg, ArrayList<Effect> tEffects, HashMap<String, Reagent> tReagents)
+	public Spell(String tName, School tSchool, String tCastMsg, ArrayList<Effect> tEffects, HashMap<String, Reagent> tReagents)
 	{
         this(tName, tSchool, tCastMsg, SpellType.ARCANE, tEffects, tReagents);
 	}
 
-	public Spell(String tName, String tSchool, String tCastMsg, SpellType sType, ArrayList<Effect> tEffects, HashMap<String, Reagent> tReagents)
+	public Spell(String tName, School tSchool, String tCastMsg, SpellType sType, ArrayList<Effect> tEffects, HashMap<String, Reagent> tReagents)
 	{
-        this(tName, tSchool, sType, Spell.Category.NONE, SpellClass.NONE, tCastMsg, tEffects, tReagents);
+        this(tName, tSchool, sType, SpellClass.NONE, tCastMsg, tEffects, tReagents);
 	}
 
-	//Spell spell = new Spell("Teleport", School.CONJURATION, "", Spell.Category.NONE, Spell.SpellClass.WIZARD, 5, "You cast teleport.", null, null);
-    public Spell(String tName, String tSchool, SpellType sType, Category tCategory, SpellClass tSpellClass, String tCastMsg, ArrayList<Effect> tEffects, HashMap<String, Reagent> tReagents)
+    public Spell(String tName, School tSchool, SpellType sType, SpellClass tSpellClass, String tCastMsg, ArrayList<Effect> tEffects, HashMap<String, Reagent> tReagents)
     {
-        this(tName, tSchool, sType, tCategory, tSpellClass, 1, tCastMsg, tEffects, tReagents);
+        this(tName, tSchool, sType, tSpellClass, 1, tCastMsg, tEffects, tReagents);
     }
 
-	//Spell spell = new Spell("Teleport", School.CONJURATION, "", Spell.Category.NONE, Spell.SpellClass.WIZARD, 5, "You cast teleport.", null, null);
-	public Spell(String tName, String tSchool, SpellType sType, Category tCategory, SpellClass tSpellClass, int tLevel, String tCastMsg, ArrayList<Effect> tEffects, HashMap<String, Reagent> tReagents)
+	public Spell(String tName, School tSchool, SpellType sType, SpellClass tSpellClass, int tLevel, String tCastMsg, ArrayList<Effect> tEffects, HashMap<String, Reagent> tReagents)
 	{
 		this();
 		this.name = tName;
-		this.school = getSchool(tSchool);
+		//this.school = getSchool(tSchool);
+		this.school = tSchool;
 		this.sType = sType;
 		this.spellLevel = tLevel;
-		//this.cat = tCategory;
 		this.sc = new ArrayList<SpellClass>();
 		if( tSpellClass != SpellClass.NONE) { this.sc.add(tSpellClass); };
 		this.castMsg = tCastMsg;
 		this.effects = tEffects;
 		this.reagents = tReagents;
+		
+		this.rangeT = RangeType.PERSONAL;
+		this.rangeC = RangeClass.CONICAL;
 	}
 	
 	public void setLevel(int tLevel) {
@@ -209,6 +205,15 @@ public class Spell
 
 	public String getName() {
 		return this.name;
+	}
+	
+	public int getRange(int casterLevel) {
+		if( rangeT.casterLevels == 0 || rangeT.casterLevels != -1 ) {
+			return rangeT.range;
+		}
+		else {
+			return rangeT.range + (casterLevel * rangeT.rangeIncrement);
+		}
 	}
 	
 	public HashMap<String, Reagent> getReagents() {

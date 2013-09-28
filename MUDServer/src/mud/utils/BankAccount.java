@@ -1,5 +1,7 @@
 package mud.utils;
 
+import mud.Coins;
+
 /*
 Copyright (c) 2012 Jeremy N. Harton
 
@@ -36,8 +38,8 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 public class BankAccount {
 
-	private int id;      // an internal id for the bank account
-	private int[] money; // a four slot array to hold money (these represent denominations
+	private int id;        // an internal id for the bank account
+	private Coins balance; // a Coins object to hold money
 	
 	/**
 	 * 
@@ -45,7 +47,7 @@ public class BankAccount {
 	 */
 	public BankAccount(int id) {
 		this.id = id;
-		this.money = new int[] { 0, 0, 0, 0 };
+		this.balance = new Coins(new int[] { 0, 0, 0, 0 });
 	}
 	
 	/**
@@ -53,15 +55,10 @@ public class BankAccount {
 	 * @param id
 	 * @param newMoney
 	 */
-	public BankAccount(int id, int[] newMoney) 
+	public BankAccount(final int id, final Coins newMoney) 
 	{
 		this.id = id;
-		this.money = new int[] { 0, 0, 0, 0 };
-		if (newMoney.length <= 4) {
-			for (int i = 0; i < this.money.length; i++) {
-				this.money[i] = newMoney[i];
-			}
-		}
+		this.balance = Coins.copper( newMoney.numOfCopper() );
 	}
 	
 	/**
@@ -84,24 +81,20 @@ public class BankAccount {
 	 * 
 	 * @return the internal representation of the money
 	 */
-	public int[] getBalance() {
+	public Coins getBalance() {
 		/*
 		 * possibly insecure, if we can modify it after
 		 * being returned and actually change the one in the bank
 		 */
-		return this.money;
+		return this.balance;
 	}
 	
 	/**
 	 * 
 	 * @param deposit
 	 */
-	public void deposit(int[] deposit) {
-		if (deposit.length >= 4) {
-			for (int i = 0; i < this.money.length; i++) {
-				this.money[i] += deposit[i];
-			}
-		}
+	public void deposit(Coins deposit) {
+		this.balance.add( deposit );
 	}
 	
 	/**
@@ -109,17 +102,7 @@ public class BankAccount {
 	 * @param withdrawal
 	 * @return
 	 */
-	public int[] withdraw(int[] withdrawal) {
-		int[] n = new int[4];
-		if (withdrawal.length >= 4) {
-			for (int i = 0; i < this.money.length; i++) {
-				if (withdrawal[i] < this.money[i]) {
-					this.money[i] -= withdrawal[i];
-					n[i] += withdrawal[i];
-				}
-			}
-			return n;
-		}
-		return null;
+	public Coins withdraw(Coins withdrawal) {
+		return this.balance.subtractCopper( withdrawal.numOfCopper() );
 	}
 }

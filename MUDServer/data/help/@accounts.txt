@@ -9,5 +9,11 @@ Syntax: '@accounts'
                                                    the specified name and
                                                    password, and links the
                                                    current character to it.
+        '@accounts +new'                           Creates a new (test/dummy)
+                                                   account and adds it to the
+                                                   account list.
+        '@accounts +info <name> <password>'        Show account information,
+                                                   requires the account name
+                                                   and password.
 
-Last Updated: March 21, 2013
+Last Updated: September 17, 2013

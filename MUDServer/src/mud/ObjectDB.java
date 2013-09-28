@@ -37,6 +37,9 @@ public class ObjectDB {
     // holds unused database references, that exist due to "recycled" objects
     private Stack<Integer> unusedDBNs = new Stack<Integer>();
     private List<Integer> reservedDBNs = new LinkedList<Integer>();
+    
+    // Hashtable is used here because it does not permit null values
+    private Hashtable<Client, LinkedList<Integer>> reservationTable = new Hashtable<Client, LinkedList<Integer>>();
 
     /**
      * As long as we construct objects and insert them into this db afterwards as a separate step,
@@ -56,14 +59,74 @@ public class ObjectDB {
      * unless there is an unused number already, in which case it
      * reserves that one.
      */
-    public void reserveID() {
-    	final int id;
+    /*public Integer reserveID(final Client client) {
+    	final Integer id;
 
     	if( !unusedDBNs.empty() ) { id = unusedDBNs.pop(); }
-    	else { id = nextId++; }
+    	else { id = nextId++; }                              // grab the next it, before incrementing it by one
 
     	reservedDBNs.add(id);
+    	
+    	if( reservationTable.containsKey(client) ) {
+    		reservationTable.get(client).add(id); // mark who reserved it
+    	}
+    	else reservationTable.put(client, new LinkedList<Integer>() { { add(id); } });
+    	
+    	return id;
     }
+    
+    public List<Integer> reserveIDs(final int numIds, final Client client) {
+    	final List<Integer> ids = new LinkedList<Integer>();
+    	
+    	int index = 0;
+    	
+    	while(index < numIds) {
+    		if( !unusedDBNs.empty() ) { ids.add( unusedDBNs.pop() ); }
+        	else { ids.add( nextId++ ); }
+    		
+    		reservedDBNs.add( ids.get(index) );
+    		
+    		index++;
+    	}
+    	
+    	System.out.println( ids );
+    	
+    	return ids;
+    }
+    
+    public void useID(final Integer id, final Client client) {
+    	if( client != null ) {
+    		List<Integer> ids = reservationTable.get(client);
+    		if( id != null ) {
+    			ids.remove(id);
+    			reservedDBNs.remove(id);
+    		}
+    	}
+    }
+    
+    public void freeID(final Integer id, final Client client) {
+    	if( client != null ) {
+    		List<Integer> ids = reservationTable.get(client);
+    		if( id != null ) {
+    			ids.remove(id);
+    			reservedDBNs.remove(id);
+    			// re-add id to unused?
+    		}
+    	}
+    }
+    
+    public void freeIDs(final List<Integer> ids, final Client client) {
+    	if( client != null ) {
+    		if( reservationTable.containsKey(client) ) {
+    			if( ids != null ) {
+    				List<Integer> ids1 = reservationTable.get(client);
+    				ids1.removeAll( ids );
+    				reservedDBNs.removeAll( ids );
+    				// re-add ids to unused?
+    			}
+    		}
+    	}
+    }*/
     
     /**
      * Add an unused database reference number to the list
@@ -71,15 +134,11 @@ public class ObjectDB {
      * 
      * @param unusedId
      */
-    public void addUnused(int unusedId) {
+    private void addUnused(int unusedId) {
     	MUDObject mobj = get(unusedId);
     	int next = peekNextId();{
 
-    		if( reservedDBNs.contains(unusedId) ) {
-    			reservedDBNs.remove(unusedId);
-    			unusedDBNs.push(unusedId);
-    		}
-    		else if( mobj instanceof NullObject ) {
+    		if( mobj instanceof NullObject ) {
     			NullObject no = (NullObject) mobj;
 
     			if( !no.isLocked() ) {
@@ -89,6 +148,9 @@ public class ObjectDB {
     			else {
     				System.out.println("NullObject is locked");
     			}
+    		}
+    		else if( reservedDBNs.contains(unusedId) ) {
+    			System.out.println("That id is reserved!");
     		}
     		else if(unusedDBNs.empty() && unusedId == next - 1) { // we just made a new one, but it's the most recent one in the db, just go back one
     			nextId--;
@@ -124,17 +186,41 @@ public class ObjectDB {
     }
 
     public void add(final MUDObject item) {
-        objsByName.put(item.getName(), item);
-        objsById.put(item.getDBRef(), item);
+    	System.out.println(nextId + ": " + item.getDBRef());
+    	
+    	/* If the object's dbref doesn't match the next id (e.g. there's no
+    	 * database entry and the db skips over a number) then insert a NullObject,
+    	 * then the object that didn't match the id.
+    	 * 
+    	 * NOTE: This has been setup as a while loop to catch multiple such objects.
+    	 * 
+    	 * WARNING: The absence of entries for multiple consecutive dbrefs may indicate
+    	 * some kind of database corruption or data loss. To handle that possibility,
+    	 * the code below will lock the NullObject (prevent editing) so that the errors
+    	 * are easier to find in the database later?
+    	 */
+    	while( item.getDBRef() != nextId && get(item.getDBRef()) == null ) {
+    		NullObject no = new NullObject(nextId);
+    		no.lock();
+    		
+    		objsByName.put("$NULLOBJECT$", no);
+    		objsById.put(no.getDBRef(), no);
+    		
+    		nextId++;
+    	}
+    	
+    	objsByName.put(item.getName(), item);
+    	objsById.put(item.getDBRef(), item);
+    	
+    	if(item instanceof NullObject) { addUnused(item.getDBRef()); }
+    	
         nextId++;
-        
-        if(item instanceof NullObject) { addUnused(item.getDBRef()); }
     }
 
-    public void allocate(final int n) {
+    /*public void allocate(final int n) {
         // Until we travel back to 1970 and convert this codebase into C, we probably don't need to pre-allocate things.
         // Unless users are creating rooms faster that the JVM can allocate objects...
-    }
+    }*/
 
     // Send all objects
     public void dump(final Client client, final MUDServer server) {
@@ -161,14 +247,35 @@ public class ObjectDB {
         objsByName.put(item.getName(), item);
     }
 
+    /**
+     * Does the database contain an object by the name
+     * passed in? If so, return true
+     * 
+     * @param name the name of an object to look for
+     * @return true if there is object with the specified name
+     */
     public boolean hasName(final String name) {
         return objsByName.containsKey(name);
     }
-
+    
+    /**
+     * Does the database contain an object by the name
+     * passed in? If so, return that object.
+     * 
+     * @param name the name of an object to look for
+     * @return the object with the specified name (if there is one)
+     */
     public MUDObject getByName(final String name) {
         return objsByName.get(name);
     }
-
+    
+    /**
+     * Get an object by it's Database Reference Number (DBRef)
+     * which is unique in the database
+     * 
+     * @param n the DBRef of the object you wish to get
+     * @return the object with that DBRef (if it exists)
+     */
     public MUDObject get(final int n) {
         return objsById.get(n);
     }
@@ -182,7 +289,16 @@ public class ObjectDB {
         }
         return acc;
     }
-
+    
+    /**
+     * Get the number of objects with a particular flag set. This
+     * is chiefly intended for getting a quick count of say, the number
+     * of (P)layers, (R)ooms, (E)xits, etc. However it could also be used
+     * to count objects that are flagged (D)ark for instance.
+     * 
+     * @param letters the flags to search for
+     * @return
+     */
     public int[] getFlagCounts(final String[] letters) {
         final int[] counts = new int[letters.length];
         Arrays.fill(counts, 0);
@@ -266,11 +382,11 @@ public class ObjectDB {
     }
 
 	public void placeThingsInRooms(final MUDServer parent) {
-		for (final Thing t : things) {
-			if (t != null) {
-                final Room room = parent.getRoom(t.getLocation());
+		for (final Thing thing : things) {
+			if (thing != null) {
+                final Room room = parent.getRoom(thing.getLocation());
                 if (room != null) {
-                    room.contents.add(t);
+                    room.addThing( thing );
                 }
 			}
 		}
@@ -303,7 +419,7 @@ public class ObjectDB {
     public List<Room> getRoomsByType(final RoomType type) {
         final List<Room> acc = new LinkedList<Room>();
         for (final Room r : roomsById.values()) {
-            if (r.getRoomType().equals(type)) {
+            if (r.getRoomType() == type) {
                 acc.add(r);
             }
         }
@@ -484,7 +600,7 @@ public class ObjectDB {
 		for (final Item item : items) {
 			final Room r = getRoomById(item.getLocation());
             if (r != null) {
-                r.contents1.add(item);
+                r.addItem(item);
             }
         }
     }

@@ -50,6 +50,17 @@ public class Mail {
 		this.subject = tSubject;
 		this.message = tMessage;
 		this.flag = tFlag;
+		
+		switch(tFlag) {
+		case 'U':
+			markUnread();
+			break;
+		case 'R':
+			markRead();
+			break;
+		default:
+			break;
+		}
 	}
 	
 	public Integer getId() {

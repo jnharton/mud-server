@@ -40,7 +40,14 @@ public class Coins
     static public Coins platinum(final int n) {
         return new Coins(PLATINUM_RATIO * n);
     }
-
+    
+    /**
+     * 
+     * @author Jeremy
+     * 
+     * @param n
+     * @return
+     */
     static public Coins fromArray(final int[] n) {
         return Coins.platinum(n[0]).add(Coins.gold(n[1])).add(Coins.silver(n[2])).add(Coins.copper(n[3]));
     }

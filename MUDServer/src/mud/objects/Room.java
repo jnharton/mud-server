@@ -42,30 +42,27 @@ public class Room extends MUDObject implements EventSource
 {
 	private enum Terrain { FOREST, MARSH, HILLS, MOUNTAIN, DESERT, PLAINS, AQUATIC };
 
-	private int parent;                                         // the room inside of which this room is located
+	private int parent;                                       // the room inside of which this room is located
 	
-	private Weather weather;                                    // the weather in this room
+	private RoomType roomType = RoomType.NONE;                // the type of room (I = Inside, O = Outside, P = Protected, N = None)
+	private Terrain terrain;                                  // terrain type of the room (affects movement speed?)
+	private Weather weather;                                  // the weather in this room
+	//private Atmosphere atmosphere = new Atmosphere();         // the atmosphere of the room (weather related)
 	
-	private ArrayList<Exit> exits = new ArrayList<Exit>();      // the exits leading away from the room
+	private ArrayList<Exit> exits = new ArrayList<Exit>();    // the exits leading away from the room
+	private String exitNames;                                 // formatted string containing the usable exit names
 	
-	public ArrayList<Thing> contents = new ArrayList<Thing>();  // the objects the room contains (things)
-	public ArrayList<Item> contents1 = new ArrayList<Item>();   // the objects the room contains (items)
-	
-	public String exitNames;                                    // formatted string containing the usable exit names
+	private ArrayList<Thing> things = new ArrayList<Thing>(); // the objects the room contains (things)
+	private ArrayList<Item> items = new ArrayList<Item>();    // the objects the room contains (items)
 
-	private RoomType roomType = RoomType.NONE;                  // the type of room (I = Inside, O = Outside, P = Protected, N = None)
-
-	public String music;                                        // the ambient background music for this room (filename, probably a wav file)
-	public String timeOfDay = "DAY";                            // replace this with an enum with one type per each or a hashmap string, boolean?
+	public String music;                                      // the ambient background music for this room (filename, probably a wav file)
+	public String timeOfDay = "DAY";                          // replace this with an enum with one type per each or a hashmap string, boolean?
 	// DAY or NIGHT
 	
-	private Integer instance_id = null;                         // instance_id, if this is the original, it should be null
+	private Integer instance_id = null;                      // instance_id, if this is the original, it should be null
 
 	public int x = 10, y = 10; // size of the room ( 10x10 default )
 	public int z = 10;         // height of room ( 10 default )
-	
-	//private Atmosphere atmosphere = new Atmosphere();         // the atmosphere of the room (weather related)
-	//private Terrain terrain;                                  // terrain type of the room (affects movement speed?)
 	
 	private BitSet[][] tiles;
 			
@@ -203,7 +200,8 @@ public class Room extends MUDObject implements EventSource
 		if( exits.size() > 0 ) {
 			final StringBuilder buf = new StringBuilder();
 			for (final Exit e : exits) {
-				buf.append(", ").append(e.getName());
+				if( e.isLocked() ) buf.append(", ").append(e.getName() + " (locked)"); 
+				else buf.append(", ").append(e.getName());
 			}
 			return buf.toString().substring(2); // clip off the initial, unecessary " ,"
 		}
@@ -267,19 +265,45 @@ public class Room extends MUDObject implements EventSource
 	public synchronized void removeSayEventListener(SayEventListener listener)   {
 		_listeners.remove(listener);
 	}
-
-	public List<Trigger> getTriggers(Triggers triggerType) {
-		return this.triggers.get(triggerType);
-	}
 	
 	public void addItem(Item item) {
-		this.contents1.add(item);
+		this.items.add(item);
 	}
 	
 	public void addItems(List<Item> items) {
 		for(Item item : items) {
 			addItem(item);
 		}
+	}
+	
+	public void removeItem(Item item) {
+		this.items.remove(item);
+	}
+	
+	public List<Item> getItems() {
+		return this.items;
+	}
+	
+	public void addThing(Thing thing) {
+		this.things.add(thing);
+	}
+	
+	public void addThings(List<Thing> things) {
+		for(Thing thing : things) {
+			addThing(thing);
+		}
+	}
+	
+	public void removeThing(Thing thing) {
+		this.things.remove(thing);
+	}
+	
+	public List<Thing> getThings() {
+		return this.things;
+	}
+	
+	public List<Trigger> getTriggers(Triggers triggerType) {
+		return this.triggers.get(triggerType);
 	}
 	
 	/**
@@ -306,7 +330,7 @@ public class Room extends MUDObject implements EventSource
 	}
 
 	public String toString() {
-		return "";
+		return getName() + " (#" + getDBRef() + ")";
 	}
 
 

@@ -68,12 +68,13 @@ public class CastCommand extends Command {
 
 			// target check, if no target then auto-target self, etc, dependent on spell
 			if (player.getTarget() == null) {
-				player.setTarget(player); // auto-target to self
+				int range = spell.getRange(player.getLevel());
+				if( range == 0 ) player.setTarget(player); // auto-target to self, if spell takes self
 			}
 
 			final MUDObject target = player.getTarget();
 
-			// reduce mana (placeholder), really needs to check the spell's actual cost
+			// expend mana
 			player.setMana(-spell.getManaCost());
 			
 			// calculate spell failure (basic, just checks armor for now)

@@ -55,6 +55,26 @@ public class Time {
 		}
 	}
 	
+	/**
+	 * Create a new time object from a give timestring
+	 * in the format described below:
+	 * 	hh:mm:ss
+	 * @return
+	 */
+	public static Time fromString(String timeString) {
+		String[] data = timeString.split(":");
+
+		if( data.length >= 3 ) {
+			int hour = Utils.toInt(data[0], -1);
+			int minute = Utils.toInt(data[1], -1);
+			int second = Utils.toInt(data[2], -1);
+
+			return new Time(hour, minute, second);
+		}
+
+		return null;
+	}
+	
 	@Override
 	public String toString() {
 		return hour() + ":" + minute() + ":" + second();

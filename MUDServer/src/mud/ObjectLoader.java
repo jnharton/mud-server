@@ -289,7 +289,7 @@ public class ObjectLoader {
                         log.debug("log.debug (db entry): " + clothing.toDB(), 2);
                     }
 
-                    if ( it == ItemType.WAND ) { // Wand
+                    else if ( it == ItemType.WAND ) { // Wand
                         String spellName = attr[6];
                         int charges = Integer.parseInt(attr[7]);
                         
@@ -304,7 +304,7 @@ public class ObjectLoader {
                         log.debug("log.debug (db entry): " + wand.toDB(), 2);
                     }
 
-                    if ( it == ItemType.WEAPON ) { // Weapon Merchant
+                    else if ( it == ItemType.WEAPON ) { // Weapon Merchant
                         int weaponType = Integer.parseInt(attr[6]);
                         int mod = Integer.parseInt(attr[7]);
 
@@ -330,7 +330,7 @@ public class ObjectLoader {
                         log.debug("log.debug (db entry): " + armor.toDB(), 2);
                     }
 
-                    if ( it == ItemType.ARROW ) { // Arrow
+                    else if ( it == ItemType.ARROW ) { // Arrow
                         int stackID = Integer.parseInt(attr[7]);
 
                         Arrow arrow = new Arrow(oDBRef, oName, oDesc, oLocation);
@@ -342,7 +342,7 @@ public class ObjectLoader {
                         log.debug("log.debug (db entry): " + arrow.toDB(), 2);
                     }
 
-                    if ( it == ItemType.BOOK ) { // Book
+                    else if ( it == ItemType.BOOK ) { // Book
                         String author = attr[6];
                         String title = attr[7];
                         int pages = Integer.parseInt(attr[8]);
@@ -360,7 +360,7 @@ public class ObjectLoader {
                         log.debug("log.debug (db entry): " + book.toDB(), 2);
                     }
                     
-                    if( it == ItemType.CONTAINER ) { // Container
+                    else if( it == ItemType.CONTAINER ) { // Container
                     	Container container = new Container(oName);
                     	
                     	container.setDesc(oDesc);
@@ -375,7 +375,7 @@ public class ObjectLoader {
                     	log.debug("log.debug (db entry): " + container.toDB(), 2);
                     }
 
-                    if ( it == ItemType.POTION ) {
+                    else if ( it == ItemType.POTION ) {
                         int stack_size = Integer.parseInt(attr[6]);
                         String sn = attr[7];
 
@@ -419,6 +419,15 @@ public class ObjectLoader {
                     	
                     	objectDB.add(ring);
                     	objectDB.addItem(ring);
+                    }
+                    
+                    else {
+                    	Item item = new Item(oDBRef, oName, EnumSet.of(ObjectFlag.ITEM), oDesc, oLocation);
+                    	
+                    	item.setItemType( ItemType.NONE );
+                    	
+                    	objectDB.add(item);
+                    	objectDB.addItem(item);
                     }
                 }
                 else if (oFlags.contains("null")) {

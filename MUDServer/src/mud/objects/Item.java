@@ -54,12 +54,13 @@ public class Item extends MUDObject {
 	
 	protected BitSet attributes;          // item attributes: rusty, glowing, etc
 	
-	protected List<Spell> spells;
+	protected List<Spell> spells;         // spells the item has, which can be cast from it
 	
 	/**
 	 * Only for creating test items and then setting their properties/attributes
 	 */
 	public Item() {
+		this.setFlags( EnumSet.of(ObjectFlag.ITEM) );
 	}
 	
 	/**
@@ -68,6 +69,7 @@ public class Item extends MUDObject {
 	 */
 	public Item(int tempDBREF) {
 		super(tempDBREF);
+		this.setFlags( EnumSet.of(ObjectFlag.ITEM) );
 	}
 	
 	/**
@@ -96,23 +98,6 @@ public class Item extends MUDObject {
 	public void setItemType(ItemType newType) {
 		this.item_type = newType;
 	}
-
-	//public abstract String getName();
-
-	/*@Override
-	public String getName() {
-		Item item = null;
-		if (this instanceof Weapon) { item = (Weapon) this; }
-		else if (this instanceof Armor) { item = (Armor) this; }
-		else if (this instanceof Shield) { item = (Shield) this; }
-		else if (this instanceof Wand) { item = (Wand) this; }
-		else if (this instanceof Clothing) { item = (Clothing) this; }
-		else if (this instanceof Jewelry) { item = (Jewelry) this; }
-		else if (this instanceof Arrow) { item = (Arrow) this; }
-
-		if (item != null) { return item.getName(); }
-		else { return this.name; }
-	}*/
 
 	public Coins getCost() {
 		return baseCost;

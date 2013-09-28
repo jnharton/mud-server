@@ -59,8 +59,8 @@ public class NPC extends Player implements InteractiveI
 	private ArrayList<Quest> questList = new ArrayList<Quest>();
 
 	// blank constructor for sub classes
-	public NPC() {
-	}
+	/*public NPC() {
+	}*/
 
 	// "normal", but not default, constructor
 	/*public NPC(int tempDBRef, String tempName, String tempDesc, int tempLoc, String tempTitle) {

@@ -52,7 +52,7 @@ public class DropCommand extends Command {
 				debug(item.getName() + " true");
 				// move object from player inventory to floor
 				item.setLocation(room.getDBRef());
-				room.contents1.add(item);
+				room.addItem(item);
 				inventory.remove(item);
 				// check for silent flag to see if object's dbref name should be shown as well?
 				// return message telling the player that they dropped the object

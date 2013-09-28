@@ -42,8 +42,14 @@ public class EditList {
     }
 
     public void addLine(final String line) {
-        lines.add(line);
-        currentLine = lines.size() - 1;
+    	if( atEnd() ) {
+    		lines.add(line);
+    		currentLine = lines.size() - 1;
+    	}
+    	else {
+    		lines.add(currentLine, line);
+    		currentLine++;
+    	}
     }
     
     public void setLine(final int lineNum, final String line) {
@@ -56,5 +62,9 @@ public class EditList {
             lines.remove(n);
             if (currentLine == n && currentLine > 0)   currentLine -= 1;
         }
+    }
+    
+    public boolean atEnd() {
+    	return currentLine == (lines.size() - 1);
     }
 }

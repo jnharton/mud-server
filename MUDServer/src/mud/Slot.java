@@ -34,7 +34,7 @@ import mud.objects.items.ClothingType;
  */
 public class Slot {
 	private String description;        // descriptive text
-	private SlotType[] slotTypes;       // the type of slot this is
+	private SlotType[] slotTypes;      // the type of slot this is
 	private ItemType itemType;         // the type of item the slot can hold
 	private ClothingType clothingType; // the type of clothing item the slot can hold
 	private Item item;                 // the item the slot currently holds
@@ -211,5 +211,4 @@ public class Slot {
 	public String toString() {
 		return "no string representation";
 	}
-
 }

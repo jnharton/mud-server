@@ -19,7 +19,7 @@ package mud;
 
 public class Effect
 {
-	public static enum Type { ACID, BURN, HEAL, INVIS, POISON };
+	public static enum Type { ACID, BURN, DAMAGE, HEAL, INVIS, POISON };
 	public static enum DurationType { INSTANTANEOUS, PERMANENT, ROUNDS, SPECIAL };
 	
 	private static int lastId = 0; // the id of the last effect created
@@ -46,6 +46,9 @@ public class Effect
 		else if (name.toLowerCase().contains("invis")) {
 			type = Type.INVIS;
 		}
+		else if (name.toLowerCase().contains("dam")) {
+			type = Type.DAMAGE;
+		}
 	}
 
 	public Effect(String eName, Type eType, String eDurationType, int eDuration)
@@ -61,6 +64,9 @@ public class Effect
 		}
 		else if (name.toLowerCase().contains("invis")) {
 			type = Type.INVIS;
+		}
+		else if (name.toLowerCase().contains("dam")) {
+			type = Type.DAMAGE;
 		}
 	}
 	

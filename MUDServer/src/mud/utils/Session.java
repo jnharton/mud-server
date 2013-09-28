@@ -44,15 +44,17 @@ import mud.objects.Player;
  *
  */
 public class Session {
-	private Account account;  // account in use
-	private Client client;    // network client 
-	private Player player;    // current player
+	private Account account;   // account in use
+	private Client client;     // network client 
+	private Player player;     // current player
 	
-	public Time connect;      // connection time
-	public Time disconnect;   // disconnect time
+	public Time connect;       // connection time
+	public Time disconnect;    // disconnect time
 	
-	private Log session;      // session log
-	private Log transactions; //
+	public Time sessionLength; // the total time the player was connected for this session
+	
+	private Log session;       // session log
+	private Log transactions;  //
 	
 	/*
 	 * this would be false if the player's connection failed,a
@@ -135,5 +137,12 @@ public class Session {
 		// log
 		
 		return (String[]) output.toArray();
+	}
+	
+	public static Session fromFile(String[] fileData) {
+		if( fileData.length == 5 ) { 
+		}
+		
+		return null;
 	}
 }

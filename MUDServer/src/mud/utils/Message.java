@@ -35,14 +35,13 @@ import mud.objects.Room;
  */
 public class Message
 {
-	private Client client;
-	private Player sender;    // player who sent the message
-	private Player recipient; // player the message was sent to.
-	private String message;   // String to store the body or content of the message.
-	private Integer location;    //
+	private Player sender;           // player who sent the message
+	private Player recipient;        // player the message was sent to.
+	private String message;          // String to store the body or content of the message.
+	private Integer location;        //
 	
-	private MessageType type; //
-	private Boolean wasSent;  // has this message been sent
+	private MessageType type;        //
+	private Boolean wasSent = false; // has this message been sent
 	
 	public enum MessageType { BROADCAST, BROADCAST_PLAYER, BROADCAST_LOCAL, SYSTEM, NORMAL, NONE };
 
@@ -109,8 +108,6 @@ public class Message
 		this.message = tempMessage;
 		this.location = tempSender.getLocation();
 		
-		this.client = sender.getClient();
-		
 		this.type = MessageType.BROADCAST_PLAYER;
 	}
 	
@@ -129,14 +126,6 @@ public class Message
 	
 	public MessageType getType() {
 		return this.type;
-	}
-	
-	public Client getClient() {
-		return this.client;
-	}
-	
-	public void setClient(final Client newClient) {
-		this.client = newClient;
 	}
 	
 	public Player getSender() {

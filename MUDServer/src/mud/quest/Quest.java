@@ -52,10 +52,12 @@ public class Quest {
 	 * Create a new quest object, using an existing one as
 	 * a template.
 	 * 
+	 * NOTE: duplicated/copied quests have the same id as the source
+	 * 
 	 * @param template
 	 */
 	public Quest( Quest template ) {
-		this.id = lastId++;
+		this.id = template.id;
 		this.name = template.name;
 		this.description = template.description;
 		this.location = template.location;

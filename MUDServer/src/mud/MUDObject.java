@@ -48,7 +48,7 @@ public abstract class MUDObject {
 
 	protected ArrayList<Effect> effects = new ArrayList<Effect>(); // Effects set on the object
 
-	public Point coord = new Point(0, 0); // object's' location on a cartesian plain within a room?
+	public Point coord = new Point(0, 0); // object's' location on a cartesian plane within a room?
 	public Point pos = new Point(0, 0);   //
 	
 	/* object state - transient? */
@@ -260,6 +260,14 @@ public abstract class MUDObject {
 	 */
 	public LinkedHashMap<String, Object> getProps() {
 		return this.props;
+	}
+	
+	public void setProperty(final String key, final Object value) {
+		this.props.put(key,  value);
+	}
+	
+	public Object getProperty(final String key) {
+		return this.props.get(key);
 	}
 	
 	//public abstract ArrayList<String> look();
