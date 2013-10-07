@@ -63,7 +63,13 @@ public class Jewelry extends Item implements Equippable<Jewelry>, Usable<Jewelry
 		this.type = jType;               // the actual type of jewelry
 		this.weight = jWeight;           // the weight of the jewelry
 	}
-
+	
+	@Override
+	public String getType() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
 	@Override
 	public void equip() {
 		// TODO Auto-generated method stub
@@ -87,12 +93,6 @@ public class Jewelry extends Item implements Equippable<Jewelry>, Usable<Jewelry
 			parent.debug(player);
 			System.out.println(parent.applyEffect(player, effect));
 		}
-	}
-
-	@Override
-	public void wear(String arg, Client client) {
-		// TODO Auto-generated method stub
-
 	}
 
 	@Override

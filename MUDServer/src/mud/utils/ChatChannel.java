@@ -20,12 +20,12 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 import java.util.ArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import mud.net.Client;
 import mud.objects.Player;
 
 public class ChatChannel { 
-	private String name;  // channel name
-	private int restrict; // restrict access based on some integer
+	private String name;      // channel name
+	private String shortname; // short version of channel name
+	private int restrict;     // restrict access based on some integer
 	
 	// output format
 	private String chan_color = "magenta"; // channel title color
@@ -36,6 +36,7 @@ public class ChatChannel {
 	
 	public ChatChannel(String name) {
 		this.name = name;
+		this.shortname = name.substring(0, 3).toLowerCase();
 		this.messages = new LinkedBlockingQueue<Message>();
 		this.listeners = new ArrayList<Player>();
 	}
@@ -53,6 +54,7 @@ public class ChatChannel {
 	 */
 	public void setName(String chanName) {
 		this.name = chanName;
+		this.shortname = name.substring(0, 3).toLowerCase();
 	}
 	
 	/**
@@ -64,10 +66,24 @@ public class ChatChannel {
 		return this.name;
 	}
 	
+	public String getShortName() {
+		return this.shortname;
+	}
+	
+	/**
+	 * Get the name of the color to be used for displaying the channel name.
+	 * 
+	 * @return
+	 */
 	public String getChanColor() {
 		return this.chan_color;
 	}
 	
+	/**
+	 * Get the name of the color to be used for displaying the channel text.
+	 * 
+	 * @return
+	 */
 	public String getTextColor() {
 		return this.text_color;
 	}

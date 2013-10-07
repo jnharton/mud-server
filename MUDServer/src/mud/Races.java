@@ -20,7 +20,7 @@ package mud;
 /* Stat modifiers used from Hypertext d20SRD */
 
 public final class Races {
-	public static final Race DRAGON = new Race("Dragon", 0, true);
+	public static final Race DRAGON = new Race("Dragon", 0, true, true);
 	public static final Race DWARF = new Race("Dwarf", 3, new Integer[]{ 0, 0, 2, 0, -2, 0 }, false);
 	public static final Race ELF = new Race("Elf", 1, new Integer[]{ 0, 2, -2, 0, 0, 0 }, false);
 	public static final Race GNOME = new Race("Gnome", 4, new Integer[]{ -2, 0, 2, 0, 0, 0 }, false);

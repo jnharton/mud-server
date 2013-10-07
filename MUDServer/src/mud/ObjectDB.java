@@ -4,6 +4,7 @@ import java.util.*;
 
 import mud.MUDObject;
 import mud.objects.*;
+import mud.objects.items.Arrow;
 import mud.objects.items.Container;
 import mud.utils.Utils;
 import mud.net.Client;
@@ -648,6 +649,27 @@ public class ObjectDB {
             }
         }
         return acc;
+    }
+    
+    /**
+     * stack all the stackable items
+     */
+    public void stackItems() {
+    	List<Item> items = getItems();
+    	
+    	List<Arrow> arrows = new LinkedList<Arrow>();
+    	
+    	for(Item item : items) {
+    		if(item instanceof Arrow) arrows.add( (Arrow) item );
+    	}
+    	
+    	for(Arrow arrow : arrows) {
+    		Item item = getItem( arrow.getLocation() );
+    		
+    		if( item != null && item instanceof Arrow ) {
+    			if( !(arrow == item) ) ((Arrow) item).stack(arrow);
+    		}
+    	}
     }
 
     ///////////////////////////// PLAYERS

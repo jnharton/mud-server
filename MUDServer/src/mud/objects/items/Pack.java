@@ -36,11 +36,7 @@ public class Pack extends Clothing {
 
 	public Item search(String name) {
 		for (Item i : this.contents) {
-			if (i.getName().equals(name)) {
-				return i;
-			}
-			else if (i.getName().equals(name.toLowerCase()))
-			{
+			if (i.getName().equals(name) || i.getName().equals(name.toLowerCase())) {
 				return i;
 			}
 		}

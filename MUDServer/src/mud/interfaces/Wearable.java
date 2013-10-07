@@ -27,5 +27,5 @@ import mud.net.Client;
  * @param <T> Some object type that will implement wearable.
  */
 public interface Wearable<T> {
-	public void wear(String arg, Client client);
+	public String getType();
 }

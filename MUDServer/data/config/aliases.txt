@@ -1,14 +1,13 @@
 # Command Aliases File
 alias @check:@chk
 alias @describe:@desc
-alias @loaddb:@load
 alias @success:@succ
 alias @osuccess:@osucc
 alias @recycle:@rec
 alias @teleport:@tel
 alias commands:cmds
-alias @examine:@ex,@exam
-alias jump:j,jmp
+alias @examine:@ex
+alias @jump:@j,@jmp
 alias page:p
 alias north:n
 alias south:s

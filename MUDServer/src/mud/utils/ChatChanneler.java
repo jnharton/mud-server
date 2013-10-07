@@ -43,12 +43,27 @@ public class ChatChanneler
 			channels.put(channelName, new ChatChannel(channelName));
 		}
 	}
-
-	public void add(final Player player, final String channelName) throws Exception {
+	
+	/**
+	 * 
+	 * @param player
+	 * @param channelName
+	 * @return
+	 * @throws Exception
+	 */
+	public boolean add(final Player player, final String channelName) throws Exception {
 		if (!channels.containsKey(channelName)) {
             throw new Exception("No channel by the name of " + channelName);
         }
-        channels.get(channelName).addListener(player);
+		
+		ChatChannel channel = channels.get(channelName);
+		
+		if( player.getAccess() >= channel.getRestrict() ) {
+			channels.get(channelName).addListener(player);
+			return true;
+		}
+		
+		return false;
 	}
 
 	public void remove(final Player player, final String channelName) {

@@ -2,6 +2,7 @@ package mud.commands;
 
 import java.io.File;
 import java.text.ParseException;
+import java.util.Arrays;
 
 import mud.MUDServer;
 import mud.net.Client;
@@ -54,13 +55,14 @@ public class HelpCommand extends Command {
 		{
 			if (helpfile.length > 25) {
 				final Player player = getPlayer(client);
-				player.setPager( new Pager(helpfile) );
+				//player.setPager( new Pager( helpfile ) );
+				player.setPager( new Pager( Arrays.copyOfRange(helpfile, 1, helpfile.length) ) );
 				player.setStatus("VIEW");
 				
 				parent.op_pager("view", client);
 			}
 			else {
-				for (final String line : helpfile) {
+				for (final String line : Arrays.copyOfRange(helpfile, 1, helpfile.length) ) {
 					client.write(check(line) + "\r\n");
 				}
 			}

@@ -11,6 +11,7 @@ import mud.utils.Utils;
 import mud.objects.Item;
 import mud.objects.Player;
 import mud.objects.Room;
+import mud.objects.Room.Terrain;
 
 /*
  * Copyright (c) 2012 Jeremy N. Harton
@@ -51,13 +52,30 @@ public class DropCommand extends Command {
 			{
 				debug(item.getName() + " true");
 				// move object from player inventory to floor
-				item.setLocation(room.getDBRef());
-				room.addItem(item);
 				inventory.remove(item);
-				// check for silent flag to see if object's dbref name should be shown as well?
-				// return message telling the player that they dropped the object
-				send("You dropped " + parent.colors(item.getName(), "yellow") + " on the floor.", client);
-				// return message telling others that the player dropped the item?
+				
+				if( room.getTerrain() == Terrain.SKY ) {
+					int id = Utils.toInt( (String) room.getProperty("dropto"), -1 );
+					Room room1 = parent.getRoom( id );
+					
+					if( room1 != null ) {
+						item.setLocation(room.getDBRef());
+						room1.addItem(item);
+						
+						send("You drop " + parent.colors(item.getName(), "yellow") + " and it falls toward the ground...", client);
+					}
+					else {
+						item.setLocation( -1 );
+					}
+				}
+				else {
+					item.setLocation(room.getDBRef());
+					room.addItem(item);
+					// check for silent flag to see if object's dbref name should be shown as well?
+					// return message telling the player that they dropped the object
+					send("You dropped " + parent.colors(item.getName(), "yellow") + " on the floor.", client);
+					// return message telling others that the player dropped the item?
+				}
 				break;
 			}
 		}

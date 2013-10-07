@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
+import mud.utils.Point;
 import mud.utils.Utils;
 
 /*
@@ -143,7 +144,7 @@ public class ProgramInterpreter {
 					List<Point> ptList = Utils.toPoints(ca[1]);
 
 					if( ptList != null ) {
-						return ptList + "; distance is " + MUDServer.distance(ptList.get(0), ptList.get(1));
+						return ptList + "; distance is " + Utils.distance(ptList.get(0), ptList.get(1));
 					}
 					else { return "PGM: Error!"; }
 				}

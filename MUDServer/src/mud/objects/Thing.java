@@ -62,6 +62,11 @@ public class Thing extends MUDObject {
 		this.flags.add(ObjectFlag.THING);
 	}
 	
+	public Thing(String name, String desc) {
+		this(name);
+		this.desc = desc;
+	}
+	
 	public Thing(boolean isContainer) {
 		if( isContainer ) {
 			this.contents = new ArrayList<Item>();

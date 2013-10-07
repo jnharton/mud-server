@@ -21,7 +21,6 @@ import mud.Coins;
 import mud.Editor;
 import mud.MUDObject;
 import mud.PClass;
-import mud.Point;
 import mud.Race;
 import mud.TypeFlag;
 import mud.Race.Subraces;
@@ -34,6 +33,7 @@ import mud.SlotType;
 import mud.MUDServer.PlayerMode;
 
 import mud.interfaces.Equippable;
+import mud.interfaces.Wearable;
 import mud.magic.Spell;
 import mud.magic.SpellBook;
 import mud.objects.items.Armor;
@@ -49,6 +49,7 @@ import mud.utils.EditList;
 import mud.utils.Landmark;
 import mud.utils.MailBox;
 import mud.utils.Pager;
+import mud.utils.Point;
 import mud.utils.cgData;
 import mud.utils.Utils;
 import mud.utils.edData;
@@ -200,7 +201,7 @@ public class Player extends MUDObject
 	protected LinkedList<Spell> spellQueue = null; // spell queue [null if not a spellcaster]
 	protected Spell lastSpell = null;              // last spell cast [null if not a spellcaster]
 
-	private State state = State.ALIVE;    // character's "state of health" (ALIVE, INCAPACITATED, DEAD)
+	private State state = State.ALIVE;             // character's "state of health" (ALIVE, INCAPACITATED, DEAD)
 
 	protected LinkedHashMap<Abilities, Integer> stats;             // Player Statistics (D&D, MUD)
 	protected LinkedHashMap<Skill, Integer> skills;                // Player Skills (D&D, MUD)
@@ -215,16 +216,21 @@ public class Player extends MUDObject
 	protected Point destination;
 
 	// leveling up
-	private boolean levelup = false;  // is this player ready to "level up" (true=yes,false=no)
+	private boolean levelup = false; // is this player ready to "level up" (true=yes,false=no)
 	private int featPts;             // points available for selecting new feats (unused)
 	private int skillPts;            // points available for increasing skills (unused)
-	//*in some ways i'd rather not assign skill points for leveling up, but i also don't like classless system
-	//*i'm thinking that feats make sense at a level, but gaining skills ought to be by what you use the most (hence, 'acquiring' the skill)
+	
+	//*in some ways i'd rather not assign skill points for leveling up, but i also don't
+	// really like classless systems
+	//*i'm thinking that feats make sense at a level, but gaining skills ought to be by what 
+	// you use the most (hence, 'acquiring' the skill)
 
 	// BitSet to record what item creation feats this player has:
 	// Brew Potion (0) Craft Magic Arms And Armor (1) Craft Rod  (2) Craft Staff  (3)
 	// Craft Wand  (4) Craft Wondrous Item        (5) Forge Ring (6) Scribe Scroll(7)
 	private BitSet item_creation_feats = new BitSet(8);
+	
+	//
 
 	// temporary states
 	private int[] statMod = new int[6];   // temporary modifications to stats (i.e. stat drains, etc)
@@ -832,6 +838,8 @@ public class Player extends MUDObject
 	}
 
 	public void setEditor(Editor editor) {
+		//if( editor != Editor.NONE ) this.status = "EDT";
+		if( editor != Editor.NONE ) setStatus("EDT");
 		this.editor = editor;
 	}
 
@@ -1110,6 +1118,20 @@ public class Player extends MUDObject
 
 	public boolean isNew() {
 		return isNew;
+	}
+	
+	public void wear(Wearable<Item> w) {
+		List<Slot> sList = new LinkedList<Slot>();
+		
+		for(String s : this.slots.keySet()) {
+			if( w.getType().toLowerCase().equals( s ) ) {
+				sList.add( this.slots.get(s) );
+			}
+		}
+		
+		for(Slot slot : sList) {
+			//if( slot.isEmpty() ) slot.insert( w );
+		}
 	}
 
 	/**

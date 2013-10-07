@@ -131,11 +131,13 @@ public class Container extends Item implements Storage<Item>, Equippable<Item>, 
 		this.contents.add(item);
 		this.weight += item.getWeight();
 	}
-
+	
 	@Override
-	public void wear(String arg, Client client) {
+	public String getType() {
+		// TODO Auto-generated method stub
+		return null;
 	}
-
+	
 	@Override
 	public void equip() {
 		// TODO Auto-generated method stub

@@ -331,8 +331,6 @@ public class ObjectLoader {
                     }
 
                     else if ( it == ItemType.ARROW ) { // Arrow
-                        int stackID = Integer.parseInt(attr[7]);
-
                         Arrow arrow = new Arrow(oDBRef, oName, oDesc, oLocation);
                         arrow.setItemType(it);
 

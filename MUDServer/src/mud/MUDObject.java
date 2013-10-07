@@ -23,6 +23,7 @@ import java.util.EnumSet;
 import java.util.List;
 
 import mud.objects.Player;
+import mud.utils.Point;
 
 /**
  * MUDObject Class

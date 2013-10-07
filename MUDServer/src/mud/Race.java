@@ -16,16 +16,26 @@ public class Race {
 	private int id;
 	private Integer[] statAdj;  // stats adjustments pertaining to a particular race
 	private boolean restricted; // is the race restricted (not available from normal selection)
+	private boolean canFly;     // is this race capable of flight
 	
 	public Race(String name, int id, boolean restricted) {
 		this(name, id, new Integer[] { 0, 0, 0, 0 , 0, 0 }, restricted);
 	}
+	
+	public Race(String name, int id, boolean restricted, boolean canFly) {
+		this(name, id, new Integer[] { 0, 0, 0, 0 , 0, 0 }, restricted, canFly);
+	}
 
 	public Race(String name, int id, Integer[] statAdj, boolean restricted) {
+		this(name, id, statAdj, restricted, false);
+	}
+	
+	public Race(String name, int id, Integer[] statAdj, boolean restricted, boolean canFly) {
 		this.name = name;
 		this.id = id;
 		this.statAdj = statAdj;
 		this.restricted = restricted;
+		this.canFly = canFly;
 	}
 	
 	public int getId() {
@@ -50,6 +60,10 @@ public class Race {
 
 	public boolean isRestricted() {
 		return this.restricted;
+	}
+	
+	public boolean canFly() {
+		return this.canFly;
 	}
 
 	public String toString() {

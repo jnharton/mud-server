@@ -12,6 +12,7 @@ import mud.TypeFlag;
 import mud.MUDObject;
 import mud.SlotType;
 import mud.magic.Spell;
+import mud.objects.items.Attribute;
 import mud.utils.Utils;
 
 /*
@@ -53,6 +54,7 @@ public class Item extends MUDObject {
 	protected int mod = 0;                // modifier - +0, +2, +3, +4, ... and so on
 	
 	protected BitSet attributes;          // item attributes: rusty, glowing, etc
+	protected Attribute a;                // conflicting implementation with the above?
 	
 	protected List<Spell> spells;         // spells the item has, which can be cast from it
 	
@@ -141,6 +143,14 @@ public class Item extends MUDObject {
 	
 	public void setMod(int newMod) {
 		this.mod = newMod;
+	}
+	
+	public void setAttribute(Attribute newAttribute) {
+		this.a = newAttribute;
+	}
+	
+	public Attribute getAttribute(Attribute newAttribute) {
+		return this.a;
 	}
 	
 	/**

@@ -25,6 +25,7 @@ import mud.objects.Item;
 import mud.objects.Player;
 import mud.objects.Room;
 import mud.objects.Thing;
+import mud.utils.Point;
 
 /**
  * A metadata structure defining a player house.

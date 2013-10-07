@@ -134,6 +134,12 @@ public class Armor extends Item implements Equippable<Armor>, Wearable<Armor>
 		return new Coins(armor_type.getCost());
 	}
 	
+	@Override
+	public String getType() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
 	public void equip() {
 	}
 
@@ -146,9 +152,6 @@ public class Armor extends Item implements Equippable<Armor>, Wearable<Armor>
 	
 	public ArrayList<String> look() {
 		return null;
-	}
-
-	public void wear(String arg, Client client) {
 	}
 	
 	@Override

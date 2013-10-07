@@ -9,10 +9,16 @@ import mud.ObjectFlag;
 
 import java.util.EnumSet;
 
-public class Arrow extends Item implements  Projectile<Arrow>, Stackable<Arrow> {
+public class Arrow extends Item implements Projectile<Arrow>, Stackable<Arrow> {
 	private Arrow a;
 
 	public Arrow() {
+		super(-1);
+		this.name = "Arrow";
+		this.desc = "";
+		this.location = -1;
+		this.flags = EnumSet.of(ObjectFlag.ITEM); 
+		this.item_type = ItemType.ARROW;
 	}
 
 	public Arrow(int dbref, String name, String desc, int location) {
@@ -45,13 +51,18 @@ public class Arrow extends Item implements  Projectile<Arrow>, Stackable<Arrow> 
 
 	@Override
 	public boolean stack(Arrow object) {
-		if (a == null) {
-			a = object;
-			return true;
+		if( this.getName().equals( object.getName() ) ) {
+			if (a == null) {
+				object.setLocation( this.getDBRef() );
+				a = object;
+				return true;
+			}
+			else {
+				return a.stack(object);
+			}
 		}
-		else {
-			return a.stack(object);
-		}
+		
+		return false;
 	}
 
 	@Override
@@ -90,14 +101,14 @@ public class Arrow extends Item implements  Projectile<Arrow>, Stackable<Arrow> 
 	@Override
 	public String toDB() {
 		String[] output = new String[8];
-		output[0] = this.getDBRef() + "";          // item database reference number
-		output[1] = this.getName();                // item name
-		output[2] = this.getFlagsAsString();                     // flags
-		output[3] = this.getDesc();                // item description
-		output[4] = this.getLocation() + "";       // item location
-		output[5] = this.item_type.ordinal() + ""; // item type
+		output[0] = this.getDBRef() + "";          // database reference number
+		output[1] = this.getName();                // name
+		output[2] = this.getFlagsAsString();       // flags
+		output[3] = this.getDesc();                // description
+		output[4] = this.getLocation() + "";       // location
+		output[5] = this.item_type.ordinal() + ""; // type
 		output[6] = this.stackSize() + "";         // how many arrows are stacked together
-		output[7] = "*";                           // blank
+		output[7] = "*";                          // 
 		
 		/*
 		 * recording stacks of these is messy

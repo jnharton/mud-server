@@ -90,8 +90,10 @@ public class Clothing extends Item implements Equippable<Clothing>, Usable<Cloth
 		return null;
 	}
 	
-	public void wear(String arg, Client client) {
+	@Override
+	public String getType() {
 		// TODO Auto-generated method stub
+		return null;
 	}
 	
 	public Effect getEffect() {

@@ -40,12 +40,12 @@ import mud.weather.Weather;
  */
 public class Room extends MUDObject implements EventSource
 {
-	private enum Terrain { FOREST, MARSH, HILLS, MOUNTAIN, DESERT, PLAINS, AQUATIC };
-
-	private int parent;                                       // the room inside of which this room is located
+	public enum Terrain { NONE, FOREST, MARSH, HILLS, MOUNTAIN, DESERT, PLAINS, AQUATIC, SKY };
+	
+	// NOTE: for room, location and "parent" are the same
 	
 	private RoomType roomType = RoomType.NONE;                // the type of room (I = Inside, O = Outside, P = Protected, N = None)
-	private Terrain terrain;                                  // terrain type of the room (affects movement speed?)
+	private Terrain terrain = Terrain.NONE;                   // terrain type of the room (affects movement speed?)
 	private Weather weather;                                  // the weather in this room
 	//private Atmosphere atmosphere = new Atmosphere();         // the atmosphere of the room (weather related)
 	
@@ -100,13 +100,12 @@ public class Room extends MUDObject implements EventSource
 	public Room(Room toCopy)
 	{
 		super(toCopy.getDBRef());
-		//this.dbref = toCopy.getDBRef();   // Set the dbref (database reference)
-		this.name = toCopy.getName();       // Set the name
-		this.desc = toCopy.getDesc();       // Set the description to the default
-		this.parent = toCopy.getParent();   // Set the parent room
-		this.flags = toCopy.getFlags();     // Set the flags
-		this.locks = "";                    // Set the locks
-		this.location = toCopy.getParent(); // Set the location
+		//this.dbref = toCopy.getDBRef();     // Set the dbref (database reference)
+		this.name = toCopy.getName();         // Set the name
+		this.desc = toCopy.getDesc();         // Set the description to the default
+		this.flags = toCopy.getFlags();       // Set the flags
+		this.locks = "";                      // Set the locks
+		this.location = toCopy.getLocation(); // Set the location
 		
 		this.tiles = toCopy.getTiles();
 		
@@ -114,25 +113,19 @@ public class Room extends MUDObject implements EventSource
 	}
 
 	// misc note: parent == location
-	public Room(int tempDBREF, String tempName, final EnumSet<ObjectFlag> tempFlags, String tempDesc, int tempParent)
+	public Room(int tempDBREF, String tempName, final EnumSet<ObjectFlag> tempFlags, String tempDesc, int tempLocation)
 	{
 		super(tempDBREF);
 		//this.dbref = tempDBREF;                                    // Set the dbref (database reference)
 		this.name = tempName;                                        // Set the name
 		this.desc = tempDesc;                                        // Set the description
-		this.parent = tempParent;                                    // Set the parent room
 		this.flags = tempFlags;                                      // Set room flags
 		this.locks = "";                                             // Set the locks
-		this.location = tempParent;                                  // Set the location
+		this.location = tempLocation;                                // Set the location
 		
 		this.tiles = new BitSet[x][y];
 		
 		this.listeners = new ArrayList<Player>();
-	}
-	
-	@Override
-	public int getLocation() {
-		return this.parent;
 	}
 	
 	/**
@@ -304,6 +297,10 @@ public class Room extends MUDObject implements EventSource
 	
 	public List<Trigger> getTriggers(Triggers triggerType) {
 		return this.triggers.get(triggerType);
+	}
+	
+	public Terrain getTerrain() {
+		return this.terrain;
 	}
 	
 	/**

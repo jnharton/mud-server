@@ -57,12 +57,12 @@ public class Chest extends Thing implements Lockable, Storage<Item> {
 
 	@Override
 	public void lock() {
-		isLocked = true;
+		if( key == null ) isLocked = true;
 	}
 	
 	@Override
 	public void unlock() {
-		isLocked = false;
+		if( key == null ) isLocked = false;
 	}
 
 	@Override

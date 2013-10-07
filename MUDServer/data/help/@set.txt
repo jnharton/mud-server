@@ -1,0 +1,12 @@
+@set
+@SET
+
+Sets properties on game objects. All properties are strings.
+
+Syntax: '@set <object>=<property name>:<property value>'
+
+<object> can be an object name or the strings 'me' or 'here which
+will use the player and the room the player is located in as
+the object.
+
+Last Updated: October 10, 2013

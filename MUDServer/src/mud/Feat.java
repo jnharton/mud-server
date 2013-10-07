@@ -1,5 +1,8 @@
 package mud;
 
+import java.util.Arrays;
+import java.util.List;
+
 /*
  * Copyright (c) 2012 Jeremy N. Harton
  * 
@@ -11,27 +14,31 @@ package mud;
  */
 
 public class Feat {
-	public static final Feat ap_chainmail = new Feat("proficiency armor chain_mail");
+	public static final Feat ap_light = new Feat("proficiency armor light");
+	public static final Feat ap_medium = new Feat("proficiency armor medium");
+	public static final Feat ap_heavy = new Feat("proficiency armor heavy", new Feat[] { ap_light, ap_medium });
 	
-	String data;
+	String name;       // name of the feat ex. 'ARMOR PROFICIENCY: chain_mail'
+	List<Feat> prereq; //
 	
-	String type;    // feat type ex. 'proficiency' which would a feat granting the proficient use of certain items
-	String subtype; // a sub category of type
-	String other;   // information about the feat ex. 'chain_mail' which is a kind of armor, possibly an AP feat
-	String name;    // name of the feat ex. 'ARMOR PROFICIENCY: chain_mail'
+	/*
+	 * prequisite type:
+	 * - ability scores
+	 * - class levels
+	 * - levels
+	 * - skill ranks
+	 * - feats
+	 */
 	
 	// types - proficiency, skill boost
 	// ex. proficiency armor chain_mail
-	Feat(String featString) {
-		this.data = featString;
-		
-		String[] temp = this.data.split(" ");
-		
-		this.type = temp[0];
-		this.subtype = temp[1];
-		this.other = temp[2];
-		
-		this.name = temp[1].toUpperCase() + " " + temp[0].toUpperCase() + ": " + temp[2];
+	Feat(String featName) {
+		this.name = featName;
 	}
-
+	
+	Feat(String featName, Feat...requiredFeats) {
+		this(featName);
+		
+		prereq = Arrays.asList( requiredFeats );
+	}
 }

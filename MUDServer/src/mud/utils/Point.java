@@ -1,4 +1,4 @@
-package mud;
+package mud.utils;
 
 /*
  * Copyright (c) 2012 Jeremy N. Harton
