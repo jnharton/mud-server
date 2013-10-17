@@ -101,9 +101,11 @@ public class CastCommand extends Command {
 					if(target instanceof Player) {
 						System.out.println("Target is Player.");
 						parent.applyEffect((Player) target, e);            // apply the effect to the target
+						
 						SpellTimer sTimer = new SpellTimer(spell, 60);     // spell timer with default (60 sec) cooldown
 						parent.getSpellTimers(player).add(sTimer);
 						parent.timer.scheduleAtFixedRate(sTimer, 0, 1000);
+						
 						EffectTimer etimer = new EffectTimer(e, 30);
 						parent.getEffectTimers(player).add(etimer);
 						parent.timer.scheduleAtFixedRate(etimer, 0, 1000); // create countdown timer

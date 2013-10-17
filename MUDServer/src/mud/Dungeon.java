@@ -21,7 +21,6 @@ import java.util.EnumSet;
 
 import mud.interfaces.Instance;
 import mud.objects.Room;
-import mud.utils.Utils;
 
 /**
  * Class for an Instanced Dungeon

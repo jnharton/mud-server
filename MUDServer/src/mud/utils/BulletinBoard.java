@@ -107,6 +107,12 @@ public class BulletinBoard {
 		int s = 0;
 		int t = 0;
 		int start = rStart;
+		
+		/*for(int i = 0; i < entries.size(); i++) {
+			final BBEntry entry = entries.get(i);
+			
+			entries.set(i, new BBEntry( entry.getId(), entry.getAuthor(), "", entry.getMessage()));
+		}*/
 
 		for (final BBEntry entry : this.entries) {
 			if (t == 0 && entry.getId() == start + 1) {
@@ -136,5 +142,8 @@ public class BulletinBoard {
 	public void ensureCapacity(int capacity) {
 		this.entries.ensureCapacity(capacity);
 	}
-
+	
+	public int getNumMessages() {
+		return this.entries.size();
+	}
 }

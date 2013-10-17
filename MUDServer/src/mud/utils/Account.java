@@ -72,13 +72,14 @@ public class Account implements Serializable {
 	 * not usable until unarchived and restored to active status.
 	 */
 	public static enum Status { ACTIVE, INACTIVE, SUSPENDED, FROZEN, LOCKED, ARCHIVED };
+	
 	private static Calendar calendar;
-
+	
 	// passive properties (might be modified, but not frequently)
-	public Date created;                  // creation date
+	public final Date created;            // creation date
 	public Date modified;                 // modification date (when any of these passive properties were last modified)
 	public Date archived;                 // archival date (null, unless account was archived; if unarchived, then when it was last archived)
-	private int id;                       // id
+	private final int id;                 // id
 	private Status status;                // status
 	private String username;              // username
 	private String password;              // password

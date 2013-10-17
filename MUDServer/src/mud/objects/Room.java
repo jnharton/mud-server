@@ -47,7 +47,7 @@ public class Room extends MUDObject implements EventSource
 	private RoomType roomType = RoomType.NONE;                // the type of room (I = Inside, O = Outside, P = Protected, N = None)
 	private Terrain terrain = Terrain.NONE;                   // terrain type of the room (affects movement speed?)
 	private Weather weather;                                  // the weather in this room
-	//private Atmosphere atmosphere = new Atmosphere();         // the atmosphere of the room (weather related)
+	//private Atmosphere atmosphere = new Atmosphere();       // the atmosphere of the room (weather related)
 	
 	private ArrayList<Exit> exits = new ArrayList<Exit>();    // the exits leading away from the room
 	private String exitNames;                                 // formatted string containing the usable exit names

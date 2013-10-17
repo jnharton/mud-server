@@ -144,7 +144,8 @@ public class ProgramInterpreter {
 					List<Point> ptList = Utils.toPoints(ca[1]);
 
 					if( ptList != null ) {
-						return ptList + "; distance is " + Utils.distance(ptList.get(0), ptList.get(1));
+						return String.format("%.1f", Utils.distance(ptList.get(0), ptList.get(1)));
+						//return ptList + "; distance is " + String.format("%.1f", Utils.distance(ptList.get(0), ptList.get(1)));
 					}
 					else { return "PGM: Error!"; }
 				}
@@ -220,6 +221,6 @@ public class ProgramInterpreter {
 		ProgramInterpreter p = new ProgramInterpreter(null);
 		p.parse("{distance:(0,0),(1,1)}");
 		p.parse("{rainbow:output this string in rainbow colors}");
-		//System.out.println(p.interpret("{distance:(0,0),(2,3)}"));
+		System.out.println(p.interpret("{distance:(0,0),(2,3)}"));
 	}
 }

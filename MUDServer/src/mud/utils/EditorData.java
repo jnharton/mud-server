@@ -20,10 +20,10 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 import java.util.HashMap;
 import java.util.LinkedList;
 
-public class edData {
+public class EditorData {
 	private HashMap<String, Object> objects;
 	
-	public edData() {
+	public EditorData() {
 		this.objects = new HashMap<String, Object>(1, 0.75f);
 	}
 	 

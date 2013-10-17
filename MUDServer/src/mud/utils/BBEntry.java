@@ -28,9 +28,6 @@ public class BBEntry {
 	private String author;
 	private String subject;
 	private String message;
-
-	public BBEntry() {
-	}
 	
 	public BBEntry(Integer id, String tempSubject, String tempMessage) {
 		this(id, "", tempSubject, tempMessage);

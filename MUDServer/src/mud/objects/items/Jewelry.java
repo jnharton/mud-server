@@ -30,7 +30,7 @@ public class Jewelry extends Item implements Equippable<Jewelry>, Usable<Jewelry
 
 	public Jewelry() {
 	}
-	
+
 	// ex. new Jewelry(ItemType.RING, "Ring of Invisibility", "A medium-sized gold ring with a smooth, unmarked surface.", new Effect("invisibility"))
 	public Jewelry(final ItemType jType, final String jName, final String jDesc, final Effect jEffect) {
 		super(-1);
@@ -38,13 +38,13 @@ public class Jewelry extends Item implements Equippable<Jewelry>, Usable<Jewelry
 		this.desc = jDesc;
 		this.flags = EnumSet.of(ObjectFlag.ITEM);
 		this.location = 8;
-		
+
 		this.equippable = true;
-		
+
 		this.effect = jEffect;
 		this.effect.setPermanent(true);
 	}
-	
+
 	public Jewelry(final ItemType jType, final String jName, final String jDesc, final String jEffectString) {
 		this(jType, jName, jDesc, new Effect(jEffectString));
 	}
@@ -63,13 +63,13 @@ public class Jewelry extends Item implements Equippable<Jewelry>, Usable<Jewelry
 		this.type = jType;               // the actual type of jewelry
 		this.weight = jWeight;           // the weight of the jewelry
 	}
-	
+
 	@Override
 	public String getType() {
 		// TODO Auto-generated method stub
 		return null;
 	}
-	
+
 	@Override
 	public void equip() {
 		// TODO Auto-generated method stub
@@ -99,11 +99,11 @@ public class Jewelry extends Item implements Equippable<Jewelry>, Usable<Jewelry
 	public String getName() {
 		return this.name;
 	}
-	
+
 	public ArrayList<String> look() {
 		return null;
 	}
-	
+
 	@Override
 	public Spell getSpell() {
 		// TODO Auto-generated method stub
@@ -124,14 +124,14 @@ public class Jewelry extends Item implements Equippable<Jewelry>, Usable<Jewelry
 
 	public String toDB() {
 		String[] output = new String[8];
-		output[0] = this.getDBRef() + "";          // jewelry database reference number
-		output[1] = this.getName();                // jewelry name
-		output[2] = this.getFlagsAsString();       // jewelry flags
-		output[3] = this.getDesc();                // jewelry description
-		output[4] = this.getLocation() + "";       // jewelry location
-		output[5] = this.item_type.ordinal() + ""; // item type
-		output[6] = "*";                           // nothing (placeholder)
-		output[7] = "*";                           // nothing (placeholder)
+		output[0] = this.getDBRef() + "";             // jewelry database reference number
+		output[1] = this.getName();                   // jewelry name
+		output[2] = this.getFlagsAsString();          // jewelry flags
+		output[3] = this.getDesc();                   // jewelry description
+		output[4] = this.getLocation() + "";          // jewelry location
+		output[5] = this.item_type.ordinal() + "";    // item type
+		output[6] = "*";                              // nothing (placeholder)
+		output[7] = "*";                              // nothing (placeholder)
 		return Utils.join(output, "#");
 	}
 

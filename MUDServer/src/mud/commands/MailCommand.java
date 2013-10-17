@@ -7,7 +7,6 @@ import mud.MUDServer;
 import mud.objects.Player;
 import mud.utils.EditList;
 import mud.utils.Mail;
-import mud.utils.MailBox;
 import mud.utils.Utils;
 import mud.net.Client;
 

@@ -40,6 +40,10 @@ public class WeatherState
 		this.name = name;
 	}
 	
+	public String getName() {
+		return this.name;
+	}
+	
 	public double getTransDownProb() {
 		return this.TransitionDownProbability;
 	}

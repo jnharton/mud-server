@@ -26,7 +26,6 @@ import mud.quest.Quest;
 import mud.quest.Task;
 import mud.quest.TaskType;
 
-import mud.utils.MailBox;
 import mud.utils.Message;
 import mud.utils.Utils;
 

@@ -52,7 +52,7 @@ import mud.utils.Pager;
 import mud.utils.Point;
 import mud.utils.cgData;
 import mud.utils.Utils;
-import mud.utils.edData;
+import mud.utils.EditorData;
 
 /*
  * Copyright (c) 2012 Jeremy N. Harton
@@ -83,18 +83,6 @@ public class Player extends MUDObject
 
 	// levels: 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
 	private static int[] levelXP = { 0, 1000, 3000, 6000, 10000, 15000, 21000, 28000, 36000, 45000, 55000, 66000 };
-
-	/*
-	 * STATUS
-	 * Active Accounts - normal state
-	 * Inactive Accounts - haven't been played recently, flagged as inactive
-	 * Suspended Accounts - temporarily banned or suspended for the time being for behavioral infractions
-	 * Frozen Accounts - permanently banned and not yet purged (PURGE)
-	 * Locked Accounts - accounts that are locked out and cannot be logged into (for instance, in the case of a hacked account)
-	 * Archived Accounts - accounts archived after 3-6 months of being inactive (inactive timer reset whenever a successful login occurs),
-	 * not usable until unarchived and restored to active status.
-	 */
-	public static enum Status { ACTIVE, INACTIVE, SUSPENDED, FROZEN, LOCKED, ARCHIVED };
 	
 	/**
 	 * Player State
@@ -102,6 +90,8 @@ public class Player extends MUDObject
 	 * @author Jeremy
 	 */
 	public static enum State { ALIVE, INCAPACITATED, DEAD };
+	
+	public static enum Status { ACTIVE, BANNED };
 
 	/**
 	 * private variable are those that are intended only for the player class
@@ -117,8 +107,8 @@ public class Player extends MUDObject
 	protected String cName = "";                      // name that show up for players who have initiated greeting, etc
 	protected String status;                          // The player's status (MU)
 	protected String title;                           // The player's title (for where, MU)
+	private Status pstatus;                           // whether or not the player has been banned
 	protected ArrayList<String> names;                // names of other players that the player actually knows
-	private Status pstatus = Status.ACTIVE;
 
 	final private MailBox mailbox = new MailBox();    // player mailbox
 
@@ -178,7 +168,7 @@ public class Player extends MUDObject
 	}
 
 	// Miscellaneous Editor
-	private edData edd = null;
+	private EditorData edd = null;
 
 	// Game Stuff (most set 'protected' so that an npc can basically have player characteristics
 	protected MUDObject target;                    // Target -- player/npc that will be used for generic interaction
@@ -229,8 +219,6 @@ public class Player extends MUDObject
 	// Brew Potion (0) Craft Magic Arms And Armor (1) Craft Rod  (2) Craft Staff  (3)
 	// Craft Wand  (4) Craft Wondrous Item        (5) Forge Ring (6) Scribe Scroll(7)
 	private BitSet item_creation_feats = new BitSet(8);
-	
-	//
 
 	// temporary states
 	private int[] statMod = new int[6];   // temporary modifications to stats (i.e. stat drains, etc)
@@ -364,6 +352,7 @@ public class Player extends MUDObject
 		this.config.put("complex-inventory", false);    // use/don't use complex inventory display (default: false)
 		this.config.put("pager_enabled", false);        // enabled/disable the help pager view (default: false)
 		this.config.put("show-weather", true);          // show weather information in room descriptions (default: true)
+		this.config.put("tagged-chat", false);          // "tag" the beginning chat lines with CHAT for the purpose of triggers, etc (default: false)
 
 		// instantiate name reference table
 		this.nameRef = new HashMap<String, Integer>(10, 0.75f); // start out assuming 10 name references
@@ -495,6 +484,7 @@ public class Player extends MUDObject
 		this.config.put("complex-inventory", false);    // use/don't use complex inventory display (default: false)
 		this.config.put("pager_enabled", false);        // enabled/disable the help pager view (default: false)
 		this.config.put("show-weather", true);          // show weather information in room descriptions (default: true)
+		this.config.put("tagged-chat", false);          // "tag" the beginning chat lines with CHAT for the purpose of triggers, etc (default: false)
 
 		// instantiate name reference table
 		this.nameRef = new HashMap<String, Integer>(10, 0.75f); // start out assuming 10 name references
@@ -642,13 +632,12 @@ public class Player extends MUDObject
 
 	// set the player's status
 	public void setStatus(String arg) { this.status = arg; }
-
-
+	
 	public Status getPStatus() {
 		return this.pstatus;
 	}
-
-	public void setPStatus( Status newStatus ) {
+	
+	public void setPStatus(Status newStatus) {
 		this.pstatus = newStatus;
 	}
 
@@ -843,11 +832,11 @@ public class Player extends MUDObject
 		this.editor = editor;
 	}
 
-	public edData getEditorData() {
+	public EditorData getEditorData() {
 		return this.edd;
 	}
 
-	public void setEditorData(edData newEdD) {
+	public void setEditorData(EditorData newEdD) {
 		this.edd = newEdD;
 	}
 
@@ -1157,7 +1146,8 @@ public class Player extends MUDObject
 		output[9] = race.getId() + "";                    // race
 		output[10] = pclass.getId() + "";                 // class
 		output[11] = status;                              // status
-		output[12] = pstatus.ordinal() + "";              // ALIVE/INCAPACITATED/DEAD
+		output[12] = state.ordinal() + "";                // ALIVE/INCAPACITATED/DEAD
+		output[13] = pstatus.ordinal() + "";              // ACTIVE/BANNED
 		return Utils.join(output, "#");
 	}
 
