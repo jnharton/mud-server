@@ -5,12 +5,11 @@ import java.util.Arrays;
 public class TableEntry implements Comparable<TableEntry>{
 	public Integer id;
 	int cols;
-	public Object[] columns;
+	public Object[] data;
 	
 	public TableEntry(Integer nId, Object...objects) {
 		this.id = nId;
-		this.cols = objects.length;
-		this.columns = objects;
+		this.data = objects;
 	}
 
 	@Override
@@ -28,6 +27,6 @@ public class TableEntry implements Comparable<TableEntry>{
 	
 	@Override
 	public String toString() {
-		return this.id + " " + Arrays.asList(this.columns);
+		return this.id + " " + Arrays.asList(this.data);
 	}
 }

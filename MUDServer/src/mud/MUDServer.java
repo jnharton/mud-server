@@ -353,7 +353,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			"@backdb",
 			"@flag", "@flush",
 			"@loaddb",
-			"@sethour", "@setminute", "@setminute", "@setmode", "@start",
+			"@setmode", "@start",
 			"@teleport"
 	};
 
@@ -361,7 +361,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			"@access",
 			"@broadcast",
 			"@load",
-			"@shutdown",
+			"@sethour", "@setminute", "@shutdown",
 			"@unload"
 	};
 
@@ -967,16 +967,18 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		// ex. prompt, "< %mode %h/%H %m/%M %state >"
 		// ex. prompt_enabled, true
 
-		/* Quest Testing -- Not DB Safe */
-		/*Quest quest = new Quest("Help the Innkeeper", "The inn's basement is full of rats. Help the innkeeper out by killing a few.",
+		/* Quest Testing -- DB Safe */
+		Quest quest = new Quest("Help the Innkeeper", "The inn's basement is full of rats. Help the innkeeper out by killing a few.",
 				new Zone("Red Dragon Inn", null), new Task("Kill 5 rats", TaskType.KILL, 5) );
 
-		NPC npc = getNPC("Iridan");        //
-		System.out.println(npc.getName()); //
-		npc.addQuest( quest );             // assign the quest to this NPC
-
+		NPC npc = getNPC("Iridan");
+		
+		if( npc != null ) {
+			System.out.println(npc.getName()); //
+			npc.addQuest( quest );             // assign the quest to this NPC
+		}
+		
 		quests.add(quest); // add to main quest table
-		*/
 
 		/* Bank Test -- DB Safe */
 		Bank bank = new Bank("test");
@@ -1541,7 +1543,32 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 						godCmd = true;
 						cmd_shutdown(arg, client);
 					}
+					else if ( cmd.equals("@sethour") ) {
+						godCmd = true;
+						try {
+							int hour = Integer.parseInt(arg);
 
+							if (hour >= 0 && hour <= 23) {
+								game_time.setHours(hour);
+
+								send("Game> Hour set to " + hour, client);
+							}
+							else {
+								send("Game> Invalid hour", client);
+							}
+
+							send("Game> Hour set to " + hour, client);
+						}
+						catch(NumberFormatException nfe) {
+							nfe.printStackTrace();
+							send("Game> Invalid hour", client);
+						}
+					}
+					else if ( cmd.equals("@setminute") ) {
+						godCmd = true;
+						cmd_setminute(arg, client);
+					}
+					
 					if (godCmd) {
 						return;
 					}
@@ -1996,29 +2023,6 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 					else if ( cmd.equals("@recycle") || (aliasExists && alias.equals("@recycle") ) )
 					{
 						cmd_recycle(arg, client);
-					}
-					else if ( cmd.equals("@sethour") ) {
-						try {
-							int hour = Integer.parseInt(arg);
-
-							if (hour >= 0 && hour <= 23) {
-								game_time.setHours(hour);
-
-								send("Game> Hour set to " + hour, client);
-							}
-							else {
-								send("Game> Invalid hour", client);
-							}
-
-							send("Game> Hour set to " + hour, client);
-						}
-						catch(NumberFormatException nfe) {
-							nfe.printStackTrace();
-							send("Game> Invalid hour", client);
-						}
-					}
-					else if ( cmd.equals("@setminute") ) {
-						cmd_setminute(arg, client);
 					}
 					else if ( cmd.equals("@setmode") || ( aliasExists && alias.equals("@setmode") ) )
 					{
@@ -2729,7 +2733,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 				for (final Quest quest : quests) {
 					if (!quest.isComplete()) {
-						client.write( quests.indexOf(quest) + ") " + quest.toDisplay());
+						client.write( quests.indexOf(quest) + ") " + quest.toDisplay(((ansi == 1) || (xterm == 1))));
 					}
 					client.write("" + Colors.WHITE);
 				}
@@ -3896,6 +3900,18 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 					send(cn + " " + "---.---.---.--- null", client);
 				}
 				cn++;
+			}
+		}
+		else if ( param.equals("colors") ) {
+			if(xterm == 1) {
+				char c = 'A';
+
+				for(int i = 0; i < 255; i++) {
+					client.write("\033[38;5;" + i + "m" + c);
+					if( i % 36 == 0 ) client.writeln("");
+				}
+
+				client.writeln("");
 			}
 		}
 		else if ( param.equals("creatures") ) {
@@ -5099,23 +5115,6 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 			if (!arg.equals("")) {
 
-				// get properties (I think we should have /visuals "folder" for visual properties
-				// i.e. 'ceiling', 'floor', 'wall(s)'
-				Object o = room.getProps().get(arg);
-
-				if (o != null) {
-					if (o instanceof String) {
-						String result = (String) o;
-						//send("You look at the " + arg, client);
-						//send(result, client);
-						send("You look at the " + arg + ": " + result , client);
-						return;
-					}
-				}
-				/*else {
-					send("You look around, but don't see that.", client);
-				}*/
-
 				int spec = 0;
 
 				if ( arg.contains(".") ) {
@@ -5166,7 +5165,27 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		}
 	}
 
-	private void cmd_lookat(final String arg, final Client client) {}
+	private void cmd_lookat(final String arg, final Client client) {
+		final Room room = getRoom(client);
+		
+		if (!arg.equals("")) {
+
+			// get properties (I think we should have /visuals "folder" for visual properties
+			// i.e. 'ceiling', 'floor', 'wall(s)'
+			Object o = room.getProperty("/visuals/" + arg);
+
+			if (o != null && o instanceof String) {
+				String result = (String) o;
+				//send("You look at the " + arg, client);
+				//send(result, client);
+				send("You look at the " + arg + ": " + result , client);
+				return;
+			}
+			else {
+				send("You look around, but don't see that.", client);
+			}
+		}
+	}
 
 	/**
 	 * Command: lsedit
@@ -6691,7 +6710,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			// add room and it's constituent parts to the editor data
 			newEDD.addObject("room", room);
 			newEDD.addObject("name", room.getName());
-			newEDD.addObject("flags", room.getFlags());
+			newEDD.addObject("flags", EnumSet.copyOf( room.getFlags() ));
 			newEDD.addObject("desc", room.getDesc());
 			newEDD.addObject("location", room.getLocation());
 			newEDD.addObject("x", room.x);
@@ -6753,11 +6772,19 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	}
 
 	private void cmd_setmode(final String arg, final Client client) {
-		final char m = arg == null ? '?' : arg.toLowerCase().charAt(0);
-		if (!GameMode.isValidString(m)) {
-			send("Invalid GameMode, using Normal instead.", client);
+		if( arg == null ) {
+			mode = GameMode.NORMAL;
 		}
-		mode = GameMode.fromString(m);
+		else {
+			final char m = arg.toLowerCase().charAt(0);
+			
+			if (!GameMode.isValidString(m)) {
+				mode = GameMode.NORMAL;
+				send("Invalid GameMode, using Normal instead.", client);
+			}
+			else mode = GameMode.fromChar(m);
+		}
+		
 		send("Game> setting GameMode to -" + mode + "-", client);
 	}
 
@@ -10065,10 +10092,9 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 				final int channel_perm = Utils.toInt(channelData[1], Constants.USER);
 
 				chan.makeChannel(channelName);
+				chan.getChatChannel(channelName).setRestrict(channel_perm);
 
 				debug("Channel Added: " + channelName);
-
-				chan.getChatChannel(channelName).setRestrict(channel_perm);
 			}
 
 			br.close();
@@ -13099,8 +13125,8 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 		List<String> fileList = new ArrayList<String>();
 
-		//System.out.println("Help File Index");
-		//System.out.println("----------------------------------------");
+		System.out.println("Help File Index");
+		System.out.println("----------------------------------------");
 
 		for( File file : Arrays.asList( new File(path).listFiles() ) ) {
 			if( file.isFile() ) {

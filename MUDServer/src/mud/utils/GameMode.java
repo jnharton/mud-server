@@ -18,14 +18,14 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
 public enum GameMode {
-	NORMAL("Normal"),
-	DEVELOPMENT("Development"),
-	WIZARD("Wizard"),
-	MAINTENANCE("Maintenance");
+	NORMAL("Normal"),           // normal      - normal gameplay
+	DEVELOPMENT("Development"), // development - no new player creation at login screen
+	WIZARD("Wizard"),           // wizard      - no logins by anyone with less than WIZARD permissions
+	MAINTENANCE("Maintenance"); // maintenance - no logins by anyone with less than GOD permissions
 
 	final private String name;
 
-	GameMode(String name) {
+	private GameMode(String name) {
 		this.name = name;
 	}
 
@@ -39,7 +39,7 @@ public enum GameMode {
         }
     }
 
-    static public GameMode fromString(final char c) {
+    static public GameMode fromChar(final char c) {
 		switch (c) {
 			case 'n':   return GameMode.NORMAL;
 			case 'd':   return GameMode.DEVELOPMENT;

@@ -263,10 +263,24 @@ public abstract class MUDObject {
 		return this.props;
 	}
 	
+	/**
+	 * Set a property on this object, where the name
+	 * of the property is the key and the value of the
+	 * property is the value.
+	 * 
+	 * @param key   property name
+	 * @param value property value
+	 */
 	public void setProperty(final String key, final Object value) {
 		this.props.put(key,  value);
 	}
 	
+	/**
+	 * Retrieve the property by it's key
+	 * 
+	 * @param key property name
+	 * @return property value
+	 */
 	public Object getProperty(final String key) {
 		return this.props.get(key);
 	}

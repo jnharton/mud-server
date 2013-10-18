@@ -26,6 +26,7 @@ public class Quest {
 	private String name;                // quest name
 	private String description;         // quest description (does it need a short and long version or just this?)
 	private Date issueDate;             // the in-game date the quest was given
+	private Date expireDate;            // the in-game date that the quests expires (for time-limited things?)
 	private boolean isComplete = false; // is the quest completed? (this should put it in a deletion queue if we delete completed quests)
 	
 	private Zone location;
@@ -166,17 +167,29 @@ public class Quest {
 	public Zone getLocation() {
 		return this.location;
 	}
+	
+	public void setExpires(Date expirationDate) {
+		this.expireDate = expirationDate;
+	}
 
     @Override
 	public String toString() {
 		return this.name + "\n" + this.description;
 	}
 
-	public String toDisplay() {
+	public String toDisplay(boolean useColor) {
         final StringBuilder buf = new StringBuilder();
-        buf.append(Colors.YELLOW).append("   o ").append(getName());
-        buf.append(Colors.MAGENTA).append(" ( ").append(location.getName()).append(" ) ").append(Colors.CYAN);
+        if( useColor ) {
+        	buf.append(Colors.YELLOW).append("   o ").append(getName());
+        	buf.append(Colors.MAGENTA).append(" ( ").append(location.getName()).append(" ) ").append(Colors.CYAN);
+        }
+        else {
+        	buf.append("   o ").append(getName());
+        	buf.append(" ( ").append(location.getName()).append(" ) ");
+        }
+        
         buf.append("\n");
+        
         for (final Task task : getTasks()) {
             buf.append(task.toDisplay());
         }
