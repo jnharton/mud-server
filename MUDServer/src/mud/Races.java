@@ -25,8 +25,8 @@ public final class Races {
 	public static final Race ELF = new Race("Elf", 1, new Integer[]{ 0, 2, -2, 0, 0, 0 }, false);
 	public static final Race GNOME = new Race("Gnome", 4, new Integer[]{ -2, 0, 2, 0, 0, 0 }, false);
 	public static final Race HALF_ELF = new Race("Half-Elf", 6, true);
-	public static final Race HALF_ORC = new Race("Half-Orc", 11, new Integer[]{ 2, 0, 0, -2, -2, 0 }, true);
-	public static final Race HALFLING = new Race("Halfling", 12, true);
+	public static final Race HALF_ORC = new Race("Half-Orc", 10, new Integer[]{ 2, 0, 0, -2, -2, 0 }, true);
+	public static final Race HALFLING = new Race("Halfling", 11, true);
 	public static final Race HUMAN = new Race("Human", 2, false);
 	public static final Race ORC = new Race("Orc", 5, false);
 	public static final Race KOBOLD = new Race("Kobold", 7, new Integer[] { -4, 2, -2, 0, 0, 0 } , true);

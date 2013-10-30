@@ -12,6 +12,7 @@ import mud.ObjectFlag;
 import mud.MUDObject;
 import mud.Trigger;
 import mud.Triggers;
+import mud.TypeFlag;
 
 //import mud.miscellaneous.Atmosphere;
 
@@ -86,7 +87,8 @@ public class Room extends MUDObject implements EventSource
 	 */
 	public Room() {
 		super(-1);
-		this.flags = EnumSet.of(ObjectFlag.ROOM, ObjectFlag.SILENT);
+		this.type = TypeFlag.ROOM;
+		this.flags = EnumSet.of(ObjectFlag.SILENT);
 		this.locks = "";            // Set the locks
 		this.location = 0;          // Set the location
 		
@@ -100,6 +102,7 @@ public class Room extends MUDObject implements EventSource
 	public Room(Room toCopy)
 	{
 		super(toCopy.getDBRef());
+		this.type = TypeFlag.ROOM;
 		//this.dbref = toCopy.getDBRef();     // Set the dbref (database reference)
 		this.name = toCopy.getName();         // Set the name
 		this.desc = toCopy.getDesc();         // Set the description to the default
@@ -116,6 +119,7 @@ public class Room extends MUDObject implements EventSource
 	public Room(int tempDBREF, String tempName, final EnumSet<ObjectFlag> tempFlags, String tempDesc, int tempLocation)
 	{
 		super(tempDBREF);
+		this.type = TypeFlag.ROOM;
 		//this.dbref = tempDBREF;                                    // Set the dbref (database reference)
 		this.name = tempName;                                        // Set the name
 		this.desc = tempDesc;                                        // Set the description
@@ -311,7 +315,7 @@ public class Room extends MUDObject implements EventSource
 		String[] output = new String[9];
 		output[0] = this.getDBRef() + "";                         // database reference number
 		output[1] = this.getName();                               // name
-		output[2] = this.getFlagsAsString();                      // flags
+		output[2] = this.type + this.getFlagsAsString();          // flags
 		output[3] = this.getDesc();                               // description
 		output[4] = this.getLocation() + "";                      // location (a.k.a parent)
 		output[5] = "" + this.getRoomType().toString().charAt(0); // room type

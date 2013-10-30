@@ -60,7 +60,7 @@ public class Armor extends Item implements Equippable<Armor>, Wearable<Armor>
 	
 	public Armor(int aMod, ArmorType armor)
 	{
-		super(-1, armor.getName().toLowerCase(), EnumSet.of(ObjectFlag.ITEM), "armor", 8);
+		super(-1, armor.getName().toLowerCase(), EnumSet.noneOf(ObjectFlag.class), "armor", 8);
 		this.equippable = true;
 		this.equip_type = ItemType.ARMOR;
 		this.item_type = ItemType.ARMOR;
@@ -74,7 +74,7 @@ public class Armor extends Item implements Equippable<Armor>, Wearable<Armor>
 	
 	public Armor(int dbref, int aMod, ArmorType armor)
 	{
-		super(dbref, armor.getName().toLowerCase(), EnumSet.of(ObjectFlag.ITEM), "armor", 8);
+		super(dbref, armor.getName().toLowerCase(), EnumSet.noneOf(ObjectFlag.class), "armor", 8);
 		this.equippable = true;
 		this.equip_type = ItemType.ARMOR;
 		this.item_type = ItemType.ARMOR;
@@ -99,7 +99,7 @@ public class Armor extends Item implements Equippable<Armor>, Wearable<Armor>
 	 */
 	public Armor(String wName, String wDesc, int wLoc, int wDBREF, int aMod, ArmorType armor)
 	{
-		super(wDBREF, wName, EnumSet.of(ObjectFlag.ITEM), wDesc, wLoc);
+		super(wDBREF, wName, EnumSet.noneOf(ObjectFlag.class), wDesc, wLoc);
 		this.equippable = true;
 		this.equip_type = ItemType.ARMOR;
 		

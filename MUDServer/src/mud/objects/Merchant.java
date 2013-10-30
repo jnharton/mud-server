@@ -8,7 +8,6 @@ import mud.ObjectFlag;
 import mud.Abilities;
 import mud.Classes;
 import mud.Coins;
-import mud.Currency;
 import mud.MUDServer;
 import mud.Races;
 
@@ -16,7 +15,7 @@ import mud.interfaces.Vendor;
 
 import mud.net.Client;
 import mud.objects.items.Armor;
-import mud.objects.items.ArmorType;
+import mud.objects.items.Weapon;
 
 /*
  * Copyright (c) 2012 Jeremy N. Harton
@@ -28,7 +27,7 @@ import mud.objects.items.ArmorType;
  * changes are made to the one referred to.
  */
 
-public class ArmorMerchant extends NPC implements Vendor {
+public class Merchant extends NPC implements Vendor {
 
 	/**
 	 * 
@@ -36,7 +35,7 @@ public class ArmorMerchant extends NPC implements Vendor {
 	final private MUDServer parent;
 	public ArrayList<Item> stock = new ArrayList<Item>();
 
-	public ArmorMerchant(final MUDServer mudServer, final int tempDBRef, final String tempName, final EnumSet<ObjectFlag> tempFlags, 
+	public Merchant(final MUDServer mudServer, final int tempDBRef, final String tempName, final EnumSet<ObjectFlag> tempFlags, 
             final String tempDesc, final String tempTitle, final String tempPStatus, final int tempLoc, final Coins tempMoney) {
 		super(tempDBRef, tempName, null, tempFlags, tempDesc, tempTitle, tempPStatus, tempLoc, tempMoney);
 
@@ -64,6 +63,11 @@ public class ArmorMerchant extends NPC implements Vendor {
 				Armor a = (Armor) item;
 				//parent.send(parent.colors("+" + a.getMod() + " " + a.getName() + " (" + a.getWeight() + ") Cost: " + a.getCost(), "yellow"), client);
 				parent.send(parent.colors(a.toString() + " (" + a.getWeight() + ") Cost: " + a.getCost(), "yellow"), client);
+			}
+			else if (item instanceof Weapon) {
+				final Weapon w = (Weapon) item;
+				//parent.send(parent.colors("+" + w.getMod() + " " + w.getName() + " (" + w.getWeight() + ") Cost: " + w.getCost(), "yellow"), client);
+				parent.send(parent.colors(w.toString()  + " (" + w.getWeight() + ") Cost: " + w.getCost(), "yellow"), client);
 			}
 			else {
 				parent.send("?", client);

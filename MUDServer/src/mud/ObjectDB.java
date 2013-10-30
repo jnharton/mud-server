@@ -342,6 +342,18 @@ public class ObjectDB {
         		index++;
         		continue; // skip to next object
         	}
+        	/*else if(obj instanceof Player) {
+        		Player player = (Player) obj;
+        		
+        		if( !player.isNew() ) { // if the player is not new, save it
+        			toSave[index] = obj.toDB();
+        		}
+        		else { // otherwise, store a NullObject
+        			toSave[index] = new NullObject(obj.getDBRef()).toDB();
+        		}
+        		
+        		continue;
+        	}*/
         	
         	toSave[index] = obj.toDB();
         	

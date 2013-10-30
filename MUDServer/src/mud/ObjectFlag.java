@@ -19,21 +19,14 @@ import java.util.EnumSet;
  */
 public enum ObjectFlag
 {
-    ADMIN("ADMIN"),
-    BUILDER("BUILDER"),
-    CREATURE("CREATURE"),
-    EXIT("EXIT"),
+    //ADMIN("ADMIN"),
+    //BUILDER("BUILDER"),
     DARK("DARK"),
     GUEST("GUEST"),
     HOUSE("HOUSE"),
-    ITEM("ITEM"),
     MERCHANT("MERCHANT"),
-    NPC("NPC"),
-    PLAYER("PLAYER"),
-    ROOM("ROOM"),
     SILENT("SILENT"),
-    THING("THING"),
-    WIZARD("WIZARD"),
+    //WIZARD("WIZARD"),
     VENDOR("VENDOR"),
     ZONE("ZONE");
     
@@ -45,21 +38,14 @@ public enum ObjectFlag
 
     static public ObjectFlag fromLetter(final char c) {
         switch (c) {
-        case 'A':    return ADMIN;
-        case 'B':    return BUILDER;
-        case 'C':    return CREATURE;
+        //case 'A':    return ADMIN;
+        //case 'B':    return BUILDER;
         case 'D':    return DARK;
-        case 'E':	 return EXIT;
         case 'G':    return GUEST;
         case 'H':    return HOUSE;
-        case 'I':	 return ITEM;
         case 'M':	 return MERCHANT;
-        case 'N':	 return NPC;
-        case 'P':	 return PLAYER;
-        case 'R':	 return ROOM;
         case 'S':    return SILENT;
-        case 'T':	 return THING;
-        case 'W':    return WIZARD;
+        //case 'W':    return WIZARD;
         case 'V':    return VENDOR;
         case 'Z':    return ZONE;
         default:    throw new IllegalArgumentException("Invalid ObjectFlag letter: " + c);    

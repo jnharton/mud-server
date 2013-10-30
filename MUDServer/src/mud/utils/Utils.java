@@ -471,14 +471,17 @@ public final class Utils {
 		int str = work.length();
 		int remain = n - work.length();
 
-		//System.out.println("str: " + str + " remain: " + remain);
+		System.out.println("str: " + str + " remain: " + remain);
 
 		int left = 0;
 		int right = 0;
+		
+		System.out.println("left: " + left + " right: " + right);
+				
 		if( remain > 0 ) {
 			left = (int) (0.5 * remain);
 			right = (int) (0.5 * remain);
-			return padLeft("", ' ', left) +  s + padRight("", ' ', right);
+			return padLeft("", ' ', left) +  s + padRight("", ' ', right + ( remain - (left + right) ));
 		}
 		else {
 			return truncate(s, n);

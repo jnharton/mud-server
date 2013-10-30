@@ -16,6 +16,7 @@ import mud.Skill;
 import mud.Skills;
 import mud.Slot;
 import mud.SlotType;
+import mud.TypeFlag;
 
 import mud.interfaces.Vendor;
 
@@ -78,12 +79,14 @@ public class NPC extends Player implements InteractiveI
             final String tempDesc, final String tempTitle, final String tempPStatus, final int tempLoc, final Coins tempMoney)
 	{
         super(tempDBRef, tempName, tempFlags, tempDesc, tempLoc, tempTitle, tempPass, tempPStatus, new Integer[] {10, 10, 10, 10, 10, 10}, tempMoney);
+        this.type = TypeFlag.NPC;
 	}
 	
 	public NPC(final int tempDBRef, final String tempName, final EnumSet<ObjectFlag> tempFlags, final String tempDesc, 
             final int tempLoc, final String tempTitle, final String tempPStatus, final Integer[] tempStats, final Coins tempMoney)
 	{
 		super(tempDBRef, tempName, tempFlags, tempDesc, tempLoc, tempTitle, "", tempPStatus, tempStats, tempMoney);
+		this.type = TypeFlag.NPC;
 	}
 	
 	public void say(String message) {
@@ -169,12 +172,12 @@ public class NPC extends Player implements InteractiveI
 	 */
 	public String toDB() {
 		String[] output = new String[12];
-		output[0] = this.getDBRef() + "";              // player database reference number
-		output[1] = this.getName();                    // player name
-		output[2] = this.getFlagsAsString();           // player flags
-		output[3] = this.getDesc();                    // player description
-		output[4] = this.getLocation() + "";           // player location
-		output[5] = this.getPass();                    // player password
+		output[0] = this.getDBRef() + "";                // player database reference number
+		output[1] = this.getName();                      // player name
+		output[2] = this.type + this.getFlagsAsString(); // player flags
+		output[3] = this.getDesc();                      // player description
+		output[4] = this.getLocation() + "";             // player location
+		output[5] = this.getPass();                      // player password
 		output[6] = stats.get(Abilities.STRENGTH) +
 				"," + stats.get(Abilities.DEXTERITY) +
 				"," + stats.get(Abilities.CONSTITUTION) +
@@ -182,7 +185,7 @@ public class NPC extends Player implements InteractiveI
 				"," + stats.get(Abilities.WISDOM) +
 				"," + stats.get(Abilities.CHARISMA);
 		output[7] = getMoney().toString(false);        // player money
-		output[8] = this.access + "";                  // player permissions level
+		output[8] = this.access + "";                  //s player permissions level
 		output[9] = race.getId() + "";                 // player race
 		output[10] = pclass.getId() + "";              // player class
 		output[11] = this.getStatus();                 // player status

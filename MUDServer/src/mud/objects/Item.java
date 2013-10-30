@@ -62,7 +62,7 @@ public class Item extends MUDObject {
 	 * Only for creating test items and then setting their properties/attributes
 	 */
 	public Item() {
-		this.setFlags( EnumSet.of(ObjectFlag.ITEM) );
+		this.type = TypeFlag.ITEM;
 	}
 	
 	/**
@@ -71,7 +71,7 @@ public class Item extends MUDObject {
 	 */
 	public Item(int tempDBREF) {
 		super(tempDBREF);
-		this.setFlags( EnumSet.of(ObjectFlag.ITEM) );
+		this.type = TypeFlag.ITEM;
 	}
 	
 	/**
@@ -81,6 +81,7 @@ public class Item extends MUDObject {
 	 */
 	public Item(Item template) {
 		super(template.getDBRef());
+		this.type = TypeFlag.ITEM;
 		
 		this.name = template.name;
 		this.flags = template.flags;
@@ -91,6 +92,7 @@ public class Item extends MUDObject {
 	public Item(int tempDBREF, String tempName, final EnumSet<ObjectFlag> tempFlags, String tempDesc, int tempLoc)
 	{
 		super(tempDBREF, tempName, tempFlags, tempDesc, tempLoc);
+		this.type = TypeFlag.ITEM;
 	}
 	
 	public ItemType getItemType() {
@@ -171,14 +173,14 @@ public class Item extends MUDObject {
 	
 	public String toDB() {
 		String[] output = new String[8];
-		output[0] = this.getDBRef() + "";          // database reference number
-		output[1] = this.getName();                // name
-		output[2] = this.getFlagsAsString();       // flags
-		output[3] = this.getDesc();                // description
-		output[4] = this.getLocation() + "";       // location
-		output[5] = this.item_type.ordinal() + ""; // item type
-		output[6] = "*";                           // blank
-		output[7] = "*";                           // blank
+		output[0] = this.getDBRef() + "";                // database reference number
+		output[1] = this.getName();                      // name
+		output[2] = this.type + this.getFlagsAsString(); // flags
+		output[3] = this.getDesc();                      // description
+		output[4] = this.getLocation() + "";             // location
+		output[5] = this.item_type.ordinal() + "";       // item type
+		output[6] = "*";                                 // blank
+		output[7] = "*";                              // blank
 		return Utils.join(output, "#");
 	}
 

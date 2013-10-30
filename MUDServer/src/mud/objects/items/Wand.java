@@ -6,6 +6,7 @@ import java.util.EnumSet;
 
 import mud.Effect;
 import mud.ObjectFlag;
+import mud.TypeFlag;
 
 import mud.interfaces.Equippable;
 import mud.interfaces.Usable;
@@ -59,7 +60,8 @@ public class Wand extends Item implements Equippable<Wand>, Usable<Wand>, Wielda
 	 * @param spell
 	 */
 	public Wand(String tempName, String tempDesc, int tempLoc, int tempDBREF, ItemType itemType, int tCharges, Spell spell) {
-		super(tempDBREF, tempName, EnumSet.of(ObjectFlag.ITEM), tempDesc, tempLoc);
+		super(tempDBREF, tempName, EnumSet.noneOf(ObjectFlag.class), tempDesc, tempLoc);
+		this.type = TypeFlag.ITEM;
 		this.equippable = true;
 		this.item_type = ItemType.WAND;
 		this.equip_type = ItemType.WEAPON;

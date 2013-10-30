@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -21,6 +22,7 @@ import mud.Coins;
 import mud.Editor;
 import mud.MUDObject;
 import mud.PClass;
+import mud.Profession;
 import mud.Race;
 import mud.TypeFlag;
 import mud.Race.Subraces;
@@ -75,7 +77,7 @@ import mud.utils.EditorData;
  */
 public class Player extends MUDObject
 {	
-	private static final EnumSet<ObjectFlag> _FLAGS = EnumSet.of(ObjectFlag.PLAYER);
+	private static final EnumSet<ObjectFlag> _FLAGS = EnumSet.noneOf(ObjectFlag.class);
 	private static final String _STATUS = "NEW";
 	private static final String _DESC = "There is nothing to see.";
 	private static final Coins _MONEY = new Coins(10, 50, 50, 100); // default_money (10pp, 50gp, 50sp, 100cp)
@@ -107,7 +109,7 @@ public class Player extends MUDObject
 	protected String cName = "";                      // name that show up for players who have initiated greeting, etc
 	protected String status;                          // The player's status (MU)
 	protected String title;                           // The player's title (for where, MU)
-	private Status pstatus;                           // whether or not the player has been banned
+	private Status pstatus = Status.ACTIVE;           // whether or not the player has been banned
 	protected ArrayList<String> names;                // names of other players that the player actually knows
 
 	final private MailBox mailbox = new MailBox();    // player mailbox
@@ -186,6 +188,10 @@ public class Player extends MUDObject
 	protected int level;                           // Level
 	protected int xp;                              // Experience
 	protected Coins money;                         // Money (D&D, MUD)
+	
+	private Profession prof1;                          // Active Profession (One)
+	private Profession prof2;                          // Active Profession (Two)
+	private Hashtable<String, Profession> professions; // holds all your trained professions
 
 	protected SpellBook spells = null;             // spells [null if not a spellcaster]
 	protected LinkedList<Spell> spellQueue = null; // spell queue [null if not a spellcaster]
@@ -218,7 +224,7 @@ public class Player extends MUDObject
 	// BitSet to record what item creation feats this player has:
 	// Brew Potion (0) Craft Magic Arms And Armor (1) Craft Rod  (2) Craft Staff  (3)
 	// Craft Wand  (4) Craft Wondrous Item        (5) Forge Ring (6) Scribe Scroll(7)
-	private BitSet item_creation_feats = new BitSet(8);
+	public BitSet item_creation_feats = new BitSet(8);
 
 	// temporary states
 	private int[] statMod = new int[6];   // temporary modifications to stats (i.e. stat drains, etc)
@@ -353,6 +359,7 @@ public class Player extends MUDObject
 		this.config.put("pager_enabled", false);        // enabled/disable the help pager view (default: false)
 		this.config.put("show-weather", true);          // show weather information in room descriptions (default: true)
 		this.config.put("tagged-chat", false);          // "tag" the beginning chat lines with CHAT for the purpose of triggers, etc (default: false)
+		this.config.put("compact-editor", true);        // compact the output of editor's 'show' commands (default: true)
 
 		// instantiate name reference table
 		this.nameRef = new HashMap<String, Integer>(10, 0.75f); // start out assuming 10 name references
@@ -485,6 +492,7 @@ public class Player extends MUDObject
 		this.config.put("pager_enabled", false);        // enabled/disable the help pager view (default: false)
 		this.config.put("show-weather", true);          // show weather information in room descriptions (default: true)
 		this.config.put("tagged-chat", false);          // "tag" the beginning chat lines with CHAT for the purpose of triggers, etc (default: false)
+		this.config.put("compact-editor", true);        // compact the output of editor's 'show' commands (default: true)
 
 		// instantiate name reference table
 		this.nameRef = new HashMap<String, Integer>(10, 0.75f); // start out assuming 10 name references
@@ -1128,10 +1136,10 @@ public class Player extends MUDObject
 	 * format used by the database
 	 */
 	public String toDB() {
-		String[] output = new String[13];
+		String[] output = new String[14];
 		output[0] = getDBRef() + "";                      // database reference number
 		output[1] = getName();                            // name
-		output[2] = getFlagsAsString();                   // flags
+		output[2] = type + getFlagsAsString();            // flags
 		output[3] = getDesc();                            // description
 		output[4] = getLocation() + "";                   // location
 		output[5] = getPass();                            // password

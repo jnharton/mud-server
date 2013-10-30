@@ -49,7 +49,7 @@ public class Exit extends MUDObject implements Lockable
 	
 	// empty default constructor for subclasses
 	public Exit() {
-		this.flags = EnumSet.of(ObjectFlag.EXIT);
+		this.type  = TypeFlag.EXIT;
 		
 		// set messages to clear
 		this.succMsg = "";  // Success Message
@@ -59,7 +59,7 @@ public class Exit extends MUDObject implements Lockable
 	}
 	
 	public Exit(ExitType eType) {
-		this.flags = EnumSet.of(ObjectFlag.EXIT);
+		this.type = TypeFlag.EXIT;
 		this.eType = eType;
 		
 		// set messages to clear
@@ -70,12 +70,13 @@ public class Exit extends MUDObject implements Lockable
 	}
 	
 	public Exit(String name, int location, int destination) {
+		this.type = TypeFlag.EXIT;
 		// Set the name
 		this.name = name;
 		// Set the description to the default
 		this.desc = "You see nothing.";
 		// Set flags
-		this.flags = EnumSet.of(ObjectFlag.EXIT);
+		//this.flags = null;
 		// Set the locks
 		this.locks = "";
 		// Set the location
@@ -95,13 +96,14 @@ public class Exit extends MUDObject implements Lockable
 	{
 		// Set the dbref (database reference)
 		super(tempDBRef);
+		this.type = TypeFlag.EXIT;
 		
 		// Set the name
 		this.name = tempName;
 		// Set the description to the default
 		this.desc = "You see nothing.";
 		// Set flags
-		this.flags = EnumSet.of(ObjectFlag.EXIT);
+		this.flags = flagsNotUsed;
 		// Set the locks
 		this.locks = "";
 		// Set the location

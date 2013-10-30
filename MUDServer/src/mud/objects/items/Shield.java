@@ -5,6 +5,7 @@ import java.util.EnumSet;
 
 import mud.Coins;
 import mud.ObjectFlag;
+import mud.TypeFlag;
 import mud.interfaces.Equippable;
 import mud.interfaces.Wieldable;
 
@@ -22,7 +23,7 @@ public class Shield extends Item implements Equippable<Shield>, Wieldable<Shield
 	// weight - light, medium, heavy
 	String size = "";
 	//type - buckler, small shield, medium shield, large shield, tower shield
-	String type = "";
+	//String type = "";
 	Handed handed = Handed.ONE;
 
 	public Shield() {
@@ -33,7 +34,7 @@ public class Shield extends Item implements Equippable<Shield>, Wieldable<Shield
 		this.equippable = true;
 		this.equip_type = ItemType.SHIELD; // the type of equipment it is
 		this.mod = sMod;
-		this.type = sType;                 // the actual type of shield
+		//this.type = sType;                 // the actual type of shield
 		this.weight = sWeight;             // the weight of the shield
 	}
 
@@ -49,7 +50,8 @@ public class Shield extends Item implements Equippable<Shield>, Wieldable<Shield
 	 * @param tempDBREF
 	 */
 	public Shield(String sName, String sDesc, int sLoc, int sDBREF, int sMod, ItemType item, ShieldType shield) {
-		super(sDBREF, sName, EnumSet.of(ObjectFlag.ITEM), sDesc, sLoc);
+		super(sDBREF, sName, null, sDesc, sLoc);
+		this.type = TypeFlag.ITEM;
 		this.equippable = true;
 		this.equip_type = ItemType.SHIELD;
 		

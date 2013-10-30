@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 
 import mud.ObjectFlag;
+import mud.TypeFlag;
 
 import mud.SlotType;
 import mud.interfaces.Editable;
@@ -22,6 +23,9 @@ public class Book extends Item implements Editable {
 	private Integer currentPage = 0;
 
 	public Book() {
+		this.flags = EnumSet.noneOf(ObjectFlag.class);
+				
+		this.type = TypeFlag.ITEM;
 		this.item_type = ItemType.BOOK;
 		this.title = "";
 		this.author = "";
@@ -29,6 +33,9 @@ public class Book extends Item implements Editable {
 	}
 	
 	public Book(String bookTitle) {
+		this.flags = EnumSet.noneOf(ObjectFlag.class);
+		
+		this.type = TypeFlag.ITEM;
 		this.item_type = ItemType.BOOK;
 		this.title = bookTitle;
 		this.author = "";
@@ -42,6 +49,8 @@ public class Book extends Item implements Editable {
 	}
 
 	public Book(String bookTitle, String bookAuthor, int pages) {
+		this.flags = EnumSet.noneOf(ObjectFlag.class);
+		
 		this.item_type = ItemType.BOOK;
 		this.title = bookTitle;
 		this.author = bookAuthor;
@@ -69,8 +78,9 @@ public class Book extends Item implements Editable {
 	 * @param spellName
 	 */
 	public Book(String tempName, String tempDesc, int tempLoc, int tempDBREF) {
-		super(tempDBREF, tempName, EnumSet.of(ObjectFlag.ITEM), tempDesc, tempLoc);
+		super(tempDBREF, tempName, EnumSet.noneOf(ObjectFlag.class), tempDesc, tempLoc);
 		
+		this.type = TypeFlag.ITEM;
 		this.item_type = ItemType.BOOK;
 		this.st = SlotType.NONE;
 		

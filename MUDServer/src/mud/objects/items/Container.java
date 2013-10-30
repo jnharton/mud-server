@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 
 import mud.ObjectFlag;
+import mud.TypeFlag;
 
 import mud.interfaces.Equippable;
 import mud.interfaces.Storage;
@@ -32,7 +33,8 @@ public class Container extends Item implements Storage<Item>, Equippable<Item>, 
 	private Character bottom = '-';
 
 	public Container() {
-		super(-1, "Container", EnumSet.of(ObjectFlag.ITEM), "A generic container", 4);
+		super(-1, "Container", EnumSet.noneOf(ObjectFlag.class), "A generic container", 4);
+		this.type = TypeFlag.ITEM;
 		
 		this.equippable = false;
 		this.equip_type = ItemType.CONTAINER; // the type of equipment it is

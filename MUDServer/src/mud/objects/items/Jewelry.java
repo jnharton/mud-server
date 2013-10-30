@@ -5,6 +5,7 @@ import java.util.EnumSet;
 import java.util.List;
 
 import mud.Effect;
+import mud.TypeFlag;
 
 import mud.interfaces.Equippable;
 import mud.interfaces.Usable;
@@ -24,7 +25,7 @@ public class Jewelry extends Item implements Equippable<Jewelry>, Usable<Jewelry
 {
 
 	// type - necklace, bracelet, ring, earring, tiara
-	String type = "";
+	//String type = "";
 
 	Effect effect;
 
@@ -34,9 +35,10 @@ public class Jewelry extends Item implements Equippable<Jewelry>, Usable<Jewelry
 	// ex. new Jewelry(ItemType.RING, "Ring of Invisibility", "A medium-sized gold ring with a smooth, unmarked surface.", new Effect("invisibility"))
 	public Jewelry(final ItemType jType, final String jName, final String jDesc, final Effect jEffect) {
 		super(-1);
+		this.type = TypeFlag.ITEM;
 		this.name = jName;
 		this.desc = jDesc;
-		this.flags = EnumSet.of(ObjectFlag.ITEM);
+		this.flags = null;
 		this.location = 8;
 
 		this.equippable = true;
@@ -52,15 +54,16 @@ public class Jewelry extends Item implements Equippable<Jewelry>, Usable<Jewelry
 	public Jewelry(int jMod, String jType, double jWeight)
 	{
 		super(-1);
+		this.type = TypeFlag.ITEM;
 		this.name = "Ring of Invisibility";
 		this.desc = "A medium-sized gold ring with a smooth, unmarked surface.";
-		this.flags = ObjectFlag.getFlagsFromString("I");
+		this.flags = null;
 		this.location = 8;
 
 		this.equippable = true;
 		this.equip_type = ItemType.RING; // the type of equipment it is
 		this.mod = jMod;
-		this.type = jType;               // the actual type of jewelry
+		//this.type = jType;               // the actual type of jewelry
 		this.weight = jWeight;           // the weight of the jewelry
 	}
 

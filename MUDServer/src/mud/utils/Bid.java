@@ -18,12 +18,12 @@ public class Bid {
 	private Coins bid;
 	private Coins max_bid;
 	
-	Bid(Player bidder, Coins bid) {
+	public Bid(Player bidder, Coins bid) {
 		this.bidder = bidder;
 		this.bid = bid;
 	}
 	
-	Bid(Player bidder, Coins bid, Coins max_bid) {
+	public Bid(Player bidder, Coins bid, Coins max_bid) {
 		this(bidder, bid);
 		this.max_bid = max_bid;
 	}

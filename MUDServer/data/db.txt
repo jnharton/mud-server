@@ -183,14 +183,14 @@
 182#Lightsinger Theatre#RS#The Lightsinger Theatre (C56)#53#I#10,10,10#-1#
 183#ls#E#You see nothing.#48#182#2#-1
 184#out#E#You see nothing.#182#48#2#-1
-&185#Terys#WMV#A weapon merchant.#161#null#12,12,12,12,12,12#1000,1000,1000,1000#0#2#14#
+&185#Terys#NMV#A weapon merchant.#161#null#12,12,12,12,12,12#1000,1000,1000,1000#0#2#14#
 186#Iridan#N#An innkeeper.#4##0,0,0,0,0,0#0,0,0,0#0#2#0#IC
 187#Potion#I#A potion.#8#8#1#null
 188#out#E#You see nothing.#4#9#0#0
 189#inn#E#You see nothing.#9#4#0#0
 190#Fountain#RS#A small clearing in the forest, paved, strangely, with smooth granite tiles and at the center is a large marble fountain with jets of water bursting forth and then falling into the pool beneath.#0#N#10,10,10#-1#
 191#Table#T#A wooden table.#4#0
-192#Aran#AMV#An armor merchant.#161#null#12,12,12,12,12,12#1010,10,10,0#0#2#14#VEN
+192#Aran#NMV#An armor merchant.#161#null#12,12,12,12,12,12#1010,10,10,0#0#2#14#VEN
 193#Potion#I#A potion.#8#8#1#null
 194#test#RS#You see nothing.#5#N#10,10,10#-1#
 195#test1#RS#You see nothing.#5#N#10,10,10#-1#

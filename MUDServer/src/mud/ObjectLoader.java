@@ -45,6 +45,7 @@ public class ObjectLoader {
 		{	
 			Integer oDBRef = 0, oLocation = 0;
 			String oName = "", oFlags = "", oDesc = "";
+			Character oTypeFlag;
 
 			if ( oInfo.charAt(0) == '&' ) { // means to ignore that line
 				log.debug("`loadObjects` ignoring line: " + oInfo);
@@ -59,7 +60,8 @@ public class ObjectLoader {
 				String[] attr = oInfo.split("#");
 				oDBRef = Integer.parseInt(attr[0]);
 				oName = attr[1];
-				oFlags = attr[2];
+				oTypeFlag = attr[2].charAt(0);
+				oFlags = attr[2].substring(1, attr[2].length());
 				oDesc = attr[3];
 				oLocation = Integer.parseInt(attr[4]);
 
@@ -69,38 +71,20 @@ public class ObjectLoader {
 				log.debug("Description: " + oDesc);
 				log.debug("Location: " + oLocation);
 
-				if (oFlags.indexOf("C") == 0) {
+				if (oTypeFlag == 'C') {
 					final Creature cre = new Creature(oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), oDesc, oLocation);
 
 					// add the creature to the in-memory database and to the list of creatures
 					objectDB.add(cre);
 					objectDB.addCreature(cre);
 				}
-				else if (oFlags.indexOf("P") == 0) {
+				else if (oTypeFlag == 'P') {
 					Player player = loadPlayer( oInfo );
 
 					//log.debug("log.debug (db entry): " + player.toDB(), 2);
 
 					objectDB.add(player);
 					objectDB.addPlayer(player);
-				}
-				else if (oFlags.equals("WMV")) {
-					WeaponMerchant wm = new WeaponMerchant(parent, oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), "A weapon merchant.", "Merchant", "VEN", 161, Coins.fromArray(new int[] {1000, 1000, 1000, 1000}));
-
-					log.debug("log.debug (db entry): " + wm.toDB(), 2);
-					log.debug("Weapon Merchant", 2);
-
-					objectDB.add(wm);
-					objectDB.addNPC(wm);
-				}
-				else if (oFlags.equals("AMV")) {
-					ArmorMerchant am = new ArmorMerchant(parent, oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), "An armor merchant.", "Merchant", "VEN", 161, Coins.fromArray(new int[] {1000, 1000, 1000, 1000}));
-
-					log.debug("log.debug (db entry): " + am.toDB(), 2);
-					log.debug("Armor Merchant", 2);
-
-					objectDB.add(am);
-					objectDB.addNPC(am);
 				}
 				else if (oFlags.equals("IKV") ) {
 					Innkeeper ik = new Innkeeper(parent, oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), oDesc, "Merchant", "VEN", oLocation, Coins.fromArray(new int[] {1000, 1000, 1000, 1000}));
@@ -112,7 +96,7 @@ public class ObjectLoader {
 					objectDB.addNPC(ik);
 				}
 				//Exit(String tempName, String tempFlags, String tempDesc, int tempLoc, int tempDBREF, int tempDestination)
-				else if (oFlags.indexOf("E") == 0)
+				else if (oTypeFlag == 'E')
 				{
 					int eType = Integer.parseInt(attr[6]);
 
@@ -206,7 +190,19 @@ public class ObjectLoader {
 					}
 				}
 				// NPC(int tempDBRef, String tempName, String tempDesc, int tempLoc, String tempTitle)
-				else if (oFlags.indexOf("N") == 0) {
+				else if (oTypeFlag == 'N') {
+					if(oFlags.contains("M")) {
+						Merchant merchant = new Merchant(parent, oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), "A merchant.", "Merchant", "VEN", 161, Coins.fromArray(new int[] {1000, 1000, 1000, 1000}));
+
+						log.debug("log.debug (db entry): " + merchant.toDB(), 2);
+						log.debug("Merchant", 2);
+
+						objectDB.add(merchant);
+						objectDB.addNPC(merchant);
+
+						continue;
+					}
+					
 					//NPC npc = new NPC(oDBRef, oName, oDesc, oLocation, "npc");
 					NPC npc = loadNPC(oInfo);
 					npc.setCName("npc");
@@ -219,7 +215,7 @@ public class ObjectLoader {
 					objectDB.addNPC(npc);
 				}
 				//Room(String tempName, String tempFlags, String tempDesc, int tempParent, int tempDBREF)
-				else if (oFlags.indexOf("R") == 0)
+				else if (oTypeFlag == 'R')
 				{
 					String roomType = attr[5];
 
@@ -249,7 +245,7 @@ public class ObjectLoader {
 					objectDB.addRoom(room);
 				}
 				//Thing(String tempName, String tempFlags, String tempDesc, int tempLoc, int tempDBREF)
-				else if (oFlags.indexOf("T") == 0)
+				else if (oTypeFlag == 'T')
 				{
 					int tType = Utils.toInt(attr[5], 0); // find a type, else TYPE 0 (NONE)
 					ThingType tt = ThingType.values()[tType];
@@ -269,7 +265,7 @@ public class ObjectLoader {
 					objectDB.add(thing);
 					objectDB.addThing(thing);
 				}
-				else if (oFlags.indexOf("I") == 0) { // 
+				else if (oTypeFlag == 'I') { 
 					int itemType = Integer.parseInt(attr[5]); // get the type of item it should be
 					ItemType it = ItemType.values()[itemType];
 
@@ -379,10 +375,10 @@ public class ObjectLoader {
 						 * of a stack of potions correctly
 						 */
 
-						Potion potion = new Potion(oDBRef, oName, EnumSet.of(ObjectFlag.ITEM), oDesc, oLocation, sn);
+						Potion potion = new Potion(oDBRef, oName, EnumSet.noneOf(ObjectFlag.class), oDesc, oLocation, sn);
 
 						for (int i = 1; i < stack_size; i++) {
-							Potion potion1 = new Potion(oDBRef, oName, EnumSet.of(ObjectFlag.ITEM), oDesc, oLocation, sn);
+							Potion potion1 = new Potion(oDBRef, oName, EnumSet.noneOf(ObjectFlag.class), oDesc, oLocation, sn);
 							potion.setItemType(ItemType.POTION);
 
 							potion.stack(potion1);
@@ -407,7 +403,7 @@ public class ObjectLoader {
 					}
 
 					else if ( it == ItemType.RING ) {
-						Item ring = new Item(oDBRef, oName, EnumSet.of(ObjectFlag.ITEM), oDesc, oLocation);
+						Item ring = new Item(oDBRef, oName, null, oDesc, oLocation);
 
 						ring.setItemType( ItemType.RING );
 
@@ -416,7 +412,7 @@ public class ObjectLoader {
 					}
 
 					else {
-						Item item = new Item(oDBRef, oName, EnumSet.of(ObjectFlag.ITEM), oDesc, oLocation);
+						Item item = new Item(oDBRef, oName, null, oDesc, oLocation);
 
 						item.setItemType( ItemType.NONE );
 
@@ -481,7 +477,8 @@ public class ObjectLoader {
 
 		Integer oDBRef = Utils.toInt(attr[0], -1);
 		String oName = attr[1];
-		String oFlags = attr[2];
+		Character oTypeFlag = attr[2].charAt(0);
+		String oFlags = attr[2].substring(1, attr[2].length());
 		String oDesc = attr[3];
 		Integer oLocation = Utils.toInt(attr[4], Constants.WELCOME_ROOM);
 
@@ -505,11 +502,11 @@ public class ObjectLoader {
 		player.setAccess(access);
 
 		/* Set Player Race */
-		raceNum = Utils.toInt(attr[9], 9);
+		raceNum = Utils.toInt(attr[9], Races.NONE.getId());
 		player.setPlayerRace(Races.getRace(raceNum));
 
 		/* Set Player Class */
-		classNum = Utils.toInt(attr[10], 0);
+		classNum = Utils.toInt(attr[10], Classes.NONE.getId());
 		player.setPClass(Classes.getClass(classNum));
 
 		/* Set Status */
@@ -517,7 +514,11 @@ public class ObjectLoader {
 
 		/* Set Player State */
 		int state = Utils.toInt(attr[12], -1);
-		player.setState( Player.State.values()[state] );
+		player.setState( Player.State.values()[state]);
+		
+		/**/
+		//player_status = Utils.toInt(attr[13], -1);
+		//player.setPStatus(Player.Status.values()[player_status]);
 
 		return player;
 	}
@@ -542,10 +543,12 @@ public class ObjectLoader {
 		int oDBRef = 0, oLocation = 0;
 		String oName = "", oFlags = "", oDesc = "";
 		String[] os, om;
+		
+		int len = attr[2].length();
 
 		oDBRef = Integer.parseInt(attr[0]);    // 0 - npc database reference number
 		oName = attr[1];                       // 1 - npc name
-		oFlags = attr[2];                      // 2 - npc flags
+		oFlags = attr[2].substring(1, len);    // 2 - npc flags
 		oDesc = attr[3];                       // 3 - npc description
 		oLocation = Integer.parseInt(attr[4]); // 4 - npc location
 

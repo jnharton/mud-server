@@ -1,5 +1,6 @@
 package mud.objects;
 
+import mud.TypeFlag;
 import mud.interfaces.Ridable;
 
 /**
@@ -15,13 +16,14 @@ public class Mount extends Creature implements Ridable {
 	public enum Speed { SLOW, MEDIUM, FAST };
 	
 	private String name;
-	private MountType type;
+	private MountType mtype;
 	private int speed;
 	//private Speed speedClass; // slow, medium, fast
 	
 	public Mount(String name) {
+		this.type = TypeFlag.OBJECT;
 		this.name = name;
-		this.type = MountType.HORSE;
+		this.mtype = MountType.HORSE;
 		this.speed = 8;
 		//this.speedClass = Speed.FAST;
 	}
@@ -31,7 +33,7 @@ public class Mount extends Creature implements Ridable {
 	}
 	
 	public MountType getType() {
-		return this.type;
+		return this.mtype;
 	}
 	
 	public int getSpeed() {
@@ -41,13 +43,11 @@ public class Mount extends Creature implements Ridable {
 	@Override
 	public void mount() {
 		// TODO Auto-generated method stub
-		
 	}
 
 	@Override
 	public void unmount() {
 		// TODO Auto-generated method stub
-		
 	}
 
 	@Override

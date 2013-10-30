@@ -27,8 +27,9 @@ public class AuctionTimer extends TimerTask {
 	public void run() {
 		if( this.remaining > 0 ) {
 			// do task
-			// increment counter
-			this.remaining--; // count down a "second"
+			// decrement time
+			this.auction.remaining--; //
+			this.remaining--;         // count down a "second"
 		}
 		else { cancel(); }
 	}

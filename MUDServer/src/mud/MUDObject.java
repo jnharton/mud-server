@@ -38,7 +38,7 @@ public abstract class MUDObject {
 	private int dbref = 0;                                                  // database reference number
 	protected String name = "";                                             // object name
 	protected String desc = "";                                             // object description
-	protected TypeFlag type = TypeFlag.NONE;                                // object type
+	protected TypeFlag type = TypeFlag.OBJECT;                              // object type
 	protected EnumSet<ObjectFlag> flags = EnumSet.noneOf(ObjectFlag.class); // object flags
 	protected Object locks = "";                                            // object locks
 	protected int location = 0;                                             // object location
@@ -66,12 +66,14 @@ public abstract class MUDObject {
 	 * 
 	 * @param tempDBRef
 	 */
-	public MUDObject(int tempDBRef)
+	protected MUDObject(int tempDBRef)
 	{
+		this.type = TypeFlag.OBJECT;
 		this.dbref = tempDBRef;
 	}
 
-	public MUDObject(final int tempDBRef, final String tempName, final EnumSet<ObjectFlag> tempFlags, final String tempDesc, final int tempLoc) {
+	protected MUDObject(final int tempDBRef, final String tempName, final EnumSet<ObjectFlag> tempFlags, final String tempDesc, final int tempLoc) {
+		this.type = TypeFlag.OBJECT;
 		this.dbref = tempDBRef;
 		this.name = tempName;
 		this.flags = tempFlags;
@@ -352,6 +354,10 @@ public abstract class MUDObject {
 		
 		return false;
 	}
+	
+	public boolean hasEffect(Effect effect) {
+		return this.effects.contains(effect);
+	}
 
 	// get effect
 	public Effect getEffect(int id) {
@@ -391,6 +397,10 @@ public abstract class MUDObject {
 				this.effects.remove(effect);
 			}
 		}
+	}
+	
+	public void removeEffect(Effect effect) {
+		this.effects.remove(effect);
 	}
 
 	// clear all effects
@@ -477,4 +487,8 @@ public abstract class MUDObject {
 	 * @return
 	 */
 	public abstract String toJSON();
+	
+	public String toString() {
+		return this.name;
+	}
 }

@@ -6,6 +6,7 @@ import java.util.Hashtable;
 
 import mud.ObjectFlag;
 import mud.MUDObject;
+import mud.TypeFlag;
 import mud.utils.Utils;
 
 /*
@@ -50,24 +51,26 @@ public class Thing extends MUDObject {
 	 * A no-argument constructor for making a sub-class of Thing
 	 */
 	public Thing() {
+		this.type = TypeFlag.THING;
 		attributes = new Hashtable<String, String>();
 	}
 	
 	public Thing(String name) {
 		super(-1);
+		this.type = TypeFlag.THING;
 		this.name = name;
 		this.location = -1;
 		attributes = new Hashtable<String, String>();
-		
-		this.flags.add(ObjectFlag.THING);
 	}
 	
 	public Thing(String name, String desc) {
 		this(name);
+		this.type = TypeFlag.THING;
 		this.desc = desc;
 	}
 	
 	public Thing(boolean isContainer) {
+		this.type = TypeFlag.THING;
 		if( isContainer ) {
 			this.contents = new ArrayList<Item>();
 		}
@@ -79,6 +82,7 @@ public class Thing extends MUDObject {
 	public Thing(final int tempDBRef, final String tempName, final EnumSet<ObjectFlag> tempFlags, final String tempDesc, final int tempLoc)
 	{
 		super(tempDBRef, tempName, tempFlags, tempDesc, tempLoc);
+		this.type = TypeFlag.THING;
 		/*
 		// Set the name
 		this.name = tempName;
@@ -103,12 +107,12 @@ public class Thing extends MUDObject {
 
 	public String toDB() {
 		String[] output = new String[6];
-		output[0] = this.getDBRef() + "";           // database reference number
-		output[1] = this.getName();                 // name
-		output[2] = this.getFlagsAsString();        // flags
-		output[3] = this.getDesc();                 // description
-		output[4] = this.getLocation() + "";        // location (a.k.a parent)
-		output[5] = this.thing_type.ordinal() + ""; // thing type
+		output[0] = this.getDBRef() + "";                // database reference number
+		output[1] = this.getName();                      // name
+		output[2] = this.type + this.getFlagsAsString(); // flags
+		output[3] = this.getDesc();                      // description
+		output[4] = this.getLocation() + "";             // location (a.k.a parent)
+		output[5] = this.thing_type.ordinal() + "";      // thing type
 		return Utils.join(output, "#"); 
 	}
 

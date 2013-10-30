@@ -6,6 +6,7 @@ import mud.objects.Item;
 import mud.objects.ItemType;
 import mud.utils.Utils;
 import mud.ObjectFlag;
+import mud.TypeFlag;
 
 import java.util.EnumSet;
 
@@ -14,15 +15,17 @@ public class Arrow extends Item implements Projectile<Arrow>, Stackable<Arrow> {
 
 	public Arrow() {
 		super(-1);
+		this.type = TypeFlag.ITEM;
 		this.name = "Arrow";
 		this.desc = "";
 		this.location = -1;
-		this.flags = EnumSet.of(ObjectFlag.ITEM); 
+		this.flags = null; 
 		this.item_type = ItemType.ARROW;
 	}
 
 	public Arrow(int dbref, String name, String desc, int location) {
-		super(dbref, name, EnumSet.of(ObjectFlag.ITEM), desc, location);
+		super(dbref, name, null, desc, location);
+		this.type = TypeFlag.ITEM;
 		this.item_type = ItemType.ARROW;
 	}
 	

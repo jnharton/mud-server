@@ -6,6 +6,7 @@ import java.util.EnumSet;
 
 import mud.Effect;
 import mud.ObjectFlag;
+import mud.TypeFlag;
 
 import mud.interfaces.Stackable;
 import mud.interfaces.Usable;
@@ -39,12 +40,13 @@ public class Potion extends Item implements Stackable<Potion>, Usable<Potion> {
 	
 	public ArrayList<Effect> effects; // multiple effects the potion will give you
 	
-	public Potion p = null; // nested copy of itself, for implementing stacks
+	public Potion p = null;           // nested copy of itself, for implementing stacks
 	
 	//private static double weight = 0.5;
 
 	public Potion() {
-		super(-1, "Potion", EnumSet.of(ObjectFlag.ITEM), "An empty glass potion bottle.", 8);
+		super(-1, "Potion", EnumSet.noneOf(ObjectFlag.class), "An empty glass potion bottle.", 8);
+		this.type = TypeFlag.ITEM;
 		this.item_type = ItemType.POTION;
 		this.drinkable = true;
 		this.spell = null;
@@ -63,8 +65,8 @@ public class Potion extends Item implements Stackable<Potion>, Usable<Potion> {
 	}*/
 	
 	public Potion(Effect effect) {
-		super(-1, "Potion", EnumSet.of(ObjectFlag.ITEM), "A potion of " + effect.getName(), 8);
-		
+		super(-1, "Potion", EnumSet.noneOf(ObjectFlag.class), "A potion of " + effect.getName(), 8);
+		this.type = TypeFlag.ITEM;
 		this.item_type = ItemType.POTION;
 		this.drinkable = true;
 		this.effect = effect;
@@ -75,8 +77,8 @@ public class Potion extends Item implements Stackable<Potion>, Usable<Potion> {
 	}
 
 	public Potion(Spell spell) {
-		super(-1, "Potion", EnumSet.of(ObjectFlag.ITEM), "A potion of " + spell.getName(), 8);
-		
+		super(-1, "Potion", EnumSet.noneOf(ObjectFlag.class), "A potion of " + spell.getName(), 8);
+		this.type = TypeFlag.ITEM;
 		this.item_type = ItemType.POTION;
 		this.drinkable = true;
 		this.spell = spell;

@@ -21,18 +21,20 @@ import java.util.EnumSet;
  */
 public enum TypeFlag
 {
-	EXIT("EXIT"),
-	ITEM("ITEM"),
-	NPC("NPC"),
-	NONE("NONE"),
-    PLAYER("PLAYER"),
-	ROOM("ROOM"),
-	THING("THING");
+	EXIT("EXIT", 'E'),
+	ITEM("ITEM", 'I'),
+	NPC("NPC", 'N'),
+	OBJECT("OBJECT", 'O'),
+    PLAYER("PLAYER", 'P'),
+	ROOM("ROOM", 'R'),
+	THING("THING", 'T');
 	
 	private String name;
+	private char flag;
     
-    TypeFlag(String flagName) {
+    TypeFlag(final String flagName, final char flagChar) {
     	this.name = flagName;
+    	this.flag = flagChar;
     }
     
     static public TypeFlag fromLetter(final char c) {
@@ -47,25 +49,7 @@ public enum TypeFlag
     	}
     }
     
-    static public EnumSet<TypeFlag> getFlagsFromString(final String str) {
-        final EnumSet<TypeFlag> flags = EnumSet.noneOf(TypeFlag.class);
-        for (final Character ch : str.toCharArray()) {
-            if (Character.isLetter(ch)) {
-                flags.add(TypeFlag.fromLetter(ch));
-            }
-        }
-        return flags;
-    }
-
-    static public String toInitString(final EnumSet<TypeFlag> set) {
-        final StringBuilder buf = new StringBuilder();
-        for (final TypeFlag flag : set) {
-            buf.append(" ").append(flag.toString());
-        }
-        return buf.length() < 1 ? buf.toString() : buf.toString().substring(1);
-    }
-
-    static public String firstInit(final EnumSet<TypeFlag> set) {
-        return set.isEmpty() ? "" : set.iterator().next().toString();
+    public String toString() {
+    	return "" + this.name;
     }
 }

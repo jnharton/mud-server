@@ -76,32 +76,24 @@ public class Account implements Serializable {
 	private static Calendar calendar;
 	
 	// passive properties (might be modified, but not frequently)
-	public final Date created;            // creation date
-	public Date modified;                 // modification date (when any of these passive properties were last modified)
-	public Date archived;                 // archival date (null, unless account was archived; if unarchived, then when it was last archived)
+	private final Date created;            // creation date
+	private Date modified;                 // modification date (when any of these passive properties were last modified)
+	private Date archived;                 // archival date (null, unless account was archived; if unarchived, then when it was last archived)
+	
 	private final int id;                 // id
 	private Status status;                // status
 	private String username;              // username
 	private String password;              // password
 	private int charLimit = 3;            // character limit
 
-	public ArrayList<Integer> playerIds = new ArrayList<Integer>();  // ids of players the account owns
-
 	// active properties (current state)
-	transient private ArrayList<Player> characters; // all the characters that exist for an account
-
-	transient private Client client;
-	transient private Player player;
-
-	transient private boolean online;
-
-	/**
-	 * create account without a valid account number
-	 */
-	public Account() {
-		this(-1);
-	}
-
+	private ArrayList<Player> characters; // all the characters that exist for an account
+	
+	private Client client;
+	private Player player;
+	
+	private boolean online;
+	
 	/**
 	 * 
 	 * @param aId
@@ -156,8 +148,45 @@ public class Account implements Serializable {
 
 		for (Player player : aCharacters) {
 			this.characters.add(player);
-			this.playerIds.add(player.getDBRef());
 		}
+	}
+	
+	/**
+	 * 
+	 * defensive copying used
+	 * 
+	 * @return
+	 */
+	public Date getCreated() {
+		return new Date(this.created);
+	}
+	
+	public void setModified(Date modDate) {
+		this.modified = modDate;
+	}
+	
+	/**
+	 * 
+	 * defensive copying used
+	 * 
+	 * @return
+	 */
+	public Date getModified() {
+		return new Date(this.modified);
+	}
+	
+	public void setArchived(Date arcDate) {
+		this.archived = arcDate;
+	}
+	
+	/**
+	 * 
+	 * defensive copying used
+	 * 
+	 * @return
+	 */
+	public Date getArchived() {
+		return new Date(this.archived);
 	}
 
 	/**
@@ -218,9 +247,13 @@ public class Account implements Serializable {
 	 * 
 	 * @param newCharacter the character to link
 	 */
-	public void linkCharacter(Player newCharacter) {
-		this.playerIds.add(newCharacter.getDBRef());
-		this.characters.add(newCharacter);
+	public boolean linkCharacter(Player newCharacter) {
+		if( this.characters.size() < charLimit ) {
+			//this.playerIds.add(newCharacter.getDBRef());
+			return this.characters.add(newCharacter);
+		}
+
+		return false;
 	}
 
 	/**
@@ -228,9 +261,13 @@ public class Account implements Serializable {
 	 * 
 	 * @param currCharacter the character to unlink
 	 */
-	public void unlinkCharacter(Player currCharacter) {
-		this.playerIds.remove(currCharacter.getDBRef());
-		this.characters.remove(currCharacter);
+	public boolean unlinkCharacter(Player currCharacter) {
+		if( this.characters.contains(currCharacter) ) {
+			//this.playerIds.remove(currCharacter.getDBRef());
+			return this.characters.remove(currCharacter);
+		}
+
+		return false;
 	}
 
 	/**
@@ -299,11 +336,8 @@ public class Account implements Serializable {
 	}
 
 	public static void main(String[] args) {
-		Account a = new Account();
 		Account b = new Account(5);
-		Account c = new Account(00123);
-		System.out.println("Id: " + a.id);
-		System.out.println("Created " + a.created);
+		Account c = new Account(123);
 		System.out.println("Id: " + b.id);
 		System.out.println("Created " + b.created);
 		System.out.println("Id: " + c.id);

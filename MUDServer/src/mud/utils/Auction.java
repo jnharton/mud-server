@@ -17,9 +17,10 @@ import mud.Coins;
 import mud.objects.Item;
 
 public class Auction {
-	private int duration;
+	int duration;
+	int remaining = 100;
 	private Item item;
-	public Coins initial_price;
+	private Coins initial_price;
 	private Coins buyout_price;
 	
 	private Bid currentBid;
@@ -56,6 +57,14 @@ public class Auction {
 		this.buyout_price = buyout;
 	}
 	
+	public Coins getInitialPrice() {
+		return Coins.copper( initial_price.numOfCopper() );
+	}
+	
+	public Coins getBuyoutPrice() {
+		return Coins.copper( buyout_price.numOfCopper() );
+	}
+	
 	public boolean hasBids() {
 		if( bids.size() > 0 ) { return true; }
 		else { return false; }
@@ -90,10 +99,18 @@ public class Auction {
 	}
 	
 	public boolean retractBid(Bid oldBid) {
+		if( currentBid != oldBid ) {
+			return bids.remove(oldBid);
+		}
+		
 		return false;
 	}
 	
 	public Bid getCurrentBid() {
 		return this.currentBid;
+	}
+	
+	public int getTimeLeft() {
+		return this.remaining;
 	}
 }

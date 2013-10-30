@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import mud.ObjectFlag;
+import mud.TypeFlag;
 import mud.interfaces.Lockable;
 import mud.interfaces.Storage;
 
@@ -25,10 +26,12 @@ public class Chest extends Thing implements Lockable, Storage<Item> {
 	
 	public Chest() {
 		this("Public Chest", "A chest");
+		this.flags = EnumSet.noneOf(ObjectFlag.class);
 	}
 	
 	public Chest(String name, String desc) {
-		super(-1, name, EnumSet.of(ObjectFlag.THING), desc, 8);
+		super(-1, name, EnumSet.noneOf(ObjectFlag.class), desc, 8);
+		this.type = TypeFlag.ITEM;
 		thing_type = ThingType.CHEST;
 	}
 	
@@ -48,7 +51,8 @@ public class Chest extends Thing implements Lockable, Storage<Item> {
 	 * @param dbref
 	 */
 	public Chest(int dbref, String name, String desc, int location) {
-		super(dbref, name, EnumSet.of(ObjectFlag.THING), desc, location);
+		super(dbref, name, EnumSet.noneOf(ObjectFlag.class), desc, location);
+		this.type = TypeFlag.ITEM;
 		thing_type = ThingType.CHEST;
 	}
 	

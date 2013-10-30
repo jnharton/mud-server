@@ -35,6 +35,8 @@ public class Date implements Serializable {
 	 */
 	private static final long serialVersionUID = 1L;
 
+	private static int MAX_DAY = 31;
+	private static int MAX_MONTH = 12;
 	private static int MAX_YEAR = 9999;
 
 	private int month; // 1-12 (12 possible months)
@@ -42,50 +44,40 @@ public class Date implements Serializable {
 	private int year;  // 0000-9999 (10,000 possible years)
 
 	// date parsing regexp
-	transient static private String re1="(\\d)";	// Any Single Digit 1
-	transient static private String re2="(\\d)";	// Any Single Digit 2
-	transient static private String re3="(-)";	// Any Single Character 1
-	transient static private String re4="(\\d)";	// Any Single Digit 3
-	transient static private String re5="(\\d)";	// Any Single Digit 4
-	transient static private String re6="(-)";	// Any Single Character 2
-	transient static private String re7="((?:(?:[1]{1}\\d{1}\\d{1}\\d{1})|(?:[2]{1}\\d{3})))(?![\\d])";	// Year 1
-
-	//transient static private final String datePattern = re1+re2+re3+re4+re5+re6;
-	transient static private final String datePattern = 
-			"(\\d)(\\d)(-)(\\d)(\\d)(-)((?:(?:[1]{1}\\d{1}\\d{1}\\d{1})|(?:[2]{1}\\d{3})))(?![\\d])";
-
-	public Date() {
-	}
+	public static final String datePattern = "(\\d)(\\d)(-)(\\d)(\\d)(-)((?:(?:[1]{1}\\d{1}\\d{1}\\d{1})|(?:[2]{1}\\d{3})))(?![\\d])";
 
 	// assume 1 index day and month input 
 	public Date(int month, int day) {
+		this(month, day, -1);
+	}
+
+	public Date(int month, int day, int year) {
 		if( month >= 1 && month <= 12 ) {
 			this.month = month;
 		}
 		else {
-			if( month < 1 ) { this.month = 1; }
-			else if( month > 12 ) { this.month = 11; } 
+			this.month = 1; 
 		}
 
 		if( day >= 1 && day <= 31 ) {
 			this.day = day;
 		}
 		else {
-			if( day < 1 ) { this.day = 1; }
-			else if( day > 31 ) { this.day = 31; }
+			this.day = 1;
 		}
-	}
 
-	public Date(int month, int day, int year) {
-		this(month, day);
-
-		if( year >= 0 && year <= MAX_YEAR ) {
+		if( year >= 0 && year <= 9999 ) {
 			this.year = year;
 		}
 		else {
-			if( year > MAX_YEAR ) { this.year = MAX_YEAR; }
-			else if( year < 0 ) { this.year = 0; }
+			this.year = 0;
 		}
+	}
+	
+	public Date(Date toCopy) {
+		this.day = toCopy.day;
+		this.month = toCopy.month;
+		this.year = toCopy.year;
 	}
 
 	/**
