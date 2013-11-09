@@ -37,7 +37,7 @@ public class AttackCommand extends Command {
 			if (!arg.equals("")) {
 				// here we want to try and get whatever was targeted
 
-				MUDObject mobj = parent.getObject(arg);
+				MUDObject mobj = getObject(arg);
 
 				player.setTarget(mobj);
 
@@ -51,13 +51,13 @@ public class AttackCommand extends Command {
 					boolean attack = canAttack(player.getTarget());
 
 					if (attack) {
-						parent.send("Can attack.", client);
-						parent.send("You attack " + player.getTarget().getName() + ".", client);
+						send("Can attack.", client);
+						send("You attack " + player.getTarget().getName() + ".", client);
 
 						boolean inRange = true;
 
 						if (inRange) { // are they in range of our weapon?
-							parent.send("In range.", client);
+							send("In range.", client);
 
 							boolean hit = canHit(player.getTarget());
 
@@ -88,45 +88,45 @@ public class AttackCommand extends Command {
 								}
 
 								// tell us what 
-								parent.send("A solid hit! (" + damage + " damage )", client);
+								send("A solid hit! (" + damage + " damage )", client);
 								
 								if(target instanceof Player) {
 									if( ((Player) target).getHP() <= 0 ) {
-										parent.send("You killed " + ((Player) target).getName() + ".", client);
-										parent.handleDeath( (Player) target );
+										send("You killed " + ((Player) target).getName() + ".", client);
+										handleDeath( (Player) target );
 									}
 								}
 								else {
 									debug("Creature HP: " + ((Creature) target).getHP());
 									if( ((Creature) target).getHP() <= 0 ) {
-										parent.send("You killed " + ((Creature) target).getName() + ".", client);
-										parent.handleDeath( (Creature) target, client );
+										send("You killed " + ((Creature) target).getName() + ".", client);
+										handleDeath( (Creature) target, client );
 									}
 								}
 							}
 							else {
 								// reason we didn't hit? (this should determine our message)
-								parent.send("Wow, that was terrible, you barely touched them with that.", client);
+								send("Wow, that was terrible, you barely touched them with that.", client);
 
 							}
 						}
 						else { // else
 							switch(wt) {
 							case LONGSWORD:
-								parent.send("Really? You aren't even close enough to hit!", client);
+								send("Really? You aren't even close enough to hit!", client);
 								break;
 							default:
 								break;
 							}
-							parent.send("Your attack was ineffectual, since you couldn't reach your target.", client);
+							send("Your attack was ineffectual, since you couldn't reach your target.", client);
 						}
 					}
 					else {
-						parent.send("Hey! You can't attack that.", client);
+						send("Hey! You can't attack that.", client);
 					}
 				}
 				else {
-					parent.send("Your attempt to kill nothing looked really pitiful.", client);
+					send("Your attempt to kill nothing looked really pitiful.", client);
 				}
 			}
 		}

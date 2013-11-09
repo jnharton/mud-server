@@ -30,18 +30,18 @@ public class Season {
 
         WeatherState newState;
 		if (transitionDown && li.hasNext()) {
-            System.out.println("Transition Down");
+            //System.out.println("Transition Down");
             newState = li.next();
-            System.out.println("Is current equal to next? " + cs.equals(newState));
+            //System.out.println("Is current equal to next? " + cs.equals(newState));
             newState.upDown = -1;
         }
 		else if (!transitionDown && li.hasPrevious()) {
-            System.out.println("Transition Up");
+            //System.out.println("Transition Up");
             newState = li.previous();
             newState.upDown = 1;
         }
         else {
-            System.out.println("No Transition");
+            //System.out.println("No Transition");
             newState = cs;
             newState.upDown = 0;
         }

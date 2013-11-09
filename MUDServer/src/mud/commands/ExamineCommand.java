@@ -32,47 +32,47 @@ public class ExamineCommand extends Command {
 	public void execute(String arg, Client client) {
 		if ( arg.equals("here") ) {
 			Room room = getRoom(client);
-			parent.examine(room, client);
+			examine(room, client);
 		}
 		else if (arg.equals("me")) {
 			Player player = getPlayer(client);
-			parent.examine(player, client);
+			examine(player, client);
 		}
 		else {
             final int dbref = Utils.toInt(arg, -1);
 
 			if (dbref != -1) {
-				MUDObject mobj = parent.getObject(dbref);
+				MUDObject mobj = getObject(dbref);
 
 				if (mobj != null) {
 
 					if (mobj instanceof Room) {
 						Room room = (Room) mobj;
-						parent.examine(room, client);
+						examine(room, client);
 					}
 					
 					else if (mobj instanceof Item) {
 						Item item = (Item) mobj;
-						parent.examine(item, client);
+						examine(item, client);
 					}
 
 					else if (mobj instanceof Exit) {
 						Exit exit = (Exit) mobj;
-						parent.examine(exit, client);
+						examine(exit, client);
 					}
 					
 					else if (mobj instanceof Thing) {
 						Thing thing = (Thing) mobj;
-						parent.examine(thing, client);
+						examine(thing, client);
 					}
 					
 					else if (mobj instanceof Player) {
 						Player player = (Player) mobj;
-						parent.examine(player, client);
+						examine(player, client);
 					}
 
 					else {
-						parent.examine(mobj, client);
+						examine(mobj, client);
 					}
 				}
 				else {
@@ -84,14 +84,14 @@ public class ExamineCommand extends Command {
 				final Room room = getRoom(arg);
 				
 				if (room != null) {
-					parent.examine(room, client);
+					examine(room, client);
 					return;
 				}
 				
-				final Exit exit = parent.getExit(arg);
+				final Exit exit = getExit(arg);
 				
 				if (exit != null) {
-					parent.examine(exit, client);
+					examine(exit, client);
 					return;
 				}
 				
@@ -99,20 +99,18 @@ public class ExamineCommand extends Command {
 				final Player player = getPlayer(arg);
 				
 				if (player != null) {
-					parent.examine(player, client);
+					examine(player, client);
 					return;
 				}
 				
 				final NPC npc = getNPC(arg);
 				
 				if (npc != null) {
-					parent.examine(npc, client);
+					examine(npc, client);
 					return;
 				}
 				
-				
 				send("That doesn't exist.", client);
-				
 			}
 		}
 	}

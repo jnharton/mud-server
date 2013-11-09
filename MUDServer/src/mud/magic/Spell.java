@@ -68,6 +68,8 @@ public class Spell
 	protected String name, castMsg;
 	protected ArrayList<Effect> effects;  // an arraylist of spell effects (e.g. invisibility, acid resistance)
 	protected HashMap<String, Reagent> reagents; // a matched set of reagent:quantity spell requirements?
+	
+	public int target = 0;
 
 	protected int manaCost = 5;
 	

@@ -301,21 +301,19 @@ public class ObjectDB {
      * @return
      */
     public int[] getFlagCounts(final String[] letters) {
-        final int[] counts = new int[letters.length];
-        Arrays.fill(counts, 0);
-        
-        // objsById returns more objects than objsByName
+    	final int[] counts = new int[letters.length];
+    	Arrays.fill(counts, 0);
 
-        for (final MUDObject obj : objsById.values()) {
-            for (final ObjectFlag f : obj.getFlags()) {
-                for (int i = 0; i < letters.length; i++) {
-                    if (f.toString().startsWith(letters[i])) {
-                        counts[i] += 1;
-                    }
-                }
-            }
-        }
-        return counts;
+    	// objsById returns more objects than objsByName
+    	for (final MUDObject obj : objsById.values()) {
+    		for (int i = 0; i < letters.length; i++) {
+    			if (obj.type.toString().startsWith(letters[i])) {
+    				counts[i] += 1;
+    			}
+    		}
+    	}
+    	
+    	return counts;
     }
 
     // Serialize all objects via `toDB` and save array to file.

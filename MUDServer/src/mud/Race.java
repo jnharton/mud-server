@@ -38,24 +38,24 @@ public class Race {
 		this.canFly = canFly;
 	}
 	
+	public String getName() {
+		return this.name;
+	}
+	
+	public void setSubrace(Subrace sub) {
+		this.sub = sub;
+	}
+	
+	public Subrace getSubrace() {
+		return this.sub;
+	}
+	
 	public int getId() {
 		return this.id;
 	}
 
 	public Integer[] getStatAdjust() {
 		return this.statAdj;
-	}
-	
-	public Subrace getSubrace() {
-		return this.sub;
-	}
-
-	public void setSubrace(Subrace sub) {
-		this.sub = sub;
-	}
-
-	public String getName() {
-		return this.name;
 	}
 
 	public boolean isRestricted() {
@@ -77,10 +77,10 @@ public class Race {
 	
 	public class Subrace {
 		public Race parentRace;
-		public String name;
-		public String alt;
+		public String name;     // name of the subrace
+		public String alt;      // common alternate name for the subrace
 
-		Subrace(Race pRace, String name, String alt) {
+		public Subrace(Race pRace, String name, String alt) {
 			this.parentRace = pRace;
 			this.name = name;
 			this.alt = alt;

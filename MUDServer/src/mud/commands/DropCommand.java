@@ -56,13 +56,13 @@ public class DropCommand extends Command {
 				
 				if( room.getTerrain() == Terrain.SKY ) {
 					int id = Utils.toInt( (String) room.getProperty("dropto"), -1 );
-					Room room1 = parent.getRoom( id );
+					Room room1 = getRoom( id );
 					
 					if( room1 != null ) {
 						item.setLocation(room.getDBRef());
 						room1.addItem(item);
 						
-						send("You drop " + parent.colors(item.getName(), "yellow") + " and it falls toward the ground...", client);
+						send("You drop " + colors(item.getName(), "yellow") + " and it falls toward the ground...", client);
 					}
 					else {
 						item.setLocation( -1 );
@@ -73,7 +73,7 @@ public class DropCommand extends Command {
 					room.addItem(item);
 					// check for silent flag to see if object's dbref name should be shown as well?
 					// return message telling the player that they dropped the object
-					send("You dropped " + parent.colors(item.getName(), "yellow") + " on the floor.", client);
+					send("You dropped " + colors(item.getName(), "yellow") + " on the floor.", client);
 					// return message telling others that the player dropped the item?
 				}
 				break;

@@ -14,7 +14,7 @@ import mud.Colors;
  * 
  * An object to represent quests given to players to complete.
  * 
- * @see "Last Work: 6/4/2012"
+ * @see "Last Work: 11/4/2013"
  * 
  * @author Jeremy
  *
@@ -25,26 +25,54 @@ public class Quest {
 	private int id;                     // quest id
 	private String name;                // quest name
 	private String description;         // quest description (does it need a short and long version or just this?)
-	private Date issueDate;             // the in-game date the quest was given
-	private Date expireDate;            // the in-game date that the quests expires (for time-limited things?)
+	private Zone location;              // the quest region (for instance if you must kill the kobolds in region X for the reward)
+	
+	private Date issueDate = null;      // the in-game date the quest was given
+	private Date expireDate = null;     // the in-game date that the quests expires (for time-limited things?)
+	
 	private boolean isComplete = false; // is the quest completed? (this should put it in a deletion queue if we delete completed quests)
 	
-	private Zone location;
+	final private ArrayList<Task> tasks; // a list of tasks that must be completed to finish the quest
 	
-	public boolean Edit_Ok = true;
-
-	final private ArrayList<Task> tasks;      // a list of tasks that must be completed to finish the quest
+	public boolean Edit_Ok = true; // can the quest be edited safely (no one else is editing it)
 	
-	public Quest() {
+	/**
+	 * Construct a "blank quest" (for editing purposes)
+	 */
+	public Quest( String qName, String qDescription ) {
+		this.id = -1;
+		this.name = qName;
+		this.description = qDescription;
+		this.location = null;
 		this.tasks = new ArrayList<Task>();
 	}
-
-	public Quest( String qName, String qDescription, Zone qLocation, Task...tasks ) {
+	
+	/**
+	 * Construct a quest with no tasks.
+	 * 
+	 * @param qName
+	 * @param qDescription
+	 * @param qLocation
+	 */
+	public Quest( String qName, String qDescription, Zone qLocation ) {
 		this.id = lastId++;
 		this.name = qName;
 		this.description = qDescription;
 		this.location = qLocation;
-		this.tasks = new ArrayList<Task>(Arrays.asList(tasks));
+		this.tasks = new ArrayList<Task>();
+	}
+	
+	/**
+	 * Construct a task with the specified tasks
+	 * 
+	 * @param qName
+	 * @param qDescription
+	 * @param qLocation
+	 * @param tasks
+	 */
+	public Quest( String qName, String qDescription, Zone qLocation, Task...tasks ) {
+		this(qName, qDescription, qLocation);
+		this.tasks.addAll(Arrays.asList(tasks));
 	}
 	
 	/**
@@ -170,6 +198,10 @@ public class Quest {
 	
 	public void setExpires(Date expirationDate) {
 		this.expireDate = expirationDate;
+	}
+	
+	public void init() {
+		if( this.id == -1 ) this.id = lastId++;
 	}
 
     @Override

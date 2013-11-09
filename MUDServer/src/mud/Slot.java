@@ -34,41 +34,22 @@ import mud.objects.items.ClothingType;
  */
 public class Slot {
 	private String description;        // descriptive text
-	private SlotType[] slotTypes;      // the type of slot this is
+	private SlotType slotType;         // the type of slot this is
 	private ItemType itemType;         // the type of item the slot can hold
 	private ClothingType clothingType; // the type of clothing item the slot can hold
 	private Item item;                 // the item the slot currently holds
 
 	/**
-	 * Constructs a slot based on a single parameter, an
+	 * Constructs a slot based on a two parameters, the type of s
 	 * item type that it can hold.
 	 * 
 	 * @param slotType
 	 * @param itemType
 	 */
-	public Slot(final SlotType[] slotTypes, final ItemType itemType) {
-		this(slotTypes, itemType, null);
-	}
-
-	/**
-	 * Constructs a slot based on two parameters: the
-	 * item type it can hold and an item to place in the
-	 * slot as it is being constructed.
-	 * 
-	 * @param slotType
-	 * @param itemType
-	 * @param item
-	 */
-	public Slot(final SlotType[] slotTypes, final ItemType itemType, final Item item) {
-		this.slotTypes = slotTypes;
+	//public Slot(final SlotType[] slotTypes, final ItemType itemType) {
+	public Slot(final SlotType slotType, final ItemType itemType) {
+		this.slotType = slotType;
 		this.itemType = itemType;
-		
-		if (item != null) { // ensure that putting null in doesn't register as full
-			this.item = item;
-		}
-		else {
-			this.item = null;
-		}
 	}
 	
 	/**
@@ -78,30 +59,14 @@ public class Slot {
 	 * @param slotType
 	 * @param clothingType
 	 */
-	public Slot(final SlotType[] slotTypes, final ClothingType clothingType) {
-		this(slotTypes, clothingType, null);
-	}
-	
-	/**
-	 * Constructs a slot based on two parameters: the
-	 * item type it can hold and an item to place in the
-	 * slot as it is being constructed.
-	 * 
-	 * @param slotType
-	 * @param clothingType
-	 * @param clothing
-	 */
-	public Slot(final SlotType[] slotTypes, final ClothingType clothingType, final Clothing clothing) {
-		this.slotTypes = slotTypes;
+	//public Slot(final SlotType[] slotTypes, final ClothingType clothingType) {
+	public Slot(final SlotType slotType, final ClothingType clothingType) {
+		//this(slotTypes, clothingType, null);
+		this.slotType = slotType;
 		this.itemType = ItemType.CLOTHING;
 		this.clothingType = clothingType;
 		
-		if (clothing != null) { // ensure that putting null in doesn't register as full
-			this.item = clothing;
-		}
-		else {
-			this.item = null;
-		}
+		this.item = null;
 	}
 	
 	/**
@@ -172,8 +137,8 @@ public class Slot {
 		return this.clothingType;
 	}
 	
-	public SlotType[] getSlotTypes() {
-		return this.slotTypes;
+	public SlotType getSlotType() {
+		return this.slotType;
 	}
 	
 	/**

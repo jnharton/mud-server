@@ -7,3 +7,4 @@ cure light wounds#You cast cure light wounds on &target.#instant#heal+10#none#en
 cure moderate wounds#You cast cure moderate wounds on &target.#instant#heal+20#none#enemy,self,friend
 arcane lock#You cast arcane lock on &target#permanent#arcane_lock#none#item,thing
 eagles_splendor#You cast Eagle's Splendor#instant#cha+4#none#self,friend
+doom#You cast Doom#instant#cha-4#none#self

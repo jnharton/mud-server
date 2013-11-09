@@ -891,4 +891,14 @@ public final class Utils {
 	public static int square(int num) {
 		return num * num;
 	}
+	
+	public static <T> List<T> mkList(T...objects) {
+		List<T> result = new LinkedList<T>();
+		for(T obj : objects) {
+			result.add(obj);
+		}
+		
+		return result;
+		
+	}
 }

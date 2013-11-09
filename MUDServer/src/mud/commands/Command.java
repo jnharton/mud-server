@@ -1,10 +1,22 @@
 package mud.commands;
 
+import java.util.ArrayList;
+import java.util.TimerTask;
+
+import mud.Effect;
+import mud.MUDObject;
 import mud.MUDServer;
+import mud.ProgramInterpreter;
+import mud.magic.Spell;
 import mud.net.Client;
+import mud.objects.Creature;
+import mud.objects.Exit;
 import mud.objects.NPC;
 import mud.objects.Player;
 import mud.objects.Room;
+import mud.utils.EffectTimer;
+import mud.utils.Message;
+import mud.utils.SpellTimer;
 
 /*
  * Copyright (c) 2012 Jeremy N. Harton
@@ -22,11 +34,7 @@ public abstract class Command {
 	protected static int WIZARD = 2; //
 	protected static int GOD = 3;    // Pff, such arrogant idiots we are! (anyway, max permissions)
 	
-	protected MUDServer parent;
-	
-	public Command() {
-		this(null);
-	}
+	private MUDServer parent;
 
 	/**
 	 * Construct a command object with a parent
@@ -36,7 +44,7 @@ public abstract class Command {
 	 * 
 	 * @param mParent
 	 */
-	public Command(MUDServer mParent) {
+	protected Command(MUDServer mParent) {
 		this.parent = mParent;
 	}
 	
@@ -68,7 +76,7 @@ public abstract class Command {
 	 * 
 	 * @param toSend
 	 */
-	public void send(String toSend, Client client) {
+	protected final void send(String toSend, Client client) {
 		this.parent.send(toSend, client);
 	}
 	
@@ -81,12 +89,57 @@ public abstract class Command {
 	 * 
 	 * @param toSend
 	 */
-	public void debug(String toSend) {
+	protected final void debug(String toSend) {
 		this.parent.debug(toSend);
 	}
 	
-	public String gameError(String source, int type) {
+	protected final void addMessage(final Message msg) {
+		parent.addMessage(msg);
+	}
+	
+	protected final String gameError(String source, int type) {
 		return this.parent.gameError(source, type);
+	}
+	
+	protected final ProgramInterpreter getProgInt() {
+		return parent.getProgInt();
+	}
+	
+	protected final void scheduleAtFixedRate(final TimerTask task, final long delay, final long period) {
+		parent.timer.scheduleAtFixedRate(task, delay, period);
+		
+	}
+	
+	protected final String colors(final String arg, final String cc) {
+		return parent.colors(arg,  cc);
+	}
+	
+	protected final String[] getHelpFile(String name) {
+		return parent.getHelpFile(name);
+	}
+	
+	protected final String[] getTopicFile(String name) {
+		return parent.getTopicFile(name);
+	}
+	
+	protected final void examine(final MUDObject m, final Client client) {
+		examine(m, client);
+	}
+	
+	protected final Spell getSpell(final String name) {
+		return parent.getSpell(name);
+	}
+	
+	protected final MUDObject getObject(final String name) {
+		return parent.getObject(name);
+	}
+	
+	protected final MUDObject getObject(final String objectName, final Client client) {
+		return parent.getObject(objectName, client);
+	}
+	
+	protected final MUDObject getObject(Integer dbref) {
+		return parent.getObject(dbref);
 	}
 	
 	/**
@@ -98,7 +151,7 @@ public abstract class Command {
 	 * @param object
 	 * @return
 	 */
-	public Player getPlayer(Object object) {
+	protected final Player getPlayer(Object object) {
 		if( object instanceof String ) {
 			return parent.getPlayer((String) object);
 		}
@@ -112,7 +165,7 @@ public abstract class Command {
 		return null;
 	}
 	
-	public NPC getNPC(Object object) {
+	protected final NPC getNPC(Object object) {
 		if( object instanceof String ) {
 			return parent.getNPC((String) object);
 		}
@@ -132,14 +185,49 @@ public abstract class Command {
 	 * @param object
 	 * @return
 	 */
-	public Room getRoom(Object object) {
+	protected final Room getRoom(Object object) {
 		if( object instanceof String ) {
 			return parent.getRoom((String) object);
 		}
-		else if( object instanceof Client ) {
-			return parent.getRoom((Client) object);
+		else if( object instanceof Player ) {
+			return parent.getRoom((Player) object);
+		}
+		else if( object instanceof Integer ) {
+			return parent.getRoom((Integer) object);
 		}
 		
 		return null;
+	}
+	
+	protected final Exit getExit(final String exitName) {
+		return parent.getExit(exitName);
+	}
+	
+	protected final ArrayList<Player> getPlayers() {
+		return parent.getPlayers();
+	}
+	
+	protected final void addSpellTimer(final Player player, final SpellTimer s) {
+		parent.getSpellTimers(player).add(s);
+	}
+	
+	protected final void addEffectTimer(final Player player, final EffectTimer e) {
+		parent.getEffectTimers(player).add(e);
+	}
+	
+	protected final boolean applyEffect(final MUDObject m, final Effect effect) {
+		return parent.applyEffect(m, effect);
+	}
+	
+	protected final void handleDeath(Player player) {
+		parent.handleDeath(player);
+	}
+	
+	protected final void handleDeath(Creature creature, Client client) {
+		parent.handleDeath(creature, client);
+	}
+	
+	protected final void handleMail(final String input, final Client client) {
+		handleMail(input, client);
 	}
 }

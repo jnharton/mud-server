@@ -24,12 +24,12 @@ public class AliasCommand extends Command {
 	@Override
 	public void execute(String arg, Client client) {
 		if ( arg.equals("#list") ) {
-			parent.send("Aliases", client);
-			parent.send("-------------------------------------------", client);
+			send("Aliases", client);
+			send("-------------------------------------------", client);
 			for (final Entry<String, String> e : parent.aliases.entrySet()) {
-				parent.send(e.getKey() + " : " + e.getValue(), client);
+				send(e.getKey() + " : " + e.getValue(), client);
 			}
-			parent.send("-------------------------------------------", client);
+			send("-------------------------------------------", client);
 		}
 		else {
 			// if no set of things to alias to, just show existing aliases for it if any

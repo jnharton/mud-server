@@ -41,7 +41,7 @@ public class CastCommand extends Command {
 			return;
 		}
 
-		final Spell spell = parent.getSpell(spellName);
+		final Spell spell = getSpell(spellName);
 
 		if (spell == null) {
 			send("You move your fingers and mumble, but nothing happens. Must have been the wrong words.", client);
@@ -73,6 +73,12 @@ public class CastCommand extends Command {
 			}
 
 			final MUDObject target = player.getTarget();
+			
+			// check validity of target for this spell
+			if( !validTarget( target, spell, player ) ) {
+				send("Game> Invalid Target for Spell!", client);
+				return;
+			}
 
 			// expend mana
 			player.setMana(-spell.getManaCost());
@@ -98,32 +104,62 @@ public class CastCommand extends Command {
 
 				// apply effects to the target
 				for (final Effect e : spell.getEffects()) {
+					applyEffect(target, e); // apply the effect to the target
+					
+					// is there ever a case where the caster wouldn't be a player here?
+					SpellTimer sTimer = new SpellTimer(spell, 60);     // spell timer with default (60 sec) cooldown
+					addSpellTimer(player, sTimer);
+					scheduleAtFixedRate(sTimer, 0, 1000);
+					
+					EffectTimer etimer = new EffectTimer(e, 30);
+					addEffectTimer(player, etimer);
+					scheduleAtFixedRate(etimer, 0, 1000); // create countdown timer
+					
+					// if our target is a player set timers for us and tell them, otherwise don't bother
 					if(target instanceof Player) {
-						System.out.println("Target is Player.");
-						parent.applyEffect((Player) target, e);            // apply the effect to the target
-						
-						SpellTimer sTimer = new SpellTimer(spell, 60);     // spell timer with default (60 sec) cooldown
-						parent.getSpellTimers(player).add(sTimer);
-						parent.timer.scheduleAtFixedRate(sTimer, 0, 1000);
-						
-						EffectTimer etimer = new EffectTimer(e, 30);
-						parent.getEffectTimers(player).add(etimer);
-						parent.timer.scheduleAtFixedRate(etimer, 0, 1000); // create countdown timer
+						debug("Target is Player.");
+						addMessage(new Message(player, player.getName() + " cast " + spell.getName() + " on you." , (Player) target));
 					}
-					else {
-						System.out.println("Target is Player.");
-						parent.applyEffect(target, e);
-					}
-				}
-
-				// if our target is a player tell them otherwise don't bother
-				if (target instanceof Player) {
-					parent.addMessage(new Message(player, player.getName() + " cast " + spell.getName() + " on you." , (Player) target));
 				}
 			}
 			else {
 				send("A bit of magical energy sparks off you briefly, then fizzles out. Drat!", client);
 			}
+		}
+	}
+	
+	// is TARGET a valid target for SPELL cast by PLAYER
+	private boolean validTarget( MUDObject target, Spell spell, Player player) {
+		if( target instanceof Player ) {
+			Player player1 = (Player) target;
+			
+			int x = 1;
+			// replace 'x == 1' with a check on the spell for 'self' as a target,
+			// code below implies that any spell can be targeted at yourself
+			if( x == 1 ) { // if self true
+				if( player == player1 ) return true;
+				else if( x == 1 ) { // if the spell can target friendly
+				}
+				else { // if not ( spell targets hostiles )
+				}
+				
+				return false; // dummy return
+			}
+			else { // if self not true
+				if( player == player1 ) return false;
+				// check friendly/hostile
+				else if( x == 1 ) { // if the spell can target friendly
+				}
+				else { // if not ( spell targets hostiles )
+				}
+				
+				return false; // dummy return
+			}
+			// if target is friendly, can the spell target friendlies?
+			// if target is hostile, can the spell target hostiles?
+		}
+		else {
+			return true; // assuming that the spell can target any object, regardless
 		}
 	}
 

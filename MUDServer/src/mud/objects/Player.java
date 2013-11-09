@@ -85,6 +85,12 @@ public class Player extends MUDObject
 
 	// levels: 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
 	private static int[] levelXP = { 0, 1000, 3000, 6000, 10000, 15000, 21000, 28000, 36000, 45000, 55000, 66000 };
+	// level[n] = level[n-1] + (n * 1000)
+	// n=0: ? + (0 * 1000)
+	// n=1: 1000 = 0 + ( 1 * 1000) !
+	// n=2; 3000 = 1000 + (2 * 1000)
+	// n=3: 6000 = 3000 + (3 * 1000)
+	// n=4: 10000 = 6000 + (4 * 1000)
 	
 	/**
 	 * Player State
@@ -291,21 +297,21 @@ public class Player extends MUDObject
 		this.slots = new LinkedHashMap<String, Slot>(11, 0.75f);
 
 		// initialize slots
-		this.slots.put("helmet", new Slot(new SlotType[] { SlotType.HEAD }, ItemType.HELMET));
-		this.slots.put("necklace", new Slot(new SlotType[] { SlotType.NECK }, ItemType.NECKLACE));
-		this.slots.put("armor", new Slot(new SlotType[] { SlotType.CHEST }, ItemType.ARMOR));
-		this.slots.put("cloak", new Slot(new SlotType[] { SlotType.BACK }, ClothingType.CLOAK));
-		this.slots.put("ring1", new Slot(new SlotType[] { SlotType.FINGER }, ItemType.RING));
-		this.slots.put("ring2", new Slot(new SlotType[] { SlotType.FINGER }, ItemType.RING));
-		this.slots.put("ring3", new Slot(new SlotType[] { SlotType.FINGER }, ItemType.RING));
-		this.slots.put("ring4", new Slot(new SlotType[] { SlotType.FINGER }, ItemType.RING));
-		this.slots.put("ring5", new Slot(new SlotType[] { SlotType.FINGER }, ItemType.RING));
-		this.slots.put("ring6", new Slot(new SlotType[] { SlotType.FINGER }, ItemType.RING));
-		this.slots.put("gloves", new Slot(new SlotType[] { SlotType.HANDS }, ClothingType.GLOVES));
-		this.slots.put("weapon", new Slot(new SlotType[] { SlotType.RHAND }, ItemType.WEAPON));
-		this.slots.put("weapon1", new Slot(new SlotType[] { SlotType.LHAND }, ItemType.WEAPON));
-		this.slots.put("belt", new Slot(new SlotType[] { SlotType.WAIST }, ClothingType.BELT));;
-		this.slots.put("boots", new Slot(new SlotType[] { SlotType.FEET }, ClothingType.BOOTS));
+		this.slots.put("helmet", new Slot( SlotType.HEAD, ItemType.HELMET));
+		this.slots.put("necklace", new Slot( SlotType.NECK, ItemType.NECKLACE));
+		this.slots.put("armor", new Slot( SlotType.CHEST, ItemType.ARMOR));
+		this.slots.put("cloak", new Slot( SlotType.BACK, ClothingType.CLOAK));
+		this.slots.put("ring1", new Slot( SlotType.FINGER, ItemType.RING));
+		this.slots.put("ring2", new Slot( SlotType.FINGER, ItemType.RING));
+		this.slots.put("ring3", new Slot( SlotType.FINGER, ItemType.RING));
+		this.slots.put("ring4", new Slot( SlotType.FINGER, ItemType.RING));
+		this.slots.put("ring5", new Slot( SlotType.FINGER, ItemType.RING));
+		this.slots.put("ring6", new Slot( SlotType.FINGER, ItemType.RING));
+		this.slots.put("gloves", new Slot( SlotType.HANDS, ClothingType.GLOVES));
+		this.slots.put("weapon", new Slot( SlotType.RHAND, ItemType.WEAPON));
+		this.slots.put("weapon1", new Slot( SlotType.LHAND, ItemType.WEAPON));
+		this.slots.put("belt", new Slot( SlotType.WAIST, ClothingType.BELT));
+		this.slots.put("boots", new Slot( SlotType.FEET, ClothingType.BOOTS));
 
 		// instantiate stats
 		stats = new LinkedHashMap<Abilities, Integer>(6, 0.75f);
@@ -423,21 +429,21 @@ public class Player extends MUDObject
 		this.slots = new LinkedHashMap<String, Slot>(11, 0.75f);
 
 		// initialize slots
-		this.slots.put("helmet", new Slot(new SlotType[] { SlotType.HEAD }, ItemType.HELMET));
-		this.slots.put("necklace", new Slot(new SlotType[] { SlotType.NECK }, ItemType.NECKLACE));
-		this.slots.put("armor", new Slot(new SlotType[] { SlotType.CHEST }, ItemType.ARMOR));
-		this.slots.put("cloak", new Slot(new SlotType[] { SlotType.BACK }, ClothingType.CLOAK));
-		this.slots.put("ring1", new Slot(new SlotType[] { SlotType.FINGER }, ItemType.RING));
-		this.slots.put("ring2", new Slot(new SlotType[] { SlotType.FINGER }, ItemType.RING));
-		this.slots.put("ring3", new Slot(new SlotType[] { SlotType.FINGER }, ItemType.RING));
-		this.slots.put("ring4", new Slot(new SlotType[] { SlotType.FINGER }, ItemType.RING));
-		this.slots.put("ring5", new Slot(new SlotType[] { SlotType.FINGER }, ItemType.RING));
-		this.slots.put("ring6", new Slot(new SlotType[] { SlotType.FINGER }, ItemType.RING));
-		this.slots.put("gloves", new Slot(new SlotType[] { SlotType.HANDS }, ClothingType.GLOVES));
-		this.slots.put("weapon", new Slot(new SlotType[] { SlotType.RHAND }, ItemType.WEAPON));
-		this.slots.put("weapon1", new Slot(new SlotType[] { SlotType.LHAND }, ItemType.WEAPON));
-		this.slots.put("belt", new Slot(new SlotType[] { SlotType.WAIST }, ClothingType.BELT));;
-		this.slots.put("boots", new Slot(new SlotType[] { SlotType.FEET }, ClothingType.BOOTS));
+		this.slots.put("helmet", new Slot( SlotType.HEAD, ItemType.HELMET));
+		this.slots.put("necklace", new Slot( SlotType.NECK, ItemType.NECKLACE));
+		this.slots.put("armor", new Slot( SlotType.CHEST, ItemType.ARMOR));
+		this.slots.put("cloak", new Slot( SlotType.BACK, ClothingType.CLOAK));
+		this.slots.put("ring1", new Slot( SlotType.FINGER, ItemType.RING));
+		this.slots.put("ring2", new Slot( SlotType.FINGER, ItemType.RING));
+		this.slots.put("ring3", new Slot( SlotType.FINGER, ItemType.RING));
+		this.slots.put("ring4", new Slot( SlotType.FINGER, ItemType.RING));
+		this.slots.put("ring5", new Slot( SlotType.FINGER, ItemType.RING));
+		this.slots.put("ring6", new Slot( SlotType.FINGER, ItemType.RING));
+		this.slots.put("gloves", new Slot( SlotType.HANDS, ClothingType.GLOVES));
+		this.slots.put("weapon", new Slot( SlotType.RHAND, ItemType.WEAPON));
+		this.slots.put("weapon1", new Slot( SlotType.LHAND, ItemType.WEAPON));
+		this.slots.put("belt", new Slot( SlotType.WAIST, ClothingType.BELT));
+		this.slots.put("boots", new Slot( SlotType.FEET, ClothingType.BOOTS));
 
 		// instantiate stats
 		stats = new LinkedHashMap<Abilities, Integer>(6, 0.75f);
@@ -727,7 +733,9 @@ public class Player extends MUDObject
 	 * @return long the amount of experience needed for the player
 	 * to 'level up' to the next level
 	 */
-	public int getXPToLevel() { return Player.levelXP[level]; }
+	public int getXPToLevel() {
+		return Player.levelXP[level];
+	}
 
 	public int getHP() {
 		return this.hp;
@@ -767,6 +775,10 @@ public class Player extends MUDObject
 
 	public void setAbility(Abilities ability, int abilityValue) {
 		this.stats.put(ability, abilityValue);
+	}
+	
+	public int getAbilityMod(Abilities ability) {
+		return this.statMod[ability.ordinal()];
 	}
 
 	public void setAbilityMod(Abilities ability, int abilityMod) {

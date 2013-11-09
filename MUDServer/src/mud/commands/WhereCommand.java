@@ -36,7 +36,7 @@ public class WhereCommand extends Command {
 		
 		send("Player     Class     S Race      Idle Status Location", client);
 		send("-------------------------------------------------------------------------------------------------", client);
-		for (Player player : parent.getPlayers())
+		for (Player player : getPlayers())
 		{
 			try {
 				String name = player.getName();             // name ( 10 characters )
@@ -47,12 +47,19 @@ public class WhereCommand extends Command {
 				String race = player.getPRace().toString();
 				String ustatus = player.getStatus();        // status ( 3 characters )
 				int location = player.getLocation();        // room # ( 5 characters ) (max. 99999?)
-				String room = parent.getRoom(location).getName(); // truncate to 24 characters
+				String room = getRoom(location).getName(); // truncate to 24 characters
 				String locString;
 				if (player.hasEffect("invisibility")) { locString = "INVISIBLE"; }
 				else { locString = room + " (#" + player.getLocation() + ")"; }
 				String idle = player.getIdleString();
-
+				
+				
+				// example output:
+				//
+				// Player     Class     S Race      Idle Location
+				// --------------------------------------------------------------
+				// Nathan      None      N None      ---- Red Dragon Inn
+				// --------------------------------------------------------------
 				if (names.contains(name) || currName.equals(name)) {
 					send(Utils.padRight(name, 10) + " " + Utils.padRight(playerClass, 9) + " " + Utils.padRight(playerGender, 1)
 							+ Utils.padRight(race, 9) + " " + Utils.padRight(idle, 4) + " " + Utils.padRight(ustatus, 6) + " " + locString, client);

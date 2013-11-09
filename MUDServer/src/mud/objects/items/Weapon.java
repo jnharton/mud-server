@@ -25,7 +25,7 @@ public class Weapon extends Item implements Equippable<Weapon>, Wieldable
 	Handed handed;
 
 	public Weapon() {
-		super(-1, "Sword", null, "A nice, shiny steel longsword.", 8);
+		super(-1, "Sword", EnumSet.noneOf(ObjectFlag.class), "A nice, shiny steel longsword.", 8);
 		this.type = TypeFlag.ITEM;
 		this.equippable = true;
 		this.equip_type = ItemType.WEAPON;       // the type of equipment it is
@@ -50,7 +50,7 @@ public class Weapon extends Item implements Equippable<Weapon>, Wieldable
 	
 	public Weapon(int wMod, Handed handed, WeaponType wType)
 	{
-		super(-1, wType.getName(), null, "A nice, shiny steel longsword.", 8);
+		super(-1, wType.getName(), EnumSet.noneOf(ObjectFlag.class), "A nice, shiny steel longsword.", 8);
 		this.type = TypeFlag.ITEM;
 		this.equippable = true;
 		this.equip_type = ItemType.WEAPON; // the type of equipment it is
@@ -63,7 +63,7 @@ public class Weapon extends Item implements Equippable<Weapon>, Wieldable
 
 	public Weapon(int wMod, Handed handed, WeaponType wType, double wWeight)
 	{
-		super(-1, "Sword", null, "A nice, shiny steel longsword.", 8);
+		super(-1, "Sword", EnumSet.noneOf(ObjectFlag.class), "A nice, shiny steel longsword.", 8);
 		this.type = TypeFlag.ITEM;
 		this.equippable = true;
 		this.equip_type = ItemType.WEAPON; // the type of equipment it is
@@ -76,7 +76,7 @@ public class Weapon extends Item implements Equippable<Weapon>, Wieldable
 	
 	public Weapon(String wName, String wDesc, int wMod, Handed handed, WeaponType wType, double wWeight)
 	{
-		super(-1, wName, null, wDesc, -1);
+		super(-1, wName, EnumSet.noneOf(ObjectFlag.class), wDesc, -1);
 		this.type = TypeFlag.ITEM;
 		this.equippable = true;
 		this.equip_type = ItemType.WEAPON; // the type of equipment it is
@@ -104,7 +104,7 @@ public class Weapon extends Item implements Equippable<Weapon>, Wieldable
 	 */
 	public Weapon(String wName, String wDesc, int wLoc, int wDBREF, int wMod, Handed handed, WeaponType wType, double wWeight)
 	{
-		super(wDBREF, wName, null, wDesc, wLoc);
+		super(wDBREF, wName, EnumSet.noneOf(ObjectFlag.class), wDesc, wLoc);
 		this.type = TypeFlag.ITEM;
 		this.equippable = true;
 		this.equip_type = ItemType.WEAPON; // the type of equipment it is

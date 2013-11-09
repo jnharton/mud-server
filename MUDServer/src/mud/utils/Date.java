@@ -52,26 +52,14 @@ public class Date implements Serializable {
 	}
 
 	public Date(int month, int day, int year) {
-		if( month >= 1 && month <= 12 ) {
-			this.month = month;
-		}
-		else {
-			this.month = 1; 
-		}
+		if( month >= 1 && month <= MAX_MONTH ) this.month = month;
+		else this.month = 1;
 
-		if( day >= 1 && day <= 31 ) {
-			this.day = day;
-		}
-		else {
-			this.day = 1;
-		}
+		if( day >= 1 && day <= MAX_DAY ) this.day = day;
+		else this.day = 1;
 
-		if( year >= 0 && year <= 9999 ) {
-			this.year = year;
-		}
-		else {
-			this.year = 0;
-		}
+		if( year >= 0 && year <= MAX_YEAR ) this.year = year;
+		else this.year = 0;
 	}
 	
 	public Date(Date toCopy) {
@@ -108,8 +96,6 @@ public class Date implements Serializable {
 	}
 
 	class DateFormatException extends IllegalArgumentException {
-		public DateFormatException() {}
-
 		public DateFormatException(String s) {
 			super(s);
 		}

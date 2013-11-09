@@ -337,6 +337,7 @@ public class Room extends MUDObject implements EventSource
 
 	// call this method whenever you want to notify
 	//the event listeners of the particular event
+	@Override
 	public synchronized void fireEvent(String message) {
 		SayEvent event = new SayEvent(this, message);
 		Iterator<SayEventListener> iter = _listeners.iterator();

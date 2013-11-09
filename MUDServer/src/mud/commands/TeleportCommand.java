@@ -37,7 +37,7 @@ public class TeleportCommand extends Command {
 		MUDObject target = null;
 		
 		if(args.length > 1) {
-			target = parent.getObject(args[0]);
+			target = getObject(args[0]);
 			
 			dbref = Utils.toInt(args[1], -1);
 		}

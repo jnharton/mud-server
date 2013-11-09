@@ -40,7 +40,7 @@ public abstract class MUDObject {
 	protected String desc = "";                                             // object description
 	protected TypeFlag type = TypeFlag.OBJECT;                              // object type
 	protected EnumSet<ObjectFlag> flags = EnumSet.noneOf(ObjectFlag.class); // object flags
-	protected Object locks = "";                                            // object locks
+	protected String locks = "";                                            // object locks
 	protected int location = 0;                                             // object location
 	
 	protected LinkedHashMap<String, Object> props = new LinkedHashMap<String, Object>(1, 0.75f);
@@ -216,7 +216,7 @@ public abstract class MUDObject {
 	 * 
 	 * @return
 	 */
-	public int getDBRef()
+	public final int getDBRef()
 	{
 		return this.dbref;
 	}
@@ -226,7 +226,7 @@ public abstract class MUDObject {
 	 * 
 	 * @param newDBRef
 	 */
-	public void setDBRef(int newDBRef)
+	public final void setDBRef(int newDBRef)
 	{
 		this.dbref = newDBRef;
 	}
@@ -261,7 +261,7 @@ public abstract class MUDObject {
 	 * 
 	 * @return
 	 */
-	public LinkedHashMap<String, Object> getProps() {
+	final public LinkedHashMap<String, Object> getProps() {
 		return this.props;
 	}
 	
@@ -273,7 +273,7 @@ public abstract class MUDObject {
 	 * @param key   property name
 	 * @param value property value
 	 */
-	public void setProperty(final String key, final Object value) {
+	final public void setProperty(final String key, final Object value) {
 		this.props.put(key,  value);
 	}
 	
@@ -283,8 +283,12 @@ public abstract class MUDObject {
 	 * @param key property name
 	 * @return property value
 	 */
-	public Object getProperty(final String key) {
+	final public Object getProperty(final String key) {
 		return this.props.get(key);
+	}
+	
+	final public boolean hasProperty(final String key) {
+		return this.props.containsKey(key);
 	}
 	
 	//public abstract ArrayList<String> look();
