@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project name="MUDServer" default="build">
+    <target name="build">
+        <jar destfile="build/mud_server.jar">
+            <manifest>
+                <attribute name="Main-Class" value="mud.MUDServer" />
+                <attribute name="Class-Path" value="."/>
+            </manifest>
+            <fileset dir="bin" defaultexcludes="true">
+                <include name="**/*.class" />
+            </fileset>
+        	<fileset dir="data" defaultexcludes="true">
+        		<include name="data/*.*" />
+    		</fileset>
+        </jar>
+    </target>
+</project>
