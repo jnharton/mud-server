@@ -54,6 +54,4 @@ see the [Wiki](https://github.com/jnharton/mud-server/wiki)
 ## Copyright
 Copyright (c) 2012 Jeremy Harton. See LICENSE.txt for further details.
 
-The license given applies to all files in the source directory, excepting those under src/mud/net which are
-licensed under the GNU LGPL (Lesser GNU Public License) For the specific details of that license refer to the
-headers in the respective files or the included full, unpersonalized version of LGPL 2.1 in LICENSE2.TXT.
+The license given basically applies to all files in the source (MUDServer/src) directory.
