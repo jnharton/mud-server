@@ -34,6 +34,7 @@ import mud.SlotType;
 
 import mud.MUDServer.PlayerMode;
 
+import mud.commands.Command;
 import mud.interfaces.Equippable;
 import mud.interfaces.Wearable;
 import mud.magic.Spell;
@@ -86,11 +87,11 @@ public class Player extends MUDObject
 	// levels: 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
 	private static int[] levelXP = { 0, 1000, 3000, 6000, 10000, 15000, 21000, 28000, 36000, 45000, 55000, 66000 };
 	// level[n] = level[n-1] + (n * 1000)
-	// n=0: ? + (0 * 1000)
-	// n=1: 1000 = 0 + ( 1 * 1000) !
-	// n=2; 3000 = 1000 + (2 * 1000)
-	// n=3: 6000 = 3000 + (3 * 1000)
-	// n=4: 10000 = 6000 + (4 * 1000)
+	// n=0: ? + (0 * 1000) = 0
+	// n=1: 1000 = 0 + ( 1 * 1000) = 1000
+	// n=2; 3000 = 1000 + (2 * 1000) = 3000
+	// n=3: 6000 = 3000 + (3 * 1000) = 6000
+	// n=4: 10000 = 6000 + (4 * 1000) = 10000
 	
 	/**
 	 * Player State
@@ -186,6 +187,7 @@ public class Player extends MUDObject
 	protected Alignments alignment;                // Alignment
 	protected Handed handed = Handed.RIGHT;        // which hand is dominant (irr. but enum encompasses that and weapons hand req.)
 	protected int hp;                              // Hit Points
+	protected int temphp;                          // Temporary Hit Points
 	protected int totalhp;                         // Total Hit Points
 	protected int mana;                            // Mana
 	protected int totalmana;                       // Total Mana
@@ -250,7 +252,9 @@ public class Player extends MUDObject
 	// Knowledge?
 	
 	public Map<String, Landmark> landmarks = new HashMap<String, Landmark>(); // contains "landmarks", which are places you've been and h
-
+	
+	public Map<String, Command> commandMap = new HashMap<String, Command>();
+	
 	/**
 	 * No argument constructor for subclasses
 	 * 
@@ -312,6 +316,7 @@ public class Player extends MUDObject
 		this.slots.put("weapon1", new Slot( SlotType.LHAND, ItemType.WEAPON));
 		this.slots.put("belt", new Slot( SlotType.WAIST, ClothingType.BELT));
 		this.slots.put("boots", new Slot( SlotType.FEET, ClothingType.BOOTS));
+		this.slots.put("other", new Slot( SlotType.NONE, ItemType.NONE ));
 
 		// instantiate stats
 		stats = new LinkedHashMap<Abilities, Integer>(6, 0.75f);
@@ -444,6 +449,7 @@ public class Player extends MUDObject
 		this.slots.put("weapon1", new Slot( SlotType.LHAND, ItemType.WEAPON));
 		this.slots.put("belt", new Slot( SlotType.WAIST, ClothingType.BELT));
 		this.slots.put("boots", new Slot( SlotType.FEET, ClothingType.BOOTS));
+		this.slots.put("other", new Slot( SlotType.NONE, ItemType.NONE ));
 
 		// instantiate stats
 		stats = new LinkedHashMap<Abilities, Integer>(6, 0.75f);
@@ -734,19 +740,45 @@ public class Player extends MUDObject
 	 * to 'level up' to the next level
 	 */
 	public int getXPToLevel() {
-		return Player.levelXP[level];
+		return getXPToLevel(level+1);
+		//return Player.levelXP[level];
+	}
+	
+	/* level[n] = level[n-1] + (n * 1000) */
+	private int getXPToLevel(int level) {
+		if( level == 0 ) return 0;
+		else {
+			return getXPToLevel(level - 1) + ( level * 1000 );
+		}
 	}
 
 	public int getHP() {
-		return this.hp;
+		return this.hp + this.temphp;
 	}
 
 	public void setHP(int hp) {
+		/*if( this.temphp > 0 ) {
+			if( hp < 0 ) { // damage
+				if( this.temphp >= hp ) {
+					this.temphp += hp;
+				}
+				else {
+					this.temphp = 0;
+					this.hp += this.temphp - hp;
+				}
+			}
+			else {
+				this.hp += hp;
+			}
+		}
+		else {
+			this.hp += hp;
+		}*/
 		this.hp += hp;
 	}
 
 	public int getTotalHP() {
-		return this.totalhp;
+		return this.totalhp + this.temphp;
 	}
 
 	public void setTotalHP(int hp) {
@@ -1052,7 +1084,15 @@ public class Player extends MUDObject
 	public void clearNameRefs() {
 		this.nameRef.clear();
 	}
-
+	
+	/**
+	 * Determines if the player has sufficient experience to
+	 * "level up" to the next level.
+	 * 
+	 * NOTE: does not check maximum levels that server has
+	 * 
+	 * @return
+	 */
 	public boolean isLevelUp() {
 		if ( getXP() >= getXPToLevel() ) {
 			return true;
@@ -1067,18 +1107,18 @@ public class Player extends MUDObject
 	}
 
 	public int getArmorClass() {
-		Armor armor = (Armor) slots.get("armor").getItem();
-		Shield shield = (Shield) slots.get("weapon1").getItem();
+		Item armor = slots.get("armor").getItem();
+		Item shield = slots.get("weapon1").getItem();
 
 		if( armor != null && armor instanceof Armor ) {
 			if( shield != null && shield instanceof Shield ) {
-				return 10 + armor.getArmorBonus() + shield.getShieldBonus();
+				return 10 + ((Armor) armor).getArmorBonus() + ((Shield) shield).getShieldBonus();
 			}
 
-			return 10 + armor.getArmorBonus();
+			return 10 + ((Armor) armor).getArmorBonus();
 		}
 		else if( shield != null && shield instanceof Shield ) {
-			return 10 + shield.getShieldBonus();
+			return 10 + ((Shield) shield).getShieldBonus();
 		}
 
 		return 10;

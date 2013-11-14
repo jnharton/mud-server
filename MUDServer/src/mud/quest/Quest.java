@@ -130,6 +130,23 @@ public class Quest {
 		return this.tasks;
 	}
 	
+	public ArrayList<Task> getTasks(boolean incomplete) {
+		ArrayList<Task> tasks = new ArrayList<Task>();
+		
+		if( incomplete ) {
+			for(Task task : this.tasks) {
+				if( !task.isComplete() ) tasks.add(task);
+			}
+		}
+		else {
+			for(Task task : this.tasks) {
+				if( task.isComplete() ) tasks.add(task);
+			}
+		}
+		
+		return tasks;
+	}
+	
 	private void update() {
 		for (Task task : this.tasks) {
 			if ( !task.isComplete() ) {

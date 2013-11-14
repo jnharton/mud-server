@@ -21,6 +21,7 @@ public enum Editor {
 	MAIL("Mail Editor"),
 	QUEST("Quest Editor"),
 	ROOM("Room Editor"),
+	SKILL("Skill Editor"),
 	NONE("None");
 	
 	private String name;

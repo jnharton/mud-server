@@ -3,6 +3,7 @@ package mud.objects;
 import java.util.BitSet;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 
 import mud.Effect;
 import mud.ObjectFlag;
@@ -11,6 +12,8 @@ import mud.TypeFlag;
 
 import mud.MUDObject;
 import mud.SlotType;
+import mud.commands.Command;
+import mud.interfaces.ExtraCommands;
 import mud.magic.Spell;
 import mud.objects.items.Attribute;
 import mud.utils.Utils;
@@ -180,7 +183,7 @@ public class Item extends MUDObject {
 		output[4] = this.getLocation() + "";             // location
 		output[5] = this.item_type.ordinal() + "";       // item type
 		output[6] = "*";                                 // blank
-		output[7] = "*";                              // blank
+		output[7] = "*";                                 // blank
 		return Utils.join(output, "#");
 	}
 

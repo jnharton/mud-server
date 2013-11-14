@@ -106,20 +106,25 @@ public class Log
 			try {
 				this.file = new File(DATA_DIR + "logs/" + this.filename);
 				this.output = new PrintWriter(file);
+				
+				this.isOpen = true;
 			}
 			catch (FileNotFoundException fnfe) {
 				try {
+					System.out.println("File not found!");
+					
+					System.out.println("Creating file...");
 					this.file.createNewFile();
+					
 					this.output = new PrintWriter(file);
 					
+					this.isOpen = true;
 				}
 				catch (IOException e) {
-                    System.out.println("Bath path: " + file);
+                    System.out.println("Bad path: " + file);
 					e.printStackTrace();
 				}
 			}
-			
-			this.isOpen = true;
 		}
 		else {
 			System.out.println("Game> Log File already open, debug coding.");
@@ -139,7 +144,7 @@ public class Log
 		}
 		else
 		{
-			System.out.println("ASMU> Log File not open, debug coding.");
+			System.out.println("Game> Log File not open, debug coding.");
 		}
 	}
 	
@@ -156,7 +161,7 @@ public class Log
 		}
 		else
 		{
-			System.out.println("ASMU> Log File not open, debug coding.");
+			System.out.println("Game> Log File not open, debug coding.");
 		}
 	}
 
@@ -194,7 +199,7 @@ public class Log
 		}
 		else
 		{
-			System.out.println("ASMU> Log File not open, debug coding.");
+			System.out.println("Game> Log File not open, debug coding.");
 		}
 	}
 	
@@ -232,7 +237,7 @@ public class Log
 		}
 		else
 		{
-			System.out.println("ASMU> Log File not open, debug coding.");
+			System.out.println("Game> Log File not open, debug coding.");
 		}
 	}
 
@@ -274,7 +279,7 @@ public class Log
 		}
 		else
 		{
-			System.out.println("ASMU> Log File not open, debug coding.");
+			System.out.println("Game> Log File not open, debug coding.");
 		}
 	}
 	

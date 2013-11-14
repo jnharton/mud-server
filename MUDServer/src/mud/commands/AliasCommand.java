@@ -26,7 +26,7 @@ public class AliasCommand extends Command {
 		if ( arg.equals("#list") ) {
 			send("Aliases", client);
 			send("-------------------------------------------", client);
-			for (final Entry<String, String> e : parent.aliases.entrySet()) {
+			for (final Entry<String, String> e : getAliases().entrySet()) {
 				send(e.getKey() + " : " + e.getValue(), client);
 			}
 			send("-------------------------------------------", client);

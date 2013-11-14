@@ -25,6 +25,7 @@ public enum ObjectFlag
     GUEST("GUEST"),
     HOUSE("HOUSE"),
     MERCHANT("MERCHANT"),
+    NO_TELEPORT("NO_TELEPORT"), // prevent teleporting to the location (for rooms) or moving the object (for everything else)
     SILENT("SILENT"),
     //WIZARD("WIZARD"),
     VENDOR("VENDOR"),

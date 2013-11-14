@@ -65,7 +65,7 @@ public class TeleportCommand extends Command {
 				player.setCoordinates(0, 0);
 				send("Done.", client);
 				room = getRoom(client);
-				parent.look(room, client);
+				//parent.look(room, client);
 
 				room.addListener(player); // add listener
 			}

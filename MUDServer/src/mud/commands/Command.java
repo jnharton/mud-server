@@ -1,8 +1,10 @@
 package mud.commands;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.TimerTask;
 
+import mud.Constants;
 import mud.Effect;
 import mud.MUDObject;
 import mud.MUDServer;
@@ -65,9 +67,13 @@ public abstract class Command {
 	 * returns the specified access permissions required to use
 	 * the command
 	 * 
+	 * note: default is USER
+	 * 
 	 * @return int representing access level
 	 */
-	public abstract int getAccessLevel();
+	public int getAccessLevel() {
+		return Constants.USER;
+	}
 	
 	/**
 	 * method that passes the thing to be sent for debugging to
@@ -123,7 +129,7 @@ public abstract class Command {
 	}
 	
 	protected final void examine(final MUDObject m, final Client client) {
-		examine(m, client);
+		parent.examine(m, client);
 	}
 	
 	protected final Spell getSpell(final String name) {
@@ -223,11 +229,15 @@ public abstract class Command {
 		parent.handleDeath(player);
 	}
 	
-	protected final void handleDeath(Creature creature, Client client) {
-		parent.handleDeath(creature, client);
+	protected final void handleDeath(Creature creature, Player player) {
+		parent.handleDeath(creature, player);
 	}
 	
 	protected final void handleMail(final String input, final Client client) {
 		handleMail(input, client);
+	}
+	
+	protected final LinkedHashMap<String, String> getAliases() {
+		return parent.getAliases();
 	}
 }

@@ -10,7 +10,9 @@ package mud.api;
  * changes are made to the one referred to.
  */
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -41,8 +43,12 @@ public class APIServer implements Runnable {
 		parent = p;
 		rp = new RequestProcessor(this, parent);
 		
+		running = true;
+		
 		try {
 			serverSocket = new ServerSocket(port);
+			//thread = new Thread(this);
+			//thread.start();
 		}
 		catch (IOException e) {
 		    System.out.println("Could not listen on port: " + port);
@@ -50,9 +56,8 @@ public class APIServer implements Runnable {
 		}
 		
 		apiKeys.add( new APIKey("978419ff") );
-		new Thread(rp).start();
 		
-		running = true;
+		new Thread(rp).start();
 	}
 	
 	@Override
@@ -90,9 +95,21 @@ public class APIServer implements Runnable {
 		
 		System.out.println(as.apiKeys);
 		
-		as.requests.add( new Request(new String[] { "request-data", "978419ff", "test" } , null) );
-		
 		new Thread(as).start();
+		
+		BufferedReader br = new BufferedReader( new InputStreamReader( System.in ) );
+		
+		System.out.print("> ");
+		
+		try {
+			while( br.ready() ) {
+				String string = br.readLine();
+				as.requests.add( new Request(new String[] { "request-data", "978419ff", string } , null) );
+				System.out.print("> ");
+			}
+		} catch (IOException ioe) {
+			ioe.printStackTrace();
+		}
 	}
 	
 	public void stop() {

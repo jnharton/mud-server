@@ -1,6 +1,7 @@
 package mud.quest;
 
 import mud.Colors;
+import mud.objects.Creature;
 
 /**
  * Task Class
@@ -25,6 +26,7 @@ public class Task {
 	public Integer toCollect = 0;
 	public Integer collects = 0;
 	
+	public Creature objective = null;
 	public boolean hasItem = false;
 	
 	/**
@@ -56,15 +58,22 @@ public class Task {
 	 * @param tType task type
 	 * @param other data about the objectives for the task type
 	 */
-	public Task(String tDescription, TaskType tType, Object other) {
+	public Task(String tDescription, TaskType tType, Object...other) {
 		this.description = tDescription;
 		this.taskType = tType;
 		if (this.taskType == TaskType.KILL) {
-			if (other instanceof Integer) {
-				Integer k = (Integer) other;
-				
-				this.toKill = k;
-				this.kills = 0;
+			if( other.length == 2 ) {
+				if (other[0] instanceof Integer) {
+					final Integer k = (Integer) other[0];
+					
+					this.toKill = k;
+					this.kills = 0;
+				}
+				if(other[1] instanceof Creature) {
+					final Creature c = (Creature) other[1];
+					
+					this.objective = c;
+				}
 			}
 		}
 	}
@@ -91,6 +100,10 @@ public class Task {
 
 	public void setType(TaskType tType) {
 		this.taskType = tType;
+	}
+	
+	public boolean isType(TaskType tType) {
+		return this.taskType == tType;
 	}
 	
 	private void update() {
@@ -140,7 +153,7 @@ public class Task {
 	 * @return boolean indicates whether or not we changed the Task
 	 */
 	private boolean applyUpdate(TaskUpdate update) {
-		return false;
+		return true;
 	}
 	
 	public boolean isComplete() {

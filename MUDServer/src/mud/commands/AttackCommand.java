@@ -36,6 +36,8 @@ public class AttackCommand extends Command {
 		try {
 			if (!arg.equals("")) {
 				// here we want to try and get whatever was targeted
+				
+				//List<Creature> creatures = objectDB.getCreatureByRoom( getRoom( player ) );
 
 				MUDObject mobj = getObject(arg);
 
@@ -100,7 +102,7 @@ public class AttackCommand extends Command {
 									debug("Creature HP: " + ((Creature) target).getHP());
 									if( ((Creature) target).getHP() <= 0 ) {
 										send("You killed " + ((Creature) target).getName() + ".", client);
-										handleDeath( (Creature) target, client );
+										handleDeath( (Creature) target, player);
 									}
 								}
 							}

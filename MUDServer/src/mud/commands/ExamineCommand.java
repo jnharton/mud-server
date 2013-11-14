@@ -31,7 +31,7 @@ public class ExamineCommand extends Command {
 	@Override
 	public void execute(String arg, Client client) {
 		if ( arg.equals("here") ) {
-			Room room = getRoom(client);
+			Room room = getRoom( getPlayer( client ) );
 			examine(room, client);
 		}
 		else if (arg.equals("me")) {

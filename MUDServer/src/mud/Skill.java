@@ -40,6 +40,13 @@ public class Skill
 		}
 	};
 	
+	public Skill() {
+		this.name = "new_skill";
+		this.id = -1;
+		this.ability = "";
+		this.classes = new PClass[0];
+	}
+	
 	/**
 	 * Class Constructor for Skills
 	 * 
