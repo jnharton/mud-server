@@ -19,12 +19,12 @@ public class Arrow extends Item implements Projectile<Arrow>, Stackable<Arrow> {
 		this.name = "Arrow";
 		this.desc = "";
 		this.location = -1;
-		this.flags = null; 
+		this.flags = EnumSet.noneOf(ObjectFlag.class);
 		this.item_type = ItemType.ARROW;
 	}
 
 	public Arrow(int dbref, String name, String desc, int location) {
-		super(dbref, name, null, desc, location);
+		super(dbref, name, EnumSet.noneOf(ObjectFlag.class), desc, location);
 		this.type = TypeFlag.ITEM;
 		this.item_type = ItemType.ARROW;
 	}

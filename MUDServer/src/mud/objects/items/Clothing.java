@@ -1,7 +1,5 @@
 package mud.objects.items;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.EnumSet;
 
 import mud.Effect;
@@ -11,9 +9,6 @@ import mud.TypeFlag;
 import mud.interfaces.Equippable;
 import mud.interfaces.Usable;
 import mud.interfaces.Wearable;
-
-import mud.magic.Spell;
-import mud.net.Client;
 
 import mud.objects.Item;
 import mud.objects.ItemType;
@@ -47,7 +42,7 @@ public class Clothing extends Item implements Equippable<Clothing>, Usable<Cloth
 
 	public Clothing(String name, int cMod, ClothingType cType, double cWeight)
 	{
-		super(-1, name, null, "<TESTING>", 8);
+		super(-1, name, EnumSet.noneOf(ObjectFlag.class), "<TESTING>", 8);
 		this.type = TypeFlag.ITEM;
 		this.equippable = true;
 		this.equip_type = ItemType.CLOTHING; // the type of equipment it is
@@ -71,7 +66,7 @@ public class Clothing extends Item implements Equippable<Clothing>, Usable<Cloth
 	 * @param spellName
 	 */
 	public Clothing(int tempDBREF, String tempName, String tempDesc, int tempLoc, int cMod, ClothingType cType) {
-		super(tempDBREF, tempName, null, tempDesc, tempLoc);
+		super(tempDBREF, tempName, EnumSet.noneOf(ObjectFlag.class), tempDesc, tempLoc);
 		this.type = TypeFlag.ITEM;
 		this.equippable = true;
 		this.equip_type = ItemType.CLOTHING;

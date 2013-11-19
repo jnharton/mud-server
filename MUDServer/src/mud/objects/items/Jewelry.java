@@ -38,7 +38,7 @@ public class Jewelry extends Item implements Equippable<Jewelry>, Usable<Jewelry
 		this.type = TypeFlag.ITEM;
 		this.name = jName;
 		this.desc = jDesc;
-		this.flags = null;
+		this.flags = EnumSet.noneOf(ObjectFlag.class);
 		this.location = 8;
 
 		this.equippable = true;
@@ -57,7 +57,7 @@ public class Jewelry extends Item implements Equippable<Jewelry>, Usable<Jewelry
 		this.type = TypeFlag.ITEM;
 		this.name = "Ring of Invisibility";
 		this.desc = "A medium-sized gold ring with a smooth, unmarked surface.";
-		this.flags = null;
+		this.flags = EnumSet.noneOf(ObjectFlag.class);
 		this.location = 8;
 
 		this.equippable = true;

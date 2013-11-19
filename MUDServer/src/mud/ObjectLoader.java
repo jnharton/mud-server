@@ -10,7 +10,6 @@ import mud.Coins;
 import mud.objects.Item;
 import mud.utils.Utils;
 import mud.magic.Spell;
-import mud.misc.Zone;
 
 /*
 Copyright (c) 2012 Jeremy N. Harton
@@ -231,11 +230,6 @@ public class ObjectLoader {
 					room.x = dimensions[0];
 					room.y = dimensions[1];
 					room.z = dimensions[2];
-
-					// create zones where flags exist
-					if( oFlags.contains("Z") ) {
-						parent.zones.put(new Zone("zone", room), 1);
-					}
 
 					if (room.getRoomType().equals(RoomType.OUTSIDE)) {
 						room.getProps().put("sky", "The sky is clear and flecked with stars.");

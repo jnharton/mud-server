@@ -12,8 +12,6 @@ import mud.TypeFlag;
 
 import mud.MUDObject;
 import mud.SlotType;
-import mud.commands.Command;
-import mud.interfaces.ExtraCommands;
 import mud.magic.Spell;
 import mud.objects.items.Attribute;
 import mud.utils.Utils;

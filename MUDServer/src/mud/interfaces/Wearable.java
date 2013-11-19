@@ -17,8 +17,6 @@ CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTH
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-import mud.net.Client;
-
 /**
  * Defines an interface for wearable objects, such as clothes. (i.e. armor, clothing, cloak, boots, etc)
  * 

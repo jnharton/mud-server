@@ -1,6 +1,5 @@
 package mud.objects.things;
 
-import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;

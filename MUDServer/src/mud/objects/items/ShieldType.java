@@ -1,7 +1,5 @@
 package mud.objects.items;
 
-import mud.objects.items.ArmorType.Type;
-
 public enum ShieldType {
 	/* Type, Name, Cost, Shield Bonus, Weight */
 	/*       Type         Name       Cost        P  G  S   C   SB WHT */

@@ -22,6 +22,7 @@ public enum Editor {
 	QUEST("Quest Editor"),
 	ROOM("Room Editor"),
 	SKILL("Skill Editor"),
+	ZONE("Zone Editor"),
 	NONE("None");
 	
 	private String name;

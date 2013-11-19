@@ -9,8 +9,6 @@ import mud.ObjectFlag;
 import mud.interfaces.Equippable;
 import mud.interfaces.Wearable;
 
-import mud.net.Client;
-
 import mud.objects.Item;
 import mud.objects.ItemType;
 import mud.objects.Player;

@@ -12,11 +12,9 @@ import mud.interfaces.Stackable;
 import mud.interfaces.Usable;
 
 import mud.magic.Spell;
-import mud.net.Client;
 
 import mud.objects.Item;
 import mud.objects.ItemType;
-import mud.objects.Player;
 
 import mud.utils.Utils;
 

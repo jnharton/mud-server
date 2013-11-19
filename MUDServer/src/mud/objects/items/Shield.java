@@ -50,7 +50,7 @@ public class Shield extends Item implements Equippable<Shield>, Wieldable<Shield
 	 * @param tempDBREF
 	 */
 	public Shield(String sName, String sDesc, int sLoc, int sDBREF, int sMod, ItemType item, ShieldType shield) {
-		super(sDBREF, sName, null, sDesc, sLoc);
+		super(sDBREF, sName, EnumSet.noneOf(ObjectFlag.class), sDesc, sLoc);
 		this.type = TypeFlag.ITEM;
 		this.equippable = true;
 		this.equip_type = ItemType.SHIELD;

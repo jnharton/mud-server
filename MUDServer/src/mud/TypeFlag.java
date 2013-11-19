@@ -10,8 +10,6 @@ package mud;
  * changes are made to the one referred to.
  */
 
-import java.util.EnumSet;
-
 /**
  * These "flags" are solely for typing, not for modification
  * of behavior, visibility, or other checks.

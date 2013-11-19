@@ -2,7 +2,6 @@ package mud.utils;
 
 import java.util.TimerTask;
 
-import mud.Effect;
 import mud.utils.Auction;
 
 public class AuctionTimer extends TimerTask {

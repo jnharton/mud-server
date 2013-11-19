@@ -1,7 +1,5 @@
 package mud.objects.items;
 
-import java.lang.reflect.ParameterizedType;
-
 import java.util.ArrayList;
 import java.util.EnumSet;
 
@@ -10,16 +8,14 @@ import mud.TypeFlag;
 
 import mud.interfaces.Equippable;
 import mud.interfaces.Storage;
-import mud.interfaces.Wearable;
 
-import mud.net.Client;
 import mud.objects.Item;
 import mud.objects.ItemType;
 import mud.objects.Player;
 
 import mud.utils.Utils;
 
-public class Container extends Item implements Storage<Item>, Equippable<Item>, Wearable<Item> {
+public class Container extends Item implements Storage<Item>, Equippable<Item> {
 	
 	private int size = 5;
 	private boolean accessible;
@@ -132,12 +128,6 @@ public class Container extends Item implements Storage<Item>, Equippable<Item>, 
 		// check display width, change if necessary (shorten/lengthen)
 		this.contents.add(item);
 		this.weight += item.getWeight();
-	}
-	
-	@Override
-	public String getType() {
-		// TODO Auto-generated method stub
-		return null;
 	}
 	
 	@Override

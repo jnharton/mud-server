@@ -19,6 +19,7 @@ import mud.TypeFlag;
 import mud.events.EventSource;
 import mud.events.SayEvent;
 import mud.events.SayEventListener;
+import mud.misc.Zone;
 import mud.objects.Thing;
 import mud.utils.Utils;
 import mud.weather.Weather;
@@ -59,6 +60,8 @@ public class Room extends MUDObject implements EventSource
 	public String music;                                      // the ambient background music for this room (filename, probably a wav file)
 	public String timeOfDay = "DAY";                          // replace this with an enum with one type per each or a hashmap string, boolean?
 	// DAY or NIGHT
+	
+	private Zone zone = null;
 	
 	private Integer instance_id = null;                      // instance_id, if this is the original, it should be null
 
@@ -305,6 +308,14 @@ public class Room extends MUDObject implements EventSource
 	
 	public Terrain getTerrain() {
 		return this.terrain;
+	}
+	
+	public void setZone(final Zone zone) {
+		this.zone = zone;
+	}
+	
+	public Zone getZone() {
+		return this.zone;
 	}
 	
 	/**

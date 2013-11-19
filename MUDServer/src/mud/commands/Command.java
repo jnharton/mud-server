@@ -1,7 +1,7 @@
 package mud.commands;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.TimerTask;
 
 import mud.Constants;
@@ -234,10 +234,10 @@ public abstract class Command {
 	}
 	
 	protected final void handleMail(final String input, final Client client) {
-		handleMail(input, client);
+		parent.handleMail(input, client);
 	}
 	
-	protected final LinkedHashMap<String, String> getAliases() {
+	protected final Map<String, String> getAliases() {
 		return parent.getAliases();
 	}
 }

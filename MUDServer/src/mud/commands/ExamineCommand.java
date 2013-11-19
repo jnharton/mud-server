@@ -39,40 +39,44 @@ public class ExamineCommand extends Command {
 			examine(player, client);
 		}
 		else {
-            final int dbref = Utils.toInt(arg, -1);
+			if( arg.charAt(0) == '#' ) {
+				final int dbref = Utils.toInt(arg.substring(1), -1);
+				
+				if (dbref != -1) {
+					MUDObject mobj = getObject(dbref);
 
-			if (dbref != -1) {
-				MUDObject mobj = getObject(dbref);
+					if (mobj != null) {
+						if (mobj instanceof Room) {
+							Room room = (Room) mobj;
+							examine(room, client);
+						}
+						
+						else if (mobj instanceof Item) {
+							Item item = (Item) mobj;
+							examine(item, client);
+						}
 
-				if (mobj != null) {
+						else if (mobj instanceof Exit) {
+							Exit exit = (Exit) mobj;
+							examine(exit, client);
+						}
+						
+						else if (mobj instanceof Thing) {
+							Thing thing = (Thing) mobj;
+							examine(thing, client);
+						}
+						
+						else if (mobj instanceof Player) {
+							Player player = (Player) mobj;
+							examine(player, client);
+						}
 
-					if (mobj instanceof Room) {
-						Room room = (Room) mobj;
-						examine(room, client);
+						else {
+							examine(mobj, client);
+						}
 					}
-					
-					else if (mobj instanceof Item) {
-						Item item = (Item) mobj;
-						examine(item, client);
-					}
-
-					else if (mobj instanceof Exit) {
-						Exit exit = (Exit) mobj;
-						examine(exit, client);
-					}
-					
-					else if (mobj instanceof Thing) {
-						Thing thing = (Thing) mobj;
-						examine(thing, client);
-					}
-					
-					else if (mobj instanceof Player) {
-						Player player = (Player) mobj;
-						examine(player, client);
-					}
-
 					else {
-						examine(mobj, client);
+						send("That doesn't exist.", client);
 					}
 				}
 				else {

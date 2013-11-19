@@ -35,10 +35,28 @@ public class EditorData {
 		return this.objects.remove(key);
 	}
 	
+	/**
+	 * Get the object in the map that this key
+	 * is mapped to.
+	 * 
+	 * @param key
+	 * @return the mapped object (or null)
+	 */
 	public Object getObject(String key) {
 		return this.objects.get(key);
 	}
 	
+	/**
+	 * Set the object mapped to the specified key to
+	 * be a different object.
+	 * 
+	 * NOTE: Only usable for objects added with
+	 * addObject(...)
+	 * 
+	 * @param key
+	 * @param object
+	 * @return
+	 */
 	public boolean setObject(String key, Object object) {
 		boolean success = false;
 		

@@ -270,6 +270,29 @@ public class ObjectDB {
         return objsByName.get(name);
     }
     
+    public void changeName(final MUDObject object, final String newName) {
+    	object.setName(newName);
+    	
+    	objsByName.remove( object.getName() );
+    	objsByName.put( newName, object );
+    	
+    	if(object instanceof NPC) {
+    		final NPC npc = (NPC) object; 
+    		npcsByName.remove( npc.getName() );
+    		npcsByName.put( newName, npc );
+    	}
+    	else if(object instanceof Room) {
+    		final Room room = (Room) object;
+    		roomsByName.remove( room.getName() );
+    		roomsByName.put( newName, room );
+    	}
+    	else if(object instanceof Exit) {
+    		final Exit exit = (Exit) object;
+    		exitsByName.remove( exit.getName() );
+    		exitsByName.put( newName, exit );
+    	}
+    }
+    
     /**
      * Get an object by it's Database Reference Number (DBRef)
      * which is unique in the database
@@ -462,8 +485,8 @@ public class ObjectDB {
     }
 
     /////////////// EXITS
-    final Map<Integer, Exit> exitsById   = new HashMap<Integer, Exit>();
-    final Map<String, Exit>  exitsByName = new HashMap<String, Exit>();
+    private final Map<Integer, Exit> exitsById   = new HashMap<Integer, Exit>();
+    private final Map<String, Exit>  exitsByName = new HashMap<String, Exit>();
     
     public Exit getExit(final String name) {
         return exitsByName.get(name);
@@ -550,8 +573,8 @@ public class ObjectDB {
     }
 
     ////////////////// NPCs
-    final Map<Integer, NPC> npcsById   = new HashMap<Integer, NPC>();
-    final Map<String, NPC>  npcsByName = new HashMap<String, NPC>();
+    private final Map<Integer, NPC> npcsById   = new HashMap<Integer, NPC>();
+    private final Map<String, NPC>  npcsByName = new HashMap<String, NPC>();
 
     public void addNPC(final NPC npc) {
         npcsById.put(npc.getDBRef(), npc);
@@ -582,10 +605,10 @@ public class ObjectDB {
     }
 
     ////////////////// ITEMS
-    private ArrayList<Item> items = new ArrayList<Item>();
+    private final ArrayList<Item> items = new ArrayList<Item>();
     
     // these are not presently loaded with anything by the code (8-23-2013)
-    final Map<Integer, Item> itemsById   = new HashMap<Integer, Item>();
+    private final Map<Integer, Item> itemsById   = new HashMap<Integer, Item>();
     //final Map<String, Item>  itemsByName = new HashMap<String, Item>();
 
     public void addItem(final Item item) {
@@ -683,7 +706,7 @@ public class ObjectDB {
     }
 
     ///////////////////////////// PLAYERS
-    final Map<String, Player> players = new HashMap<String, Player>();
+    private final Map<String, Player> players = new HashMap<String, Player>();
 
     public void addPlayer(final Player p) {
         players.put(p.getName(), p);

@@ -10,7 +10,6 @@ package mud.net;
  * changes are made to the one referred to.
  */
 
-import java.lang.reflect.*;
 import java.net.*;
 import java.util.*;
 
