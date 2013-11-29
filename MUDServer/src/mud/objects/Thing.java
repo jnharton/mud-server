@@ -58,6 +58,7 @@ public class Thing extends MUDObject {
 	public Thing(String name) {
 		super(-1);
 		this.type = TypeFlag.THING;
+		this.flags = EnumSet.noneOf(ObjectFlag.class);
 		this.name = name;
 		this.location = -1;
 		attributes = new Hashtable<String, String>();
@@ -122,6 +123,12 @@ public class Thing extends MUDObject {
 
 	@Override
 	public String toJSON() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Thing fromJSON() {
 		// TODO Auto-generated method stub
 		return null;
 	}

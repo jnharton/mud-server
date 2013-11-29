@@ -1215,4 +1215,10 @@ public class Player extends MUDObject
 	public String toJSON() {
 		return null;
 	}
+
+	@Override
+	public Player fromJSON() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

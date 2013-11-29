@@ -186,4 +186,10 @@ public class Exit extends MUDObject implements Lockable
 		// TODO Auto-generated method stub
 		return null;
 	}
+
+	@Override
+	public Exit fromJSON() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

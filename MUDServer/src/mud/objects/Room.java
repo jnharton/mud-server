@@ -43,48 +43,48 @@ import mud.weather.Weather;
 public class Room extends MUDObject implements EventSource
 {
 	public enum Terrain { NONE, FOREST, MARSH, HILLS, MOUNTAIN, DESERT, PLAINS, AQUATIC, SKY };
-	
+
 	// NOTE: for room, location and "parent" are the same
-	
+
 	private RoomType roomType = RoomType.NONE;                // the type of room (I = Inside, O = Outside, P = Protected, N = None)
 	private Terrain terrain = Terrain.NONE;                   // terrain type of the room (affects movement speed?)
 	private Weather weather;                                  // the weather in this room
 	//private Atmosphere atmosphere = new Atmosphere();       // the atmosphere of the room (weather related)
-	
+
 	private ArrayList<Exit> exits = new ArrayList<Exit>();    // the exits leading away from the room
 	private String exitNames;                                 // formatted string containing the usable exit names
-	
+
 	private ArrayList<Thing> things = new ArrayList<Thing>(); // the objects the room contains (things)
 	private ArrayList<Item> items = new ArrayList<Item>();    // the objects the room contains (items)
 
 	public String music;                                      // the ambient background music for this room (filename, probably a wav file)
 	public String timeOfDay = "DAY";                          // replace this with an enum with one type per each or a hashmap string, boolean?
 	// DAY or NIGHT
-	
+
 	private Zone zone = null;
-	
+
 	private Integer instance_id = null;                      // instance_id, if this is the original, it should be null
 
 	public int x = 10, y = 10; // size of the room ( 10x10 default )
 	public int z = 10;         // height of room ( 10 default )
-	
+
 	private BitSet[][] tiles;
-			
+
 	private List<SayEventListener> _listeners = new ArrayList<SayEventListener>();
 	private ArrayList<Player> listeners;
-	
+
 	private HashMap<Triggers, List<Trigger>> triggers = new HashMap<Triggers, List<Trigger>>() {
 		{
 			put(Triggers.onEnter, new LinkedList<Trigger>());
 			put(Triggers.onLeave, new LinkedList<Trigger>());
 		}
 	};
-	
+
 	{
 		(triggers.get(Triggers.onEnter)).add( new Trigger("TRIGGER: enter") );
 		(triggers.get(Triggers.onLeave)).add( new Trigger("TRIGGER: leave") );
 	}
-	
+
 	/**
 	 * Construct a room using only default parameter
 	 */
@@ -94,13 +94,13 @@ public class Room extends MUDObject implements EventSource
 		this.flags = EnumSet.of(ObjectFlag.SILENT);
 		this.locks = "";            // Set the locks
 		this.location = 0;          // Set the location
-		
+
 		this.tiles = new BitSet[x][y];
-		
+
 		this.listeners = new ArrayList<Player>();
 	}
-	
-	
+
+
 	// copy constructor
 	public Room(Room toCopy)
 	{
@@ -112,9 +112,9 @@ public class Room extends MUDObject implements EventSource
 		this.flags = toCopy.getFlags();       // Set the flags
 		this.locks = "";                      // Set the locks
 		this.location = toCopy.getLocation(); // Set the location
-		
+
 		this.tiles = toCopy.getTiles();
-		
+
 		this.listeners = new ArrayList<Player>();
 	}
 
@@ -129,12 +129,12 @@ public class Room extends MUDObject implements EventSource
 		this.flags = tempFlags;                                      // Set room flags
 		this.locks = "";                                             // Set the locks
 		this.location = tempLocation;                                // Set the location
-		
+
 		this.tiles = new BitSet[x][y];
-		
+
 		this.listeners = new ArrayList<Player>();
 	}
-	
+
 	/**
 	 * Set parent room.
 	 * 
@@ -143,7 +143,7 @@ public class Room extends MUDObject implements EventSource
 	public void setParent(int parentRoomId) {
 		this.setLocation(parentRoomId);
 	}
-	
+
 	/**
 	 * Get parent room.
 	 * 
@@ -152,7 +152,7 @@ public class Room extends MUDObject implements EventSource
 	public int getParent() {
 		return this.getLocation();
 	}
-	
+
 	/**
 	 * Set the type of room.
 	 * 
@@ -161,7 +161,7 @@ public class Room extends MUDObject implements EventSource
 	public void setRoomType(final RoomType newRoomType) {
 		this.roomType = newRoomType;
 	}
-	
+
 	/**
 	 * Get the type of room.
 	 * 
@@ -193,7 +193,7 @@ public class Room extends MUDObject implements EventSource
 	public ArrayList<Exit> getExits() {
 		//return new ArrayList<Exit>(exits); // ???
 		return exits;
-		
+
 	}
 
 	public String getExitNames() {
@@ -209,12 +209,12 @@ public class Room extends MUDObject implements EventSource
 	}
 
 	public String getVisibleExitNames() {
-        final StringBuilder buf = new StringBuilder();
-        for (final Exit e : exits) {
-            if (!e.getFlags().contains("D")) {
-                buf.append(", ").append(e.getName());
-            }
-        }
+		final StringBuilder buf = new StringBuilder();
+		for (final Exit e : exits) {
+			if (!e.getFlags().contains("D")) {
+				buf.append(", ").append(e.getName());
+			}
+		}
 		return buf.toString().substring(2); // clip off the initial, unecessary " ,"
 	}
 
@@ -237,23 +237,23 @@ public class Room extends MUDObject implements EventSource
 			return -1;
 		}
 	}
-	
+
 	public void setTiles(BitSet[][] newTiles) {
 		this.tiles = newTiles;
 	}
-	
+
 	public BitSet[][] getTiles() {
 		return this.tiles;
 	}
-	
+
 	public ArrayList<Player> getListeners() {
 		return this.listeners;
 	}
-	
+
 	public void addListener(Player player) {
 		listeners.add(player);
 	}
-	
+
 	public void removeListener(Player player) {
 		listeners.remove(player);
 	}
@@ -265,59 +265,70 @@ public class Room extends MUDObject implements EventSource
 	public synchronized void removeSayEventListener(SayEventListener listener)   {
 		_listeners.remove(listener);
 	}
-	
+
 	public void addItem(Item item) {
 		this.items.add(item);
 	}
-	
+
 	public void addItems(List<Item> items) {
 		for(Item item : items) {
 			addItem(item);
 		}
 	}
-	
+
 	public void removeItem(Item item) {
 		this.items.remove(item);
 	}
-	
+
 	public List<Item> getItems() {
 		return this.items;
 	}
-	
+
 	public void addThing(Thing thing) {
 		this.things.add(thing);
 	}
-	
+
 	public void addThings(List<Thing> things) {
 		for(Thing thing : things) {
 			addThing(thing);
 		}
 	}
-	
+
 	public void removeThing(Thing thing) {
 		this.things.remove(thing);
 	}
-	
+
 	public List<Thing> getThings() {
 		return this.things;
 	}
-	
+
 	public List<Trigger> getTriggers(Triggers triggerType) {
 		return this.triggers.get(triggerType);
 	}
-	
+
 	public Terrain getTerrain() {
 		return this.terrain;
 	}
-	
+
 	public void setZone(final Zone zone) {
 		this.zone = zone;
 	}
-	
+
 	public Zone getZone() {
 		return this.zone;
 	}
-	
+
+	// call this method whenever you want to notify
+	//the event listeners of the particular event
+	@Override
+	public synchronized void fireEvent(String message) {
+		SayEvent event = new SayEvent(this, message);
+		Iterator<SayEventListener> iter = _listeners.iterator();
+		while(iter.hasNext())  {
+			iter.next().handleSayEvent(event);
+		}
+	}
+
 	/**
 	 * Translate the persistent aspects of the room into the string
 	 * format used by the database
@@ -333,27 +344,21 @@ public class Room extends MUDObject implements EventSource
 		output[6] = this.x + "," + this.y + "," + this.z;         // room dimensions (x,y,z)
 		output[7] = "-1";                                         // room terrain
 		output[8] = "";                                           //
-		
+
 		return Utils.join(output, "#");
 	}
-	
+
 	public String toJSON() {
+		return null;
+	}
+
+	@Override
+	public Room fromJSON() {
+		// TODO Auto-generated method stub
 		return null;
 	}
 
 	public String toString() {
 		return getName() + " (#" + getDBRef() + ")";
-	}
-
-
-	// call this method whenever you want to notify
-	//the event listeners of the particular event
-	@Override
-	public synchronized void fireEvent(String message) {
-		SayEvent event = new SayEvent(this, message);
-		Iterator<SayEventListener> iter = _listeners.iterator();
-		while(iter.hasNext())  {
-			 iter.next().handleSayEvent(event);
-		}
 	}
 }

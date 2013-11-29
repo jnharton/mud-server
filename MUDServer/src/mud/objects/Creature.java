@@ -138,4 +138,10 @@ public class Creature extends MUDObject {
 		// TODO Auto-generated method stub
 		return null;
 	}
+
+	@Override
+	public Creature fromJSON() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

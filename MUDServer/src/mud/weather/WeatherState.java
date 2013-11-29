@@ -4,7 +4,7 @@ package mud.weather;
  * WeatherState.java
  * 
  * Represents a state of weather, such as clouds, rain, snow, or a combination of them,
- * as well as the likelyhood of the weather getting "worse".
+ * as well as the likelihood of the weather getting "worse".
  * 
  * This is used to implement a weather system of sorts inspired by the ideas here:
  * http://textgaming.blogspot.com/2011/10/weather-ii.html
@@ -17,7 +17,7 @@ public class WeatherState
 	public String name;                      // name/type of weather state
 	public String description;               // description of the weather state
 	public String transDownText;             // the text describing the weather shift if it transitioned down to this
-	public String transUpText;               // the text describing the weather shift if it transitione up to this
+	public String transUpText;               // the text describing the weather shift if it transitions up to this
 	
 	public double TransitionDownProbability; // How likely the weather is to transition "down a state" (worse weather)
 	public boolean Precipitation;            // Is precipitation possible? (true/false)

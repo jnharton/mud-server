@@ -287,6 +287,10 @@ public abstract class MUDObject {
 		return this.props.get(key);
 	}
 	
+	final public <T> T getProperty(final String key, Class<T> c) {
+		return (T) c.cast(this.props.get(key));
+	}
+	
 	final public boolean hasProperty(final String key) {
 		return this.props.containsKey(key);
 	}
@@ -491,6 +495,8 @@ public abstract class MUDObject {
 	 * @return
 	 */
 	public abstract String toJSON();
+	
+	public abstract MUDObject fromJSON();
 	
 	public String toString() {
 		return this.name;

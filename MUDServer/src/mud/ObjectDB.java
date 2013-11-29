@@ -182,12 +182,13 @@ public class ObjectDB {
 
     public void addAsNew(final MUDObject item) {
     	if( !unusedDBNs.empty() ) { item.setDBRef( unusedDBNs.pop() ); }
-    	else { item.setDBRef(nextId + 1); }
+    	//else { item.setDBRef(nextId + 1); } // changed 11/19/2013 -- why was this set this way?
+    	else { item.setDBRef(nextId); }
         add(item);
     }
 
     public void add(final MUDObject item) {
-    	System.out.println(nextId + ": " + item.getDBRef());
+    	System.out.println("ObjectDB " + nextId + ": " + item.getDBRef());
     	
     	/* If the object's dbref doesn't match the next id (e.g. there's no
     	 * database entry and the db skips over a number) then insert a NullObject,
