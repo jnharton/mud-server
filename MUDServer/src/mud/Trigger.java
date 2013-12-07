@@ -11,16 +11,38 @@ package mud;
  */
 
 public class Trigger {
-	public String script;
+	private Script script;
+	private int delay;
 	
-	public Trigger(String newScript) {
-		this.script = newScript;
+	public Trigger(String tScript) {
+		this(tScript, 0);
+	}
+	
+	public Trigger(String tScript, int delay) {
+		this.script = new Script(tScript);
+		this.delay = delay;
+	}
+	
+	public Script getScript() {
+		return this.script;
+	}
+	
+	public void setScript(String newScript) {
+		this.script = new Script(newScript);
+	}
+	
+	public int getDelay() {
+		return this.delay;
+	}
+	
+	public void setDelay(int newDelay) {
+		this.delay = newDelay;
 	}
 	
 	public String exec() {
 		/*if( !(this.script.contains("{") || this.script.contains("}")) ) {
 			return this.script;
 		}*/
-		return "";
+		return this.script.getText();
 	}
 }

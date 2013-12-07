@@ -597,9 +597,16 @@ public class Player extends MUDObject
 	 * @param newTitle
 	 */
 	public void setTitle(String newTitle) { this.title = newTitle; }
-
+	
+	/**
+	 * overrides MUDObject's setName method to prevent player names from being
+	 * set
+	 */
 	@Override
-	public boolean setName(String newName) { return false; }
+	public boolean setName(String newName) {
+		return false;
+	}
+		
 
 	// get the players password (BAD, BAD, BAD!!!) -- do not let this have any normal access
 	// note: as of ?/?/2011 this should not be a problem since only the hashed version is ever stored

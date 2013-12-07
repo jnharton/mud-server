@@ -6,6 +6,8 @@ import java.util.Hashtable;
 
 import mud.ObjectFlag;
 import mud.MUDObject;
+import mud.Trigger;
+import mud.Triggers;
 import mud.TypeFlag;
 import mud.utils.Utils;
 
@@ -44,6 +46,8 @@ public class Thing extends MUDObject {
 	public Hashtable<String, String> attributes; 
 	
 	protected ArrayList<Item> contents = null;
+	
+	public Trigger onUse;
 	
 	/**
 	 * Thing - no parameters
@@ -100,6 +104,16 @@ public class Thing extends MUDObject {
 		*/
 		
 		attributes = new Hashtable<String, String>();
+	}
+	
+	public void setScriptOnTrigger(Triggers type, String script) {
+		switch(type) {
+		case onUse:
+			onUse = new Trigger(script);
+			break;
+		default:
+			break;
+		}
 	}
 	
 	public double getWeight() {

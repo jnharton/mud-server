@@ -37,6 +37,9 @@ public class Telnet  {
 	public static final byte DONT = (byte) 254; // server/client don't do X (imperative)
 	public static final byte IAC  = (byte) 255; // Is A Command (Indicates a command)
 	
+	//
+	public static final byte TERMINAL_TYPE = (byte) 24;
+	
 	// custom options for other protocols (general)
 	public static final byte LINEMODE = (byte) 34;
 	
@@ -61,6 +64,7 @@ public class Telnet  {
 			put("EL", EL);       put("GA", GA);               put("SB", SB);     put("WILL", WILL);
 			put("WONT", WONT);   put("DO", DO);               put("DONT", DONT); put("IAC", IAC);
 			
+			put("TERMINAL-TYPE", TERMINAL_TYPE);
 			put("LINEMODE", LINEMODE);
 			
 			put("MCCP", MCCP);   put("MCCP1", MCCP1);         put("COMPRESS", COMPRESS);
@@ -77,6 +81,7 @@ public class Telnet  {
 			put(EL, "EL");       put(GA, "GA");               put(SB, "SB");     put(WILL, "WILL");
 			put(WONT, "WONT");   put(DO, "DO");               put(DONT, "DONT"); put(IAC, "IAC");
 			
+			put(TERMINAL_TYPE, "TERMINAL-TYPE");
 			put(LINEMODE, "LINEMODE");
 			
 			put(MCCP, "MCCP");   put(MCCP1, "MCCP1");         put(COMPRESS, "COMPRESS");

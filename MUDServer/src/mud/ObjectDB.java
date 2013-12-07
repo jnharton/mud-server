@@ -211,6 +211,8 @@ public class ObjectDB {
     		nextId++;
     	}
     	
+    	System.out.println(item.getDBRef() + ": " + item.getName());
+    	
     	objsByName.put(item.getName(), item);
     	objsById.put(item.getDBRef(), item);
     	

@@ -17,7 +17,7 @@ alias inventory:inv,i
 alias look:l
 alias quit:QUIT
 alias @setskill:@ss
-alias go:approachh
+alias go:approach
 alias equip:eq
 alias attack:kill
 alias @backdb:@backup

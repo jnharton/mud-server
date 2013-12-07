@@ -145,8 +145,7 @@ public class ObjectLoader {
 							portal.setDesc(oDesc);
 
 							portal.name = attr[1];            // name
-							portal.coord.setX(0);             // x coordinate
-							portal.coord.setY(0);             // y coordinate
+							portal.setPosition(0, 0);         // set x and y coordinate of position
 
 							log.debug("log.debug (db entry): " + portal.toDB(), 2);
 
@@ -167,8 +166,7 @@ public class ObjectLoader {
 							portal.setExitType(et);
 
 							portal.name = attr[1];            // name
-							portal.coord.setX(0);             // x coordinate
-							portal.coord.setY(0);             // y coordinate
+							portal.setPosition(0, 0);         // set x and y coordinate of position
 
 							portal.setKey("test");
 
@@ -232,7 +230,7 @@ public class ObjectLoader {
 					room.z = dimensions[2];
 
 					if (room.getRoomType().equals(RoomType.OUTSIDE)) {
-						room.getProps().put("sky", "The sky is clear and flecked with stars.");
+						room.getProperties().put("sky", "The sky is clear and flecked with stars.");
 					}
 
 					objectDB.add(room);

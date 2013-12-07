@@ -23,6 +23,18 @@ public class Profession {
 		this.exp = pExp;
 	}
 	
+	public String getName() {
+		return this.name;
+	}
+	
+	public int getRanks() {
+		return this.ranks;
+	}
+	
+	public int getExp() {
+		return this.exp;
+	}
+	
 	public boolean increaseRank() {
 		if( (ranks + 1) <= MAX_RANKS && exp >= (ranks + 1) * EXP_PER_RANK ) {
 			ranks++;
@@ -39,17 +51,5 @@ public class Profession {
 		}
 		
 		return false;
-	}
-	
-	public String getName() {
-		return this.name;
-	}
-	
-	public int getRanks() {
-		return this.ranks;
-	}
-	
-	public int getExp() {
-		return this.exp;
 	}
 }

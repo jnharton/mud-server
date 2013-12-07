@@ -13,7 +13,9 @@ package mud;
 public enum Triggers {
 	onEnter,
 	onEnterPortal,
+	onEquip,
 	onLeave,
 	onLeavePortal,
+	onUnEquip,
 	onUse;
 }

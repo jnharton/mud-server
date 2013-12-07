@@ -29,7 +29,8 @@ public enum Colors {
 	CYAN(36),
 	WHITE(37);
 	
-	static int state = 3;
+	private static boolean bright = true;
+	
 	private final String prefix = "\33[";
 	private final String suffix = "m";
 	
@@ -39,7 +40,12 @@ public enum Colors {
 		this.num = num;
 	}
 	
+	public static void setBright(boolean bright) {
+		Colors.bright = bright;
+	}
+	
 	public String toString() {
-		return prefix + this.num + suffix;
+		if( Colors.bright ) return prefix + this.num + ";1" + suffix;
+		else return prefix + this.num + ";0" + suffix;
 	}
 }

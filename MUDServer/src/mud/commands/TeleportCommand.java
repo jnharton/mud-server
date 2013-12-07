@@ -62,7 +62,7 @@ public class TeleportCommand extends Command {
 
 				send("Teleporting to " + room.getName() + "... ", client);
 				player.setLocation(room.getDBRef());
-				player.setCoordinates(0, 0);
+				player.setPosition(0, 0);
 				send("Done.", client);
 				room = getRoom(client);
 				//parent.look(room, client);
@@ -72,7 +72,7 @@ public class TeleportCommand extends Command {
 			else {
 				send("Teleporting " + target.getName() + " to " + room.getName() + "... ", client);
 				target.setLocation(room.getDBRef());
-				target.setCoordinates(0, 0);
+				target.setPosition(0, 0);
 				send("Done.", client);
 			}
 		}

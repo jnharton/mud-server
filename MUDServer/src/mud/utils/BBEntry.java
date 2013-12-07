@@ -57,6 +57,10 @@ public class BBEntry {
 		this.author = newAuthor;
 	}
 	
+	public String getSubject() {
+		return this.subject;
+	}
+	
 	public String getMessage() {
 		return this.message;
 	}

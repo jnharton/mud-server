@@ -1,5 +1,8 @@
 package mud;
 
+import java.util.Hashtable;
+import java.util.Map;
+
 /*
  * Copyright (c) 2013 Jeremy N. Harton
  * 
@@ -25,6 +28,16 @@ public final class Constants {
 	public static final int ADMIN = 2;  // account administration?
 	public static final int WIZARD = 3; // Most permissions
 	public static final int GOD = 4;    // Pff, such arrogant idiots we are! (anyway, max permissions)
+	
+	public static final Map<String, Integer> permissionMap = new Hashtable<String, Integer>() {
+		{
+			put("USER", USER);
+			put("BUILD", BUILD);
+			put("ADMIN", ADMIN);
+			put("WIZARD", WIZARD);
+			put("GOD", GOD);
+		}
+	};
 	
 	// Named Rooms
 	public static final int WELCOME_ROOM = 8; // welcome room

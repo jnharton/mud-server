@@ -32,10 +32,10 @@ import mud.utils.Point;
  * 
  */
 public abstract class MUDObject {
-	public static MUDServer parent;
+	protected static MUDServer parent;
 
 	/* object data - persistent */
-	private int dbref = 0;                                                  // database reference number
+	private int dbref;                                                      // database reference number
 	protected String name = "";                                             // object name
 	protected String desc = "";                                             // object description
 	protected TypeFlag type = TypeFlag.OBJECT;                              // object type
@@ -43,14 +43,14 @@ public abstract class MUDObject {
 	protected String locks = "";                                            // object locks
 	protected int location = 0;                                             // object location
 	
-	protected LinkedHashMap<String, Object> props = new LinkedHashMap<String, Object>(1, 0.75f);
-	
+	/* object data - related to game (persistent) */
 	protected int owner = 0; // who owns the object (dbref of owner)
+	
+	protected Point pos = new Point(0, 0, 0); // object's' location/position on a cartesian plane within a room? (3D Point)
+	
+	protected LinkedHashMap<String, Object> properties = new LinkedHashMap<String, Object>(1, 0.75f);
 
 	protected ArrayList<Effect> effects = new ArrayList<Effect>(); // Effects set on the object
-
-	public Point coord = new Point(0, 0); // object's' location on a cartesian plane within a room?
-	public Point pos = new Point(0, 0);   //
 	
 	/* object state - transient? */
 	public boolean Edit_Ok = true; // is this object allowed to be edited
@@ -129,7 +129,13 @@ public abstract class MUDObject {
 	{
 		return this.flags;
 	}
-
+	
+	/**
+	 * Get MUDObject flags as a String, rather than as
+	 * a EnumSet<ObjectFlag>
+	 * 
+	 * @return
+	 */
     public String getFlagsAsString()
 	{
         final StringBuilder buf = new StringBuilder();
@@ -205,7 +211,12 @@ public abstract class MUDObject {
 	public void lock(String tempLock, String tempLockString)
 	{
 		// locks = home:here|teleport:no
-		this.locks = locks + "|" + tempLock + ":" + tempLockString;
+		if( !this.locks.equals("") ) {
+			this.locks = locks + "|" + tempLock + ":" + tempLockString;
+		}
+		else {
+			this.locks = tempLock + ":" + tempLockString;
+		}
 	}
 
 	public void unlock() {
@@ -230,21 +241,30 @@ public abstract class MUDObject {
 	{
 		this.dbref = newDBRef;
 	}
-
-	// arg -- int playerDBREF
+	
+	/**
+	 * Get this MUDObject's location.
+	 * 
+	 * @return int database reference of the object this object is located at/in
+	 */
 	public int getLocation()
 	{
 		return this.location;
 	}
 	
 	/**
-	 * Set this object's location. Generally speaking, this
-	 * should be a integer that is a valid database reference
-	 * in that it refers to an existing object. Generally speaking,
-	 * appropriate object types whose dbrefs should be used here
-	 * include: <b>Players, NPCs, Things, Items, Rooms</b>
+	 * Set this MUDObject's location.<br>
 	 * 
-	 * <br><br>
+	 * <br>
+	 * Generally speaking, this should be:<br>
+	 * - a positive integer<br>
+	 * - a valid database reference in that it refers to an existing object.<br>
+	 * 
+	 * <br>
+	 * appropriate object types whose dbrefs should be used here include:<br>
+	 * <b>Players, NPCs, Things, Items, Rooms</b><br>
+	 * 
+	 * <br>
 	 * The sole exception to the principle stated above is using -1 to indicate
 	 * that the object is not in the world and/or does not have a valid location.
 	 * 
@@ -257,12 +277,24 @@ public abstract class MUDObject {
 	
 	/**
 	 * Get the Properties HashMap, a mutable hashmap of strings and objects
-	 * that can be used to store "properties" (a.k.a. "props) of the object.
+	 * that can be used to store "properties" (a.k.a. "props) of/on the object.
 	 * 
 	 * @return
 	 */
-	final public LinkedHashMap<String, Object> getProps() {
-		return this.props;
+	final public LinkedHashMap<String, Object> getProperties() {
+		return this.properties;
+	}
+	
+	final public LinkedHashMap<String, Object> getVisualProperties() {
+		final LinkedHashMap<String, Object> visual_props = new LinkedHashMap<String, Object>();
+		
+		for(final String key : properties.keySet()) {
+			if( key.startsWith("visual/") ) {
+				visual_props.put( key, properties.get(key) );
+			}
+		}
+		
+		return visual_props;
 	}
 	
 	/**
@@ -274,7 +306,7 @@ public abstract class MUDObject {
 	 * @param value property value
 	 */
 	final public void setProperty(final String key, final Object value) {
-		this.props.put(key,  value);
+		this.properties.put(key,  value);
 	}
 	
 	/**
@@ -284,15 +316,15 @@ public abstract class MUDObject {
 	 * @return property value
 	 */
 	final public Object getProperty(final String key) {
-		return this.props.get(key);
+		return this.properties.get(key);
 	}
 	
 	final public <T> T getProperty(final String key, Class<T> c) {
-		return (T) c.cast(this.props.get(key));
+		return (T) c.cast(this.properties.get(key));
 	}
 	
 	final public boolean hasProperty(final String key) {
-		return this.props.containsKey(key);
+		return this.properties.containsKey(key);
 	}
 	
 	//public abstract ArrayList<String> look();
@@ -421,37 +453,48 @@ public abstract class MUDObject {
 	 * Coordinate System related methods 
 	 */
 	
-	public int getXCoord() {
-		return this.coord.getX();
+	/*public int getXCoord() {
+		return this.pos.getX();
 	}
 	
 	public void setXCoord(int newXCoord) {
-		this.coord.setX(newXCoord);
+		this.pos.setX(newXCoord);
 	}
 	
 	public int getYCoord() {
-		return this.coord.getY();
+		return this.pos.getY();
 	}
 	
 	public void setYCoord(int newYCoord) {
-		this.coord.setY(newYCoord);
+		this.pos.setY(newYCoord);
 	}
 	
 	public int getZCoord() {
-		return this.coord.getZ();
+		return this.pos.getZ();
 	}
 	
 	public void setZCoord(int newZCoord) {
-		this.coord.setZ(newZCoord);
+		this.pos.setZ(newZCoord);
+	}*/
+	
+	public Point getPosition() {
+		return this.pos;
 	}
 	
-	public Point getCoordinates() {
-		return this.coord;
+	public void setPosition(int x, int y) {
+		setPosition(x, y, 0);
 	}
 	
-	public void setCoordinates(int x, int y) {
-		this.coord.setX(x);
-		this.coord.setY(y);
+	public void setPosition(int x, int y, int z) {
+		this.pos.setX(x);
+		this.pos.setY(y);
+		this.pos.setZ(z);
+	}
+	
+	public void changePosition(int cX, int cY, int cZ) {
+		this.pos.changeX(cX);
+		this.pos.changeY(cY);
+		this.pos.changeZ(cZ);
 	}
 	
 	/**
@@ -464,6 +507,9 @@ public abstract class MUDObject {
 	
 	/**
 	 * Set ownership of this object
+	 * 
+	 * NOTE: takes a Player parameter to ensure that we don't try and set other
+	 * objects as owning objects (only Player's can "own" objects?)
 	 * 
 	 * @param player
 	 */

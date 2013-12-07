@@ -33,7 +33,7 @@ public class DropCommand extends Command {
 	public void execute(String arg, Client client) {
 		// get player, room objects to work with
 		Player player = getPlayer(client);
-		Room room = getRoom(client);
+		Room room = getRoom( player.getLocation() );
 		Item item;
 		
 		ArrayList<Item> inventory = player.getInventory();

@@ -30,7 +30,7 @@ public class Item extends MUDObject {
 	public boolean equippable = false; // is the item equippable?
 	public boolean equipped = false;   // is the item equipped?
 	
-	boolean canAuction = true;
+	private boolean canAuction = true;       // allows/disallows auctioning this item (default: true)
 
     private Coins baseCost = Coins.gold(1);
 	public boolean drinkable = false;        // drinkable? (0 = no, 1 = yes)
@@ -41,7 +41,7 @@ public class Item extends MUDObject {
 	
 	public double reduction_factor = 1.0; // amount of weight reduction (none by default, so 100% == 1)
 	
-	public boolean isAbsorb = true;       // does this item absorb water? (default: true)
+	private boolean isAbsorb = true;       // does this item absorb water? (default: true)
 	public boolean isWet = false;         // defines whether the item is wet or not (default: false)
 	public double wet = 1.0;              // degree of water absorbed
 	
@@ -58,7 +58,7 @@ public class Item extends MUDObject {
 	protected Attribute a;                // conflicting implementation with the above?
 	
 	protected List<Spell> spells;         // spells the item has, which can be cast from it
-	
+		
 	/**
 	 * Only for creating test items and then setting their properties/attributes
 	 */
@@ -72,6 +72,10 @@ public class Item extends MUDObject {
 	 */
 	public Item(int tempDBREF) {
 		super(tempDBREF);
+		this.type = TypeFlag.ITEM;
+	}
+	
+	public Item(boolean drinkable, boolean weightReduction, boolean isAbsorb) {
 		this.type = TypeFlag.ITEM;
 	}
 	
@@ -148,12 +152,23 @@ public class Item extends MUDObject {
 		this.mod = newMod;
 	}
 	
+	public void setAbsorb(boolean absorb) {
+	}
+	
+	public boolean isAbsorb() {
+		return this.isAbsorb;
+	}
+	
 	public void setAttribute(Attribute newAttribute) {
 		this.a = newAttribute;
 	}
 	
 	public Attribute getAttribute(Attribute newAttribute) {
 		return this.a;
+	}
+	
+	public boolean isAuctionable() {
+		return canAuction;
 	}
 	
 	/**
@@ -165,6 +180,10 @@ public class Item extends MUDObject {
 	}
 	
 	public Spell getSpell() {
+		if( this.spells.size() >= 1 ) {
+			return this.spells.get(0);
+		}
+		
 		return null;
 	}
 

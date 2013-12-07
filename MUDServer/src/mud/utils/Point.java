@@ -32,7 +32,8 @@ public class Point {
 		
 		this.type = Type.PT_3D;
 	}
-
+	
+	//
 	public int getX() { return x; }
 
 	public void setX(int newX) { this.x = newX; }
@@ -40,7 +41,8 @@ public class Point {
 	public void incX() { this.x++; }
 	
 	public void changeX(int dx) { this.x += dx; }
-
+	
+	//
 	public int getY() { return y; }
 
 	public void setY(int newY) { this.y = newY; }
@@ -49,12 +51,22 @@ public class Point {
 	
 	public void changeY(int dy) { this.y += dy; }
 	
+	//
 	public int getZ() {
 		if( this.type == Type.PT_2D ) return -1;
 		
 		return z;
 	}
-
+	
+	/**
+	 * Set z coordinate of this point.
+	 * 
+	 * NOTE: Setting or modifying the z coordinate of a
+	 * Point of Type PT_2D will result in an automatic upgrade
+	 * to a Type of PT_3D.
+	 * 
+	 * @param newZ
+	 */
 	public void setZ(int newZ) {
 		if( this.type == Type.PT_2D ) this.type = Type.PT_3D;
 		this.z = newZ;
@@ -75,6 +87,9 @@ public class Point {
 		// if the two objects are equal in reference, they are equal
 		if (this == object) { return true; }
 		// if the object is a Point, it must have the same coordinates to be equal
+		// for points with different types:
+		// if either point is 2D, then we only compare the X and Y coordinates
+		// if both are 3D then we compare the X,Y, and Z coordinates
 		else if (object instanceof Point) {
 			Point point = (Point) object;
 			
@@ -95,9 +110,23 @@ public class Point {
 		// if the object isn't a Point, then it can't be equal to it
 		else { return false; }
 	}
-
+	
+	/**
+	 * Creates and returns a String representation of a Point
+	 * ex.
+	 * Type: PT_2D
+	 * x = 5, y = 6
+	 * String -> (5,6)
+	 * 
+	 * Type: PT_3D
+	 * x = 5, y = 6, z = 0
+	 * String -> (5,6,0)
+	 */
 	public String toString() {
-		if( type == Type.PT_2D ) return "(" + x + "," + y + ")";
-		else return "(" + x + "," + y + "," + z + ")";
+		switch(type) {
+		case PT_2D: return "(" + x + "," + y + ")";
+		case PT_3D: return "(" + x + "," + y + "," + z + ")";
+		default:    return "";
+		}
 	}
 }

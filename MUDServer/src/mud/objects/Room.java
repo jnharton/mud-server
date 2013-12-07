@@ -73,14 +73,12 @@ public class Room extends MUDObject implements EventSource
 	private List<SayEventListener> _listeners = new ArrayList<SayEventListener>();
 	private ArrayList<Player> listeners;
 
-	private HashMap<Triggers, List<Trigger>> triggers = new HashMap<Triggers, List<Trigger>>() {
-		{
-			put(Triggers.onEnter, new LinkedList<Trigger>());
-			put(Triggers.onLeave, new LinkedList<Trigger>());
-		}
-	};
-
+	private HashMap<Triggers, List<Trigger>> triggers = new HashMap<Triggers, List<Trigger>>();
+	
+	// initialize trigger lists and some basic triggers
 	{
+		triggers.put(Triggers.onEnter, new LinkedList<Trigger>());
+		triggers.put(Triggers.onLeave, new LinkedList<Trigger>());
 		(triggers.get(Triggers.onEnter)).add( new Trigger("TRIGGER: enter") );
 		(triggers.get(Triggers.onLeave)).add( new Trigger("TRIGGER: leave") );
 	}

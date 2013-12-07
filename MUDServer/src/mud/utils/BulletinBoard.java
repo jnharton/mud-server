@@ -18,8 +18,6 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
 import java.util.ArrayList;
-import java.util.HashMap;
-
 import mud.net.Client;
 
 /**
@@ -34,20 +32,18 @@ public class BulletinBoard {
 	/**
 	 * 
 	 */
-	private final String mudName;
-	private ArrayList<BBEntry> entries;
+	private final String name;
 	private int lastId = 1;
-	private int lastTopicId = 1;
-	private HashMap <Integer, String> topics = new HashMap<Integer,String>(1, 0.75f);
+	
+	private ArrayList<BBEntry> entries;
 
-	public BulletinBoard(String mudName) {
-		this.mudName = mudName;
+	public BulletinBoard(String name) {
+		this.name = name;
 		this.entries = new ArrayList<BBEntry>();
-		this.addTopic("Test Topic");
 	}
-
-	public ArrayList<BBEntry> getEntries() {
-		return this.entries;
+	
+	public String getName() {
+		return this.name;
 	}
 	
 	public BBEntry getEntry(int messageNum) {
@@ -61,6 +57,10 @@ public class BulletinBoard {
 	public void removeEntry(int index) {
 		this.entries.remove(index);
 	}
+	
+	public ArrayList<BBEntry> getEntries() {
+		return this.entries;
+	}
 
 	/**
 	 * if class extracted, revise to send a
@@ -70,10 +70,9 @@ public class BulletinBoard {
 	public ArrayList<String> scan() {
 		ArrayList<String> out = new ArrayList<String>();
 		
-		out.add(mudName + " Bulletin Board");
+		out.add(name);
 		//out.add("+-------------------------------------------------+");
 		out.add("+--------------------------------------------------------------------------------+");
-		out.add("| Topics:                                                                        |");
 		for (BBEntry entry : this.entries) {
 			out.add("| " + Utils.padRight(entry.toView(), 78) + " |");
 		}
@@ -103,41 +102,18 @@ public class BulletinBoard {
 		this.addEntry(entry);
 	}
 
-	public void renumber(int rStart) {
-		int s = 0;
-		int t = 0;
-		int start = rStart;
-		
-		/*for(int i = 0; i < entries.size(); i++) {
+	public void renumber(int start) {
+		for(int i = start; i < entries.size(); i++) {
 			final BBEntry entry = entries.get(i);
 			
-			entries.set(i, new BBEntry( entry.getId(), entry.getAuthor(), "", entry.getMessage()));
-		}*/
-
-		for (final BBEntry entry : this.entries) {
-			if (t == 0 && entry.getId() == start + 1) {
-				s = 1;
-				t = 0;
-			}
-			else if (s == 1) {
-				int tid = entry.getId() - 1;
-				System.out.println("Old Entry Id: " + entry.getId());
-				entry.setId(tid);
-				System.out.println("New Entry Id: " + entry.getId());
-			}
+			int tid = entry.getId() - 1;
+			System.out.println("Old Entry Id: " + entry.getId());
+			entry.setId(tid);
+			System.out.println("New Entry Id: " + entry.getId());
 		}
 	}
 
 	public void renumber() { renumber(0); }
-
-	public void addTopic(String topicName) {
-		this.topics.put(lastTopicId++, topicName);
-	}
-
-	public void removeTopic(String topicName) {
-		this.topics.remove(topicName);
-		// topic index needs re-indexing
-	}
 	
 	public void ensureCapacity(int capacity) {
 		this.entries.ensureCapacity(capacity);

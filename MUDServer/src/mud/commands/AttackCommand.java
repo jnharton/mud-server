@@ -66,19 +66,12 @@ public class AttackCommand extends Command {
 							if (hit) { // did we hit?
 								
 								player.setMode(PlayerMode.COMBAT); // we are now in combat mode
-
-								boolean criticalHit = false;							
+						
 								int criticalCheckRoll = Utils.roll(1, 20);
+								boolean criticalHit = criticalCheckRoll >= wt.getCritMin() && criticalCheckRoll <= wt.getCritMax() ? true : false;
 
-								int damage = 0;
-
-								if (criticalCheckRoll > 10) { /*dummy hit check, if c > 10 we hit them and it's a critical */
-									damage = calculateDamage(wt, true); // need to figure out how to get whatever weapon they used
-								}
-								else {
-									damage = calculateDamage(wt, false); // need to figure out how to get whatever weapon they used
-								}
-
+								int damage = calculateDamage(wt, criticalHit);
+								
 								// damage the target
 								MUDObject target = player.getTarget();
 								if(target instanceof Player) {
