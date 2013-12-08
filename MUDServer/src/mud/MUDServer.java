@@ -1060,41 +1060,43 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		// ex. prompt_enabled, true
 
 		/* Quest/Creature Testing -- NOT DB Safe (expects a room to exist, etc) */
+		
+		if( mainDB.endsWith("db.txt") ) {
+			Creature c = new Creature(-1, "rat", "Mangy Rat", "A large, scruffy gray with red beady eyes and pointy teeth.");
+			Creature c1 = new Creature( c );
+			Creature c2 = new Creature( c );
 
-		Creature c = new Creature(-1, "rat", "Mangy Rat", "A large, scruffy gray with red beady eyes and pointy teeth.");
-		Creature c1 = new Creature( c );
-		Creature c2 = new Creature( c );
+			objectDB.addAsNew(c);
+			objectDB.addCreature(c);
+			objectDB.addAsNew(c1);
+			objectDB.addCreature(c1);
+			objectDB.addAsNew(c2);
+			objectDB.addCreature(c2);
 
-		objectDB.addAsNew(c);
-		objectDB.addCreature(c);
-		objectDB.addAsNew(c1);
-		objectDB.addCreature(c1);
-		objectDB.addAsNew(c2);
-		objectDB.addCreature(c2);
+			Room room = getRoom(4); // Red Dragon Inn
 
-		Room room = getRoom(4); // Red Dragon Inn
+			if( room != null ) {
+				c.setLocation(4);
+				c1.setLocation(4);
+				c2.setLocation(4);
+			}
 
-		if( room != null ) {
-			c.setLocation(4);
-			c1.setLocation(4);
-			c2.setLocation(4);
+			Zone rdi = new Zone("Red Dragon Inn", null);
+			rdi.addRoom( getRoom( 4 ) );
+			zones.put(rdi, 0);
+
+			Quest quest = new Quest("Help the Innkeeper", "The inn's basement is full of rats. Help the innkeeper out by killing a few.",
+					rdi, new Task("Kill 5 rats", TaskType.KILL, 5, c) );
+
+			NPC npc = getNPC("Iridan");
+
+			if( npc != null ) {
+				System.out.println(npc.getName()); //
+				npc.addQuest( quest );             // assign the quest to this NPC
+			}
+
+			quests.add(quest); // add to main quest table
 		}
-
-		Zone rdi = new Zone("Red Dragon Inn", null);
-		rdi.addRoom( getRoom( 4 ) );
-		zones.put(rdi, 0);
-
-		Quest quest = new Quest("Help the Innkeeper", "The inn's basement is full of rats. Help the innkeeper out by killing a few.",
-				rdi, new Task("Kill 5 rats", TaskType.KILL, 5, c) );
-
-		NPC npc = getNPC("Iridan");
-
-		if( npc != null ) {
-			System.out.println(npc.getName()); //
-			npc.addQuest( quest );             // assign the quest to this NPC
-		}
-
-		quests.add(quest); // add to main quest table
 
 		/* Bank Test -- DB Safe */
 		Bank bank = new Bank("test");
