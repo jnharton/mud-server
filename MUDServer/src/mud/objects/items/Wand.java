@@ -75,6 +75,26 @@ public class Wand extends Item implements Equippable<Wand>, Usable<Wand>, Wielda
 	public String getName() {
 		return this.name;
 	}
+	
+	@Override
+	public String getDesc() {
+		final String chargeState;
+		
+		if(this.charges >= 50) {
+			chargeState = "fully charged";
+		}
+		else if(this.charges >= 12 && this.charges <= 25) {
+			chargeState = "about half charged";
+		}
+		else if(this.charges < 12) {
+			chargeState = "about a quarter charged";
+		}
+		else {
+			chargeState = "dead, kaput, useless";
+		}
+		
+		return this.desc + "\nThis wand is " + chargeState;
+	}
 
 	@Override
 	public void equip() {

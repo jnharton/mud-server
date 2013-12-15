@@ -1,5 +1,6 @@
 package mud;
 
+import mud.utils.Date;
 import mud.utils.Message;
 
 /*
@@ -40,8 +41,9 @@ public class TimeLoop implements Runnable
     private int ms_per_second = 166;       // 166 ms (1/6 s), runs 6x normal time
     private int ms_per_minute = 10 * 1000; // 10k ms (10 s) , runs 6x normal time
     
+    final private int[] DAYS;              // array containing the number of days in each month
+    
     final private MUDServer server;
-    final private int[] DAYS;
 
     /**
      * This uses a 6:1 timescale. That is, 6 minutes of game time is equal to 1 minute
@@ -57,9 +59,9 @@ public class TimeLoop implements Runnable
         this.server = server;
         this.minute = min;  // the initial minute (start time)
         this.hour = hour;   // the initial hour (start time)
-        this.day = day;       // the initial day (start day)
-        this.month = month;   // the initial month (start month)
-        this.year = year;     // the initial year (start year)
+        this.day = day;     // the initial day (start day)
+        this.month = month; // the initial month (start month)
+        this.year = year;   // the initial year (start year)
     }
 
     // message sending with specifics needs a loginCheck(client), but it needs to not cause the game to crash
@@ -197,6 +199,18 @@ public class TimeLoop implements Runnable
 
     public void killLoop() {
         running = false;
+    }
+    
+    public void setDate(final Date newDate) {
+    	pauseLoop();
+    	this.day = newDate.getDay();
+    	this.month = newDate.getMonth();
+    	this.year = newDate.getYear();
+    	
+    	this.hour = 6;    // 6am?
+    	this.minute  = 0;
+    	this.second = 0;
+    	unpauseLoop();
     }
 
     public void setHours(int hour) {

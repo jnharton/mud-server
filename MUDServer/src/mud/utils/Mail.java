@@ -28,10 +28,13 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 public class Mail {
 	private Integer id;
+	private String sender;
 	private String recipient;
 	private String subject;
 	private String message;
 	private Character flag;
+	
+	private static final Character mark = '~';
 	
 	private boolean isUnread;
 	
@@ -44,27 +47,27 @@ public class Mail {
 	 * @param tMessage
 	 * @param tFlag
 	 */
-	public Mail(int tId, String tRecipient, String tSubject, String tMessage, Character tFlag) {
+	public Mail(int tId, String tSender, String tRecipient, String tSubject, String tMessage, Character tFlag) {
 		this.id = tId;
+		this.sender = tSender;
 		this.recipient = tRecipient;
 		this.subject = tSubject;
 		this.message = tMessage;
 		this.flag = tFlag;
 		
 		switch(tFlag) {
-		case 'U':
-			markUnread();
-			break;
-		case 'R':
-			markRead();
-			break;
-		default:
-			break;
+		case 'U': markUnread(); break;
+		case 'R': markRead();   break;
+		default:  break;
 		}
 	}
 	
 	public Integer getId() {
 		return this.id;
+	}
+	
+	public String getSender() {
+		return this.sender;
 	}
 	
 	public String getRecipient() {
@@ -118,12 +121,14 @@ public class Mail {
     }
 	
 	public String[] toStorage() {
-		String[] out = new String[4];
+		String[] out = new String[6];
 		
-		out[0] = recipient;
-		out[1] = subject;
-		out[2] = message;
-		out[3] = flag.toString();
+		out[0] = sender;
+		out[1] = recipient;
+		out[2] = subject;
+		out[3] = message;
+		out[4] = flag.toString();
+		out[5] = mark.toString();
 		
 		return out;
 	}

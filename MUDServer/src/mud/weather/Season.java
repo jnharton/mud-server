@@ -4,6 +4,18 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.ListIterator;
 
+import mud.Seasons;
+
+/*
+ * Copyright (c) 2013 Jeremy N. Harton
+ * 
+ * Released under the MIT License:
+ * LICENSE.txt, http://opensource.org/licenses/MIT
+ * 
+ * NOTE: license provided with code controls, if any
+ * changes are made to the one referred to.
+ */
+
 /**
  * Season.java
  * 
@@ -16,36 +28,36 @@ import java.util.ListIterator;
  */
 public class Season {
 	public String name;
-	public LinkedList<WeatherState> weather_states;
+	public int beginMonth;
+	public int endMonth;
+	public WeatherPattern weatherPattern;
+	
+	public Season(String name, int beginMonth, int endMonth) {
+		this.name = name;
+		this.beginMonth = beginMonth;
+		this.endMonth = endMonth;
+		this.weatherPattern = null;
+	}
+	
+	private Season(String name, int beginMonth, int endMonth, WeatherState...sWeatherStates) {
+		this.name = name;
+		this.beginMonth = beginMonth;
+		this.endMonth = endMonth;
+		this.weatherPattern = new WeatherPattern(sWeatherStates);
+	}
 	
 	public Season(String sName, WeatherState...sWeatherStates) {
 		this.name = sName;
-		this.weather_states = new LinkedList<WeatherState>(Arrays.asList(sWeatherStates));
+		this.beginMonth = -1;
+		this.endMonth = -1;
+		this.weatherPattern = new WeatherPattern(sWeatherStates);
 	}
 	
-	public WeatherState getNextState(final WeatherState cs) {
-		ListIterator<WeatherState> li = this.weather_states.listIterator(weather_states.indexOf(cs) + 1);
+	public String getName() {
+		return this.name;
+	}
 
-		boolean transitionDown = Math.random() <= cs.getTransDownProb();
-
-        WeatherState newState;
-		if (transitionDown && li.hasNext()) {
-            //System.out.println("Transition Down");
-            newState = li.next();
-            //System.out.println("Is current equal to next? " + cs.equals(newState));
-            newState.upDown = -1;
-        }
-		else if (!transitionDown && li.hasPrevious()) {
-            //System.out.println("Transition Up");
-            newState = li.previous();
-            newState.upDown = 1;
-        }
-        else {
-            //System.out.println("No Transition");
-            newState = cs;
-            newState.upDown = 0;
-        }
-
-		return newState;
+	public String toString() {
+		return this.name;
 	}
 }

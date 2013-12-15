@@ -125,6 +125,8 @@ public class CastCommand extends Command {
 			else {
 				send("A bit of magical energy sparks off you briefly, then fizzles out. Drat!", client);
 			}
+			
+			player.setLastSpell(spell);
 		}
 	}
 	

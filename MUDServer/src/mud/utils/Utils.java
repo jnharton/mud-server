@@ -897,11 +897,9 @@ public final class Utils {
 	
 	public static <T> List<T> mkList(T...objects) {
 		List<T> result = new LinkedList<T>();
-		for(T obj : objects) {
-			result.add(obj);
-		}
 		
-		return result;
+		for(T obj : objects) result.add(obj);
 		
+		return result;		
 	}
 }

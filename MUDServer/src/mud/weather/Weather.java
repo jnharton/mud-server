@@ -1,5 +1,15 @@
 package mud.weather;
 
+/*
+ * Copyright (c) 2012 Jeremy N. Harton
+ * 
+ * Released under the MIT License:
+ * LICENSE.txt, http://opensource.org/licenses/MIT
+ * 
+ * NOTE: license provided with code controls, if any
+ * changes are made to the one referred to.
+ */
+
 /**
  * Weather.java
  * 
@@ -27,6 +37,6 @@ public class Weather
 	}
 	
 	public void nextState() {
-		setState(this.season.getNextState( this.ws ));
+		setState(this.season.weatherPattern.getNextState( this.ws ));
 	}
 }

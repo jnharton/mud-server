@@ -188,6 +188,7 @@ public class ObjectDB {
     }
 
     public void add(final MUDObject item) {
+    	System.out.println("");
     	System.out.println("ObjectDB " + nextId + ": " + item.getDBRef());
     	
     	/* If the object's dbref doesn't match the next id (e.g. there's no
@@ -212,6 +213,7 @@ public class ObjectDB {
     	}
     	
     	System.out.println(item.getDBRef() + ": " + item.getName());
+    	System.out.println("");
     	
     	objsByName.put(item.getName(), item);
     	objsById.put(item.getDBRef(), item);
