@@ -381,6 +381,8 @@ public class ObjectDB {
         		continue;
         	}*/
         	
+        	System.out.println(obj.getName());
+        	
         	toSave[index] = obj.toDB();
         	
             index++;

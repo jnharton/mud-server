@@ -1,4 +1,4 @@
-package mud.objects;
+package mud.objects.npcs;
 
 /*
 Copyright (c) 2012 Jeremy N. Harton
@@ -18,6 +18,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
 import mud.Coins;
+import mud.objects.InteractiveI;
 
 public interface BankerI extends InteractiveI
 {

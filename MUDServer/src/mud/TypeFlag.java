@@ -19,6 +19,7 @@ package mud;
  */
 public enum TypeFlag
 {
+	CREATURE("CREATURE", 'C'),
 	EXIT("EXIT", 'E'),
 	ITEM("ITEM", 'I'),
 	NPC("NPC", 'N'),
@@ -37,6 +38,7 @@ public enum TypeFlag
     
     static public TypeFlag fromLetter(final char c) {
     	switch(c) {
+    	case 'C':	return CREATURE;
     	case 'E':	return EXIT;
     	case 'I':	return ITEM;
     	case 'N':	return NPC;
@@ -45,6 +47,10 @@ public enum TypeFlag
     	case 'T':	return THING;
     	default:    throw new IllegalArgumentException("Invalid TypeFlag letter: " + c);    
     	}
+    }
+    
+    static public char asLetter(final TypeFlag flag) {
+    	return flag.flag;
     }
     
     public String toString() {

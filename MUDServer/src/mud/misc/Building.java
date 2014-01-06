@@ -18,6 +18,8 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
 import java.awt.Point;
+import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -25,36 +27,14 @@ public class Building {
 	private String name;
 	private String shortName;
 	
-	private Map entrances; // places where you can enter the building (ex. doors, windows, holes in the walls)0
-	private Map exits;     // places where you can leave the building (ex. doors, windows, holes in the walls)0
+	private Map entrances; // places where you can enter the building (ex. doors, windows, holes in the walls)
+	private Map exits;     // places where you can leave the building (ex. doors, windows, holes in the walls)
 	
 	private List<Edge> sides;
 	
-	public Building(String name, String shortName) {
-		
-	}
-	
-	private class Edge {
-		private Point start;
-		private Point end;
-		private int length;
-		
-		public Edge(Point startP, Point endP, int length) {
-			this.start = startP;
-			this.end = endP;
-			this.length = length;
-		}
-		
-		public Point getStartPoint() {
-			return start;
-		}
-		
-		public Point getEndPoint() {
-			return end;
-		}
-		
-		public int length() {
-			return this.length;
-		}
+	public Building(String name, String shortName, Edge...edges) {
+		this.name = name;
+		this.shortName = shortName;
+		this.sides = new LinkedList<Edge>( Arrays.asList( edges ) );	
 	}
 }

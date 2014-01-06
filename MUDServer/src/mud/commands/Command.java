@@ -132,6 +132,10 @@ public abstract class Command {
 		parent.examine(m, client);
 	}
 	
+	protected final void examine(final Room r, final Client client) {
+		parent.examine(r, client);
+	}
+	
 	protected final Spell getSpell(final String name) {
 		return parent.getSpell(name);
 	}
@@ -140,9 +144,9 @@ public abstract class Command {
 		return parent.getObject(name);
 	}
 	
-	protected final MUDObject getObject(final String objectName, final Client client) {
+	/*protected final MUDObject getObject(final String objectName, final Client client) {
 		return parent.getObject(objectName, client);
-	}
+	}*/
 	
 	protected final MUDObject getObject(Integer dbref) {
 		return parent.getObject(dbref);

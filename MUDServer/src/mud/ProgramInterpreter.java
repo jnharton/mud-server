@@ -139,7 +139,7 @@ public class ProgramInterpreter {
 					for(int i = 0; i < params.size(); i++) {
 						if( ( params.get(i).startsWith("{") && !params.get(i).endsWith("}") ) 
 								&& ( !params.get(i+1).startsWith("}") && params.get(i+1).endsWith("}") ) ) {
-							params.set(i, params.get(i) + "," + params.get(i+1));
+							params.set(i, (params.get(i) + "," + params.get(i+1)).trim());
 							params.remove(i+1);
 						}
 					}
@@ -147,13 +147,12 @@ public class ProgramInterpreter {
 					System.out.println("Params: " + params);
 
 					int index = 0;
-
+					
+					// whenever the function called isn't 'if' or 'with', we want to evaluate all parameters as we get them
 					if( !functionName.equals("if") && !functionName.equals("with") ) {
 						for(String param : params) {
-							//System.out.println("Param (before): " + param);
 							if( param.startsWith("{") && param.endsWith("}") ) {
 								params.set(index, interpret(param, client));
-								//System.out.println("Param (after): " + param);
 							}
 							index++;
 						}

@@ -19,34 +19,39 @@ import java.util.EnumSet;
  */
 public enum ObjectFlag
 {
-    //ADMIN("ADMIN"),
-    //BUILDER("BUILDER"),
-    DARK("DARK"),
+	DARK("DARK"),
+    FORGE("FORGE", TypeFlag.ROOM),
     GUEST("GUEST"),
     HOUSE("HOUSE"),
     MERCHANT("MERCHANT"),
     NO_TELEPORT("NO_TELEPORT"), // prevent teleporting to the location (for rooms) or moving the object (for everything else)
+    QUIET("QUIET"),
+    SHOP("SHOP", TypeFlag.ROOM),
     SILENT("SILENT"),
-    //WIZARD("WIZARD"),
     VENDOR("VENDOR"),
     ZONE("ZONE");
     
-    private String name;
+    private String name;   // name of the flag
+    private TypeFlag type; // type of object this flag can be set on
     
     ObjectFlag(String flagName) {
     	this.name = flagName;
     }
+    
+    ObjectFlag(String flagName, TypeFlag type) {
+    	this.name = flagName;
+    	this.type = type;
+    }
 
     static public ObjectFlag fromLetter(final char c) {
         switch (c) {
-        //case 'A':    return ADMIN;
-        //case 'B':    return BUILDER;
         case 'D':    return DARK;
         case 'G':    return GUEST;
+        case 'F':    return FORGE;
         case 'H':    return HOUSE;
         case 'M':	 return MERCHANT;
         case 'S':    return SILENT;
-        //case 'W':    return WIZARD;
+        case 'Q':    return QUIET;
         case 'V':    return VENDOR;
         case 'Z':    return ZONE;
         default:    throw new IllegalArgumentException("Invalid ObjectFlag letter: " + c);    
@@ -64,11 +69,17 @@ public enum ObjectFlag
     }
 
     static public String toInitString(final EnumSet<ObjectFlag> set) {
-        final StringBuilder buf = new StringBuilder();
-        for (final ObjectFlag flag : set) {
-            buf.append(" ").append(flag.toString());
-        }
-        return buf.length() < 1 ? buf.toString() : buf.toString().substring(1);
+    	if( set != null ) {
+    		final StringBuilder buf = new StringBuilder();
+    		
+    		for (final ObjectFlag flag : set) {
+    			buf.append(" ").append(flag.toString());
+    		}
+    		
+    		return buf.length() < 1 ? buf.toString() : buf.toString().substring(1);
+    	}
+    	
+    	return "";
     }
 
     static public String firstInit(final EnumSet<ObjectFlag> set) {

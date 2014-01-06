@@ -1,4 +1,4 @@
-package mud.objects;
+package mud.objects.npcs;
 
 import java.util.EnumSet;
 
@@ -6,6 +6,7 @@ import mud.ObjectFlag;
 import mud.Coins;
 import mud.Currency;
 import mud.net.Client;
+import mud.objects.NPC;
 import mud.utils.Bank;
 
 /*

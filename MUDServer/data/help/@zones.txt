@@ -1,11 +1,11 @@
 @zones
 @ZONES
 
-Create new zones, add rooms to existing, zones, 
+Show zone list, create new zones, add rooms to existing zones, etc
 
-Syntax: '@zones'                                    # List existing zones and the number of rooms in each
-        '@zones +new [zone name]'                   # Create a new zone with the indicated name
-        '@zones +add [room name/dbref]=[zone name]' # Add the indicated room to the indicated zone
-        '@zones +info'                              # Not Implemented
+Syntax: '@zones'                    # List existing zones and the number of rooms
+        '@zones +new [zone name]'   # Create a new zone with the indicated name
+        '@zones +add [room]=[zone]' # Add the indicated room to the indicated zone
+        '@zones +info'              # Not Implemented
 
-Last Updated: December 7, 2013
+Last Updated: December 26, 2013

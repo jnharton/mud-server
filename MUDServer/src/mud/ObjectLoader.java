@@ -4,8 +4,9 @@ import java.util.*;
 
 import mud.objects.*;
 import mud.objects.items.*;
+import mud.objects.npcs.Innkeeper;
+import mud.objects.npcs.Merchant;
 import mud.objects.things.Chest;
-
 import mud.Coins;
 import mud.objects.Item;
 import mud.utils.Utils;

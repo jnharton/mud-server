@@ -2,12 +2,8 @@ package mud.commands;
 
 import mud.MUDObject;
 import mud.MUDServer;
-import mud.objects.Exit;
-import mud.objects.Item;
-import mud.objects.NPC;
 import mud.objects.Player;
 import mud.objects.Room;
-import mud.objects.Thing;
 
 import mud.net.Client;
 import mud.utils.Utils;
@@ -30,7 +26,7 @@ public class ExamineCommand extends Command {
 
 	@Override
 	public void execute(String arg, Client client) {
-		if ( arg.equals("here") ) {
+		if ( arg.equals("") || arg.equals("here") ) {
 			Room room = getRoom( getPlayer( client ) );
 			examine(room, client);
 		}
@@ -46,34 +42,7 @@ public class ExamineCommand extends Command {
 					MUDObject mobj = getObject(dbref);
 
 					if (mobj != null) {
-						if (mobj instanceof Room) {
-							Room room = (Room) mobj;
-							examine(room, client);
-						}
-						
-						else if (mobj instanceof Item) {
-							Item item = (Item) mobj;
-							examine(item, client);
-						}
-
-						else if (mobj instanceof Exit) {
-							Exit exit = (Exit) mobj;
-							examine(exit, client);
-						}
-						
-						else if (mobj instanceof Thing) {
-							Thing thing = (Thing) mobj;
-							examine(thing, client);
-						}
-						
-						else if (mobj instanceof Player) {
-							Player player = (Player) mobj;
-							examine(player, client);
-						}
-
-						else {
-							examine(mobj, client);
-						}
+						examine(mobj, client);
 					}
 					else {
 						send("That doesn't exist.", client);
@@ -85,36 +54,14 @@ public class ExamineCommand extends Command {
 			}
 			else {
 				// get by string/name
-				final Room room = getRoom(arg);
+				MUDObject mobj = getObject(arg);
 				
-				if (room != null) {
-					examine(room, client);
-					return;
+				if( mobj != null ) {
+					examine(mobj, client);
 				}
-				
-				final Exit exit = getExit(arg);
-				
-				if (exit != null) {
-					examine(exit, client);
-					return;
+				else {
+					send("That doesn't exist.", client);
 				}
-				
-				
-				final Player player = getPlayer(arg);
-				
-				if (player != null) {
-					examine(player, client);
-					return;
-				}
-				
-				final NPC npc = getNPC(arg);
-				
-				if (npc != null) {
-					examine(npc, client);
-					return;
-				}
-				
-				send("That doesn't exist.", client);
 			}
 		}
 	}

@@ -56,8 +56,8 @@ public final class Skills {
 	public static final Skill USE_MAGIC_DEVICE = new Skill("Use Magic Device", 40, "CHA", new PClass[] { Classes.BARD, Classes.ROGUE });
 	public static final Skill USE_ROPE = new Skill("Use Rope", 41, "DEX", new PClass[] { Classes.RANGER, Classes.ROGUE });
 	
-	public static final Skill NAVIGATION = new Skill("Navigation", 42, "", null);
-	public static final Skill TRACKING = new Skill("Tracking", 43, "", null);
+	public static final Skill NAVIGATION = new Skill("Navigation", 42, "INT", new PClass[0]);
+	public static final Skill TRACKING = new Skill("Tracking", 43, "WIS", new PClass[0]);
 	
 	private static final HashMap<String, Skill> skillMap = new HashMap<String, Skill>(43, 0.75f) {
 		{

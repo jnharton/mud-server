@@ -1,4 +1,4 @@
-package mud.objects;
+package mud.objects.npcs;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -8,12 +8,14 @@ import mud.ObjectFlag;
 import mud.Abilities;
 import mud.Classes;
 import mud.Coins;
-import mud.Currency;
 import mud.MUDServer;
 import mud.Races;
-import mud.interfaces.*;
+import mud.interfaces.Vendor;
 import mud.net.Client;
+import mud.objects.Item;
+import mud.objects.NPC;
 import mud.objects.items.Armor;
+import mud.objects.items.Weapon;
 
 /*
  * Copyright (c) 2012 Jeremy N. Harton
@@ -25,20 +27,20 @@ import mud.objects.items.Armor;
  * changes are made to the one referred to.
  */
 
-public class Innkeeper extends NPC implements Vendor {
+public class Merchant extends NPC implements Vendor {
 
-	private MUDServer parent;
-	public ArrayList<Item> stock;
+	/**
+	 * 
+	 */
+	final private MUDServer parent;
+	public ArrayList<Item> stock = new ArrayList<Item>();
 
-	public Innkeeper(final MUDServer mudServer, final int tempDBRef, final String tempName, final EnumSet<ObjectFlag> tempFlags, 
-                    final String tempDesc, final String tempTitle, final String tempPStatus, final int tempLoc, final Coins tempMoney) {
+	public Merchant(final MUDServer mudServer, final int tempDBRef, final String tempName, final EnumSet<ObjectFlag> tempFlags, 
+            final String tempDesc, final String tempTitle, final String tempPStatus, final int tempLoc, final Coins tempMoney) {
 		super(tempDBRef, tempName, null, tempFlags, tempDesc, tempTitle, tempPStatus, tempLoc, tempMoney);
 
 		this.parent = mudServer;
-		this.stock = new ArrayList<Item>();
-
 		this.access = 0;
-
 		this.stats = new LinkedHashMap<Abilities, Integer>(6, 0.75f);
 
 		this.stats.put(Abilities.STRENGTH, 12);
@@ -51,6 +53,28 @@ public class Innkeeper extends NPC implements Vendor {
 		this.race = Races.HUMAN;
 		this.pclass = Classes.COMMONER;
 	}
+	
+	@Override
+	public void interact(final Client client) {
+		parent.send(this.getName(), client);
+		parent.send("-----< Stock >--------------------", client);
+		for (Item item : this.stock) {
+			if (item instanceof Armor) {
+				Armor a = (Armor) item;
+				//parent.send(parent.colors("+" + a.getMod() + " " + a.getName() + " (" + a.getWeight() + ") Cost: " + a.getCost(), "yellow"), client);
+				parent.send(parent.colors(a.toString() + " (" + a.getWeight() + ") Cost: " + a.getCost(), "yellow"), client);
+			}
+			else if (item instanceof Weapon) {
+				final Weapon w = (Weapon) item;
+				//parent.send(parent.colors("+" + w.getMod() + " " + w.getName() + " (" + w.getWeight() + ") Cost: " + w.getCost(), "yellow"), client);
+				parent.send(parent.colors(w.toString()  + " (" + w.getWeight() + ") Cost: " + w.getCost(), "yellow"), client);
+			}
+			else {
+				parent.send("?", client);
+			}
+		}
+		parent.send("----------------------------------", client);
+	}
 
 	public ArrayList<Item> list() {
 		return this.stock;
@@ -58,18 +82,18 @@ public class Innkeeper extends NPC implements Vendor {
 
 	public Item buy(String name) {
 		Item bought = null;
-
+		
 		for (Item item : this.stock) {
 			if (item.getName().equals(name)) {
-
+				
 				bought = item;
-
-				if ( this.stock.remove(item) ) {
+				
+				if (this.stock.remove(item)) {
 					return bought;
 				}
 			}
 		}
-
+		
 		return bought;
 	}
 
@@ -84,7 +108,7 @@ public class Innkeeper extends NPC implements Vendor {
 				return true;
 			}
 		}
-
+		
 		return false;
 	}
 
@@ -94,24 +118,7 @@ public class Innkeeper extends NPC implements Vendor {
 				return item;
 			}
 		}
-
+		
 		return null;
-	}
-
-	@Override
-	public void interact(Client client) {
-		parent.send(this.getName(), client);
-		parent.send("-----< Stock >--------------------", client);
-		for (Item item : this.stock) {
-			if (item instanceof Armor) {
-				final Armor a = (Armor) item;
-				//parent.send(parent.colors("+" + a.getMod() + " " + a.getName() + " " + a.getDesc() + " (" + a.getWeight() + ") Cost: " + a.getCost(), "yellow"), client);
-				parent.send(parent.colors(a.toString() + " " + a.getDesc() + " (" + a.getWeight() + ") Cost: " + a.getCost(), "yellow"), client);
-			}
-			else {
-				parent.send("?", client);
-			}
-		}
-		parent.send("----------------------------------", client);
 	}
 }

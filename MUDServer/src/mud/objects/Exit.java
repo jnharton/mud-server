@@ -24,6 +24,10 @@ import java.util.EnumSet;
 /**
  * Exit Class
  * 
+ * Represents an in-game exit or entrance, generally one way
+ * and connecting two rooms. A two-directional is possible, but
+ * may cause weirdness in other code.
+ * 
  * @author Jeremy N. Harton
  * 
  */
@@ -40,10 +44,10 @@ public class Exit extends MUDObject implements Lockable
 	private int origin = 0;      // strictly for doors?
 	private int destination = 0;
 	
-	public String succMsg;       // message about successfully using exit
-	public String osuccMsg;      // message others see about you using exit
-	public String failMsg;       // message about failing to use the exit (locked, etc)
-	public String ofailMsg;      // message others see about you failing to use the exit
+	private String succMsg;       // message about successfully using exit
+	private String osuccMsg;      // message others see about you using exit
+	private String failMsg;       // message about failing to use the exit (locked, etc)
+	private String ofailMsg;      // message others see about you failing to use the exit
 	
 	public ArrayList<String> aliases = new ArrayList<String>();
 	
@@ -135,6 +139,14 @@ public class Exit extends MUDObject implements Lockable
 		else if (name.toLowerCase().equals("osuccmsg")) { this.osuccMsg = newMsg; }
 		else if (name.toLowerCase().equals("failmsg")) { this.failMsg = newMsg; }
 		else if (name.toLowerCase().equals("ofailmsg")) { this.ofailMsg = newMsg; }
+	}
+	
+	public String getMessage(String name) {
+		if (name.toLowerCase().equals("succmsg")) { return this.succMsg; }
+		else if (name.toLowerCase().equals("osuccmsg")) { return this.osuccMsg; }
+		else if (name.toLowerCase().equals("failmsg")) { return this.failMsg; }
+		else if (name.toLowerCase().equals("ofailmsg")) { return this.ofailMsg; }
+		else return null;
 	}
 
 	@Override

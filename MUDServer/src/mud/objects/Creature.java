@@ -4,7 +4,6 @@ import mud.MUDObject;
 import mud.Race;
 import mud.Races;
 import mud.ObjectFlag;
-import mud.Skills;
 import mud.TypeFlag;
 
 import mud.utils.Utils;
@@ -49,7 +48,7 @@ public class Creature extends MUDObject {
 	 */
 	public Creature(final Creature template) {
 		super(-1);
-		this.type = TypeFlag.OBJECT;
+		this.type = TypeFlag.CREATURE;
 		
 		this.name = template.name;
 		this.flags = template.flags;
@@ -62,9 +61,9 @@ public class Creature extends MUDObject {
 	
 	public Creature(int dbref, String race, String name, String desc) {
 		super(dbref);
-		this.type = TypeFlag.OBJECT;
+		this.type = TypeFlag.CREATURE;
 		this.name = name;
-		this.flags = null;
+		this.flags = EnumSet.noneOf(ObjectFlag.class);
 		this.locks = "";
 		this.desc = desc;
 		this.location = 8;
@@ -81,7 +80,7 @@ public class Creature extends MUDObject {
 	 */
 	public Creature(final int tempDBRef, final String tempName, final EnumSet<ObjectFlag> tempFlags, final String tempDesc, final int tempLoc) {
 		super(tempDBRef);
-		this.type = TypeFlag.OBJECT;
+		this.type = TypeFlag.CREATURE;
 		
 		this.name = tempName;
 		this.flags = tempFlags;
