@@ -28,8 +28,7 @@ public enum ObjectFlag
     QUIET("QUIET"),
     SHOP("SHOP", TypeFlag.ROOM),
     SILENT("SILENT"),
-    VENDOR("VENDOR"),
-    ZONE("ZONE");
+    VENDOR("VENDOR");
     
     private String name;   // name of the flag
     private TypeFlag type; // type of object this flag can be set on
@@ -53,7 +52,6 @@ public enum ObjectFlag
         case 'S':    return SILENT;
         case 'Q':    return QUIET;
         case 'V':    return VENDOR;
-        case 'Z':    return ZONE;
         default:    throw new IllegalArgumentException("Invalid ObjectFlag letter: " + c);    
         }
     }

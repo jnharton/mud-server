@@ -3,6 +3,7 @@ package mud.objects;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.LinkedHashMap;
@@ -13,7 +14,6 @@ import java.util.Set;
 import java.util.EnumSet;
 
 import mud.net.Client;
-
 import mud.Alignments;
 import mud.Classes;
 import mud.ObjectFlag;
@@ -31,9 +31,7 @@ import mud.Skill;
 import mud.Skills;
 import mud.Slot;
 import mud.SlotType;
-
 import mud.MUDServer.PlayerMode;
-
 import mud.commands.Command;
 import mud.interfaces.Equippable;
 import mud.interfaces.Wearable;
@@ -43,11 +41,9 @@ import mud.objects.items.Armor;
 import mud.objects.items.ClothingType;
 import mud.objects.items.Handed;
 import mud.objects.items.Shield;
-
 import mud.quest.Quest;
 import mud.quest.Task;
 import mud.quest.TaskType;
-
 import mud.utils.EditList;
 import mud.utils.Landmark;
 import mud.utils.MailBox;
@@ -197,9 +193,9 @@ public class Player extends MUDObject
 	protected int xp;                              // Experience
 	protected Coins money;                         // Money (D&D, MUD)
 	
-	private Profession prof1;                          // Active Profession (One)
-	private Profession prof2;                          // Active Profession (Two)
-	private Hashtable<String, Profession> professions; // holds all your trained professions
+	private Profession prof1 = null;                          // Active Profession (One) **UNUSED
+	private Profession prof2 = null;                          // Active Profession (Two) **UNUSED
+	private Hashtable<String, Profession> professions = null; // holds all your trained professions **UNUSED
 
 	protected SpellBook spells = null;             // spells [null if not a spellcaster]
 	protected LinkedList<Spell> spellQueue = null; // spell queue [null if not a spellcaster]
@@ -207,11 +203,11 @@ public class Player extends MUDObject
 
 	private State state = State.ALIVE;             // character's "state of health" (ALIVE, INCAPACITATED, DEAD)
 
-	protected LinkedHashMap<Abilities, Integer> stats;             // Player Statistics (D&D, MUD)
-	protected LinkedHashMap<Skill, Integer> skills;                // Player Skills (D&D, MUD)
+	protected LinkedHashMap<Abilities, Integer> stats;              // Player Statistics (D&D, MUD)
+	protected LinkedHashMap<Skill, Integer> skills;                 // Player Skills (D&D, MUD)
 
-	protected ArrayList<Item> inventory = new ArrayList<Item>(10); // Player Inventory (D&D, MUD, MU)
-	protected LinkedHashMap<String, Slot> slots;                   // the player's equipped gear
+	protected ArrayList<Item> inventory = new ArrayList<Item>(100); // Player Inventory (D&D, MUD, MU)
+	protected LinkedHashMap<String, Slot> slots;                    // the player's equipped gear
 
 	private ArrayList<Quest> quests;                               // the player's quests
 
@@ -361,7 +357,7 @@ public class Player extends MUDObject
 		// initialize list editor variables
 		this.editor = Editor.NONE;
 
-		this.config = new LinkedHashMap<String, Boolean>();
+		this.config = new LinkedHashMap<String, Boolean>(10);
 		this.config.put("global-nameref-table", false); // use the global name reference table instead of a local one (default: false)
 		this.config.put("pinfo-brief", true);           // make your player info output brief/complete (default: true)
 		this.config.put("prompt_enabled", false);       // enable/disable the prompt (default: false)
@@ -495,7 +491,7 @@ public class Player extends MUDObject
 		// initialize list editor variables
 		this.editor = Editor.NONE;
 
-		this.config = new LinkedHashMap<String, Boolean>();
+		this.config = new LinkedHashMap<String, Boolean>(10);
 		this.config.put("global-nameref-table", false); // use the global name reference table instead of a local one (default: false)
 		this.config.put("pinfo-brief", true);           // make your player info output brief/complete (default: true)
 		this.config.put("prompt_enabled", false);       // enable/disable the prompt (default: false)
@@ -843,17 +839,25 @@ public class Player extends MUDObject
 	public ArrayList<Item> getInventory() {
 		return this.inventory;
 	}
-
-	public LinkedHashMap<String, Slot> getSlots() {
-		return this.slots;
+	
+	public void addSlot(String name, Slot slot) {
+		this.slots.put(name, slot);
+	}
+	
+	public void removeSlot(String name) {
+		this.slots.remove(name);
 	}
 
-	public LinkedHashMap<Skill, Integer> getSkills() {
-		return this.skills;
+	public Map<String, Slot> getSlots() {
+		return Collections.unmodifiableMap( this.slots );
 	}
 
-	public LinkedHashMap<Abilities, Integer> getStats() {
-		return this.stats;
+	public Map<Skill, Integer> getSkills() {
+		return Collections.unmodifiableMap( this.skills );
+	}
+
+	public Map<Abilities, Integer> getStats() {
+		return Collections.unmodifiableMap( this.stats );
 	}
 
 	public ArrayList<Quest> getQuests() {
@@ -1189,7 +1193,7 @@ public class Player extends MUDObject
 			//if( slot.isEmpty() ) slot.insert( w );
 		}
 	}
-
+	
 	/**
 	 * Translate the persistent aspects of the player into the string
 	 * format used by the database

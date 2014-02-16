@@ -75,17 +75,11 @@ public class Currency {
 
 	public static Currency fromInt(int index) {
 		switch(index) {
-			case 0:
-				return COPPER;
-			case 1:
-				return SILVER;
-			case 2:
-				return GOLD;
-			case 3:
-				return PLATINUM;
-			default:
-				return COPPER;
+			case 0:  return COPPER;
+			case 1:  return SILVER;
+			case 2:  return GOLD;
+			case 3:  return PLATINUM;
+			default: return COPPER;
 		}
 	}
-	
 }

@@ -26,7 +26,9 @@ public class Client implements Runnable {
 
 	private boolean telnet = true;
 	private boolean tn_neg_seq = false;
-
+	
+	private boolean console = false;
+	
 	private final int BUF_SIZE = 4096;
 
 	private final ConcurrentLinkedQueue<String> queuedLines = new ConcurrentLinkedQueue<String>();
@@ -53,8 +55,8 @@ public class Client implements Runnable {
 
 	public void run() {
 		try {
-			while( running ) {
-				/*int readValue = 0;
+			/*while( running ) {
+				int readValue = 0;
 
 				if( !tn_neg_seq ) {
 					// this makes concessions to telnet clients and mud clients by capturing all data sent simultaneously
@@ -92,44 +94,52 @@ public class Client implements Runnable {
 						readValue = input.read();
 
 						buffer.add( (byte) readValue );
-						
+
 						System.out.println("Read: " + readValue);
 					}
-				}*/
+				}
 
 				// ---------------------------------------------------------------------------------
-				
-				// can't use BufferedReader here - we need access to the buffer for telnet commands, 
-				// which won't be followed by a newline
-				final byte buf[] = new byte[BUF_SIZE];
-				int numRead = 0;
+			}*/
 
-				while (running) {
-					final int lastNumRead = input.read(buf, numRead, BUF_SIZE - numRead);
-					numRead += lastNumRead;
+			// can't use BufferedReader here - we need access to the buffer for telnet commands, 
+			// which won't be followed by a newline
+			final byte buf[] = new byte[BUF_SIZE];
+			int numRead = 0;
 
-					// if we read more than one character total and we found a carriage-return ('\r)
-					// or a newline (\n) character, turn the input into a string and dump it into
-					// queued lines
-					if (numRead > 1 && (buf[numRead - 1] == '\r' || buf[numRead - 1] == '\n')) {
-						final String input = new String(buf, 0, numRead); // convert read characters into string
+			while (running) {
+				final int lastNumRead = input.read(buf, numRead, BUF_SIZE - numRead);
+				numRead += lastNumRead;
 
-						numRead = 0; // clear count of read characters
+				// if we read more than one character total and we found a carriage-return ('\r)
+				// or a newline (\n) character, turn the input into a string and dump it into
+				// queued lines
+				if (numRead > 1 && (buf[numRead - 1] == '\r' || buf[numRead - 1] == '\n')) {
+					final String input = new String(buf, 0, numRead); // convert read characters into string
 
-						// handles possibility of multiple lines in input (mud client, probably)
-						for (final String line : input.split("(\r\n|\n|\r)")) {
-							if (line != null && !"".equals(line)) {
-								queuedLines.add(line);
-							}
+					numRead = 0; // clear count of read characters
+
+					// handles possibility of multiple lines in input (mud client, probably)
+					for (final String line : input.split("(\r\n|\n|\r)")) {
+						if (line != null && !"".equals(line)) {
+							queuedLines.add(line);
 						}
 					}
 				}
 			}
 		}
+		catch (SocketException se) {
+			// if we catch a SocketException, we have likely stopped the client intentionally,
+			// in which case no warning is really necessary, otherwise we want to print a stack
+			// trace and stop the client.
+			if( running ) {
+				se.printStackTrace();
+				stopRunning();
+			}
+		}
 		catch (Exception e) {
 			e.printStackTrace();
 			stopRunning();
-
 		}
 		finally {
 			try { socket.close(); }
@@ -145,6 +155,38 @@ public class Client implements Runnable {
 
 	public void stopRunning() {
 		running = false;
+		
+		// clean up after ourselves
+		try {
+			if( input != null ) {
+				input.close();
+				//input = null;
+			}
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+		}
+
+		try {
+			if( output != null ) {
+				output.close();
+				//output = null;
+			}
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+		}
+
+		try {
+			if( socket != null ) {
+				socket.close();
+				//socket = null;
+			}
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+		}
+
 	}
 
 	public String ip() {
@@ -184,5 +226,12 @@ public class Client implements Runnable {
 			stopRunning();
 		}
 	}
-
+	
+	public void setConsole(boolean console) {
+		this.console = console;
+	}
+	
+	public boolean isConsole() {
+		return this.console;
+	}
 }

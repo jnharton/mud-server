@@ -1,0 +1,18 @@
+quests
+QUESTS
+
+List your current quests and also share them with other players
+or abandon them to start over. Also allows you to keep your quests
+list output short by ignoring quests that aren't important to you
+at the moment.
+
+Syntax: quests [#<param>]
+
+Optional Params:
+abandon <quest id>  - abandon the indicated quest (only works/matters
+                      if you have the quest)
+ignore <quest id>   - "ignores" a quest (hides it from your quest list)
+list                - shows a list of all the quests in the game (STAFF)
+share <player name> - share the quest with another player
+
+Last Updated: September 3rd, 2013

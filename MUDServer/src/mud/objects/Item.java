@@ -87,11 +87,15 @@ public class Item extends MUDObject {
 	public Item(Item template) {
 		super(template.getDBRef());
 		this.type = TypeFlag.ITEM;
-		
+		this.item_type = template.item_type;
 		this.name = template.name;
 		this.flags = template.flags;
 		this.desc = template.desc;
 		this.location = template.location;
+		
+		this.equipped = false;
+		this.equippable = template.equippable;
+		this.drinkable = template.drinkable;
 	}
 
 	public Item(int tempDBREF, String tempName, final EnumSet<ObjectFlag> tempFlags, String tempDesc, int tempLoc)
@@ -165,6 +169,10 @@ public class Item extends MUDObject {
 	
 	public Attribute getAttribute(Attribute newAttribute) {
 		return this.a;
+	}
+	
+	public void setAuctionable(boolean canAuction) {
+		this.canAuction = canAuction;
 	}
 	
 	public boolean isAuctionable() {

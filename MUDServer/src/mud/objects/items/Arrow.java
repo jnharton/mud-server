@@ -11,7 +11,7 @@ import mud.TypeFlag;
 import java.util.EnumSet;
 
 public class Arrow extends Item implements Projectile<Arrow>, Stackable<Arrow> {
-	private Arrow a;
+	private Arrow arrow;
 
 	public Arrow() {
 		super(-1);
@@ -44,8 +44,8 @@ public class Arrow extends Item implements Projectile<Arrow>, Stackable<Arrow> {
 	 * @return int the size of the stack
 	 */
 	public int stackSize() {
-		if (this.a != null) {
-			return 1 + a.stackSize();
+		if (this.arrow != null) {
+			return 1 + arrow.stackSize();
 		}
 		else {
 			return 1;
@@ -54,14 +54,14 @@ public class Arrow extends Item implements Projectile<Arrow>, Stackable<Arrow> {
 
 	@Override
 	public boolean stack(Arrow object) {
-		if( this.getName().equals( object.getName() ) ) {
-			if (a == null) {
-				object.setLocation( this.getDBRef() );
-				a = object;
+		if( this.getName().equals( object.getName() ) ) { // name equality is treated as Item equality
+			if (arrow == null && stackSize() < Stackable.maxDepth) {
+				object.setLocation( this.getDBRef() ); // the new location of the arrow in question is the old arrow
+				arrow = object;
 				return true;
 			}
 			else {
-				return a.stack(object);
+				return arrow.stack(object);
 			}
 		}
 		
@@ -71,7 +71,7 @@ public class Arrow extends Item implements Projectile<Arrow>, Stackable<Arrow> {
 	@Override
 	public Arrow split(int number) {
 		if (number > 0 && stackSize() > number) {
-			if (a == null) {
+			if (arrow == null) {
 				return this;
 			}
 			else {
@@ -82,11 +82,11 @@ public class Arrow extends Item implements Projectile<Arrow>, Stackable<Arrow> {
 
 				while (qty < number) {
 					prev = curr;
-					curr = curr.a;
+					curr = curr.arrow;
 					qty++;
 				}
 
-				prev.a = null;
+				prev.arrow = null;
 
 				return curr;
 			}
@@ -111,7 +111,7 @@ public class Arrow extends Item implements Projectile<Arrow>, Stackable<Arrow> {
 		output[4] = this.getLocation() + "";       // location
 		output[5] = this.item_type.ordinal() + ""; // type
 		output[6] = this.stackSize() + "";         // how many arrows are stacked together
-		output[7] = "*";                          // 
+		output[7] = "*";                           // 
 		
 		/*
 		 * recording stacks of these is messy
@@ -119,6 +119,9 @@ public class Arrow extends Item implements Projectile<Arrow>, Stackable<Arrow> {
 		 * 241#Flaming Arrow#I#A flaming arrow.#8#1#5#*
 		 * 
 		 * should description be dynamic, and indicate the number of arrows
+		 * 
+		 * data for whether a thing is a stack
+		 * data for whether a thing is in a stack?
 		 */
 		
 		return Utils.join(output, "#");

@@ -531,6 +531,9 @@ public abstract class MUDObject {
 	 * Convert the object to a String based representation
 	 * for storage in the plain text database.
 	 * 
+	 * NOTE: Every subclass of MUDObject should implement
+	 * this for itself.
+	 * 
 	 * @return
 	 */
 	public abstract String toDB();
@@ -538,6 +541,10 @@ public abstract class MUDObject {
 	/**
 	 * Convert the object to a JSON based representation
 	 * for storage in some kind of database system
+	 * 
+	 * NOTE: Every subclass of MUDObject should implement
+	 * this for itself. 
+	 * 
 	 * @return
 	 */
 	public abstract String toJSON();

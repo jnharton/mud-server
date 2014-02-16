@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.EnumSet;
 
+import mud.MUDObject;
 import mud.ObjectFlag;
 import mud.Abilities;
 import mud.Classes;
@@ -17,16 +18,12 @@ import mud.Skills;
 import mud.Slot;
 import mud.SlotType;
 import mud.TypeFlag;
-
 import mud.interfaces.Vendor;
-
 import mud.net.Client;
 import mud.objects.items.ClothingType;
-
 import mud.quest.Quest;
 import mud.quest.Task;
 import mud.quest.TaskType;
-
 import mud.utils.Message;
 import mud.utils.Utils;
 
@@ -142,8 +139,7 @@ public class NPC extends Player implements InteractiveI
         int foundQuests = -1;
 
         for (final Quest q : questList) {
-            //if ( q.isSuitable(player) ) {
-        	if( true ) {
+        	if ( q.isSuitable(player) ) {
                 foundQuests += 1;
                 if (foundQuests == questNum) {
                     return q;
@@ -198,7 +194,13 @@ public class NPC extends Player implements InteractiveI
 
 	@Override
 	public void interact(Client client) {
-		// TODO Auto-generated method stub
+		Player player = MUDObject.parent.getPlayer(client);
 		
+		if( player != null ) {
+			say("Hello, " + player.getCName());
+		}
+		else {
+			say("Hello");
+		}
 	}
 }

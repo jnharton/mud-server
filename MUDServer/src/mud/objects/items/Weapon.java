@@ -145,6 +145,10 @@ public class Weapon extends Item implements Equippable<Weapon>, Wieldable
 		return null;
 	}
 	
+	public void setWeaponType(WeaponType wType) {
+		this.weapon_type = wType;
+	}
+	
 	public WeaponType getWeaponType() {
 		return this.weapon_type;
 	}

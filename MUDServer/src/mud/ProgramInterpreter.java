@@ -2,7 +2,6 @@ package mud;
 
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
@@ -10,6 +9,7 @@ import java.util.List;
 import mud.net.Client;
 import mud.objects.Item;
 import mud.objects.Player;
+import mud.utils.Message;
 import mud.utils.Point;
 import mud.utils.Utils;
 
@@ -262,6 +262,17 @@ public class ProgramInterpreter {
 					else return "";
 					//else { return "Incomplete function statement, no parameters!"; }
 				}
+				else if (functionName.equals("tell")) {
+					final String message = params[0];
+					final Player p = parent.getPlayer(Utils.toInt(params[1], -1));
+					
+					if( message != null && p != null ) {
+						//parent.addMessage( new Message(message, p) );
+						return message;
+					}
+					
+					return "";
+				}
 				else { return "PGM: No such function!"; }
 			}
 			else if( params.length == 3 ) {
@@ -316,9 +327,6 @@ public class ProgramInterpreter {
 					}
 					else {};
 
-					return "";
-				}
-				else if (functionName.equals("tell")) {
 					return "";
 				}
 				else if (functionName.equals("with")) {

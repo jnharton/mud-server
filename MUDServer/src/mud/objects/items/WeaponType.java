@@ -8,7 +8,8 @@ package mud.objects.items;
 public enum WeaponType {
 	LONGSWORD("Long Sword", AttackType.SLASHING, "1d6", 19, 20, 2, 2.0),
 	RAPIER("Rapier", AttackType.PIERCING, "1d4", 18, 20, 2, 2.0),
-	SCIMITAR("Scimitar", AttackType.SLASHING, "1d4", 18, 20, 2, 4.0);
+	SCIMITAR("Scimitar", AttackType.SLASHING, "1d4", 18, 20, 2, 4.0),
+	REVOLVER("Revolver", null, "10", -1, -1, 1, 3.0);
 	
 	public enum AttackType { PIERCING, SLASHING; }
 	

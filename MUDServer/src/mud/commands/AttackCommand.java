@@ -3,13 +3,11 @@ package mud.commands;
 import mud.MUDObject;
 import mud.MUDServer;
 import mud.MUDServer.PlayerMode;
-
 import mud.net.Client;
-
 import mud.objects.Creature;
 import mud.objects.NPC;
 import mud.objects.Player;
-
+import mud.objects.items.Weapon;
 import mud.objects.items.WeaponType;
 import mud.utils.Utils;
 
@@ -45,9 +43,15 @@ public class AttackCommand extends Command {
 
 				if (player.getTarget() != null) {
 					// start attacking
-
-					// get our weapon type
-					WeaponType wt = WeaponType.LONGSWORD;
+					
+					Weapon weapon = (Weapon) player.getSlots().get("weapon").getItem();
+					WeaponType wt = null;
+					
+					if(weapon != null) {
+						// get our weapon type
+						wt = weapon.getWeaponType();
+						//wt = WeaponType.LONGSWORD;
+					}
 
 					// can we attack them?
 					boolean attack = canAttack(player.getTarget());

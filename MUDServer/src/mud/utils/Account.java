@@ -76,23 +76,23 @@ public class Account implements Serializable {
 	private static Calendar calendar;
 	
 	// passive properties (might be modified, but not frequently)
-	private final Date created;            // creation date
-	private Date modified;                 // modification date (when any of these passive properties were last modified)
-	private Date archived;                 // archival date (null, unless account was archived; if unarchived, then when it was last archived)
+	private final Date created; // creation date
+	private Date modified;      // modification date (when any of these passive properties were last modified)
+	private Date archived;      // archival date (null, unless account was archived; if unarchived, then when it was last archived)
 	
-	private final int id;                 // id
-	private Status status;                // status
-	private String username;              // username
-	private String password;              // password
-	private int charLimit = 3;            // character limit
+	private final int id;       // id
+	private Status status;      // status
+	private String username;    // username
+	private String password;    // password
+	private int charLimit = 3;  // character limit
 
 	// active properties (current state)
 	private ArrayList<Player> characters; // all the characters that exist for an account
 	
-	private Client client;
-	private Player player;
+	private Client client;      // the client object for the the player that is in-game
+	private Player player;      // the in-game player
 	
-	private boolean online;
+	private boolean online;     // is there a Player in-game from this account/is the account logged in
 	
 	/**
 	 * 
@@ -103,9 +103,11 @@ public class Account implements Serializable {
 
 		this.id = aId;
 		this.status = Status.ACTIVE;
+		
+		final Date newDate = new Date(Account.calendar.get(Calendar.MONTH), Account.calendar.get(Calendar.DATE), Account.calendar.get(Calendar.YEAR));
 
-		this.created = new Date(Account.calendar.get(Calendar.MONTH), Account.calendar.get(Calendar.DATE), Account.calendar.get(Calendar.YEAR));
-		this.modified = new Date(Account.calendar.get(Calendar.MONTH), Account.calendar.get(Calendar.DATE), Account.calendar.get(Calendar.YEAR));
+		this.created = new Date(newDate);
+		this.modified = new Date(newDate);
 	}
 
 	/**
@@ -204,6 +206,10 @@ public class Account implements Serializable {
 	 */
 	public void setStatus(Status newStatus) {
 		this.status = newStatus;
+		
+		Account.calendar = Calendar.getInstance(TimeZone.getTimeZone("America/New_York"), new Locale("ENGLISH", "US"));
+		final Date newDate = new Date(Account.calendar.get(Calendar.MONTH), Account.calendar.get(Calendar.DATE), Account.calendar.get(Calendar.YEAR));
+		setModified(newDate);
 	}
 
 	/**
@@ -231,6 +237,10 @@ public class Account implements Serializable {
 	 */
 	public void setPassword(String newPassword) {
 		this.password = newPassword;
+		
+		Account.calendar = Calendar.getInstance(TimeZone.getTimeZone("America/New_York"), new Locale("ENGLISH", "US"));
+		final Date newDate = new Date(Account.calendar.get(Calendar.MONTH), Account.calendar.get(Calendar.DATE), Account.calendar.get(Calendar.YEAR));
+		setModified(newDate);
 	}
 
 	/**
@@ -340,7 +350,9 @@ public class Account implements Serializable {
 		Account c = new Account(123);
 		System.out.println("Id: " + b.id);
 		System.out.println("Created " + b.created);
+		System.out.println("Modified " + b.modified);
 		System.out.println("Id: " + c.id);
 		System.out.println("Created " + c.created);
+		System.out.println("Modified " + c.modified);
 	}
 }

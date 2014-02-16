@@ -31,6 +31,7 @@ public class Quest {
 	private Date expireDate = null;     // the in-game date that the quests expires (for time-limited things?)
 	
 	private boolean isComplete = false; // is the quest completed? (this should put it in a deletion queue if we delete completed quests)
+	private boolean isIgnored = false;  // is the quest being ignored? (i.e. it shouldn't show up in the main quest list for the player)
 	
 	final private ArrayList<Task> tasks; // a list of tasks that must be completed to finish the quest
 	
@@ -90,7 +91,10 @@ public class Quest {
 		this.name = template.name;
 		this.description = template.description;
 		this.location = template.location;
-		this.tasks = new ArrayList<Task>(template.getTasks());
+		this.tasks = new ArrayList<Task>();
+		for(Task task : template.getTasks()) {
+			this.tasks.add( new Task( task ) );
+		}
 	}
 	
 	public void addTask(Task newTask) {
@@ -134,14 +138,10 @@ public class Quest {
 		ArrayList<Task> tasks = new ArrayList<Task>();
 		
 		if( incomplete ) {
-			for(Task task : this.tasks) {
-				if( !task.isComplete() ) tasks.add(task);
-			}
+			for(Task task : this.tasks) if( !task.isComplete() ) tasks.add(task);
 		}
 		else {
-			for(Task task : this.tasks) {
-				if( task.isComplete() ) tasks.add(task);
-			}
+			for(Task task : this.tasks) if( task.isComplete() ) tasks.add(task);
 		}
 		
 		return tasks;
@@ -259,5 +259,13 @@ public class Quest {
 	 */
 	public boolean isSuitable(final Player player) {
 		return true;
+	}
+	
+	public void setIgnore(boolean ignore) {
+		this.isIgnored = ignore;
+	}
+
+	public boolean isIgnored() {
+		return isIgnored;
 	}
 }

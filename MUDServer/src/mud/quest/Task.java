@@ -78,6 +78,19 @@ public class Task {
 		}
 	}
 	
+	public Task(Task task) {
+		this.description = task.description;
+		this.taskType = task.taskType;
+		if (task.taskType == TaskType.KILL) {
+			this.toKill = task.toKill;
+			this.kills = 0;
+			
+			if(task.objective != null) {
+				this.objective = task.objective;
+			}
+		}
+	}
+	
 	public int getId() {
 		return this.id;
 	}

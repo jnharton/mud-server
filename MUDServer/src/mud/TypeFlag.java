@@ -26,7 +26,8 @@ public enum TypeFlag
 	OBJECT("OBJECT", 'O'),
     PLAYER("PLAYER", 'P'),
 	ROOM("ROOM", 'R'),
-	THING("THING", 'T');
+	THING("THING", 'T'),
+	ZONE("ZONE", 'Z');
 	
 	private String name;
 	private char flag;
@@ -45,6 +46,7 @@ public enum TypeFlag
     	case 'P':	return PLAYER;
     	case 'R':	return ROOM;
     	case 'T':	return THING;
+    	case 'Z':    return ZONE;
     	default:    throw new IllegalArgumentException("Invalid TypeFlag letter: " + c);    
     	}
     }

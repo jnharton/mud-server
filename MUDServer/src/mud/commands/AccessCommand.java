@@ -46,7 +46,14 @@ public class AccessCommand extends Command {
 					send(player.getName() + "'s access level is " + player.getAccess(), client);
 				}
 			}
-			else { send("No such player!", client); } // error
+			else { // error
+				if( args[0].equalsIgnoreCase("#levels") ) {
+					send("GOD: 4, WIZARD: 3, ADMIN: 2, BUILD: 1, USER: 0", client);
+				}
+				else {
+					send("No such player!", client);
+				}
+			}
 		}
 		else {
 			send(gameError("@access", 1), client); // Invalid Syntax Error

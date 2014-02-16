@@ -100,7 +100,7 @@ public class TimeLoop implements Runnable
             incrementHour();
         }
         server.debug("Time loop: " + hour + ":" + minute);
-        server.broadcastWeather();
+        if( (minute % 3) == 0 ) server.broadcastWeather();
         server.handleMovement();
     }
 

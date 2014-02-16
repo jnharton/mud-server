@@ -42,8 +42,9 @@ import mud.weather.Weather;
  */
 public class Room extends MUDObject implements EventSource
 {
+	// NON,FOR,MSH,HILL,MTN,DST,AQU,SKY?
 	public enum Terrain { NONE, FOREST, MARSH, HILLS, MOUNTAIN, DESERT, PLAINS, AQUATIC, SKY };
-
+	
 	// NOTE: for room, location and "parent" are the same
 
 	private RoomType roomType = RoomType.NONE;                // the type of room (I = Inside, O = Outside, P = Protected, N = None)
@@ -63,7 +64,7 @@ public class Room extends MUDObject implements EventSource
 
 	private Zone zone = null;
 
-	private Integer instance_id = null;                      // instance_id, if this is the original, it should be null
+	private Integer instance_id = null; // instance_id, if this is the original, it should be null
 
 	public int x = 10, y = 10; // size of the room ( 10x10 default )
 	public int z = 10;         // height of room ( 10 default )
@@ -82,6 +83,8 @@ public class Room extends MUDObject implements EventSource
 		(triggers.get(Triggers.onEnter)).add( new Trigger("TRIGGER: enter") );
 		(triggers.get(Triggers.onLeave)).add( new Trigger("TRIGGER: leave") );
 	}
+	
+	// misc note: parent == location
 
 	/**
 	 * Construct a room using only default parameter
@@ -89,6 +92,8 @@ public class Room extends MUDObject implements EventSource
 	public Room() {
 		super(-1);
 		this.type = TypeFlag.ROOM;
+		this.name = "room";
+		this.desc = "You see nothing.";
 		this.flags = EnumSet.of(ObjectFlag.SILENT);
 		this.locks = "";            // Set the locks
 		this.location = 0;          // Set the location
@@ -97,14 +102,16 @@ public class Room extends MUDObject implements EventSource
 
 		this.listeners = new ArrayList<Player>();
 	}
-
-
-	// copy constructor
+	
+	/**
+	 * Copy Constructor
+	 * 
+	 * @param toCopy
+	 */
 	public Room(Room toCopy)
 	{
 		super(toCopy.getDBRef());
 		this.type = TypeFlag.ROOM;
-		//this.dbref = toCopy.getDBRef();     // Set the dbref (database reference)
 		this.name = toCopy.getName();         // Set the name
 		this.desc = toCopy.getDesc();         // Set the description to the default
 		this.flags = toCopy.getFlags();       // Set the flags
@@ -115,8 +122,16 @@ public class Room extends MUDObject implements EventSource
 
 		this.listeners = new ArrayList<Player>();
 	}
-
-	// misc note: parent == location
+	
+	/**
+	 * Loading Constructor
+	 * 
+	 * @param tempDBREF
+	 * @param tempName
+	 * @param tempFlags
+	 * @param tempDesc
+	 * @param tempLocation
+	 */
 	public Room(int tempDBREF, String tempName, final EnumSet<ObjectFlag> tempFlags, String tempDesc, int tempLocation)
 	{
 		super(tempDBREF);
@@ -169,14 +184,6 @@ public class Room extends MUDObject implements EventSource
 		return this.roomType;
 	}
 
-	/*public void setAtmosphere(Atmosphere a) {
-		this.atmosphere = a;
-	}*/
-
-	/*public Atmosphere getAtmosphere() {
-		return this.atmosphere;
-	}*/
-
 	public void setWeather(Weather weather) {
 		this.weather = weather;
 	}
@@ -210,7 +217,8 @@ public class Room extends MUDObject implements EventSource
 		final StringBuilder buf = new StringBuilder();
 		for (final Exit e : exits) {
 			if (!e.getFlags().contains("D")) {
-				buf.append(", ").append(e.getName());
+				if( e.isLocked() ) buf.append(", ").append(e.getName() + " (locked)"); 
+				else buf.append(", ").append(e.getName());
 			}
 		}
 		return buf.toString().substring(2); // clip off the initial, unecessary " ,"
@@ -222,10 +230,6 @@ public class Room extends MUDObject implements EventSource
 	public void setExits(ArrayList<Exit> exits) {
 		this.exits = exits;
 	}
-
-	/*public String weather() { // ought to return string
-		return this.getAtmosphere().weather.name;
-	}*/
 
 	public Integer getInstanceId() {
 		if (this.instance_id != null) {
@@ -255,7 +259,6 @@ public class Room extends MUDObject implements EventSource
 	public void removeListener(Player player) {
 		listeners.remove(player);
 	}
-
 
 	public synchronized void addSayEventListener(SayEventListener listener)  {
 		_listeners.add(listener);

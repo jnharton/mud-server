@@ -46,11 +46,13 @@ public class DropCommand extends Command {
 		for (int i = 0; i < inventory.size(); i++)
 		{			
 			item = inventory.get(i);
+			
+			final String itemName = item.getName();
 
 			// if there is a name or dbref match from the argument in the inventory
-			if ( item.getName().equals(arg) || item.getName().contains(arg) && !arg.equals("") || item.getDBRef() == dbref )
+			if ( itemName.equals(arg) || itemName.contains(arg) && !arg.equals("") || item.getDBRef() == dbref )
 			{
-				debug(item.getName() + " true");
+				debug(itemName + " true");
 				// move object from player inventory to floor
 				inventory.remove(item);
 				
@@ -62,7 +64,7 @@ public class DropCommand extends Command {
 						item.setLocation(room.getDBRef());
 						room1.addItem(item);
 						
-						send("You drop " + colors(item.getName(), "yellow") + " and it falls toward the ground...", client);
+						send("You drop " + colors(itemName, "yellow") + " and it falls toward the ground...", client);
 					}
 					else {
 						item.setLocation( -1 );
@@ -73,7 +75,7 @@ public class DropCommand extends Command {
 					room.addItem(item);
 					// check for silent flag to see if object's dbref name should be shown as well?
 					// return message telling the player that they dropped the object
-					send("You dropped " + colors(item.getName(), "yellow") + " on the floor.", client);
+					send("You dropped " + colors(itemName, "yellow") + " on the floor.", client);
 					// return message telling others that the player dropped the item?
 				}
 				break;

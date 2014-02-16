@@ -315,7 +315,6 @@ public class ObjectLoader {
 
 						log.debug("log.debug (db entry): " + armor.toDB(), 2);
 					}
-
 					else if ( it == ItemType.ARROW ) { // Arrow
 						Arrow arrow = new Arrow(oDBRef, oName, oDesc, oLocation);
 						arrow.setItemType(it);
@@ -412,6 +411,19 @@ public class ObjectLoader {
 						objectDB.add(item);
 						objectDB.addItem(item);
 					}
+				}
+				else if(oTypeFlag == 'Z') { // Zone
+					// not sure about this bit, for some reason I made 'Z' a TypeFlag
+					// for a Zone, but Zone isn't presently a MUDObject and I'm a little
+					// uncertain as to whether it should be.
+					//
+					// i'd like to load them on startup, but MUDObjects chiefly handle "real" objects
+					// in the world rather than abstract concepts. Of course, Room kind of bends
+					// the boundary in that defines an abstract space and Zone is kind of like a super room...
+					/*Zone zone = loadZone();
+					
+					objectDB.add(zone);*/
+					
 				}
 				else if (oFlags.contains("null")) {
 
