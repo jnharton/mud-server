@@ -53,6 +53,9 @@ public class NPC extends Player implements InteractiveI
 	 * 
 	 */
 	protected String greeting = "Lovely weather we're having around these parts.";
+	
+	private boolean givesQuests = false;
+	
 	private ArrayList<Quest> questList = new ArrayList<Quest>();
 
 	// blank constructor for sub classes
@@ -129,6 +132,14 @@ public class NPC extends Player implements InteractiveI
 
 	public void setGreeting(String newGreeting) {
 		this.greeting = newGreeting;
+	}
+	
+	public void setQuestGiver(boolean givesQuests) {
+		this.givesQuests = givesQuests;
+	}
+	
+	public boolean isQuestgiver() {
+		return this.givesQuests;
 	}
 	
 	public Quest getQuestFor(final Player player, final int questNum) {

@@ -6,6 +6,7 @@ import java.util.EnumSet;
 
 import mud.ObjectFlag;
 import mud.Abilities;
+import mud.Ability;
 import mud.Classes;
 import mud.Coins;
 import mud.MUDServer;
@@ -34,6 +35,8 @@ public class Merchant extends NPC implements Vendor {
 	 */
 	final private MUDServer parent;
 	public ArrayList<Item> stock = new ArrayList<Item>();
+	
+	String type = "";
 
 	public Merchant(final MUDServer mudServer, final int tempDBRef, final String tempName, final EnumSet<ObjectFlag> tempFlags, 
             final String tempDesc, final String tempTitle, final String tempPStatus, final int tempLoc, final Coins tempMoney) {
@@ -41,7 +44,7 @@ public class Merchant extends NPC implements Vendor {
 
 		this.parent = mudServer;
 		this.access = 0;
-		this.stats = new LinkedHashMap<Abilities, Integer>(6, 0.75f);
+		this.stats = new LinkedHashMap<Ability, Integer>(6, 0.75f);
 
 		this.stats.put(Abilities.STRENGTH, 12);
 		this.stats.put(Abilities.DEXTERITY, 12);
@@ -120,5 +123,14 @@ public class Merchant extends NPC implements Vendor {
 		}
 		
 		return null;
+	}
+	
+	// hacked in functionality for setting what sort of merchant this is
+	public void setType(String type) {
+		this.type = type;
+	}
+	
+	public String getType() {
+		return this.type;
 	}
 }

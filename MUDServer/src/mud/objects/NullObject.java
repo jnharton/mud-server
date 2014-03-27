@@ -49,7 +49,7 @@ public class NullObject extends MUDObject {
 	
 	@Override
 	public String toDB() {
-		// ex. 0#null#null#null#-1
+		// dbref#null#null#null#-1#null#null#null#null#null#null
 		String[] output = new String[11];
 		
 		output[0] = getDBRef() + ""; // database reference number

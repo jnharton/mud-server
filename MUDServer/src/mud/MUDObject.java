@@ -208,7 +208,7 @@ public abstract class MUDObject {
 		this.locks = newLocks;
 	}
 
-	public void lock(String tempLock, String tempLockString)
+	/*public void lock(String tempLock, String tempLockString)
 	{
 		// locks = home:here|teleport:no
 		if( !this.locks.equals("") ) {
@@ -217,10 +217,7 @@ public abstract class MUDObject {
 		else {
 			this.locks = tempLock + ":" + tempLockString;
 		}
-	}
-
-	public void unlock() {
-	}
+	}*/
 	
 	/**
 	 * Get database reference number of MUDObject

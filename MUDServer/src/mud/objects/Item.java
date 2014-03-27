@@ -8,8 +8,8 @@ import java.util.Map;
 import mud.Effect;
 import mud.ObjectFlag;
 import mud.Coins;
+import mud.Slot;
 import mud.TypeFlag;
-
 import mud.MUDObject;
 import mud.SlotType;
 import mud.magic.Spell;
@@ -27,37 +27,44 @@ import mud.utils.Utils;
  */
 
 public class Item extends MUDObject {
-	public boolean equippable = false; // is the item equippable?
-	public boolean equipped = false;   // is the item equipped?
+	public boolean equippable = false;       // is the item equippable?
+	public boolean equipped = false;         // is the item equipped?
 	
 	private boolean canAuction = true;       // allows/disallows auctioning this item (default: true)
 
     private Coins baseCost = Coins.gold(1);
+    
+    public boolean edible = false;           // edible?
 	public boolean drinkable = false;        // drinkable? (0 = no, 1 = yes)
 	protected double weight = 0;             // the weight in whatever units are used of the equippable object
 
 	// original idea was a multiplying factor for weight when wet such as
 	// 1.0 - normal, 1.25 - damp, 1.50 - soaked, 2.00 - saturated, etc ("feels" x times as heavy)
 	
-	public double reduction_factor = 1.0; // amount of weight reduction (none by default, so 100% == 1)
+	public double reduction_factor = 1.0;     // amount of weight reduction (none by default, so 100% == 1)
 	
-	private boolean isAbsorb = true;       // does this item absorb water? (default: true)
-	public boolean isWet = false;         // defines whether the item is wet or not (default: false)
-	public double wet = 1.0;              // degree of water absorbed
+	private boolean isAbsorb = true;          // does this item absorb water? (default: true)
+	private boolean isWet = false;            // defines whether the item is wet or not (default: false)
+	private double wet = 1.0;                 // degree of water absorbed
 	
-	public int durability = 100;          // how durable the material is (100 is a test value)
-	public int wear = 0;                  // how much wear and tear the item has been subject to
+	public int durability = 100;              // how durable the material is (100 is a test value)
+	public int wear = 0;                      // how much wear and tear the item has been subject to
 	
-	public ItemType equip_type;           // equip type - armor, shield, jewelry, weapon
-	protected ItemType item_type;         // item type - what type of item is this (supersede equip_type?)
+	protected ItemType item_type;             // item type - what type of item is this (supersede equip_type?)
+	public ItemType equip_type;               // equip type - armor, shield, jewelry, weapon
+	protected SlotType slot_type;             // the type of slot this fits in (if any)
 	
-	protected SlotType st;                // the type of slot this fits in (if any)
-	protected int mod = 0;                // modifier - +0, +2, +3, +4, ... and so on
+	protected int mod = 0;                    // modifier - +0, +2, +3, +4, ... and so on
 	
-	protected BitSet attributes;          // item attributes: rusty, glowing, etc
-	protected Attribute a;                // conflicting implementation with the above?
+	protected BitSet attributes;              // item attributes: rusty, glowing, etc
+	protected Attribute a;                    // conflicting implementation with the above?
 	
-	protected List<Spell> spells;         // spells the item has, which can be cast from it
+	protected List<Effect> effects;           // effects
+	protected List<Spell> spells;             // spells the item has, which can be cast from it
+	
+	protected Map<String, Slot> slots = null; //
+	
+	protected boolean unique = false;         // is this item Unique (only one of them, cannot be copied)
 		
 	/**
 	 * Only for creating test items and then setting their properties/attributes
@@ -86,6 +93,7 @@ public class Item extends MUDObject {
 	 */
 	public Item(Item template) {
 		super(template.getDBRef());
+		
 		this.type = TypeFlag.ITEM;
 		this.item_type = template.item_type;
 		this.name = template.name;
@@ -159,6 +167,10 @@ public class Item extends MUDObject {
 	public void setAbsorb(boolean absorb) {
 	}
 	
+	public boolean isWet() {
+		return this.isWet;
+	}
+	
 	public boolean isAbsorb() {
 		return this.isAbsorb;
 	}
@@ -177,6 +189,10 @@ public class Item extends MUDObject {
 	
 	public boolean isAuctionable() {
 		return canAuction;
+	}
+	
+	public boolean isUnique() {
+		return this.unique;
 	}
 	
 	/**

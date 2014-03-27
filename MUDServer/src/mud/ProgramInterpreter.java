@@ -38,7 +38,7 @@ public class ProgramInterpreter {
 
 	public ProgramInterpreter(final MUDServer parent) {
 		this.parent = parent;
-		this.error = null;
+		this.error = System.err;
 		this.vars = null;
 		this.use_vars = false;
 	}
@@ -136,12 +136,28 @@ public class ProgramInterpreter {
 				if( temp.length > 1 ) {
 					params = Utils.mkList(temp[1].split(","));
 					
+					
+					// correct incorrect breaks?
+					//int leftCurlyCount = 0;
+					//int rightCurlyCount = 0;
+					
 					for(int i = 0; i < params.size(); i++) {
-						if( ( params.get(i).startsWith("{") && !params.get(i).endsWith("}") ) 
+						//leftCurlyCount = Utils.count(params.get(i), '{');
+						//rightCurlyCount = Utils.count(params.get(i), '}');
+						
+						//String temp1 = params.get(i);
+						//String temp2 = params.get(i+1);
+						
+						if( ( params.get(i).startsWith("{") && !params.get(i).endsWith("}") )  
 								&& ( !params.get(i+1).startsWith("}") && params.get(i+1).endsWith("}") ) ) {
 							params.set(i, (params.get(i) + "," + params.get(i+1)).trim());
 							params.remove(i+1);
 						}
+						
+						/*if( leftCurlyCount != rightCurlyCount ) {
+							params.set(i, (params.get(i) + "," + params.get(i+1)).trim());
+							params.remove(i+1);
+						}*/
 					}
 
 					System.out.println("Params: " + params);
@@ -173,22 +189,12 @@ public class ProgramInterpreter {
 
 		return "Invalid Script!";
 	}
-
-	/*class Script {
-		List<String> lines;
-
-		public List<String> getLines() {
-			return this.lines;
-		}
-	}
-
-	private void execute(Script s) {
-		for(String string : s.getLines()) {
-			interpret(string, null);
-		}
-	}*/
-
+	
 	private String evaluate(final String functionName, final String[] params, final Client client) {
+		System.out.println("Params: " + params.length);
+		for(String param : params) {
+			System.out.println(param);
+		}
 		if( params.length > 0 ) {
 			if( params.length == 1 ) {
 				if(functionName.equals("create_item")) {
@@ -200,6 +206,9 @@ public class ProgramInterpreter {
 					else {
 						return "-1";
 					}
+				}
+				else if (functionName.equals("dbref")) {
+					return "" + parent.getObject(params[0]).getDBRef();
 				}
 				else if (functionName.equals("rainbow")) {
 					System.out.println(params[0]);
@@ -226,18 +235,37 @@ public class ProgramInterpreter {
 					if( params[0].startsWith("{") && params[0].endsWith(")") ) {
 						params[0] = interpret(params[0], client);
 					}
-					
-					final Integer first = Integer.parseInt(params[0]);
-					final Integer second = Integer.parseInt(params[1]);
 
-					System.out.println("first: " + first);
-					System.out.println("Second: " + second);
-					
-					if( first == second) {
+					//System.out.println("first: " + params[0]);
+					//System.out.println("Second: " + params[1]);
+
+					if( params[0].equals(params[1]) ) {
 						return ":true";
 					}
 					else {
-						return ":false";
+						Integer first = null;
+						Integer second = null;
+						
+						try {
+							first = Integer.parseInt(params[0]);
+							second = Integer.parseInt(params[1]);
+						}
+						catch(NumberFormatException nfe) {
+							System.out.println("-- Stack Trace --");
+							nfe.printStackTrace();
+							
+							return ":false";
+						}
+						
+						//System.out.println("first: " + first);
+						//System.out.println("Second: " + second);
+
+						if (first == second) {
+							return ":true";
+						}
+						else {
+							return ":false";
+						}
 					}
 				}
 				//else { return "Incomplete function statement, no parameters!"; }
@@ -414,6 +442,14 @@ public class ProgramInterpreter {
 	private static boolean isFunction(String s) {
 		if( s.startsWith("{") && s.endsWith("}") ) return true;
 		else return false;
+	}
+	
+	public void exec(Script script) {
+		exec(script, null);
+	}
+	
+	public void exec(Script script, Client client) {
+		interpret( script.getText(), client );
 	}
 
 	public static void main(String[] args) {

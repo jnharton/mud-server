@@ -59,7 +59,7 @@ public final class Skills {
 	public static final Skill NAVIGATION = new Skill("Navigation", 42, "INT", new PClass[0]);
 	public static final Skill TRACKING = new Skill("Tracking", 43, "WIS", new PClass[0]);
 	
-	private static final HashMap<String, Skill> skillMap = new HashMap<String, Skill>(43, 0.75f) {
+	public static final HashMap<String, Skill> skillMap = new HashMap<String, Skill>(43, 0.75f) {
 		{
 			put("appraise", Skills.APPRAISE);
 			put("balance", Skills.BALANCE);
@@ -114,12 +114,4 @@ public final class Skills {
 			put("track", Skills.TRACKING);
 		}
 	};
-	
-	public static Skill getSkill(final String skillName) {
-		return skillMap.get(skillName);
-	}
-	
-	public static int getSkillId(final Skill s) {
-		return s.getId();
-	}
 }

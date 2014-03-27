@@ -108,14 +108,10 @@ public class ChatChannel {
 	
 	public void write(String message) {
 		this.messages.add( new Message(message) );
-		//parent1.debug("new chat message sent to " + getName());
-		//parent1.debug(message);
 	}
 	
 	public void write(Player player, String message) {
 		this.messages.add( new Message(player, message) );
-		//parent1.debug("new chat message sent to " + getName());
-		//parent1.debug(message);
 	}
 	
 	public Message getNextMessage() {

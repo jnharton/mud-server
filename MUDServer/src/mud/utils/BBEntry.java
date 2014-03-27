@@ -29,6 +29,8 @@ public class BBEntry {
 	private String subject;
 	private String message;
 	
+	private Integer topic = 0;
+	
 	public BBEntry(Integer id, String tempSubject, String tempMessage) {
 		this(id, "", tempSubject, tempMessage);
 	}

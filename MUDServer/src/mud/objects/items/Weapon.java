@@ -32,12 +32,13 @@ public class Weapon extends Item implements Equippable<Weapon>, Wieldable
 		this.item_type = ItemType.WEAPON;
 		this.mod = 0;
 		this.handed = Handed.ONE;
-		this.weapon_type = WeaponType.LONGSWORD; // weapon type
+		this.weapon_type = WeaponTypes.LONGSWORD; // weapon type
 		this.weight = 7.0;                       // the weight of the weapon (lbs)
 	}
 	
 	public Weapon( Weapon template ) {
-		super(-1, template.name, template.flags, template.desc, template.location);
+		//super(-1, template.name, template.flags, template.desc, template.location);
+		super( template );
 		this.type = TypeFlag.ITEM;
 		this.equippable = true;
 		this.equip_type = template.equip_type;
@@ -162,7 +163,7 @@ public class Weapon extends Item implements Equippable<Weapon>, Wieldable
 		output[3] = this.getDesc();                  // description
 		output[4] = this.getLocation() + "";         // location
 		output[5] = this.item_type.ordinal() + "";   // item type
-		output[6] = this.weapon_type.ordinal() + ""; // weapon type
+		output[6] = this.weapon_type.getId() + ""; // weapon type
 		output[7] = this.mod + "";                   // modifier
 		return Utils.join(output, "#");
 	}

@@ -35,22 +35,25 @@ public enum ItemType {
 	}
 	
 	public static ItemType getType(String typeName) {
-		if (typeName.toUpperCase().equals("ARMOR"))          return ARMOR;
-		else if (typeName.toUpperCase().equals("BOOK"))      return BOOK;
-		else if (typeName.toUpperCase().equals("CIRCLET"))   return CIRCLET;
-		else if (typeName.toUpperCase().equals("CLOTHING"))  return CLOTHING;
-		else if (typeName.toUpperCase().equals("CONTAINER")) return CONTAINER;
-		else if (typeName.toUpperCase().equals("EAR_RING"))  return EAR_RING;
-		else if (typeName.toUpperCase().equals("FOOD"))      return FOOD;
-		else if (typeName.toUpperCase().equals("HELMET"))    return HELMET;
-		else if (typeName.toUpperCase().equals("NECKLACE"))  return NECKLACE;
-		else if (typeName.toUpperCase().equals("NONE"))      return NONE;
-		else if (typeName.toUpperCase().equals("POTION"))    return POTION;
-		else if (typeName.toUpperCase().equals("RING"))      return RING;
-		else if (typeName.toUpperCase().equals("SHIELD"))    return SHIELD;
-		else if (typeName.toUpperCase().equals("WEAPON"))    return WEAPON;
-		else if (typeName.toUpperCase().equals(CONTAINER))   return CONTAINER;
-		else { return NONE; }
+		switch(typeName.toUpperCase()) {
+		case "ARMOR":     return ARMOR;
+		case "ARROW":     return ARROW;
+		case "BOOK":      return BOOK;
+		case "CIRCLET":   return CIRCLET;
+		case "CLOTHING":  return CLOTHING;
+		case "CONTAINER": return CONTAINER;
+		case "EAR_RING":  return EAR_RING;
+		case "FOOD":      return FOOD;
+		case "HELMET":    return HELMET;
+		case "NECKLACE":  return NECKLACE;
+		case "NONE":      return NONE;
+		case "POTION":    return POTION;
+		case "RING":      return RING;
+		case "SHIELD":    return SHIELD;
+		case "WAND":      return WAND;
+		case "WEAPON":    return WEAPON;
+		default:          return NONE;
+		}
 	}
 	
 	public String toString() {

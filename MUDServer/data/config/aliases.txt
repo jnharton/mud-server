@@ -27,3 +27,4 @@ alias pinfo:sheet
 alias pconfig:pconf
 alias travel:landmarks,lm
 alias @zoneedit:@zedit
+alias @skilledit:@skedit

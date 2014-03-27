@@ -14,6 +14,7 @@ import java.util.Set;
 import java.util.EnumSet;
 
 import mud.net.Client;
+import mud.Ability;
 import mud.Alignments;
 import mud.Classes;
 import mud.ObjectFlag;
@@ -122,13 +123,13 @@ public class Player extends MUDObject
 	private boolean isNew;                            // is the player new? (e.g. hasn't done chargen)
 
 	private boolean controller = false;               // place to indicate if we are controlling an npc (by default, we are not)
-	private HashMap<String, EditList> editorsMap = new HashMap<String, EditList>(); // array of lists belonging to this player
+	private HashMap<String, EditList> editMap = new HashMap<String, EditList>(); // array of lists belonging to this player
 
 	// preferences (ACCOUNT DATA?)
-	private int lineLimit = 80;                       // how wide the client's screen is in columns (shouldn't be in Player class)
-	public int invDispWidth = 60;                     // display width for the complex version of inventory display
-	private Character invType = 'C';                  // S = simple, C = Complex (candidate for being a config option, not a single variable)
-	private LinkedHashMap<String, Boolean> config;    // player preferences for player configurable options
+	private int lineLimit = 80;                          // how wide the client's screen is in columns (shouldn't be in Player class)
+	public int invDispWidth = 60;                        // display width for the complex version of inventory display
+	private Character invType = 'C';                     // S = simple, C = Complex (candidate for being a config option, not a single variable)
+	private final LinkedHashMap<String, Boolean> config; // player preferences for player configurable options
 
 	// utility
 	private HashMap<String, Integer> nameRef;         // store name references to dbref numbers (i.e. $this->49)
@@ -154,7 +155,7 @@ public class Player extends MUDObject
 	
 	/* get an existing list to edit */
 	public void loadEditList(final String name) {
-		currentEdit = editorsMap.get(name);
+		currentEdit = editMap.get(name);
 	}
 	
 	/* load a list to edit from some other source (files?) */
@@ -163,8 +164,8 @@ public class Player extends MUDObject
 	}
 
 	/* save the current list */
-	public void saveCurrentEditor() {
-		editorsMap.put(currentEdit.name, currentEdit);
+	public void saveCurrentEdit() {
+		editMap.put(currentEdit.name, currentEdit);
 	}
 	
 	/* stop editing -- clears the current list in a final manner */
@@ -203,7 +204,7 @@ public class Player extends MUDObject
 
 	private State state = State.ALIVE;             // character's "state of health" (ALIVE, INCAPACITATED, DEAD)
 
-	protected LinkedHashMap<Abilities, Integer> stats;              // Player Statistics (D&D, MUD)
+	protected LinkedHashMap<Ability, Integer> stats;              // Player Statistics (D&D, MUD)
 	protected LinkedHashMap<Skill, Integer> skills;                 // Player Skills (D&D, MUD)
 
 	protected ArrayList<Item> inventory = new ArrayList<Item>(100); // Player Inventory (D&D, MUD, MU)
@@ -245,11 +246,10 @@ public class Player extends MUDObject
 
 	private Client client;
 	
-	// Knowledge?
-	
-	public Map<String, Landmark> landmarks = new HashMap<String, Landmark>(); // contains "landmarks", which are places you've been and h
-	
 	public Map<String, Command> commandMap = new HashMap<String, Command>();
+	
+	// Knowledge
+	public Map<String, Landmark> landmarks = new HashMap<String, Landmark>(); // contains "landmarks", which are places you've been and h
 	
 	/**
 	 * No argument constructor for subclasses
@@ -315,7 +315,7 @@ public class Player extends MUDObject
 		this.slots.put("other", new Slot( SlotType.NONE, ItemType.NONE ));
 
 		// instantiate stats
-		stats = new LinkedHashMap<Abilities, Integer>(6, 0.75f);
+		stats = new LinkedHashMap<Ability, Integer>(6, 0.75f);
 
 		// initialize stats
 		this.stats.put(Abilities.STRENGTH, _STATS[0]);     // Strength
@@ -357,7 +357,7 @@ public class Player extends MUDObject
 		// initialize list editor variables
 		this.editor = Editor.NONE;
 
-		this.config = new LinkedHashMap<String, Boolean>(10);
+		this.config = new LinkedHashMap<String, Boolean>(11);
 		this.config.put("global-nameref-table", false); // use the global name reference table instead of a local one (default: false)
 		this.config.put("pinfo-brief", true);           // make your player info output brief/complete (default: true)
 		this.config.put("prompt_enabled", false);       // enable/disable the prompt (default: false)
@@ -367,6 +367,8 @@ public class Player extends MUDObject
 		this.config.put("show-weather", true);          // show weather information in room descriptions (default: true)
 		this.config.put("tagged-chat", false);          // "tag" the beginning chat lines with CHAT for the purpose of triggers, etc (default: false)
 		this.config.put("compact-editor", true);        // compact the output of editor's 'show' commands (default: true)
+		this.config.put("hud_enabled", true);           // is the "heads-up display" that accompanies the room description enabled (default: true)
+		this.config.put("notify_newmail", false);       // notify the player on receipt of new mail? (default: false)
 
 		// instantiate name reference table
 		this.nameRef = new HashMap<String, Integer>(10, 0.75f); // start out assuming 10 name references
@@ -448,7 +450,7 @@ public class Player extends MUDObject
 		this.slots.put("other", new Slot( SlotType.NONE, ItemType.NONE ));
 
 		// instantiate stats
-		stats = new LinkedHashMap<Abilities, Integer>(6, 0.75f);
+		stats = new LinkedHashMap<Ability, Integer>(6, 0.75f);
 
 		// initialize stats
 		this.stats.put(Abilities.STRENGTH, tempStats[0]);     // Strength
@@ -491,7 +493,7 @@ public class Player extends MUDObject
 		// initialize list editor variables
 		this.editor = Editor.NONE;
 
-		this.config = new LinkedHashMap<String, Boolean>(10);
+		this.config = new LinkedHashMap<String, Boolean>(11);
 		this.config.put("global-nameref-table", false); // use the global name reference table instead of a local one (default: false)
 		this.config.put("pinfo-brief", true);           // make your player info output brief/complete (default: true)
 		this.config.put("prompt_enabled", false);       // enable/disable the prompt (default: false)
@@ -501,6 +503,8 @@ public class Player extends MUDObject
 		this.config.put("show-weather", true);          // show weather information in room descriptions (default: true)
 		this.config.put("tagged-chat", false);          // "tag" the beginning chat lines with CHAT for the purpose of triggers, etc (default: false)
 		this.config.put("compact-editor", true);        // compact the output of editor's 'show' commands (default: true)
+		this.config.put("hud_enabled", true);           // is the "heads-up display" that accompanies the room description enabled (default: true)
+		this.config.put("notify_newmail", false);       // notify the player on receipt of new mail? (default: false)
 
 		// instantiate name reference table
 		this.nameRef = new HashMap<String, Integer>(10, 0.75f); // start out assuming 10 name references
@@ -572,12 +576,22 @@ public class Player extends MUDObject
 		}
 	}
 
-	public Race getPRace() { return this.race; }
+	public Race getRace() { return this.race; }
 
-	public void setPlayerRace(Race race) { this.race = race; }
-
+	public void setRace(Race race) { this.race = race; }
+	
+	/**
+	 * Get player gender
+	 * 
+	 * @return
+	 */
 	public Character getGender() { return this.gender; }
-
+	
+	/**
+	 * set player gender
+	 * 
+	 * @param newGender
+	 */
 	public void setGender(Character newGender) { this.gender = newGender; }
 
 	/**
@@ -804,20 +818,20 @@ public class Player extends MUDObject
 		this.totalmana = mana;
 	}
 
-	public int getAbility(Abilities ability) {
-		return this.stats.get(ability) + statMod[ability.ordinal()];
+	public int getAbility(Ability ability) {
+		return this.stats.get(ability) + statMod[ability.getId()];
 	}
 
-	public void setAbility(Abilities ability, int abilityValue) {
+	public void setAbility(Ability ability, int abilityValue) {
 		this.stats.put(ability, abilityValue);
 	}
 	
-	public int getAbilityMod(Abilities ability) {
-		return this.statMod[ability.ordinal()];
+	public int getAbilityMod(Ability ability) {
+		return this.statMod[ability.getId()];
 	}
 
-	public void setAbilityMod(Abilities ability, int abilityMod) {
-		this.statMod[ability.ordinal()] = abilityMod;
+	public void setAbilityMod(Ability ability, int abilityMod) {
+		this.statMod[ability.getId()] = abilityMod;
 	} 
 
 	public int getSkill(Skill skill) {
@@ -856,7 +870,7 @@ public class Player extends MUDObject
 		return Collections.unmodifiableMap( this.skills );
 	}
 
-	public Map<Abilities, Integer> getStats() {
+	public Map<Ability, Integer> getStats() {
 		return Collections.unmodifiableMap( this.stats );
 	}
 
@@ -1002,7 +1016,7 @@ public class Player extends MUDObject
 	}
 
 	public boolean hasEditor(final String name) {
-		return editorsMap.containsKey(name);
+		return editMap.containsKey(name);
 	}
 
 	public LinkedList<Spell> getSpellQueue() {

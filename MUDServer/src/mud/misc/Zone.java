@@ -15,18 +15,17 @@ import mud.objects.Room;
  *
  */
 public class Zone {
-	private int id;      // if this is the first one, it should be -1/0
+	private int id = -1;
 	private String name;
 	private Zone parent;
 	
-	private Integer instance_id = -1;
+	private Integer instance_id = -1; // if this is the first one, it should be -1/0
 	
 	private List<Room> rooms = new ArrayList<Room>();
 	private Map<Integer, Room> roomsById = new TreeMap<Integer, Room>();
 	private Map<String, Room> roomsByName = new TreeMap<String, Room>();
 
-	public Zone(final String name,final Zone parent) {
-		this.id = -1;
+	public Zone(final String name, final Zone parent) {
 		this.name = name;
 		this.parent = parent;
 	}
@@ -34,12 +33,25 @@ public class Zone {
 	public Zone(Zone toCopy) {
     }
 	
+	public boolean setId(int newId) {
+		if( id == -1 ) {
+			this.id = newId; return true;
+		}
+		else {
+			return false;
+		}
+	}
+	
 	public int getId() {
 		return this.id;
 	}
 
 	public String getName() {
 		return this.name;
+	}
+	
+	public Zone getParent() {
+		return this.parent;
 	}
 	
 	public void addRoom(Room room) {

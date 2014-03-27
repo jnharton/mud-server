@@ -10,6 +10,20 @@ public class PClass {
 	private String color;
 	
 	/**
+	 * Default PClass constructor, mostly intended for loading user specified, "soft-coded" classes
+	 * from files. That is, information for the class will be loaded from a file.
+	 */
+	public PClass() {
+		this.name = "unnamed";
+		this.abrv = "noabrv";
+		this.id = -1;
+		this.hit_dice = "0d0";
+		this.npc = false;
+		this.caster = false;
+		this.color = "";
+	}
+	
+	/**
 	 * The constructor for a enum class that represent D&D-like Player Classes
 	 * 
 	 * @param name the name of the class

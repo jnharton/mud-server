@@ -29,7 +29,7 @@ public class Skill
 	private String ability;    // ability that modifies the skill (string)
 	private PClass[] classes; // array of classes for which this is a class skill
 	
-	private static final HashMap<String, Abilities> abilityMap = new HashMap<String, Abilities>() {
+	private static final HashMap<String, Ability> abilityMap = new HashMap<String, Ability>() {
 		{
 			put("STR", Abilities.STRENGTH);
 			put("DEX", Abilities.DEXTERITY);
@@ -66,7 +66,7 @@ public class Skill
 		return this.name;
 	}
 	
-	public Abilities getAbility() {
+	public Ability getAbility() {
 		return Skill.abilityMap.get(this.ability);
 	}
 	

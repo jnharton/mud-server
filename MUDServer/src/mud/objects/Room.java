@@ -11,7 +11,7 @@ import java.util.List;
 import mud.ObjectFlag;
 import mud.MUDObject;
 import mud.Trigger;
-import mud.Triggers;
+import mud.TriggerType;
 import mud.TypeFlag;
 
 //import mud.miscellaneous.Atmosphere;
@@ -62,7 +62,7 @@ public class Room extends MUDObject implements EventSource
 	public String timeOfDay = "DAY";                          // replace this with an enum with one type per each or a hashmap string, boolean?
 	// DAY or NIGHT
 
-	private Zone zone = null;
+	private Zone zone = null; // the zone this room belongs to
 
 	private Integer instance_id = null; // instance_id, if this is the original, it should be null
 
@@ -70,18 +70,18 @@ public class Room extends MUDObject implements EventSource
 	public int z = 10;         // height of room ( 10 default )
 
 	private BitSet[][] tiles;
+	
+	private ArrayList<Player> listeners; // Player(s) in the Room listening to what is going on
+	private List<SayEventListener> _listeners = new ArrayList<SayEventListener>(); // 
 
-	private List<SayEventListener> _listeners = new ArrayList<SayEventListener>();
-	private ArrayList<Player> listeners;
-
-	private HashMap<Triggers, List<Trigger>> triggers = new HashMap<Triggers, List<Trigger>>();
+	private HashMap<TriggerType, List<Trigger>> triggers = new HashMap<TriggerType, List<Trigger>>();
 	
 	// initialize trigger lists and some basic triggers
 	{
-		triggers.put(Triggers.onEnter, new LinkedList<Trigger>());
-		triggers.put(Triggers.onLeave, new LinkedList<Trigger>());
-		(triggers.get(Triggers.onEnter)).add( new Trigger("TRIGGER: enter") );
-		(triggers.get(Triggers.onLeave)).add( new Trigger("TRIGGER: leave") );
+		triggers.put(TriggerType.onEnter, new LinkedList<Trigger>());
+		triggers.put(TriggerType.onLeave, new LinkedList<Trigger>());
+		(triggers.get(TriggerType.onEnter)).add( new Trigger("TRIGGER: enter") );
+		(triggers.get(TriggerType.onLeave)).add( new Trigger("TRIGGER: leave") );
 	}
 	
 	// misc note: parent == location
@@ -95,8 +95,8 @@ public class Room extends MUDObject implements EventSource
 		this.name = "room";
 		this.desc = "You see nothing.";
 		this.flags = EnumSet.of(ObjectFlag.SILENT);
-		this.locks = "";            // Set the locks
-		this.location = 0;          // Set the location
+		this.locks = "";   // Set the locks
+		this.location = 0; // Set the location
 
 		this.tiles = new BitSet[x][y];
 
@@ -205,10 +205,21 @@ public class Room extends MUDObject implements EventSource
 		if( exits.size() > 0 ) {
 			final StringBuilder buf = new StringBuilder();
 			for (final Exit e : exits) {
-				if( e.isLocked() ) buf.append(", ").append(e.getName() + " (locked)"); 
+				if( e instanceof Door ) {
+					Door d = (Door) e;
+					
+					if( getDBRef() == d.getLocation() ) {
+						if( d.isLocked() ) buf.append(", ").append(d.getName().split(";")[0] + " (locked)");
+						else buf.append(", ").append(d.getName().split(";")[0]);
+					}
+					else if( getDBRef() == d.getDestination() ) {
+						if( d.isLocked() ) buf.append(", ").append(d.getName().split(";")[1] + " (locked)");
+						else buf.append(", ").append(d.getName().split(";")[1]);
+					}
+				} 
 				else buf.append(", ").append(e.getName());
 			}
-			return buf.toString().substring(2); // clip off the initial, unecessary " ,"
+			return buf.toString().substring(2); // clip off the initial, unnecessary " ,"
 		}
 		else { return ""; }
 	}
@@ -217,7 +228,18 @@ public class Room extends MUDObject implements EventSource
 		final StringBuilder buf = new StringBuilder();
 		for (final Exit e : exits) {
 			if (!e.getFlags().contains("D")) {
-				if( e.isLocked() ) buf.append(", ").append(e.getName() + " (locked)"); 
+				if( e instanceof Door ) {
+					Door d = (Door) e;
+					
+					if( getDBRef() == d.getLocation() ) {
+						if( d.isLocked() ) buf.append(", ").append(d.getName().split(";")[0] + " (locked)");
+						else buf.append(", ").append(d.getName().split(";")[0]);
+					}
+					else if( getDBRef() == d.getDestination() ) {
+						if( d.isLocked() ) buf.append(", ").append(d.getName().split(";")[1] + " (locked)");
+						else buf.append(", ").append(d.getName().split(";")[1]);
+					}
+				} 
 				else buf.append(", ").append(e.getName());
 			}
 		}
@@ -266,35 +288,69 @@ public class Room extends MUDObject implements EventSource
 	public synchronized void removeSayEventListener(SayEventListener listener)   {
 		_listeners.remove(listener);
 	}
-
+	
+	/**
+	 * Add an Item to the room.
+	 * 
+	 * @param item
+	 */
 	public void addItem(Item item) {
 		this.items.add(item);
 	}
-
+	
+	/**
+	 * Add multiple items to the room at the same time.
+	 * 
+	 * @param items List of Item(s)
+	 */
 	public void addItems(List<Item> items) {
 		for(Item item : items) {
 			addItem(item);
 		}
 	}
-
+	
+	/**
+	 * Remove an Item from the room.
+	 * @param item
+	 */
 	public void removeItem(Item item) {
 		this.items.remove(item);
 	}
-
+	
+	/**
+	 * Get a List of the Item(s) in the Room.
+	 * 
+	 * @return
+	 */
 	public List<Item> getItems() {
 		return this.items;
 	}
-
+	
+	/**
+	 * Add a Thing to the room
+	 * 
+	 * @param thing the Thing to add
+	 */
 	public void addThing(Thing thing) {
 		this.things.add(thing);
 	}
-
+	
+	/**
+	 * Add multiple Thing(s) to the room at the same time.
+	 * 
+	 * @param things List of Thing(s) to add
+	 */
 	public void addThings(List<Thing> things) {
 		for(Thing thing : things) {
 			addThing(thing);
 		}
 	}
-
+	
+	/**
+	 * Remove a Thing from the room
+	 * 
+	 * @param thing
+	 */
 	public void removeThing(Thing thing) {
 		this.things.remove(thing);
 	}
@@ -302,8 +358,12 @@ public class Room extends MUDObject implements EventSource
 	public List<Thing> getThings() {
 		return this.things;
 	}
+	
+	public void setTrigger(TriggerType type, Trigger trigger) {
+		this.triggers.get(type).add(trigger);
+	}
 
-	public List<Trigger> getTriggers(Triggers triggerType) {
+	public List<Trigger> getTriggers(TriggerType triggerType) {
 		return this.triggers.get(triggerType);
 	}
 
@@ -344,7 +404,8 @@ public class Room extends MUDObject implements EventSource
 		output[5] = "" + this.getRoomType().toString().charAt(0); // room type
 		output[6] = this.x + "," + this.y + "," + this.z;         // room dimensions (x,y,z)
 		output[7] = "-1";                                         // room terrain
-		output[8] = "";                                           //
+		if( zone != null ) output[8] = "" + zone.getId();         // zone data
+		else output[8] = "-1";
 
 		return Utils.join(output, "#");
 	}

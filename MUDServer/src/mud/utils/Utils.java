@@ -399,6 +399,7 @@ public final class Utils {
 				out[l] = Integer.parseInt(in[l]);
 			}
 			catch(NumberFormatException nfe) {
+				System.out.println("--- Stack Trace ---");
 				nfe.printStackTrace();
 				System.out.println("Cannot parse element");
 			}
@@ -430,6 +431,7 @@ public final class Utils {
 				index++;
 			}
 			catch(NumberFormatException nfe) {
+				System.out.println("--- Stack Trace ---");
 				nfe.printStackTrace();
 				System.out.println("Cannot parse element");
 			}
@@ -611,18 +613,24 @@ public final class Utils {
 	}
 
 	public static int roll(final String input) { // roll(3, 4, 7) for 3d4+7
+		final int num;
+		int sides;
+		int bonus;
+		
 		final String[] words = input.split("d");
 
-		final int num = Utils.toInt(words[0], 1);
-
-		int sides = 0, bonus = 0;
+		num = Utils.toInt(words[0], 1);
+		
+		sides = 0;
+		bonus = 0;
+		
 		try {
 			final String[] second_words = words[1].split("[-+]");
 			sides = Utils.toInt(second_words[0], 0);
 			bonus = Utils.toInt(second_words[1], 0);
 		} catch (Exception e) {}
 
-		return bonus + roll(num, sides);
+		return roll(num, sides) + bonus;
 	}
 
 	// old roll
@@ -681,6 +689,8 @@ public final class Utils {
 		try {
 			return Integer.parseInt(str);
 		} catch(NumberFormatException nfe) {
+			System.out.println("--- Stack Trace ---");
+			nfe.printStackTrace();
 			return alt;
 		}
 	}
@@ -901,5 +911,19 @@ public final class Utils {
 		for(T obj : objects) result.add(obj);
 		
 		return result;		
+	}
+	
+	public static int count(final String s, final char c) {
+		int count = 0;
+		int index = 0;
+		
+		int lastIndex = 0;
+		
+		while( (lastIndex = s.indexOf(c, index)) != -1 ) {
+			count++;
+			index = lastIndex;
+		}
+		
+		return count;
 	}
 }

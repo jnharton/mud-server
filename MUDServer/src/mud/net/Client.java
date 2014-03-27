@@ -23,17 +23,17 @@ public class Client implements Runnable {
 	private final Socket socket;
 	private final InputStream input;
 	private final OutputStream output;
+	
+	private boolean running;
 
 	private boolean telnet = true;
 	private boolean tn_neg_seq = false;
 	
-	private boolean console = false;
+	private boolean console = false; // indicates to the server that the client is using the admin console (default: false)
 	
 	private final int BUF_SIZE = 4096;
 
 	private final ConcurrentLinkedQueue<String> queuedLines = new ConcurrentLinkedQueue<String>();
-
-	private boolean running;
 
 	private final StringBuffer sb = new StringBuffer(80);
 	private List<Byte> buffer = new ArrayList<Byte>();
@@ -54,25 +54,37 @@ public class Client implements Runnable {
 	}
 
 	public void run() {
+		// TODO refine code
 		try {
-			/*while( running ) {
-				int readValue = 0;
-
-				if( !tn_neg_seq ) {
-					// this makes concessions to telnet clients and mud clients by capturing all data sent simultaneously
-					while( input.available() > 0 ) {
-						readValue = input.read();
-
+			int readValue;
+			int bytes;
+			
+			while( running ) {
+				readValue = 0;
+				bytes = 0;
+				
+				while( input.available() > 0 ) {
+					
+					readValue = input.read();
+					
+					if( !tn_neg_seq ) {
 						if( (byte) readValue == Telnet.IAC ) {
 							buffer.clear();
+							
+							System.out.println("TELNET Command");
+							System.out.println("Read: " + readValue);
+							
 							buffer.add( (byte) readValue );
+							bytes++;
+							
 							tn_neg_seq = true;
-							break;
+							
+							continue;
 						}
 
 						final Character ch = (char) readValue;
 
-						if (ch == '\012' || ch == '\015') { // newline (\n) or carriage-return (\r)
+						if (ch == '\012' || ch == '\015') {        // newline (\n) or carriage-return (\r)
 							this.queuedLines.add( sb.toString() ); // convert stringbuffer to string
 							sb.delete(0, sb.length());             // clear stringbuffer
 						}
@@ -88,19 +100,65 @@ public class Client implements Runnable {
 
 						System.out.println("current telnet input: " + Utils.stringToArrayList( sb.toString(), "" )); // tell us the whole string
 					}
-				}
-				else {
-					while( input.available() > 0 ) {
-						readValue = input.read();
+					else {
+						if( bytes < 3 ) {
+							buffer.add( (byte) readValue );
+							bytes++;
 
-						buffer.add( (byte) readValue );
+							System.out.println("Read: " + readValue);
+						}
+						
+						if( bytes == 3 ) {
+							Byte[] ba = new Byte[buffer.size()];
 
-						System.out.println("Read: " + readValue);
+							buffer.toArray(ba);
+
+							byte[] ba2 = new byte[ba.length];
+
+							int index = 0;
+
+							for(Byte b : ba) {
+								ba2[index] = b;
+								index++;
+							}
+							
+							String msg = Telnet.translate(ba2);
+							String[] msga = msg.split(" ");
+							
+							
+							System.out.println( "] Received: " + msg );
+							
+							byte[] response = new byte[3];
+							
+							
+							// if asked WILL some unknown option, respond DONT
+							if( msga[1].equals("WILL") && msga[2].equals("null") ) {
+								response[0] = Telnet.IAC;
+								response[1] = Telnet.DONT;
+								response[2] = ba2[2];
+								
+								write(response);
+								System.out.println( "] Sent: " + Telnet.translate(response) );
+							}
+							
+							// if asked DO some unknown option, respond WONT
+							if( msga[1].equals("DO") && msga[2].equals("null") ) {
+								response[0] = Telnet.IAC;
+								response[1] = Telnet.WONT;
+								response[2] = ba2[2];
+								
+								write(response);
+								System.out.println( "] Sent: " + Telnet.translate(response) );
+							}
+							
+							buffer.clear();
+							bytes = 0;
+							tn_neg_seq = false;
+						}
 					}
 				}
-
 				// ---------------------------------------------------------------------------------
-			}*/
+			}
 
 			// can't use BufferedReader here - we need access to the buffer for telnet commands, 
 			// which won't be followed by a newline
@@ -137,15 +195,13 @@ public class Client implements Runnable {
 				stopRunning();
 			}
 		}
-		catch (Exception e) {
-			e.printStackTrace();
+		catch (IOException ioe) {
+			ioe.printStackTrace();
 			stopRunning();
 		}
 		finally {
 			try { socket.close(); }
-			catch (Exception e) {
-				e.printStackTrace();
-			}
+			catch (IOException ioe) { ioe.printStackTrace(); }
 		}
 	}
 
@@ -158,35 +214,11 @@ public class Client implements Runnable {
 		
 		// clean up after ourselves
 		try {
-			if( input != null ) {
-				input.close();
-				//input = null;
-			}
+			if( input != null )  input.close();
+			if( output != null ) output.close();
+			if( socket != null ) socket.close();
 		}
-		catch(Exception e) {
-			e.printStackTrace();
-		}
-
-		try {
-			if( output != null ) {
-				output.close();
-				//output = null;
-			}
-		}
-		catch(Exception e) {
-			e.printStackTrace();
-		}
-
-		try {
-			if( socket != null ) {
-				socket.close();
-				//socket = null;
-			}
-		}
-		catch(Exception e) {
-			e.printStackTrace();
-		}
-
+		catch(IOException ioe) {ioe.printStackTrace(); }
 	}
 
 	public String ip() {
@@ -197,21 +229,24 @@ public class Client implements Runnable {
 		return queuedLines.poll();
 	}
 
-	public void writeln(final String data) {
-		write((data + "\r\n").getBytes());
-	}
-
-	public void write(final String data) {
-		write(data.getBytes());
-	}
-
-	public void write(final char data) {
+	public void write(final char ch) {
 		try {
-			output.write(data);
-			output.flush();
-
-		} catch (Exception e) {
-			e.printStackTrace();
+			output.write(ch);
+			//output.flush();
+		}
+		catch (IOException ioe) {
+			ioe.printStackTrace();
+			stopRunning();
+		}
+	}
+	
+	public void write(final byte b) {
+		try {
+			output.write(b);
+			//output.flush();
+		}
+		catch (IOException ioe) {
+			ioe.printStackTrace();
 			stopRunning();
 		}
 	}
@@ -220,11 +255,19 @@ public class Client implements Runnable {
 		try {
 			output.write(data);
 			output.flush();
-
-		} catch (Exception e) {
-			e.printStackTrace();
+		}
+		catch (IOException ioe) {
+			ioe.printStackTrace();
 			stopRunning();
 		}
+	}
+	
+	public void write(final String data) {
+		write(data.getBytes());
+	}
+	
+	public void writeln(final String data) {
+		write((data + "\r\n").getBytes());
 	}
 	
 	public void setConsole(boolean console) {

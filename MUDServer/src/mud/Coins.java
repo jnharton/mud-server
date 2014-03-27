@@ -165,5 +165,4 @@ public class Coins
     public String toString() {
         return toString(true);
     }
-
 }

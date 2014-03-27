@@ -25,6 +25,8 @@ public enum ObjectFlag
     HOUSE("HOUSE"),
     MERCHANT("MERCHANT"),
     NO_TELEPORT("NO_TELEPORT"), // prevent teleporting to the location (for rooms) or moving the object (for everything else)
+    NO_ENTER("NO_ENTER", TypeFlag.ROOM),
+    NO_LEAVE("NO_LEAVE", TypeFlag.ROOM),
     QUIET("QUIET"),
     SHOP("SHOP", TypeFlag.ROOM),
     SILENT("SILENT"),
@@ -54,6 +56,14 @@ public enum ObjectFlag
         case 'V':    return VENDOR;
         default:    throw new IllegalArgumentException("Invalid ObjectFlag letter: " + c);    
         }
+    }
+    
+    static public ObjectFlag fromString(final String s) {
+    	switch(s.toUpperCase()) {
+    	case "NO_ENTER":	return NO_ENTER;
+    	case "NO_LEAVE":	return NO_LEAVE;
+    	default:			throw new IllegalArgumentException("Invalid ObjectFlag string: " + s);
+    	}
     }
 
     static public EnumSet<ObjectFlag> getFlagsFromString(final String str) {

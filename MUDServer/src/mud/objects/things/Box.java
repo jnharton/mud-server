@@ -8,38 +8,40 @@ import mud.ObjectFlag;
 import mud.TypeFlag;
 import mud.interfaces.Lockable;
 import mud.interfaces.Storage;
-
 import mud.objects.Item;
+import mud.objects.Player;
 import mud.objects.Thing;
 import mud.objects.ThingType;
-
 import mud.utils.Utils;
 
-public class Chest extends Thing implements Lockable, Storage<Item> {
+public class Box extends Thing implements Lockable<Item>, Storage<Item> {
 	
 	private Item key = null;
 	private boolean isLocked = false;
+	private boolean isOpen = false;
 	private boolean full = false;
+	private boolean empty = true;
+	private int size = 10;
 	
 	private Map<String, Integer> contentMap = new HashMap<String, Integer>();
 	
-	public Chest() {
-		this("Public Chest", "A chest");
+	public Box() {
+		this("Chest", "A chest");
 		this.flags = EnumSet.noneOf(ObjectFlag.class);
 	}
 	
-	public Chest(String name, String desc) {
+	public Box(String name, String desc) {
 		super(-1, name, EnumSet.noneOf(ObjectFlag.class), desc, 8);
 		this.type = TypeFlag.ITEM;
-		thing_type = ThingType.CHEST;
+		thing_type = ThingType.CONTAINER;
 	}
 	
-	public Chest(boolean isLocked) {
+	public Box(boolean isLocked) {
 		this();
 		this.isLocked = isLocked;
 	}
 	
-	public Chest(Item key, boolean isLocked) {
+	public Box(Item key, boolean isLocked) {
 		this();
 		this.key = key;
 		this.isLocked = isLocked;
@@ -49,23 +51,76 @@ public class Chest extends Thing implements Lockable, Storage<Item> {
 	 * Object Loading Constructor
 	 * @param dbref
 	 */
-	public Chest(int dbref, String name, String desc, int location) {
+	public Box(int dbref, String name, String desc, int location) {
 		super(dbref, name, EnumSet.noneOf(ObjectFlag.class), desc, location);
 		this.type = TypeFlag.ITEM;
-		thing_type = ThingType.CHEST;
+		thing_type = ThingType.CONTAINER;
 	}
 	
-	public Chest(int tempDBRef, String tempName, String tempFlags, String tempDesc, int tempLoc) {
+	public Box(int tempDBRef, String tempName, String tempFlags, String tempDesc, int tempLoc) {
+	}
+	
+	@Override
+	public void setKey(Item key) {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	@Override
+	public Item getKey() {
+		return this.key;
+	}
+	
+	@Override
+	public boolean hasKey(Player p) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+	
+	@Override
+	public boolean lock() {
+		if( this.key == null ) {
+			isLocked = true;
+			return true;
+		}
+		
+		return false;
 	}
 
 	@Override
-	public void lock() {
-		if( key == null ) isLocked = true;
+	public boolean lock(Item key) {
+		if( this.key == null ) return lock();
+		else {
+			if( this.key == key ) {
+				isLocked = true;
+				return true;
+			}
+			
+			return false;
+		}
 	}
 	
 	@Override
-	public void unlock() {
-		if( key == null ) isLocked = false;
+	public boolean unlock() {
+		if( this.key == null ) {
+			isLocked = false;
+			return true;
+		}
+		
+		return false;
+	}
+	
+	@Override
+	public boolean unlock(Item key) {
+		if( this.key == null ) return lock();
+		else {
+			if( this.key == key ) {
+				isLocked = false;
+				return true;
+			}
+			
+			return false;
+		}
 	}
 
 	@Override
@@ -75,24 +130,45 @@ public class Chest extends Thing implements Lockable, Storage<Item> {
 	
 	public void insert(Item item) {
 		if( !full ) {
-			contents.add( item );
-			contentMap.put( item.getName(), contents.indexOf(item) );
+			this.contents.add( item );
+			this.contentMap.put( item.getName(), this.contents.indexOf(item) );
+			if( this.contents.size() == this.size ) full = true;
 		}
 	}
 	
 	public Item retrieve(int index) {
-		return contents.get(index);
+		if( !empty ) {
+			Item item = contents.remove(index);
+			
+			if( item != null ) {
+				this.contentMap.remove( item.getName() );
+				if( this.contents.size() == 0 ) empty = true;
+			}
+			
+			return item;
+		}
+		
+		return null;
 	}
 
 	public Item retrieve(String tName) {
 		if( contentMap.containsKey(tName) ) {
-			return contents.get( contentMap.get(tName) );
+			return this.retrieve( contentMap.get(tName) );
 		}
-		else { return null; }
+		
+		return null;
+	}
+	
+	public boolean isEmpty() {
+		return this.empty;
 	}
 
 	public boolean isFull() {
 		return this.full;
+	}
+	
+	public boolean isOpen() {
+		return this.isOpen;
 	}
 	
 	/**

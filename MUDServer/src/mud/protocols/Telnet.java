@@ -38,7 +38,12 @@ public class Telnet  {
 	public static final byte IAC  = (byte) 255; // Is A Command (Indicates a command)
 	
 	//
-	public static final byte TERMINAL_TYPE = (byte) 24;
+	public static final byte ECHO = (byte) 1;
+	public static final byte SUPPRESS_GO_AHEAD = (byte) 3;
+	
+	public static final byte TERMINAL_TYPE = (byte) 24;  //
+	public static final byte NAWS = (byte) 31;           // Negotiate about window size (NAWS) -- RFC 1073
+	public static final byte TERMINAL_SPEED = (byte) 32; // Terminal Speed -- RFC 1079
 	
 	// custom options for other protocols (general)
 	public static final byte LINEMODE = (byte) 34;
@@ -64,7 +69,12 @@ public class Telnet  {
 			put("EL", EL);       put("GA", GA);               put("SB", SB);     put("WILL", WILL);
 			put("WONT", WONT);   put("DO", DO);               put("DONT", DONT); put("IAC", IAC);
 			
+			put("ECHO", ECHO);
+			put("SUPPRESS-GO-AHEAD", SUPPRESS_GO_AHEAD);
+			
 			put("TERMINAL-TYPE", TERMINAL_TYPE);
+			put("NAWS", NAWS);
+			put("TERMINAL-SPEED", TERMINAL_SPEED);
 			put("LINEMODE", LINEMODE);
 			
 			put("MCCP", MCCP);   put("MCCP1", MCCP1);         put("COMPRESS", COMPRESS);
@@ -81,7 +91,12 @@ public class Telnet  {
 			put(EL, "EL");       put(GA, "GA");               put(SB, "SB");     put(WILL, "WILL");
 			put(WONT, "WONT");   put(DO, "DO");               put(DONT, "DONT"); put(IAC, "IAC");
 			
+			put(ECHO, "ECHO");
+			put(SUPPRESS_GO_AHEAD, "SUPPRESS-GO-AHEAD");
+			
 			put(TERMINAL_TYPE, "TERMINAL-TYPE");
+			put(NAWS, "NAWS");
+			put(TERMINAL_SPEED, "TERMINAL-SPEED");
 			put(LINEMODE, "LINEMODE");
 			
 			put(MCCP, "MCCP");   put(MCCP1, "MCCP1");         put(COMPRESS, "COMPRESS");
@@ -132,7 +147,7 @@ public class Telnet  {
 		System.out.println("Translate from Byte to String (receiving)");
 		
 		for (int b = 0; b < input.length; b++) {
-			System.out.println(input[b] + " " + map1.get(input[b]));
+			System.out.println( input[b] + " " + map1.get(input[b]));
 			output[b] = map1.get(input[b]);
 		}
 		

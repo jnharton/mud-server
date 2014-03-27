@@ -7,7 +7,7 @@ import java.util.Hashtable;
 import mud.ObjectFlag;
 import mud.MUDObject;
 import mud.Trigger;
-import mud.Triggers;
+import mud.TriggerType;
 import mud.TypeFlag;
 import mud.utils.Utils;
 
@@ -47,6 +47,7 @@ public class Thing extends MUDObject {
 	
 	protected ArrayList<Item> contents = null;
 	
+	// triggers
 	public Trigger onUse;
 	
 	/**
@@ -103,10 +104,12 @@ public class Thing extends MUDObject {
 		this.location = tempLoc;
 		*/
 		
-		attributes = new Hashtable<String, String>();
+		this.attributes = new Hashtable<String, String>();
+		
+		this.contents = new ArrayList<Item>();
 	}
 	
-	public void setScriptOnTrigger(Triggers type, String script) {
+	public void setScriptOnTrigger(TriggerType type, String script) {
 		switch(type) {
 		case onUse:
 			onUse = new Trigger(script);

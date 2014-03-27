@@ -10,7 +10,7 @@ import mud.events.PortalEvent;
 import mud.events.PortalEventListener;
 import mud.events.SayEvent;
 import mud.events.SayEventListener;
-
+import mud.interfaces.Lockable;
 import mud.objects.Player;
 import mud.utils.Utils;
 
@@ -46,7 +46,7 @@ import mud.utils.Utils;
  *
  */
 public class Portal extends Exit implements EventSource, SayEventListener {
-	private PortalType type;                        // type of portal
+	private PortalType pType;                        // type of portal
 	private Object key;                             // if it's locked with a key what is it
 	private int origin;                             // portal origin
 	private Integer destination = null;             // a single destination (single destination portal)
@@ -60,8 +60,8 @@ public class Portal extends Exit implements EventSource, SayEventListener {
 
 	// standard, "always open" portal (default is active)
 	public Portal(int pOrigin, int pDestination) {
-		super(ExitType.PORTAL);
-		this.type = PortalType.STD;
+		this.eType = ExitType.PORTAL;
+		this.pType = PortalType.STD;
 		this.key = null;
 		
 		this.location = pOrigin;
@@ -73,8 +73,10 @@ public class Portal extends Exit implements EventSource, SayEventListener {
 
 	// keyed portal (default is inactive)
 	public Portal(Object pKey, int pOrigin, int pDestination) {
-		super(ExitType.PORTAL);
-		this.type = PortalType.STD;
+		super();
+		
+		this.eType = ExitType.PORTAL;
+		this.pType = PortalType.STD;
 		this.key = pKey;
 		if (pKey != null) { this.requiresKey = true; }
 		
@@ -86,8 +88,10 @@ public class Portal extends Exit implements EventSource, SayEventListener {
 	}
 	
 	public Portal(PortalType pType, int pOrigin, int pDestination) {
-		super(ExitType.PORTAL);
-		this.type = pType;
+		super();
+		
+		this.eType = ExitType.PORTAL;
+		this.pType = pType;
 		this.key = null;
 		
 		this.location = pOrigin;
@@ -99,8 +103,10 @@ public class Portal extends Exit implements EventSource, SayEventListener {
 
 	// typed portal (default is active)
 	public Portal(PortalType pType, int pOrigin, int[] pDestinations) {
-		super(ExitType.PORTAL);
-		this.type = pType;
+		super();
+		
+		this.eType = ExitType.PORTAL;
+		this.pType = pType;
 		this.key = null;
 		
 		this.location = pOrigin;
@@ -120,8 +126,10 @@ public class Portal extends Exit implements EventSource, SayEventListener {
 
 	// typed, keyed portal (default is inactive)
 	public Portal(PortalType pType, Object pKey, int pOrigin, int[] pDestinations) {
-		super(ExitType.PORTAL);
-		this.type = pType;
+		super();
+		
+		this.eType = ExitType.PORTAL;
+		this.pType = pType;
 		this.key = pKey;
 		if (pKey != null) { this.requiresKey = true; }
 		
@@ -139,12 +147,12 @@ public class Portal extends Exit implements EventSource, SayEventListener {
 	}
 	
 	public PortalType getPortalType() {
-		return this.type;
+		return this.pType;
 	}
 
 	public void setType(PortalType newType) {
-		PortalType last = this.type;
-		this.type = newType;
+		PortalType last = this.pType;
+		this.pType = newType;
 		if (last != newType) { // don't permit changing to the same type as it is already
 			if ( newType == PortalType.RANDOM ) {
 				this.destinations = new ArrayList<Integer>(1); // instantiate the destinations array list
@@ -217,7 +225,7 @@ public class Portal extends Exit implements EventSource, SayEventListener {
 	 */
 	@Override
 	public int getDestination() {
-		if (this.type == PortalType.RANDOM) {
+		if (this.pType == PortalType.RANDOM) {
 			if (destinations != null && destinations.size() > 0) {
 				int roll = generator.nextInt(destinations.size()); // roll a random destination
 				return destinations.get(roll);	
@@ -236,26 +244,32 @@ public class Portal extends Exit implements EventSource, SayEventListener {
 	 * 
 	 * @param key
 	 */
-	public void activate(Object pKey) {
+	public boolean activate(Object pKey) {
 		if (key instanceof String) {
 			if ( ( (String) pKey ).equals( (String) this.key ) ) {
 				this.active = true;
 				System.out.println("Portal: activated");
+				return true;
 			}
 		}
+		
+		return false;
 	}
 
 	/**
 	 * Deactivation via words
 	 * @param key
 	 */
-	public void deactivate(Object pKey) {
+	public boolean deactivate(Object pKey) {
 		if (key instanceof String) {
 			if (((String) pKey).equals((String) this.key)) {
 				this.active = false;
 				System.out.println("Portal: deactivated");
+				return true;
 			}
 		}
+		
+		return false;
 	}
 
 	public boolean isActive() {
@@ -278,10 +292,10 @@ public class Portal extends Exit implements EventSource, SayEventListener {
 		output[2] = this.getFlagsAsString();           // flags
 		output[3] = this.getDesc();                    // description
 		output[4] = this.getLocation() + "";           // portal location (a.k.a source)
-		if (this.type == PortalType.STD) {
+		if (this.pType == PortalType.STD) {
 			output[5] = this.destination + "";         // portal destination
 		}
-		else if (this.type == PortalType.RANDOM) {
+		else if (this.pType == PortalType.RANDOM) {
 			final ArrayList<String> d = new ArrayList<String>();
 			for (int dest : this.destinations) {
 				d.add(dest + "");
@@ -289,7 +303,7 @@ public class Portal extends Exit implements EventSource, SayEventListener {
 			output[5] = Utils.join(d, ",");            // portal destination(s)
 		}
 		output[6] = this.getExitType().ordinal() + ""; // exit type
-		output[7] = type.ordinal() + "";               // portal type
+		output[7] = pType.ordinal() + "";               // portal type
 		
 		return Utils.join(output, "#");
 	}
@@ -297,10 +311,12 @@ public class Portal extends Exit implements EventSource, SayEventListener {
 	@Override
 	public void handleSayEvent(SayEvent se) {
 		if( active ) {
-			deactivate(se.getMessage() );
+			if( deactivate(se.getMessage() ) ) {
+			}
 		}
 		else {
-			activate(se.getMessage());
+			if( activate(se.getMessage()) ) {
+			}
 		}
 	}
 

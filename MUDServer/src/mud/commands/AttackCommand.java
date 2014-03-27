@@ -110,8 +110,8 @@ public class AttackCommand extends Command {
 							}
 						}
 						else { // else
-							switch(wt) {
-							case LONGSWORD:
+							switch(wt.getName().toUpperCase()) {
+							case "LONGSWORD":
 								send("Really? You aren't even close enough to hit!", client);
 								break;
 							default:

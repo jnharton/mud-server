@@ -6,7 +6,7 @@ import mud.objects.*;
 import mud.objects.items.*;
 import mud.objects.npcs.Innkeeper;
 import mud.objects.npcs.Merchant;
-import mud.objects.things.Chest;
+import mud.objects.things.Box;
 import mud.Coins;
 import mud.objects.Item;
 import mud.utils.Utils;
@@ -116,18 +116,18 @@ public class ObjectLoader {
 					}
 					else if( et == ExitType.DOOR ) {
 						int oDest = Integer.parseInt(attr[5]);
-						int lockState = Integer.parseInt(attr[6]);
+						int lockState = Utils.toInt(attr[7], 0); // all lock states other than 0 or 1 are invalid
+						
+						Door door = new Door(oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), oDesc, oLocation, oDest);
+						door.setExitType(et);
 
-						Exit exit = new Exit(oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), oDesc, oLocation, oDest);
-						exit.setExitType(et);
+						if( lockState == 1 ) { door.lock(); }
+						else { door.unlock(); }
 
-						if( lockState == 1 ) { exit.lock(); }
-						else { exit.unlock(); }
+						log.debug("log.debug (db entry): " + door.toDB(), 2);
 
-						log.debug("log.debug (db entry): " + exit.toDB(), 2);
-
-						objectDB.add(exit);
-						objectDB.addExit(exit);
+						objectDB.add(door);
+						objectDB.addExit(door);
 					}
 					else if (et == ExitType.PORTAL) {
 						Portal portal;
@@ -216,6 +216,8 @@ public class ObjectLoader {
 				else if (oTypeFlag == 'R')
 				{
 					String roomType = attr[5];
+					int[] dimensions = Utils.stringsToInts(attr[6].split(","));
+					int zoneId = Utils.toInt(attr[8], -1);
 
 					final Room room = new Room(oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), oDesc, oLocation);
 
@@ -224,11 +226,14 @@ public class ObjectLoader {
 					room.setRoomType(RoomType.fromLetter(roomType.charAt(0)));
 
 					// set room dimensions
-					int[] dimensions = Utils.stringsToInts(attr[6].split(","));
-
 					room.x = dimensions[0];
 					room.y = dimensions[1];
 					room.z = dimensions[2];
+					
+					// set zone
+					if( zoneId != -1 ) {
+						room.setZone( parent.getZone( zoneId ) );
+					}
 
 					if (room.getRoomType().equals(RoomType.OUTSIDE)) {
 						room.getProperties().put("sky", "The sky is clear and flecked with stars.");
@@ -245,9 +250,8 @@ public class ObjectLoader {
 
 					final Thing thing;
 
-					if( tt == ThingType.CHEST ) {
-						thing = new Chest(oDBRef, oName, oDesc, oLocation);
-						//thing.thing_type = ThingType.CHEST; // shouldn't be needed
+					if( tt == ThingType.CONTAINER ) {
+						thing = new Box(oDBRef, oName, oDesc, oLocation);
 					}
 					else {
 						thing = new Thing(oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), oDesc, oLocation);
@@ -294,7 +298,7 @@ public class ObjectLoader {
 						int weaponType = Integer.parseInt(attr[6]);
 						int mod = Integer.parseInt(attr[7]);
 
-						Weapon weapon = new Weapon(oName, oDesc, oLocation, oDBRef, mod, Handed.ONE, WeaponType.values()[weaponType], 15.0);
+						Weapon weapon = new Weapon(oName, oDesc, oLocation, oDBRef, mod, Handed.ONE, WeaponTypes.getWeaponType(weaponType), 15.0);
 						weapon.setItemType(it);
 
 						objectDB.add(weapon);
@@ -508,7 +512,7 @@ public class ObjectLoader {
 
 		/* Set Player Race */
 		raceNum = Utils.toInt(attr[9], Races.NONE.getId());
-		player.setPlayerRace(Races.getRace(raceNum));
+		player.setRace(Races.getRace(raceNum));
 
 		/* Set Player Class */
 		classNum = Utils.toInt(attr[10], Classes.NONE.getId());
@@ -578,11 +582,11 @@ public class ObjectLoader {
 		// Set NPC Race
 		try {
 			raceNum = Integer.parseInt(attr[9]);
-			npc.setPlayerRace(Races.getRace(raceNum));
+			npc.setRace(Races.getRace(raceNum));
 		}
 		catch(NumberFormatException nfe) {
 			nfe.printStackTrace();
-			npc.setPlayerRace(Races.NONE);
+			npc.setRace(Races.NONE);
 		}
 
 		// Set NPC Class

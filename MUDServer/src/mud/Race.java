@@ -18,12 +18,22 @@ public class Race {
 	private boolean restricted; // is the race restricted (not available from normal selection)
 	private boolean canFly;     // is this race capable of flight
 	
+	// no args constructor
+	/*public Race() {
+		this.name = "noname";
+		this.sub = null;
+		this.id = -1;
+		this.statAdj = new Integer[] { 0, 0, 0, 0, 0, 0 };
+		this.restricted = false;
+		this.canFly = false;
+	}*/
+	
 	public Race(String name, int id, boolean restricted) {
-		this(name, id, new Integer[] { 0, 0, 0, 0 , 0, 0 }, restricted);
+		this(name, id, new Integer[] { 0, 0, 0, 0, 0, 0 }, restricted);
 	}
 	
 	public Race(String name, int id, boolean restricted, boolean canFly) {
-		this(name, id, new Integer[] { 0, 0, 0, 0 , 0, 0 }, restricted, canFly);
+		this(name, id, new Integer[] { 0, 0, 0, 0, 0, 0 }, restricted, canFly);
 	}
 
 	public Race(String name, int id, Integer[] statAdj, boolean restricted) {

@@ -44,7 +44,7 @@ public class WhereCommand extends Command {
 				//String title = player.getTitle();         // title ( 8 characters )
 				String playerClass = player.getPClass().getName();
 				String playerGender = player.getGender().toString();
-				String race = player.getPRace().toString();
+				String race = player.getRace().toString();
 				String ustatus = player.getStatus();        // status ( 3 characters )
 				int location = player.getLocation();        // room # ( 5 characters ) (max. 99999?)
 				String room = getRoom(location).getName(); // truncate to 24 characters

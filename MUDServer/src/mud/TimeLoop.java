@@ -41,6 +41,8 @@ public class TimeLoop implements Runnable
     private int ms_per_second = 166;       // 166 ms (1/6 s), runs 6x normal time
     private int ms_per_minute = 10 * 1000; // 10k ms (10 s) , runs 6x normal time
     
+    private int weather_update_interval = 3; // how many minutes between weather broadcasts
+    
     final private int[] DAYS;              // array containing the number of days in each month
     
     final private MUDServer server;
@@ -99,8 +101,11 @@ public class TimeLoop implements Runnable
             minute = 0;
             incrementHour();
         }
+        
         server.debug("Time loop: " + hour + ":" + minute);
-        if( (minute % 3) == 0 ) server.broadcastWeather();
+        
+        if( (minute % weather_update_interval) == 0 ) server.broadcastWeather();
+        
         server.handleMovement();
     }
 
@@ -110,6 +115,7 @@ public class TimeLoop implements Runnable
             hour = 0;
             incrementDay();
         }
+        
         server.onHourIncrement();
 
         if (minute != 0) {
@@ -236,13 +242,31 @@ public class TimeLoop implements Runnable
     public int getSeconds() {
     	return this.second;
     }
-
+    
+    /**
+     * Set the scale at which time moves in the game world relative
+     * to the real world.
+     * 
+     * E.g. In real time, there are 1000ms to 1s. To speed the game
+     * up you'd reduce that number. If you made it 500ms to 1s then the
+     * game time would run at 2x compared to real time.
+     * 
+     * @param ms the number of milliseconds per second (ms)
+     */
     public void setScale(int ms) {
-        this.ms_per_minute = ms;
+        //this.ms_per_minute = ms;
+        this.ms_per_second = ms;
     }
-
+    
+    /**
+     * Get the scale, number of milliseconds (ms) per second, at which
+     * time currently moves in the game world relative to the real world.
+     * 
+     * @return the number of milliseconds per second (ms)
+     */
     public int getScale() {
-        return ms_per_minute;
+        //return ms_per_minute;
+    	return ms_per_second;
     }
 
     public String getCelestialBody() {

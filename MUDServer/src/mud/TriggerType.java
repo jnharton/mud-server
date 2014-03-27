@@ -10,7 +10,7 @@ package mud;
  * changes are made to the one referred to.
  */
 
-public enum Triggers {
+public enum TriggerType {
 	onEnter,
 	onEnterPortal,
 	onEquip,

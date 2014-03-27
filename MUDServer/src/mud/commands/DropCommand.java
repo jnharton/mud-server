@@ -78,9 +78,12 @@ public class DropCommand extends Command {
 					send("You dropped " + colors(itemName, "yellow") + " on the floor.", client);
 					// return message telling others that the player dropped the item?
 				}
-				break;
+				
+				return;
 			}
 		}
+		
+		send("You don't have that.", client);
 	}
 
 	@Override

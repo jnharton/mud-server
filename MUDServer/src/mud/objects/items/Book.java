@@ -82,7 +82,7 @@ public class Book extends Item implements Editable {
 		
 		this.type = TypeFlag.ITEM;
 		this.item_type = ItemType.BOOK;
-		this.st = SlotType.NONE;
+		this.slot_type = SlotType.NONE;
 		
 		this.pages = new ArrayList<ArrayList<String>>(0);
 	}

@@ -215,8 +215,21 @@ public class ObjectDB {
     	System.out.println(item.getDBRef() + ": " + item.getName());
     	System.out.println("");
     	
-    	objsByName.put(item.getName(), item);
-    	objsById.put(item.getDBRef(), item);
+    	// kludge for doors here
+    	if( item.getName().contains(";") ) {
+    		String[] temp = item.getName().split(";");
+    		
+    		System.out.println(temp[0]);
+    		System.out.println(temp[1]);
+    		
+    		objsByName.put(temp[0], item);
+    		objsByName.put(temp[1], item);
+        	objsById.put(item.getDBRef(), item);
+    	}
+    	else {
+    		objsByName.put(item.getName(), item);
+        	objsById.put(item.getDBRef(), item);
+    	}
     	
     	if(item instanceof NullObject) { addUnused(item.getDBRef()); }
     	
@@ -252,6 +265,17 @@ public class ObjectDB {
         objsById.put(n, item);
         objsByName.put(item.getName(), item);
     }
+    
+    /**
+     * Get an object by it's Database Reference Number (DBRef)
+     * which is unique in the database
+     * 
+     * @param n the DBRef of the object you wish to get
+     * @return the object with that DBRef (if it exists)
+     */
+    public MUDObject get(final int n) {
+        return objsById.get(n);
+    }
 
     /**
      * Does the database contain an object by the name
@@ -275,6 +299,17 @@ public class ObjectDB {
         return objsByName.get(name);
     }
     
+    public List<MUDObject> getByRoom(final Room room) {
+    	List<MUDObject> objects = new ArrayList<MUDObject>(100);
+    	
+    	objects.addAll( getThingsForRoom( room.getDBRef() ) );
+    	objects.addAll( getItemsByLoc( room.getDBRef() ) );
+    	objects.addAll( getNPCsByRoom( room.getDBRef() ) );
+    	objects.addAll( getPlayersByRoom( room.getDBRef() ) );
+    	
+    	return objects;
+    }
+    
     public void changeName(final MUDObject object, final String newName) {
     	object.setName(newName);
     	
@@ -296,17 +331,6 @@ public class ObjectDB {
     		exitsByName.remove( exit.getName() );
     		exitsByName.put( newName, exit );
     	}
-    }
-    
-    /**
-     * Get an object by it's Database Reference Number (DBRef)
-     * which is unique in the database
-     * 
-     * @param n the DBRef of the object you wish to get
-     * @return the object with that DBRef (if it exists)
-     */
-    public MUDObject get(final int n) {
-        return objsById.get(n);
     }
 
     public List<MUDObject> findByLower(final String name) {
@@ -514,12 +538,22 @@ public class ObjectDB {
     }
 
     public void addExit(final Exit e) {
-        exitsByName.put(e.getName(), e);
+        if( e.getExitType() == ExitType.DOOR ) {
+        	exitsByName.put(e.getName().split(";")[0], e);
+        	exitsByName.put(e.getName().split(";")[1], e);
+    	}
+        else { exitsByName.put(e.getName(), e); }
+        
         exitsById.put(e.getDBRef(), e);
     }
 
     public void removeExit(final Exit e) {
-        exitsByName.values().remove(e);
+    	if( e.getExitType() == ExitType.DOOR ) {
+        	exitsByName.values().remove(e);
+        	exitsByName.values().remove(e);
+        }
+    	else { exitsByName.values().remove(e); }
+    	
         exitsById.values().remove(e);
     }
 
@@ -535,15 +569,15 @@ public class ObjectDB {
 
 				if (room != null) {
 					room.getExits().add(e);
-					parent.debug("Exit " + e.getDBRef() + " added to room " + room.getDBRef() + ".", 2);
+					parent.debug("Exit (Door)" + e.getDBRef() + " added to room " + room.getDBRef() + ".", 2);
 				}
 
-				/*final Room room1 = getRoomById(e.getDestination());
+				final Room room1 = getRoomById(e.getDestination());
 
 				if (room1 != null) {
 					room1.getExits().add(e);
 					parent.debug("Exit (Door)" + e.getDBRef() + " added to room " + room1.getDBRef() + ".", 2);
-				}*/
+				}
 			}
 			else {
 				final Room room = getRoomById(e.getLocation());

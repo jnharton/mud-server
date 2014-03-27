@@ -31,15 +31,13 @@ import java.util.EnumSet;
  * @author Jeremy N. Harton
  * 
  */
-public class Exit extends MUDObject implements Lockable
+public class Exit extends MUDObject
 {
 	/**
 	 * 
 	 */
 
-	private ExitType eType = ExitType.STD;
-
-	private boolean isLocked = false;
+	protected ExitType eType = ExitType.STD;
 
 	private int origin = 0;      // strictly for doors?
 	private int destination = 0;
@@ -54,17 +52,6 @@ public class Exit extends MUDObject implements Lockable
 	// empty default constructor for subclasses
 	public Exit() {
 		this.type  = TypeFlag.EXIT;
-		
-		// set messages to clear
-		this.succMsg = "";  // Success Message
-		this.osuccMsg = ""; // OSuccess Message
-		this.failMsg = "";  // Failure Message
-		this.ofailMsg = ""; // OFailure Message
-	}
-	
-	public Exit(ExitType eType) {
-		this.type = TypeFlag.EXIT;
-		this.eType = eType;
 		
 		// set messages to clear
 		this.succMsg = "";  // Success Message
@@ -147,25 +134,6 @@ public class Exit extends MUDObject implements Lockable
 		else if (name.toLowerCase().equals("failmsg")) { return this.failMsg; }
 		else if (name.toLowerCase().equals("ofailmsg")) { return this.ofailMsg; }
 		else return null;
-	}
-
-	@Override
-	public void lock() {
-		if (this.eType == ExitType.DOOR) {
-			this.isLocked = true;
-		}
-	}
-
-	@Override
-	public void unlock() {
-		if (this.eType == ExitType.DOOR) {
-			this.isLocked = false;
-		}
-	}
-
-	@Override
-	public boolean isLocked() {
-		return this.isLocked;
 	}
 	
 	public void setExitType(ExitType newType) {

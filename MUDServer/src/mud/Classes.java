@@ -51,21 +51,21 @@ public class Classes {
 	
 	private static final HashMap<String, PClass> classMap = new HashMap<String, PClass>() {
 		{
-			put("ADEPT", Classes.ADEPT);
+			put("ADEPT",      Classes.ADEPT);
 			put("ARISTOCRAT", Classes.ARISTOCRAT);
-			put("BARBARIAN", Classes.BARBARIAN);
-			put("BARD", Classes.BARD);
-			put("COMMONER", Classes.COMMONER);
-			put("CLERIC", Classes.CLERIC);
-			put("DRUID", Classes.DRUID);
-			put("FIGHTER", Classes.FIGHTER);
-			put("MONK", Classes.MONK);
-			put("PALADIN", Classes.PALADIN);
-			put("RANGER", Classes.RANGER);
-			put("ROGUE", Classes.ROGUE);
-			put("SORCEROR", Classes.SORCERER);
-			put("WARRIOR", Classes.WARRIOR);
-			put("WIZARD", Classes.WIZARD);
+			put("BARBARIAN",  Classes.BARBARIAN);
+			put("BARD",       Classes.BARD);
+			put("COMMONER",   Classes.COMMONER);
+			put("CLERIC",     Classes.CLERIC);
+			put("DRUID",      Classes.DRUID);
+			put("FIGHTER",    Classes.FIGHTER);
+			put("MONK",       Classes.MONK);
+			put("PALADIN",    Classes.PALADIN);
+			put("RANGER",     Classes.RANGER);
+			put("ROGUE",      Classes.ROGUE);
+			put("SORCEROR",   Classes.SORCERER);
+			put("WARRIOR",    Classes.WARRIOR);
+			put("WIZARD",     Classes.WIZARD);
 		}
 	};
 	

@@ -10,6 +10,7 @@ package mud.net;
  * changes are made to the one referred to.
  */
 
+import java.io.InputStream;
 import java.net.*;
 import java.util.*;
 
@@ -69,10 +70,13 @@ public class Server implements Runnable {
         try {
             running = true;
             while (running) {
-                Socket socket = server.accept();
+                Socket socket = server.accept();             
+                
                 Client client = new Client(socket);
+                
                 parent.clientConnected(client);
                 clients.add(client);
+                
                 System.out.println("Accepted client socket.");
             }
         } catch (Exception e) {

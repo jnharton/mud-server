@@ -37,6 +37,7 @@ public abstract class Command {
 	protected static int GOD = 3;    // Pff, such arrogant idiots we are! (anyway, max permissions)
 	
 	private MUDServer parent;
+	private String description;
 
 	/**
 	 * Construct a command object with a parent
@@ -50,6 +51,11 @@ public abstract class Command {
 		this.parent = mParent;
 	}
 	
+	protected Command(MUDServer mParent, String description) {
+		this(mParent);
+		this.description = description;
+	}
+	
 	/**
 	 * execute
 	 * 
@@ -60,6 +66,10 @@ public abstract class Command {
 	 * @param client
 	 */
 	public abstract void execute(String arg, Client client);
+	
+	public String getDescription() {
+		return this.description;
+	}
 	
 	/**
 	 * getAcessLevel

@@ -6,6 +6,7 @@ import java.util.EnumSet;
 
 import mud.ObjectFlag;
 import mud.Abilities;
+import mud.Ability;
 import mud.Classes;
 import mud.Coins;
 import mud.Currency;
@@ -41,7 +42,7 @@ public class Innkeeper extends NPC implements Vendor {
 
 		this.access = 0;
 
-		this.stats = new LinkedHashMap<Abilities, Integer>(6, 0.75f);
+		this.stats = new LinkedHashMap<Ability, Integer>(6, 0.75f);
 
 		this.stats.put(Abilities.STRENGTH, 12);
 		this.stats.put(Abilities.DEXTERITY, 12);

@@ -1,16 +1,17 @@
 package mud.misc;
 
-import java.awt.Point;
+import mud.utils.Utils;
+import mud.utils.Point;
 
 public class Edge {
 	private Point start;
 	private Point end;
-	private int length;
+	private float length;
 	
-	public Edge(Point startP, Point endP, int length) {
+	public Edge(Point startP, Point endP) {
 		this.start = startP;
 		this.end = endP;
-		this.length = length;
+		this.length = Utils.distance(this.start, this.end);
 	}
 	
 	public Point getStartPoint() {
@@ -21,7 +22,7 @@ public class Edge {
 		return end;
 	}
 	
-	public int length() {
-		return this.length;
+	public int getLength() {
+		return (int) this.length;
 	}
 }

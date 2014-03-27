@@ -12,7 +12,7 @@ package mud.objects;
 
 public enum ThingType {
 	NONE("None"),   // 0
-	CHEST("Chest"); // 1
+	CONTAINER("Container"); // 1
 	
 	private String name;
 	
@@ -21,8 +21,7 @@ public enum ThingType {
 	}
 	
 	public static ThingType getType(String typeName) {
-		if (typeName.toUpperCase().equals("CHEST")) { return CHEST; }
-		//else if (typeName.toUpperCase().equals("NONE")) { return NONE; }
+		if (typeName.toUpperCase().equals("CONTAINER")) { return CONTAINER; }
 		else { return NONE; }
 	}
 	
