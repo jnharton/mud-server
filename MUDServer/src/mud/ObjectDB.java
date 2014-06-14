@@ -2,11 +2,11 @@ package mud;
 
 import java.util.*;
 
-import mud.MUDObject;
 import mud.objects.*;
 import mud.objects.items.Arrow;
 import mud.objects.items.Container;
 import mud.utils.Utils;
+import mud.game.PClass;
 import mud.net.Client;
 
 /*
@@ -27,7 +27,7 @@ import mud.net.Client;
  *
  */
 
-public class ObjectDB {
+public final class ObjectDB {
 
     private static int nextId = 0;
 
@@ -40,7 +40,7 @@ public class ObjectDB {
     private List<Integer> reservedDBNs = new LinkedList<Integer>();
     
     // Hashtable is used here because it does not permit null values
-    private Hashtable<Client, LinkedList<Integer>> reservationTable = new Hashtable<Client, LinkedList<Integer>>();
+    //private Hashtable<Client, LinkedList<Integer>> reservationTable = new Hashtable<Client, LinkedList<Integer>>();
 
     /**
      * As long as we construct objects and insert them into this db afterwards as a separate step,
@@ -181,12 +181,22 @@ public class ObjectDB {
     }
 
     public void addAsNew(final MUDObject item) {
-    	if( !unusedDBNs.empty() ) { item.setDBRef( unusedDBNs.pop() ); }
-    	//else { item.setDBRef(nextId + 1); } // changed 11/19/2013 -- why was this set this way?
-    	else { item.setDBRef(nextId); }
+    	if( !unusedDBNs.empty() ) {
+    		item.setDBRef( unusedDBNs.pop() );
+    	}
+    	else {
+    		item.setDBRef( nextId );
+    	}
+    	
         add(item);
     }
-
+    
+    /**
+     * mostly used for adding objects in file to in-memory database, all of
+     * which have, of course, valid dbrefs that follow each other sequentially.
+     * 
+     * @param item
+     */
     public void add(final MUDObject item) {
     	System.out.println("");
     	System.out.println("ObjectDB " + nextId + ": " + item.getDBRef());
@@ -210,26 +220,24 @@ public class ObjectDB {
     		objsById.put(no.getDBRef(), no);
     		
     		nextId++;
+    		continue;
     	}
     	
     	System.out.println(item.getDBRef() + ": " + item.getName());
     	System.out.println("");
     	
-    	// kludge for doors here
-    	if( item.getName().contains(";") ) {
-    		String[] temp = item.getName().split(";");
-    		
-    		System.out.println(temp[0]);
-    		System.out.println(temp[1]);
+    	// kludge for doors here (give one object two different name entries)
+    	if( item.getName().contains("/") ) {
+    		String[] temp = item.getName().split("/");
     		
     		objsByName.put(temp[0], item);
     		objsByName.put(temp[1], item);
-        	objsById.put(item.getDBRef(), item);
     	}
     	else {
     		objsByName.put(item.getName(), item);
-        	objsById.put(item.getDBRef(), item);
     	}
+    	
+    	objsById.put(item.getDBRef(), item);
     	
     	if(item instanceof NullObject) { addUnused(item.getDBRef()); }
     	
@@ -276,6 +284,16 @@ public class ObjectDB {
     public MUDObject get(final int n) {
         return objsById.get(n);
     }
+    
+    // TODO kludgy, used for/with cnames
+    public void addName(MUDObject object, String name) {
+    	if( this.getByName(name) == null ) {
+    		objsByName.put( name, object );
+    		
+    		if( object instanceof Player ) {
+    		}
+    	}
+    }
 
     /**
      * Does the database contain an object by the name
@@ -299,12 +317,20 @@ public class ObjectDB {
         return objsByName.get(name);
     }
     
+    /**
+     * Gets a List of the object in or attached to the specified
+     * room.
+     * 
+     * @param room
+     * @return
+     */
     public List<MUDObject> getByRoom(final Room room) {
     	List<MUDObject> objects = new ArrayList<MUDObject>(100);
     	
+    	objects.addAll( getExitsByRoom( room.getDBRef() )   );
     	objects.addAll( getThingsForRoom( room.getDBRef() ) );
-    	objects.addAll( getItemsByLoc( room.getDBRef() ) );
-    	objects.addAll( getNPCsByRoom( room.getDBRef() ) );
+    	objects.addAll( getItemsByLoc( room.getDBRef() )    );
+    	objects.addAll( getNPCsByRoom( room.getDBRef() )    );
     	objects.addAll( getPlayersByRoom( room.getDBRef() ) );
     	
     	return objects;
@@ -332,13 +358,21 @@ public class ObjectDB {
     		exitsByName.put( newName, exit );
     	}
     }
-
+    
+    /**
+     * Find objects in the database whose names start with the
+     * specified search term. Use the lowercase of the object's
+     * name and the search term for comparison
+     * 
+     * @param name
+     * @return
+     */
     public List<MUDObject> findByLower(final String name) {
         final LinkedList<MUDObject> acc = new LinkedList<MUDObject>();
         for (final MUDObject obj : objsByName.values()) {
-            if (obj.getName().toLowerCase().contains(name.toLowerCase())) {
-                acc.add(obj);
-            }
+        	if(obj.getName().toLowerCase().startsWith(name.toLowerCase())) {
+        		acc.add(obj);
+        	}
         }
         return acc;
     }
@@ -369,63 +403,83 @@ public class ObjectDB {
     }
 
     // Serialize all objects via `toDB` and save array to file.
+    // TODO fix save method, this one depends on saving over the old database
     public void save(final String filename) {
     	final String[] old = Utils.loadStrings(filename);    // old (current in file) database
     	final String[] toSave = new String[objsById.size()]; // new (save to file) database
 		
     	int index = 0;
         
-		for (final MUDObject obj : objsById.values()) {
-        	if(obj instanceof NullObject) {
-        		NullObject no = (NullObject) obj;
-        		
-        		// a locked NullObject means an ignored line whose data we are ignoring (but want to keep)
-        		if( no.isLocked() ) {
-        			System.out.println(index + " Old Data: " + old[index] + " Keeping...");
-        			toSave[index] = old[index]; // keep old data
-        		}
-        		else {
-        			System.out.println(index + " No Previous Data, Overwriting...");
-        			toSave[index] = obj.toDB(); // just save the null object
-        		}
-        		
-        		index++;
-        		continue; // skip to next object
-        	}
-        	/*else if(obj instanceof Player) {
-        		Player player = (Player) obj;
-        		
-        		if( !player.isNew() ) { // if the player is not new, save it
-        			toSave[index] = obj.toDB();
-        		}
-        		else { // otherwise, store a NullObject
-        			toSave[index] = new NullObject(obj.getDBRef()).toDB();
-        		}
-        		
-        		continue;
-        	}*/
-        	
-        	System.out.println(obj.getName());
-        	
-        	toSave[index] = obj.toDB();
-        	
-            index++;
-        }
+    	if( old != null ) {
+    		for (final MUDObject obj : objsById.values()) {
+    			if(obj instanceof NullObject) {
+    				NullObject no = (NullObject) obj;
+
+    				// a locked NullObject probably means a line whose data we are ignoring (but want to keep)
+    				if( no.isLocked() ) {
+    					System.out.println(index + " Old Data: " + old[index] + " Keeping...");
+    					toSave[index] = old[index]; // keep old data
+    				}
+    				else {
+    					System.out.println(index + " No Previous Data, Overwriting...");
+    					toSave[index] = obj.toDB(); // just save the null object
+    				}
+
+    				index++;
+    				continue; // skip to next object
+    			}
+    			else if(obj instanceof Player) {
+    				Player player = (Player) obj;
+
+    				if( !player.isNew() ) { // if the player is not new, save it
+    					toSave[index] = obj.toDB();
+    				}
+    				else { // otherwise, store a NullObject
+    					toSave[index] = new NullObject(obj.getDBRef()).toDB();
+    				}
+
+    				continue;
+    			}
+
+    			System.out.println(obj.getName());
+
+    			toSave[index] = obj.toDB();
+
+    			index++;
+    		}
+    	}
+    	else {
+    		// TODO figure out if this part of save(...) should just go elsewhere. This is essentially
+    		// breaking the notion of save since we aren't saving over an existing database
+    		for (final MUDObject obj : objsById.values()) {
+    			
+    			System.out.println(obj.getName());
+
+    			toSave[index] = obj.toDB();
+
+    			index++;
+    		}
+    	}
         
 		Utils.saveStrings(filename, toSave);
     }
 
     ///////////// THINGS
     final private ArrayList<Thing> things = new ArrayList<Thing>();
+    final private Map<Integer, Thing> thingsById = new HashMap<Integer, Thing>();
+    
+    public void addThing(final Thing thing) {
+        things.add(thing);
+        thingsById.put(thing.getDBRef(), thing);
+    }
 
-    public List<Thing> getThingsForRoom(final int roomId) {
-        final List<Thing> acc = new LinkedList<Thing>();
-		for (final Thing t : things) {
-			if (t.getLocation() == roomId) {
-                acc.add(t);
-			}
-		}
-        return acc;
+    public void removeThing(final Thing thing) {
+        things.remove(thing);
+        thingsById.remove(thing.getDBRef());
+    }
+    
+    public Thing getThing(int dbref) {
+    	return thingsById.get(dbref);
     }
 
     public Thing getThing(final int roomId, final String name) {
@@ -437,13 +491,19 @@ public class ObjectDB {
 		}
         return null;
     }
-
-    public void addThing(final Thing t) {
-        things.add(t);
+    
+    public List<Thing> getThings() {
+    	return new ArrayList<Thing>(thingsById.values());
     }
-
-    public void removeThing(final Thing t) {
-        things.remove(t);
+    
+    public List<Thing> getThingsForRoom(final int roomId) {
+        final List<Thing> acc = new LinkedList<Thing>();
+		for (final Thing t : things) {
+			if (t.getLocation() == roomId) {
+                acc.add(t);
+			}
+		}
+        return acc;
     }
 
 	public void placeThingsInRooms(final MUDServer parent) {
@@ -462,9 +522,9 @@ public class ObjectDB {
     final private Map<String, Room>  roomsByName = new HashMap<String, Room>();
 
     // must add room to both maps
-    public void addRoom(final Room r) {
-        roomsByName.put(r.getName(), r);
-        roomsById.put(r.getDBRef(), r);
+    public void addRoom(final Room room) {
+        roomsByName.put(room.getName(), room);
+        roomsById.put(room.getDBRef(), room);
     }
 
     // must remove room from both maps
@@ -537,24 +597,29 @@ public class ObjectDB {
         return acc;
     }
 
-    public void addExit(final Exit e) {
-        if( e.getExitType() == ExitType.DOOR ) {
-        	exitsByName.put(e.getName().split(";")[0], e);
-        	exitsByName.put(e.getName().split(";")[1], e);
+    public void addExit(final Exit exit) {
+        if( exit.getExitType() == ExitType.DOOR ) {
+        	String[] names = exit.getName().split("/");
+        	
+        	exitsByName.put(names[0], exit);
+        	exitsByName.put(names[1], exit);
     	}
-        else { exitsByName.put(e.getName(), e); }
+        else { exitsByName.put(exit.getName(), exit); }
         
-        exitsById.put(e.getDBRef(), e);
+        exitsById.put(exit.getDBRef(), exit);
     }
 
     public void removeExit(final Exit e) {
     	if( e.getExitType() == ExitType.DOOR ) {
-        	exitsByName.values().remove(e);
-        	exitsByName.values().remove(e);
+    		String[] temp = e.getName().split(";");
+        	String[] names = temp[0].split("/");
+    		
+        	exitsByName.values().remove(names[0]);
+        	exitsByName.values().remove(names[1]);
         }
-    	else { exitsByName.values().remove(e); }
+    	else { exitsByName.remove(e.getName()); }
     	
-        exitsById.values().remove(e);
+        exitsById.values().remove(e.getDBRef());
     }
 
 	/**
@@ -622,9 +687,18 @@ public class ObjectDB {
         npcsByName.put(npc.getName(), npc);
         npcsByName.put(npc.getCName(), npc);
     }
-
+    
+    /**
+     * Get the NPC that has the specified name.
+     * 
+     * NOTE: As a special case, an empty string returns null.
+     * 
+     * @param name
+     * @return
+     */
     public NPC getNPC(final String name) {
-        return npcsByName.get(name);
+    	if( name.equals("") ) return null;
+    	return npcsByName.get(name);
     }
 
     public NPC getNPC(final int dbref) {
@@ -653,8 +727,13 @@ public class ObjectDB {
     //final Map<String, Item>  itemsByName = new HashMap<String, Item>();
 
     public void addItem(final Item item) {
-    	itemsById.put(item.getDBRef(), item);
         items.add(item);
+        itemsById.put(item.getDBRef(), item);
+    }
+    
+    public void removeItem(final Item item) {
+    	items.remove(item);
+    	itemsById.remove(item.getDBRef());
     }
     
     // somewhat pointless, since items are more likely to have the same name than most other objects
@@ -663,7 +742,6 @@ public class ObjectDB {
     }*/
 
     public Item getItem(final int dbref) {
-
     	return itemsById.get(dbref);
     }
 
@@ -754,7 +832,19 @@ public class ObjectDB {
     }
 
     public Player getPlayer(final String name) {
-        return players.get(name);
+    	// TODO fix kludginess, used with/for cnames
+    	Player player = players.get(name);
+    	
+    	if( player == null ) {
+    		MUDObject object = getByName(name);
+    		
+    		if( object instanceof Player ) {
+    			player = (Player) object;
+    		}
+    	}
+    	
+    	return player;
+        //return players.get(name);
     }
 
     public int getNumPlayers(final PClass c) {
@@ -781,6 +871,8 @@ public class ObjectDB {
      * Erase the entire database
      */
     public void clear() {
+    	things.clear();
+    	
     	items.clear();
     	
     	creeps.clear();
@@ -790,11 +882,11 @@ public class ObjectDB {
     	
     	players.clear();
     	
-    	roomsById.clear();
-    	roomsByName.clear();
-    	
     	exitsById.clear();
     	exitsByName.clear();
+    	
+    	roomsById.clear();
+    	roomsByName.clear();
     	
     	objsById.clear();
     	objsByName.clear();

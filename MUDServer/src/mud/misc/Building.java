@@ -19,22 +19,64 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 import java.awt.Point;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+
+import mud.objects.Exit;
+import mud.objects.Room;
 
 public class Building {
 	private String name;
 	private String shortName;
 	
-	private Map entrances; // places where you can enter the building (ex. doors, windows, holes in the walls)
-	private Map exits;     // places where you can leave the building (ex. doors, windows, holes in the walls)
+	private Room parent;
+	
+	private Map<String, Exit> entrances; // places where you can enter the building (ex. doors, windows, holes in the walls)
+	private Map<String, Exit> exits;     // places where you can leave the building (ex. doors, windows, holes in the walls)
 	
 	private List<Edge> sides;
 	
-	public Building(String name, String shortName, Edge...edges) {
+	public Building(Room parent, String name, String shortName, Edge...edges) {
+		this.parent = parent;
 		this.name = name;
 		this.shortName = shortName;
 		this.sides = new LinkedList<Edge>( Arrays.asList( edges ) );	
+	}
+	
+	public Map<String, Exit> getEntrances() {
+		return Collections.unmodifiableMap( this.entrances );
+	}
+	
+	/*public List<String> getEntrances() {
+		List<String> keys = new LinkedList<String>();
+		keys.addAll( entrances.keySet() );
+		return Collections.unmodifiableList( keys );
+	}*/
+	
+	public Map<String, Exit> getExits() {
+		return Collections.unmodifiableMap( this.exits );
+	}
+	
+	/*public List<String> getExits() {
+		List<String> keys = new LinkedList<String>();
+		keys.addAll( exits.keySet() );
+		return Collections.unmodifiableList( keys );
+	}*/
+	
+	/**
+	 * Get a List of the Edges (or sides) of the building that
+	 * is unmodifiable for the purposes of determining where the
+	 * character can walk.
+	 * 
+	 * NOTE:
+	 * Edges consist of two points and the length of the straight line connecting
+	 * them.
+	 * 
+	 * @return
+	 */
+	public List<Edge> getSides() {
+		return Collections.unmodifiableList( sides );
 	}
 }

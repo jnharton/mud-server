@@ -1,4 +1,4 @@
-package mud;
+package mud.game;
 
 import java.util.HashMap;
 
@@ -75,5 +75,9 @@ public class Classes {
 	
 	public static PClass getClass(String className) {
 		return classMap.get( className.toUpperCase() );
+	}
+	
+	public static PClass[] getClasses() {
+		return myValues;
 	}
 }

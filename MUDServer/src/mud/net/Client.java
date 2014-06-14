@@ -12,7 +12,8 @@ package mud.net;
 
 import java.io.*;
 import java.net.*;
-import java.util.ArrayList;
+import java.util.BitSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -36,7 +37,14 @@ public class Client implements Runnable {
 	private final ConcurrentLinkedQueue<String> queuedLines = new ConcurrentLinkedQueue<String>();
 
 	private final StringBuffer sb = new StringBuffer(80);
-	private List<Byte> buffer = new ArrayList<Byte>();
+	private List<Byte> buffer = new LinkedList<Byte>();
+	
+	private final static int MCCP1 = 0;
+	private final static int MCCP2 = 1;
+	private final static int MSP = 2;
+	private final static int MXP = 3;
+	
+	final BitSet protocol_status = new BitSet(8);
 
 	public Client(final String host, final int port) throws IOException {
 		this(new Socket(host, port));
@@ -58,6 +66,7 @@ public class Client implements Runnable {
 		try {
 			int readValue;
 			int bytes;
+			int last_ch = ' ';
 			
 			while( running ) {
 				readValue = 0;
@@ -83,10 +92,24 @@ public class Client implements Runnable {
 						}
 
 						final Character ch = (char) readValue;
-
-						if (ch == '\012' || ch == '\015') {        // newline (\n) or carriage-return (\r)
-							this.queuedLines.add( sb.toString() ); // convert stringbuffer to string
-							sb.delete(0, sb.length());             // clear stringbuffer
+						
+						// LF+CR, LFCR, CR+LF, CRLF
+						// the above combinations are detected and the cr after the nl or the nl after the cr
+						// are ignored because it introduces an extra line into the command
+						
+						if (ch == '\012') { // newline (\n)
+							if( last_ch == '\015') sb.delete(0, sb.length()); // clear stringbuffer
+							else {
+								this.queuedLines.add( sb.toString().trim() ); // convert stringbuffer to string
+								sb.delete(0, sb.length());                    // clear stringbuffer
+							}
+						}
+						else if(ch == '\015') { // carriage-return (\r)
+							if( last_ch == '\012') sb.delete(0, sb.length()); // clear stringbuffer
+							else {
+								this.queuedLines.add( sb.toString().trim() ); // convert stringbuffer to string
+								sb.delete(0, sb.length());                    // clear stringbuffer
+							}
 						}
 						else if (ch == '\010') { // backspace
 							if( !(sb.length() == 0) ) {
@@ -97,6 +120,8 @@ public class Client implements Runnable {
 							System.out.println("Read: " + ch + "(" + readValue + ")");
 							sb.append(ch);
 						}
+						
+						last_ch = ch;
 
 						System.out.println("current telnet input: " + Utils.stringToArrayList( sb.toString(), "" )); // tell us the whole string
 					}
@@ -130,7 +155,6 @@ public class Client implements Runnable {
 							
 							byte[] response = new byte[3];
 							
-							
 							// if asked WILL some unknown option, respond DONT
 							if( msga[1].equals("WILL") && msga[2].equals("null") ) {
 								response[0] = Telnet.IAC;
@@ -142,13 +166,24 @@ public class Client implements Runnable {
 							}
 							
 							// if asked DO some unknown option, respond WONT
-							if( msga[1].equals("DO") && msga[2].equals("null") ) {
+							else if( msga[1].equals("DO") && msga[2].equals("null") ) {
 								response[0] = Telnet.IAC;
 								response[1] = Telnet.WONT;
 								response[2] = ba2[2];
 								
 								write(response);
 								System.out.println( "] Sent: " + Telnet.translate(response) );
+							}
+							
+							else {
+								if( msga[1].equals("DO") ) { 
+									switch(msga[2]) {
+									case "MCCP1": protocol_status.set(MCCP1); break;
+									case "MCCP2": protocol_status.set(MCCP2); break;
+									case "MSP":   protocol_status.set(MSP);   break;
+									case "MXP":   protocol_status.set(MXP);   break;
+									}
+								}
 							}
 							
 							buffer.clear();
@@ -159,7 +194,9 @@ public class Client implements Runnable {
 				}
 				// ---------------------------------------------------------------------------------
 			}
-
+			
+			/*
+			
 			// can't use BufferedReader here - we need access to the buffer for telnet commands, 
 			// which won't be followed by a newline
 			final byte buf[] = new byte[BUF_SIZE];
@@ -185,6 +222,8 @@ public class Client implements Runnable {
 					}
 				}
 			}
+			
+			*/
 		}
 		catch (SocketException se) {
 			// if we catch a SocketException, we have likely stopped the client intentionally,
@@ -221,12 +260,20 @@ public class Client implements Runnable {
 		catch(IOException ioe) {ioe.printStackTrace(); }
 	}
 
-	public String ip() {
+	public String getIPAddress() {
 		return socket.getInetAddress().getHostAddress();
 	}
 
 	public String getInput() {
 		return queuedLines.poll();
+	}
+	
+	public InputStream getInputStream() {
+		return this.input;
+	}
+	
+	public OutputStream getOutputStream() {
+		return this.output;
 	}
 
 	public void write(final char ch) {
@@ -268,6 +315,12 @@ public class Client implements Runnable {
 	
 	public void writeln(final String data) {
 		write((data + "\r\n").getBytes());
+	}
+	
+	public void write(final List<String> data) {
+		for(final String string : data) {
+			writeln(string);
+		}
 	}
 	
 	public void setConsole(boolean console) {

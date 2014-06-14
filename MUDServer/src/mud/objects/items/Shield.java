@@ -7,7 +7,6 @@ import mud.Coins;
 import mud.ObjectFlag;
 import mud.TypeFlag;
 import mud.interfaces.Equippable;
-import mud.interfaces.Wieldable;
 
 import mud.net.Client;
 
@@ -17,7 +16,7 @@ import mud.objects.ItemType;
 import mud.objects.Player;
 import mud.utils.Utils;
 
-public class Shield extends Item implements Equippable<Shield>, Wieldable<Shield>
+public class Shield extends Item
 {	
 	private ShieldType shield_type;
 	// weight - light, medium, heavy
@@ -67,22 +66,8 @@ public class Shield extends Item implements Equippable<Shield>, Wieldable<Shield
 	}
 	
 	@Override
-	public Coins getCost() {
+	public Coins getValue() {
 		return new Coins(shield_type.getCost());
-	}
-	
-	public void equip() {
-	}
-
-	public void equip(Player p) {
-		// TODO Auto-generated method stub
-	}
-
-	public Shield unequip() {
-		return null;
-	}
-
-	public void wield(String arg, Client client) {
 	}
 	
 	public ArrayList<String> look() {

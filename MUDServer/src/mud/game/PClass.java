@@ -1,4 +1,4 @@
-package mud;
+package mud.game;
 
 public class PClass {
 	private String name;

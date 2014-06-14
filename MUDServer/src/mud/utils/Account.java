@@ -11,14 +11,15 @@ package mud.utils;
  */
 
 import java.io.Serializable;
-
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
 
 import mud.net.Client;
-
 import mud.objects.Player;
 
 //public class MUDAccount
@@ -55,6 +56,11 @@ public class Account implements Serializable {
 	 *  001234->2356
 	 *  001234->3361
 	 *  001234->4522
+	 *  
+	 *  ex.
+	 *  nathan.acct (id 5)
+	 *  2356.pfile
+	 *  000005->2356
 	 * when an account connects, certain information from these player files will be accessed and displayed
 	 * upon choosing a character, that file will be loaded up
 	 * 
@@ -80,19 +86,24 @@ public class Account implements Serializable {
 	private Date modified;      // modification date (when any of these passive properties were last modified)
 	private Date archived;      // archival date (null, unless account was archived; if unarchived, then when it was last archived)
 	
-	private final int id;       // id
-	private Status status;      // status
-	private String username;    // username
-	private String password;    // password
-	private int charLimit = 3;  // character limit
+	private final int id;    // id
+	private Status status;   // status
+	private String username; // username
+	private String password; // password
+	
+	private int charLimit = 3;     // character limit
+	
+	private boolean disabled = false;
+	
+	private String lastIPAddress;
 
 	// active properties (current state)
-	private ArrayList<Player> characters; // all the characters that exist for an account
+	private transient ArrayList<Player> characters; // all the characters that exist for an account
 	
-	private Client client;      // the client object for the the player that is in-game
-	private Player player;      // the in-game player
+	private transient Client client;  // the client object for the the player that is in-game
+	private transient Player player;  // the in-game player
 	
-	private boolean online;     // is there a Player in-game from this account/is the account logged in
+	private transient boolean online; // is there a Player in-game from this account/is the account logged in
 	
 	/**
 	 * 
@@ -251,6 +262,10 @@ public class Account implements Serializable {
 	public String getPassword() {
 		return this.password;
 	}
+	
+	public Integer getCharLimit() {
+		return this.charLimit;
+	}
 
 	/**
 	 * Link an existing character to this account
@@ -312,8 +327,8 @@ public class Account implements Serializable {
 		return this.player;
 	}
 
-	public ArrayList<Player> getCharacters() {
-		return this.characters;
+	public List<Player> getCharacters() {
+		return Collections.unmodifiableList(this.characters);
 	}
 
 	public void setOnline(boolean online) {
@@ -331,6 +346,18 @@ public class Account implements Serializable {
 		else {
 			return "No";
 		}
+	}
+	
+	public void setLastIPAddress(final String ipAddress) {
+		this.lastIPAddress = ipAddress;
+	}
+	
+	public String getLastIPAddress() {
+		return this.lastIPAddress;
+	}
+	
+	public boolean isDisabled() {
+		return this.disabled;
 	}
 
 	public String display() {

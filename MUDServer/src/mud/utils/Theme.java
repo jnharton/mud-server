@@ -26,9 +26,10 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  * the current date, etc.
  */
 public class Theme {
-	String name;
-	String mud_name;
-	String motd_file;
+	public String name;
+	public String mud_name;
+	public String motd_file;
+	public String world;
 	
 	private int day;
 	private int month;

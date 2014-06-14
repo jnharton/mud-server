@@ -38,6 +38,13 @@ public class ConfigObject {
 		else { return null; }			
 	}
 	
+	public Integer getInteger() {
+		if(objectClass == Integer.class) {
+			return (Integer) object;
+		}
+		else { return null; }
+	}
+	
 	public String getString() {
 		if(objectClass == String.class) {
 			return (String) object;

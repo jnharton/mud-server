@@ -15,7 +15,7 @@ import mud.objects.Player;
 
 import mud.utils.Utils;
 
-public class Container extends Item implements Storage<Item>, Equippable<Item> {
+public class Container extends Item implements Storage<Item> {
 	
 	private int size = 5;
 	private boolean accessible;
@@ -128,23 +128,6 @@ public class Container extends Item implements Storage<Item>, Equippable<Item> {
 		// check display width, change if necessary (shorten/lengthen)
 		this.contents.add(item);
 		this.weight += item.getWeight();
-	}
-	
-	@Override
-	public void equip() {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void equip(Player p) {
-		// TODO Auto-generated method stub
-	}
-
-	@Override
-	public Container unequip() {
-		// TODO Auto-generated method stub
-		return null;
 	}
 	
 	/* internal ArrayList wrapper functions */

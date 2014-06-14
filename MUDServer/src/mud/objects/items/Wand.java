@@ -10,7 +10,6 @@ import mud.TypeFlag;
 
 import mud.interfaces.Equippable;
 import mud.interfaces.Usable;
-import mud.interfaces.Wieldable;
 
 import mud.magic.Spell;
 import mud.net.Client;
@@ -21,7 +20,7 @@ import mud.objects.Player;
 
 import mud.utils.Utils;
 
-public class Wand extends Item implements Equippable<Wand>, Usable<Wand>, Wieldable<Wand>
+public class Wand extends Item implements Usable<Wand>
 {
 	// wand should really have the itemType WAND, but it needs weapon right now, so that it can
 	// fit in the slot it needs to be in
@@ -94,27 +93,6 @@ public class Wand extends Item implements Equippable<Wand>, Usable<Wand>, Wielda
 		}
 		
 		return this.desc + "\nThis wand is " + chargeState;
-	}
-
-	@Override
-	public void equip() {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void equip(Player p) {
-		// TODO Auto-generated method stub
-	}
-
-	@Override
-	public Wand unequip() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public void wield(String arg, Client client) {
 	}
 	
 	public ArrayList<String> look() {

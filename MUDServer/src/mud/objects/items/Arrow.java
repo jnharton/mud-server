@@ -76,18 +76,18 @@ public class Arrow extends Item implements Projectile<Arrow>, Stackable<Arrow> {
 			}
 			else {
 				Arrow prev = null; // the arrow before the current one (initially null)
-				Arrow curr = this; // the current arrows
-
+				Arrow curr = this; // the current arrow
+				
 				int qty = 0;       // the total quantity of arrows, how we know if we have split off enough
 
-				while (qty < number) {
+				while (qty < stackSize() - number) {
 					prev = curr;
 					curr = curr.arrow;
 					qty++;
 				}
 
 				prev.arrow = null;
-
+				
 				return curr;
 			}
 		}

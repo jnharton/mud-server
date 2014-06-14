@@ -1,10 +1,13 @@
 package mud.objects;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 
+import mud.ObjectFlag;
+import mud.TypeFlag;
 import mud.events.EventSource;
 import mud.events.PortalEvent;
 import mud.events.PortalEventListener;
@@ -46,11 +49,13 @@ import mud.utils.Utils;
  *
  */
 public class Portal extends Exit implements EventSource, SayEventListener {
-	private PortalType pType;                        // type of portal
+	private PortalType pType;                       // type of portal
 	private Object key;                             // if it's locked with a key what is it
-	private int origin;                             // portal origin
-	private Integer destination = null;             // a single destination (single destination portal)
+	//private int origin;                             // portal origin
+	//private Integer destination = null;             // a single destination (single destination portal)
 	private ArrayList<Integer> destinations = null; // a list of destinations by dbref (multi-destination portal)
+	
+	// portal state
 	private boolean active;                         // is the portal currently active?
 	private boolean requiresKey = false;            // does it require a key?
 
@@ -144,6 +149,12 @@ public class Portal extends Exit implements EventSource, SayEventListener {
 			}
 		}
 		this.active = false;
+	}
+	
+	public Portal(int tempDBRef, String tempName, final EnumSet<ObjectFlag> flagsNotUsed, String tempDesc, int tempLocation, int tempDestination) {
+		super( tempDBRef, tempName, flagsNotUsed, tempDesc, tempLocation, tempDestination );
+		
+		this.eType = ExitType.PORTAL;
 	}
 	
 	public PortalType getPortalType() {
@@ -287,24 +298,24 @@ public class Portal extends Exit implements EventSource, SayEventListener {
 	@Override
 	public String toDB() {
 		String[] output = new String[8];
-		output[0] = this.getDBRef() + "";              // database reference number
-		output[1] = this.getName();                    // name
-		output[2] = this.getFlagsAsString();           // flags
-		output[3] = this.getDesc();                    // description
-		output[4] = this.getLocation() + "";           // portal location (a.k.a source)
+		output[0] = this.getDBRef() + "";                // database reference number
+		output[1] = this.getName();                      // name
+		output[2] = TypeFlag.asLetter(this.type) + "";   // flags
+		output[2] = output[2] + this.getFlagsAsString();
+		output[3] = this.getDesc();                      // description
+		output[4] = this.getLocation() + "";             // portal location (a.k.a source)
 		if (this.pType == PortalType.STD) {
-			output[5] = this.destination + "";         // portal destination
+			output[5] = this.destination + "";           // portal destination
 		}
 		else if (this.pType == PortalType.RANDOM) {
 			final ArrayList<String> d = new ArrayList<String>();
 			for (int dest : this.destinations) {
 				d.add(dest + "");
 			}
-			output[5] = Utils.join(d, ",");            // portal destination(s)
+			output[5] = Utils.join(d, ",");              // portal destination(s)
 		}
-		output[6] = this.getExitType().ordinal() + ""; // exit type
-		output[7] = pType.ordinal() + "";               // portal type
-		
+		output[6] = this.getExitType().ordinal() + "";   // exit type
+		output[7] = pType.ordinal() + "";                // portal type
 		return Utils.join(output, "#");
 	}
 

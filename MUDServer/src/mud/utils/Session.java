@@ -124,7 +124,7 @@ public class Session {
 		
 		// account id, client ip, player name
 		output.add(String.valueOf(account.getId()));
-		output.add(client.ip());
+		output.add(client.getIPAddress());
 		output.add(player.getName());
 		
 		// formatting

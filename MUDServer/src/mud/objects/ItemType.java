@@ -11,22 +11,28 @@ package mud.objects;
  */
 
 public enum ItemType {
-	ARMOR("Armor"),         // 0 
-	ARROW("Arrow"),         // 1
-	BOOK("Book"),           // 2
+	/*
+	 * ItemType(s) have a rough correspondence to
+	 * subclasses of Item, although not all of them
+	 * are represented. 
+	 */
+	
+	ARMOR("Armor"),         // 0 (exists)
+	ARROW("Arrow"),         // 1 (exists)
+	BOOK("Book"),           // 2 (exists)
 	CIRCLET("Circlet"),     // 3
-	CLOTHING("Clothing"),   // 4
-	CONTAINER("Container"), // 5
+	CLOTHING("Clothing"),   // 4 (exists)
+	CONTAINER("Container"), // 5 (exists)
 	EAR_RING("Earring"),    // 6
 	FOOD("Food"),           // 7
 	HELMET("Helmet"),       // 8
 	NECKLACE("Necklace"),   // 9
-	NONE("None"),           // 10
-	POTION("Potion"),       // 11
+	NONE("None"),           // 10 (exists, basic Item)
+	POTION("Potion"),       // 11 (exists)
 	RING("Ring"),           // 12
-	SHIELD("Shield"),       // 13
-	WAND("Wand"),           // 14
-	WEAPON("Weapon");       // 15
+	SHIELD("Shield"),       // 13 (exists)
+	WAND("Wand"),           // 14 (exists)
+	WEAPON("Weapon");       // 15 (exists)
 	
 	private String name;
 	

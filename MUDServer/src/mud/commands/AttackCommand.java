@@ -5,8 +5,10 @@ import mud.MUDServer;
 import mud.MUDServer.PlayerMode;
 import mud.net.Client;
 import mud.objects.Creature;
+import mud.objects.Item;
 import mud.objects.NPC;
 import mud.objects.Player;
+import mud.objects.Thing;
 import mud.objects.items.Weapon;
 import mud.objects.items.WeaponType;
 import mud.utils.Utils;
@@ -36,30 +38,34 @@ public class AttackCommand extends Command {
 				// here we want to try and get whatever was targeted
 				
 				//List<Creature> creatures = objectDB.getCreatureByRoom( getRoom( player ) );
-
+				
+				// TODO we shouldn't be able to attack anything not in the same room with us, etc
 				MUDObject mobj = getObject(arg);
 
 				player.setTarget(mobj);
 
 				if (player.getTarget() != null) {
-					// start attacking
 					
-					Weapon weapon = (Weapon) player.getSlots().get("weapon").getItem();
-					WeaponType wt = null;
-					
-					if(weapon != null) {
-						// get our weapon type
-						wt = weapon.getWeaponType();
-						//wt = WeaponType.LONGSWORD;
-					}
-
 					// can we attack them?
-					boolean attack = canAttack(player.getTarget());
+					boolean attack = canAttack( player.getTarget() );
 
 					if (attack) {
 						send("Can attack.", client);
 						send("You attack " + player.getTarget().getName() + ".", client);
-
+						
+						// start attacking
+						
+						// get weapon
+						Weapon weapon = (Weapon) player.getSlots().get("weapon").getItem();
+						WeaponType wt = null;
+						
+						if(weapon != null) {
+							// get our weapon type
+							wt = weapon.getWeaponType();
+							//wt = WeaponType.LONGSWORD;
+						}
+						
+						// check range
 						boolean inRange = true;
 
 						if (inRange) { // are they in range of our weapon?
@@ -69,15 +75,27 @@ public class AttackCommand extends Command {
 
 							if (hit) { // did we hit?
 								
-								player.setMode(PlayerMode.COMBAT); // we are now in combat mode
+								player.setMode(PlayerMode.COMBAT); // we are now in combat mode (allows us to limit command set?)
 						
 								int criticalCheckRoll = Utils.roll(1, 20);
 								boolean criticalHit = criticalCheckRoll >= wt.getCritMin() && criticalCheckRoll <= wt.getCritMax() ? true : false;
 
 								int damage = calculateDamage(wt, criticalHit);
 								
+								// tell us what 
+								if( damage <= 1 ) {
+									send("Pff. You practically missed them anyway (" + damage + " damage )", client);
+								}
+								else if ( damage > 1 && damage < 5) {
+									send("A solid hit! (" + damage + " damage )", client);
+								}
+								else {
+									send("Ouch! That had to hurt (" + damage + " damage )", client);
+								}
+								
 								// damage the target
 								MUDObject target = player.getTarget();
+								
 								if(target instanceof Player) {
 									((Player) target).setHP(-damage);
 									((Player) target).updateCurrentState();
@@ -85,21 +103,39 @@ public class AttackCommand extends Command {
 								else if(target instanceof Creature) {
 									((Creature) target).setHP(-damage);
 								}
-
-								// tell us what 
-								send("A solid hit! (" + damage + " damage )", client);
+								else if(target instanceof Item) {
+									((Item) target).durability -= damage;
+								}
+								else if(target instanceof Thing) {
+									// ?
+								}
+								else {
+									// ?
+								}
 								
+								/*
+								 * TODO revise this to handle different states, if we're still
+								 * attacking a dead creature tell us that it's dead already, otherwise
+								 * indicate if we merely incapacitated it or it's really dead. We may
+								 * need to record player state beforehand so we can check against that
+								 * in case a state change occurred. Or maybe, we should be recording elsewhere
+								 * whether a call to updateCurrentState() actually resulted in a state change.
+								 */
 								if(target instanceof Player) {
+									//final Player player1 = (Player) target;
+									
 									if( ((Player) target).getHP() <= 0 ) {
-										send("You killed " + ((Player) target).getName() + ".", client);
+										send("You killed them!" + ((Player) target).getName() + ".", client);
 										handleDeath( (Player) target );
 									}
 								}
 								else {
-									debug("Creature HP: " + ((Creature) target).getHP());
-									if( ((Creature) target).getHP() <= 0 ) {
-										send("You killed " + ((Creature) target).getName() + ".", client);
-										handleDeath( (Creature) target, player);
+									final Creature creature = (Creature) target;
+									
+									debug("Creature HP: " + creature.getHP());
+									if( creature.getHP() <= 0 ) {
+										send("You killed " + creature.getName() + ".", client);
+										handleDeath( creature, player );
 									}
 								}
 							}
@@ -113,6 +149,9 @@ public class AttackCommand extends Command {
 							switch(wt.getName().toUpperCase()) {
 							case "LONGSWORD":
 								send("Really? You aren't even close enough to hit!", client);
+								break;
+							case "BOW":
+								send("Well, that was a waste of effort -AND- a good arrow!", client);
 								break;
 							default:
 								break;

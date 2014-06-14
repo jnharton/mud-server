@@ -1,11 +1,14 @@
 package mud.objects.things;
 
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import mud.ObjectFlag;
 import mud.TypeFlag;
+import mud.interfaces.Closeable;
 import mud.interfaces.Lockable;
 import mud.interfaces.Storage;
 import mud.objects.Item;
@@ -14,7 +17,7 @@ import mud.objects.Thing;
 import mud.objects.ThingType;
 import mud.utils.Utils;
 
-public class Box extends Thing implements Lockable<Item>, Storage<Item> {
+public class Box extends Thing implements Closeable, Lockable<Item>, Storage<Item> {
 	
 	private Item key = null;
 	private boolean isLocked = false;
@@ -62,8 +65,7 @@ public class Box extends Thing implements Lockable<Item>, Storage<Item> {
 	
 	@Override
 	public void setKey(Item key) {
-		// TODO Auto-generated method stub
-		
+		this.key = key;
 	}
 	
 	@Override
@@ -73,8 +75,7 @@ public class Box extends Thing implements Lockable<Item>, Storage<Item> {
 	
 	@Override
 	public boolean hasKey(Player p) {
-		// TODO Auto-generated method stub
-		return false;
+		return p.getInventory().contains(key);
 	}
 	
 	@Override
@@ -128,11 +129,19 @@ public class Box extends Thing implements Lockable<Item>, Storage<Item> {
 		return this.isLocked;
 	}
 	
+	@Override
+	public List<Item> getContents() {
+		return Collections.unmodifiableList(this.contents);
+	}
+	
 	public void insert(Item item) {
 		if( !full ) {
-			this.contents.add( item );
-			this.contentMap.put( item.getName(), this.contents.indexOf(item) );
-			if( this.contents.size() == this.size ) full = true;
+			if( item != null ) {
+				this.contents.add( item );
+				this.contentMap.put( item.getName(), this.contents.indexOf(item) );
+				if( this.contents.size() > 0 ) this.empty = false;
+				if( this.contents.size() == this.size ) full = true;
+			}
 		}
 	}
 	
@@ -167,6 +176,16 @@ public class Box extends Thing implements Lockable<Item>, Storage<Item> {
 		return this.full;
 	}
 	
+	@Override
+	public void open() {
+		// TODO Auto-generated method stub
+	}
+
+	@Override
+	public void close() {
+		// TODO Auto-generated method stub
+	}
+	
 	public boolean isOpen() {
 		return this.isOpen;
 	}
@@ -181,14 +200,15 @@ public class Box extends Thing implements Lockable<Item>, Storage<Item> {
 	 */
 	public String toDB() {
 		String[] output = new String[8];
-		output[0] = this.getDBRef() + "";           // database reference number
-		output[1] = this.getName();                 // name
-		output[2] = this.getFlagsAsString();        // flags
-		output[3] = this.getDesc();                 // description
-		output[4] = this.getLocation() + "";        // location
-		output[5] = this.thing_type.ordinal() + ""; // thing type
-		output[6] = "*";                            // key
-		output[7] = "*";                            // locked?
+		output[0] = this.getDBRef() + "";              // database reference number
+		output[1] = this.getName();                    // name
+		output[2] = TypeFlag.asLetter(this.type) + ""; // flags
+		output[2] = output[2] + getFlagsAsString();
+		output[3] = this.getDesc();                    // description
+		output[4] = this.getLocation() + "";           // location
+		output[5] = this.thing_type.ordinal() + "";    // thing type
+		output[6] = "*";                               // key
+		output[7] = "*";                               // locked?
 		return Utils.join(output, "#");
 	}
 }

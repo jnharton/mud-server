@@ -31,6 +31,8 @@ public class DropCommand extends Command {
 
 	@Override
 	public void execute(String arg, Client client) {
+		debug("Drop Command");
+		
 		// get player, room objects to work with
 		Player player = getPlayer(client);
 		Room room = getRoom( player.getLocation() );
@@ -40,7 +42,27 @@ public class DropCommand extends Command {
 
 		// get the integer value, if there is one, as the argument
         final int dbref = Utils.toInt(arg, -1);
-
+        
+        // dependent on limited access to the database
+        if( dbref != -1 ) {
+        	final Item item2 = getItem(dbref);
+        	
+        	if( item2 == null ) {
+        		send("No such item.", client);
+        		return;
+        	}
+        	
+        	final String itemName = item2.getName();
+        	
+        	if( item2.getLocation() == player.getDBRef() ) {
+        		inventory.remove(item2);
+        		item2.setLocation( room.getDBRef() );
+        		room.addItem(item2);
+        		
+        		send("You dropped " + colors(itemName, "yellow") + " on the floor.", client);
+        	}
+        }
+        
 		// get the object the argument refers to: by name (if it's in the calling player's inventory), or by dbref#
 		// should be done by searching the player's inventory for the object and if there is such an object, drop it on the floor.
 		for (int i = 0; i < inventory.size(); i++)

@@ -8,6 +8,15 @@ package mud.events;
 
 import java.util.EventListener;
 
+/**
+ * SayEventListener
+ * 
+ * Any object that should listen for SayEvent(s) which are
+ * generated whenever something is said.
+ * 
+ * @author Jeremy
+ *
+ */
 public interface SayEventListener extends EventListener {
 	  public void handleSayEvent(SayEvent se);
 }

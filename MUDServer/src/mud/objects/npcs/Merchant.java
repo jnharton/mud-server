@@ -5,16 +5,17 @@ import java.util.LinkedHashMap;
 import java.util.EnumSet;
 
 import mud.ObjectFlag;
-import mud.Abilities;
-import mud.Ability;
-import mud.Classes;
 import mud.Coins;
 import mud.MUDServer;
-import mud.Races;
+import mud.game.Abilities;
+import mud.game.Ability;
+import mud.game.Classes;
+import mud.game.Races;
 import mud.interfaces.Vendor;
 import mud.net.Client;
 import mud.objects.Item;
 import mud.objects.NPC;
+import mud.objects.Player;
 import mud.objects.items.Armor;
 import mud.objects.items.Weapon;
 
@@ -58,19 +59,21 @@ public class Merchant extends NPC implements Vendor {
 	}
 	
 	@Override
-	public void interact(final Client client) {
+	public void interact(Player player) {
+		final Client client = player.getClient();
+		
 		parent.send(this.getName(), client);
 		parent.send("-----< Stock >--------------------", client);
 		for (Item item : this.stock) {
 			if (item instanceof Armor) {
 				Armor a = (Armor) item;
 				//parent.send(parent.colors("+" + a.getMod() + " " + a.getName() + " (" + a.getWeight() + ") Cost: " + a.getCost(), "yellow"), client);
-				parent.send(parent.colors(a.toString() + " (" + a.getWeight() + ") Cost: " + a.getCost(), "yellow"), client);
+				parent.send(parent.colors(a.toString() + " (" + a.getWeight() + ") Cost: " + a.getValue(), "yellow"), client);
 			}
 			else if (item instanceof Weapon) {
 				final Weapon w = (Weapon) item;
 				//parent.send(parent.colors("+" + w.getMod() + " " + w.getName() + " (" + w.getWeight() + ") Cost: " + w.getCost(), "yellow"), client);
-				parent.send(parent.colors(w.toString()  + " (" + w.getWeight() + ") Cost: " + w.getCost(), "yellow"), client);
+				parent.send(parent.colors(w.toString()  + " (" + w.getWeight() + ") Cost: " + w.getValue(), "yellow"), client);
 			}
 			else {
 				parent.send("?", client);

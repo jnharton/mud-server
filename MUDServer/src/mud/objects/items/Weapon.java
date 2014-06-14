@@ -1,28 +1,26 @@
 package mud.objects.items;
 
-import java.util.ArrayList;
 import java.util.EnumSet;
 
 import mud.Coins;
 import mud.ObjectFlag;
 import mud.TypeFlag;
-
+import mud.game.Skill;
 import mud.interfaces.Equippable;
-import mud.interfaces.Wieldable;
-
-import mud.net.Client;
-
 import mud.objects.Item;
 import mud.objects.ItemType;
 import mud.objects.Player;
-
 import mud.objects.items.Handed;
+import mud.utils.Tuple;
 import mud.utils.Utils;
 
-public class Weapon extends Item implements Equippable<Weapon>, Wieldable
+public class Weapon extends Item implements Cloneable
 {
 	private WeaponType weapon_type;
 	Handed handed;
+	
+	protected Skill required_skill;
+	protected int req_skill_value;
 
 	public Weapon() {
 		super(-1, "Sword", EnumSet.noneOf(ObjectFlag.class), "A nice, shiny steel longsword.", 8);
@@ -36,7 +34,7 @@ public class Weapon extends Item implements Equippable<Weapon>, Wieldable
 		this.weight = 7.0;                       // the weight of the weapon (lbs)
 	}
 	
-	public Weapon( Weapon template ) {
+	protected Weapon( Weapon template ) {
 		//super(-1, template.name, template.flags, template.desc, template.location);
 		super( template );
 		this.type = TypeFlag.ITEM;
@@ -96,24 +94,23 @@ public class Weapon extends Item implements Equippable<Weapon>, Wieldable
 	 * that have parameters.
 	 *
 	 * 
-	 * @param tempName
-	 * @param tempDesc
-	 * @param tempLoc
-	 * @param tempDBREF
-	 * @param tCharges
-	 * @param spellName
+	 * @param wName
+	 * @param wDesc
+	 * @param wLoc
+	 * @param wDBREF
 	 */
 	public Weapon(String wName, String wDesc, int wLoc, int wDBREF, int wMod, Handed handed, WeaponType wType, double wWeight)
 	{
 		super(wDBREF, wName, EnumSet.noneOf(ObjectFlag.class), wDesc, wLoc);
-		this.type = TypeFlag.ITEM;
+		this.item_type = ItemType.WEAPON;
+		
 		this.equippable = true;
 		this.equip_type = ItemType.WEAPON; // the type of equipment it is
-		this.item_type = ItemType.WEAPON;
+		
 		this.mod = wMod;
 		this.handed = handed;
-		this.weapon_type = wType;        // the actual type of weapon
-		this.weight = wWeight;      // the weight of the weapon
+		this.weapon_type = wType; // the actual type of weapon
+		this.weight = wWeight;    // the weight of the weapon
 	}
 
 	public String getName() {
@@ -121,29 +118,22 @@ public class Weapon extends Item implements Equippable<Weapon>, Wieldable
 	}
 	
 	@Override
-	public Coins getCost() {
+	public Coins getValue() {
 		return new Coins(weapon_type.getCost());
 	}
-
-	@Override
-	public void equip() {
-	}
-
-	@Override
-	public void equip(Player p) {
-	}
-
-	@Override
-	public Weapon unequip() {
-		return null;
-	}
-
-	@Override
-	public void wield(String arg, Client client) {
+	
+	public void setRequiredSkill(Skill required, int value) {
+		this.required_skill = required;
+		this.req_skill_value = value;
 	}
 	
-	public ArrayList<String> look() {
-		return null;
+	public Tuple<Skill, Integer> getRequiredSkill() {
+		return new Tuple<Skill, Integer>(this.required_skill, this.req_skill_value);
+	}
+	
+	public boolean isSkillRequired() {
+		if( required_skill == null ) return false;
+		else return true;
 	}
 	
 	public void setWeaponType(WeaponType wType) {
@@ -155,16 +145,22 @@ public class Weapon extends Item implements Equippable<Weapon>, Wieldable
 	}
 	
 	@Override
+	public Weapon clone() {
+		return new Weapon(this);
+	}
+	
+	@Override
 	public String toDB() {
 		String[] output = new String[8];
-		output[0] = this.getDBRef() + "";            // database reference number
-		output[1] = this.getName();                  // name
-		output[2] = this.getFlagsAsString();         // flags
-		output[3] = this.getDesc();                  // description
-		output[4] = this.getLocation() + "";         // location
-		output[5] = this.item_type.ordinal() + "";   // item type
-		output[6] = this.weapon_type.getId() + ""; // weapon type
-		output[7] = this.mod + "";                   // modifier
+		output[0] = this.getDBRef() + "";              // database reference number
+		output[1] = this.getName();                    // name
+		output[2] = TypeFlag.asLetter(this.type) + ""; // flags
+		output[2] = output[2] + getFlagsAsString();
+		output[3] = this.getDesc();                    // description
+		output[4] = this.getLocation() + "";           // location
+		output[5] = this.item_type.ordinal() + "";     // item type
+		output[6] = this.weapon_type.getId() + "";     // weapon type
+		output[7] = this.mod + "";                     // modifier
 		return Utils.join(output, "#");
 	}
 	

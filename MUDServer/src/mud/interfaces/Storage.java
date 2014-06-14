@@ -17,9 +17,14 @@ CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTH
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-public interface Storage<T> {
+import java.util.List;
+
+import mud.objects.Item;
+
+public interface Storage<T extends Item> {
 	public T retrieve(int index);
 	public T retrieve(String tName);
 	public void insert(T i);
 	public boolean isFull();
+	public List<T> getContents();
 }

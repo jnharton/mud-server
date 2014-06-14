@@ -5,18 +5,15 @@ import java.util.EnumSet;
 import mud.Effect;
 import mud.ObjectFlag;
 import mud.TypeFlag;
-
 import mud.interfaces.Equippable;
 import mud.interfaces.Usable;
 import mud.interfaces.Wearable;
-
 import mud.objects.Item;
 import mud.objects.ItemType;
 import mud.objects.Player;
-
 import mud.utils.Utils;
 
-public class Clothing extends Item implements Equippable<Clothing>, Usable<Clothing>, Wearable<Clothing>
+public class Clothing extends Item implements Usable<Clothing>, Wearable<Clothing>
 {
 	/**
 	 * Additional stuff that I need to figure into the persistence:
@@ -74,25 +71,6 @@ public class Clothing extends Item implements Equippable<Clothing>, Usable<Cloth
 		
 		this.clothing = cType;
 	}
-
-	@Override
-	public void equip() {
-	}
-
-	@Override
-	public void equip(Player p) {
-	}
-
-	@Override
-	public Clothing unequip() {
-		return null;
-	}
-	
-	@Override
-	public String getType() {
-		// TODO Auto-generated method stub
-		return null;
-	}
 	
 	public Effect getEffect() {
 		return this.effect;
@@ -121,5 +99,11 @@ public class Clothing extends Item implements Equippable<Clothing>, Usable<Cloth
 	public String toString() {
 		//return this.mod + " " + this.name;
 		return getName();
+	}
+
+	@Override
+	public String getType() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

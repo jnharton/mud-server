@@ -19,16 +19,19 @@ package mud;
 
 public class Effect
 {
-	public static enum Type { ACID, BURN, DAMAGE, HEAL, INVIS, POISON };
+	public static enum Type { ACID, BURN, DAMAGE, HEAL, INVIS, POISON, RESIST };
+	public static enum ResistType { ACID, FIRE, LIGHTNING };
+	// LESSER, IMPROVED, GREATER, SUPERIOR
 	public static enum DurationType { INSTANTANEOUS, PERMANENT, ROUNDS, SPECIAL };
 	
 	private static int lastId = 0; // the id of the last effect created
 	
-	private int id;                // int
-	private String name;           // name of effect (ex. 'invisibility', 'acid')
-	private Type type;             // damage, visibility, resistance, etc
-	private String durationType;   // temporary vs. permanent, etc
-	private int duration;          // effects duration in seconds (mask rounds by using a uniform length of round, in seconds)
+	private int id;                    // int
+	private String name;               // name of effect (ex. 'invisibility', 'acid')
+	private Type type;                 // damage, visibility, resistance, etc
+	private ResistType rtype;          // for resistance effects, the type of resistance
+	private DurationType durationType; // temporary vs. permanent, etc
+	private int duration;              // effects duration in seconds (mask rounds by using a uniform length of round, in seconds)
 	
 	private boolean permanent = false;
 
@@ -51,7 +54,7 @@ public class Effect
 		}
 	}
 
-	public Effect(String eName, Type eType, String eDurationType, int eDuration)
+	public Effect(String eName, Type eType, DurationType eDurationType, int eDuration)
 	{
 		id = nextID();
 		name = eName;
@@ -70,7 +73,7 @@ public class Effect
 		}
 	}
 	
-	public Effect(String eName, Type eType, String eDurationType, int eDuration, boolean ePermanent)
+	public Effect(String eName, Type eType, DurationType eDurationType, int eDuration, boolean ePermanent)
 	{
 		this(eName, eType, eDurationType, eDuration);
 		
@@ -94,11 +97,11 @@ public class Effect
 		this.type = type;
 	}
 
-	public String getDurationType() {
+	public DurationType getDurationType() {
 		return durationType;
 	}
 
-	public void setDurationType(String durationType) {
+	public void setDurationType(DurationType durationType) {
 		this.durationType = durationType;
 	}
 
@@ -126,9 +129,9 @@ public class Effect
 		return this.permanent;
 	}
 	
-	public boolean getPermanent() {
+	/*public boolean getPermanent() {
 		return this.permanent;
-	}
+	}*/
 	
 	/**
 	 * Mark this effect as a permanent effect

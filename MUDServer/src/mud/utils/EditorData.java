@@ -22,6 +22,7 @@ import java.util.LinkedList;
 
 public class EditorData {
 	private HashMap<String, Object> objects;
+	private HashMap<Object, Boolean> locks;
 	
 	public EditorData() {
 		this.objects = new HashMap<String, Object>(1, 0.75f);
@@ -85,5 +86,21 @@ public class EditorData {
 		}
 		
 		return objectList;
+	}
+	
+	public void lockObject(String key) {
+		if( this.objects.containsKey(key) ) {
+			this.locks.put( getObject(key), true );
+		}
+	}
+	
+	public void unlockObject(String key) {
+		Object obj = getObject( key );
+		
+		if( obj != null ) {
+			if( this.locks.containsKey( obj ) ) {
+				this.locks.remove( obj );
+			}
+		}
 	}
 }

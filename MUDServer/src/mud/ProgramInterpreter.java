@@ -1,6 +1,5 @@
 package mud;
 
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.LinkedList;
@@ -9,7 +8,6 @@ import java.util.List;
 import mud.net.Client;
 import mud.objects.Item;
 import mud.objects.Player;
-import mud.utils.Message;
 import mud.utils.Point;
 import mud.utils.Utils;
 
@@ -31,14 +29,12 @@ import mud.utils.Utils;
 public class ProgramInterpreter {
 
 	private final MUDServer parent;
-	private final OutputStream error;
 	
 	private Hashtable<String, String> vars;
 	private boolean use_vars;
 
 	public ProgramInterpreter(final MUDServer parent) {
 		this.parent = parent;
-		this.error = System.err;
 		this.vars = null;
 		this.use_vars = false;
 	}
@@ -136,30 +132,8 @@ public class ProgramInterpreter {
 				if( temp.length > 1 ) {
 					params = Utils.mkList(temp[1].split(","));
 					
+					fixParams( params ); // sort of fixes the params
 					
-					// correct incorrect breaks?
-					//int leftCurlyCount = 0;
-					//int rightCurlyCount = 0;
-					
-					for(int i = 0; i < params.size(); i++) {
-						//leftCurlyCount = Utils.count(params.get(i), '{');
-						//rightCurlyCount = Utils.count(params.get(i), '}');
-						
-						//String temp1 = params.get(i);
-						//String temp2 = params.get(i+1);
-						
-						if( ( params.get(i).startsWith("{") && !params.get(i).endsWith("}") )  
-								&& ( !params.get(i+1).startsWith("}") && params.get(i+1).endsWith("}") ) ) {
-							params.set(i, (params.get(i) + "," + params.get(i+1)).trim());
-							params.remove(i+1);
-						}
-						
-						/*if( leftCurlyCount != rightCurlyCount ) {
-							params.set(i, (params.get(i) + "," + params.get(i+1)).trim());
-							params.remove(i+1);
-						}*/
-					}
-
 					System.out.println("Params: " + params);
 
 					int index = 0;
@@ -192,11 +166,11 @@ public class ProgramInterpreter {
 	
 	private String evaluate(final String functionName, final String[] params, final Client client) {
 		System.out.println("Params: " + params.length);
-		for(String param : params) {
-			System.out.println(param);
-		}
+
 		if( params.length > 0 ) {
 			if( params.length == 1 ) {
+				System.out.println("Parameter (1): " + params[0]);
+				
 				if(functionName.equals("create_item")) {
 					final Item item = parent.createItem(params[0]);
 
@@ -231,13 +205,64 @@ public class ProgramInterpreter {
 					}
 					else { return "PGM: Error!"; }
 				}
+				else if(functionName.equals("add")) { // {add:5,5} -> 10
+					if( params[0].startsWith("{") && params[0].endsWith(")") ) {
+						params[0] = interpret(params[0], client);
+					}
+					
+					if( params[1].startsWith("{") && params[1].endsWith(")") ) {
+						params[1] = interpret(params[1], client);
+					}
+					
+					Integer first = null;
+					Integer second = null;
+					
+					try {
+						first = Integer.parseInt(params[0]);
+						second = Integer.parseInt(params[1]);
+					}
+					catch(NumberFormatException nfe) {
+						System.out.println("-- Stack Trace --");
+						nfe.printStackTrace();
+						
+						return "";
+					}
+					
+					return "" + (first + second);
+				}
+				else if(functionName.equals("sub")) { // {sub:5,3} -> 2
+					if( params[0].startsWith("{") && params[0].endsWith(")") ) {
+						params[0] = interpret(params[0], client);
+					}
+					
+					if( params[1].startsWith("{") && params[1].endsWith(")") ) {
+						params[1] = interpret(params[1], client);
+					}
+					
+					Integer first = null;
+					Integer second = null;
+					
+					try {
+						first = Integer.parseInt(params[0]);
+						second = Integer.parseInt(params[1]);
+					}
+					catch(NumberFormatException nfe) {
+						System.out.println("-- Stack Trace --");
+						nfe.printStackTrace();
+						
+						return "";
+					}
+					
+					return "" + (first - second);
+				}
 				else if(functionName.equals("eq")) { // {eq:<string 1>,<string 2>} -> {eq:test,test} -> :true
 					if( params[0].startsWith("{") && params[0].endsWith(")") ) {
 						params[0] = interpret(params[0], client);
 					}
-
-					//System.out.println("first: " + params[0]);
-					//System.out.println("Second: " + params[1]);
+					
+					if( params[1].startsWith("{") && params[1].endsWith(")") ) {
+						params[1] = interpret(params[1], client);
+					}
 
 					if( params[0].equals(params[1]) ) {
 						return ":true";
@@ -286,7 +311,10 @@ public class ProgramInterpreter {
 					
 					final MUDObject object = parent.getObject(dbref);
 					
-					if( object != null ) return (String) object.getProperty(property);
+					if( object != null ) {
+						System.out.println("Object: " + object.getName());
+						return "" +  object.getProperty(property);
+					}
 					else return "";
 					//else { return "Incomplete function statement, no parameters!"; }
 				}
@@ -398,6 +426,13 @@ public class ProgramInterpreter {
 					
 					return Utils.join(params1, " ");
 				}
+				else if ( functionName.equals("do") ) {
+					for(String param : params) {
+						interpret(param, client);
+					}
+					
+					return "";
+				}
 				else { return "PGM: No such function!"; }
 				//else { return "PGM: Error!"; }
 			}
@@ -450,6 +485,107 @@ public class ProgramInterpreter {
 	
 	public void exec(Script script, Client client) {
 		interpret( script.getText(), client );
+	}
+
+	public void fixParams(List<String> params) {
+		// correct incorrect breaks?
+		List<String> tempList = new ArrayList<String>();
+		
+		boolean done = false;
+		
+		int leftCurlyCount = 0;
+		int rightCurlyCount = 0;
+
+		int test = 0;
+		int index = 0;
+		int offset = 0;
+		String temp = "";
+		
+		test = params.size();
+
+		while( index < test - 1 ) {
+			done = false;
+			
+			offset = 0;
+			temp = params.get(index);
+			
+			System.out.println("---");
+			System.out.println("Params: ");
+			for(String s : params) {
+				System.out.println(s);
+			}
+			System.out.println("Temp: " + temp);
+			System.out.println("---");
+
+			while( !done ) {
+				leftCurlyCount = Utils.countNumOfChar(temp, '{');
+				rightCurlyCount = Utils.countNumOfChar(temp, '}');
+				
+				System.out.println("lcc: " + leftCurlyCount);
+				System.out.println("rcc: " + rightCurlyCount);
+				System.out.println("offset: " + offset);
+				
+				//|| leftCurlyCount <= 1 || rightCurlyCount <= 1
+				if( leftCurlyCount != rightCurlyCount ) {
+					offset++;
+					temp = temp + "," + params.get(index + offset);
+					System.out.println("TEMP: " + temp);
+				}
+				else {
+					System.out.println("Result: " + temp);
+					done = true;
+				}
+			}
+			
+			System.out.println("---");
+			System.out.println("INDEX: " + index);
+			
+			// if no changes were necessary
+			if( params.get(index).equals(temp) ) {
+				index++;
+				test = params.size();
+				continue;
+			}
+			else { // offset != 0, since that would imply no change
+				if( index == 0 ) {
+					tempList.addAll( params.subList(offset + 1, test) ); // keep the list after the first and any we used
+				}
+				else {
+					tempList.addAll( params.subList(0, index) );
+					tempList.addAll( params.subList(index + offset + 1, test) ); // keep the list after the first and any we used
+				};
+				
+				params.retainAll( tempList );
+
+				tempList.clear();
+
+				params.add(index, temp);
+				
+				//
+
+				index++;
+				test = params.size();
+			}
+		}
+
+		/*for(int i = 0; i < params.size(); i++) {
+			//leftCurlyCount = Utils.count(params.get(i), '{');
+			//rightCurlyCount = Utils.count(params.get(i), '}');
+
+			//String temp1 = params.get(i);
+			//String temp2 = params.get(i+1);
+
+			if( ( params.get(i).startsWith("{") && !params.get(i).endsWith("}") )  
+					&& ( !params.get(i+1).startsWith("}") && params.get(i+1).endsWith("}") ) ) {
+				params.set(i, (params.get(i) + "," + params.get(i+1)).trim());
+				params.remove(i+1);
+			}
+
+			//if( leftCurlyCount != rightCurlyCount ) {
+			//params.set(i, (params.get(i) + "," + params.get(i+1)).trim());
+			//params.remove(i+1);
+			//}
+		}*/
 	}
 
 	public static void main(String[] args) {

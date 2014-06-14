@@ -1,5 +1,6 @@
 package mud;
 
+import java.util.EnumSet;
 import java.util.Hashtable;
 import java.util.Map;
 
@@ -29,6 +30,9 @@ public final class Constants {
 	public static final int WIZARD = 3; // Most permissions
 	public static final int GOD = 4;    // Pff, such arrogant idiots we are! (anyway, max permissions)
 	
+	// Flags
+	public static final EnumSet<ObjectFlag> default_room_flags = EnumSet.of(ObjectFlag.DARK,ObjectFlag.SILENT); // RDS, where R is a TypeFlag
+	
 	public static final Map<String, Integer> permissionMap = new Hashtable<String, Integer>() {
 		{
 			put("USER", USER);
@@ -41,8 +45,24 @@ public final class Constants {
 	
 	// Named Rooms
 	public static final int WELCOME_ROOM = 8; // welcome room
+	public static final int VOID = -1;        // an invalid room dbref (so it doesn't technically exist anywhere)
 	
 	// Channel Names/IDs? (move to another constants class - ChanID?)
 	public static final String OOC_CHANNEL = "ooc";
 	public static final String STAFF_CHANNEL = "staff";
+	
+	// Account Login State
+	public static final int USERNAME = 0;
+	public static final int PASSWORD = 1;
+	public static final int AUTHENTICATE = 2;
+	
+	// Color Options
+	public static final int DISABLED = 0;
+	public static final int ANSI = 1;
+	public static final int XTERM = 2;
+	
+	// status
+	public static final String ST_EDIT = "EDT";
+	public static final String ST_INTERACT = "INT";
+	
 }

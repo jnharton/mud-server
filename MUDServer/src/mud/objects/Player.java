@@ -14,30 +14,34 @@ import java.util.Set;
 import java.util.EnumSet;
 
 import mud.net.Client;
-import mud.Ability;
-import mud.Alignments;
-import mud.Classes;
 import mud.ObjectFlag;
-import mud.Abilities;
 import mud.Coins;
-import mud.Editor;
+import mud.Editors;
 import mud.MUDObject;
-import mud.PClass;
-import mud.Profession;
-import mud.Race;
 import mud.TypeFlag;
-import mud.Race.Subraces;
-import mud.Races;
-import mud.Skill;
-import mud.Skills;
 import mud.Slot;
 import mud.SlotType;
 import mud.MUDServer.PlayerMode;
 import mud.commands.Command;
+import mud.game.Abilities;
+import mud.game.Ability;
+import mud.game.Alignments;
+import mud.game.Classes;
+import mud.game.PClass;
+import mud.game.Profession;
+import mud.game.Race;
+import mud.game.Races;
+import mud.game.Skill;
+import mud.game.Skills;
+import mud.game.Race.Subraces;
 import mud.interfaces.Equippable;
+import mud.interfaces.Mobile;
+import mud.interfaces.Ridable;
+import mud.interfaces.Ruleset;
 import mud.interfaces.Wearable;
 import mud.magic.Spell;
 import mud.magic.SpellBook;
+import mud.misc.Faction;
 import mud.objects.items.Armor;
 import mud.objects.items.ClothingType;
 import mud.objects.items.Handed;
@@ -73,7 +77,7 @@ import mud.utils.EditorData;
  * @author Jeremy N. Harton
  *
  */
-public class Player extends MUDObject
+public class Player extends MUDObject implements Mobile
 {	
 	private static final EnumSet<ObjectFlag> _FLAGS = EnumSet.noneOf(ObjectFlag.class);
 	private static final String _STATUS = "NEW";
@@ -90,13 +94,10 @@ public class Player extends MUDObject
 	// n=3: 6000 = 3000 + (3 * 1000) = 6000
 	// n=4: 10000 = 6000 + (4 * 1000) = 10000
 	
-	/**
-	 * Player State
-	 * Alive - alive, INCAPACITATED - incapacitated (hp < 0 && hp > -10), DEAD (hp < -10)
-	 * @author Jeremy
-	 */
+	/* Player State Alive - alive, INCAPACITATED - incapacitated (hp < 0 && hp > -10), DEAD (hp < -10) */
 	public static enum State { ALIVE, INCAPACITATED, DEAD };
 	
+	/* Player Status - Active, Banned */
 	public static enum Status { ACTIVE, BANNED };
 
 	/**
@@ -128,14 +129,15 @@ public class Player extends MUDObject
 	// preferences (ACCOUNT DATA?)
 	private int lineLimit = 80;                          // how wide the client's screen is in columns (shouldn't be in Player class)
 	public int invDispWidth = 60;                        // display width for the complex version of inventory display
-	private Character invType = 'C';                     // S = simple, C = Complex (candidate for being a config option, not a single variable)
-	private final LinkedHashMap<String, Boolean> config; // player preferences for player configurable options
+	//private Character invType = 'C';                     // S = simple, C = Complex (candidate for being a config option, not a single variable)
+	
+	private final Map<String, Boolean> config = new LinkedHashMap<String, Boolean>(); // player preferences for player configurable options
 
 	// utility
 	private HashMap<String, Integer> nameRef;         // store name references to dbref numbers (i.e. $this->49)
 
 	// Editors, General
-	private Editor editor;
+	private Editors editor;
 
 	/* Editor Data */ 
 
@@ -211,6 +213,9 @@ public class Player extends MUDObject
 	protected LinkedHashMap<String, Slot> slots;                    // the player's equipped gear
 
 	private ArrayList<Quest> quests;                               // the player's quests
+	
+	protected Faction faction;
+	protected Map<Faction, Integer> reputation;
 
 	// movement
 	protected boolean moving;
@@ -232,7 +237,7 @@ public class Player extends MUDObject
 	public BitSet item_creation_feats = new BitSet(8);
 
 	// temporary states
-	private int[] statMod = new int[6];   // temporary modifications to stats (i.e. stat drains, etc)
+	private int[] statMod = new int[7];   // temporary modifications to stats (i.e. stat drains, etc)
 	private int[] skillMod = new int[44]; // temporary modifications to skills
 	private int negativeLevels = 0;
 
@@ -250,6 +255,11 @@ public class Player extends MUDObject
 	
 	// Knowledge
 	public Map<String, Landmark> landmarks = new HashMap<String, Landmark>(); // contains "landmarks", which are places you've been and h
+	
+	
+	public static Ruleset ruleset;
+	
+	public Ridable mount = null;
 	
 	/**
 	 * No argument constructor for subclasses
@@ -315,15 +325,21 @@ public class Player extends MUDObject
 		this.slots.put("other", new Slot( SlotType.NONE, ItemType.NONE ));
 
 		// instantiate stats
-		stats = new LinkedHashMap<Ability, Integer>(6, 0.75f);
+		//stats = new LinkedHashMap<Ability, Integer>(6, 0.75f);
+		
+		stats = new LinkedHashMap<Ability, Integer>(ruleset.getAbilities().length, 0.75f);
 
 		// initialize stats
-		this.stats.put(Abilities.STRENGTH, _STATS[0]);     // Strength
+		/*this.stats.put(Abilities.STRENGTH, _STATS[0]);     // Strength
 		this.stats.put(Abilities.DEXTERITY, _STATS[1]);    // Dexterity
 		this.stats.put(Abilities.CONSTITUTION, _STATS[2]); // Constitution
 		this.stats.put(Abilities.INTELLIGENCE, _STATS[3]); // Intelligence
 		this.stats.put(Abilities.WISDOM, _STATS[4]);       // Wisdom
-		this.stats.put(Abilities.CHARISMA, _STATS[5]);     // Charisma
+		this.stats.put(Abilities.CHARISMA, _STATS[5]);     // Charisma*/
+		
+		for(Ability ability : ruleset.getAbilities()) {
+			this.stats.put(ability, 0);
+		}
 		
 		// instantiate skills
 		skills = new LinkedHashMap<Skill, Integer>(36, 0.75f);
@@ -355,20 +371,19 @@ public class Player extends MUDObject
 		this.names = new ArrayList<String>(); // we get a new blank list this way, not a loaded state
 
 		// initialize list editor variables
-		this.editor = Editor.NONE;
+		this.editor = Editors.NONE;
 
-		this.config = new LinkedHashMap<String, Boolean>(11);
-		this.config.put("global-nameref-table", false); // use the global name reference table instead of a local one (default: false)
-		this.config.put("pinfo-brief", true);           // make your player info output brief/complete (default: true)
-		this.config.put("prompt_enabled", false);       // enable/disable the prompt (default: false)
-		this.config.put("msp_enabled", false);          // enable/disable MUD Sound Protocol, a.k.a. MSP (default: false)
-		this.config.put("complex-inventory", false);    // use/don't use complex inventory display (default: false)
-		this.config.put("pager_enabled", false);        // enabled/disable the help pager view (default: false)
-		this.config.put("show-weather", true);          // show weather information in room descriptions (default: true)
-		this.config.put("tagged-chat", false);          // "tag" the beginning chat lines with CHAT for the purpose of triggers, etc (default: false)
-		this.config.put("compact-editor", true);        // compact the output of editor's 'show' commands (default: true)
-		this.config.put("hud_enabled", true);           // is the "heads-up display" that accompanies the room description enabled (default: true)
-		this.config.put("notify_newmail", false);       // notify the player on receipt of new mail? (default: false)
+		addConfigOption("global-nameref-table", false); // use the global name reference table instead of a local one (default: false)
+		addConfigOption("pinfo-brief", true);           // make your player info output brief/complete (default: true)
+		addConfigOption("prompt_enabled", false);       // enable/disable the prompt (default: false)
+		addConfigOption("msp_enabled", false);          // enable/disable MUD Sound Protocol, a.k.a. MSP (default: false)
+		addConfigOption("complex-inventory", false);    // use/don't use complex inventory display (default: false)
+		addConfigOption("pager_enabled", false);        // enabled/disable the help pager view (default: false)
+		addConfigOption("show-weather", true);          // show weather information in room descriptions (default: true)
+		addConfigOption("tagged-chat", false);          // "tag" the beginning chat lines with CHAT for the purpose of triggers, etc (default: false)
+		addConfigOption("compact-editor", true);        // compact the output of editor's 'show' commands (default: true)
+		addConfigOption("hud_enabled", false);          // is the "heads-up display" that accompanies the room description enabled (default: false)
+		addConfigOption("notify_newmail", false);       // notify the player on receipt of new mail? (default: false)
 
 		// instantiate name reference table
 		this.nameRef = new HashMap<String, Integer>(10, 0.75f); // start out assuming 10 name references
@@ -450,15 +465,32 @@ public class Player extends MUDObject
 		this.slots.put("other", new Slot( SlotType.NONE, ItemType.NONE ));
 
 		// instantiate stats
-		stats = new LinkedHashMap<Ability, Integer>(6, 0.75f);
+		//stats = new LinkedHashMap<Ability, Integer>(6, 0.75f);
+		
+		stats = new LinkedHashMap<Ability, Integer>(ruleset.getAbilities().length, 0.75f);
 
 		// initialize stats
-		this.stats.put(Abilities.STRENGTH, tempStats[0]);     // Strength
+		/*this.stats.put(Abilities.STRENGTH, tempStats[0]);     // Strength
 		this.stats.put(Abilities.DEXTERITY, tempStats[1]);    // Dexterity
 		this.stats.put(Abilities.CONSTITUTION, tempStats[2]); // Constitution
 		this.stats.put(Abilities.INTELLIGENCE, tempStats[3]); // Intelligence
 		this.stats.put(Abilities.WISDOM, tempStats[4]);       // Wisdom
-		this.stats.put(Abilities.CHARISMA, tempStats[5]);     // Charisma
+		this.stats.put(Abilities.CHARISMA, tempStats[5]);     // Charisma*/
+		
+		int index = 0;
+		
+		for(Ability ability : ruleset.getAbilities()) {
+			if( tempStats.length > index ) {
+				this.stats.put(ability, tempStats[index]);
+			}
+			else {
+				this.stats.put(ability, 0);
+			}
+			
+			System.out.println(ability.getName() + ": " + this.stats.get(ability));
+			
+			index++;
+		}
 
 		// instantiate skills
 		skills = new LinkedHashMap<Skill, Integer>(36, 0.75f);
@@ -491,20 +523,19 @@ public class Player extends MUDObject
 		this.names = new ArrayList<String>(); // we get a new blank list this way, not a loaded state
 
 		// initialize list editor variables
-		this.editor = Editor.NONE;
+		this.editor = Editors.NONE;
 
-		this.config = new LinkedHashMap<String, Boolean>(11);
-		this.config.put("global-nameref-table", false); // use the global name reference table instead of a local one (default: false)
-		this.config.put("pinfo-brief", true);           // make your player info output brief/complete (default: true)
-		this.config.put("prompt_enabled", false);       // enable/disable the prompt (default: false)
-		this.config.put("msp_enabled", false);          // enable/disable MUD Sound Protocol, a.k.a. MSP (default: false)
-		this.config.put("complex-inventory", false);    // use/don't use complex inventory display (default: false)
-		this.config.put("pager_enabled", false);        // enabled/disable the help pager view (default: false)
-		this.config.put("show-weather", true);          // show weather information in room descriptions (default: true)
-		this.config.put("tagged-chat", false);          // "tag" the beginning chat lines with CHAT for the purpose of triggers, etc (default: false)
-		this.config.put("compact-editor", true);        // compact the output of editor's 'show' commands (default: true)
-		this.config.put("hud_enabled", true);           // is the "heads-up display" that accompanies the room description enabled (default: true)
-		this.config.put("notify_newmail", false);       // notify the player on receipt of new mail? (default: false)
+		addConfigOption("global-nameref-table", false); // use the global name reference table instead of a local one (default: false)
+		addConfigOption("pinfo-brief", true);           // make your player info output brief/complete (default: true)
+		addConfigOption("prompt_enabled", false);       // enable/disable the prompt (default: false)
+		addConfigOption("msp_enabled", false);          // enable/disable MUD Sound Protocol, a.k.a. MSP (default: false)
+		addConfigOption("complex-inventory", false);    // use/don't use complex inventory display (default: false)
+		addConfigOption("pager_enabled", false);        // enabled/disable the help pager view (default: false)
+		addConfigOption("show-weather", true);          // show weather information in room descriptions (default: true)
+		addConfigOption("tagged-chat", false);          // "tag" the beginning chat lines with CHAT for the purpose of triggers, etc (default: false)
+		addConfigOption("compact-editor", true);        // compact the output of editor's 'show' commands (default: true)
+		addConfigOption("hud_enabled", false);           // is the "heads-up display" that accompanies the room description enabled (default: false)
+		addConfigOption("notify_newmail", false);       // notify the player on receipt of new mail? (default: false)
 
 		// instantiate name reference table
 		this.nameRef = new HashMap<String, Integer>(10, 0.75f); // start out assuming 10 name references
@@ -524,15 +555,7 @@ public class Player extends MUDObject
 	public Client getClient() {
 		return client;
 	}
-
-	public void addName(String tName) {
-		this.names.add(tName);
-	}
-
-	public void removeName(String tName) {
-		this.names.remove(tName);
-	}
-
+	
 	/**
 	 * Get Access
 	 * 
@@ -551,6 +574,32 @@ public class Player extends MUDObject
 		this.access = newAccessLevel;
 	}
 
+	public void addName(String tName) {
+		this.names.add(tName);
+	}
+
+	public void removeName(String tName) {
+		this.names.remove(tName);
+	}
+	
+	public Race getRace() { return this.race; }
+
+	public void setRace(Race race) { this.race = race; }
+	
+	/**
+	 * Get player gender
+	 * 
+	 * @return
+	 */
+	public Character getGender() { return this.gender; }
+	
+	/**
+	 * set player gender
+	 * 
+	 * @param newGender
+	 */
+	public void setGender(Character newGender) { this.gender = newGender; }
+	
 	/**
 	 * Get Player Class
 	 * 
@@ -575,25 +624,7 @@ public class Player extends MUDObject
 			this.lastSpell = null;
 		}
 	}
-
-	public Race getRace() { return this.race; }
-
-	public void setRace(Race race) { this.race = race; }
 	
-	/**
-	 * Get player gender
-	 * 
-	 * @return
-	 */
-	public Character getGender() { return this.gender; }
-	
-	/**
-	 * set player gender
-	 * 
-	 * @param newGender
-	 */
-	public void setGender(Character newGender) { this.gender = newGender; }
-
 	/**
 	 * Get player title
 	 * 
@@ -890,22 +921,21 @@ public class Player extends MUDObject
 		return this.capacity;
 	}
 
-	public Character getInvType() {
+	/*public Character getInvType() {
 		return this.invType;
-	}
+	}*/
 
 	/**
 	 * 
 	 * 
 	 * @return
 	 */
-	public Editor getEditor() {
+	public Editors getEditor() {
 		return this.editor;
 	}
 
-	public void setEditor(Editor editor) {
-		//if( editor != Editor.NONE ) this.status = "EDT";
-		if( editor != Editor.NONE ) setStatus("EDT");
+	public void setEditor(Editors editor) {
+		if( editor != Editors.NONE ) setStatus("EDT");
 		this.editor = editor;
 	}
 
@@ -1014,6 +1044,12 @@ public class Player extends MUDObject
 	public void setDestination(Point newDest) {
 		this.destination = newDest;
 	}
+	
+	public void changePosition(int cX, int cY, int cZ) {
+		this.pos.changeX(cX);
+		this.pos.changeY(cY);
+		this.pos.changeZ(cZ);
+	}
 
 	public boolean hasEditor(final String name) {
 		return editMap.containsKey(name);
@@ -1077,7 +1113,7 @@ public class Player extends MUDObject
 	}
 
 	/**
-	 * Check to see if the player's is that specified.
+	 * Check to see if the player's  state is that specified.
 	 * 
 	 * @param checkState
 	 * @return
@@ -1168,9 +1204,35 @@ public class Player extends MUDObject
 	public void setAlignment(int newAlignment) {
 		this.alignment = Alignments.values()[newAlignment];
 	}
-
+	
+	public void modifyReputation(final Faction faction, final Integer value) {
+		setReputation(faction, getReputation(faction) + value);
+	}
+	
+	public void setReputation(final Faction faction, final Integer value) {
+		this.reputation.put(faction, value);
+	}
+	
+	public Integer getReputation(final Faction faction) {
+		return reputation.get(faction);
+	}
+	
+	private void addConfigOption(final String option, final Boolean initialValue) {
+		this.config.put(option, initialValue);
+	}
+	
+	public void setConfigOption(final String option, final Boolean value) {
+		if( this.config.containsKey(option) ) {
+			this.config.put(option, value);
+		}
+	}
+	
+	public Boolean getConfigOption(final String option) {
+		return this.config.get(option);
+	}
+	
 	public Map<String, Boolean> getConfig() {
-		return this.config;
+		return Collections.unmodifiableMap(this.config);
 	}
 
 	public void setLastSpell(Spell last) {
@@ -1216,7 +1278,8 @@ public class Player extends MUDObject
 		String[] output = new String[14];
 		output[0] = getDBRef() + "";                      // database reference number
 		output[1] = getName();                            // name
-		output[2] = type + getFlagsAsString();            // flags
+		output[2] = TypeFlag.asLetter(this.type) + "";    // flags
+		output[2] = output[2] + getFlagsAsString();
 		output[3] = getDesc();                            // description
 		output[4] = getLocation() + "";                   // location
 		output[5] = getPass();                            // password

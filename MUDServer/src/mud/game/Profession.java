@@ -1,4 +1,4 @@
-package mud;
+package mud.game;
 
 public class Profession {
 	private static int EXP_PER_RANK = 2000;

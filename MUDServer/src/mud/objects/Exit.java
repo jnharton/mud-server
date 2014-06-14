@@ -6,7 +6,6 @@ import mud.MUDObject;
 import mud.ObjectFlag;
 import mud.TypeFlag;
 
-import mud.interfaces.Lockable;
 import mud.utils.Utils;
 
 import java.util.EnumSet;
@@ -39,13 +38,13 @@ public class Exit extends MUDObject
 
 	protected ExitType eType = ExitType.STD;
 
-	private int origin = 0;      // strictly for doors?
-	private int destination = 0;
+	protected Integer origin = 0;      // strictly for doors?
+	protected Integer destination = 0; //
 	
-	private String succMsg;       // message about successfully using exit
-	private String osuccMsg;      // message others see about you using exit
-	private String failMsg;       // message about failing to use the exit (locked, etc)
-	private String ofailMsg;      // message others see about you failing to use the exit
+	private String succMsg;            // message about successfully using exit
+	private String osuccMsg;           // message others see about you using exit
+	private String failMsg;            // message about failing to use the exit (locked, etc)
+	private String ofailMsg;           // message others see about you failing to use the exit
 	
 	public ArrayList<String> aliases = new ArrayList<String>();
 	
@@ -117,6 +116,16 @@ public class Exit extends MUDObject
 		return destination;
 	}
 	
+	public boolean hasAlias(String alias) {
+		for(String aliasString : this.aliases) {
+			if( aliasString.equals(alias) ) {
+				return true;
+			}
+		}
+		
+		return false;
+	}
+	
 	public ArrayList<String> getAliases() {
 		return this.aliases;
 	}
@@ -146,13 +155,14 @@ public class Exit extends MUDObject
 
 	public String toDB() {
 		String[] output = new String[7];
-		output[0] = this.getDBRef() + "";       // database reference number
-		output[1] = this.getName();             // name
-		output[2] = this.getFlagsAsString();    // flags
-		output[3] = this.getDesc();             // description
-		output[4] = this.getLocation() + "";    // location (a.k.a source)
-		output[5] = this.getDestination() + ""; // destination
-		output[6] = this.eType.ordinal() + "";  // exit type
+		output[0] = this.getDBRef() + "";                // database reference number
+		output[1] = this.getName();                      // name
+		output[2] = TypeFlag.asLetter(this.type) + "";   // flags
+		output[2] = output[2] + this.getFlagsAsString();
+		output[3] = this.getDesc();                      // description
+		output[4] = this.getLocation() + "";             // location (a.k.a source)
+		output[5] = this.getDestination() + "";          // destination
+		output[6] = this.eType.ordinal() + "";           // exit type
 		return Utils.join(output, "#");
 	}
 	

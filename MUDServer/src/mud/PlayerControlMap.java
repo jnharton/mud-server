@@ -28,9 +28,12 @@ public class PlayerControlMap {
      */
     public Player control(final Player controller, final Player newSlave) {
         final Player oldSlave = map.get(controller);
+        
         map.put(controller, newSlave);
+        
         newSlave.setAccess(controller.getAccess());
-        //controller.setController(true);
+        controller.setController(true);
+        
         return oldSlave;
     }
     

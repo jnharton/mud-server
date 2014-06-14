@@ -5,17 +5,18 @@ import java.util.LinkedHashMap;
 import java.util.EnumSet;
 
 import mud.ObjectFlag;
-import mud.Abilities;
-import mud.Ability;
-import mud.Classes;
 import mud.Coins;
 import mud.Currency;
 import mud.MUDServer;
-import mud.Races;
+import mud.game.Abilities;
+import mud.game.Ability;
+import mud.game.Classes;
+import mud.game.Races;
 import mud.interfaces.*;
 import mud.net.Client;
 import mud.objects.Item;
 import mud.objects.NPC;
+import mud.objects.Player;
 import mud.objects.items.Armor;
 
 /*
@@ -102,14 +103,16 @@ public class Innkeeper extends NPC implements Vendor {
 	}
 
 	@Override
-	public void interact(Client client) {
+	public void interact(Player player) {
+		final Client client = player.getClient();
+		
 		parent.send(this.getName(), client);
 		parent.send("-----< Stock >--------------------", client);
 		for (Item item : this.stock) {
 			if (item instanceof Armor) {
 				final Armor a = (Armor) item;
 				//parent.send(parent.colors("+" + a.getMod() + " " + a.getName() + " " + a.getDesc() + " (" + a.getWeight() + ") Cost: " + a.getCost(), "yellow"), client);
-				parent.send(parent.colors(a.toString() + " " + a.getDesc() + " (" + a.getWeight() + ") Cost: " + a.getCost(), "yellow"), client);
+				parent.send(parent.colors(a.toString() + " " + a.getDesc() + " (" + a.getWeight() + ") Cost: " + a.getValue(), "yellow"), client);
 			}
 			else {
 				parent.send("?", client);

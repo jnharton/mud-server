@@ -10,12 +10,14 @@ package mud;
  * changes are made to the one referred to.
  */
 
-public enum Editor {
+public enum Editors {
 	AREA("Area Editor"),
 	DESC("Desc Editor"),
 	CHARGEN("Character Generation"),
+	CREATURE("Creature Editor"),
 	HELP("Help Editor"),
 	INTCAST("Interactive Casting"),
+	INPUT("Interactive Input"),
 	ITEM("Item Editor"),
 	LIST("List Editor"),
 	MAIL("Mail Editor"),
@@ -27,7 +29,7 @@ public enum Editor {
 	
 	private String name;
 	
-	private Editor(String editorName) {
+	private Editors(String editorName) {
 		this.name = editorName;
 	}
 	

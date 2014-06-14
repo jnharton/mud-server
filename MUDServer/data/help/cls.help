@@ -1,0 +1,10 @@
+cls
+CLEAR SCREEN
+
+"Clears" the screen by sending the specified number of blank lines.
+
+USER CMD
+
+Syntax: 'cls <number>'        # send blank lines equal to the specified number
+
+Last Updated: May 17, 2014

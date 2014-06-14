@@ -32,9 +32,9 @@ public class Mount extends Creature implements Ridable {
 		return this.name;
 	}
 	
-	public MountType getType() {
+	/*public MountType getType() {
 		return this.mtype;
-	}
+	}*/
 	
 	public int getSpeed() {
 		return this.speed;
@@ -51,7 +51,7 @@ public class Mount extends Creature implements Ridable {
 	}
 
 	@Override
-	public boolean isLargeEnough() {
+	public boolean isLargeEnough(Size riderSize) {
 		// TODO Auto-generated method stub
 		return false;
 	}

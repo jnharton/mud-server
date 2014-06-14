@@ -24,4 +24,19 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  */
 public class HelpFile {
+	private String name;
+	private String[] data;
+	
+	public HelpFile(String hName, String[] hData) {
+		this.name = hName;
+		this.data = hData;
+	}
+	
+	public String getName() {
+		return this.name;
+	}
+	
+	public String[] getData() {
+		return this.data;
+	}
 }

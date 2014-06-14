@@ -2,6 +2,7 @@ package mud.objects;
 
 import java.util.ArrayList;
 import java.util.BitSet;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -209,12 +210,12 @@ public class Room extends MUDObject implements EventSource
 					Door d = (Door) e;
 					
 					if( getDBRef() == d.getLocation() ) {
-						if( d.isLocked() ) buf.append(", ").append(d.getName().split(";")[0] + " (locked)");
-						else buf.append(", ").append(d.getName().split(";")[0]);
+						if( d.isLocked() ) buf.append(", ").append(d.getName().split("/")[0] + " (locked)");
+						else buf.append(", ").append(d.getName().split("/")[0]);
 					}
 					else if( getDBRef() == d.getDestination() ) {
-						if( d.isLocked() ) buf.append(", ").append(d.getName().split(";")[1] + " (locked)");
-						else buf.append(", ").append(d.getName().split(";")[1]);
+						if( d.isLocked() ) buf.append(", ").append(d.getName().split("/")[1] + " (locked)");
+						else buf.append(", ").append(d.getName().split("/")[1]);
 					}
 				} 
 				else buf.append(", ").append(e.getName());
@@ -232,12 +233,12 @@ public class Room extends MUDObject implements EventSource
 					Door d = (Door) e;
 					
 					if( getDBRef() == d.getLocation() ) {
-						if( d.isLocked() ) buf.append(", ").append(d.getName().split(";")[0] + " (locked)");
-						else buf.append(", ").append(d.getName().split(";")[0]);
+						if( d.isLocked() ) buf.append(", ").append(d.getName().split("/")[0] + " (locked)");
+						else buf.append(", ").append(d.getName().split("/")[0]);
 					}
 					else if( getDBRef() == d.getDestination() ) {
-						if( d.isLocked() ) buf.append(", ").append(d.getName().split(";")[1] + " (locked)");
-						else buf.append(", ").append(d.getName().split(";")[1]);
+						if( d.isLocked() ) buf.append(", ").append(d.getName().split("/")[1] + " (locked)");
+						else buf.append(", ").append(d.getName().split("/")[1]);
 					}
 				} 
 				else buf.append(", ").append(e.getName());
@@ -364,7 +365,7 @@ public class Room extends MUDObject implements EventSource
 	}
 
 	public List<Trigger> getTriggers(TriggerType triggerType) {
-		return this.triggers.get(triggerType);
+		return Collections.unmodifiableList(this.triggers.get(triggerType));
 	}
 
 	public Terrain getTerrain() {
@@ -398,7 +399,8 @@ public class Room extends MUDObject implements EventSource
 		String[] output = new String[9];
 		output[0] = this.getDBRef() + "";                         // database reference number
 		output[1] = this.getName();                               // name
-		output[2] = this.type + this.getFlagsAsString();          // flags
+		output[2] = TypeFlag.asLetter(this.type) + "";            // flags
+		output[2] = output[2] + getFlagsAsString();
 		output[3] = this.getDesc();                               // description
 		output[4] = this.getLocation() + "";                      // location (a.k.a parent)
 		output[5] = "" + this.getRoomType().toString().charAt(0); // room type

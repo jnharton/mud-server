@@ -1,4 +1,4 @@
-package mud.utils;
+package mud.auction;
 
 /*
  * Copyright (c) 2013 Jeremy N. Harton
@@ -18,12 +18,13 @@ import mud.objects.Item;
 import mud.objects.Player;
 
 public class Auction {
-	int duration;
-	int remaining = 100;
-	private Player seller;
-	private Item item;
-	private Coins initial_price;
-	private Coins buyout_price;
+	private Player seller;       // Player selling the item
+	private Item item;           // Item for auction
+	private Coins initial_price; // starting price
+	private Coins buyout_price;  // price at which you can buy the item outright (if one is set)
+	
+	private int duration;        // length of the auction ( in seconds )
+	protected int remaining;     // time until the auction ends ( in seconds )
 	
 	private Bid currentBid;
 	
@@ -40,11 +41,20 @@ public class Auction {
 	 * @param auctionItem
 	 * @param initial
 	 */
-	public Auction(Player seller, Item auctionItem, Coins initial) {
+	public Auction(Player seller, Item auctionItem, Coins initial, int duration) {
 		this.seller = seller;
 		this.item = auctionItem;
 		this.initial_price = initial;
 		
+		if( duration > 0 ) {
+			this.duration = duration;
+			this.remaining = duration;
+		}
+		else {
+			this.duration = 3600;  // default is 1 hour ( 60s/min x 60min/hr = 3600s)
+			this.remaining = 3600; // starts same as duration
+		}
+
 		this.currentBid = null;
 		
 		bids = new LinkedList<Bid>();
@@ -58,8 +68,8 @@ public class Auction {
 	 * @param initial
 	 * @param buyout
 	 */
-	public Auction(Player seller, Item auctionItem, Coins initial, Coins buyout) {
-		this(seller, auctionItem, initial);
+	public Auction(Player seller, Item auctionItem, Coins initial, Coins buyout, int duration) {
+		this(seller, auctionItem, initial, duration);
 		
 		this.buyout_price = buyout;
 	}

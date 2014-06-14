@@ -4,16 +4,17 @@
 Lists some information for all of the existing accounts, and permits
 the creation of new accounts
 
+
 Syntax: '@accounts'
+        '@accounts +add me'                        Creates a new account
+                                                   with the name and password
+                                                   of the player typing the command.
         '@accounts +add <account name> <password>' Creates a new account with
                                                    the specified name and
                                                    password, and links the
                                                    current character to it.
-        '@accounts +new'                           Creates a new (test/dummy)
-                                                   account and adds it to the
-                                                   account list.
         '@accounts +info <name> <password>'        Show account information,
                                                    requires the account name
                                                    and password.
 
-Last Updated: September 17, 2013
+Last Updated: April 9th, 2014

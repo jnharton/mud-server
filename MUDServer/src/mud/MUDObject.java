@@ -1,21 +1,21 @@
 package mud;
 
 /*
-  Copyright (c) 2012 Jeremy N. Harton
-  
-  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
-  documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
-  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit
-  persons to whom the Software is furnished to do so, subject to the following conditions:
-  
-  The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
-  Software.
-  
-  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
-  CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-*/
+ * Copyright (c) 2012 Jeremy N. Harton
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit
+ * persons to whom the Software is furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
+ * Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+ * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -42,24 +42,24 @@ public abstract class MUDObject {
 	protected EnumSet<ObjectFlag> flags = EnumSet.noneOf(ObjectFlag.class); // object flags
 	protected String locks = "";                                            // object locks
 	protected int location = 0;                                             // object location
-	
+
 	/* object data - related to game (persistent) */
 	protected int owner = 0; // who owns the object (dbref of owner)
-	
+
 	protected Point pos = new Point(0, 0, 0); // object's' location/position on a cartesian plane within a room? (3D Point)
-	
+
 	protected LinkedHashMap<String, Object> properties = new LinkedHashMap<String, Object>(1, 0.75f);
 
 	protected ArrayList<Effect> effects = new ArrayList<Effect>(); // Effects set on the object
-	
+
 	/* object state - transient? */
 	public boolean Edit_Ok = true; // is this object allowed to be edited
-	
+
 	/**
 	 * Parent constructor for no argument subclass constructors
 	 */
 	public MUDObject() {}
-	
+
 	/**
 	 * Parent constructor for subclasses. Allows you to initialize a subclass with
 	 * a dbref number without having issues with the dbref being private.
@@ -80,7 +80,27 @@ public abstract class MUDObject {
 		this.desc = tempDesc;
 		this.location = tempLoc;
 	}
-	
+
+	/**
+	 * Get database reference number of MUDObject
+	 * 
+	 * @return
+	 */
+	public final int getDBRef()
+	{
+		return this.dbref;
+	}
+
+	/**
+	 * Set database reference number of MUDObject
+	 * 
+	 * @param newDBRef
+	 */
+	public final void setDBRef(int newDBRef)
+	{
+		this.dbref = newDBRef;
+	}
+
 	/**
 	 * Get the name of the MUDObject.
 	 * 
@@ -89,7 +109,7 @@ public abstract class MUDObject {
 	public String getName() {
 		return this.name;
 	}
-	
+
 	/**
 	 * Set the name of the MUDObject;
 	 * 
@@ -100,7 +120,7 @@ public abstract class MUDObject {
 		this.name = newName;
 		return true;
 	}
-	
+
 	/**
 	 * Get the description of the MUDObject
 	 * 
@@ -110,7 +130,7 @@ public abstract class MUDObject {
 	{
 		return this.desc;
 	}
-	
+
 	/**
 	 * Set the description of the MUDObject
 	 * 
@@ -118,6 +138,14 @@ public abstract class MUDObject {
 	 */
 	public void setDesc(String newDescription) {
 		this.desc = newDescription;
+	}
+
+	/*public TypeFlag getType() {
+	return this.type;
+}*/
+
+	public String getTypeName() {
+		return this.type.name();
 	}
 
 	/**
@@ -129,19 +157,19 @@ public abstract class MUDObject {
 	{
 		return this.flags;
 	}
-	
+
 	/**
 	 * Get MUDObject flags as a String, rather than as
 	 * a EnumSet<ObjectFlag>
 	 * 
 	 * @return
 	 */
-    public String getFlagsAsString()
+	public String getFlagsAsString()
 	{
-        final StringBuilder buf = new StringBuilder();
-        for (final ObjectFlag f : flags) {
-            buf.append(f.toString().charAt(0));
-        }
+		final StringBuilder buf = new StringBuilder();
+		for (final ObjectFlag f : flags) {
+			buf.append(f.toString().charAt(0));
+		}
 		return buf.toString();
 	}
 
@@ -152,9 +180,9 @@ public abstract class MUDObject {
 	 */
 	public void setFlags(final EnumSet<ObjectFlag> tempFlags)
 	{
-        this.flags = tempFlags;
+		this.flags = tempFlags;
 	}
-	
+
 	/**
 	 * Remove a single ObjectFlag from the MUDObject (EnumSet flags)
 	 * 
@@ -163,7 +191,7 @@ public abstract class MUDObject {
 	public void removeFlag(final ObjectFlag flag) {
 		this.flags.remove(flag);
 	}
-	
+
 	/**
 	 * Remove several ObjectFlags from the MUDObject (EnumSet flags)
 	 * 
@@ -171,17 +199,7 @@ public abstract class MUDObject {
 	 */
 	public void removeFlags(final EnumSet<ObjectFlag> tempFlags)
 	{
-        this.flags.removeAll(tempFlags);
-	}
-	
-	/**
-	 * Does this MUDObject have the indicated ObjectFlag?
-	 * 
-	 * @param tempFlag
-	 * @return
-	 */
-	public boolean hasFlag(ObjectFlag tempFlag) {
-		return this.flags.contains(tempFlag);
+		this.flags.removeAll(tempFlags);
 	}
 
 	/**
@@ -218,27 +236,7 @@ public abstract class MUDObject {
 			this.locks = tempLock + ":" + tempLockString;
 		}
 	}*/
-	
-	/**
-	 * Get database reference number of MUDObject
-	 * 
-	 * @return
-	 */
-	public final int getDBRef()
-	{
-		return this.dbref;
-	}
-	
-	/**
-	 * Set database reference number of MUDObject
-	 * 
-	 * @param newDBRef
-	 */
-	public final void setDBRef(int newDBRef)
-	{
-		this.dbref = newDBRef;
-	}
-	
+
 	/**
 	 * Get this MUDObject's location.
 	 * 
@@ -248,7 +246,7 @@ public abstract class MUDObject {
 	{
 		return this.location;
 	}
-	
+
 	/**
 	 * Set this MUDObject's location.<br>
 	 * 
@@ -271,7 +269,83 @@ public abstract class MUDObject {
 	{
 		this.location = newLocation;
 	}
-	
+
+	/**
+	 * Get the ownership of this object
+	 * @return
+	 */
+	public int getOwner() {
+		return this.owner;
+	}
+
+	/**
+	 * Set ownership of this object
+	 * 
+	 * NOTE: takes a Player parameter to ensure that we don't try and set other
+	 * objects as owning objects (only Player's can "own" objects?)
+	 * 
+	 * @param player
+	 */
+	public void setOwner(Player player) {
+		this.owner = player.getDBRef();
+	}
+
+	/*
+	 * Coordinate System related methods 
+	 */
+
+	/*public int getXCoord() {
+		return this.pos.getX();
+	}
+
+	public void setXCoord(int newXCoord) {
+		this.pos.setX(newXCoord);
+	}
+
+	public int getYCoord() {
+		return this.pos.getY();
+	}
+
+	public void setYCoord(int newYCoord) {
+		this.pos.setY(newYCoord);
+	}
+
+	public int getZCoord() {
+		return this.pos.getZ();
+	}
+
+	public void setZCoord(int newZCoord) {
+		this.pos.setZ(newZCoord);
+	}*/
+
+	public Point getPosition() {
+		return this.pos;
+	}
+
+	public void setPosition(int x, int y) {
+		setPosition(x, y, 0);
+	}
+
+	public void setPosition(int x, int y, int z) {
+		this.pos.setX(x);
+		this.pos.setY(y);
+		this.pos.setZ(z);
+	}
+
+	/**
+	 * Retrieve the property by it's key
+	 * 
+	 * @param key property name
+	 * @return property value
+	 */
+	final public Object getProperty(final String key) {
+		return this.properties.get(key);
+	}
+
+	final public <T> T getProperty(final String key, Class<T> c) {
+		return (T) c.cast(this.properties.get(key));
+	}
+
 	/**
 	 * Get the Properties HashMap, a mutable hashmap of strings and objects
 	 * that can be used to store "properties" (a.k.a. "props) of/on the object.
@@ -281,19 +355,19 @@ public abstract class MUDObject {
 	final public LinkedHashMap<String, Object> getProperties() {
 		return this.properties;
 	}
-	
+
 	final public LinkedHashMap<String, Object> getVisualProperties() {
 		final LinkedHashMap<String, Object> visual_props = new LinkedHashMap<String, Object>();
-		
+
 		for(final String key : properties.keySet()) {
 			if( key.startsWith("visual/") ) {
 				visual_props.put( key, properties.get(key) );
 			}
 		}
-		
+
 		return visual_props;
 	}
-	
+
 	/**
 	 * Set a property on this object, where the name
 	 * of the property is the key and the value of the
@@ -307,103 +381,35 @@ public abstract class MUDObject {
 	}
 	
 	/**
-	 * Retrieve the property by it's key
+	 * Get Effect
 	 * 
-	 * @param key property name
-	 * @return property value
+	 * @param id
+	 * @return
 	 */
-	final public Object getProperty(final String key) {
-		return this.properties.get(key);
+	public Effect getEffect(int id) {
+		return this.effects.get(id);
 	}
 	
-	final public <T> T getProperty(final String key, Class<T> c) {
-		return (T) c.cast(this.properties.get(key));
+	/**
+	 * Get Effect(s)
+	 * 
+	 * @return
+	 */
+	public List<Effect> getEffects() {
+		return this.effects;
 	}
-	
-	final public boolean hasProperty(final String key) {
-		return this.properties.containsKey(key);
-	}
-	
-	//public abstract ArrayList<String> look();
 
-	// set an effect (string, the simple version)
 	/**
-	 * Set an effect (simple)
+	 * Set an effect
 	 * 
 	 * <br><br>
-	 * This sets an Effect on the objects (generally adding it
-	 * to the list of current affects). This simple form of the method
-	 * makes a brand new Effect object, passing it the input string. It
-	 * is very simple and is not useful for complex effects.
-	 * 
-	 * @param effect
-	 */
-	public void addEffect(String effect)
-	{
-		effects.add(new Effect(effect));
-	}
-	
-	/**
-	 * Set an effect (complex)
-	 * 
-	 * <br><br>
-	 * This sets an Effect on the object in question. This more complicated
-	 * form of the method makes takes a pre-existing Effect object and sets
-	 * it on the object . It is very simple and is not useful for complex 
-	 * effects (generally adding it to the list of current affects).
+	 * This sets an Effect on the object in question.
 	 * 
 	 * @param effect
 	 */
 	public void addEffect(Effect effect)
 	{
-		effects.add(effect);
-	}
-	
-	/**
-	 * Is an effect with the name specified set on the object?
-	 * 
-	 * @param arg      name of the effect (String)
-	 * @return does the object have this effect, yes/no? (boolean)
-	 */
-	public boolean hasEffect(String arg)
-	{
-		for (int e = 0; e < this.effects.size(); e++)
-		{
-			if (this.effects.get(e).toString().equals(arg))
-			{
-				return true;
-			}
-		}
-		return false;
-	}
-	
-	/**
-	 * Is an effect with the specified type set on the object?
-	 * 
-	 * @param arg      type of the effect (Effect.Type)
-	 * @return does the object have this effect, yes/no? (boolean)
-	 */
-	public boolean hasEffectType(Effect.Type effectType)
-	{
-		for (Effect effect : this.effects) {
-			if ( effect.getType() == effectType ) { return true; }
-		}
-		
-		return false;
-	}
-	
-	public boolean hasEffect(Effect effect) {
-		return this.effects.contains(effect);
-	}
-
-	// get effect
-	public Effect getEffect(int id) {
-		return this.effects.get(id);
-	}
-
-	// get effect
-	public List<Effect> getEffects() {
-		return this.effects;
+		this.effects.add(effect);
 	}
 
 	// get effects
@@ -435,85 +441,29 @@ public abstract class MUDObject {
 			}
 		}
 	}
-	
+
 	public void removeEffect(Effect effect) {
 		this.effects.remove(effect);
 	}
 
 	// clear all effects
-	public void removeEffects()
+	public void clearEffects()
 	{
 		this.effects.clear();
 	}
-	
-	/*
-	 * Coordinate System related methods 
-	 */
-	
-	/*public int getXCoord() {
-		return this.pos.getX();
-	}
-	
-	public void setXCoord(int newXCoord) {
-		this.pos.setX(newXCoord);
-	}
-	
-	public int getYCoord() {
-		return this.pos.getY();
-	}
-	
-	public void setYCoord(int newYCoord) {
-		this.pos.setY(newYCoord);
-	}
-	
-	public int getZCoord() {
-		return this.pos.getZ();
-	}
-	
-	public void setZCoord(int newZCoord) {
-		this.pos.setZ(newZCoord);
-	}*/
-	
-	public Point getPosition() {
-		return this.pos;
-	}
-	
-	public void setPosition(int x, int y) {
-		setPosition(x, y, 0);
-	}
-	
-	public void setPosition(int x, int y, int z) {
-		this.pos.setX(x);
-		this.pos.setY(y);
-		this.pos.setZ(z);
-	}
-	
-	public void changePosition(int cX, int cY, int cZ) {
-		this.pos.changeX(cX);
-		this.pos.changeY(cY);
-		this.pos.changeZ(cZ);
-	}
-	
+
+	/* Check Methods */
+
 	/**
-	 * Get the ownership of this object
+	 * Does this MUDObject have the indicated ObjectFlag?
+	 * 
+	 * @param tempFlag
 	 * @return
 	 */
-	public int getOwner() {
-		return this.owner;
+	public boolean hasFlag(ObjectFlag tempFlag) {
+		return this.flags.contains(tempFlag);
 	}
-	
-	/**
-	 * Set ownership of this object
-	 * 
-	 * NOTE: takes a Player parameter to ensure that we don't try and set other
-	 * objects as owning objects (only Player's can "own" objects?)
-	 * 
-	 * @param player
-	 */
-	public void setOwner(Player player) {
-		this.owner = player.getDBRef();
-	}
-	
+
 	/**
 	 * Does the specified player own this object?
 	 * 
@@ -523,7 +473,49 @@ public abstract class MUDObject {
 	public boolean isOwnedBy(Player player) {
 		return this.owner == player.getDBRef() ? true : false;
 	}
-	
+
+	final public boolean hasProperty(final String key) {
+		return this.properties.containsKey(key);
+	}
+
+	/**
+	 * Is an effect with the name specified set on the object?
+	 * 
+	 * @param arg      name of the effect (String)
+	 * @return does the object have this effect, yes/no? (boolean)
+	 */
+	public boolean hasEffect(String arg)
+	{
+		for(final Effect effect : this.effects) {
+			if( effect.getName().equalsIgnoreCase( arg ) ) {
+				return true;
+			}
+		}
+		
+		return false;
+	}
+
+	/**
+	 * Is an effect with the specified type set on the object?
+	 * 
+	 * @param arg      type of the effect (Effect.Type)
+	 * @return does the object have this effect, yes/no? (boolean)
+	 */
+	public boolean hasEffectType(Effect.Type effectType)
+	{
+		for (final Effect effect : this.effects) {
+			if ( effect.getType() == effectType ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	public boolean hasEffect(Effect effect) {
+		return this.effects.contains(effect);
+	}
+
 	/**
 	 * Convert the object to a String based representation
 	 * for storage in the plain text database.
@@ -534,7 +526,7 @@ public abstract class MUDObject {
 	 * @return
 	 */
 	public abstract String toDB();
-	
+
 	/**
 	 * Convert the object to a JSON based representation
 	 * for storage in some kind of database system
@@ -545,9 +537,9 @@ public abstract class MUDObject {
 	 * @return
 	 */
 	public abstract String toJSON();
-	
+
 	public abstract MUDObject fromJSON();
-	
+
 	public String toString() {
 		return this.name;
 	}

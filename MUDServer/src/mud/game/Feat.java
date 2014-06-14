@@ -1,4 +1,4 @@
-package mud;
+package mud.game;
 
 import java.util.Arrays;
 import java.util.List;
@@ -18,8 +18,8 @@ public class Feat {
 	public static final Feat ap_medium = new Feat("proficiency armor medium");
 	public static final Feat ap_heavy = new Feat("proficiency armor heavy", new Feat[] { ap_light, ap_medium });
 	
-	String name;       // name of the feat ex. 'ARMOR PROFICIENCY: chain_mail'
-	List<Feat> prereq; //
+	private String name;       // name of the feat ex. 'ARMOR PROFICIENCY: chain_mail'
+	private List<Feat> prereq; //
 	
 	/*
 	 * prequisite type:
@@ -40,5 +40,9 @@ public class Feat {
 		this(featName);
 		
 		prereq = Arrays.asList( requiredFeats );
+	}
+	
+	public String getName() {
+		return this.name;
 	}
 }

@@ -7,6 +7,7 @@ import mud.Coins;
 import mud.Currency;
 import mud.net.Client;
 import mud.objects.NPC;
+import mud.objects.Player;
 import mud.utils.Bank;
 
 /*
@@ -30,7 +31,7 @@ public class Banker extends NPC implements BankerI {
 	}
 	
 	@Override
-	public void interact(Client client) {
+	public void interact(Player player) {
 		// TODO Auto-generated method stub
 	}
 

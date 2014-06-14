@@ -1,6 +1,6 @@
 package mud.commands;
 
-import mud.Editor;
+import mud.Editors;
 import mud.MUDServer;
 import mud.objects.Player;
 import mud.utils.EditorData;
@@ -66,12 +66,12 @@ public class MailCommand extends Command {
 			//client.write("+-------+------+------------+----------------------------------+------------------+\n");
 			//client.write("| ID    | Flag | Subject    | Brief                            | Date             |\n");
 			//client.write("+-------+------+------------+----------------------------------+------------------+\n");
-			client.write("+--------------------------------------------------------------+\n");
-			client.write("| Mailbox                                                      |\n");
-			client.write("+-------+------+------------+----------------------------------+\n");
-			client.write("| ID    | Flag | Subject    | Brief                            |\n");
-			client.write("+-------+------+------------+----------------------------------+\n");
-
+			client.write("+---------------------------------------------------------------------------+\n");
+			client.write("| Mailbox                                                                   |\n");
+			client.write("+-------+------+------------+----------------------------------+------------+\n");
+			client.write("| ID    | Flag | Subject    | Brief                            | Date       |\n");
+			client.write("+-------+------+------------+----------------------------------+------------+\n");
+			
 			for (final Mail mail : player.getMailBox()) {
 				client.write("| ");
 				client.write(Utils.padLeft(mail.getId() + "", 5).substring(0, 5));
@@ -82,27 +82,19 @@ public class MailCommand extends Command {
 				client.write(" | ");
 				client.write(Utils.padRight(mail.getMessage(), shortMSG).substring(0, shortMSG));
 				client.write(" | ");
-				//client.write("5/5/2011 12:31PM");
-				//client.write(" |");
+				client.write("??/??/????");
+				client.write(" |");
 				client.write("\n");
 			}
 
 			//client.write("+-------+------+------------+----------------------------------+------------------+\n");
-			client.write("+-------+------+------------+----------------------------------+\n");
+			client.write("+---------------------------------------------------------------------------+\n");
 		}
 		else if (arg.equals("#write")) {
-			client.write("#write function entry\n");
-			
-			// enter interactive input "editor"
-			// enter list editor
-			// exit list editor
-			// exit interactive input "editor"
-			// send the mail
-			
 			String old_status = player.getStatus();
 
 			player.setStatus("EDT");       // set the 'edit' status flag
-			player.setEditor(Editor.MAIL); // mail
+			player.setEditor(Editors.MAIL); // mail
 
 			EditorData newEDD = new EditorData();
 			
@@ -117,47 +109,15 @@ public class MailCommand extends Command {
 			player.setEditorData(newEDD);
 			
 			handleMail("", client);
-			
-			/* Functionality is not complete */
-
-			/*if (arg.indexOf("+") != -1) {
-				String[] args1 = arg.substring(arg.indexOf("+")).split("=");
-
-				player.setStatus("EDT");
-				player.setEditor(Editor.LIST);
-
-				// need to somehow flag as editing mail, so I can
-				// conditionally change some of the list editor's behavior
-				// or maybe I could add another comand 'mail #send' that
-				// would look for the write listname in my lists, use it
-				// to construct a mail message, and then remove it?
-
-                player.startEditing("mailmsg");
-				client.write("Mail Editor v0.0b\n");
-                final EditList list = player.getEditList();
-				String header = "< List: " + list.name + " Lines: " + list.getLines() + " >";
-
-				client.write(header);
-
-				client.write(">> Please type your message below and type '.end' when done.");
-				client.write(">> NOTE: you are using the normal line editor for this, so some commands" +
-						"may produce unexpected results");
-			}
-			else {
-			}*/
 		}
 		else if(!arg.equals("")) {
 			final int msg = Utils.toInt(arg, -1);
 
 			if (msg > -1 && msg < player.getMailBox().numMessages()) {
-				client.write("Checking Mail... " + msg + "\n");
+				//client.write("Checking Mail... " + msg + "\n");
+				send("Checking Mail... " + msg, client);
 
 				Mail mail = player.getMailBox().get(msg);
-
-				/*client.write("Message #: " + msg + "\n");
-					client.write("To:        " + mail.getRecipient() + "\n");
-					client.write("Subject:   " + mail.getSubject() + "\n");
-					client.write("\n" + mail.getMessage() + "\n\n");*/
 
 				send("Message #: " + msg, client);
 				send("To:        " + mail.getRecipient(), client);
@@ -168,20 +128,29 @@ public class MailCommand extends Command {
 
 				if (mail.isUnread()) {
 					mail.markRead();
-					client.write("< mail marked as read >\n");
+					//client.write("< mail marked as read >\n");
+					send("< mail marked as read >", client);
 				}
 			}
 			else {
-				client.write("No such existing message!\n");
+				//client.write("No such existing message!\n");
+				send("No such existing message!", client);
 			}
 		}
 		else {
-			client.write("Checking for unread messages...\n");
+			//client.write("Checking for unread messages...\n");
+			send("Checking for unread messages...", client);
 
 			final int messages = player.getMailBox().numUnreadMessages();
 
-			if (messages == 0) { client.write("You have no unread messages.\n"); }
-			else { client.write("You have " + String.valueOf(messages) + " unread messages.\n"); }
+			if (messages == 0) {
+				//client.write("You have no unread messages.\n");
+				send("You have no unread messages.", client);
+			}
+			else {
+				//client.write("You have " + String.valueOf(messages) + " unread messages.\n");
+				send("You have " + String.valueOf(messages) + " unread messages.", client);
+			}
 		}
 	}
 

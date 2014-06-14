@@ -1,0 +1,12 @@
+ask
+ASK
+
+Ask an NPC about something.
+
+Note: If an NPC has a name with spaces, substitute _'s for spaces.
+
+Syntax: ask <NPC name> <keyword> <other>
+
+Keywords: about, accept, quests
+
+Last Updated: April 2nd, 2014

@@ -1,5 +1,6 @@
 package mud.commands;
 
+import mud.Constants;
 import mud.MUDServer;
 import mud.objects.Player;
 import mud.net.Client;
@@ -30,16 +31,23 @@ public class AccessCommand extends Command {
 
 			if (player != null) { // if we have a valid player
 				if (args.length > 1) { // if we have specified a new access level
-					Integer aL = player.getAccess();
+					//Integer aL = player.getAccess();
+					Integer aL = Constants.USER;
+					
+					aL = Constants.permissionMap.get(args[1].toUpperCase());
 
-					try {
-						aL = Integer.parseInt(args[1]); // get new access value (integer)
-					}
-					catch(NumberFormatException nfe) {
-						send("Invalid access level!", client); // non-numerical input and non-real numbers probably won't work
+					if( aL == null ) {
+						try {
+							aL = Integer.parseInt(args[1]); // get new access value (integer)
+						}
+						catch(NumberFormatException nfe) {
+							send("Invalid access level!", client); // non-numerical input and non-real numbers probably won't work
+							aL = Constants.USER;
+						}
 					}
 
 					player.setAccess(aL);                                                            // set access to new value (integer)
+					
 					send(player.getName() + "'s access level set to " + player.getAccess(), client); // tell us to what the player's access was set
 				}
 				else { // if there wasn't any argument other than player name

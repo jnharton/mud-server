@@ -1,4 +1,4 @@
-package mud.utils;
+package mud.auction;
 
 /*
  * Copyright (c) 2013 Jeremy N. Harton

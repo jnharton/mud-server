@@ -19,6 +19,7 @@ import java.util.EnumSet;
  */
 public enum ObjectFlag
 {
+	BANK("BANK"),
 	DARK("DARK"),
     FORGE("FORGE", TypeFlag.ROOM),
     GUEST("GUEST"),
@@ -30,7 +31,8 @@ public enum ObjectFlag
     QUIET("QUIET"),
     SHOP("SHOP", TypeFlag.ROOM),
     SILENT("SILENT"),
-    VENDOR("VENDOR");
+    VENDOR("VENDOR"),
+	VIRTUAL("VIRTUAL");
     
     private String name;   // name of the flag
     private TypeFlag type; // type of object this flag can be set on
@@ -46,6 +48,7 @@ public enum ObjectFlag
 
     static public ObjectFlag fromLetter(final char c) {
         switch (c) {
+        case 'B':    return BANK;
         case 'D':    return DARK;
         case 'G':    return GUEST;
         case 'F':    return FORGE;

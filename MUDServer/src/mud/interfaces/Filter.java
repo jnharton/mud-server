@@ -1,5 +1,7 @@
 package mud.interfaces;
 
+import java.util.Collection;
+
 /*
 Copyright (c) 2012 Jeremy N. Harton
 
@@ -17,8 +19,8 @@ CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTH
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-public interface Filter {
+public interface Filter<E> {
 	
-	public Object filter(Object o, Filter...filters);
+	public void filter(Collection<E> c);
 
 }

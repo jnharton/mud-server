@@ -9,62 +9,62 @@ public class EditList {
     private LinkedList<String> lines = new LinkedList<String>();
     
     public EditList(final String n) {
-        name = n;
+    	this.name = n;
     }
 
     public EditList(final String n, List<String> init) {
-        name = n;
-        if (lines != null)  lines = new LinkedList<String>(init);
+    	this.name = n;
+        this.lines = new LinkedList<String>(init);
     }
 
     public int getNumLines() {
-        return lines.size();
+        return this.lines.size();
     }
 
     public void setLineNum(final int n) {
-        if (n >= 0 && n < lines.size()) currentLine = n;
+    	if (n >= 0 && n <= this.lines.size()) this.currentLine = n;
     }
 
     public int getLineNum() {
-        return currentLine;
+        return this.currentLine;
     }
 
     public String getCurrentLine() {
-        return lines.isEmpty() ? "" : lines.get(currentLine);
+        return atEnd() ? "" : this.lines.isEmpty() ? "" : this.lines.get(this.currentLine);
     }
 
     public String getLastLine() {
-        return lines.isEmpty() ? "" : lines.get(lines.size() - 1);
+        return this.lines.isEmpty() ? "" : this.lines.get(this.lines.size() - 1);
     }
 
     public List<String> getLines() {
-        return new LinkedList<String>(lines);
+        return new LinkedList<String>(this.lines);
     }
 
     public void addLine(final String line) {
     	if( atEnd() ) {
-    		lines.add(line);
-    		currentLine = lines.size() - 1;
+    		this.lines.add(line);
+    		this.currentLine = this.lines.size();
     	}
     	else {
-    		lines.add(currentLine, line);
-    		currentLine++;
+    		this.lines.add(this.currentLine, line);
+    		this.currentLine++;
     	}
     }
     
     public void setLine(final int lineNum, final String line) {
-    	lines.set(lineNum, line);
-    	if( currentLine < lines.size() ) { currentLine += 1; }
+    	this.lines.set(lineNum, line);
+    	if( this.currentLine < this.lines.size() ) { this.currentLine += 1; }
     }
 
     public void removeLine(final int n) {
-        if (n >= 0 && n < lines.size()) {
-            lines.remove(n);
-            if (currentLine == n && currentLine > 0)   currentLine -= 1;
+        if (n >= 0 && n < this.lines.size()) {
+        	this.lines.remove(n);
+            if (this.currentLine == n && this.currentLine > 0) this.currentLine -= 1;
         }
     }
     
     public boolean atEnd() {
-    	return currentLine == (lines.size() - 1);
+    	return this.currentLine == this.lines.size();
     }
 }

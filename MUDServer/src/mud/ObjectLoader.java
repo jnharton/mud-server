@@ -3,6 +3,7 @@ package mud;
 import java.util.*;
 
 import mud.objects.*;
+import mud.objects.creatures.Horse;
 import mud.objects.items.*;
 import mud.objects.npcs.Innkeeper;
 import mud.objects.npcs.Merchant;
@@ -10,6 +11,9 @@ import mud.objects.things.Box;
 import mud.Coins;
 import mud.objects.Item;
 import mud.utils.Utils;
+import mud.game.Classes;
+import mud.game.Races;
+import mud.interfaces.Ruleset;
 import mud.magic.Spell;
 
 /*
@@ -38,8 +42,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 public class ObjectLoader {
 
-	static public void loadObjects(final List<String> in, final LoggerI log, final ObjectDB objectDB, 
-			final MUDServer parent)
+	static public void loadObjects(final List<String> in, final LoggerI log, final ObjectDB objectDB, final MUDServer parent)
 	{
 		for (final String oInfo : in)
 		{	
@@ -72,8 +75,30 @@ public class ObjectLoader {
 				log.debug("Location: " + oLocation);
 
 				if (oTypeFlag == 'C') {
-					final Creature cre = new Creature(oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), oDesc, oLocation);
+					
+					/*int cType = Integer.parseInt(attr[6]);
 
+					CreatureType ct = CreatureType.values()[cType];
+
+					if (ct == CreatureType.HORSE) {
+						final Horse horse = new Horse();
+						//final Creature cre = new Creature(oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), oDesc, oLocation);
+						horse.setCreatureType( ct );
+						
+						// add the creature to the in-memory database and to the list of creatures
+						objectDB.add(horse);
+						objectDB.addCreature(horse);
+					}
+					else {
+						final Creature cre = new Creature(oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), oDesc, oLocation);
+						
+						// add the creature to the in-memory database and to the list of creatures
+						objectDB.add(cre);
+						objectDB.addCreature(cre);
+					}*/
+					
+					final Creature cre = new Creature(oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), oDesc, oLocation);
+					
 					// add the creature to the in-memory database and to the list of creatures
 					objectDB.add(cre);
 					objectDB.addCreature(cre);
@@ -118,8 +143,27 @@ public class ObjectLoader {
 						int oDest = Integer.parseInt(attr[5]);
 						int lockState = Utils.toInt(attr[7], 0); // all lock states other than 0 or 1 are invalid
 						
+						String[] temp = oName.split(";");
+						System.out.println(Arrays.asList(temp));
+						oName = temp[0];
+						
 						Door door = new Door(oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), oDesc, oLocation, oDest);
 						door.setExitType(et);
+						
+						if( temp.length == 2 ) {
+							String[] names = temp[0].split("/");
+							System.out.println(Arrays.asList(names));
+							String[] aliases = temp[1].split("/");
+							System.out.println(Arrays.asList(aliases));
+
+							if( aliases.length > 0 ) {
+								for(String a : aliases[0].split(",")) door.aliases.add( names[0] + "|" + a );
+
+								if(aliases.length == 2 ) {
+									for(String a : aliases[1].split(",")) door.aliases.add( names[1] + "|" + a );
+								}
+							}
+						}
 
 						if( lockState == 1 ) { door.lock(); }
 						else { door.unlock(); }
@@ -190,27 +234,27 @@ public class ObjectLoader {
 				// NPC(int tempDBRef, String tempName, String tempDesc, int tempLoc, String tempTitle)
 				else if (oTypeFlag == 'N') {
 					if(oFlags.contains("M")) {
-						Merchant merchant = new Merchant(parent, oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), "A merchant.", "Merchant", "VEN", 161, Coins.fromArray(new int[] {1000, 1000, 1000, 1000}));
+						Merchant merchant = new Merchant(parent, oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), "A merchant.", "Merchant", "VEN", oLocation, Coins.fromArray(new int[] {1000, 1000, 1000, 1000}));
 
 						log.debug("log.debug (db entry): " + merchant.toDB(), 2);
 						log.debug("Merchant", 2);
 
 						objectDB.add(merchant);
 						objectDB.addNPC(merchant);
-
-						continue;
 					}
-					
-					//NPC npc = new NPC(oDBRef, oName, oDesc, oLocation, "npc");
-					NPC npc = loadNPC(oInfo);
-					npc.setCName("npc");
+					else {
 
-					//npc.addQuest(new Quest("Test", "Test", new Task("Test")));
+						//NPC npc = new NPC(oDBRef, oName, oDesc, oLocation, "npc");
+						NPC npc = loadNPC(oInfo);
+						npc.setCName("npc");
 
-					log.debug("log.debug (db entry): " + npc.toDB(), 2);
+						//npc.addQuest(new Quest("Test", "Test", new Task("Test")));
 
-					objectDB.add(npc);
-					objectDB.addNPC(npc);
+						log.debug("log.debug (db entry): " + npc.toDB(), 2);
+
+						objectDB.add(npc);
+						objectDB.addNPC(npc);
+					}
 				}
 				//Room(String tempName, String tempFlags, String tempDesc, int tempParent, int tempDBREF)
 				else if (oTypeFlag == 'R')
@@ -233,6 +277,7 @@ public class ObjectLoader {
 					// set zone
 					if( zoneId != -1 ) {
 						room.setZone( parent.getZone( zoneId ) );
+						parent.getZone( zoneId ).addRoom( room );
 					}
 
 					if (room.getRoomType().equals(RoomType.OUTSIDE)) {

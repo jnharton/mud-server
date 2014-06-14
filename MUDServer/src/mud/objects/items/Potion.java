@@ -46,7 +46,7 @@ public class Potion extends Item implements Stackable<Potion>, Usable<Potion> {
 		super(-1, "Potion", EnumSet.noneOf(ObjectFlag.class), "An empty glass potion bottle.", 8);
 		this.type = TypeFlag.ITEM;
 		this.item_type = ItemType.POTION;
-		this.drinkable = true;
+		this.setDrinkable(true);
 		this.spell = null;
 		this.effect = null;
 		this.weight = 0.5;
@@ -66,7 +66,7 @@ public class Potion extends Item implements Stackable<Potion>, Usable<Potion> {
 		super(-1, "Potion", EnumSet.noneOf(ObjectFlag.class), "A potion of " + effect.getName(), 8);
 		this.type = TypeFlag.ITEM;
 		this.item_type = ItemType.POTION;
-		this.drinkable = true;
+		this.setDrinkable(true);
 		this.effect = effect;
 		this.weight = 0.5;
 		
@@ -78,7 +78,7 @@ public class Potion extends Item implements Stackable<Potion>, Usable<Potion> {
 		super(-1, "Potion", EnumSet.noneOf(ObjectFlag.class), "A potion of " + spell.getName(), 8);
 		this.type = TypeFlag.ITEM;
 		this.item_type = ItemType.POTION;
-		this.drinkable = true;
+		this.setDrinkable(true);
 		this.spell = spell;
 		this.weight = 0.5;
 		
@@ -122,7 +122,7 @@ public class Potion extends Item implements Stackable<Potion>, Usable<Potion> {
 		this.effects.add(this.effect);
 
 		this.item_type = ItemType.POTION;
-		this.drinkable = true;
+		this.setDrinkable(true);
 		
 		this.weight = 0.5;
 	}
@@ -164,7 +164,7 @@ public class Potion extends Item implements Stackable<Potion>, Usable<Potion> {
 
 				int qty = 0;
 
-				while (qty < number) {
+				while (qty < stackSize() - number) {
 					prev = curr;
 					curr = curr.p;
 					qty++;

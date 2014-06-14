@@ -2,6 +2,7 @@ package mud.objects;
 
 import java.util.BitSet;
 import java.util.EnumSet;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 
@@ -12,6 +13,7 @@ import mud.Slot;
 import mud.TypeFlag;
 import mud.MUDObject;
 import mud.SlotType;
+import mud.interfaces.Stackable;
 import mud.magic.Spell;
 import mud.objects.items.Attribute;
 import mud.utils.Utils;
@@ -26,32 +28,33 @@ import mud.utils.Utils;
  * changes are made to the one referred to.
  */
 
-public class Item extends MUDObject {
-	public boolean equippable = false;       // is the item equippable?
-	public boolean equipped = false;         // is the item equipped?
+public class Item extends MUDObject implements Cloneable {
+	public boolean equippable = false; // is the item equippable? (default: false)
+	public boolean equipped = false;   // is the item equipped? (default: false)
 	
-	private boolean canAuction = true;       // allows/disallows auctioning this item (default: true)
+	protected boolean canAuction = true; // allows/disallows auctioning this item (default: true)
 
-    private Coins baseCost = Coins.gold(1);
+    protected Coins baseValue = Coins.gold(1);
     
-    public boolean edible = false;           // edible?
-	public boolean drinkable = false;        // drinkable? (0 = no, 1 = yes)
-	protected double weight = 0;             // the weight in whatever units are used of the equippable object
+    protected boolean edible = false;    // edible?
+    protected boolean drinkable = false; // drinkable? (0 = no, 1 = yes)
+	
+	protected double weight = 0;       // the weight in whatever units are used of the equippable object
 
 	// original idea was a multiplying factor for weight when wet such as
 	// 1.0 - normal, 1.25 - damp, 1.50 - soaked, 2.00 - saturated, etc ("feels" x times as heavy)
 	
 	public double reduction_factor = 1.0;     // amount of weight reduction (none by default, so 100% == 1)
 	
-	private boolean isAbsorb = true;          // does this item absorb water? (default: true)
-	private boolean isWet = false;            // defines whether the item is wet or not (default: false)
-	private double wet = 1.0;                 // degree of water absorbed
+	protected boolean isAbsorb = true;        // does this item absorb water? (default: true)
+	protected boolean isWet = false;          // defines whether the item is wet or not (default: false)
+	protected double wet = 1.0;               // degree of water absorbed
 	
-	public int durability = 100;              // how durable the material is (100 is a test value)
 	public int wear = 0;                      // how much wear and tear the item has been subject to
+	public int durability = 100;              // how durable the material is (100 is a test value)
 	
 	protected ItemType item_type;             // item type - what type of item is this (supersede equip_type?)
-	public ItemType equip_type;               // equip type - armor, shield, jewelry, weapon
+	protected ItemType equip_type;            // equip type - armor, shield, jewelry, weapon
 	protected SlotType slot_type;             // the type of slot this fits in (if any)
 	
 	protected int mod = 0;                    // modifier - +0, +2, +3, +4, ... and so on
@@ -65,6 +68,8 @@ public class Item extends MUDObject {
 	protected Map<String, Slot> slots = null; //
 	
 	protected boolean unique = false;         // is this item Unique (only one of them, cannot be copied)
+	
+	protected Hashtable<String, Integer> skill_buffs = new Hashtable<String, Integer>();
 		
 	/**
 	 * Only for creating test items and then setting their properties/attributes
@@ -82,6 +87,9 @@ public class Item extends MUDObject {
 		this.type = TypeFlag.ITEM;
 	}
 	
+	/**
+	 * ?
+	 */
 	public Item(boolean drinkable, boolean weightReduction, boolean isAbsorb) {
 		this.type = TypeFlag.ITEM;
 	}
@@ -91,21 +99,39 @@ public class Item extends MUDObject {
 	 * 
 	 * @param template
 	 */
-	public Item(Item template) {
-		super(template.getDBRef());
+	protected Item(Item template) {
+		//super(template.getDBRef());
+		super(-1);
 		
 		this.type = TypeFlag.ITEM;
-		this.item_type = template.item_type;
+		
 		this.name = template.name;
 		this.flags = template.flags;
 		this.desc = template.desc;
-		this.location = template.location;
+		//this.location = template.location;
+		this.location = -1;
+		
+		this.item_type = template.item_type;
+		this.equip_type = template.equip_type;
 		
 		this.equipped = false;
 		this.equippable = template.equippable;
-		this.drinkable = template.drinkable;
+		this.drinkable = template.isDrinkable();
 	}
-
+	
+	/**
+	 * Object Loading Constructor
+	 * 
+	 * Since Item is a subclass of object, this constructor mainly just sets the appropriate
+	 * TypeFlag and passes the rest of the argument's to the superclass's object loading
+	 * constructor
+	 * 
+	 * @param tempDBREF
+	 * @param tempName
+	 * @param tempFlags
+	 * @param tempDesc
+	 * @param tempLoc
+	 */
 	public Item(int tempDBREF, String tempName, final EnumSet<ObjectFlag> tempFlags, String tempDesc, int tempLoc)
 	{
 		super(tempDBREF, tempName, tempFlags, tempDesc, tempLoc);
@@ -119,9 +145,17 @@ public class Item extends MUDObject {
 	public void setItemType(ItemType newType) {
 		this.item_type = newType;
 	}
+	
+	public ItemType getEquipType() {
+		return this.item_type;
+	}
+	
+	public void setEquipType(ItemType newType) {
+		this.equip_type = newType;
+	}
 
-	public Coins getCost() {
-		return baseCost;
+	public Coins getValue() {
+		return baseValue;
 	}
 	
 	public int getWear() {
@@ -195,6 +229,21 @@ public class Item extends MUDObject {
 		return this.unique;
 	}
 	
+	public boolean isEdible() {
+		return this.edible;
+	}
+	
+	/**
+	 * @param drinkable the drinkable to set
+	 */
+	public void setDrinkable(boolean drinkable) {
+		this.drinkable = drinkable;
+	}
+
+	public boolean isDrinkable() {
+		return this.drinkable;
+	}
+	
 	/**
 	 * Get Effective Item Level (EIL)
 	 * @return
@@ -217,14 +266,15 @@ public class Item extends MUDObject {
 	
 	public String toDB() {
 		String[] output = new String[8];
-		output[0] = this.getDBRef() + "";                // database reference number
-		output[1] = this.getName();                      // name
-		output[2] = this.type + this.getFlagsAsString(); // flags
-		output[3] = this.getDesc();                      // description
-		output[4] = this.getLocation() + "";             // location
-		output[5] = this.item_type.ordinal() + "";       // item type
-		output[6] = "*";                                 // blank
-		output[7] = "*";                                 // blank
+		output[0] = this.getDBRef() + "";           // database reference number
+		output[1] = this.getName();                 // name
+		output[2] = TypeFlag.asLetter(type) + "";   // flags
+		output[2] = output[2] + getFlagsAsString();
+		output[3] = this.getDesc();                 // description
+		output[4] = this.getLocation() + "";        // location
+		output[5] = this.item_type.ordinal() + "";  // item type
+		output[6] = "*";                            // blank
+		output[7] = "*";                            // blank
 		return Utils.join(output, "#");
 	}
 
@@ -238,5 +288,10 @@ public class Item extends MUDObject {
 	public MUDObject fromJSON() {
 		// TODO Auto-generated method stub
 		return null;
+	}
+	
+	@Override
+	public Item clone() {
+		return new Item(this);
 	}
 }

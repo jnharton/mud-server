@@ -1,17 +1,17 @@
 olc
 OLC
 
-The OLC, or online creation system, is based loosely (command naming and output) on the style
-used by the ROM mud server's OLC <insert some history here>. Not all the commands are the same,
-although they may in the future be revised to match, so as to allow ease of use by people familiar
-with that style of building.
+The OLC, or online creation system, is based loosely (command naming and output)
+on the style used by the ROM mud server's OLC <insert some history here>. Not all
+the commands are the same, although they may in the future be revised to match,
+so as to allow ease of use by people familiar with that style of building.
 
-The online creation tools consist chiefly of the following editors: room editor, zone editor, item
-editor and quest editor.
+The online creation tools consist chiefly of the following editors: room editor,
+zone editor, item editor and quest editor.
 
 for other editors see 'help editors'
 
-NOTE: as of right now, there is no area system, only the links which connect any room to any other
-room, so there is that in favor of difference.
+NOTE: as of right now, there is no area system, only the links which connect any
+room to any other room, so there is that in favor of difference.
 
-Last Updated: January 5, 2014
+Last Updated: April 8th, 2014

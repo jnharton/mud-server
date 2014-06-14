@@ -69,12 +69,14 @@ public class Server implements Runnable {
     public void run() {
         try {
             running = true;
+            
             while (running) {
                 Socket socket = server.accept();             
                 
                 Client client = new Client(socket);
                 
                 parent.clientConnected(client);
+                
                 clients.add(client);
                 
                 System.out.println("Accepted client socket.");

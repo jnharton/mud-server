@@ -1,16 +1,16 @@
 package mud.commands;
 
+import java.util.Arrays;
+import java.util.List;
+
 import mud.Effect;
 import mud.MUDObject;
 import mud.MUDServer;
-
 import mud.magic.Reagent;
 import mud.magic.Spell;
 import mud.net.Client;
-
 import mud.objects.Player;
 import mud.objects.items.Armor;
-
 import mud.utils.EffectTimer;
 import mud.utils.Message;
 import mud.utils.SpellTimer;
@@ -132,36 +132,42 @@ public class CastCommand extends Command {
 	
 	// is TARGET a valid target for SPELL cast by PLAYER
 	private boolean validTarget( MUDObject target, Spell spell, Player player) {
+		// if the spell is an area affect spell, then not having a target is valid, as is having a target,
+		// having no target means the spell hits a general area somewhere in front of you, whereas a target
+		// means the spell hits and radiates out from the target
+		
+		List<String> targets = Arrays.asList( Spell.decodeTargets(spell).split(",") );
+		
+		System.out.println("Targets: " + targets);
+		
 		if( target instanceof Player ) {
 			Player player1 = (Player) target;
 			
-			int x = 1;
-			// replace 'x == 1' with a check on the spell for 'self' as a target,
-			// code below implies that any spell can be targeted at yourself
-			if( x == 1 ) { // if self true
+			// determine whether the target player is hostile or friendly with regard to
+			// the caster
+			
+			// I'd like a better method that uses numerical equivalents
+			if( targets.contains("self") ) {
 				if( player == player1 ) return true;
-				else if( x == 1 ) { // if the spell can target friendly
-				}
-				else { // if not ( spell targets hostiles )
-				}
 				
-				return false; // dummy return
+				return false;
 			}
-			else { // if self not true
-				if( player == player1 ) return false;
-				// check friendly/hostile
-				else if( x == 1 ) { // if the spell can target friendly
+			else if( targets.contains("enemy") ) {
+				if( player != player1 ) return false;
+				else {
+					return false;
 				}
-				else { // if not ( spell targets hostiles )
-				}
-				
-				return false; // dummy return
 			}
-			// if target is friendly, can the spell target friendlies?
-			// if target is hostile, can the spell target hostiles?
+			else if( targets.contains("friend") ) {
+				if( player != player1 ) return false;
+				else {
+					return false;
+				}
+			}
+			else return false;
 		}
 		else {
-			return true; // assuming that the spell can target any object, regardless
+			return true; // assuming that the spell can target any non-player object, regardless
 		}
 	}
 

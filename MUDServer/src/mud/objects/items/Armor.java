@@ -5,10 +5,8 @@ import java.util.EnumSet;
 
 import mud.Coins;
 import mud.ObjectFlag;
-
 import mud.interfaces.Equippable;
 import mud.interfaces.Wearable;
-
 import mud.objects.Item;
 import mud.objects.ItemType;
 import mud.objects.Player;
@@ -21,7 +19,7 @@ import mud.utils.Utils;
  * @param aMod Armor bonus modifier (integer)
  * @param aGroup err, no idea.
  */
-public class Armor extends Item implements Equippable<Armor>, Wearable<Armor>
+public class Armor extends Item implements Wearable<Armor>
 {
 	/**
 	 * Flag: I
@@ -128,24 +126,8 @@ public class Armor extends Item implements Equippable<Armor>, Wearable<Armor>
 	}
 	
 	@Override
-	public Coins getCost() {
+	public Coins getValue() {
 		return new Coins(armor_type.getCost());
-	}
-	
-	@Override
-	public String getType() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-	
-	public void equip() {
-	}
-
-	public void equip(Player p) {
-	}
-
-	public Armor unequip() {
-		return null;
 	}
 	
 	public ArrayList<String> look() {
@@ -177,5 +159,11 @@ public class Armor extends Item implements Equippable<Armor>, Wearable<Armor>
 		else {
 			return this.getName();
 		}
+	}
+
+	@Override
+	public String getType() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

@@ -6,22 +6,18 @@ import java.util.List;
 
 import mud.Effect;
 import mud.TypeFlag;
-
 import mud.interfaces.Equippable;
 import mud.interfaces.Usable;
 import mud.interfaces.Wearable;
-
 import mud.magic.Spell;
 import mud.net.Client;
-
 import mud.objects.Item;
 import mud.objects.ItemType;
 import mud.objects.Player;
-
 import mud.utils.Utils;
 import mud.ObjectFlag;
 
-public class Jewelry extends Item implements Equippable<Jewelry>, Usable<Jewelry>, Wearable<Jewelry>
+public class Jewelry extends Item implements Usable<Jewelry>, Wearable<Jewelry>
 {
 
 	// type - necklace, bracelet, ring, earring, tiara
@@ -65,28 +61,6 @@ public class Jewelry extends Item implements Equippable<Jewelry>, Usable<Jewelry
 		this.mod = jMod;
 		//this.type = jType;               // the actual type of jewelry
 		this.weight = jWeight;           // the weight of the jewelry
-	}
-
-	@Override
-	public String getType() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public void equip() {
-		// TODO Auto-generated method stub
-	}
-
-	@Override
-	public void equip(Player p) {
-		// TODO Auto-generated method stub
-	}
-
-	@Override
-	public Jewelry unequip() {
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 	public void use(String arg, Client client) {
@@ -140,5 +114,11 @@ public class Jewelry extends Item implements Equippable<Jewelry>, Usable<Jewelry
 
 	public String toString() {
 		return this.getName();
+	}
+
+	@Override
+	public String getType() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

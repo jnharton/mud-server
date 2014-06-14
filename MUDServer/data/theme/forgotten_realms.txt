@@ -2,6 +2,9 @@
 name = Forgotten_Realms
 mud_name = WaterdeepMUD
 motd_file = motd-wd-edit.txt
+start_room = 9
+world = forgotten_realms
+db = db.txt
 [/theme]
 
 [calendar]

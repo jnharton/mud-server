@@ -9,10 +9,10 @@ at the moment.
 Syntax: quests [#<param>]
 
 Optional Params:
-abandon <quest id>  - abandon the indicated quest (only works/matters
-                      if you have the quest)
-ignore <quest id>   - "ignores" a quest (hides it from your quest list)
-list                - shows a list of all the quests in the game (STAFF)
-share <player name> - share the quest with another player
+    abandon <quest id>             - abandon the indicated quest (only works/matters
+                                   if you have the quest)
+    ignore <quest id>              - "ignores" a quest (hides it from your quest list)
+    list                           - shows a list of all the quests in the game (STAFF)
+    share <player name> <quest id> - share the quest with another player
 
 Last Updated: September 3rd, 2013

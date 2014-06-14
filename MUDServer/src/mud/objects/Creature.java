@@ -1,11 +1,13 @@
 package mud.objects;
 
 import mud.MUDObject;
-import mud.Race;
-import mud.Races;
 import mud.ObjectFlag;
 import mud.TypeFlag;
-
+import mud.game.Race;
+import mud.game.Races;
+import mud.interfaces.Mobile;
+import mud.objects.CreatureType;
+import mud.utils.Point;
 import mud.utils.Utils;
 
 import java.util.EnumSet;
@@ -30,9 +32,11 @@ import java.util.EnumSet;
  * 
  * @author Jeremy
  */
-public class Creature extends MUDObject {
+public class Creature extends MUDObject implements Mobile {
 
 	// type flag = C
+	protected CreatureType ctype;
+	
 	String race = "kobold";
 	
 	private boolean ridable = false; // can this creature be ridden (default: false)
@@ -40,7 +44,13 @@ public class Creature extends MUDObject {
 	int hp = 10;
 	int maxhp = 10;
 	
+	// movement
+	protected boolean moving;
+	protected Point destination;
+	
 	public Creature() {
+		super(-1);
+		this.type = TypeFlag.CREATURE;
 	}
 	
 	/**
@@ -89,12 +99,54 @@ public class Creature extends MUDObject {
 		this.location = tempLoc;
 	}
 	
+	public void setCreatureType(CreatureType c) {
+		this.ctype = c;
+	}
+	
+	public CreatureType getCreatureType() {
+		return this.ctype;
+	}
+	
+	public CreatureType getType() {
+		return this.ctype;
+	}
+	
+	public void setRace(Race race) {
+		this.race = race.getName();
+	}
+	
+	public Race getRace() {
+		return Races.getRace(this.race);
+	}
+	
 	public void setHP(int change) {
 		this.hp += change;
 	}
 	
 	public int getHP() {
 		return this.hp;
+	}
+	
+	public boolean isMoving() {
+		return this.moving;
+	}
+
+	public void setMoving(boolean isMoving) {
+		this.moving = isMoving;
+	}
+
+	public Point getDestination() {
+		return this.destination;
+	}
+
+	public void setDestination(Point newDest) {
+		this.destination = newDest;
+	}
+	
+	public void changePosition(int cX, int cY, int cZ) {
+		this.pos.changeX(cX);
+		this.pos.changeY(cY);
+		this.pos.changeZ(cZ);
 	}
 	
 	/**
@@ -111,26 +163,18 @@ public class Creature extends MUDObject {
 	 * * - denotes an unused field
 	 */
 	public String toDB() {
-		String[] output = new String[10];    // used to be 8
-		output[0] = this.getDBRef() + "";    // creature database reference number
-		output[1] = this.getName();          // creature name
-		output[2] = this.getFlagsAsString(); // creature flags
-		output[3] = this.getDesc();          // creature description
-		output[4] = this.getLocation() + ""; // creature location
-		output[5] = "*";                     //
-		output[6] = "*";                     //
-		output[7] = "*";                     //
-		output[8] = "*";                     //
-		
+		String[] output = new String[10];                // used to be 8
+		output[0] = this.getDBRef() + "";                // creature database reference number
+		output[1] = this.getName();                      // creature name
+		output[2] = TypeFlag.asLetter(this.type) + "";   // flags
+		output[2] = output[2] + this.getFlagsAsString();
+		output[3] = this.getDesc();                      // creature description
+		output[4] = this.getLocation() + "";             // creature location
+		output[5] = "*";                                 //
+		output[6] = "*";                                 //
+		output[7] = "*";                                 //
+		output[8] = "*";                                 //
 		return Utils.join(output, "#");
-	}
-	
-	public void setRace(Race race) {
-		this.race = race.getName();
-	}
-	
-	public Race getRace() {
-		return Races.getRace(this.race);
 	}
 	
 	public String toJSON() {

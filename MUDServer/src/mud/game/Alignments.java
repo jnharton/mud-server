@@ -1,4 +1,4 @@
-package mud;
+package mud.game;
 
 /*
  * Copyright (c) 2013 Jeremy N. Harton

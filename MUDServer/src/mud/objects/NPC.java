@@ -5,25 +5,26 @@ import java.util.List;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.EnumSet;
+import java.util.Random;
 
 import mud.MUDObject;
 import mud.ObjectFlag;
-import mud.Abilities;
-import mud.Classes;
 import mud.Coins;
-import mud.Editor;
-import mud.Races;
-import mud.Skill;
-import mud.Skills;
+import mud.Editors;
 import mud.Slot;
 import mud.SlotType;
 import mud.TypeFlag;
-import mud.interfaces.Vendor;
+import mud.game.Abilities;
+import mud.game.Classes;
+import mud.game.Races;
+import mud.game.Skill;
+import mud.game.Skills;
 import mud.net.Client;
 import mud.objects.items.ClothingType;
 import mud.quest.Quest;
 import mud.quest.Task;
 import mud.quest.TaskType;
+import mud.utils.Direction;
 import mud.utils.Message;
 import mud.utils.Utils;
 
@@ -52,14 +53,23 @@ public class NPC extends Player implements InteractiveI
 	/**
 	 * 
 	 */
-	protected String greeting = "Lovely weather we're having around these parts.";
+	//protected String greeting = "Lovely weather we're having around these parts.";
+	public String greeting = "Lovely weather we're having around these parts.";
 	
 	private boolean givesQuests = false;
 	
 	private ArrayList<Quest> questList = new ArrayList<Quest>();
+	
+	private Direction lastDir = Direction.NONE;
 
 	// blank constructor for sub classes
 	/*public NPC() {
+	}*/
+	
+	// TODO make the below work (may need to modify Player)
+	/*public NPC(String name) {
+		super(-1);
+		this.name = tempName;
 	}*/
 
 	// "normal", but not default, constructor
@@ -89,6 +99,10 @@ public class NPC extends Player implements InteractiveI
 		this.type = TypeFlag.NPC;
 	}
 	
+	public void greet(Player player) {
+		parent.addMessage(new Message(this, greeting, player));
+	}
+	
 	public void say(String message) {
 		parent.addMessage(new Message(this, message));
 	}
@@ -98,7 +112,7 @@ public class NPC extends Player implements InteractiveI
 	}
 	
 	// THIS IS A HACKED-UP SOLUTION THAT NEEDS FIXING
-	public ArrayList<Message> interact(final int n) {
+	/*public ArrayList<Message> interact(final int n) {
 		final ArrayList<Message> ret = new ArrayList<Message>(2);
 
         ret.add(new Message(this, greeting));       // send some kind of generic response (need an ai of a kind to generate/determine responses)
@@ -110,7 +124,7 @@ public class NPC extends Player implements InteractiveI
                             + q.getName() + q.getDescription() + "\n"));
         }
         return ret;
-	}
+	}*/
 
 	/*@Override
 	public ArrayList<Item> list() {
@@ -183,35 +197,60 @@ public class NPC extends Player implements InteractiveI
 	 */
 	public String toDB() {
 		String[] output = new String[12];
-		output[0] = this.getDBRef() + "";                // player database reference number
-		output[1] = this.getName();                      // player name
-		output[2] = this.type + this.getFlagsAsString(); // player flags
-		output[3] = this.getDesc();                      // player description
-		output[4] = this.getLocation() + "";             // player location
-		output[5] = this.getPass();                      // player password
+		output[0] = this.getDBRef() + "";                   // database reference number
+		output[1] = this.getName();                         // name
+		output[2] = TypeFlag.asLetter(this.type) + "";      // flags
+		output[2] = output[2] + this.getFlagsAsString();
+		output[3] = this.getDesc();                         // description
+		output[4] = this.getLocation() + "";                // location
+		output[5] = "";                                     // empty (npcs have no password)
 		output[6] = stats.get(Abilities.STRENGTH) +
 				"," + stats.get(Abilities.DEXTERITY) +
 				"," + stats.get(Abilities.CONSTITUTION) +
 				"," + stats.get(Abilities.INTELLIGENCE) +
 				"," + stats.get(Abilities.WISDOM) +
 				"," + stats.get(Abilities.CHARISMA);
-		output[7] = getMoney().toString(false);        // player money
-		output[8] = this.access + "";                  //s player permissions level
-		output[9] = race.getId() + "";                 // player race
-		output[10] = pclass.getId() + "";              // player class
-		output[11] = this.getStatus();                 // player status
+		output[7] = getMoney().toString(false);             // money
+		output[8] = this.access + "";                       // permissions level
+		output[9] = this.race.getId() + "";                 // race
+		output[10] = this.pclass.getId() + "";              // class
+		output[11] = this.getStatus();                      // status
 		return Utils.join(output, "#");
 	}
 
 	@Override
-	public void interact(Client client) {
-		Player player = MUDObject.parent.getPlayer(client);
-		
+	public void interact(Player player) {
 		if( player != null ) {
-			say("Hello, " + player.getCName());
+			if( this.names.contains(player.getName()) ) {
+				tell(player, "Hello, " + player.getName() + ".");
+				//say("Hello, " + player.getName() + ".");
+			}
+			else {
+				//say(greeting);
+				tell(player, greeting);
+			}
+		}
+	}
+	
+	public Direction getDirection() {
+		ArrayList<Direction> directions = (ArrayList<Direction>) Utils.mkList(
+				Direction.NORTH,     Direction.SOUTH,
+				Direction.EAST,      Direction.WEST,
+				Direction.NORTHEAST, Direction.NORTHWEST,
+				Direction.SOUTHEAST, Direction.SOUTHWEST);
+		
+		Random rDir = new Random();		
+		
+		int n = rDir.nextInt( directions.size() );
+		
+		Direction temp = directions.get(n);
+		
+		if( temp == lastDir ) {
+			return getDirection();
 		}
 		else {
-			say("Hello");
+			lastDir = temp;
+			return temp;
 		}
 	}
 }

@@ -13,6 +13,7 @@ import mud.magic.Spell;
 import mud.net.Client;
 import mud.objects.Creature;
 import mud.objects.Exit;
+import mud.objects.Item;
 import mud.objects.NPC;
 import mud.objects.Player;
 import mud.objects.Room;
@@ -221,6 +222,17 @@ public abstract class Command {
 	
 	protected final Exit getExit(final String exitName) {
 		return parent.getExit(exitName);
+	}
+	
+	protected final Item getItem(Object object) {
+		/*if( object instanceof String ) {
+			return parent.getItem((String) object);
+		}*/
+		if( object instanceof Integer ) {
+			return parent.getItem((Integer) object);
+		}
+		
+		return null;
 	}
 	
 	protected final ArrayList<Player> getPlayers() {

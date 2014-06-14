@@ -1,4 +1,4 @@
-package mud;
+package mud.misc;
 
 /*
   Copyright (c) 2012 Jeremy N. Harton
@@ -19,6 +19,7 @@ package mud;
 
 import java.util.EnumSet;
 
+import mud.ObjectFlag;
 import mud.interfaces.Instance;
 import mud.objects.Room;
 

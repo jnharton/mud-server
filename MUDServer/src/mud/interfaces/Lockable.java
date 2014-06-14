@@ -25,7 +25,7 @@ import mud.objects.Player;
  * 
  * @author Jeremy
  *
- * @param <L> Some object type that will implement Lockable
+ * @param <L> Some object type that will be used as the key
  */
 public interface Lockable<L> {
 	public void setKey(L key);

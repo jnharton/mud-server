@@ -1,26 +1,28 @@
 package mud.utils;
 
 /*
-Copyright (c) 2012 Jeremy N. Harton
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
-documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
-rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit
-persons to whom the Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
-Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
-CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * Copyright (c) 2012 Jeremy N. Harton
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit
+ * persons to whom the Software is furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
+ * Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+ * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.math.BigInteger;
 import java.text.ParseException;
@@ -33,11 +35,22 @@ import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.security.spec.KeySpec;
+
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 
+/**
+ * A class containing utilities useful across all the whole codebase
+ * for MUDServer.
+ * 
+ * @author Jeremy
+ *
+ */
 public final class Utils {
-
+	
+	private static final int LINES = 500;
+	
+	// initialize stuff for doing hashing
 	private static SecretKeyFactory f;
 	static {
 		try {
@@ -62,107 +75,35 @@ public final class Utils {
 	 */
 	public static String hash(final String password) {
 		final KeySpec spec = new PBEKeySpec(password.toCharArray(), salt, 65536, 128);
+		
 		try {
 			final byte[] hash = f.generateSecret(spec).getEncoded();
 			return new BigInteger(1, hash).toString(16);
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
 			e.printStackTrace();
+			System.err.println("ERROR: Exception occurred in Utils.hash(...)");
 			System.exit(-1);
 		}
 		return null;
 	}
 
 	/**
-	 * Hash Function (old)
-	 * 
-	 * hash function (simple alphabetical shift and a reverse line for testing)
-	 * some kind of hash function for password shadowing, that is: we'll store the
-	 * hashed version and check the input password by hashing it and comparing it
-	 * to the stored hash.
-	 * 
-	 * @param input a string of non-zero length
-	 * @return a hashed string, a string generated based on the input that is single, and unique to the input combination
-	 */
-	public static String hash_old(String input)
-	{
-		// consider replacing strings with character arrays while working?
-
-		// two character forward alphabetical shift in set
-		String alphabet =  "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-		String alphabet1 = "cdefghijklmnopqrstuvwxyzabCDEFGHIJKLMNOPQRSTUVWXYZAB";
-
-		// letters for words swap
-		String[] special = new String[] { "ARENDIA", "BORDER", "CAIPHAS", "DESTRUCTION", "EMINENT",
-				"FAILURE", "GRENADE", "HEXAGON", "IDRIS", "JARL", "KRPYTOS", "LAMELLAR", "MYSTERIOUS",
-				"NONAGON", "OCTAVE", "PRINCESS", "QUEUE", "RATIONAL", "SINISTER", "TORRENTIAL", "UBUNTU",
-				"VIVACIOUS", "WATER", "XYLOPHONE", "YEOMAN", "ZOSTER" };
-
-
-		String working = "";
-		String rtn = "";
-
-		// letters for words swap (case is preserved)
-		for(int c = 0; c < input.length(); c++)
-		{
-			Character ch = input.charAt(c); // get the character at the current position in the input string
-			String replace = "";            // place to store the replacement word for this character
-
-			if(Character.isLowerCase(ch) == true) {
-				replace = special[alphabet.indexOf(ch)].toLowerCase();
-			}
-			else if(Character.isUpperCase(ch) == true) {
-				replace = special[alphabet.indexOf(ch)].toUpperCase();
-			}
-
-			working += replace;
-		}
-
-		// swap each character with the one two spaces ahead of it in the alphabet (case included)
-		for(int c = 0; c < working.length(); c++)
-		{
-			rtn = rtn + alphabet1.charAt(alphabet.indexOf(working.charAt(c)));
-		}
-
-		// take the shift crypto and reverse the line for additional obfuscation
-		rtn = flipLine(rtn);
-
-		// drop the second half of it (future feature)?
-		//rtn = rtn.substring(0, rtn.length() / 2);
-
-		// return the outputs
-		return rtn;
-	}
-
-	/**
-	 * flipLine
+	 * reverseString
 	 * 
 	 * flip a line around and return a reversed copy
 	 * 
-	 * @param temp the string to be flipped
-	 * @return the flipped string
+	 * @param temp the string to be reversed
+	 * @return the reversed string
 	 */
-	public static String flipLine(String temp)
-	{
-		StringBuffer arga = new StringBuffer(temp.length());
-
-		// loop through the string, character by character
-		for(int c = 0; c < temp.length(); c++)
-		{
-			// add each character back to the string, reversing it completely
-			arga.append(temp.charAt(temp.length() - c - 1));
-		}
-
-		// return a string as the result
-		return arga.toString();
-	}
-
 	public static String reverseString(final String temp)
 	{
-		final StringBuilder buf = new StringBuilder();
+		final StringBuilder buf = new StringBuilder(temp.length());
 
 		for (int j = temp.length() - 1; j >= 0; j--) {
 			buf.append(temp.charAt(j));
 		}
+		
 		return buf.toString();
 	}
 
@@ -191,38 +132,7 @@ public final class Utils {
 			e.printStackTrace();
 		}
 	}
-
-	// old
-	/**
-	 * Saves string arrays to files (the assumption being that said file is a
-	 * collection/list of arbitrary strings in a particular layout
-	 * 
-	 * @param filename
-	 * @param sArray
-	 */
-	/*public static void saveStrings(String filename, String[] sArray) {
-		File file = null;
-		PrintWriter output = null;
-
-		try {
-			file = new File(filename);
-			if( !(file instanceof File) ) {
-				throw new FileNotFoundException("Invalid File!");
-			}
-			else {
-				output = new PrintWriter(file);
-				for(String s : sArray) {
-					output.println(s);
-				}
-				output.flush();
-				output.close();
-			}
-		}
-		catch(FileNotFoundException fnfe) {
-			fnfe.printStackTrace();
-		}
-	}*/
-
+	
 	/**
 	 * Load Strings
 	 * 
@@ -235,19 +145,32 @@ public final class Utils {
 		try {
 			final File file = new File(filename);
 			final BufferedReader br = new BufferedReader(new FileReader(file));
+			//final ArrayList<String> output = new ArrayList<String>(LINES);
 			final ArrayList<String> output = new ArrayList<String>();
+			
 			String line;
-			while ((line = br.readLine()) != null) {
-				output.add(line);
-			}
+			
+			while ((line = br.readLine()) != null) output.add(line);
+			
 			br.close();
+			
+			output.trimToSize();
+			
 			return output.toArray(new String[0]);
 		}
-		catch(Exception e) {
+		catch(FileNotFoundException fnfe) {
+			System.out.println("Error: file not found. (FileNotFoundException)");
 			System.out.println("--- Stack Trace ---");
+			fnfe.printStackTrace();
+		}
+		catch(IOException ioe) {
+			ioe.printStackTrace();
+		}
+		catch(Exception e) {
 			e.printStackTrace();
 		}
-		return new String[0];
+		
+		return null;
 	}
 
 	// old
@@ -902,9 +825,15 @@ public final class Utils {
 	}
 	
 	public static int square(int num) {
-		return num * num;
+		return (int) Math.pow(num, 2);
 	}
 	
+	/**
+	 * Make a List of Objects of type T.
+	 * 
+	 * @param objects variable number of arguments (Objects of type T)
+	 * @return
+	 */
 	public static <T> List<T> mkList(T...objects) {
 		List<T> result = new LinkedList<T>();
 		
@@ -913,11 +842,11 @@ public final class Utils {
 		return result;		
 	}
 	
-	public static int count(final String s, final char c) {
-		int count = 0;
-		int index = 0;
+	/*public static int count(final String s, final char c) {
+		int count = 0; // number of characters found
 		
-		int lastIndex = 0;
+		int index = 0;     // current index into the string
+		int lastIndex = 0; // last index where we found the specified character
 		
 		while( (lastIndex = s.indexOf(c, index)) != -1 ) {
 			count++;
@@ -925,5 +854,73 @@ public final class Utils {
 		}
 		
 		return count;
+	}*/
+	
+	public static int countNumOfChar(final String s, final char ch) {
+		int count = 0;
+		
+		for(int c = 0; c < s.length(); c++) {
+			if( s.charAt(c) == ch ) count++;
+		}
+
+		return count;
+	}
+	
+	/**
+	 * Parse a String representation of a positive integer
+	 * and return an int
+	 * 
+	 * @param string integer represented as a string (digits 0-9)
+	 * @return
+	 */
+	public static int parseInt(final String string) {
+		int index = string.length() - 1;
+		int n = 0;
+		int temp = 0;
+
+		int value = 0;
+
+		boolean is_digit;
+
+		while( index > -1 ) {
+			is_digit = true;
+
+			switch( string.charAt(index) ) {
+			case '0':
+				temp = 0; break;
+			case '1':
+				temp = 1; break;
+			case '2':
+				temp = 2; break;
+			case '3':
+				temp = 3; break;
+			case '4':
+				temp = 4; break;
+			case '5':
+				temp = 5; break;
+			case '6':
+				temp = 6; break;
+			case '7':
+				temp = 7; break;
+			case '8':
+				temp = 8; break;
+			case '9':
+				temp = 9; break;
+			default:
+				is_digit = false; break;
+			}
+
+			if( is_digit ) {
+				value += temp * Math.pow(10, n);
+			}
+			else {
+				throw new NumberFormatException();
+			}
+
+			index--;
+			n++;
+		}
+
+		return value;
 	}
 }

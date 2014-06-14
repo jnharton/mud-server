@@ -3,12 +3,15 @@ package mud.objects;
 import java.util.EnumSet;
 
 import mud.ObjectFlag;
+import mud.TypeFlag;
 import mud.interfaces.Lockable;
 import mud.utils.Utils;
 
 public class Door extends Exit implements Lockable<Item> {
 	
 	private boolean isLocked = false;
+	
+	private Item key = new Item();
 	
 	public Door() {
 		this.eType = ExitType.DOOR;
@@ -28,23 +31,27 @@ public class Door extends Exit implements Lockable<Item> {
 	
 	@Override
 	public boolean lock(Item key) {
-		return lock();
+		if( this.key == key ) {
+			return lock();
+		}
+		
+		return false;
 	}
 
 
 	@Override
 	public boolean unlock() {
-		if (this.getExitType() == ExitType.DOOR) {
-			this.isLocked = false;
-			return true;
-		}
-		
-		return false;
+		this.isLocked = false;
+		return true;
 	}
 	
 	@Override
 	public boolean unlock(Item key) {
-		return unlock();
+		if( this.key == key ) {
+			return unlock();
+		}
+		
+		return false;
 	}
 
 	@Override
@@ -54,31 +61,37 @@ public class Door extends Exit implements Lockable<Item> {
 
 	@Override
 	public void setKey(Item key) {
-		// TODO Auto-generated method stub
+		this.key = key;
 	}
 
 	@Override
 	public Item getKey() {
-		// TODO Auto-generated method stub
-		return null;
+		return this.key;
 	}
 
 	@Override
 	public boolean hasKey(Player p) {
-		// TODO Auto-generated method stub
+		// TODO Player needs some kind of item check method to simplify this
+		if( p.getInventory().contains(this.key) ) {
+			return true;
+		}
+		
 		return false;
 	}
 	
+	// TODO check loader etc and fix for new data field
 	public String toDB() {
-		String[] output = new String[8];
-		output[0] = this.getDBRef() + "";           // database reference number
-		output[1] = this.getName();                 // name
-		output[2] = this.getFlagsAsString();        // flags
-		output[3] = this.getDesc();                 // description
-		output[4] = this.getLocation() + "";        // location (a.k.a source)
-		output[5] = this.getDestination() + "";     // destination
-		output[6] = this.eType.ordinal() + "";      // exit type
-		output[7] = (this.isLocked() ? 1 : 0) + ""; // lock state
+		String[] output = new String[9];
+		output[0] = this.getDBRef() + "";                // database reference number
+		output[1] = this.getName();                      // name
+		output[2] = TypeFlag.asLetter(this.type) + "";   // flags
+		output[2] = output[2] + this.getFlagsAsString();
+		output[3] = this.getDesc();                      // description
+		output[4] = this.getLocation() + "";             // location (a.k.a source)
+		output[5] = this.getDestination() + "";          // destination
+		output[6] = this.eType.ordinal() + "";           // exit type
+		output[7] = (this.isLocked() ? 1 : 0) + "";      // lock state
+		output[8] = this.key.getDBRef() + "";            // door's key (an Item) dbref
 		return Utils.join(output, "#");
 	}
 }

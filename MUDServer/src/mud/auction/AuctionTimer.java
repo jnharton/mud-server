@@ -1,8 +1,8 @@
-package mud.utils;
+package mud.auction;
 
 import java.util.TimerTask;
 
-import mud.utils.Auction;
+import mud.auction.Auction;
 
 public class AuctionTimer extends TimerTask {
 	private Auction auction;

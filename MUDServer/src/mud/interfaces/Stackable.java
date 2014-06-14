@@ -17,6 +17,8 @@ CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTH
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+import mud.objects.Item;
+
 /**
  * Defines an interface for "stackable" objects. (money?)
  * 

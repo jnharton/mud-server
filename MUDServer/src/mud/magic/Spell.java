@@ -220,6 +220,79 @@ public class Spell
 	public HashMap<String, Reagent> getReagents() {
 		return this.reagents;
 	}
+	
+	/**
+	 * Decode an integer to reconstruct data about valid targets
+	 * for the spell in question.
+	 * 
+	 * @param spell
+	 * @return
+	 */
+	public static String decodeTargets(final Spell spell) {
+		final int SELF = 4;
+		final int FRIEND = 2;
+		final int ENEMY = 1;
+
+		final StringBuilder sb = new StringBuilder();
+
+		int temp = spell.target;
+
+		// decode targets
+		// S, F, E
+		if( temp > 3 && temp <= 7 ) {
+			temp = temp ^ SELF;
+			if( temp > 0 && temp <= 3 ) {
+				sb.append("self, ");
+				temp = temp ^ FRIEND;
+				if( temp > 0 && temp <= 1) {
+					sb.append("friend, ");
+					temp = temp ^ ENEMY;
+					if( temp > 0 && temp <= 0 ) sb.append("enemy, ");
+					else if( temp == 0 ) sb.append("enemy");
+				}
+				else if( temp == 0 ) sb.append("friend");
+			}
+			else if( temp == 0 ) sb.append("self");
+		}
+		else if( temp == 3 ) sb.append("friend, enemy");
+		else if( temp == 2 ) sb.append("friend");
+		else if( temp == 1 ) sb.append("enemy");
+		else sb.append("none");
+
+		return sb.toString();
+	}
+	
+	/**
+	 * Convert valid targets for spells into a short form to store it
+	 * by encoding it into binary as a single integer.
+	 * 
+	 * @param tTargets
+	 * @return
+	 */
+	public static int encodeTargets(final String[] tTargets) {
+		int targets = 0;
+
+		int SELF = 4;
+		int FRIEND = 2;
+		int ENEMY = 1;
+
+		for(String s : tTargets) {
+			if( s.equals("none") ) {
+				targets = 0;
+				break;
+			}
+			else {
+				switch(s) {
+				case "self":   targets |= SELF; break;
+				case "enemy":  targets |= ENEMY; break;
+				case "friend": targets |= FRIEND; break;
+				default: break;
+				}
+			}
+		}
+
+		return targets;
+	}
 
     @Override
 	public String toString() {

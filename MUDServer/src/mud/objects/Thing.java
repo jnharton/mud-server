@@ -57,7 +57,13 @@ public class Thing extends MUDObject {
 	 */
 	public Thing() {
 		this.type = TypeFlag.THING;
-		attributes = new Hashtable<String, String>();
+		this.attributes = new Hashtable<String, String>();
+	}
+	
+	public Thing(int tempDBREF) {
+		super(tempDBREF);
+		this.type = TypeFlag.THING;
+		this.attributes = new Hashtable<String, String>();
 	}
 	
 	public Thing(String name) {
@@ -127,7 +133,8 @@ public class Thing extends MUDObject {
 		String[] output = new String[6];
 		output[0] = this.getDBRef() + "";                // database reference number
 		output[1] = this.getName();                      // name
-		output[2] = this.type + this.getFlagsAsString(); // flags
+		output[2] = TypeFlag.asLetter(this.type) + "";   // flags
+		output[2] = output[2] + getFlagsAsString();
 		output[3] = this.getDesc();                      // description
 		output[4] = this.getLocation() + "";             // location (a.k.a parent)
 		output[5] = this.thing_type.ordinal() + "";      // thing type

@@ -1,5 +1,7 @@
 package mud;
 
+import java.lang.reflect.Method;
+
 import mud.utils.Date;
 import mud.utils.Message;
 
@@ -46,6 +48,10 @@ public class TimeLoop implements Runnable
     final private int[] DAYS;              // array containing the number of days in each month
     
     final private MUDServer server;
+    
+    //private Method onMinuteIncrement;
+    //private Method onHourIncrement;
+    //private Method onDayIncrement;
 
     /**
      * This uses a 6:1 timescale. That is, 6 minutes of game time is equal to 1 minute
@@ -92,6 +98,7 @@ public class TimeLoop implements Runnable
     		second = 0;
     		incrementMinute();
     	}
+    	
     	server.checkTimers();
     }
     
@@ -102,11 +109,7 @@ public class TimeLoop implements Runnable
             incrementHour();
         }
         
-        server.debug("Time loop: " + hour + ":" + minute);
-        
-        if( (minute % weather_update_interval) == 0 ) server.broadcastWeather();
-        
-        server.handleMovement();
+        server.onMinuteIncrement();
     }
 
     private void incrementHour() {
@@ -220,8 +223,10 @@ public class TimeLoop implements Runnable
     }
 
     public void setHours(int hour) {
+    	pauseLoop();
         this.hour = hour;
         this.minute = 0;
+        unpauseLoop();
     }
 
     public int getHours() {
@@ -229,7 +234,9 @@ public class TimeLoop implements Runnable
     }
 
     public void setMinutes(int minute) {
+    	pauseLoop();
         this.minute = minute;
+        unpauseLoop();
     }
 
     public int getMinutes() {
@@ -237,8 +244,11 @@ public class TimeLoop implements Runnable
     }
     
     public void setSeconds(int second) {
+    	pauseLoop();
     	this.second = second;
+    	unpauseLoop();
     }
+    
     public int getSeconds() {
     	return this.second;
     }
@@ -277,7 +287,15 @@ public class TimeLoop implements Runnable
         return isDay;
     }
     
+    public void setMoonPhase(MoonPhase next_phase) {
+    	this.moonPhase = next_phase;
+    }
+    
     public MoonPhase getMoonPhase() {
         return moonPhase;
+    }
+    
+    public int getWeatherUpdateInterval() {
+    	return this.weather_update_interval;
     }
 }

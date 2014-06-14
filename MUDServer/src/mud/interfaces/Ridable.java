@@ -29,6 +29,10 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 public interface Ridable {
 	
+	public enum Size { SMALL, MEDIUM, LARGE };
+	
+	public String getName();
+	
 	/**
 	 * mount/get in this ridable object
 	 */
@@ -43,7 +47,9 @@ public interface Ridable {
 	 * Is this ridable object big enough
 	 * to fit you?
 	 * 
+	 * @param riderSize
+	 * 
 	 * @return
 	 */
-	public boolean isLargeEnough();
+	public boolean isLargeEnough(Size riderSize);
 }

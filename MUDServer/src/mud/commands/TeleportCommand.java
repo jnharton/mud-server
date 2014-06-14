@@ -85,5 +85,4 @@ public class TeleportCommand extends Command {
 	public int getAccessLevel() {
 		return WIZARD;
 	}
-
 }

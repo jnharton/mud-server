@@ -19,7 +19,7 @@ import mud.Colors;
  * @author Jeremy
  *
  */
-public class Quest {
+public class Quest implements Cloneable {
 	private static int lastId = 0;      // the last quest id issued
 	
 	private int id;                     // quest id
@@ -32,6 +32,7 @@ public class Quest {
 	
 	private boolean isComplete = false; // is the quest completed? (this should put it in a deletion queue if we delete completed quests)
 	private boolean isIgnored = false;  // is the quest being ignored? (i.e. it shouldn't show up in the main quest list for the player)
+	private boolean isCopy = false;     // is this quest the original object or a copy
 	
 	final private ArrayList<Task> tasks; // a list of tasks that must be completed to finish the quest
 	
@@ -86,23 +87,27 @@ public class Quest {
 	 * 
 	 * @param template
 	 */
-	public Quest( Quest template ) {
+	protected Quest( Quest template ) {
 		this.id = template.id;
 		this.name = template.name;
 		this.description = template.description;
 		this.location = template.location;
+		
+		if( !this.isCopy ) this.isCopy = true;
+		
 		this.tasks = new ArrayList<Task>();
+		
 		for(Task task : template.getTasks()) {
 			this.tasks.add( new Task( task ) );
 		}
 	}
 	
 	public void addTask(Task newTask) {
-		this.tasks.add(newTask);
+		if( !isCopy ) this.tasks.add(newTask);
 	}
 	
 	public void removeTask(Task toRemove) {
-		this.tasks.remove(toRemove);
+		if( !isCopy ) this.tasks.remove(toRemove);
 	}
 	
 	/**
@@ -113,21 +118,29 @@ public class Quest {
 	public int getId() {
 		return this.id;
 	}
+	
+	public void setName(String newName) {
+		if( !isCopy ) this.name = newName;
+	}
 
 	public String getName() { 
 		return this.name;
 	}
 	
-	public void setName(String newName) {
-		this.name = newName;
+	public void setDescription(String newDescription) {
+		if( !isCopy ) this.description = newDescription;
 	}
-
+	
 	public String getDescription() {
 		return this.description;
 	}
 	
-	public void setDescription(String newDescription) {
-		this.description = newDescription;
+	public void setLocation(Zone newLocation) {
+		if( !isCopy ) this.location = newLocation;
+	}
+	
+	public Zone getLocation() {
+		return this.location;
 	}
 	
 	public ArrayList<Task> getTasks() {
@@ -209,8 +222,8 @@ public class Quest {
 		return this.isComplete;
 	}
 	
-	public Zone getLocation() {
-		return this.location;
+	public void setIssued(Date issuedDate) {
+		this.issueDate = issuedDate;
 	}
 	
 	public void setExpires(Date expirationDate) {
@@ -228,6 +241,7 @@ public class Quest {
 
 	public String toDisplay(boolean useColor) {
         final StringBuilder buf = new StringBuilder();
+        
         if( useColor ) {
         	buf.append(Colors.YELLOW).append("   o ").append(getName());
         	buf.append(Colors.MAGENTA).append(" ( ").append(location.getName()).append(" ) ").append(Colors.CYAN);
@@ -262,10 +276,15 @@ public class Quest {
 	}
 	
 	public void setIgnore(boolean ignore) {
-		this.isIgnored = ignore;
+		if( isCopy ) this.isIgnored = ignore;
 	}
 
 	public boolean isIgnored() {
 		return isIgnored;
+	}
+	
+	@Override
+	public Quest clone() {
+		return new Quest(this);
 	}
 }
