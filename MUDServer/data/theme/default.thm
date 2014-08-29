@@ -1,0 +1,42 @@
+[theme]
+name = MUD
+mud_name = DefaultMUD
+motd_file = motd.txt
+start_room = 0
+db = db.txt
+[/theme]
+
+[calendar]
+day = 1
+month = 1
+year = 0
+reckon = DR
+season = summer
+[/calendar]
+
+// number = name
+[months]
+1 = Hammer
+2 = Alturiak
+3 = Ches
+4 = Tarsakh
+5 = Mirtul
+6 = Kythorn
+7 = Flamerule
+8 = Eleasias
+9 = Eleint
+10 = Marpenoth
+11 = Uktar
+12 = Nightal
+[/months]
+
+// alternate month names
+[months_alt]
+[/months_alt]
+
+// month,day = name
+[holidays]
+[/holidays]
+
+[years]
+[/years]

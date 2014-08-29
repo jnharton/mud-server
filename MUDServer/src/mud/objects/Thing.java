@@ -39,7 +39,7 @@ public class Thing extends MUDObject {
 	 * 
 	 */
 
-	protected double weight = 40; // the weight in whatever units are used of the equippable object
+	protected double weight = 0; // the weight in whatever units are used of the equippable object
 	
 	public ThingType thing_type = ThingType.NONE;
 	

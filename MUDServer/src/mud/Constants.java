@@ -65,4 +65,8 @@ public final class Constants {
 	public static final String ST_EDIT = "EDT";
 	public static final String ST_INTERACT = "INT";
 	
+	// stat generation
+	public static final int ROLL = 0;
+	public static final int ASSIGN = 1;
+	
 }

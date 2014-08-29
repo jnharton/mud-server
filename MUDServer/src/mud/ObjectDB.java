@@ -198,8 +198,8 @@ public final class ObjectDB {
      * @param item
      */
     public void add(final MUDObject item) {
-    	System.out.println("");
-    	System.out.println("ObjectDB " + nextId + ": " + item.getDBRef());
+    	//System.out.println("");
+    	//System.out.println("ObjectDB " + nextId + ": " + item.getDBRef());
     	
     	/* If the object's dbref doesn't match the next id (e.g. there's no
     	 * database entry and the db skips over a number) then insert a NullObject,
@@ -223,25 +223,40 @@ public final class ObjectDB {
     		continue;
     	}
     	
+    	System.out.println("");
+    	System.out.println("ObjectDB " + nextId + ": " + item.getDBRef());
+    	
     	System.out.println(item.getDBRef() + ": " + item.getName());
     	System.out.println("");
     	
-    	// kludge for doors here (give one object two different name entries)
-    	if( item.getName().contains("/") ) {
-    		String[] temp = item.getName().split("/");
-    		
-    		objsByName.put(temp[0], item);
-    		objsByName.put(temp[1], item);
+    	if(item instanceof NullObject) {
+    		NullObject no = (NullObject) item;
+
+    		objsByName.put("$NULLOBJECT$", no);
+    		objsById.put(no.getDBRef(), no);
+
+    		if( !no.isLocked() ) {
+    			addUnused(item.getDBRef());
+    		}
+
+    		nextId++;
     	}
     	else {
-    		objsByName.put(item.getName(), item);
+    		// kludge for doors here (give one object two different name entries)
+    		if( item.getName().contains("/") ) {
+    			String[] temp = item.getName().split("/");
+
+    			objsByName.put(temp[0], item);
+    			objsByName.put(temp[1], item);
+    		}
+    		else {
+    			objsByName.put(item.getName(), item);
+    		}
+
+    		objsById.put(item.getDBRef(), item);
+
+    		nextId++;
     	}
-    	
-    	objsById.put(item.getDBRef(), item);
-    	
-    	if(item instanceof NullObject) { addUnused(item.getDBRef()); }
-    	
-        nextId++;
     }
 
     /*public void allocate(final int n) {
@@ -424,9 +439,6 @@ public final class ObjectDB {
     					System.out.println(index + " No Previous Data, Overwriting...");
     					toSave[index] = obj.toDB(); // just save the null object
     				}
-
-    				index++;
-    				continue; // skip to next object
     			}
     			else if(obj instanceof Player) {
     				Player player = (Player) obj;
@@ -437,14 +449,13 @@ public final class ObjectDB {
     				else { // otherwise, store a NullObject
     					toSave[index] = new NullObject(obj.getDBRef()).toDB();
     				}
-
-    				continue;
     			}
+    			else {
+    				System.out.println(obj.getName());
 
-    			System.out.println(obj.getName());
-
-    			toSave[index] = obj.toDB();
-
+        			toSave[index] = obj.toDB();
+    			}
+    			
     			index++;
     		}
     	}
@@ -452,7 +463,6 @@ public final class ObjectDB {
     		// TODO figure out if this part of save(...) should just go elsewhere. This is essentially
     		// breaking the notion of save since we aren't saving over an existing database
     		for (final MUDObject obj : objsById.values()) {
-    			
     			System.out.println(obj.getName());
 
     			toSave[index] = obj.toDB();
@@ -702,6 +712,7 @@ public final class ObjectDB {
     }
 
     public NPC getNPC(final int dbref) {
+    	if( dbref < 0 ) return null;
         return npcsById.get(dbref);
     }
 
@@ -724,7 +735,7 @@ public final class ObjectDB {
     
     // these are not presently loaded with anything by the code (8-23-2013)
     private final Map<Integer, Item> itemsById   = new HashMap<Integer, Item>();
-    //final Map<String, Item>  itemsByName = new HashMap<String, Item>();
+    //private final Map<String, Item>  itemsByName = new HashMap<String, Item>();
 
     public void addItem(final Item item) {
         items.add(item);
@@ -744,6 +755,10 @@ public final class ObjectDB {
     public Item getItem(final int dbref) {
     	return itemsById.get(dbref);
     }
+    
+    /*public Item getItem(final String name) {
+    	return itemsByName.
+    }*/
 
     public List<Item> getItems() {
         return new ArrayList<Item>(itemsById.values());

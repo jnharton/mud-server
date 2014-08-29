@@ -15,6 +15,7 @@ import mud.game.Classes;
 import mud.game.Races;
 import mud.interfaces.Ruleset;
 import mud.magic.Spell;
+import mud.misc.Zone;
 
 /*
 Copyright (c) 2012 Jeremy N. Harton
@@ -43,7 +44,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 public class ObjectLoader {
 
 	static public void loadObjects(final List<String> in, final LoggerI log, final ObjectDB objectDB, final MUDServer parent)
-	{
+	{		
 		for (final String oInfo : in)
 		{	
 			Integer oDBRef = 0, oLocation = 0;
@@ -52,9 +53,14 @@ public class ObjectLoader {
 
 			if ( oInfo.charAt(0) == '&' ) { // means to ignore that line
 				log.debug("`loadObjects` ignoring line: " + oInfo);
+				
 				oDBRef = Integer.parseInt(oInfo.split("#")[0].replace('&', ' ').trim());
+				
 				NullObject no = new NullObject(oDBRef);
 				no.lock(); // lock the NullObject
+				
+				System.out.println("NULLObject (" + oDBRef + ") Locked?: " + no.isLocked());
+				
 				objectDB.add(no);
 				continue;
 			}
@@ -276,6 +282,12 @@ public class ObjectLoader {
 					
 					// set zone
 					if( zoneId != -1 ) {
+						System.out.println("Zone ID: " + zoneId);
+						
+						Zone zone = parent.getZone( zoneId );
+						
+						System.out.println( (zone == null) );
+						
 						room.setZone( parent.getZone( zoneId ) );
 						parent.getZone( zoneId ).addRoom( room );
 					}
@@ -475,7 +487,6 @@ public class ObjectLoader {
 					
 				}
 				else if (oFlags.contains("null")) {
-
 					NullObject Null = new NullObject(oDBRef);
 
 					objectDB.add(Null);

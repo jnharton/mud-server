@@ -7,6 +7,7 @@ import mud.game.Race;
 import mud.game.Races;
 import mud.interfaces.Mobile;
 import mud.objects.CreatureType;
+import mud.objects.creatures.Size;
 import mud.utils.Point;
 import mud.utils.Utils;
 
@@ -37,7 +38,8 @@ public class Creature extends MUDObject implements Mobile {
 	// type flag = C
 	protected CreatureType ctype;
 	
-	String race = "kobold";
+	protected String race;
+	protected Size size;
 	
 	private boolean ridable = false; // can this creature be ridden (default: false)
 	

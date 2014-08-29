@@ -1,14 +1,17 @@
 mail
 MAIL
 
-Read the mail in your player inbox, the former command with no argument will list the
-number of unread messages, the latter will display a particular message, the one with
-the id/index selected. The third option will output a list of the messages you have,
-with their id, subject, brief portion of message, etc.
+Read the mail in your player inbox.
+
+Using this command with no argument will list the number of unread messages,
+whereas giving it a message number will display a particular message. Using
+the delete parameter it is possible to delete a message given it's number.
+The list parameter, as might be expected, will output a list of the messages
+you have, with their id, subject, brief portion of message, etc.
 
 Syntax: 'mail'
         'mail <message #>'         read mail with the id of <message #>
         'mail #delete <message #>' delete mail with the id of <message #>
         'mail #list'               show the contents of your mailbox
         
-Last Updated: September 28, 2013
+Last Updated: June 14, 2014

@@ -71,8 +71,7 @@ public class Door extends Exit implements Lockable<Item> {
 
 	@Override
 	public boolean hasKey(Player p) {
-		// TODO Player needs some kind of item check method to simplify this
-		if( p.getInventory().contains(this.key) ) {
+		if( p.hasItem(this.key) ) {
 			return true;
 		}
 		

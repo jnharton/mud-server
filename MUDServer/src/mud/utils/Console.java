@@ -27,7 +27,7 @@ public class Console {
 		else if ( input.equalsIgnoreCase("clients") ) {
 			int cn = 0;
 			client.writeln("-- " + Utils.padRight("Clients ", '-', 69));
-			for (Client c : server.s.getClients()) {
+			for (Client c : server.getClients()) {
 				final String ident = c.isConsole() ? "Console" : server.loginCheck(c) ? "Logged-In" : "Not Logged-In";
 				
 				if (c != null) {

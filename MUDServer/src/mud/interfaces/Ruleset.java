@@ -23,6 +23,7 @@ public interface Ruleset<E> {
 	
 	public Skill getSkill(int id);
 	public Skill getSkill(String name);
+	public Skill[] getSkills();
 	
 	//public Hashtable<Tuple<String, E>> getExtendedData();
 }

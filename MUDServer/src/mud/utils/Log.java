@@ -15,7 +15,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
 CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-*/
+ */
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -37,16 +37,18 @@ import java.util.TimeZone;
 public class Log
 {
 	private static String DATA_DIR = "data//";
-	
+
 	private Calendar calendar;
-	
+
 	private String date;
 	private String time;
+
 	private String filename;
 	private File file;
 	private PrintWriter output;
 
-	//private int length;
+	private int length;
+	private int max_log_size;
 
 	private boolean isOpen;
 	private boolean isFull;
@@ -63,12 +65,13 @@ public class Log
 	public Log()
 	{
 		this.calendar = Calendar.getInstance(TimeZone.getTimeZone("America/New_York"), new Locale("ENGLISH", "US"));
-		
+
 		this.date = str(month() + 1) + "-" + str(day()) + "-" + str(year());
 		this.time = str(hour()) + "-" + str(minute());
 		this.filename = "log_" + this.date + "_" + this.time + ".txt";
 
-		//this.length = 0;
+		this.length = 0;
+		this.max_log_size = -1;
 
 		this.isOpen = false;
 		this.isFull = false;
@@ -86,15 +89,32 @@ public class Log
 	public Log(String filename)
 	{
 		this.calendar = Calendar.getInstance(TimeZone.getTimeZone("America/New_York"), new Locale("ENGLISH", "US"));
-		
+
 		this.date = str(month() + 1) + "-" + str(day()) + "-" + str(year());
 		this.time = str(hour()) + "-" + str(minute());
 		this.filename = filename + "_" + this.date + "_" + this.time + ".txt";
 
-		//this.length = 0;
+		this.length = 0;
+		this.max_log_size = -1;
 
 		this.isOpen = false;
 		this.isFull = false;
+	}
+	
+	/**
+	 * Alternate Log constructor that takes a specific filename
+	 * and prefixes it to the default name in place of 'log'. This
+	 * version also takes a maximum log length.
+	 * 
+	 * NOTE: Should this allow an entirely alternate name, i.e. is that
+	 * something a person might expect?
+	 * 
+	 * @param filename
+	 */
+	public Log(String filename, int maxLength) {
+		this(filename);
+
+		this.max_log_size = maxLength;
 	}
 
 	/**
@@ -106,62 +126,28 @@ public class Log
 			try {
 				this.file = new File(DATA_DIR + "logs/" + this.filename);
 				this.output = new PrintWriter(file);
-				
+
 				this.isOpen = true;
 			}
 			catch (FileNotFoundException fnfe) {
 				try {
 					System.out.println("File not found!");
-					
+
 					System.out.println("Creating file...");
 					this.file.createNewFile();
-					
+
 					this.output = new PrintWriter(file);
-					
+
 					this.isOpen = true;
 				}
 				catch (IOException e) {
-                    System.out.println("Bad path: " + file);
+					System.out.println("Bad path: " + file);
 					e.printStackTrace();
 				}
 			}
 		}
 		else {
 			System.out.println("Game> Log File already open, debug coding.");
-		}
-	}
-	
-	/**
-	 * 
-	 * @param b
-	 */
-	public void write(Byte b) {
-		if (this.isOpen) {
-			if (!this.isFull) {
-				this.output.print(b + ' ');
-				this.output.flush();
-			}
-		}
-		else
-		{
-			System.out.println("Game> Log File not open, debug coding.");
-		}
-	}
-	
-	/**
-	 * 
-	 * @param b
-	 */
-	public void writeln(Byte b) {
-		if (this.isOpen) {
-			if (!this.isFull) {
-				this.output.println(b + ' ');
-				this.output.flush();
-			}
-		}
-		else
-		{
-			System.out.println("Game> Log File not open, debug coding.");
 		}
 	}
 
@@ -174,27 +160,23 @@ public class Log
 		if (this.isOpen)
 		{
 			if (!this.isFull) {
-				// update calendar
-				this.calendar = Calendar.getInstance(TimeZone.getTimeZone("America/New_York"), new Locale("ENGLISH", "US"));
-				
-				//
-				String hour, minute, second;
-				if (hour() < 10) { hour = "0" + str(hour()); }
-				else { hour = str(hour()); }
-				if (minute() < 10) { minute = "0" + str(minute()); }
-				else { minute = str(minute()); }
-				if (second() < 10) { second = "0" + str(second()); }
-				else { second = str(second()); }
-				String logString = "[" + hour + ":" + minute + ":" + second + "] " + message;
-				
+				final String timeString = getTimeString();
+				final String logString = timeString + " " + message;
+
 				logString.trim();
 				
 				this.output.print(logString);
 				this.output.flush();
-				//this.length++;
-				//if (this.length == max_log_size) {
-				//	this.isFull = true;
-				//}
+
+				this.length++;
+
+				if (max_log_size != -1 && this.length == max_log_size) {
+					this.isFull = true;
+				}
+			}
+			else {
+				// report full log
+				// close current log file and open a new one and call write again
 			}
 		}
 		else
@@ -202,7 +184,7 @@ public class Log
 			System.out.println("Game> Log File not open, debug coding.");
 		}
 	}
-	
+
 	/**
 	 * 
 	 * @param message
@@ -212,27 +194,23 @@ public class Log
 		if (this.isOpen)
 		{
 			if (!this.isFull) {
-				// update calendar
-				this.calendar = Calendar.getInstance(TimeZone.getTimeZone("America/New_York"), new Locale("ENGLISH", "US"));
-				
-				//
-				String hour, minute, second;
-				if (hour() < 10) { hour = "0" + str(hour()); }
-				else { hour = str(hour()); }
-				if (minute() < 10) { minute = "0" + str(minute()); }
-				else { minute = str(minute()); }
-				if (second() < 10) { second = "0" + str(second()); }
-				else { second = str(second()); }
-				String logString = "[" + hour + ":" + minute + ":" + second + "] " + message;
-				
+				final String timeString = getTimeString();
+				final String logString = timeString + " " + message;
+
 				logString.trim();
-				
+
 				this.output.println(logString);
 				this.output.flush();
-				//this.length++;
-				//if (this.length == max_log_size) {
-				//	this.isFull = true;
-				//}
+
+				this.length++;
+
+				if (max_log_size != -1 && this.length == max_log_size) {
+					this.isFull = true;
+				}
+			}
+			else {
+				// report full log
+				// close current log file and open a new one and call write again
 			}
 		}
 		else
@@ -252,29 +230,23 @@ public class Log
 		if (this.isOpen)
 		{
 			if (!this.isFull) {
-				// update calendar
-				this.calendar = Calendar.getInstance(TimeZone.getTimeZone("America/New_York"), new Locale("ENGLISH", "US"));
-				
-				//
-				String hour, minute, second;
-				if (hour() < 10) { hour = "0" + str(hour()); }
-				else { hour = str(hour()); }
-				if (minute() < 10) { minute = "0" + str(minute()); }
-				else { minute = str(minute()); }
-				if (second() < 10) { second = "0" + str(second()); }
-				else { second = str(second()); }
-				String logString = "log failure";
-				logString = "[" + hour + ":" + minute + ":" + second + "] (" + playerName + ") {Location: #" + playerLoc +  "}  " + action;
-				
+				final String timeString = getTimeString();
+				final String logString = timeString + " " + "(" + playerName + ") {Location: #" + playerLoc +  "}  " + action;
+
 				logString.trim();
-				
+
 				this.output.print(logString);
 				this.output.flush();
-				//this.length++;
-				// need a way to get the max log size
-				//if (this.length == max_log_size) {
-				//	this.isFull = true;
-				//}
+				
+				this.length++;
+				
+				if (max_log_size != -1 && this.length == max_log_size) {
+					this.isFull = true;
+				}
+			}
+			else {
+				// report full log
+				// close current log file and open a new one and call write again
 			}
 		}
 		else
@@ -282,48 +254,42 @@ public class Log
 			System.out.println("Game> Log File not open, debug coding.");
 		}
 	}
-	
+
 	// method for logging player actions
-		/**
-		 * 
-		 * @param temp
-		 * @param action
-		 */
-		public void writeln(String playerName, int playerLoc, String action)
+	/**
+	 * 
+	 * @param temp
+	 * @param action
+	 */
+	public void writeln(String playerName, int playerLoc, String action)
+	{
+		if (this.isOpen)
 		{
-			if (this.isOpen)
-			{
-				if (!this.isFull) {
-					// update calendar
-					this.calendar = Calendar.getInstance(TimeZone.getTimeZone("America/New_York"), new Locale("ENGLISH", "US"));
-					
-					//
-					String hour, minute, second;
-					if (hour() < 10) { hour = "0" + str(hour()); }
-					else { hour = str(hour()); }
-					if (minute() < 10) { minute = "0" + str(minute()); }
-					else { minute = str(minute()); }
-					if (second() < 10) { second = "0" + str(second()); }
-					else { second = str(second()); }
-					String logString = "log failure";
-					logString = "[" + hour + ":" + minute + ":" + second + "] (" + playerName + ") {Location: #" + playerLoc +  "}  " + action;
-					
-					logString.trim();
-					
-					this.output.println(logString);
-					this.output.flush();
-					//this.length++;
-					// need a way to get the max log size
-					//if (this.length == max_log_size) {
-					//	this.isFull = true;
-					//}
+			if (!this.isFull) {
+				final String timeString = getTimeString();
+				final String logString = timeString + " " + "(" + playerName + ") {Location: #" + playerLoc +  "}  " + action;
+
+				logString.trim();
+
+				this.output.println(logString);
+				this.output.flush();
+				
+				this.length++;
+				
+				if (max_log_size != -1 && this.length == max_log_size) {
+					this.isFull = true;
 				}
 			}
-			else
-			{
-				System.out.println("Game> Log File not open, debug coding.");
+			else {
+				// report full log
+				// close current log file and open a new one and call write again
 			}
 		}
+		else
+		{
+			System.out.println("Game> Log File not open, debug coding.");
+		}
+	}
 
 	/**
 	 * A method to close the log (and it's corresponding file).
@@ -376,6 +342,23 @@ public class Log
 
 	private int year() {
 		return this.calendar.get(Calendar.YEAR);
+	}
+	
+	private String getTimeString() {
+		this.calendar = Calendar.getInstance(TimeZone.getTimeZone("America/New_York"), new Locale("ENGLISH", "US"));
+
+		String hour, minute, second;
+
+		if (hour() < 10) hour = "0" + str(hour());
+		else             hour = str(hour());
+
+		if (minute() < 10) minute = "0" + str(minute());
+		else               minute = str(minute());
+
+		if (second() < 10) second = "0" + str(second());
+		else               second = str(second());
+		
+		return "[" + hour + ":" + minute + ":" + second + "]";
 	}
 
 	public static String str(Object o) {

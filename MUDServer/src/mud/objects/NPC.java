@@ -15,6 +15,7 @@ import mud.Slot;
 import mud.SlotType;
 import mud.TypeFlag;
 import mud.game.Abilities;
+import mud.game.Ability;
 import mud.game.Classes;
 import mud.game.Races;
 import mud.game.Skill;
@@ -204,12 +205,24 @@ public class NPC extends Player implements InteractiveI
 		output[3] = this.getDesc();                         // description
 		output[4] = this.getLocation() + "";                // location
 		output[5] = "";                                     // empty (npcs have no password)
-		output[6] = stats.get(Abilities.STRENGTH) +
+		
+		final StringBuilder sb = new StringBuilder();
+		int abilities = ruleset.getAbilities().length;
+		int count = 0;
+		
+		for(Ability ability : ruleset.getAbilities()) {
+			sb.append( this.stats.get(ability) );
+			if( count < abilities) sb.append(",");
+			count++;
+		}
+		
+		output[6] = sb.toString();                          // stats 
+		/*output[6] = stats.get(Abilities.STRENGTH) +         // stats
 				"," + stats.get(Abilities.DEXTERITY) +
 				"," + stats.get(Abilities.CONSTITUTION) +
 				"," + stats.get(Abilities.INTELLIGENCE) +
 				"," + stats.get(Abilities.WISDOM) +
-				"," + stats.get(Abilities.CHARISMA);
+				"," + stats.get(Abilities.CHARISMA);*/
 		output[7] = getMoney().toString(false);             // money
 		output[8] = this.access + "";                       // permissions level
 		output[9] = this.race.getId() + "";                 // race

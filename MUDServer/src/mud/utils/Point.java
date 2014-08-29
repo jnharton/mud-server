@@ -11,7 +11,7 @@ package mud.utils;
  */
 
 public class Point {
-	enum Type { PT_2D, PT_3D };
+	public enum Type { PT_2D, PT_3D };
 	
 	private Integer x = 0;
 	private Integer y = 0;
@@ -109,6 +109,10 @@ public class Point {
 		}
 		// if the object isn't a Point, then it can't be equal to it
 		else { return false; }
+	}
+	
+	public boolean isType(Type ptType) {
+		return this.type == ptType;
 	}
 	
 	/**

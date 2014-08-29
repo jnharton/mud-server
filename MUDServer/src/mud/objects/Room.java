@@ -15,8 +15,6 @@ import mud.Trigger;
 import mud.TriggerType;
 import mud.TypeFlag;
 
-//import mud.miscellaneous.Atmosphere;
-
 import mud.events.EventSource;
 import mud.events.SayEvent;
 import mud.events.SayEventListener;
@@ -50,8 +48,8 @@ public class Room extends MUDObject implements EventSource
 
 	private RoomType roomType = RoomType.NONE;                // the type of room (I = Inside, O = Outside, P = Protected, N = None)
 	private Terrain terrain = Terrain.NONE;                   // terrain type of the room (affects movement speed?)
+	
 	private Weather weather;                                  // the weather in this room
-	//private Atmosphere atmosphere = new Atmosphere();       // the atmosphere of the room (weather related)
 
 	private ArrayList<Exit> exits = new ArrayList<Exit>();    // the exits leading away from the room
 	private String exitNames;                                 // formatted string containing the usable exit names
@@ -63,16 +61,16 @@ public class Room extends MUDObject implements EventSource
 	public String timeOfDay = "DAY";                          // replace this with an enum with one type per each or a hashmap string, boolean?
 	// DAY or NIGHT
 
-	private Zone zone = null; // the zone this room belongs to
+	private Zone zone = null;                                 // the zone this room belongs to
 
-	private Integer instance_id = null; // instance_id, if this is the original, it should be null
+	private Integer instance_id = null;                       // instance_id, if this is the original, it should be null
 
 	public int x = 10, y = 10; // size of the room ( 10x10 default )
 	public int z = 10;         // height of room ( 10 default )
 
 	private BitSet[][] tiles;
 	
-	private ArrayList<Player> listeners; // Player(s) in the Room listening to what is going on
+	private ArrayList<Player> listeners;                                            // Player(s) in the Room listening to what is being said
 	private List<SayEventListener> _listeners = new ArrayList<SayEventListener>(); // 
 
 	private HashMap<TriggerType, List<Trigger>> triggers = new HashMap<TriggerType, List<Trigger>>();
@@ -81,8 +79,8 @@ public class Room extends MUDObject implements EventSource
 	{
 		triggers.put(TriggerType.onEnter, new LinkedList<Trigger>());
 		triggers.put(TriggerType.onLeave, new LinkedList<Trigger>());
-		(triggers.get(TriggerType.onEnter)).add( new Trigger("TRIGGER: enter") );
-		(triggers.get(TriggerType.onLeave)).add( new Trigger("TRIGGER: leave") );
+		setTrigger(TriggerType.onEnter, new Trigger("TRIGGER: enter"));
+		setTrigger(TriggerType.onLeave, new Trigger("TRIGGER: leave"));
 	}
 	
 	// misc note: parent == location
@@ -366,6 +364,10 @@ public class Room extends MUDObject implements EventSource
 
 	public List<Trigger> getTriggers(TriggerType triggerType) {
 		return Collections.unmodifiableList(this.triggers.get(triggerType));
+	}
+	
+	public void setTerrain(final Terrain newTerrain) {
+		this.terrain = newTerrain;
 	}
 
 	public Terrain getTerrain() {

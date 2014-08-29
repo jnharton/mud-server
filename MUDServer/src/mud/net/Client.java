@@ -45,6 +45,9 @@ public class Client implements Runnable {
 	private final static int MXP = 3;
 	
 	final BitSet protocol_status = new BitSet(8);
+	
+	private boolean response_expected = false;
+	private String response;
 
 	public Client(final String host, final int port) throws IOException {
 		this(new Socket(host, port));
@@ -329,5 +332,9 @@ public class Client implements Runnable {
 	
 	public boolean isConsole() {
 		return this.console;
+	}
+	
+	public void setResponseExpected(boolean re) {
+		this.response_expected = re;
 	}
 }

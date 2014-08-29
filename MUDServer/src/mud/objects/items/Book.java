@@ -2,10 +2,10 @@ package mud.objects.items;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.List;
 
 import mud.ObjectFlag;
 import mud.TypeFlag;
-
 import mud.SlotType;
 import mud.interfaces.Editable;
 import mud.objects.Item;
@@ -17,9 +17,9 @@ import mud.utils.Utils;
 
 public class Book extends Item implements Editable {
 
-	private String title;
-	private String author;
-	private ArrayList<ArrayList<String>> pages;
+	private String title = "";
+	private String author = "";
+	private ArrayList<List<String>> pages;
 	private Integer currentPage = 0;
 
 	public Book() {
@@ -27,9 +27,10 @@ public class Book extends Item implements Editable {
 				
 		this.type = TypeFlag.ITEM;
 		this.item_type = ItemType.BOOK;
+		
 		this.title = "";
 		this.author = "";
-		this.pages = new ArrayList<ArrayList<String>>();
+		this.pages = new ArrayList<List<String>>();
 	}
 	
 	public Book(String bookTitle) {
@@ -37,24 +38,27 @@ public class Book extends Item implements Editable {
 		
 		this.type = TypeFlag.ITEM;
 		this.item_type = ItemType.BOOK;
+		
 		this.title = bookTitle;
 		this.author = "";
-		this.pages = new ArrayList<ArrayList<String>>();
+		this.pages = new ArrayList<List<String>>();
 	}
 
 	public Book(String bookTitle, String bookAuthor) {
-		this();
-		this.title = bookTitle;
+		this(bookTitle);
+		
 		this.author = bookAuthor;
 	}
 
 	public Book(String bookTitle, String bookAuthor, int pages) {
 		this.flags = EnumSet.noneOf(ObjectFlag.class);
 		
+		this.type = TypeFlag.ITEM;
 		this.item_type = ItemType.BOOK;
+		
 		this.title = bookTitle;
 		this.author = bookAuthor;
-		this.pages = new ArrayList<ArrayList<String>>(pages);
+		this.pages = new ArrayList<List<String>>(pages);
 	}
 	
 	public Book( Book template ) {
@@ -84,7 +88,7 @@ public class Book extends Item implements Editable {
 		this.item_type = ItemType.BOOK;
 		this.slot_type = SlotType.NONE;
 		
-		this.pages = new ArrayList<ArrayList<String>>(0);
+		this.pages = new ArrayList<List<String>>(0);
 	}
 
 	@Override
@@ -97,12 +101,21 @@ public class Book extends Item implements Editable {
 		getPage(currentPage).add(text);
 	}
 	
-	public ArrayList<String> getPage(int pageNum) {
+	public void addPage(Integer newPageNum, List<String> list) {
+		this.pages.add(list);
+	}
+	public List<String> getPage(int pageNum) {
 		return this.pages.get(pageNum);
 	}
 
-	public ArrayList<String> setPage(Integer newPageNum, ArrayList<String> newPage) {
-		return this.pages.set(newPageNum, newPage);
+	public List<String> setPage(Integer newPageNum, List<String> list) {
+		if( this.pages.get(newPageNum) != null ) {
+			return this.pages.set(newPageNum, list);
+		}
+		else {
+			this.pages.add(list);
+			return null;
+		}
 	}
 	
 	public Integer getPageNum() {
@@ -133,7 +146,7 @@ public class Book extends Item implements Editable {
 	 * existing content and it's location in relation to the whole
 	 */
 	public void setSize(int newSize) {
-		this.pages = new ArrayList<ArrayList<String>>(newSize);
+		this.pages = new ArrayList<List<String>>(newSize);
 	}
 
 	public int getSize() {
@@ -144,12 +157,12 @@ public class Book extends Item implements Editable {
 		this.currentPage = newPage;
 	}
 	
-	public ArrayList<String> nextPage() {
+	public List<String> nextPage() {
 		this.currentPage++;
 		return getPage(this.currentPage);
 	}
 	
-	public ArrayList<String> prevPage() {
+	public List<String> prevPage() {
 		this.currentPage--;
 		return getPage(this.currentPage);
 	}

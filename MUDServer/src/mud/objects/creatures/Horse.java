@@ -5,13 +5,12 @@ import mud.interfaces.Ridable;
 import mud.objects.Creature;
 import mud.objects.CreatureType;
 
-public class Horse extends Creature implements Ridable, Mobile {
-	
-	Size size = Size.MEDIUM;
-	
+public class Horse extends Creature implements Ridable, Mobile {	
 	public Horse() {
 		super();
 		this.ctype = CreatureType.HORSE;
+		this.race = "horse";
+		this.size = Size.MEDIUM;
 	}
 	
 	@Override

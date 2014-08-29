@@ -218,7 +218,8 @@ public class Player extends MUDObject implements Mobile
 	protected Map<Faction, Integer> reputation;
 
 	// movement
-	protected boolean moving;
+	protected boolean moving = false;
+	protected boolean flying = false;
 	protected Point destination;
 
 	// leveling up
@@ -863,14 +864,20 @@ public class Player extends MUDObject implements Mobile
 
 	public void setAbilityMod(Ability ability, int abilityMod) {
 		this.statMod[ability.getId()] = abilityMod;
-	} 
+	}
+	
+	public void addSkill(Skill skill) {
+		this.skills.put(skill,  0);
+	}
 
 	public int getSkill(Skill skill) {
 		return this.skills.get(skill) + skillMod[skill.getId()];
 	}
 
 	public void setSkill(Skill skill, int skillValue) {
-		this.skills.put(skill, skillValue);
+		if( this.skills.containsKey(skill) ) {
+			this.skills.put(skill, skillValue);	
+		}
 	}
 
 	public int getSkillMod(Skill skill) {
@@ -925,36 +932,6 @@ public class Player extends MUDObject implements Mobile
 		return this.invType;
 	}*/
 
-	/**
-	 * 
-	 * 
-	 * @return
-	 */
-	public Editors getEditor() {
-		return this.editor;
-	}
-
-	public void setEditor(Editors editor) {
-		if( editor != Editors.NONE ) setStatus("EDT");
-		this.editor = editor;
-	}
-
-	public EditorData getEditorData() {
-		return this.edd;
-	}
-
-	public void setEditorData(EditorData newEdD) {
-		this.edd = newEdD;
-	}
-
-	public cgData getCGData() {
-		return this.cgd;
-	}
-
-	public void setCGData(cgData newCGD) {
-		this.cgd = newCGD;
-	}
-
 	public boolean isCaster() {
 		return this.getPClass().isCaster();
 	}
@@ -990,6 +967,10 @@ public class Player extends MUDObject implements Mobile
 
 	public void unequip(Item item) {
 		this.inventory.add(item);
+	}
+	
+	public boolean hasItem(final Item item) {
+		return this.inventory.contains(item);
 	}
 
 	public ArrayList<String> getNames() {
@@ -1035,6 +1016,14 @@ public class Player extends MUDObject implements Mobile
 
 	public void setMoving(boolean isMoving) {
 		this.moving = isMoving;
+	}
+	
+	public boolean isFlying() {
+		return this.flying;
+	}
+	
+	public void setFlying(boolean isFlying) {
+		this.flying = isFlying;
 	}
 
 	public Point getDestination() {
@@ -1217,16 +1206,40 @@ public class Player extends MUDObject implements Mobile
 		return reputation.get(faction);
 	}
 	
+	/**
+	 * addConfigOption
+	 * 
+	 * Adds a new config option to the config map and sets an initial value.
+	 * 
+	 * @param option
+	 * @param initialValue
+	 */
 	private void addConfigOption(final String option, final Boolean initialValue) {
 		this.config.put(option, initialValue);
 	}
 	
+	/**
+	 * setConfigOption
+	 * 
+	 * Sets the value of the specified option, if it exists.
+	 * 
+	 * @param option some config option
+	 * @param value  boolean value (true/false)
+	 */
 	public void setConfigOption(final String option, final Boolean value) {
 		if( this.config.containsKey(option) ) {
 			this.config.put(option, value);
 		}
 	}
 	
+	/**
+	 * getConfigOption
+	 * 
+	 * Get the current value of the specified option, if it exists.
+	 * 
+	 * @param option
+	 * @return
+	 */
 	public Boolean getConfigOption(final String option) {
 		return this.config.get(option);
 	}
@@ -1270,6 +1283,38 @@ public class Player extends MUDObject implements Mobile
 		}
 	}
 	
+	// Editors
+	
+	/**
+	 * 
+	 * 
+	 * @return
+	 */
+	public Editors getEditor() {
+		return this.editor;
+	}
+
+	public void setEditor(Editors editor) {
+		if( editor != Editors.NONE ) setStatus("EDT");
+		this.editor = editor;
+	}
+
+	public EditorData getEditorData() {
+		return this.edd;
+	}
+
+	public void setEditorData(EditorData newEdD) {
+		this.edd = newEdD;
+	}
+
+	public cgData getCGData() {
+		return this.cgd;
+	}
+
+	public void setCGData(cgData newCGD) {
+		this.cgd = newCGD;
+	}
+	
 	/**
 	 * Translate the persistent aspects of the player into the string
 	 * format used by the database
@@ -1283,12 +1328,24 @@ public class Player extends MUDObject implements Mobile
 		output[3] = getDesc();                            // description
 		output[4] = getLocation() + "";                   // location
 		output[5] = getPass();                            // password
-		output[6] = stats.get(Abilities.STRENGTH) +       // stats
+		
+		final StringBuilder sb = new StringBuilder();
+		int abilities = ruleset.getAbilities().length;
+		int count = 0;
+		
+		for(Ability ability : ruleset.getAbilities()) {
+			sb.append( this.stats.get(ability) );
+			if( count < abilities) sb.append(",");
+			count++;
+		}
+		
+		output[6] = sb.toString();                        // stats
+		/*output[6] = stats.get(Abilities.STRENGTH) +       // stats
 				"," + stats.get(Abilities.DEXTERITY) +
 				"," + stats.get(Abilities.CONSTITUTION) +
 				"," + stats.get(Abilities.INTELLIGENCE) +
 				"," + stats.get(Abilities.WISDOM) +
-				"," + stats.get(Abilities.CHARISMA);
+				"," + stats.get(Abilities.CHARISMA);*/
 		output[7] = getMoney().toString(false);           // money
 		output[8] = access + "";                          // permissions level
 		output[9] = race.getId() + "";                    // race

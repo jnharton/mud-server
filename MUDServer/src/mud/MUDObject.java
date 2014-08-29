@@ -48,7 +48,7 @@ public abstract class MUDObject {
 
 	protected Point pos = new Point(0, 0, 0); // object's' location/position on a cartesian plane within a room? (3D Point)
 
-	protected LinkedHashMap<String, Object> properties = new LinkedHashMap<String, Object>(1, 0.75f);
+	protected LinkedHashMap<String, Object> properties = new LinkedHashMap<String, Object>(10, 0.75f);
 
 	protected ArrayList<Effect> effects = new ArrayList<Effect>(); // Effects set on the object
 

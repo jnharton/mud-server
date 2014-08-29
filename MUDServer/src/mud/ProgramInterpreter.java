@@ -8,6 +8,7 @@ import java.util.List;
 import mud.net.Client;
 import mud.objects.Item;
 import mud.objects.Player;
+import mud.utils.Message;
 import mud.utils.Point;
 import mud.utils.Utils;
 
@@ -108,16 +109,17 @@ public class ProgramInterpreter {
 	 * @param script
 	 * @return
 	 */
-	public String interpret(final String script, final Client client)
-	{	
+	public String interpret(final String script, final Client client) {	
 		//System.out.println("PGM: <" + script + ">");
 		//System.out.println("pArg: " + script);
 
 		System.out.println("Interpret: " + script);
+		System.out.println("script[0]: " + script.charAt(0));
+		System.out.println("script[length - 1]: " + script.charAt(script.length() - 1));
 
 		if (script.startsWith("{") && script.endsWith("}")) {
 			if( script.indexOf(":") != -1 ) {
-				String work = script.substring(1, script.length() - 1);
+				String work = script.substring(1, script.length() - 1); // strip off the outermost squiggly braces ( {} )
 				//String work = script.replace("{", "").replace("}", "");
 
 				System.out.println("work: " + work);
@@ -127,10 +129,10 @@ public class ProgramInterpreter {
 				String functionName = temp[0];
 				List<String> params = null;
 
-				System.out.println("Function: " + functionName);
+				System.out.println("Function: " + functionName); // tell us the script function used
 
 				if( temp.length > 1 ) {
-					params = Utils.mkList(temp[1].split(","));
+					params = Utils.mkList(temp[1].split(",")); // split the arguments on commas ( , )
 					
 					fixParams( params ); // sort of fixes the params
 					
@@ -138,8 +140,8 @@ public class ProgramInterpreter {
 
 					int index = 0;
 					
-					// whenever the function called isn't 'if' or 'with', we want to evaluate all parameters as we get them
-					if( !functionName.equals("if") && !functionName.equals("with") ) {
+					// whenever the function called isn't 'if' or 'with' or 'do', we want to evaluate all parameters as we get them
+					if( !functionName.equals("if") && !functionName.equals("with") && !functionName.equals("do") ) {
 						for(String param : params) {
 							if( param.startsWith("{") && param.endsWith("}") ) {
 								params.set(index, interpret(param, client));
@@ -229,6 +231,11 @@ public class ProgramInterpreter {
 					}
 					
 					return "" + (first + second);
+				}
+				else if(functionName.equals("do")) {
+					interpret(params[0], client);
+					interpret(params[1], client);
+					return "";
 				}
 				else if(functionName.equals("sub")) { // {sub:5,3} -> 2
 					if( params[0].startsWith("{") && params[0].endsWith(")") ) {
@@ -320,10 +327,20 @@ public class ProgramInterpreter {
 				}
 				else if (functionName.equals("tell")) {
 					final String message = params[0];
-					final Player p = parent.getPlayer(Utils.toInt(params[1], -1));
+					//final Player p = parent.getPlayer(Utils.toInt(params[1], -1));
+					final Player p;
+					
+					// TODO fix this kludge...
+					if( params[1].trim().equalsIgnoreCase("{&player}") ) {
+						p = parent.getPlayer(client);
+					}
+					else {
+						p = parent.getPlayer(Utils.toInt(params[1], -1));
+					}
 					
 					if( message != null && p != null ) {
-						//parent.addMessage( new Message(message, p) );
+						// TODO figure out if there's a problem with this method of transmitting info
+						parent.addMessage( new Message(message, p) );
 						return message;
 					}
 					
@@ -344,6 +361,23 @@ public class ProgramInterpreter {
 					else if( result.equals(":false") ) {
 						return interpret(params[2], client);
 					}
+				}
+				else if(functionName.equals("set")) {
+					// {set: propname, object, value }
+					
+					final String property = params[0];
+					final int dbref = Utils.toInt(params[1], -1);
+					
+					final MUDObject object = parent.getObject(dbref);
+					
+					final String value = params[2];
+					
+					if( object != null ) {
+						System.out.println("Object: " + object.getName());
+						object.setProperty(property, value);
+						return "" +  object.getProperty(property);
+					}
+					else return "";
 				}
 
 				return "";

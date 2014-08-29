@@ -65,7 +65,7 @@ public class Item extends MUDObject implements Cloneable {
 	protected List<Effect> effects;           // effects
 	protected List<Spell> spells;             // spells the item has, which can be cast from it
 	
-	protected Map<String, Slot> slots = null; //
+	protected Map<String, Slot> slots = null; // handles objects which hold specific things, like sheaths for swords
 	
 	protected boolean unique = false;         // is this item Unique (only one of them, cannot be copied)
 	
@@ -95,6 +95,8 @@ public class Item extends MUDObject implements Cloneable {
 	}
 	
 	/**
+	 * Copy Constructor
+	 * 
 	 * Create a new item with the same attributes as a template object
 	 * 
 	 * @param template

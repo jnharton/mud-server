@@ -76,6 +76,12 @@ public final class D20 implements Ruleset {
 	}
 	
 	@Override
+	public Skill[] getSkills() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
+	@Override
 	public Skill getSkill(int id) {
 		// TODO Auto-generated method stub
 		return null;

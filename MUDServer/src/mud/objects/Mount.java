@@ -2,6 +2,7 @@ package mud.objects;
 
 import mud.TypeFlag;
 import mud.interfaces.Ridable;
+import mud.objects.creatures.Size;
 
 /**
  * MUDObject -> Creature -> Mount

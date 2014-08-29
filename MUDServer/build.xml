@@ -9,9 +9,6 @@
             <fileset dir="bin" defaultexcludes="true">
                 <include name="**/*.class" />
             </fileset>
-        	<fileset dir="data" defaultexcludes="true">
-        		<include name="data/*.*" />
-    		</fileset>
         </jar>
     </target>
 </project>

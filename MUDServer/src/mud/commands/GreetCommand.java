@@ -34,7 +34,10 @@ public class GreetCommand extends Command {
 		final Client client1 = player1.getClient();
 		debug("player1: " + player1.getName());
 		
-		// TODO prevent us from greeting players not logged-in or present
+		if( client == null ) {
+			send("Game> That player is not logged-in", current.getClient());
+			return;
+		}
 		
 		if (!player1.getNames().contains(current.getName())) {
 			player1.addName(current.getName());

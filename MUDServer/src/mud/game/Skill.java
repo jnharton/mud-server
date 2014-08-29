@@ -26,8 +26,8 @@ public class Skill
 {
 	private String name;       // name of the skill (string)
 	private int id;            // id of the skills (unique integer)
-	private String ability;    // ability that modifies the skill (string)
-	private PClass[] classes; // array of classes for which this is a class skill
+	private Ability ability;   // ability that modifies the skill (string)
+	private PClass[] classes;  // array of classes for which this is a class skill
 	
 	private static final HashMap<String, Ability> abilityMap = new HashMap<String, Ability>() {
 		{
@@ -43,7 +43,7 @@ public class Skill
 	public Skill() {
 		this.name = "new_skill";
 		this.id = -1;
-		this.ability = "";
+		this.ability = null;
 		this.classes = new PClass[0];
 	}
 	
@@ -56,6 +56,18 @@ public class Skill
 	 * @param classes
 	 */
 	public Skill(final String name, final int id, final String ability, final PClass[] classes) {
+		this(name, id, abilityMap.get(ability), classes);
+	}
+	
+	/**
+	 * Class Constructor2 for Skills
+	 * 
+	 * @param name
+	 * @param id
+	 * @param ability
+	 * @param classes
+	 */
+	public Skill(final String name, final int id, final Ability ability, final PClass[] classes) {
 		this.name = name;
 		this.id = id;
 		this.ability = ability;
@@ -67,7 +79,7 @@ public class Skill
 	}
 	
 	public Ability getAbility() {
-		return Skill.abilityMap.get(this.ability);
+		return this.ability;
 	}
 	
 	public int getId() {

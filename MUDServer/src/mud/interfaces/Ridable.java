@@ -1,5 +1,7 @@
 package mud.interfaces;
 
+import mud.objects.creatures.Size;
+
 /*
 Copyright (c) 2012 Jeremy N. Harton
 
@@ -28,8 +30,6 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  */
 public interface Ridable {
-	
-	public enum Size { SMALL, MEDIUM, LARGE };
 	
 	public String getName();
 	

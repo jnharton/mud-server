@@ -16,7 +16,7 @@ import mud.utils.Utils;
 
 public class Weapon extends Item implements Cloneable
 {
-	private WeaponType weapon_type;
+	private WeaponType weapon_type = null;
 	Handed handed;
 	
 	protected Skill required_skill;
@@ -34,19 +34,6 @@ public class Weapon extends Item implements Cloneable
 		this.weight = 7.0;                       // the weight of the weapon (lbs)
 	}
 	
-	protected Weapon( Weapon template ) {
-		//super(-1, template.name, template.flags, template.desc, template.location);
-		super( template );
-		this.type = TypeFlag.ITEM;
-		this.equippable = true;
-		this.equip_type = template.equip_type;
-		this.item_type = template.item_type;
-		this.mod = template.mod;
-		this.handed = template.handed;
-		this.weapon_type = template.weapon_type;
-		this.weight = template.weight;
-	}
-	
 	public Weapon(int wMod, Handed handed, WeaponType wType)
 	{
 		super(-1, wType.getName(), EnumSet.noneOf(ObjectFlag.class), "A nice, shiny steel longsword.", 8);
@@ -62,7 +49,13 @@ public class Weapon extends Item implements Cloneable
 
 	public Weapon(int wMod, Handed handed, WeaponType wType, double wWeight)
 	{
-		super(-1, "Sword", EnumSet.noneOf(ObjectFlag.class), "A nice, shiny steel longsword.", 8);
+		super(-1);
+		
+		this.name = "Sword";
+		this.flags = EnumSet.noneOf(ObjectFlag.class);
+		this.desc = "A nice, shiny steel longsword.";
+		this.location = 8;
+		
 		this.type = TypeFlag.ITEM;
 		this.equippable = true;
 		this.equip_type = ItemType.WEAPON; // the type of equipment it is
@@ -73,17 +66,46 @@ public class Weapon extends Item implements Cloneable
 		this.weight = wWeight; // the weight of the weapon
 	}
 	
-	public Weapon(String wName, String wDesc, int wMod, Handed handed, WeaponType wType, double wWeight)
-	{
-		super(-1, wName, EnumSet.noneOf(ObjectFlag.class), wDesc, -1);
+	public Weapon(String wName, String wDesc, double wWeight) {
+		super(-1);
+		
 		this.type = TypeFlag.ITEM;
+		this.name = wName;
+		this.flags = EnumSet.noneOf(ObjectFlag.class);
+		this.desc = wDesc;
+		this.location = -1;
+		
 		this.equippable = true;
 		this.equip_type = ItemType.WEAPON; // the type of equipment it is
 		this.item_type = ItemType.WEAPON;
+		this.weight = wWeight;
+	}
+	
+	public Weapon(String wName, String wDesc, int wMod, Handed handed, WeaponType wType, double wWeight)
+	{
+		this(wName, wDesc, wWeight);
+		
 		this.mod = wMod;
 		this.handed = handed;
 		this.weapon_type = wType;   // the actual type of weapon
-		this.weight = wWeight; // the weight of the weapon
+	}
+	
+	/**
+	 * Copy Constructor
+	 * 
+	 * @param template
+	 */
+	protected Weapon( Weapon template ) {
+		//super(-1, template.name, template.flags, template.desc, template.location);
+		super( template );
+		this.type = TypeFlag.ITEM;
+		this.equippable = true;
+		this.equip_type = template.equip_type;
+		this.item_type = template.item_type;
+		this.mod = template.mod;
+		this.handed = template.handed;
+		this.weapon_type = template.weapon_type;
+		this.weight = template.weight;
 	}
 	
 	/**
@@ -159,7 +181,8 @@ public class Weapon extends Item implements Cloneable
 		output[3] = this.getDesc();                    // description
 		output[4] = this.getLocation() + "";           // location
 		output[5] = this.item_type.ordinal() + "";     // item type
-		output[6] = this.weapon_type.getId() + "";     // weapon type
+		//output[6] = this.weapon_type.getId() + "";     // weapon type
+		output[6] = "" + 0;
 		output[7] = this.mod + "";                     // modifier
 		return Utils.join(output, "#");
 	}

@@ -76,7 +76,8 @@ public class AttackCommand extends Command {
 							if (hit) { // did we hit?
 								
 								player.setMode(PlayerMode.COMBAT); // we are now in combat mode (allows us to limit command set?)
-						
+								
+								// figure out damage
 								int criticalCheckRoll = Utils.roll(1, 20);
 								boolean criticalHit = criticalCheckRoll >= wt.getCritMin() && criticalCheckRoll <= wt.getCritMax() ? true : false;
 
