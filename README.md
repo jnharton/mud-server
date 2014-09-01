@@ -15,11 +15,21 @@ This code requires at least Java 7 (1.7)
 ## Usage
 
 ```
-Usage: java -jar MUDServer.jar
+Usage: java -jar mud_server.jar [ parameters ]
 
-    --port  <port number> specifiy port for the server to listen on
-    --debug               enable debugging messages
+  --port  <port number> Specify the port for the server to listen on, default is 4000
+  --db <database>       Specifies the database file to load (databases directory)
+  --debug               Enable debugging messages
+  --enable-logging      Enable logging of various things
+  --theme               Use the specified theme file (theme directory)
+  --setup               Run first time setup
+  --telnet              Indicate that you'd like the server to handle pure telnet
+
+* generally speaking, you will only use setup once, and can run the server with just that parameter if you just want to generate the necessary files and don't need anything else set
+* telnet connections here just means a raw connection sending one character at a time
 ```
+
+See 'Installation and Setup' page in wiki for more details.
 
 ## Help
 
