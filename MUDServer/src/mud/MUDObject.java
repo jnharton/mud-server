@@ -42,15 +42,16 @@ public abstract class MUDObject {
 	protected EnumSet<ObjectFlag> flags = EnumSet.noneOf(ObjectFlag.class); // object flags
 	protected String locks = "";                                            // object locks
 	protected int location = 0;                                             // object location
-
-	/* object data - related to game (persistent) */
+	
 	protected int owner = 0; // who owns the object (dbref of owner)
-
-	protected Point pos = new Point(0, 0, 0); // object's' location/position on a cartesian plane within a room? (3D Point)
+	
+	/* object data - related to game (persistent) */
 
 	protected LinkedHashMap<String, Object> properties = new LinkedHashMap<String, Object>(10, 0.75f);
 
 	protected ArrayList<Effect> effects = new ArrayList<Effect>(); // Effects set on the object
+	
+	protected Point pos = new Point(0, 0, 0); // object's' location/position on a cartesian plane within a room? (3D Point)
 
 	/* object state - transient? */
 	public boolean Edit_Ok = true; // is this object allowed to be edited
@@ -139,10 +140,14 @@ public abstract class MUDObject {
 	public void setDesc(String newDescription) {
 		this.desc = newDescription;
 	}
-
+	
 	/*public TypeFlag getType() {
-	return this.type;
-}*/
+		return this.type;
+	}*/
+	
+	public boolean isType(final TypeFlag type) {
+		return this.type == type;
+	}
 
 	public String getTypeName() {
 		return this.type.name();
@@ -171,6 +176,10 @@ public abstract class MUDObject {
 			buf.append(f.toString().charAt(0));
 		}
 		return buf.toString();
+	}
+	
+	public void setFlag(final ObjectFlag flag) {
+		this.flags.add(flag);
 	}
 
 	/**
@@ -288,48 +297,6 @@ public abstract class MUDObject {
 	 */
 	public void setOwner(Player player) {
 		this.owner = player.getDBRef();
-	}
-
-	/*
-	 * Coordinate System related methods 
-	 */
-
-	/*public int getXCoord() {
-		return this.pos.getX();
-	}
-
-	public void setXCoord(int newXCoord) {
-		this.pos.setX(newXCoord);
-	}
-
-	public int getYCoord() {
-		return this.pos.getY();
-	}
-
-	public void setYCoord(int newYCoord) {
-		this.pos.setY(newYCoord);
-	}
-
-	public int getZCoord() {
-		return this.pos.getZ();
-	}
-
-	public void setZCoord(int newZCoord) {
-		this.pos.setZ(newZCoord);
-	}*/
-
-	public Point getPosition() {
-		return this.pos;
-	}
-
-	public void setPosition(int x, int y) {
-		setPosition(x, y, 0);
-	}
-
-	public void setPosition(int x, int y, int z) {
-		this.pos.setX(x);
-		this.pos.setY(y);
-		this.pos.setZ(z);
 	}
 
 	/**
@@ -450,6 +417,48 @@ public abstract class MUDObject {
 	public void clearEffects()
 	{
 		this.effects.clear();
+	}
+	
+	/*
+	 * Coordinate System related methods 
+	 */
+
+	/*public int getXCoord() {
+		return this.pos.getX();
+	}
+
+	public void setXCoord(int newXCoord) {
+		this.pos.setX(newXCoord);
+	}
+
+	public int getYCoord() {
+		return this.pos.getY();
+	}
+
+	public void setYCoord(int newYCoord) {
+		this.pos.setY(newYCoord);
+	}
+
+	public int getZCoord() {
+		return this.pos.getZ();
+	}
+
+	public void setZCoord(int newZCoord) {
+		this.pos.setZ(newZCoord);
+	}*/
+
+	public Point getPosition() {
+		return this.pos;
+	}
+
+	public void setPosition(int x, int y) {
+		setPosition(x, y, 0);
+	}
+
+	public void setPosition(int x, int y, int z) {
+		this.pos.setX(x);
+		this.pos.setY(y);
+		this.pos.setZ(z);
 	}
 
 	/* Check Methods */

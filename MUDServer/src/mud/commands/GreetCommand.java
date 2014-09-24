@@ -1,9 +1,8 @@
 package mud.commands;
 
+import mud.Constants;
 import mud.MUDServer;
-
 import mud.net.Client;
-
 import mud.objects.Player;
 
 /*
@@ -58,6 +57,6 @@ public class GreetCommand extends Command {
 	
 	@Override
 	public int getAccessLevel() {
-		return USER;
+		return Constants.USER;
 	}
 }

@@ -70,6 +70,6 @@ public class AccessCommand extends Command {
 
 	@Override
 	public int getAccessLevel() {
-		return GOD;
+		return Constants.GOD;
 	}
 }

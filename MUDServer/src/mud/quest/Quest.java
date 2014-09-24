@@ -160,6 +160,10 @@ public class Quest implements Cloneable {
 		return tasks;
 	}
 	
+	/**
+	 * call this after a quest update has been applied to
+	 * check and see if the quest has been completed.
+	 */
 	private void update() {
 		for (Task task : this.tasks) {
 			if ( !task.isComplete() ) {
@@ -209,11 +213,15 @@ public class Quest implements Cloneable {
 					if ( task.update(tu) ) {
                         questChanged = true;
                     }
+					
 					update.taskUpdates.remove(tu);
+					
 					break;
 				}
 			}
 		}
+		
+		System.out.println("Quest State: " + questChanged);
 		
 		return questChanged;
 	}

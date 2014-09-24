@@ -17,7 +17,11 @@ import java.util.ArrayList;
  *
  */
 public class QuestUpdate extends Update {
-	int questId;
+	public int questId;
+	public ArrayList<TaskUpdate> taskUpdates;
 	
-	ArrayList<TaskUpdate> taskUpdates;
+	public QuestUpdate(int id) {
+		this.questId = id;
+		this.taskUpdates = new ArrayList<TaskUpdate>();
+	}
 }

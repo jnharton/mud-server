@@ -2,12 +2,10 @@ package mud.commands;
 
 import java.util.ArrayList;
 
+import mud.Constants;
 import mud.MUDServer;
-
 import mud.net.Client;
-
 import mud.utils.Utils;
-
 import mud.objects.Item;
 import mud.objects.Player;
 import mud.objects.Room;
@@ -110,6 +108,6 @@ public class DropCommand extends Command {
 
 	@Override
 	public int getAccessLevel() {
-		return USER;
+		return Constants.USER;
 	}
 }

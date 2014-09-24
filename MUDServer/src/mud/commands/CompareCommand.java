@@ -1,5 +1,6 @@
 package mud.commands;
 
+import mud.Constants;
 import mud.MUDServer;
 import mud.net.Client;
 import mud.objects.Item;
@@ -33,7 +34,7 @@ public class CompareCommand extends Command {
 
 	@Override
 	public int getAccessLevel() {
-		return USER;
+		return Constants.USER;
 	}
 
 }

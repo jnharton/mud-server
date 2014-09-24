@@ -2,6 +2,7 @@ package mud.commands;
 
 import java.util.Map.Entry;
 
+import mud.Constants;
 import mud.MUDServer;
 import mud.net.Client;
 
@@ -38,6 +39,6 @@ public class AliasCommand extends Command {
 
 	@Override
 	public int getAccessLevel() {
-		return ADMIN;
+		return Constants.ADMIN;
 	}
 }

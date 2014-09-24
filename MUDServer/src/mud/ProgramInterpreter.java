@@ -30,7 +30,6 @@ import mud.utils.Utils;
 public class ProgramInterpreter {
 
 	private final MUDServer parent;
-	
 	private Hashtable<String, String> vars;
 	private boolean use_vars;
 

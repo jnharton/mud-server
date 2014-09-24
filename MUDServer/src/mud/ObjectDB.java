@@ -678,7 +678,7 @@ public final class ObjectDB {
         return new ArrayList<Creature>(creeps);
     }
 
-    public List<Creature> getCreatureByRoom(final int loc) {
+    public List<Creature> getCreaturesByRoom(final int loc) {
         final List<Creature> acc = new LinkedList<Creature>();
         for (final Creature c : creeps) {
             if (c.getLocation() == loc) {

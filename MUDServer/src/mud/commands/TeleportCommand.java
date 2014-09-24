@@ -1,5 +1,6 @@
 package mud.commands;
 
+import mud.Constants;
 import mud.MUDObject;
 import mud.MUDServer;
 import mud.net.Client;
@@ -83,6 +84,6 @@ public class TeleportCommand extends Command {
 
 	@Override
 	public int getAccessLevel() {
-		return WIZARD;
+		return Constants.WIZARD;
 	}
 }

@@ -10,4 +10,8 @@ package mud.quest;
  */
 public class TaskUpdate extends Update {
 	public int taskId;
+	
+	public TaskUpdate(int taskId) {
+		this.taskId = taskId;
+	}
 }

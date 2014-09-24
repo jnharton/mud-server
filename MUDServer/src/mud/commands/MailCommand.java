@@ -1,5 +1,6 @@
 package mud.commands;
 
+import mud.Constants;
 import mud.Editors;
 import mud.MUDServer;
 import mud.objects.Player;
@@ -156,6 +157,6 @@ public class MailCommand extends Command {
 
 	@Override
 	public int getAccessLevel() {
-		return USER;
+		return Constants.USER;
 	}
 }

@@ -2,10 +2,9 @@ package mud.commands;
 
 import java.util.List;
 
+import mud.Constants;
 import mud.MUDServer;
-
 import mud.net.Client;
-
 import mud.objects.Player;
 import mud.utils.Utils;
 
@@ -82,6 +81,6 @@ public class WhereCommand extends Command {
 
 	@Override
 	public int getAccessLevel() {
-		return USER;
+		return Constants.USER;
 	}
 }

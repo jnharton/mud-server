@@ -112,6 +112,7 @@ import mud.utils.Point;
 
 	public House(final Player owner, final int maxRooms) {
 		this.owner = owner;
+		this.houseSize = HouseSize.CUSTOM;
 		this.max_rooms = maxRooms;
 	}
 

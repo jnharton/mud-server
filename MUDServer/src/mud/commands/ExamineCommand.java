@@ -1,10 +1,11 @@
 package mud.commands;
 
+import mud.Constants;
 import mud.MUDObject;
 import mud.MUDServer;
+import mud.TypeFlag;
 import mud.objects.Player;
 import mud.objects.Room;
-
 import mud.net.Client;
 import mud.utils.Utils;
 
@@ -42,6 +43,11 @@ public class ExamineCommand extends Command {
 					MUDObject mobj = getObject(dbref);
 
 					if (mobj != null) {
+						if( mobj.isType(TypeFlag.ROOM) ) {
+							examine((Room) mobj, client);
+							return;
+						}
+						
 						examine(mobj, client);
 					}
 					else {
@@ -57,6 +63,12 @@ public class ExamineCommand extends Command {
 				MUDObject mobj = getObject(arg);
 				
 				if( mobj != null ) {
+					/** TODO: fix the following kludge **/
+					if( mobj.getLocation() != getPlayer(client).getLocation() ) {
+						send("That doesn't exist.", client);
+						return;
+					}
+					
 					examine(mobj, client);
 				}
 				else {
@@ -68,6 +80,6 @@ public class ExamineCommand extends Command {
 
 	@Override
 	public int getAccessLevel() {
-		return USER;
+		return Constants.USER;
 	}
 }

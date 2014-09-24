@@ -3,6 +3,7 @@ package mud.commands;
 import java.util.Arrays;
 import java.util.List;
 
+import mud.Constants;
 import mud.Effect;
 import mud.MUDObject;
 import mud.MUDServer;
@@ -173,7 +174,7 @@ public class CastCommand extends Command {
 
 	@Override
 	public int getAccessLevel() {
-		return USER;
+		return Constants.USER;
 	}
 
 }

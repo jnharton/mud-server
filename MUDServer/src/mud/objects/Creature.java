@@ -1,5 +1,6 @@
 package mud.objects;
 
+import mud.Constants;
 import mud.MUDObject;
 import mud.ObjectFlag;
 import mud.TypeFlag;
@@ -55,12 +56,25 @@ public class Creature extends MUDObject implements Mobile {
 		this.type = TypeFlag.CREATURE;
 	}
 	
+	public Creature(final String name, final String desc) {
+		super(-1);
+		this.type = TypeFlag.CREATURE;
+		
+		this.name = name;
+		this.flags = EnumSet.noneOf(ObjectFlag.class);
+		this.locks = ""; // should take tempLocks argument  
+		this.desc = desc;
+		this.location = Constants.VOID;
+	}
+	
 	/**
 	 * Copy Constructor
 	 */
 	public Creature(final Creature template) {
 		super(-1);
 		this.type = TypeFlag.CREATURE;
+		
+		this.race = template.race;
 		
 		this.name = template.name;
 		this.flags = template.flags;
@@ -69,16 +83,8 @@ public class Creature extends MUDObject implements Mobile {
 		this.location = template.location;
 		
 		this.ridable = template.ridable;
-	}
-	
-	public Creature(int dbref, String race, String name, String desc) {
-		super(dbref);
-		this.type = TypeFlag.CREATURE;
-		this.name = name;
-		this.flags = EnumSet.noneOf(ObjectFlag.class);
-		this.locks = "";
-		this.desc = desc;
-		this.location = 8;
+		
+		this.setMaxHP( template.getMaxHP() );
 	}
 	
 	/**
@@ -127,6 +133,15 @@ public class Creature extends MUDObject implements Mobile {
 	
 	public int getHP() {
 		return this.hp;
+	}
+	
+	public void setMaxHP(int newMaxHP) {
+		this.maxhp = newMaxHP;
+		this.hp = maxhp;
+	}
+	
+	public int getMaxHP() {
+		return this.maxhp;
 	}
 	
 	public boolean isMoving() {

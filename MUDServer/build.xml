@@ -1,5 +1,15 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<project name="MUDServer" default="build">
+<project name="MUDServer" default="build" basedir=".">
+	<description>
+		build file for MUDServer project that creates a jar file,
+		copies the appropriate help files, and compresses all the files
+		into a zip file.
+	</description>
+	
+	<property name="src"   location="src"></property>
+	<property name="build" location="build"></property>
+	<property name="dist"  location="dist"></property>
+	
     <target name="build">
         <jar destfile="build/mud_server.jar">
             <manifest>
@@ -10,5 +20,15 @@
                 <include name="**/*.class" />
             </fileset>
         </jar>
+        
+        <copy todir="build/data/help">
+        	<fileset dir="data/help"/>
+        </copy>
+        
+        <zip destfile="${build}/mudserver.zip" basedir="${build}">
+        </zip>
+    </target>
+    <target name="test">
+    	<copy file="README" tofile="${build}/mycopy.txt"/>
     </target>
 </project>

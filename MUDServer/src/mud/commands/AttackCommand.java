@@ -1,5 +1,8 @@
 package mud.commands;
 
+import java.util.List;
+
+import mud.Constants;
 import mud.MUDObject;
 import mud.MUDServer;
 import mud.MUDServer.PlayerMode;
@@ -37,10 +40,18 @@ public class AttackCommand extends Command {
 			if (!arg.equals("")) {
 				// here we want to try and get whatever was targeted
 				
-				//List<Creature> creatures = objectDB.getCreatureByRoom( getRoom( player ) );
+				final List<Creature> creatures = getCreaturesByRoom( getRoom( player ) );
 				
 				// TODO we shouldn't be able to attack anything not in the same room with us, etc
-				MUDObject mobj = getObject(arg);
+				//MUDObject mobj = getObject(arg);
+				
+				MUDObject mobj = null;
+				
+				for(final Creature c : creatures) {
+					if( c.getName().equalsIgnoreCase(arg) ) {
+						mobj = c;
+					}
+				}
 
 				player.setTarget(mobj);
 
@@ -75,7 +86,9 @@ public class AttackCommand extends Command {
 
 							if (hit) { // did we hit?
 								
-								player.setMode(PlayerMode.COMBAT); // we are now in combat mode (allows us to limit command set?)
+								if( player.getMode() != PlayerMode.COMBAT ) {
+									player.setMode(PlayerMode.COMBAT); // we are now in combat mode (allows us to limit command set?)
+								}
 								
 								// figure out damage
 								int criticalCheckRoll = Utils.roll(1, 20);
@@ -176,7 +189,7 @@ public class AttackCommand extends Command {
 
 	@Override
 	public int getAccessLevel() {
-		return USER;
+		return Constants.USER;
 	}
 
 	public int calculateDamage(final WeaponType wType, final boolean critical) {

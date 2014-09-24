@@ -2,6 +2,7 @@ package mud.quest;
 
 import mud.Colors;
 import mud.objects.Creature;
+import mud.objects.Room;
 
 /**
  * Task Class
@@ -12,13 +13,13 @@ import mud.objects.Creature;
  *
  */
 public class Task {
-	private int id;
+	private int id = 0;
 	
 	private String description;
 	private TaskType taskType;
 	private boolean isComplete = false; // is the task complete? (this being true should be reflected as marked "complete"/"finished"/etc
 	
-	public String location = "Task Loc";
+	public Room location = null;
 	
 	public Integer toKill = 0;
 	public Integer kills = 0;
@@ -35,8 +36,7 @@ public class Task {
 	 * @param tDescription task description
 	 */
 	public Task(String tDescription) {
-		this.description = tDescription;
-		this.taskType = TaskType.NONE;
+		this(tDescription, TaskType.NONE, null);
 	}
 	
 	/**
@@ -45,9 +45,10 @@ public class Task {
 	 * @param tDescription task description
 	 * @param tType task type
 	 */
-	public Task(String tDescription, TaskType tType) {
+	public Task(String tDescription, TaskType tType, Room location) {
 		this.description = tDescription;
 		this.taskType = tType;
+		this.location = location;
 	}
 	
 	/**
@@ -58,9 +59,10 @@ public class Task {
 	 * @param tType task type
 	 * @param other data about the objectives for the task type
 	 */
-	public Task(String tDescription, TaskType tType, Object...other) {
+	public Task(String tDescription, TaskType tType, Room location, Object...other) {
 		this.description = tDescription;
 		this.taskType = tType;
+		this.location = location;
 		if (this.taskType == TaskType.KILL) {
 			if( other.length == 2 ) {
 				if (other[0] instanceof Integer) {
@@ -78,15 +80,22 @@ public class Task {
 		}
 	}
 	
-	public Task(Task task) {
-		this.description = task.description;
-		this.taskType = task.taskType;
-		if (task.taskType == TaskType.KILL) {
-			this.toKill = task.toKill;
+	/**
+	 * Copy Constructor
+	 * 
+	 * @param template
+	 */
+	public Task(Task template) {
+		this.description = template.description;
+		this.taskType = template.taskType;
+		this.location = template.location;
+		
+		if (template.taskType == TaskType.KILL) {
+			this.toKill = template.toKill;
 			this.kills = 0;
 			
-			if(task.objective != null) {
-				this.objective = task.objective;
+			if(template.objective != null) {
+				this.objective = template.objective;
 			}
 		}
 	}
@@ -117,6 +126,10 @@ public class Task {
 	
 	public boolean isType(TaskType tType) {
 		return this.taskType == tType;
+	}
+	
+	public Room getLocation() {
+		return location;
 	}
 	
 	private void update() {
@@ -181,7 +194,7 @@ public class Task {
 	public String toDisplay() {
         final StringBuilder buf = new StringBuilder();
         buf.append(isComplete() ? Colors.GREEN : Colors.CYAN).append("      o ").append(getDescription());
-        buf.append(Colors.MAGENTA).append(" ( ").append(location).append(" ) ").append(Colors.CYAN);
+        buf.append(Colors.MAGENTA).append(" ( ").append(location.getName()).append(" ) ").append(Colors.CYAN);
         buf.append("[+]\n");
         return buf.toString();
 	}

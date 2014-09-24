@@ -1,6 +1,7 @@
 package mud.commands;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.TimerTask;
 
@@ -32,11 +33,6 @@ import mud.utils.SpellTimer;
  */
 
 public abstract class Command {
-	protected static int USER = 0;   // basic user permissions
-	protected static int ADMIN = 1;  //
-	protected static int WIZARD = 2; //
-	protected static int GOD = 3;    // Pff, such arrogant idiots we are! (anyway, max permissions)
-	
 	private MUDServer parent;
 	private String description;
 
@@ -265,5 +261,9 @@ public abstract class Command {
 	
 	protected final Map<String, String> getAliases() {
 		return parent.getAliases();
+	}
+	
+	protected final List<Creature> getCreaturesByRoom(final Room room) {
+		return parent.getCreaturesByRoom(room);
 	}
 }

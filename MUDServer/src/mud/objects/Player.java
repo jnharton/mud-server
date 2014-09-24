@@ -206,13 +206,14 @@ public class Player extends MUDObject implements Mobile
 
 	private State state = State.ALIVE;             // character's "state of health" (ALIVE, INCAPACITATED, DEAD)
 
-	protected LinkedHashMap<Ability, Integer> stats;              // Player Statistics (D&D, MUD)
+	protected LinkedHashMap<Ability, Integer> stats;                // Player Statistics (D&D, MUD)
 	protected LinkedHashMap<Skill, Integer> skills;                 // Player Skills (D&D, MUD)
 
 	protected ArrayList<Item> inventory = new ArrayList<Item>(100); // Player Inventory (D&D, MUD, MU)
 	protected LinkedHashMap<String, Slot> slots;                    // the player's equipped gear
 
-	private ArrayList<Quest> quests;                               // the player's quests
+	private ArrayList<Quest> quests;                                // the player's quests
+	public Quest active_quest = null;                               // the quest the player is currently focusing on
 	
 	protected Faction faction;
 	protected Map<Faction, Integer> reputation;
@@ -238,7 +239,7 @@ public class Player extends MUDObject implements Mobile
 	public BitSet item_creation_feats = new BitSet(8);
 
 	// temporary states
-	private int[] statMod = new int[7];   // temporary modifications to stats (i.e. stat drains, etc)
+	private int[] statMod =  new int[7];  // temporary modifications to stats (i.e. stat drains, etc)
 	private int[] skillMod = new int[44]; // temporary modifications to skills
 	private int negativeLevels = 0;
 
@@ -375,16 +376,16 @@ public class Player extends MUDObject implements Mobile
 		this.editor = Editors.NONE;
 
 		addConfigOption("global-nameref-table", false); // use the global name reference table instead of a local one (default: false)
-		addConfigOption("pinfo-brief", true);           // make your player info output brief/complete (default: true)
-		addConfigOption("prompt_enabled", false);       // enable/disable the prompt (default: false)
-		addConfigOption("msp_enabled", false);          // enable/disable MUD Sound Protocol, a.k.a. MSP (default: false)
-		addConfigOption("complex-inventory", false);    // use/don't use complex inventory display (default: false)
-		addConfigOption("pager_enabled", false);        // enabled/disable the help pager view (default: false)
-		addConfigOption("show-weather", true);          // show weather information in room descriptions (default: true)
-		addConfigOption("tagged-chat", false);          // "tag" the beginning chat lines with CHAT for the purpose of triggers, etc (default: false)
-		addConfigOption("compact-editor", true);        // compact the output of editor's 'show' commands (default: true)
-		addConfigOption("hud_enabled", false);          // is the "heads-up display" that accompanies the room description enabled (default: false)
-		addConfigOption("notify_newmail", false);       // notify the player on receipt of new mail? (default: false)
+		addConfigOption("pinfo-brief",          true);  // make your player info output brief/complete (default: true)
+		addConfigOption("prompt_enabled",       false); // enable/disable the prompt (default: false)
+		addConfigOption("msp_enabled",          false); // enable/disable MUD Sound Protocol, a.k.a. MSP (default: false)
+		addConfigOption("complex-inventory",    false); // use/don't use complex inventory display (default: false)
+		addConfigOption("pager_enabled",        false); // enabled/disable the help pager view (default: false)
+		addConfigOption("show-weather",         true);  // show weather information in room descriptions (default: true)
+		addConfigOption("tagged-chat",          false); // "tag" the beginning chat lines with CHAT for the purpose of triggers, etc (default: false)
+		addConfigOption("compact-editor",       true);  // compact the output of editor's 'show' commands (default: true)
+		addConfigOption("hud_enabled",          false); // is the "heads-up display" that accompanies the room description enabled (default: false)
+		addConfigOption("notify_newmail",       false); // notify the player on receipt of new mail? (default: false)
 
 		// instantiate name reference table
 		this.nameRef = new HashMap<String, Integer>(10, 0.75f); // start out assuming 10 name references
@@ -540,7 +541,7 @@ public class Player extends MUDObject implements Mobile
 
 		// instantiate name reference table
 		this.nameRef = new HashMap<String, Integer>(10, 0.75f); // start out assuming 10 name references
-
+		
 		// initialize modification counters to 0
 		Arrays.fill(statMod, 0);
 		Arrays.fill(skillMod, 0);
@@ -899,6 +900,22 @@ public class Player extends MUDObject implements Mobile
 	public void removeSlot(String name) {
 		this.slots.remove(name);
 	}
+	
+	public Slot getSlot(String key) {
+		return slots.get(key);
+	}
+	
+	public List<Slot> getSlots(String key) {
+		List<Slot> slots = new LinkedList<Slot>();
+		
+		for(final String s : getSlots().keySet() ) {
+			if( s.startsWith( key.toLowerCase() ) ) {
+				slots.add( getSlot(s) );
+			}
+		}
+		
+		return slots;
+	}
 
 	public Map<String, Slot> getSlots() {
 		return Collections.unmodifiableMap( this.slots );
@@ -911,13 +928,33 @@ public class Player extends MUDObject implements Mobile
 	public Map<Ability, Integer> getStats() {
 		return Collections.unmodifiableMap( this.stats );
 	}
-
-	public ArrayList<Quest> getQuests() {
-		return this.quests;
+	
+	public Quest getQuest(int id) {
+		for(final Quest q : this.quests) {
+			if( q.getId() == id ) {
+				return q;
+			}
+		}
+		
+		return null;
 	}
 	
+	/**
+	 * 
+	 * @return
+	 */
+	public ArrayList<Quest> getQuests() {
+		//return this.quests;
+		return (ArrayList<Quest>) Collections.unmodifiableList(this.quests);
+	}
+	
+	/**
+	 * 
+	 * @param quest
+	 * @return
+	 */
 	public boolean hasQuest( Quest quest ) {
-		for(Quest quest1 : this.quests) {
+		for(final Quest quest1 : this.quests) {
 			if( quest.getId() == quest1.getId() ) return true;
 		}
 		
@@ -1009,19 +1046,43 @@ public class Player extends MUDObject implements Mobile
 	public void setMode(PlayerMode newMode) {
 		this.mode = newMode;
 	}
-
+	
+	/**
+	 * isMoving
+	 * 
+	 * Check and see if this Player is currently moving.
+	 * 
+	 * @return
+	 */
 	public boolean isMoving() {
 		return this.moving;
 	}
-
+	
+	/**
+	 * Mark this player as moving
+	 * 
+	 * @param isMoving
+	 */
 	public void setMoving(boolean isMoving) {
 		this.moving = isMoving;
 	}
 	
+	/**
+	 * isFlying
+	 * 
+	 * Check and see if this player is currently flying.
+	 * 
+	 * @return
+	 */
 	public boolean isFlying() {
 		return this.flying;
 	}
 	
+	/**
+	 * Mark this player as flying (implied in the air)
+	 * 
+	 * @param isFlying
+	 */
 	public void setFlying(boolean isFlying) {
 		this.flying = isFlying;
 	}
@@ -1118,6 +1179,8 @@ public class Player extends MUDObject implements Mobile
 	public void setPager(Pager newPager) {
 		this.pager = newPager;
 	}
+	
+	/* Name Reference Table (NRT) methods */
 
 	public Integer getNameRef(String key) {
 		return this.nameRef.get(key);
@@ -1223,12 +1286,14 @@ public class Player extends MUDObject implements Mobile
 	 * 
 	 * Sets the value of the specified option, if it exists.
 	 * 
+	 * NOTE: options which don't exist can't be set
+	 * 
 	 * @param option some config option
 	 * @param value  boolean value (true/false)
 	 */
-	public void setConfigOption(final String option, final Boolean value) {
+	public void setConfigOption(final String option, final Boolean newValue) {
 		if( this.config.containsKey(option) ) {
-			this.config.put(option, value);
+			this.config.put(option, newValue);
 		}
 	}
 	
@@ -1244,6 +1309,15 @@ public class Player extends MUDObject implements Mobile
 		return this.config.get(option);
 	}
 	
+	/**
+	 * Get Map containing config options
+	 * 
+	 * ? rename to getConfig
+	 * 
+	 * NOTE: this reference is NOT modifiable (no add or remove possible)
+	 * 
+	 * @return
+	 */
 	public Map<String, Boolean> getConfig() {
 		return Collections.unmodifiableMap(this.config);
 	}
