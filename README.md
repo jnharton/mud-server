@@ -1,8 +1,7 @@
 mud-server
 ==========
 
-A MUD server written in Java. Elements of the D&D/d20 system are used to implement the 'game' aspect of the
-server code with regards to things like player and item stats, etc.
+A MUD server written in Java.
 
 ## Status
 
