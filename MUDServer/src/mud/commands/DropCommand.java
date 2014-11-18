@@ -4,7 +4,9 @@ import java.util.ArrayList;
 
 import mud.Constants;
 import mud.MUDServer;
+import mud.ObjectFlag;
 import mud.net.Client;
+import mud.utils.Point;
 import mud.utils.Utils;
 import mud.objects.Item;
 import mud.objects.Player;
@@ -43,67 +45,83 @@ public class DropCommand extends Command {
         
         // dependent on limited access to the database
         if( dbref != -1 ) {
-        	final Item item2 = getItem(dbref);
-        	
-        	if( item2 == null ) {
+        	item = getItem(dbref);
+
+        	if( item == null ) {
         		send("No such item.", client);
         		return;
         	}
-        	
-        	final String itemName = item2.getName();
-        	
-        	if( item2.getLocation() == player.getDBRef() ) {
-        		inventory.remove(item2);
-        		item2.setLocation( room.getDBRef() );
-        		room.addItem(item2);
-        		
+
+        	final String itemName = item.getName();
+
+        	if( item.getLocation() == player.getDBRef() ) {
+        		inventory.remove( item );
+        		item.setLocation( room.getDBRef() );
+        		item.setPosition( player.getPosition() );
+        		room.addItem( item );
+
         		send("You dropped " + colors(itemName, "yellow") + " on the floor.", client);
         	}
         }
-        
-		// get the object the argument refers to: by name (if it's in the calling player's inventory), or by dbref#
-		// should be done by searching the player's inventory for the object and if there is such an object, drop it on the floor.
-		for (int i = 0; i < inventory.size(); i++)
-		{			
-			item = inventory.get(i);
-			
-			final String itemName = item.getName();
+        else {
+        	// get the object the argument refers to: by name (if it's in the calling player's inventory), or by dbref#
+        	// should be done by searching the player's inventory for the object and if there is such an object, drop it on the floor.
+        	for (final Item item2 : inventory)
+        	{			
+        		final String itemName = item2.getName();
 
-			// if there is a name or dbref match from the argument in the inventory
-			if ( itemName.equals(arg) || itemName.contains(arg) && !arg.equals("") || item.getDBRef() == dbref )
-			{
-				debug(itemName + " true");
-				// move object from player inventory to floor
-				inventory.remove(item);
-				
-				if( room.getTerrain() == Terrain.SKY ) {
-					int id = Utils.toInt( (String) room.getProperty("dropto"), -1 );
-					Room room1 = getRoom( id );
-					
-					if( room1 != null ) {
-						item.setLocation(room.getDBRef());
-						room1.addItem(item);
-						
-						send("You drop " + colors(itemName, "yellow") + " and it falls toward the ground...", client);
-					}
-					else {
-						item.setLocation( -1 );
-					}
-				}
-				else {
-					item.setLocation(room.getDBRef());
-					room.addItem(item);
-					// check for silent flag to see if object's dbref name should be shown as well?
-					// return message telling the player that they dropped the object
-					send("You dropped " + colors(itemName, "yellow") + " on the floor.", client);
-					// return message telling others that the player dropped the item?
-				}
-				
-				return;
-			}
-		}
-		
-		send("You don't have that.", client);
+        		// if there is a name or dbref match from the argument in the inventory
+        		if ( itemName.equals(arg) || itemName.contains(arg) && !arg.equals("") || item2.getDBRef() == dbref )
+        		{
+        			debug(itemName + " true");
+        			
+        			// remove object from player inventory
+        			inventory.remove(item2);
+        			
+        			// move object from player inventory to ground
+        			if( room.getTerrain() == Terrain.SKY ) {
+        				int id = Utils.toInt( (String) room.getProperty("dropto"), -1 );
+        				Room room1 = getRoom( id );
+
+        				if( room1 != null ) {
+        					final Point p = player.getPosition();
+        					
+        					item2.setLocation(room.getDBRef());
+        					item2.setPosition(p.getX(), p.getY(), 0);
+        					room1.addItem(item2);
+
+        					send("You drop " + colors(itemName, "yellow") + " and it falls toward the ground...", client);
+        				}
+        				else {
+        					item2.setLocation( -1 );
+        					
+        					send("You drop " + colors(itemName, "yellow") + " and it quickly disappears out of sight.", client);
+        				}
+        			}
+        			else {
+        				item2.setLocation( room.getDBRef() );
+                		item2.setPosition( player.getPosition() );
+                		room.addItem( item2 );
+                		
+        				// check for silent flag to see if object's dbref name should be shown as well?
+                		if( !player.hasFlag(ObjectFlag.SILENT) ) {
+                			send("You dropped " + colors(itemName, "yellow") + "(#" + item2.getDBRef() + ") on the floor.", client);
+                		}
+                		else {
+                			send("You dropped " + colors(itemName, "yellow") + " on the floor.", client);
+                		}
+        				
+        				// return message telling others that the player dropped the item?
+                		// obviously we want the players in the current room that can see something
+                		//for(final Player p
+        			}
+        			
+        			return;
+        		}
+        	}
+        	
+        	send("You don't have that.", client);
+        }
 	}
 
 	@Override

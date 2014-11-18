@@ -22,6 +22,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Calendar;
+import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
 /**
@@ -30,6 +31,10 @@ import java.util.TimeZone;
  * NOTE: this still needs work as it needs a better way to properly figure out where
  * to save files to and having a way to change the calendar easily and or maybe
  * the details of the Calendar object (timezone, etc) without creating a new calendar object
+ * 
+ * NOTE2: as things currently stand, any Log object created without a max length
+ * parameter will have a max length of -1 (infinite) which may result in very large
+ * log files if the game does not crash or is not shutdown/restarted.
  * 
  * @author Jeremy N. Harton
  *
@@ -46,12 +51,19 @@ public class Log
 	private String filename;
 	private File file;
 	private PrintWriter output;
-
+	
+	private int lognum = 1;
+	
+	private boolean isOpen = false;
+	private boolean isFull = false;
+	
+	private boolean useBuffer = false;
+	
 	private int length;
-	private int max_log_size;
-
-	private boolean isOpen;
-	private boolean isFull;
+	private int max_log_size = 5000;
+	private int buffer_size = 1000;
+	
+	private List<String> buffer = null;
 
 	// time, date, filename, etc
 	// logging principle
@@ -71,10 +83,6 @@ public class Log
 		this.filename = "log_" + this.date + "_" + this.time + ".txt";
 
 		this.length = 0;
-		this.max_log_size = -1;
-
-		this.isOpen = false;
-		this.isFull = false;
 	}
 
 	/**
@@ -95,10 +103,12 @@ public class Log
 		this.filename = filename + "_" + this.date + "_" + this.time + ".txt";
 
 		this.length = 0;
-		this.max_log_size = -1;
-
-		this.isOpen = false;
-		this.isFull = false;
+	}
+	
+	public Log(String filename, Boolean buffer) {
+		this(filename);
+		
+		this.useBuffer = buffer;
 	}
 	
 	/**
@@ -111,8 +121,8 @@ public class Log
 	 * 
 	 * @param filename
 	 */
-	public Log(String filename, int maxLength) {
-		this(filename);
+	public Log(String filename, Boolean buffer, int maxLength) {
+		this(filename, buffer);
 
 		this.max_log_size = maxLength;
 	}
@@ -155,40 +165,6 @@ public class Log
 	 * 
 	 * @param message
 	 */
-	public void write(String message)
-	{
-		if (this.isOpen)
-		{
-			if (!this.isFull) {
-				final String timeString = getTimeString();
-				final String logString = timeString + " " + message;
-
-				logString.trim();
-				
-				this.output.print(logString);
-				this.output.flush();
-
-				this.length++;
-
-				if (max_log_size != -1 && this.length == max_log_size) {
-					this.isFull = true;
-				}
-			}
-			else {
-				// report full log
-				// close current log file and open a new one and call write again
-			}
-		}
-		else
-		{
-			System.out.println("Game> Log File not open, debug coding.");
-		}
-	}
-
-	/**
-	 * 
-	 * @param message
-	 */
 	public void writeln(String message)
 	{
 		if (this.isOpen)
@@ -199,9 +175,22 @@ public class Log
 
 				logString.trim();
 
-				this.output.println(logString);
-				this.output.flush();
-
+				if( useBuffer ) {
+					if( buffer.size() >= buffer_size ) {
+						for(final String s : buffer) {
+							this.output.println(s);
+						}
+						
+						this.output.flush();
+					}
+					
+					buffer.add( logString );
+				}
+				else {
+					this.output.println(logString);
+					this.output.flush();
+				}
+				
 				this.length++;
 
 				if (max_log_size != -1 && this.length == max_log_size) {
@@ -209,44 +198,28 @@ public class Log
 				}
 			}
 			else {
-				// report full log
-				// close current log file and open a new one and call write again
-			}
-		}
-		else
-		{
-			System.out.println("Game> Log File not open, debug coding.");
-		}
-	}
-
-	// method for logging player actions
-	/**
-	 * 
-	 * @param temp
-	 * @param action
-	 */
-	public void write(String playerName, int playerLoc, String action)
-	{
-		if (this.isOpen)
-		{
-			if (!this.isFull) {
-				final String timeString = getTimeString();
-				final String logString = timeString + " " + "(" + playerName + ") {Location: #" + playerLoc +  "}  " + action;
-
-				logString.trim();
-
-				this.output.print(logString);
-				this.output.flush();
-				
-				this.length++;
-				
-				if (max_log_size != -1 && this.length == max_log_size) {
-					this.isFull = true;
+				if( useBuffer ) {
+					for(final String s : buffer) {
+						this.output.println(s);
+					}
+					
+					this.output.flush();
+					
+					buffer.clear();
 				}
-			}
-			else {
+				
 				// report full log
+				
 				// close current log file and open a new one and call write again
+				closeLog();
+				
+				// change filename
+				final String prefix = filename.substring(0, filename.indexOf('_'));
+				
+				filename.replace(prefix, prefix + lognum);
+
+				// open log
+				openLog();
 			}
 		}
 		else
@@ -270,9 +243,24 @@ public class Log
 				final String logString = timeString + " " + "(" + playerName + ") {Location: #" + playerLoc +  "}  " + action;
 
 				logString.trim();
-
-				this.output.println(logString);
-				this.output.flush();
+				
+				if( useBuffer ) {
+					if( buffer.size() >= buffer_size ) {
+						for(final String s : buffer) {
+							this.output.println(s);
+						}
+						
+						this.output.flush();
+						
+						buffer.clear();
+					}
+					
+					buffer.add( logString );
+				}
+				else {
+					this.output.println(logString);
+					this.output.flush();
+				}
 				
 				this.length++;
 				
@@ -281,8 +269,26 @@ public class Log
 				}
 			}
 			else {
+				if( useBuffer ) {
+					for(final String s : buffer) {
+						this.output.println(s);
+					}
+					
+					this.output.flush();
+				}
+				
 				// report full log
+				
 				// close current log file and open a new one and call write again
+				closeLog();
+				
+				// change filename
+				final String prefix = filename.substring(0, filename.indexOf('_'));
+				
+				filename.replace(prefix, prefix + lognum);
+
+				// open log
+				openLog();
 			}
 		}
 		else
@@ -344,6 +350,12 @@ public class Log
 		return this.calendar.get(Calendar.YEAR);
 	}
 	
+	/**
+	 * Get a Calendar instance for the purposes of checking the time, so that log entries
+	 * can be timestamped. This gets the current time and generates a string.
+	 * 
+	 * @return
+	 */
 	private String getTimeString() {
 		this.calendar = Calendar.getInstance(TimeZone.getTimeZone("America/New_York"), new Locale("ENGLISH", "US"));
 

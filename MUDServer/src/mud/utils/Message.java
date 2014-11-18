@@ -43,6 +43,14 @@ public class Message
 	private MessageType type;        //
 	private Boolean wasSent = false; // has this message been sent
 	
+	/*
+	 * BROADCAST
+	 * BROADCAST_PLAYER
+	 * BROADCAST_LOCAL
+	 * SYSTEM
+	 * NORMAL
+	 * NONE
+	 */
 	public enum MessageType { BROADCAST, BROADCAST_PLAYER, BROADCAST_LOCAL, SYSTEM, NORMAL, NONE };
 
 	/**

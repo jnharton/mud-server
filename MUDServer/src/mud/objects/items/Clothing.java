@@ -5,12 +5,10 @@ import java.util.EnumSet;
 import mud.Effect;
 import mud.ObjectFlag;
 import mud.TypeFlag;
-import mud.interfaces.Equippable;
 import mud.interfaces.Usable;
 import mud.interfaces.Wearable;
 import mud.objects.Item;
 import mud.objects.ItemType;
-import mud.objects.Player;
 import mud.utils.Utils;
 
 public class Clothing extends Item implements Usable<Clothing>, Wearable<Clothing>
@@ -37,14 +35,13 @@ public class Clothing extends Item implements Usable<Clothing>, Wearable<Clothin
 	public Clothing() {
 	}
 
-	public Clothing(String name, int cMod, ClothingType cType, double cWeight)
+	public Clothing(String name, ClothingType cType, double cWeight)
 	{
 		super(-1, name, EnumSet.noneOf(ObjectFlag.class), "<TESTING>", 8);
 		this.type = TypeFlag.ITEM;
 		this.equippable = true;
 		this.equip_type = ItemType.CLOTHING; // the type of equipment it is
 		this.item_type = ItemType.CLOTHING;
-		this.mod = cMod;
 		this.clothing = cType;               // the actual type of clothing
 		this.weight = cWeight;               // the weight of the clothing
 	}
@@ -91,7 +88,7 @@ public class Clothing extends Item implements Usable<Clothing>, Wearable<Clothin
 		output[4] = this.getLocation() + "";       // clothing location (a.k.a parent)
 		output[5] = this.item_type.ordinal() + ""; // item type
 		output[6] = this.clothing.ordinal() + "";  // clothing type
-		output[7] = this.mod + "";                 // modifier
+		//output[7] = this.mod + "";                 // modifier
 		return Utils.join(output, "#");
 	}
 	

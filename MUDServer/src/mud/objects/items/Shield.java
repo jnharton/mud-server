@@ -6,14 +6,12 @@ import java.util.EnumSet;
 import mud.Coins;
 import mud.ObjectFlag;
 import mud.TypeFlag;
-import mud.interfaces.Equippable;
 
 import mud.net.Client;
 
 import mud.objects.Item;
 import mud.objects.ItemType;
 
-import mud.objects.Player;
 import mud.utils.Utils;
 
 public class Shield extends Item
@@ -24,6 +22,8 @@ public class Shield extends Item
 	//type - buckler, small shield, medium shield, large shield, tower shield
 	//String type = "";
 	Handed handed = Handed.ONE;
+	
+	protected int mod = 0;                    // modifier - +0, +2, +3, +4, ... and so on
 
 	public Shield() {
 	}
@@ -70,8 +70,12 @@ public class Shield extends Item
 		return new Coins(shield_type.getCost());
 	}
 	
-	public ArrayList<String> look() {
-		return null;
+	public int getMod() {
+		return this.mod;
+	}
+	
+	public void setMod(int newMod) {
+		this.mod = newMod;
 	}
 	
 	@Override

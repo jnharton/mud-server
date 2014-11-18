@@ -6,6 +6,7 @@ import java.util.Hashtable;
 
 import mud.ObjectFlag;
 import mud.MUDObject;
+import mud.Script;
 import mud.Trigger;
 import mud.TriggerType;
 import mud.TypeFlag;
@@ -122,6 +123,15 @@ public class Thing extends MUDObject {
 			break;
 		default:
 			break;
+		}
+	}
+	
+	public Script getScript(TriggerType type) {
+		switch(type) {
+		case onUse:
+			return onUse.getScript();
+		default:
+			return null;
 		}
 	}
 	

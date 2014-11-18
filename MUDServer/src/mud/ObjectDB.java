@@ -282,12 +282,18 @@ public final class ObjectDB {
             i += 1;
         }
     }
+    
+    // remove object from DB, but insert a NullObject placeholder
+    public void remove(final MUDObject item) {    	
+    	objsById.put(item.getDBRef(), new NullObject(item.getDBRef()));
+    	objsByName.remove(item.getName());
+    }
 
     // Ensure object is in both maps, overwriting any object in the id map.
-    public void set(final int n, final MUDObject item) {
+    /*public void set(final int n, final MUDObject item) {
         objsById.put(n, item);
         objsByName.put(item.getName(), item);
-    }
+    }*/
     
     /**
      * Get an object by it's Database Reference Number (DBRef)

@@ -68,10 +68,24 @@ public class NPC extends Player implements InteractiveI
 	}*/
 	
 	// TODO make the below work (may need to modify Player)
-	/*public NPC(String name) {
+	public NPC(String name) {
 		super(-1);
-		this.name = tempName;
-	}*/
+		
+		this.type = TypeFlag.NPC;
+		
+		this.name = name;
+		this.desc = "A generic npc.";
+		this.flags = EnumSet.noneOf(ObjectFlag.class);
+		this.locks = "";
+		this.status = "NPC";
+		
+		this.race = Races.NONE;
+		this.pclass = Classes.NONE;
+		
+		this.money = Coins.copper(0);
+		
+		this.slots = new LinkedHashMap<String, Slot>();
+	}
 
 	// "normal", but not default, constructor
 	/*public NPC(int tempDBRef, String tempName, String tempDesc, int tempLoc, String tempTitle) {

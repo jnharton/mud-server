@@ -1,0 +1,8 @@
+get
+GET
+
+Get something from a container.
+
+Syntax: get <container> <item>
+
+Last Updated: November 8th, 2014

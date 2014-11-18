@@ -19,31 +19,40 @@ import java.util.EnumSet;
  */
 public enum ObjectFlag
 {
-	BANK("BANK"),
-	DARK("DARK"),
-    FORGE("FORGE", TypeFlag.ROOM),
-    GUEST("GUEST"),
-    HOUSE("HOUSE"),
-    MERCHANT("MERCHANT"),
+	BANK("BANK",         TypeFlag.ROOM),
+	DARK("DARK",         TypeFlag.OBJECT),
+    FORGE("FORGE",       TypeFlag.ROOM),
+    GUEST("GUEST",       TypeFlag.PLAYER),
+    HOUSE("HOUSE",       TypeFlag.ROOM),
+    MERCHANT("MERCHANT", TypeFlag.NPC),
     NO_TELEPORT("NO_TELEPORT"), // prevent teleporting to the location (for rooms) or moving the object (for everything else)
     NO_ENTER("NO_ENTER", TypeFlag.ROOM),
     NO_LEAVE("NO_LEAVE", TypeFlag.ROOM),
     QUIET("QUIET"),
-    SHOP("SHOP", TypeFlag.ROOM),
+    SHOP("SHOP",         TypeFlag.ROOM),
     SILENT("SILENT"),
     VENDOR("VENDOR"),
 	VIRTUAL("VIRTUAL");
-    
+	
+	// 13 flags    
+	// 0 1 2 3 5 7 = 0, 1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16, 17, 18
+	// restrict the use of flags to certain types?
+	
     private String name;   // name of the flag
     private TypeFlag type; // type of object this flag can be set on
     
     ObjectFlag(String flagName) {
     	this.name = flagName;
+    	this.type = null;
     }
     
     ObjectFlag(String flagName, TypeFlag type) {
     	this.name = flagName;
     	this.type = type;
+    }
+    
+    public TypeFlag getAllowedType() {
+    	return this.type;
     }
 
     static public ObjectFlag fromLetter(final char c) {

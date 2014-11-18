@@ -1,0 +1,12 @@
+trade
+TRADE
+
+Trade with another player
+
+Syntax: trade <player>
+        trade #add <player>    -- add something to the trade
+        trade #rem <player>    -- remove something from the trade
+        trade #accept <player> -- accept a trade in progress
+        trade #cancel <player> -- cancel an in progress trade
+
+Last Updated: November 8th, 2014

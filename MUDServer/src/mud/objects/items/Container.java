@@ -6,12 +6,10 @@ import java.util.EnumSet;
 import mud.ObjectFlag;
 import mud.TypeFlag;
 
-import mud.interfaces.Equippable;
 import mud.interfaces.Storage;
 
 import mud.objects.Item;
 import mud.objects.ItemType;
-import mud.objects.Player;
 
 import mud.utils.Utils;
 

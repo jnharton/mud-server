@@ -27,7 +27,15 @@ public class AccessCommand extends Command {
 		String[] args = arg.split("=");
 
 		if (args.length > 0) {
-			Player player = getPlayer(args[0]);
+			
+			Player player;
+			
+			if( args[0].equalsIgnoreCase("me") ) {
+				player = getPlayer(client);
+			}
+			else {
+				 player = getPlayer(args[0]);
+			}
 
 			if (player != null) { // if we have a valid player
 				if (args.length > 1) { // if we have specified a new access level

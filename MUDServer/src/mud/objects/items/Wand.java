@@ -8,7 +8,6 @@ import mud.Effect;
 import mud.ObjectFlag;
 import mud.TypeFlag;
 
-import mud.interfaces.Equippable;
 import mud.interfaces.Usable;
 
 import mud.magic.Spell;
@@ -16,7 +15,6 @@ import mud.net.Client;
 
 import mud.objects.Item;
 import mud.objects.ItemType;
-import mud.objects.Player;
 
 import mud.utils.Utils;
 

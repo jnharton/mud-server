@@ -9,7 +9,10 @@ import java.util.Map;
 import mud.Effect;
 import mud.ObjectFlag;
 import mud.Coins;
+import mud.Script;
 import mud.Slot;
+import mud.Trigger;
+import mud.TriggerType;
 import mud.TypeFlag;
 import mud.MUDObject;
 import mud.SlotType;
@@ -29,17 +32,22 @@ import mud.utils.Utils;
  */
 
 public class Item extends MUDObject implements Cloneable {
-	public boolean equippable = false; // is the item equippable? (default: false)
-	public boolean equipped = false;   // is the item equipped? (default: false)
+	protected ItemType item_type;             // item type - what type of item is this (supersede equip_type?)
+	protected ItemType equip_type;            // equip type - armor, shield, jewelry, weapon
+	protected SlotType slot_type;             // the type of slot this fits in (if any)
 	
-	protected boolean canAuction = true; // allows/disallows auctioning this item (default: true)
-
-    protected Coins baseValue = Coins.gold(1);
+	public boolean equippable = false;        // is the item equippable? (default: false)
+	public boolean equipped = false;          // is the item equipped? (default: false)
+	
+	protected boolean canAuction = true;      // allows/disallows auctioning this item (default: true)
     
-    protected boolean edible = false;    // edible?
-    protected boolean drinkable = false; // drinkable? (0 = no, 1 = yes)
+	protected boolean drinkable = false;      // drinkable? (0 = no, 1 = yes) -- implies DRINK
+    protected boolean edible = false;         // edible? -- implies FOOD
 	
-	protected double weight = 0;       // the weight in whatever units are used of the equippable object
+    protected boolean unique = false;         // is this item Unique (only one of them, cannot be copied)
+    
+    protected Coins baseValue = Coins.gold(1);
+	protected double weight = 0;              // the weight in whatever units are used of the equippable object
 
 	// original idea was a multiplying factor for weight when wet such as
 	// 1.0 - normal, 1.25 - damp, 1.50 - soaked, 2.00 - saturated, etc ("feels" x times as heavy)
@@ -51,13 +59,7 @@ public class Item extends MUDObject implements Cloneable {
 	protected double wet = 1.0;               // degree of water absorbed
 	
 	public int wear = 0;                      // how much wear and tear the item has been subject to
-	public int durability = 100;              // how durable the material is (100 is a test value)
-	
-	protected ItemType item_type;             // item type - what type of item is this (supersede equip_type?)
-	protected ItemType equip_type;            // equip type - armor, shield, jewelry, weapon
-	protected SlotType slot_type;             // the type of slot this fits in (if any)
-	
-	protected int mod = 0;                    // modifier - +0, +2, +3, +4, ... and so on
+	protected int durability = 100;           // how durable the material is (100 is a test value)
 	
 	protected BitSet attributes;              // item attributes: rusty, glowing, etc
 	protected Attribute a;                    // conflicting implementation with the above?
@@ -67,9 +69,9 @@ public class Item extends MUDObject implements Cloneable {
 	
 	protected Map<String, Slot> slots = null; // handles objects which hold specific things, like sheaths for swords
 	
-	protected boolean unique = false;         // is this item Unique (only one of them, cannot be copied)
-	
 	protected Hashtable<String, Integer> skill_buffs = new Hashtable<String, Integer>();
+	
+	public Trigger onUse = null;
 		
 	/**
 	 * Only for creating test items and then setting their properties/attributes
@@ -102,16 +104,9 @@ public class Item extends MUDObject implements Cloneable {
 	 * @param template
 	 */
 	protected Item(Item template) {
-		//super(template.getDBRef());
-		super(-1);
+		super( template );
 		
 		this.type = TypeFlag.ITEM;
-		
-		this.name = template.name;
-		this.flags = template.flags;
-		this.desc = template.desc;
-		//this.location = template.location;
-		this.location = -1;
 		
 		this.item_type = template.item_type;
 		this.equip_type = template.equip_type;
@@ -119,6 +114,18 @@ public class Item extends MUDObject implements Cloneable {
 		this.equipped = false;
 		this.equippable = template.equippable;
 		this.drinkable = template.isDrinkable();
+		
+		this.weight = template.weight;
+		
+		System.out.println("Cloning... " + template.getName());
+		
+		if( template.onUse != null ) {
+			this.onUse = new Trigger( template.onUse.getScript().getText() );
+			System.out.println("Item (onUse Script): " + this.getScript(TriggerType.onUse).getText());
+		}
+		else {
+			System.out.println("Item (onUse Script): No Trigger/No Script!");
+		}
 	}
 	
 	/**
@@ -134,7 +141,7 @@ public class Item extends MUDObject implements Cloneable {
 	 * @param tempDesc
 	 * @param tempLoc
 	 */
-	public Item(int tempDBREF, String tempName, final EnumSet<ObjectFlag> tempFlags, String tempDesc, int tempLoc)
+	public Item(final int tempDBREF, final String tempName, final EnumSet<ObjectFlag> tempFlags, final String tempDesc, final int tempLoc)
 	{
 		super(tempDBREF, tempName, tempFlags, tempDesc, tempLoc);
 		this.type = TypeFlag.ITEM;
@@ -160,8 +167,12 @@ public class Item extends MUDObject implements Cloneable {
 		return baseValue;
 	}
 	
+	public int getDurability() {
+		return this.durability;
+	}
+	
 	public int getWear() {
-		return wear;
+		return this.wear;
 	}
 	
 	/**
@@ -190,14 +201,6 @@ public class Item extends MUDObject implements Cloneable {
 	
 	public void setWeight(Double newWeight) {
 		this.weight = newWeight;
-	}
-	
-	public int getMod() {
-		return this.mod;
-	}
-	
-	public void setMod(int newMod) {
-		this.mod = newMod;
 	}
 	
 	public void setAbsorb(boolean absorb) {
@@ -251,7 +254,9 @@ public class Item extends MUDObject implements Cloneable {
 	 * @return
 	 */
 	public int getEIL() {
-		return this.mod * 2;
+		// TODO fix this kludge
+		return 0;
+		//return this.mod * 2;
 	}
 	
 	public Spell getSpell() {
@@ -264,6 +269,25 @@ public class Item extends MUDObject implements Cloneable {
 
 	public List<Spell> getSpells() {
 		return this.spells;
+	}
+	
+	public void setScriptOnTrigger(TriggerType type, String script) {
+		switch(type) {
+		case onUse:
+			onUse = new Trigger(script);
+			break;
+		default:
+			break;
+		}
+	}
+	
+	public Script getScript(TriggerType type) {
+		switch(type) {
+		case onUse:
+			return this.onUse.getScript();
+		default:
+			return null;
+		}
 	}
 	
 	public String toDB() {

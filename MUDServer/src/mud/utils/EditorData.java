@@ -20,6 +20,13 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 import java.util.HashMap;
 import java.util.LinkedList;
 
+/**
+ * Store a collection of arbitrary objects indexed by string keys,
+ * where there is a layer of abstraction around the map access.
+ * 
+ * @author Jeremy
+ *
+ */
 public class EditorData {
 	private HashMap<String, Object> objects;
 	private HashMap<Object, Boolean> locks;
@@ -28,8 +35,18 @@ public class EditorData {
 		this.objects = new HashMap<String, Object>(1, 0.75f);
 	}
 	 
-	public void addObject(String key, Object object) {
-		this.objects.put(key, object);
+	public boolean addObject(String key, Object object) {
+		boolean success = false;
+		
+		if( !this.objects.containsKey(key) ) {
+			this.objects.put(key, object);
+			success = true;
+		}
+		else {
+			System.out.println("Editor Data (error): Key already exists!");
+		}
+		
+		return success;
 	}
 	
 	public Object removeObject(String key) {

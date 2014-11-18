@@ -34,7 +34,6 @@ import mud.game.Races;
 import mud.game.Skill;
 import mud.game.Skills;
 import mud.game.Race.Subraces;
-import mud.interfaces.Equippable;
 import mud.interfaces.Mobile;
 import mud.interfaces.Ridable;
 import mud.interfaces.Ruleset;
@@ -106,35 +105,35 @@ public class Player extends MUDObject implements Mobile
 	 */
 
 	// SuperGame Stuff
-	private int id;                                   // unique player id (for the account system) **UNUSED
-	private boolean idle_state = false;               // Whether or not the player is currently idle (default: false) **UNUSED
-	private int idle = 0;                             // the amount of time that the player has been idle (MU)
-	private String pass;                              // The player's password in it's hashed state (timed lockout w/ password verification)
-	private PlayerMode mode = PlayerMode.NORMAL;      // Play Mode (default: normal)
-	protected String cName = "";                      // name that show up for players who have initiated greeting, etc
-	protected String status;                          // The player's status (MU)
-	protected String title;                           // The player's title (for where, MU)
-	private Status pstatus = Status.ACTIVE;           // whether or not the player has been banned
-	protected ArrayList<String> names;                // names of other players that the player actually knows
+	private int id;                                // unique player id (for the account system) **UNUSED
+	private boolean idle_state = false;            // Whether or not the player is currently idle (default: false) **UNUSED
+	public int idle = 0;                           // the amount of time that the player has been idle (MU)
+	private String pass;                           // The player's password in it's hashed state (timed lockout w/ password verification)
+	private PlayerMode mode = PlayerMode.NORMAL;   // Play Mode (default: normal)
+	protected String cName = "";                   // name that show up for players who have initiated greeting, etc
+	protected String status;                       // The player's status (MU)
+	protected String title;                        // The player's title (for where, MU)
+	private Status pstatus = Status.ACTIVE;        // whether or not the player has been banned
+	protected ArrayList<String> names;             // names of other players that the player actually knows
 
-	final private MailBox mailbox = new MailBox();    // player mailbox
+	final private MailBox mailbox = new MailBox(); // player mailbox
 
-	protected int access = 0;                         // the player's access level (permissions) - 0=player,1=admin (default: 0)
+	protected int access = 0;                      // the player's access level (permissions) - 0=player,1=admin (default: 0)
 
-	private boolean isNew;                            // is the player new? (e.g. hasn't done chargen)
+	private boolean isNew;                         // is the player new? (e.g. hasn't done chargen)
 
-	private boolean controller = false;               // place to indicate if we are controlling an npc (by default, we are not)
+	private boolean controller = false;            // place to indicate if we are controlling an npc (by default, we are not)
 	private HashMap<String, EditList> editMap = new HashMap<String, EditList>(); // array of lists belonging to this player
 
 	// preferences (ACCOUNT DATA?)
-	private int lineLimit = 80;                          // how wide the client's screen is in columns (shouldn't be in Player class)
-	public int invDispWidth = 60;                        // display width for the complex version of inventory display
-	//private Character invType = 'C';                     // S = simple, C = Complex (candidate for being a config option, not a single variable)
+	private int lineLimit = 80;                    // how wide the client's screen is in columns (shouldn't be in Player class)
+	public int invDispWidth = 60;                  // display width for the complex version of inventory display
+	//private Character invType = 'C';             // S = simple, C = Complex (candidate for being a config option, not a single variable)
 	
 	private final Map<String, Boolean> config = new LinkedHashMap<String, Boolean>(); // player preferences for player configurable options
 
 	// utility
-	private HashMap<String, Integer> nameRef;         // store name references to dbref numbers (i.e. $this->49)
+	private HashMap<String, Integer> nameRef;      // store name references to dbref numbers (i.e. $this->49)
 
 	// Editors, General
 	private Editors editor;
@@ -263,6 +262,10 @@ public class Player extends MUDObject implements Mobile
 	
 	public Ridable mount = null;
 	
+	protected Player(int tempDBREF) {
+		super(tempDBREF);
+	}
+	
 	/**
 	 * No argument constructor for subclasses
 	 * 
@@ -309,22 +312,22 @@ public class Player extends MUDObject implements Mobile
 		this.slots = new LinkedHashMap<String, Slot>(11, 0.75f);
 
 		// initialize slots
-		this.slots.put("helmet", new Slot( SlotType.HEAD, ItemType.HELMET));
-		this.slots.put("necklace", new Slot( SlotType.NECK, ItemType.NECKLACE));
-		this.slots.put("armor", new Slot( SlotType.CHEST, ItemType.ARMOR));
-		this.slots.put("cloak", new Slot( SlotType.BACK, ClothingType.CLOAK));
-		this.slots.put("ring1", new Slot( SlotType.FINGER, ItemType.RING));
-		this.slots.put("ring2", new Slot( SlotType.FINGER, ItemType.RING));
-		this.slots.put("ring3", new Slot( SlotType.FINGER, ItemType.RING));
-		this.slots.put("ring4", new Slot( SlotType.FINGER, ItemType.RING));
-		this.slots.put("ring5", new Slot( SlotType.FINGER, ItemType.RING));
-		this.slots.put("ring6", new Slot( SlotType.FINGER, ItemType.RING));
-		this.slots.put("gloves", new Slot( SlotType.HANDS, ClothingType.GLOVES));
-		this.slots.put("weapon", new Slot( SlotType.RHAND, ItemType.WEAPON));
-		this.slots.put("weapon1", new Slot( SlotType.LHAND, ItemType.WEAPON));
-		this.slots.put("belt", new Slot( SlotType.WAIST, ClothingType.BELT));
-		this.slots.put("boots", new Slot( SlotType.FEET, ClothingType.BOOTS));
-		this.slots.put("other", new Slot( SlotType.NONE, ItemType.NONE ));
+		addSlot("helmet", new Slot( SlotType.HEAD, ItemType.HELMET));
+		addSlot("necklace", new Slot( SlotType.NECK, ItemType.NECKLACE));
+		addSlot("armor", new Slot( SlotType.CHEST, ItemType.ARMOR));
+		addSlot("cloak", new Slot( SlotType.BACK, ClothingType.CLOAK));
+		addSlot("ring1", new Slot( SlotType.FINGER, ItemType.RING));
+		addSlot("ring2", new Slot( SlotType.FINGER, ItemType.RING));
+		addSlot("ring3", new Slot( SlotType.FINGER, ItemType.RING));
+		addSlot("ring4", new Slot( SlotType.FINGER, ItemType.RING));
+		addSlot("ring5", new Slot( SlotType.FINGER, ItemType.RING));
+		addSlot("ring6", new Slot( SlotType.FINGER, ItemType.RING));
+		addSlot("gloves", new Slot( SlotType.HANDS, ClothingType.GLOVES));
+		addSlot("weapon", new Slot( SlotType.RHAND, ItemType.WEAPON));
+		addSlot("weapon1", new Slot( SlotType.LHAND, ItemType.WEAPON));
+		addSlot("belt", new Slot( SlotType.WAIST, ClothingType.BELT));
+		addSlot("boots", new Slot( SlotType.FEET, ClothingType.BOOTS));
+		addSlot("other", new Slot( SlotType.NONE, ItemType.NONE ));
 
 		// instantiate stats
 		//stats = new LinkedHashMap<Ability, Integer>(6, 0.75f);
@@ -449,6 +452,7 @@ public class Player extends MUDObject implements Mobile
 		this.slots = new LinkedHashMap<String, Slot>(11, 0.75f);
 
 		// initialize slots
+		// NOTE: slot names are non-arbitrary and at the moment must match the ItemType they will hold
 		this.slots.put("helmet", new Slot( SlotType.HEAD, ItemType.HELMET));
 		this.slots.put("necklace", new Slot( SlotType.NECK, ItemType.NECKLACE));
 		this.slots.put("armor", new Slot( SlotType.CHEST, ItemType.ARMOR));
@@ -464,7 +468,7 @@ public class Player extends MUDObject implements Mobile
 		this.slots.put("weapon1", new Slot( SlotType.LHAND, ItemType.WEAPON));
 		this.slots.put("belt", new Slot( SlotType.WAIST, ClothingType.BELT));
 		this.slots.put("boots", new Slot( SlotType.FEET, ClothingType.BOOTS));
-		this.slots.put("other", new Slot( SlotType.NONE, ItemType.NONE ));
+		this.slots.put("none", new Slot( SlotType.NONE, ItemType.NONE ));
 
 		// instantiate stats
 		//stats = new LinkedHashMap<Ability, Integer>(6, 0.75f);
@@ -807,6 +811,10 @@ public class Player extends MUDObject implements Mobile
 	}
 
 	public void setHP(int hp) {
+		// you can only set HP up to the total hp
+		if( (this.hp + hp) < this.totalhp ) {
+			this.hp += hp;
+		}
 		/*if( this.temphp > 0 ) {
 			if( hp < 0 ) { // damage
 				if( this.temphp >= hp ) {
@@ -828,7 +836,8 @@ public class Player extends MUDObject implements Mobile
 	}
 
 	public int getTotalHP() {
-		return this.totalhp + this.temphp;
+		//return this.totalhp + this.temphp;
+		return this.totalhp;
 	}
 
 	public void setTotalHP(int hp) {
@@ -902,7 +911,11 @@ public class Player extends MUDObject implements Mobile
 	}
 	
 	public Slot getSlot(String key) {
-		return slots.get(key);
+		if( slots.containsKey(key) ) {
+			return slots.get(key);
+		}
+		
+		return null;
 	}
 	
 	public List<Slot> getSlots(String key) {
@@ -1387,6 +1400,14 @@ public class Player extends MUDObject implements Mobile
 
 	public void setCGData(cgData newCGD) {
 		this.cgd = newCGD;
+	}
+	
+	public void setIdle(boolean idle) {
+		this.idle_state = idle;
+	}
+	
+	public boolean isIdle() {
+		return this.idle_state;
 	}
 	
 	/**

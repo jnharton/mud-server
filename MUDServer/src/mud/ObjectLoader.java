@@ -42,9 +42,12 @@ import mud.misc.Zone;
  */
 
 public class ObjectLoader {
+	static public MUDServer parent;
 
-	static public void loadObjects(final List<String> in, final LoggerI log,
-			final ObjectDB objectDB, final MUDServer parent) {
+	static public void loadObjects(final List<String> in, final LoggerI log, final ObjectDB objectDB, final MUDServer parent) {
+		/** TODO: resolve this kludge somehow **/
+		ObjectLoader.parent = parent;
+		
 		for (final String oInfo : in) {
 			Integer oDBRef = 0, oLocation = 0;
 			String oName = "", oFlags = "", oDesc = "";
@@ -411,7 +414,7 @@ public class ObjectLoader {
 						int weaponType = Integer.parseInt(attr[6]);
 						int mod = Integer.parseInt(attr[7]);
 
-						Weapon weapon = new Weapon(oName, oDesc, oLocation, oDBRef, mod, Handed.ONE, WeaponTypes.getWeaponType(weaponType), 15.0);
+						Weapon weapon = new Weapon(oDBRef, oName, oDesc, oLocation, mod, Handed.ONE, WeaponTypes.getWeaponType(weaponType), 15.0);
 						weapon.setItemType(it);
 
 						objectDB.add(weapon);
@@ -625,7 +628,8 @@ public class ObjectLoader {
 
 		/* Set Player Race */
 		raceNum = Utils.toInt(attr[9], Races.NONE.getId());
-		player.setRace(Races.getRace(raceNum));
+		//player.setRace(Races.getRace(raceNum));
+		player.setRace(parent.getRace(raceNum));
 
 		/* Set Player Class */
 		classNum = Utils.toInt(attr[10], Classes.NONE.getId());
@@ -641,6 +645,9 @@ public class ObjectLoader {
 		/**/
 		// player_status = Utils.toInt(attr[13], -1);
 		// player.setPStatus(Player.Status.values()[player_status]);
+		
+		// mark ownership
+		player.setOwner( player );
 
 		return player;
 	}
@@ -697,7 +704,8 @@ public class ObjectLoader {
 		// Set NPC Race
 		try {
 			raceNum = Integer.parseInt(attr[9]);
-			npc.setRace(Races.getRace(raceNum));
+			//npc.setRace(Races.getRace(raceNum));
+			npc.setRace(parent.getRace(raceNum));
 		} catch (NumberFormatException nfe) {
 			nfe.printStackTrace();
 			npc.setRace(Races.NONE);
@@ -711,6 +719,9 @@ public class ObjectLoader {
 			nfe.printStackTrace();
 			npc.setPClass(Classes.NONE);
 		}
+		
+		// mark ownership
+		npc.setOwner( npc );
 
 		return npc;
 	}
@@ -752,7 +763,7 @@ public class ObjectLoader {
 			int weaponType = Integer.parseInt(attr[6]);
 			int mod = Integer.parseInt(attr[7]);
 
-			Weapon weapon = new Weapon(oName, oDesc, oLocation, oDBRef, mod, Handed.ONE, WeaponTypes.getWeaponType(weaponType), 15.0);
+			Weapon weapon = new Weapon(oDBRef, oName, oDesc, oLocation, mod, Handed.ONE, WeaponTypes.getWeaponType(weaponType), 15.0);
 			weapon.setItemType(it);
 
 			return weapon;

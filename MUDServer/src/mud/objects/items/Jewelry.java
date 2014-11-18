@@ -6,7 +6,6 @@ import java.util.List;
 
 import mud.Effect;
 import mud.TypeFlag;
-import mud.interfaces.Equippable;
 import mud.interfaces.Usable;
 import mud.interfaces.Wearable;
 import mud.magic.Spell;
@@ -47,7 +46,7 @@ public class Jewelry extends Item implements Usable<Jewelry>, Wearable<Jewelry>
 		this(jType, jName, jDesc, new Effect(jEffectString));
 	}
 
-	public Jewelry(int jMod, String jType, double jWeight)
+	public Jewelry(String jType, double jWeight)
 	{
 		super(-1);
 		this.type = TypeFlag.ITEM;
@@ -58,7 +57,6 @@ public class Jewelry extends Item implements Usable<Jewelry>, Wearable<Jewelry>
 
 		this.equippable = true;
 		this.equip_type = ItemType.RING; // the type of equipment it is
-		this.mod = jMod;
 		//this.type = jType;               // the actual type of jewelry
 		this.weight = jWeight;           // the weight of the jewelry
 	}

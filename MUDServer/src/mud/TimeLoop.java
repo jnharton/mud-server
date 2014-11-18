@@ -94,16 +94,19 @@ public class TimeLoop implements Runnable
     
     private void incrementSecond() {
     	second += 1;
+    	
     	if(second > 59) {
     		second = 0;
     		incrementMinute();
     	}
     	
     	server.checkTimers();
+    	server.onSecondIncrement();
     }
     
     private void incrementMinute() {
         minute += 1;
+        
         if (minute > 59) {
             minute = 0;
             incrementHour();
@@ -114,6 +117,7 @@ public class TimeLoop implements Runnable
 
     private void incrementHour() {
         hour += 1;
+        
         if (hour > 23) {
             hour = 0;
             incrementDay();
@@ -161,6 +165,7 @@ public class TimeLoop implements Runnable
 
     private void incrementDay() {
         day += 1;
+        
         if (day >= DAYS[month]) {
             day = 0;
             incrementMonth();
@@ -171,6 +176,7 @@ public class TimeLoop implements Runnable
 
     private void incrementMonth() {
         month += 1;
+        
         if (month >= DAYS.length) {
             month = 0;
             incrementYear();

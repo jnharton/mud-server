@@ -80,6 +80,14 @@ public class Effect
 		permanent = ePermanent;
 	}
 	
+	public Effect(final Effect toCopy) {
+		this(toCopy.getName(), toCopy.getType(), toCopy.getDurationType(), toCopy.getDuration());
+		
+		if( toCopy.isPermanent() ) {
+			this.permanent = true;
+		}
+	}
+	
 	
 	public String getName() {
 		return this.name;

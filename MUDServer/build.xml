@@ -25,7 +25,7 @@
         	<fileset dir="data/help"/>
         </copy>
         
-        <zip destfile="${build}/mudserver.zip" basedir="${build}">
+        <zip destfile="${dist}/mudserver.zip" basedir="${build}">
         </zip>
     </target>
     <target name="test">

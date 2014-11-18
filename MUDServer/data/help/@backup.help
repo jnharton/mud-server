@@ -1,0 +1,10 @@
+@backup
+@BACKUP
+
+Backs up the database to disk. Takes an optional filename
+parameter if you'd prefer not to overwrite the primary "database"
+for the game
+
+Syntax: @backup [filename]
+
+Last Updated: November 9th, 2014

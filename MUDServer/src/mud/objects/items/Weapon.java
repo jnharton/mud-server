@@ -6,10 +6,8 @@ import mud.Coins;
 import mud.ObjectFlag;
 import mud.TypeFlag;
 import mud.game.Skill;
-import mud.interfaces.Equippable;
 import mud.objects.Item;
 import mud.objects.ItemType;
-import mud.objects.Player;
 import mud.objects.items.Handed;
 import mud.utils.Tuple;
 import mud.utils.Utils;
@@ -21,17 +19,36 @@ public class Weapon extends Item implements Cloneable
 	
 	protected Skill required_skill;
 	protected int req_skill_value;
+	
+	protected int mod = 0;                    // modifier - +0, +2, +3, +4, ... and so on
 
 	public Weapon() {
-		super(-1, "Sword", EnumSet.noneOf(ObjectFlag.class), "A nice, shiny steel longsword.", 8);
+		super(-1, "weapon", EnumSet.noneOf(ObjectFlag.class), "A generic weapon", 8);
+		
 		this.type = TypeFlag.ITEM;
+		
+		this.item_type = ItemType.WEAPON;
+		
 		this.equippable = true;
 		this.equip_type = ItemType.WEAPON;       // the type of equipment it is
-		this.item_type = ItemType.WEAPON;
+		
 		this.mod = 0;
-		this.handed = Handed.ONE;
-		this.weapon_type = WeaponTypes.LONGSWORD; // weapon type
-		this.weight = 7.0;                       // the weight of the weapon (lbs)
+		//this.handed = Handed.ONE;
+		//this.weapon_type = WeaponTypes.LONGSWORD; // weapon type
+		//this.weight = 7.0;                       // the weight of the weapon (lbs)
+	}
+	
+	public Weapon(final String name) {
+		super(-1, name, EnumSet.noneOf(ObjectFlag.class), "A generic weapon", 8);
+		
+		this.type = TypeFlag.ITEM;
+		
+		this.item_type = ItemType.WEAPON;
+		
+		this.equippable = true;
+		this.equip_type = ItemType.WEAPON;       // the type of equipment it is
+		
+		this.mod = 0;
 	}
 	
 	public Weapon(int wMod, Handed handed, WeaponType wType)
@@ -44,6 +61,26 @@ public class Weapon extends Item implements Cloneable
 		this.mod = wMod;
 		this.handed = handed;
 		this.weapon_type = wType;   // the actual type of weapon
+		this.weight = wType.getWeight(); // the weight of the weapon
+	}
+	
+	/**
+	 * Create a Weapon object using the WeaponType as a template
+	 * @param wType
+	 */
+	public Weapon(WeaponType wType) {
+		super(-1);
+		
+		this.name = wType.getName();
+		this.flags = EnumSet.noneOf(ObjectFlag.class);
+		this.desc = "";
+		this.location = -1;
+		
+		this.equippable = true;
+		this.equip_type = ItemType.WEAPON; // the type of equipment it is
+		this.item_type = ItemType.WEAPON;
+		
+		this.weapon_type = null;
 		this.weight = wType.getWeight(); // the weight of the weapon
 	}
 
@@ -96,12 +133,8 @@ public class Weapon extends Item implements Cloneable
 	 * @param template
 	 */
 	protected Weapon( Weapon template ) {
-		//super(-1, template.name, template.flags, template.desc, template.location);
 		super( template );
-		this.type = TypeFlag.ITEM;
-		this.equippable = true;
-		this.equip_type = template.equip_type;
-		this.item_type = template.item_type;
+		
 		this.mod = template.mod;
 		this.handed = template.handed;
 		this.weapon_type = template.weapon_type;
@@ -114,14 +147,12 @@ public class Weapon extends Item implements Cloneable
 	 * Use this only for testing purposes and loading objects into the
 	 * server database, for anything else, use one of the other two constructors
 	 * that have parameters.
-	 *
-	 * 
+	 * @param wDBREF
 	 * @param wName
 	 * @param wDesc
 	 * @param wLoc
-	 * @param wDBREF
 	 */
-	public Weapon(String wName, String wDesc, int wLoc, int wDBREF, int wMod, Handed handed, WeaponType wType, double wWeight)
+	public Weapon(final int wDBREF, final String wName, final String wDesc, final int wLoc, final int wMod, final Handed handed, final WeaponType wType, final double wWeight)
 	{
 		super(wDBREF, wName, EnumSet.noneOf(ObjectFlag.class), wDesc, wLoc);
 		this.item_type = ItemType.WEAPON;

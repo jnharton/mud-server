@@ -47,7 +47,7 @@ public class Client implements Runnable {
 	final BitSet protocol_status = new BitSet(8);
 	
 	private boolean response_expected = false;
-	private String response;
+	private String response = "";
 
 	public Client(final String host, final int port) throws IOException {
 		this(new Socket(host, port));
@@ -103,14 +103,28 @@ public class Client implements Runnable {
 						if (ch == '\012') { // newline (\n)
 							if( last_ch == '\015') sb.delete(0, sb.length()); // clear stringbuffer
 							else {
-								this.queuedLines.add( sb.toString().trim() ); // convert stringbuffer to string
+								if( !response_expected ) {
+									this.queuedLines.add( sb.toString().trim() ); // convert stringbuffer to string
+								}
+								else {
+									this.response = sb.toString().trim();
+									//System.out.println("RESPONSE: " + response);
+								}
+								
 								sb.delete(0, sb.length());                    // clear stringbuffer
 							}
 						}
 						else if(ch == '\015') { // carriage-return (\r)
 							if( last_ch == '\012') sb.delete(0, sb.length()); // clear stringbuffer
 							else {
-								this.queuedLines.add( sb.toString().trim() ); // convert stringbuffer to string
+								if( !response_expected ) {
+									this.queuedLines.add( sb.toString().trim() ); // convert stringbuffer to string
+								}
+								else {
+									this.response = sb.toString().trim();
+									//System.out.println("RESPONSE: " + response);
+								}
+								
 								sb.delete(0, sb.length());                    // clear stringbuffer
 							}
 						}
@@ -336,5 +350,10 @@ public class Client implements Runnable {
 	
 	public void setResponseExpected(boolean re) {
 		this.response_expected = re;
+		response = "";
+	}
+	
+	public String getResponse() {
+		return response;
 	}
 }

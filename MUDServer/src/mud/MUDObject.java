@@ -43,10 +43,9 @@ public abstract class MUDObject {
 	protected String locks = "";                                            // object locks
 	protected int location = 0;                                             // object location
 	
-	protected int owner = 0; // who owns the object (dbref of owner)
+	protected int owner = -1; // who owns the object (dbref of owner)
 	
 	/* object data - related to game (persistent) */
-
 	protected LinkedHashMap<String, Object> properties = new LinkedHashMap<String, Object>(10, 0.75f);
 
 	protected ArrayList<Effect> effects = new ArrayList<Effect>(); // Effects set on the object
@@ -70,16 +69,28 @@ public abstract class MUDObject {
 	protected MUDObject(int tempDBRef)
 	{
 		this.type = TypeFlag.OBJECT;
+		
 		this.dbref = tempDBRef;
 	}
 
 	protected MUDObject(final int tempDBRef, final String tempName, final EnumSet<ObjectFlag> tempFlags, final String tempDesc, final int tempLoc) {
 		this.type = TypeFlag.OBJECT;
+		
 		this.dbref = tempDBRef;
 		this.name = tempName;
 		this.flags = tempFlags;
 		this.desc = tempDesc;
 		this.location = tempLoc;
+	}
+	
+	protected MUDObject(MUDObject template) {
+		this.type = TypeFlag.OBJECT;
+		
+		this.dbref = -1;
+		this.name = template.name;
+		this.desc = template.desc;
+		this.flags = template.flags;
+		this.location = -1;
 	}
 
 	/**
@@ -139,18 +150,6 @@ public abstract class MUDObject {
 	 */
 	public void setDesc(String newDescription) {
 		this.desc = newDescription;
-	}
-	
-	/*public TypeFlag getType() {
-		return this.type;
-	}*/
-	
-	public boolean isType(final TypeFlag type) {
-		return this.type == type;
-	}
-
-	public String getTypeName() {
-		return this.type.name();
 	}
 
 	/**
@@ -460,8 +459,20 @@ public abstract class MUDObject {
 		this.pos.setY(y);
 		this.pos.setZ(z);
 	}
+	
+	public void setPosition(final Point pos) {
+		setPosition(pos.getX(), pos.getY(), pos.getZ());
+	}
 
 	/* Check Methods */
+	
+	public boolean isType(final TypeFlag type) {
+		return this.type == type;
+	}
+
+	public String getTypeName() {
+		return this.type.name();
+	}
 
 	/**
 	 * Does this MUDObject have the indicated ObjectFlag?

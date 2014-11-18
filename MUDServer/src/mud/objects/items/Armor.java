@@ -5,11 +5,9 @@ import java.util.EnumSet;
 
 import mud.Coins;
 import mud.ObjectFlag;
-import mud.interfaces.Equippable;
 import mud.interfaces.Wearable;
 import mud.objects.Item;
 import mud.objects.ItemType;
-import mud.objects.Player;
 import mud.utils.Utils;
 
 /**
@@ -29,29 +27,10 @@ public class Armor extends Item implements Wearable<Armor>
 	// weight - light, medium, heavy
 	//private String group = "";
 	private ArmorType armor_type;
+	
+	protected int mod = 0;                    // modifier - +0, +2, +3, +4, ... and so on
 
 	public Armor() {
-	}
-	
-	/**
-	 * Armor - Copy Constructor
-	 * 
-	 * @see "Use this to make an identical copy of another armor. Just
-	 * remember to change the database reference, etc accordingly"
-	 * 
-	 * @param template the armor to copy
-	 */
-	public Armor( Armor template ) {
-		super(-1, template.name, template.flags, template.desc, template.location);
-		this.equippable = true;
-		this.equip_type = template.equip_type;
-		this.item_type = template.item_type;
-		
-		//this.mod = template.mod;
-		this.mod = 0;
-		
-		this.armor_type = template.armor_type;
-		this.weight = template.weight;
 	}
 	
 	public Armor(int aMod, ArmorType armor)
@@ -80,6 +59,20 @@ public class Armor extends Item implements Wearable<Armor>
 		
 		this.armor_type = armor;
 		this.weight = armor.getWeight();
+	}
+	
+	/**
+	 * Armor - Copy Constructor
+	 * 
+	 * @see "Use this to make an identical copy of another armor. Just
+	 * remember to change the database reference, etc accordingly"
+	 * 
+	 * @param template the armor to copy
+	 */
+	protected Armor( Armor template ) {
+		super( template );
+		
+		this.armor_type = template.armor_type;
 	}
 	
 	/**
@@ -130,8 +123,12 @@ public class Armor extends Item implements Wearable<Armor>
 		return new Coins(armor_type.getCost());
 	}
 	
-	public ArrayList<String> look() {
-		return null;
+	public int getMod() {
+		return this.mod;
+	}
+	
+	public void setMod(int newMod) {
+		this.mod = newMod;
 	}
 	
 	@Override
@@ -165,5 +162,10 @@ public class Armor extends Item implements Wearable<Armor>
 	public String getType() {
 		// TODO Auto-generated method stub
 		return null;
+	}
+	
+	@Override
+	public Armor clone() {
+		return new Armor(this);
 	}
 }

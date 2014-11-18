@@ -47,13 +47,18 @@ public class AttackCommand extends Command {
 				
 				MUDObject mobj = null;
 				
+				
 				for(final Creature c : creatures) {
 					if( c.getName().equalsIgnoreCase(arg) ) {
 						mobj = c;
 					}
 				}
-
-				player.setTarget(mobj);
+				
+				// TODO fix this kludge (designed to allow use of the target command to
+				// take precedence over creature target
+				if( player.getTarget() == null ) {
+					player.setTarget(mobj);
+				}
 
 				if (player.getTarget() != null) {
 					
@@ -118,7 +123,7 @@ public class AttackCommand extends Command {
 									((Creature) target).setHP(-damage);
 								}
 								else if(target instanceof Item) {
-									((Item) target).durability -= damage;
+									((Item) target).wear += damage;
 								}
 								else if(target instanceof Thing) {
 									// ?
