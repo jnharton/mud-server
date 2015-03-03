@@ -1,11 +1,11 @@
 {
-    "class":"wizard",
-    "level":1,
-    "school":"conjuration",
-    "manacost":5,
-    "name":"invisibility",
-    "castmsg":"You cast invisibility on &target",
+    "class": "wizard",
+    "level": 1,
+    "school": "conjuration",
+    "manacost": 5,
+    "name": "invisibility",
+    "castmsg": "You cast invisibility on &target",
     "effects": [ "invisibility" ],
-    "reagents":"none",
+    "reagents": "none",
     "targets": [ "self","friend" ]
 }

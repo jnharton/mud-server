@@ -33,17 +33,33 @@ public class BulletinBoard {
 	 * 
 	 */
 	private final String name;
-	private int lastId = 1;
+	private String filename;
+	private int lastId = 0;
 	
 	private ArrayList<BBEntry> entries;
 
 	public BulletinBoard(String name) {
 		this.name = name;
+		this.filename = "";
+		this.entries = new ArrayList<BBEntry>();
+	}
+	
+	public BulletinBoard(String name, String filename) {
+		this.name = name;
+		this.filename = filename;
 		this.entries = new ArrayList<BBEntry>();
 	}
 	
 	public String getName() {
 		return this.name;
+	}
+	
+	public void setFilename(final String filename) {
+		this.filename = filename;
+	}
+	
+	public String getFilename() {
+		return this.filename;
 	}
 	
 	public BBEntry getEntry(int messageNum) {

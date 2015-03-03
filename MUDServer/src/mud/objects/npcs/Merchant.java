@@ -5,13 +5,13 @@ import java.util.LinkedHashMap;
 import java.util.EnumSet;
 
 import mud.ObjectFlag;
-import mud.Coins;
 import mud.MUDServer;
 import mud.game.Abilities;
 import mud.game.Ability;
 import mud.game.Classes;
 import mud.game.Races;
 import mud.interfaces.Vendor;
+import mud.misc.Coins;
 import mud.net.Client;
 import mud.objects.Item;
 import mud.objects.NPC;
@@ -37,7 +37,7 @@ public class Merchant extends NPC implements Vendor {
 	final private MUDServer parent;
 	public ArrayList<Item> stock = new ArrayList<Item>();
 	
-	String type = "";
+	public String type = "";
 
 	public Merchant(final MUDServer mudServer, final int tempDBRef, final String tempName, final EnumSet<ObjectFlag> tempFlags, 
             final String tempDesc, final String tempTitle, final String tempPStatus, final int tempLoc, final Coins tempMoney) {
@@ -133,7 +133,7 @@ public class Merchant extends NPC implements Vendor {
 		this.type = type;
 	}
 	
-	public String getType() {
+	public String getMerchantType() {
 		return this.type;
 	}
 }

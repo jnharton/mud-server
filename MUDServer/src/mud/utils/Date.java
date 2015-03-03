@@ -95,14 +95,8 @@ public class Date implements Serializable {
 		return this.year;
 	}
 
-	class DateFormatException extends IllegalArgumentException {
-		public DateFormatException(String s) {
-			super(s);
-		}
-	}
-
 	// Date Pattern: MM-DD-YYYY
-	public Date parseDate(String s) throws DateFormatException {
+	public static Date parseDate(String s) throws DateFormatException {
 		if( s.matches(datePattern) ) {
 			int[] dateData = Utils.stringsToInts(s.split("-"));
 			return new Date(dateData[0], dateData[1], dateData[2]);
@@ -117,6 +111,17 @@ public class Date implements Serializable {
 	 * @return string that represents a date
 	 */
 	public String toString() {
-		return this.month + "-" + this.day + "-" + this.year;
+		String mstr;
+		String dstr;
+		String ystr;
+		
+		if(this.month < 10)  mstr = "0" + this.month;
+		else                 mstr = "" + this.month;
+		if(this.day < 10)    dstr = "0" + this.day;
+		else                 dstr = "" + this.day;
+		if(this.year < 1000) ystr = "0" + this.year;
+		else                 ystr = "" + this.year;
+		
+		return mstr + "-" + dstr + "-" + ystr;
 	}
 }

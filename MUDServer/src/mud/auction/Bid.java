@@ -10,7 +10,7 @@ package mud.auction;
  * changes are made to the one referred to.
  */
 
-import mud.Coins;
+import mud.misc.Coins;
 import mud.objects.Player;
 
 public class Bid {

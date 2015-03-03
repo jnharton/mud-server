@@ -8,13 +8,13 @@ import mud.objects.items.*;
 import mud.objects.npcs.Innkeeper;
 import mud.objects.npcs.Merchant;
 import mud.objects.things.Box;
-import mud.Coins;
 import mud.objects.Item;
 import mud.utils.Utils;
 import mud.game.Classes;
 import mud.game.Races;
 import mud.interfaces.Ruleset;
 import mud.magic.Spell;
+import mud.misc.Coins;
 import mud.misc.Zone;
 
 /*
@@ -56,14 +56,12 @@ public class ObjectLoader {
 			if (oInfo.charAt(0) == '&') { // means to ignore that line
 				log.debug("`loadObjects` ignoring line: " + oInfo);
 
-				oDBRef = Integer.parseInt(oInfo.split("#")[0].replace('&', ' ')
-						.trim());
+				oDBRef = Integer.parseInt(oInfo.split("#")[0].replace('&', ' ').trim());
 
 				NullObject no = new NullObject(oDBRef);
 				no.lock(); // lock the NullObject
 
-				System.out.println("NULLObject (" + oDBRef + ") Locked?: "
-						+ no.isLocked());
+				System.out.println("NULLObject (" + oDBRef + ") Locked?: " + no.isLocked());
 
 				objectDB.add(no);
 				continue;
@@ -107,9 +105,7 @@ public class ObjectLoader {
 					 * objectDB.addCreature(cre); }
 					 */
 
-					final Creature cre = new Creature(oDBRef, oName,
-							ObjectFlag.getFlagsFromString(oFlags), oDesc,
-							oLocation);
+					final Creature cre = new Creature(oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), oDesc, oLocation);
 
 					// add the creature to the in-memory database and to the
 					// list of creatures
@@ -123,15 +119,7 @@ public class ObjectLoader {
 					objectDB.add(player);
 					objectDB.addPlayer(player);
 				} else if (oFlags.equals("IKV")) {
-					Innkeeper ik = new Innkeeper(
-							parent,
-							oDBRef,
-							oName,
-							ObjectFlag.getFlagsFromString(oFlags),
-							oDesc,
-							"Merchant",
-							"VEN",
-							oLocation,
+					Innkeeper ik = new Innkeeper( parent, oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), oDesc, "Merchant", "VEN", oLocation,
 							Coins.fromArray(new int[] { 1000, 1000, 1000, 1000 }));
 
 					log.debug("log.debug (db entry): " + ik.toDB(), 2);
@@ -150,9 +138,7 @@ public class ObjectLoader {
 					if (et == ExitType.STD) {
 						int oDest = Integer.parseInt(attr[5]);
 
-						Exit exit = new Exit(oDBRef, oName,
-								ObjectFlag.getFlagsFromString(oFlags), oDesc,
-								oLocation, oDest);
+						Exit exit = new Exit(oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), oDesc, oLocation, oDest);
 						exit.setExitType(et);
 
 						log.debug("log.debug (db entry): " + exit.toDB(), 2);
@@ -162,20 +148,15 @@ public class ObjectLoader {
 
 					} else if (et == ExitType.DOOR) {
 						int oDest = Integer.parseInt(attr[5]);
-						int lockState = Utils.toInt(attr[7], 0); // all lock
-						// states
-						// other
-						// than 0 or
-						// 1 are
-						// invalid
+						
+						// all lock states other than 0 or 1 are invalid
+						int lockState = Utils.toInt(attr[7], 0);
 
 						String[] temp = oName.split(";");
 						System.out.println(Arrays.asList(temp));
 						oName = temp[0];
 
-						Door door = new Door(oDBRef, oName,
-								ObjectFlag.getFlagsFromString(oFlags), oDesc,
-								oLocation, oDest);
+						Door door = new Door(oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), oDesc, oLocation, oDest);
 						door.setExitType(et);
 
 						if (temp.length == 2) {
@@ -185,20 +166,21 @@ public class ObjectLoader {
 							System.out.println(Arrays.asList(aliases));
 
 							if (aliases.length > 0) {
-								for (String a : aliases[0].split(","))
-									door.aliases.add(names[0] + "|" + a);
+								for (String a : aliases[0].split(",")) {
+									door.addAlias(names[0] + "|" + a);
+								}
 
 								if (aliases.length == 2) {
-									for (String a : aliases[1].split(","))
-										door.aliases.add(names[1] + "|" + a);
+									for (String a : aliases[1].split(",")) {
+										door.addAlias(names[1] + "|" + a);
+									}
 								}
 							}
 						}
 
+						// default is unlocked
 						if (lockState == 1) {
 							door.lock();
-						} else {
-							door.unlock();
 						}
 
 						log.debug("log.debug (db entry): " + door.toDB(), 2);
@@ -217,85 +199,65 @@ public class ObjectLoader {
 						if (oPortalType == PortalType.STD) { // Standard Portal
 							int oDestination = Integer.parseInt(attr[5]);
 
-							portal = new Portal(PortalType.STD, oLocation,
-									oDestination);
-							portal.setDBRef(oDBRef); // NOTE: ought to handle
-							// this in the
-							// constructor
+							portal = new Portal(PortalType.STD, oLocation, oDestination);
+							portal.setDBRef(oDBRef); // NOTE: ought to handle this in the constructor
 							portal.setExitType(et);
 							portal.setDesc(oDesc);
 
 							portal.name = attr[1]; // name
-							portal.setPosition(0, 0); // set x and y coordinate
-							// of position
+							portal.setPosition(0, 0); // set x and y coordinate of position
 
-							log.debug("log.debug (db entry): " + portal.toDB(),
-									2);
+							log.debug("log.debug (db entry): " + portal.toDB(), 2);
 
 							portal.setKey("test");
 
 							parent.getPortals().add(portal);
-							parent.getRoom(portal.getOrigin())
-							.addSayEventListener(portal);
-							parent.getRoom(portal.getDestination())
-							.addSayEventListener(portal);
+							parent.getRoom(portal.getOrigin()).addSayEventListener(portal);
+							parent.getRoom(portal.getDestination()).addSayEventListener(portal);
 
 							objectDB.add(portal);
 							objectDB.addExit(portal);
 						} else if (oPortalType == PortalType.RANDOM) { // Random
 							// Portal
-							int[] oDestinations = Utils.stringsToInts(attr[5]
-									.split(","));
+							int[] oDestinations = Utils.stringsToInts(attr[5].split(","));
 
-							portal = new Portal(PortalType.RANDOM, oLocation,
-									oDestinations);
-							portal.setDBRef(oDBRef); // NOTE: ought to handle
-							// this in the
-							// constructor
+							portal = new Portal(PortalType.RANDOM, oLocation, oDestinations);
+							portal.setDBRef(oDBRef); // NOTE: ought to handle this in the constructor
 							portal.setExitType(et);
 
 							portal.name = attr[1]; // name
-							portal.setPosition(0, 0); // set x and y coordinate
-							// of position
+							portal.setPosition(0, 0); // set x and y coordinate of position
 
 							portal.setKey("test");
 
-							log.debug("log.debug (db entry): " + portal.toDB(),
-									2);
+							log.debug("log.debug (db entry): " + portal.toDB(), 2);
 
 							parent.getPortals().add(portal);
-							parent.getRoom(portal.getOrigin())
-							.addSayEventListener(portal);
+							parent.getRoom(portal.getOrigin()).addSayEventListener(portal);
 
 							objectDB.add(portal);
 							objectDB.addExit(portal);
 						} else {
-							log.debug(
-									"log.debug (error): Problem with object #"
-											+ oDBRef + " - invalid PortalType",
-											2);
+							log.debug("log.debug (error): Problem with object #" + oDBRef + " - invalid PortalType", 2);
 						}
 					} else {
-						log.debug("log.debug (error): Problem with object #"
-								+ oDBRef, 2);
+						log.debug("log.debug (error): Problem with object #" + oDBRef, 2);
 					}
 				}
 				// NPC(int tempDBRef, String tempName, String tempDesc, int
 				// tempLoc, String tempTitle)
 				else if (oTypeFlag == 'N') {
 					if (oFlags.contains("M")) {
-						Merchant merchant = new Merchant(parent, oDBRef, oName,
-								ObjectFlag.getFlagsFromString(oFlags),
-								"A merchant.", "Merchant", "VEN", oLocation,
-								Coins.fromArray(new int[] { 1000, 1000, 1000,
-										1000 }));
+						Merchant merchant = new Merchant(parent, oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), "A merchant.", "Merchant", "VEN", oLocation,
+								Coins.fromArray(new int[] { 1000, 1000, 1000, 1000 }));
 
 						log.debug("log.debug (db entry): " + merchant.toDB(), 2);
 						log.debug("Merchant", 2);
 
 						objectDB.add(merchant);
 						objectDB.addNPC(merchant);
-					} else {
+					}
+					else {
 
 						// NPC npc = new NPC(oDBRef, oName, oDesc, oLocation,
 						// "npc");
@@ -318,9 +280,7 @@ public class ObjectLoader {
 					int[] dimensions = Utils.stringsToInts(attr[6].split(","));
 					int zoneId = Utils.toInt(attr[8], -1);
 
-					final Room room = new Room(oDBRef, oName,
-							ObjectFlag.getFlagsFromString(oFlags), oDesc,
-							oLocation);
+					final Room room = new Room(oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), oDesc, oLocation);
 
 					log.debug("log.debug (db entry): " + room.toDB(), 2);
 
@@ -344,8 +304,7 @@ public class ObjectLoader {
 					}
 
 					if (room.getRoomType().equals(RoomType.OUTSIDE)) {
-						room.getProperties().put("sky",
-								"The sky is clear and flecked with stars.");
+						room.getProperties().put("sky", "The sky is clear and flecked with stars.");
 					}
 
 					objectDB.add(room);
@@ -363,9 +322,7 @@ public class ObjectLoader {
 					if (tt == ThingType.CONTAINER) {
 						thing = new Box(oDBRef, oName, oDesc, oLocation);
 					} else {
-						thing = new Thing(oDBRef, oName,
-								ObjectFlag.getFlagsFromString(oFlags), oDesc,
-								oLocation);
+						thing = new Thing(oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), oDesc, oLocation);
 					}
 
 					log.debug("log.debug (db entry): " + thing.toDB(), 2);
@@ -616,9 +573,7 @@ public class ObjectLoader {
 		Integer[] oStats = Utils.stringsToIntegers(attr[6].split(","));
 		int[] oMoney = Utils.stringsToInts(attr[7].split(","));
 
-		Player player = new Player(oDBRef, oName,
-				ObjectFlag.getFlagsFromString(oFlags), oDesc, oLocation, "",
-				oPassword, "IC", oStats, Coins.fromArray(oMoney));
+		Player player = new Player(oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), oDesc, oLocation, "", oPassword, "IC", oStats, Coins.fromArray(oMoney));
 
 		int access, raceNum, classNum, player_status;
 
@@ -778,12 +733,14 @@ public class ObjectLoader {
 
 			return armor;
 		}
+		
 		else if (it == ItemType.ARROW) { // Arrow
 			Arrow arrow = new Arrow(oDBRef, oName, oDesc, oLocation);
 			arrow.setItemType(it);
 
 			return arrow;
 		}
+		
 		else if (it == ItemType.BOOK) { // Book
 			String author = attr[6];
 			String title = attr[7];
@@ -798,6 +755,7 @@ public class ObjectLoader {
 
 			return book;
 		}
+		
 		else if (it == ItemType.CONTAINER) { // Container
 			Container container = new Container(oName);
 
@@ -831,6 +789,7 @@ public class ObjectLoader {
 
 			return potion;
 		}
+		
 		else if (it == ItemType.SHIELD) { // Armor Merchant
 			int shieldType = Integer.parseInt(attr[6]);
 			int mod = Integer.parseInt(attr[7]);
@@ -839,6 +798,7 @@ public class ObjectLoader {
 
 			return shield;
 		}
+		
 		else if (it == ItemType.RING) {
 			Item ring = new Item(oDBRef, oName, null, oDesc, oLocation);
 
@@ -846,6 +806,7 @@ public class ObjectLoader {
 
 			return ring;
 		}
+		
 		else {
 			Item item = new Item(oDBRef, oName, null, oDesc, oLocation);
 

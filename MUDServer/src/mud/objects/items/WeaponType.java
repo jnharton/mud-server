@@ -11,13 +11,15 @@ public class WeaponType {
 	
 	private int id;
 	private String name;
-	private int[] cost;        // weapon base cost
-	private DamageType dType;  // damage type
-	private String damage;     // damage roll
-	private int critMin;       // minimum roll for a critical hit
-	private int critMax;       // maximum roll for a critical hit
-	private int critical;      // damage multiplier for a critical hit
-	private double weight;     // base weapon weight
+	private int[] cost;            // weapon base cost
+	private DamageType dType;      // damage type
+	private String damage;         // damage roll
+	
+	private boolean critical_hits;
+	private int critMin;           // minimum roll for a critical hit
+	private int critMax;           // maximum roll for a critical hit
+	private int critical;          // damage multiplier for a critical hit
+	private double weight;         // base weapon weight
 	
 	WeaponType(int id, String name, DamageType dType, String damage, int critMin, int critMax, int critical, double weight ) {
 		this.name = name;

@@ -4,18 +4,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.EnumSet;
 
-import mud.Effect;
 import mud.ObjectFlag;
 import mud.TypeFlag;
-
 import mud.interfaces.Stackable;
 import mud.interfaces.Usable;
-
 import mud.magic.Spell;
-
+import mud.misc.Effect;
 import mud.objects.Item;
 import mud.objects.ItemType;
-
 import mud.utils.Utils;
 
 public class Potion extends Item implements Stackable<Potion>, Usable<Potion> {

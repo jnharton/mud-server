@@ -6,11 +6,11 @@ import java.util.Map;
 import java.util.TimerTask;
 
 import mud.Constants;
-import mud.Effect;
 import mud.MUDObject;
 import mud.MUDServer;
-import mud.ProgramInterpreter;
 import mud.magic.Spell;
+import mud.misc.Effect;
+import mud.misc.ProgramInterpreter;
 import mud.net.Client;
 import mud.objects.Creature;
 import mud.objects.Exit;

@@ -6,18 +6,18 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 
-import mud.Effect;
 import mud.ObjectFlag;
-import mud.Coins;
-import mud.Script;
-import mud.Slot;
-import mud.Trigger;
-import mud.TriggerType;
 import mud.TypeFlag;
 import mud.MUDObject;
-import mud.SlotType;
 import mud.interfaces.Stackable;
 import mud.magic.Spell;
+import mud.misc.Coins;
+import mud.misc.Effect;
+import mud.misc.Script;
+import mud.misc.Slot;
+import mud.misc.SlotType;
+import mud.misc.Trigger;
+import mud.misc.TriggerType;
 import mud.objects.items.Attribute;
 import mud.utils.Utils;
 

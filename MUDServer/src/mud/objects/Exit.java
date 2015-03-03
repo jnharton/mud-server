@@ -46,7 +46,7 @@ public class Exit extends MUDObject
 	private String failMsg;            // message about failing to use the exit (locked, etc)
 	private String ofailMsg;           // message others see about you failing to use the exit
 	
-	public ArrayList<String> aliases = new ArrayList<String>();
+	private ArrayList<String> aliases = new ArrayList<String>();
 	
 	// empty default constructor for subclasses
 	public Exit() {
@@ -124,6 +124,10 @@ public class Exit extends MUDObject
 		}
 		
 		return false;
+	}
+	
+	public void addAlias(final String alias) {
+		this.aliases.add(alias);
 	}
 	
 	public ArrayList<String> getAliases() {

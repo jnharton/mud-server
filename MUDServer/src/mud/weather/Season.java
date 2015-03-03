@@ -4,7 +4,7 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.ListIterator;
 
-import mud.Seasons;
+import mud.misc.Seasons;
 
 /*
  * Copyright (c) 2013 Jeremy N. Harton

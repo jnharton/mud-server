@@ -15,12 +15,8 @@ import java.util.EnumSet;
 
 import mud.net.Client;
 import mud.ObjectFlag;
-import mud.Coins;
-import mud.Editors;
 import mud.MUDObject;
 import mud.TypeFlag;
-import mud.Slot;
-import mud.SlotType;
 import mud.MUDServer.PlayerMode;
 import mud.commands.Command;
 import mud.game.Abilities;
@@ -33,21 +29,22 @@ import mud.game.Race;
 import mud.game.Races;
 import mud.game.Skill;
 import mud.game.Skills;
-import mud.game.Race.Subraces;
 import mud.interfaces.Mobile;
 import mud.interfaces.Ridable;
 import mud.interfaces.Ruleset;
 import mud.interfaces.Wearable;
 import mud.magic.Spell;
 import mud.magic.SpellBook;
+import mud.misc.Coins;
+import mud.misc.Editors;
 import mud.misc.Faction;
+import mud.misc.Slot;
+import mud.misc.SlotType;
 import mud.objects.items.Armor;
 import mud.objects.items.ClothingType;
 import mud.objects.items.Handed;
 import mud.objects.items.Shield;
 import mud.quest.Quest;
-import mud.quest.Task;
-import mud.quest.TaskType;
 import mud.utils.EditList;
 import mud.utils.Landmark;
 import mud.utils.MailBox;
@@ -92,10 +89,10 @@ public class Player extends MUDObject implements Mobile
 	// n=2; 3000 = 1000 + (2 * 1000) = 3000
 	// n=3: 6000 = 3000 + (3 * 1000) = 6000
 	// n=4: 10000 = 6000 + (4 * 1000) = 10000
-	
+
 	/* Player State Alive - alive, INCAPACITATED - incapacitated (hp < 0 && hp > -10), DEAD (hp < -10) */
 	public static enum State { ALIVE, INCAPACITATED, DEAD };
-	
+
 	/* Player Status - Active, Banned */
 	public static enum Status { ACTIVE, BANNED };
 
@@ -129,53 +126,11 @@ public class Player extends MUDObject implements Mobile
 	private int lineLimit = 80;                    // how wide the client's screen is in columns (shouldn't be in Player class)
 	public int invDispWidth = 60;                  // display width for the complex version of inventory display
 	//private Character invType = 'C';             // S = simple, C = Complex (candidate for being a config option, not a single variable)
-	
+
 	private final Map<String, Boolean> config = new LinkedHashMap<String, Boolean>(); // player preferences for player configurable options
 
 	// utility
 	private HashMap<String, Integer> nameRef;      // store name references to dbref numbers (i.e. $this->49)
-
-	// Editors, General
-	private Editors editor;
-
-	/* Editor Data */ 
-
-	// Character Editor
-	private cgData cgd = null;
-
-	// List Editor
-	private EditList currentEdit;
-
-	public EditList getEditList() {
-		return currentEdit;
-	}
-
-	public void startEditing(final String name) {
-		currentEdit = new EditList(name);
-	}
-	
-	/* get an existing list to edit */
-	public void loadEditList(final String name) {
-		currentEdit = editMap.get(name);
-	}
-	
-	/* load a list to edit from some other source (files?) */
-	public void loadEditList(final String name, final List<String> lines) {
-		currentEdit = new EditList(name, lines);
-	}
-
-	/* save the current list */
-	public void saveCurrentEdit() {
-		editMap.put(currentEdit.name, currentEdit);
-	}
-	
-	/* stop editing -- clears the current list in a final manner */
-	public void abortEditing() {
-		currentEdit = null;
-	}
-
-	// Miscellaneous Editor
-	private EditorData edd = null;
 
 	// Game Stuff (most set 'protected' so that an npc can basically have player characteristics
 	protected MUDObject target;                    // Target -- player/npc that will be used for generic interaction
@@ -194,7 +149,7 @@ public class Player extends MUDObject implements Mobile
 	protected int level;                           // Level
 	protected int xp;                              // Experience
 	protected Coins money;                         // Money (D&D, MUD)
-	
+
 	private Profession prof1 = null;                          // Active Profession (One) **UNUSED
 	private Profession prof2 = null;                          // Active Profession (Two) **UNUSED
 	private Hashtable<String, Profession> professions = null; // holds all your trained professions **UNUSED
@@ -213,7 +168,7 @@ public class Player extends MUDObject implements Mobile
 
 	private ArrayList<Quest> quests;                                // the player's quests
 	public Quest active_quest = null;                               // the quest the player is currently focusing on
-	
+
 	protected Faction faction;
 	protected Map<Faction, Integer> reputation;
 
@@ -226,7 +181,7 @@ public class Player extends MUDObject implements Mobile
 	private boolean levelup = false; // is this player ready to "level up" (true=yes,false=no)
 	private int featPts;             // points available for selecting new feats (unused)
 	private int skillPts;            // points available for increasing skills (unused)
-	
+
 	//*in some ways i'd rather not assign skill points for leveling up, but i also don't
 	// really like classless systems
 	//*i'm thinking that feats make sense at a level, but gaining skills ought to be by what 
@@ -251,21 +206,63 @@ public class Player extends MUDObject implements Mobile
 	private Pager pager = null; // a pager (ex. 'less' for linux), displays a page's/screen's worth of text at a time
 
 	private Client client;
-	
+
 	public Map<String, Command> commandMap = new HashMap<String, Command>();
-	
+
 	// Knowledge
 	public Map<String, Landmark> landmarks = new HashMap<String, Landmark>(); // contains "landmarks", which are places you've been and h
-	
-	
+
+
 	public static Ruleset ruleset;
-	
+
 	public Ridable mount = null;
+
+	// Editors, General
+	private Editors editor;
+
+	/* Editor Data */ 
+
+	// Character Editor
+	private cgData cgd = null;
+
+	// List Editor
+	private EditList currentEdit;
+
+	public EditList getEditList() {
+		return currentEdit;
+	}
+
+	public void startEditing(final String name) {
+		currentEdit = new EditList(name);
+	}
+
+	/* get an existing list to edit */
+	public void loadEditList(final String name) {
+		currentEdit = editMap.get(name);
+	}
+
+	/* load a list to edit from some other source (files?) */
+	public void loadEditList(final String name, final List<String> lines) {
+		currentEdit = new EditList(name, lines);
+	}
+
+	/* save the current list */
+	public void saveCurrentEdit() {
+		editMap.put(currentEdit.name, currentEdit);
+	}
+
+	/* stop editing -- clears the current list in a final manner */
+	public void abortEditing() {
+		currentEdit = null;
+	}
+
+	// Miscellaneous Editor
+	private EditorData edd = null;
 	
 	protected Player(int tempDBREF) {
 		super(tempDBREF);
 	}
-	
+
 	/**
 	 * No argument constructor for subclasses
 	 * 
@@ -287,7 +284,7 @@ public class Player extends MUDObject implements Mobile
 		this.gender = 'N';
 		this.pclass = Classes.NONE;
 		this.alignment = Alignments.NONE;
-		
+
 		this.desc = _DESC;
 		this.title = "Newbie";
 
@@ -331,7 +328,7 @@ public class Player extends MUDObject implements Mobile
 
 		// instantiate stats
 		//stats = new LinkedHashMap<Ability, Integer>(6, 0.75f);
-		
+
 		stats = new LinkedHashMap<Ability, Integer>(ruleset.getAbilities().length, 0.75f);
 
 		// initialize stats
@@ -341,14 +338,14 @@ public class Player extends MUDObject implements Mobile
 		this.stats.put(Abilities.INTELLIGENCE, _STATS[3]); // Intelligence
 		this.stats.put(Abilities.WISDOM, _STATS[4]);       // Wisdom
 		this.stats.put(Abilities.CHARISMA, _STATS[5]);     // Charisma*/
-		
+
 		for(Ability ability : ruleset.getAbilities()) {
 			this.stats.put(ability, 0);
 		}
-		
+
 		// instantiate skills
 		skills = new LinkedHashMap<Skill, Integer>(36, 0.75f);
-		
+
 		// these should be all -1, since no class is specified initially
 		this.skills.put(Skills.APPRAISE, -1);            this.skills.put(Skills.BALANCE, -1);            this.skills.put(Skills.BLUFF, -1);
 		this.skills.put(Skills.CLIMB, -1);               this.skills.put(Skills.CONCENTRATION, -1);      this.skills.put(Skills.CRAFT, -1);
@@ -396,7 +393,7 @@ public class Player extends MUDObject implements Mobile
 		// initialize modification counters to 0
 		Arrays.fill(statMod, 0);
 		Arrays.fill(skillMod, 0);
-		
+
 		// mark player as new
 		isNew = true;
 	}
@@ -472,7 +469,7 @@ public class Player extends MUDObject implements Mobile
 
 		// instantiate stats
 		//stats = new LinkedHashMap<Ability, Integer>(6, 0.75f);
-		
+
 		stats = new LinkedHashMap<Ability, Integer>(ruleset.getAbilities().length, 0.75f);
 
 		// initialize stats
@@ -482,9 +479,9 @@ public class Player extends MUDObject implements Mobile
 		this.stats.put(Abilities.INTELLIGENCE, tempStats[3]); // Intelligence
 		this.stats.put(Abilities.WISDOM, tempStats[4]);       // Wisdom
 		this.stats.put(Abilities.CHARISMA, tempStats[5]);     // Charisma*/
-		
+
 		int index = 0;
-		
+
 		for(Ability ability : ruleset.getAbilities()) {
 			if( tempStats.length > index ) {
 				this.stats.put(ability, tempStats[index]);
@@ -492,9 +489,9 @@ public class Player extends MUDObject implements Mobile
 			else {
 				this.stats.put(ability, 0);
 			}
-			
+
 			System.out.println(ability.getName() + ": " + this.stats.get(ability));
-			
+
 			index++;
 		}
 
@@ -545,7 +542,7 @@ public class Player extends MUDObject implements Mobile
 
 		// instantiate name reference table
 		this.nameRef = new HashMap<String, Integer>(10, 0.75f); // start out assuming 10 name references
-		
+
 		// initialize modification counters to 0
 		Arrays.fill(statMod, 0);
 		Arrays.fill(skillMod, 0);
@@ -561,7 +558,7 @@ public class Player extends MUDObject implements Mobile
 	public Client getClient() {
 		return client;
 	}
-	
+
 	/**
 	 * Get Access
 	 * 
@@ -587,25 +584,25 @@ public class Player extends MUDObject implements Mobile
 	public void removeName(String tName) {
 		this.names.remove(tName);
 	}
-	
+
 	public Race getRace() { return this.race; }
 
 	public void setRace(Race race) { this.race = race; }
-	
+
 	/**
 	 * Get player gender
 	 * 
 	 * @return
 	 */
 	public Character getGender() { return this.gender; }
-	
+
 	/**
 	 * set player gender
 	 * 
 	 * @param newGender
 	 */
 	public void setGender(Character newGender) { this.gender = newGender; }
-	
+
 	/**
 	 * Get Player Class
 	 * 
@@ -630,7 +627,7 @@ public class Player extends MUDObject implements Mobile
 			this.lastSpell = null;
 		}
 	}
-	
+
 	/**
 	 * Get player title
 	 * 
@@ -644,7 +641,7 @@ public class Player extends MUDObject implements Mobile
 	 * @param newTitle
 	 */
 	public void setTitle(String newTitle) { this.title = newTitle; }
-	
+
 	/**
 	 * overrides MUDObject's setName method to prevent player names from being
 	 * set
@@ -653,12 +650,14 @@ public class Player extends MUDObject implements Mobile
 	public boolean setName(String newName) {
 		return false;
 	}
-		
+
 
 	// get the players password (BAD, BAD, BAD!!!) -- do not let this have any normal access
 	// note: as of ?/?/2011 this should not be a problem since only the hashed version is ever stored
 	// might not be as safe as possible, but actual password can't be lost
-	public String getPass() { return this.pass; }
+	public String getPass() {
+		return this.pass;
+	}
 
 	/**
 	 * Set player's password to a new password. Hashes the supplied new password
@@ -706,11 +705,11 @@ public class Player extends MUDObject implements Mobile
 
 	// set the player's status
 	public void setStatus(String arg) { this.status = arg; }
-	
+
 	public Status getPStatus() {
 		return this.pstatus;
 	}
-	
+
 	public void setPStatus(Status newStatus) {
 		this.pstatus = newStatus;
 	}
@@ -743,7 +742,8 @@ public class Player extends MUDObject implements Mobile
 	// then I need to determine a standard weight for the money
 	// and calculate that, then decide if the player can hold it
 	public void setMoney(final Coins c) {
-		this.money.add(c);
+		//this.money.add(c);
+		this.money = this.money.add(c);
 	}
 
 	/**
@@ -771,7 +771,9 @@ public class Player extends MUDObject implements Mobile
 	 * 
 	 * @return the player's experience points as an int
 	 */
-	public int getXP() { return this.xp; }
+	public int getXP() {
+		return this.xp;
+	}
 
 	/**
 	 * It may not be the best idea, but we'll do level checks here,
@@ -797,7 +799,7 @@ public class Player extends MUDObject implements Mobile
 		return getXPToLevel(level+1);
 		//return Player.levelXP[level];
 	}
-	
+
 	/* level[n] = level[n-1] + (n * 1000) */
 	private int getXPToLevel(int level) {
 		if( level == 0 ) return 0;
@@ -867,7 +869,7 @@ public class Player extends MUDObject implements Mobile
 	public void setAbility(Ability ability, int abilityValue) {
 		this.stats.put(ability, abilityValue);
 	}
-	
+
 	public int getAbilityMod(Ability ability) {
 		return this.statMod[ability.getId()];
 	}
@@ -875,7 +877,7 @@ public class Player extends MUDObject implements Mobile
 	public void setAbilityMod(Ability ability, int abilityMod) {
 		this.statMod[ability.getId()] = abilityMod;
 	}
-	
+
 	public void addSkill(Skill skill) {
 		this.skills.put(skill,  0);
 	}
@@ -901,32 +903,32 @@ public class Player extends MUDObject implements Mobile
 	public ArrayList<Item> getInventory() {
 		return this.inventory;
 	}
-	
+
 	public void addSlot(String name, Slot slot) {
 		this.slots.put(name, slot);
 	}
-	
+
 	public void removeSlot(String name) {
 		this.slots.remove(name);
 	}
-	
+
 	public Slot getSlot(String key) {
 		if( slots.containsKey(key) ) {
 			return slots.get(key);
 		}
-		
+
 		return null;
 	}
-	
+
 	public List<Slot> getSlots(String key) {
 		List<Slot> slots = new LinkedList<Slot>();
-		
+
 		for(final String s : getSlots().keySet() ) {
 			if( s.startsWith( key.toLowerCase() ) ) {
 				slots.add( getSlot(s) );
 			}
 		}
-		
+
 		return slots;
 	}
 
@@ -941,26 +943,27 @@ public class Player extends MUDObject implements Mobile
 	public Map<Ability, Integer> getStats() {
 		return Collections.unmodifiableMap( this.stats );
 	}
-	
+
 	public Quest getQuest(int id) {
 		for(final Quest q : this.quests) {
 			if( q.getId() == id ) {
 				return q;
 			}
 		}
-		
+
 		return null;
 	}
-	
+
 	/**
 	 * 
 	 * @return
 	 */
 	public ArrayList<Quest> getQuests() {
-		//return this.quests;
-		return (ArrayList<Quest>) Collections.unmodifiableList(this.quests);
+		// it'd be nice to have an immutable/unmodifiable list to see what we have, but I need it modifiable asis
+		return this.quests;
+		//return Collections.unmodifiableList(this.quests);
 	}
-	
+
 	/**
 	 * 
 	 * @param quest
@@ -970,7 +973,7 @@ public class Player extends MUDObject implements Mobile
 		for(final Quest quest1 : this.quests) {
 			if( quest.getId() == quest1.getId() ) return true;
 		}
-		
+
 		return false;
 	}
 
@@ -1018,7 +1021,7 @@ public class Player extends MUDObject implements Mobile
 	public void unequip(Item item) {
 		this.inventory.add(item);
 	}
-	
+
 	public boolean hasItem(final Item item) {
 		return this.inventory.contains(item);
 	}
@@ -1059,7 +1062,7 @@ public class Player extends MUDObject implements Mobile
 	public void setMode(PlayerMode newMode) {
 		this.mode = newMode;
 	}
-	
+
 	/**
 	 * isMoving
 	 * 
@@ -1070,7 +1073,7 @@ public class Player extends MUDObject implements Mobile
 	public boolean isMoving() {
 		return this.moving;
 	}
-	
+
 	/**
 	 * Mark this player as moving
 	 * 
@@ -1079,7 +1082,7 @@ public class Player extends MUDObject implements Mobile
 	public void setMoving(boolean isMoving) {
 		this.moving = isMoving;
 	}
-	
+
 	/**
 	 * isFlying
 	 * 
@@ -1090,7 +1093,7 @@ public class Player extends MUDObject implements Mobile
 	public boolean isFlying() {
 		return this.flying;
 	}
-	
+
 	/**
 	 * Mark this player as flying (implied in the air)
 	 * 
@@ -1107,7 +1110,7 @@ public class Player extends MUDObject implements Mobile
 	public void setDestination(Point newDest) {
 		this.destination = newDest;
 	}
-	
+
 	public void changePosition(int cX, int cY, int cZ) {
 		this.pos.changeX(cX);
 		this.pos.changeY(cY);
@@ -1143,32 +1146,18 @@ public class Player extends MUDObject implements Mobile
 	}
 
 	public void updateCurrentState() {
-
 		final int hp = getHP();
+		
 		switch(getState()) {
 		case ALIVE:
-			if (hp <= -10) {
-				setState(State.DEAD);
-			}
-			else if (hp <= 0) {
-				setState(State.INCAPACITATED);
-			}
+			if (hp <= -10)    setState(State.DEAD);
+			else if (hp <= 0) setState(State.INCAPACITATED);
 			break;
 		case INCAPACITATED:
-			if ( hp > 0 ) {
-				setState(State.ALIVE);
-			}
-			else if ( hp <= -10 ) {
-				setState(State.DEAD);
-			}
+			if ( hp > 0 )         setState(State.ALIVE);
+			else if ( hp <= -10 ) setState(State.DEAD);
 			break;
 		case DEAD: // only resurrection spells or divine intervention can bring you back from the dead
-		/*if ( hp > 0 ) {
-                    setState(State.ALIVE);
-                }
-                else if ( hp > -10) {
-                    setState(State.INCAPACITATED);
-                }*/
 			break;
 		default:
 			break;
@@ -1192,7 +1181,7 @@ public class Player extends MUDObject implements Mobile
 	public void setPager(Pager newPager) {
 		this.pager = newPager;
 	}
-	
+
 	/* Name Reference Table (NRT) methods */
 
 	public Integer getNameRef(String key) {
@@ -1210,7 +1199,7 @@ public class Player extends MUDObject implements Mobile
 	public void clearNameRefs() {
 		this.nameRef.clear();
 	}
-	
+
 	/**
 	 * Determines if the player has sufficient experience to
 	 * "level up" to the next level.
@@ -1269,19 +1258,19 @@ public class Player extends MUDObject implements Mobile
 	public void setAlignment(int newAlignment) {
 		this.alignment = Alignments.values()[newAlignment];
 	}
-	
+
 	public void modifyReputation(final Faction faction, final Integer value) {
 		setReputation(faction, getReputation(faction) + value);
 	}
-	
+
 	public void setReputation(final Faction faction, final Integer value) {
 		this.reputation.put(faction, value);
 	}
-	
+
 	public Integer getReputation(final Faction faction) {
 		return reputation.get(faction);
 	}
-	
+
 	/**
 	 * addConfigOption
 	 * 
@@ -1293,7 +1282,7 @@ public class Player extends MUDObject implements Mobile
 	private void addConfigOption(final String option, final Boolean initialValue) {
 		this.config.put(option, initialValue);
 	}
-	
+
 	/**
 	 * setConfigOption
 	 * 
@@ -1309,7 +1298,7 @@ public class Player extends MUDObject implements Mobile
 			this.config.put(option, newValue);
 		}
 	}
-	
+
 	/**
 	 * getConfigOption
 	 * 
@@ -1319,9 +1308,17 @@ public class Player extends MUDObject implements Mobile
 	 * @return
 	 */
 	public Boolean getConfigOption(final String option) {
-		return this.config.get(option);
+		if( this.config.containsKey(option) ) {
+			return this.config.get(option);
+		}
+
+		return false;
 	}
-	
+
+	public Boolean hasConfigOption(final String option) {
+		return this.config.containsKey(option);
+	}
+
 	/**
 	 * Get Map containing config options
 	 * 
@@ -1355,23 +1352,23 @@ public class Player extends MUDObject implements Mobile
 	public boolean isNew() {
 		return isNew;
 	}
-	
-	public void wear(Wearable<Item> w) {
+
+	/*public void wear(Wearable<Item> w) {
 		List<Slot> sList = new LinkedList<Slot>();
-		
+
 		for(String s : this.slots.keySet()) {
 			if( w.getType().toLowerCase().equals( s ) ) {
 				sList.add( this.slots.get(s) );
 			}
 		}
-		
+
 		for(Slot slot : sList) {
 			//if( slot.isEmpty() ) slot.insert( w );
 		}
-	}
-	
+	}*/
+
 	// Editors
-	
+
 	/**
 	 * 
 	 * 
@@ -1401,15 +1398,15 @@ public class Player extends MUDObject implements Mobile
 	public void setCGData(cgData newCGD) {
 		this.cgd = newCGD;
 	}
-	
+
 	public void setIdle(boolean idle) {
 		this.idle_state = idle;
 	}
-	
+
 	public boolean isIdle() {
 		return this.idle_state;
 	}
-	
+
 	/**
 	 * Translate the persistent aspects of the player into the string
 	 * format used by the database
@@ -1423,17 +1420,17 @@ public class Player extends MUDObject implements Mobile
 		output[3] = getDesc();                            // description
 		output[4] = getLocation() + "";                   // location
 		output[5] = getPass();                            // password
-		
+
 		final StringBuilder sb = new StringBuilder();
 		int abilities = ruleset.getAbilities().length;
 		int count = 0;
-		
+
 		for(Ability ability : ruleset.getAbilities()) {
 			sb.append( this.stats.get(ability) );
 			if( count < abilities) sb.append(",");
 			count++;
 		}
-		
+
 		output[6] = sb.toString();                        // stats
 		/*output[6] = stats.get(Abilities.STRENGTH) +       // stats
 				"," + stats.get(Abilities.DEXTERITY) +
@@ -1453,7 +1450,107 @@ public class Player extends MUDObject implements Mobile
 
 	@Override
 	public String toJSON() {
-		return null;
+		final StringBuilder sb = new StringBuilder();
+
+		int count = 0;
+
+		sb.append("{\n");
+
+		sb.append("\t\"dbref\"" + ": \"" + getDBRef() + "\",\n");
+		sb.append("\t\"name\"" + ": \"" + getName() + "\",\n");
+		sb.append("\t\"flags\"" + ": \"" + TypeFlag.asLetter(this.type) + getFlagsAsString() + "\",\n");
+		sb.append("\t\"desc\"" + ": \"" + getDesc() + "\",\n");
+		sb.append("\t\"location\"" + ": \"" + getLocation() + "\",\n");
+
+		sb.append("\n");
+
+		sb.append("\t\"pass\"" + ": \"" + getPass() + "\",\n");
+
+		sb.append("\n");
+
+		sb.append("\t\"stats\"" + ":\n");
+
+		sb.append("\t{\n");
+
+		int abilities = ruleset.getAbilities().length;
+		count = 1;
+
+		for(Ability ability : ruleset.getAbilities()) {
+			sb.append("\t\t\"" + ability.getAbrv() + "\": \"" + this.stats.get(ability) + "\"");
+			if( count < abilities ) sb.append(",\n");
+			else                    sb.append("\n");
+			count++;
+		}
+
+		sb.append("\t},\n");
+
+		sb.append("\n");
+
+		sb.append("\t\"skill\"" + ":\n");
+
+		sb.append("\t{\n");
+
+		int skills = ruleset.getSkills().length;
+		count = 1;
+
+		for(Skill skill : ruleset.getSkills()) {
+			final String skillName = skill.getName();
+			sb.append("\t\t\"" + skillName + "\": \"" + this.stats.get(skillName) + "\"");
+			if( count < skills ) sb.append(",\n");
+			else                    sb.append("\n");
+			count++;
+		}
+
+		sb.append("\t},\n");
+
+		sb.append("\n");
+
+		sb.append("\t\"money\"" + ":\n");
+
+		sb.append("\t{\n");
+
+		String[] mn = { "platinum", "gold", "silver", "copper" };
+		count = 1;
+
+		for(final String value : getMoney().toString(false).split(",")) {
+			sb.append("\t\t\"" + mn[count] + "\": \"" + value + "\"");
+			if( count < (4 - 1) ) sb.append(",\n");
+			else            sb.append("\n");
+			count++;
+		}
+
+		sb.append("\t},\n");
+
+		sb.append("\n");
+
+		sb.append("\t\"names\"" + ":\n");
+
+		sb.append("\t{\n");
+
+		int numNames = names.size();
+		count = 0;
+
+		for(final String name : names) {
+			sb.append("\t\t\"name\"" + ": \"" + name + "\"");
+			if( count < numNames ) sb.append(",\n");
+			else                   sb.append("\n");
+			count++;
+		}
+
+		sb.append("\t},\n");
+
+		sb.append("\n");
+
+		sb.append("\t\"access\"" + ": \"" + getAccess() + "\",\n");
+		sb.append("\t\"race\"" + ": \"" + race.getId() + "\",\n");
+		sb.append("\t\"class\"" + ": \"" + pclass.getId() + "\",\n");
+		sb.append("\t\"status\"" + ": \"" + status + "\",\n");
+		sb.append("\t\"status\"" + ": \"" + state.ordinal() + "\",\n");
+		sb.append("\t\"pstatus\"" + ": \"" + pstatus.ordinal() + "\"\n");
+
+		sb.append("}\n");
+
+		return sb.toString();
 	}
 
 	@Override

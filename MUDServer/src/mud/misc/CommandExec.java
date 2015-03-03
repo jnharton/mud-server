@@ -1,4 +1,4 @@
-package mud;
+package mud.misc;
 
 /*
   Copyright (c) 2012 Jeremy N. Harton
@@ -19,7 +19,8 @@ package mud;
 
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import mud.CMD.Status;
+import mud.MUDServer;
+import mud.misc.CMD.Status;
 import mud.net.Client;
 import mud.net.Server;
 

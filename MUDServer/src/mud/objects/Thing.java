@@ -6,10 +6,10 @@ import java.util.Hashtable;
 
 import mud.ObjectFlag;
 import mud.MUDObject;
-import mud.Script;
-import mud.Trigger;
-import mud.TriggerType;
 import mud.TypeFlag;
+import mud.misc.Script;
+import mud.misc.Trigger;
+import mud.misc.TriggerType;
 import mud.utils.Utils;
 
 /*

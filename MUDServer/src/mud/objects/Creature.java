@@ -115,10 +115,6 @@ public class Creature extends MUDObject implements Mobile {
 		return this.ctype;
 	}
 	
-	public CreatureType getType() {
-		return this.ctype;
-	}
-	
 	public void setRace(Race race) {
 		this.race = race.getName();
 	}

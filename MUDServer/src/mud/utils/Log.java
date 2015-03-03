@@ -327,6 +327,14 @@ public class Log
 	public boolean isFull() {
 		return this.isFull;
 	}
+	
+	public int getLength() {
+		return this.length;
+	}
+	
+	public String getFileName() {
+		return this.filename;
+	}
 
 	private int second() {
 		return this.calendar.get(Calendar.SECOND);

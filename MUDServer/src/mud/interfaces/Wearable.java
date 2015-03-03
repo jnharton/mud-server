@@ -25,5 +25,5 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  * @param <T> Some object type that will implement wearable.
  */
 public interface Wearable<T> {
-	public String getType();
+	//public String getType();
 }

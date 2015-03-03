@@ -1,6 +1,6 @@
 package mud.quest;
 
-import mud.Colors;
+import mud.misc.Colors;
 import mud.objects.Creature;
 import mud.objects.Room;
 
@@ -130,6 +130,21 @@ public class Task {
 	
 	public Room getLocation() {
 		return location;
+	}
+	
+	public String getProgress() {
+		switch(taskType) {
+		case NONE:
+			return "";
+		case COLLECT:
+			return "" + this.collects + " / " + this.toCollect;
+		case KILL:
+			return "" + this.kills + " / " + this.toKill;
+		case RETRIEVE:
+			return ( this.hasItem ) ? "true" : "false";
+		default:
+			return "";
+		}
 	}
 	
 	private void update() {

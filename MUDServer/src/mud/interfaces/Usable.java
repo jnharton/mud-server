@@ -19,8 +19,8 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 import java.util.List;
 
-import mud.Effect;
 import mud.magic.Spell;
+import mud.misc.Effect;
 
 /**
  * Defines an interface for "usable" objects. (i.e. potions, wands, etc)

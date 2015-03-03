@@ -18,4 +18,8 @@ public class Pair<E> {
 		this.one = first;
 		this.two = second;
 	}
+	
+	public String toString() {
+		return "(" + one.toString() + ", " + two.toString() + ")";
+	}
 }

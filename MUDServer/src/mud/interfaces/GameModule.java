@@ -13,8 +13,8 @@ public interface GameModule {
 	public String getName();	
 	public Integer getVersion();
 	
-	public void init(); // initialize the module
-	public void init_player(Player player);
+	public void init();                     // initialize the module
+	public void init_player(Player player); // initialize a new player for this game
 	
 	public List<Faction> getFactions();
 	

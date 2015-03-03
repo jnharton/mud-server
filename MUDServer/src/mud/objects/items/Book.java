@@ -6,8 +6,8 @@ import java.util.List;
 
 import mud.ObjectFlag;
 import mud.TypeFlag;
-import mud.SlotType;
 import mud.interfaces.Editable;
+import mud.misc.SlotType;
 import mud.objects.Item;
 import mud.objects.ItemType;
 import mud.utils.Utils;

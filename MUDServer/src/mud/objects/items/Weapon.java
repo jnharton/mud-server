@@ -2,10 +2,10 @@ package mud.objects.items;
 
 import java.util.EnumSet;
 
-import mud.Coins;
 import mud.ObjectFlag;
 import mud.TypeFlag;
 import mud.game.Skill;
+import mud.misc.Coins;
 import mud.objects.Item;
 import mud.objects.ItemType;
 import mud.objects.items.Handed;
@@ -21,6 +21,8 @@ public class Weapon extends Item implements Cloneable
 	protected int req_skill_value;
 	
 	protected int mod = 0;                    // modifier - +0, +2, +3, +4, ... and so on
+	
+	public int damage = 1;
 
 	public Weapon() {
 		super(-1, "weapon", EnumSet.noneOf(ObjectFlag.class), "A generic weapon", 8);

@@ -1,4 +1,4 @@
-package mud;
+package mud.misc;
 
 /**
  * Script is a container for code that the ProgramInterpreter

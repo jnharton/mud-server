@@ -47,9 +47,9 @@ import javax.crypto.spec.PBEKeySpec;
  *
  */
 public final class Utils {
-	
+
 	private static final int LINES = 500;
-	
+
 	// initialize stuff for doing hashing
 	private static SecretKeyFactory f;
 	static {
@@ -75,7 +75,7 @@ public final class Utils {
 	 */
 	public static String hash(final String password) {
 		final KeySpec spec = new PBEKeySpec(password.toCharArray(), salt, 65536, 128);
-		
+
 		try {
 			final byte[] hash = f.generateSecret(spec).getEncoded();
 			return new BigInteger(1, hash).toString(16);
@@ -103,7 +103,7 @@ public final class Utils {
 		for (int j = temp.length() - 1; j >= 0; j--) {
 			buf.append(temp.charAt(j));
 		}
-		
+
 		return buf.toString();
 	}
 
@@ -132,7 +132,7 @@ public final class Utils {
 			e.printStackTrace();
 		}
 	}
-	
+
 	/**
 	 * Load Strings
 	 * 
@@ -147,15 +147,15 @@ public final class Utils {
 			final BufferedReader br = new BufferedReader(new FileReader(file));
 			//final ArrayList<String> output = new ArrayList<String>(LINES);
 			final ArrayList<String> output = new ArrayList<String>();
-			
+
 			String line;
-			
+
 			while ((line = br.readLine()) != null) output.add(line);
-			
+
 			br.close();
-			
+
 			output.trimToSize();
-			
+
 			return output.toArray(new String[0]);
 		}
 		catch(FileNotFoundException fnfe) {
@@ -169,7 +169,7 @@ public final class Utils {
 		catch(Exception e) {
 			e.printStackTrace();
 		}
-		
+
 		return null;
 	}
 
@@ -403,9 +403,9 @@ public final class Utils {
 
 		int left = 0;
 		int right = 0;
-		
+
 		System.out.println("left: " + left + " right: " + right);
-				
+
 		if( remain > 0 ) {
 			left = (int) (0.5 * remain);
 			right = (int) (0.5 * remain);
@@ -489,15 +489,15 @@ public final class Utils {
 
 		return result;
 	}
-	
+
 	public static String listToString(List<Integer> list) {
 		StringBuilder sb = new StringBuilder();
-		
+
 		for(Integer i : list) {
 			if( list.indexOf(i) != (list.size() - 1) ) sb.append( i + "," );
 			else sb.append( i );
 		}
-		
+
 		return sb.toString();
 	}
 
@@ -539,14 +539,14 @@ public final class Utils {
 		final int num;
 		int sides;
 		int bonus;
-		
+
 		final String[] words = input.split("d");
 
 		num = Utils.toInt(words[0], 1);
-		
+
 		sides = 0;
 		bonus = 0;
-		
+
 		try {
 			final String[] second_words = words[1].split("[-+]");
 			sides = Utils.toInt(second_words[0], 0);
@@ -823,11 +823,11 @@ public final class Utils {
 
 		return -1;
 	}
-	
+
 	public static int square(int num) {
 		return (int) Math.pow(num, 2);
 	}
-	
+
 	/**
 	 * Make a List of Objects of type T.
 	 * 
@@ -836,36 +836,36 @@ public final class Utils {
 	 */
 	public static <T> List<T> mkList(T...objects) {
 		List<T> result = new LinkedList<T>();
-		
+
 		for(T obj : objects) result.add(obj);
-		
+
 		return result;		
 	}
-	
+
 	/*public static int count(final String s, final char c) {
 		int count = 0; // number of characters found
-		
+
 		int index = 0;     // current index into the string
 		int lastIndex = 0; // last index where we found the specified character
-		
+
 		while( (lastIndex = s.indexOf(c, index)) != -1 ) {
 			count++;
 			index = lastIndex;
 		}
-		
+
 		return count;
 	}*/
-	
+
 	public static int countNumOfChar(final String s, final char ch) {
 		int count = 0;
-		
+
 		for(int c = 0; c < s.length(); c++) {
 			if( s.charAt(c) == ch ) count++;
 		}
 
 		return count;
 	}
-	
+
 	/**
 	 * Parse a String representation of a positive integer
 	 * and return an int
@@ -922,5 +922,36 @@ public final class Utils {
 		}
 
 		return value;
+	}
+
+	// for the list editor
+	public static ArrayList<String> loadList(String filename) {
+		ArrayList<String> strings = new ArrayList<String>();
+
+		for(final String line : loadStrings(filename)) {
+			strings.add(line);
+		}
+
+		return strings;
+	}
+
+	// for the list editor
+	/**
+	 * Loads an ArrayList of Strings from a file, one string per line with the given offset. The
+	 * offset is the number of lines in the file to skip before loading strings. NOTE: This is used
+	 * primarily to load lists for the list editor
+	 * 
+	 * @param filename the filename to load strings from
+	 * @param offset   the number of lines to skip before loading strings (from beginning of file)
+	 * @return         a list of strings
+	 */
+	public static List<String> loadList(String filename, int offset) {
+		final ArrayList<String> lines = new ArrayList<String>(Arrays.asList(Utils.loadStrings(filename)));
+		return lines.size() < offset ? new ArrayList<String>() : lines.subList(offset, lines.size());
+	}
+	
+	public static List<String> loadList(String filename, int start, int end) {
+		final ArrayList<String> lines = new ArrayList<String>(Arrays.asList(Utils.loadStrings(filename)));
+		return lines.subList(start, end);
 	}
 }

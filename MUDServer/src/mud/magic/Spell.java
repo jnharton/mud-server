@@ -22,7 +22,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
-import mud.Effect;
+import mud.misc.Effect;
 
 /**
  * class to implement Dungeons and Dragons spells

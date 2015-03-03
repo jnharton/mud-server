@@ -5,14 +5,14 @@ import java.util.LinkedHashMap;
 import java.util.EnumSet;
 
 import mud.ObjectFlag;
-import mud.Coins;
-import mud.Currency;
 import mud.MUDServer;
 import mud.game.Abilities;
 import mud.game.Ability;
 import mud.game.Classes;
 import mud.game.Races;
 import mud.interfaces.*;
+import mud.misc.Coins;
+import mud.misc.Currency;
 import mud.net.Client;
 import mud.objects.Item;
 import mud.objects.NPC;

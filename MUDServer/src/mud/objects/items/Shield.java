@@ -3,15 +3,12 @@ package mud.objects.items;
 import java.util.ArrayList;
 import java.util.EnumSet;
 
-import mud.Coins;
 import mud.ObjectFlag;
 import mud.TypeFlag;
-
+import mud.misc.Coins;
 import mud.net.Client;
-
 import mud.objects.Item;
 import mud.objects.ItemType;
-
 import mud.utils.Utils;
 
 public class Shield extends Item

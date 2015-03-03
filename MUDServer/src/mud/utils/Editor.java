@@ -19,8 +19,10 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 public interface Editor {
 	// abort, save, show, done
+	
 	public void abort();
 	public void done();
+	public void help();
 	public void save();
 	public void show();
 }

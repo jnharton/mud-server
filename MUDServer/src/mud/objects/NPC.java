@@ -9,10 +9,6 @@ import java.util.Random;
 
 import mud.MUDObject;
 import mud.ObjectFlag;
-import mud.Coins;
-import mud.Editors;
-import mud.Slot;
-import mud.SlotType;
 import mud.TypeFlag;
 import mud.game.Abilities;
 import mud.game.Ability;
@@ -20,6 +16,10 @@ import mud.game.Classes;
 import mud.game.Races;
 import mud.game.Skill;
 import mud.game.Skills;
+import mud.misc.Coins;
+import mud.misc.Editors;
+import mud.misc.Slot;
+import mud.misc.SlotType;
 import mud.net.Client;
 import mud.objects.items.ClothingType;
 import mud.quest.Quest;
@@ -99,7 +99,19 @@ public class NPC extends Player implements InteractiveI
 		this.location = tempLoc;
 		this.money = new Integer[]{ 0, 0, 0 ,0 };
 	}*/
-
+	
+	/**
+	 * 
+	 * @param tempDBRef
+	 * @param tempName
+	 * @param tempPass
+	 * @param tempFlags
+	 * @param tempDesc
+	 * @param tempTitle
+	 * @param tempPStatus
+	 * @param tempLoc
+	 * @param tempMoney
+	 */
 	public NPC(final int tempDBRef, final String tempName, final String tempPass, final EnumSet<ObjectFlag> tempFlags, 
             final String tempDesc, final String tempTitle, final String tempPStatus, final int tempLoc, final Coins tempMoney)
 	{
@@ -107,6 +119,18 @@ public class NPC extends Player implements InteractiveI
         this.type = TypeFlag.NPC;
 	}
 	
+	/**
+	 * 
+	 * @param tempDBRef
+	 * @param tempName
+	 * @param tempFlags
+	 * @param tempDesc
+	 * @param tempLoc
+	 * @param tempTitle
+	 * @param tempPStatus
+	 * @param tempStats
+	 * @param tempMoney
+	 */
 	public NPC(final int tempDBRef, final String tempName, final EnumSet<ObjectFlag> tempFlags, final String tempDesc, 
             final int tempLoc, final String tempTitle, final String tempPStatus, final Integer[] tempStats, final Coins tempMoney)
 	{

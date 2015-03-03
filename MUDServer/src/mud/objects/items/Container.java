@@ -122,8 +122,9 @@ public class Container extends Item implements Storage<Item> {
 		return null;
 	}
 	
-	public void insert(Item item) {
+	public void insert(final Item item) {
 		// check display width, change if necessary (shorten/lengthen)
+		item.setLocation( this.getDBRef() ); // should I be doing this here?
 		this.contents.add(item);
 		this.weight += item.getWeight();
 	}

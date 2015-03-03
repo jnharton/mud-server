@@ -3,9 +3,9 @@ package mud.objects.items;
 import java.util.ArrayList;
 import java.util.EnumSet;
 
-import mud.Coins;
 import mud.ObjectFlag;
 import mud.interfaces.Wearable;
+import mud.misc.Coins;
 import mud.objects.Item;
 import mud.objects.ItemType;
 import mud.utils.Utils;
@@ -156,12 +156,6 @@ public class Armor extends Item implements Wearable<Armor>
 		else {
 			return this.getName();
 		}
-	}
-
-	@Override
-	public String getType() {
-		// TODO Auto-generated method stub
-		return null;
 	}
 	
 	@Override

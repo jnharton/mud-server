@@ -4,5 +4,8 @@
 Launches the room editor to either create a new room or to edit an existing
 one.
 
-Syntax: 'redit'
-        'redit <room dbref# or name>'
+Syntax: '@redit'
+        '@redit <room dbref# or name>'
+
+Last Updated: December 11, 2014
+        

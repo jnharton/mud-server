@@ -1,0 +1,10 @@
+@skedit
+@SKEDIT
+
+Launches the skill editor to either create a new skill or to edit an existing
+one.
+
+Syntax: '@skedit'
+        '@skedit <skill name>'
+
+Last Updated: January 1, 2014

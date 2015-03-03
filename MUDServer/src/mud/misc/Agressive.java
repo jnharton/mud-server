@@ -11,7 +11,7 @@ public class Agressive extends Strategy {
 
 	@Override
 	public void onRoomChange() {
-		// TODO Auto-generated method stub
+		// look for enemies and attack if there are any
 	}
 
 }

@@ -1,6 +1,6 @@
 package mud.utils;
 
-import mud.Coins;
+import mud.misc.Coins;
 
 /*
 Copyright (c) 2012 Jeremy N. Harton

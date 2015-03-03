@@ -2,7 +2,7 @@ package mud.utils;
 
 import java.util.TimerTask;
 
-import mud.Effect;
+import mud.misc.Effect;
 
 /**
  * A TimerTask that handles Effect durations on

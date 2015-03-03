@@ -3,7 +3,7 @@
 
 A means to view the access level for a player and to changed it.
 
-ADMIN CMD
+{colors:yellow,ADMIN CMD}
 
 Syntax: '@access <player name>'                        # report the player's access level
         '@access <player name> = <int - access level>' # set a player's access level

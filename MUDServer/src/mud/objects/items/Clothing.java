@@ -2,11 +2,11 @@ package mud.objects.items;
 
 import java.util.EnumSet;
 
-import mud.Effect;
 import mud.ObjectFlag;
 import mud.TypeFlag;
 import mud.interfaces.Usable;
 import mud.interfaces.Wearable;
+import mud.misc.Effect;
 import mud.objects.Item;
 import mud.objects.ItemType;
 import mud.utils.Utils;
@@ -96,11 +96,5 @@ public class Clothing extends Item implements Usable<Clothing>, Wearable<Clothin
 	public String toString() {
 		//return this.mod + " " + this.name;
 		return getName();
-	}
-
-	@Override
-	public String getType() {
-		// TODO Auto-generated method stub
-		return null;
 	}
 }

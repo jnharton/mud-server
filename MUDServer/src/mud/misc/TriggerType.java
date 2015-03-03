@@ -1,4 +1,4 @@
-package mud;
+package mud.misc;
 
 /*
  * Copyright (c) 2013 Jeremy N. Harton

@@ -20,7 +20,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 import java.util.ArrayList;
 import java.util.List;
 
-import mud.Coins;
+import mud.misc.Coins;
 import mud.objects.Item;
 import mud.objects.Player;
 

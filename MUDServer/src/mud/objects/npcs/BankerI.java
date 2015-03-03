@@ -17,7 +17,7 @@ CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTH
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-import mud.Coins;
+import mud.misc.Coins;
 import mud.objects.InteractiveI;
 
 public interface BankerI extends InteractiveI

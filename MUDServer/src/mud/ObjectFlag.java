@@ -19,35 +19,39 @@ import java.util.EnumSet;
  */
 public enum ObjectFlag
 {
-	BANK("BANK",         TypeFlag.ROOM),
-	DARK("DARK",         TypeFlag.OBJECT),
-    FORGE("FORGE",       TypeFlag.ROOM),
-    GUEST("GUEST",       TypeFlag.PLAYER),
-    HOUSE("HOUSE",       TypeFlag.ROOM),
-    MERCHANT("MERCHANT", TypeFlag.NPC),
-    NO_TELEPORT("NO_TELEPORT"), // prevent teleporting to the location (for rooms) or moving the object (for everything else)
-    NO_ENTER("NO_ENTER", TypeFlag.ROOM),
-    NO_LEAVE("NO_LEAVE", TypeFlag.ROOM),
-    QUIET("QUIET"),
-    SHOP("SHOP",         TypeFlag.ROOM),
-    SILENT("SILENT"),
-    VENDOR("VENDOR"),
-	VIRTUAL("VIRTUAL");
+	BANK("BANK",                0, TypeFlag.ROOM),
+	DARK("DARK",                1, TypeFlag.OBJECT),
+    FORGE("FORGE",              2, TypeFlag.ROOM),
+    GUEST("GUEST",              3, TypeFlag.PLAYER),
+    HOUSE("HOUSE",              4, TypeFlag.ROOM),
+    MERCHANT("MERCHANT",        5, TypeFlag.NPC),
+    NO_TELEPORT("NO_TELEPORT",  6), // prevent teleporting to the location (for rooms) or moving the object (for everything else)
+    NO_ENTER("NO_ENTER",        7, TypeFlag.ROOM),
+    NO_LEAVE("NO_LEAVE",        8, TypeFlag.ROOM),
+    QUIET("QUIET",              9), 
+    SHOP("SHOP",               10, TypeFlag.ROOM),
+    SILENT("SILENT",           11),
+    VENDOR("VENDOR",           12),
+	VIRTUAL("VIRTUAL",         13);
 	
 	// 13 flags    
 	// 0 1 2 3 5 7 = 0, 1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16, 17, 18
+	// 0000000000000
 	// restrict the use of flags to certain types?
 	
     private String name;   // name of the flag
+    private Integer index; //
     private TypeFlag type; // type of object this flag can be set on
     
-    ObjectFlag(String flagName) {
+    ObjectFlag(String flagName, Integer index) {
     	this.name = flagName;
+    	this.index = index;
     	this.type = null;
     }
     
-    ObjectFlag(String flagName, TypeFlag type) {
+    ObjectFlag(String flagName, Integer index, TypeFlag type) {
     	this.name = flagName;
+    	this.index = index;
     	this.type = type;
     }
     

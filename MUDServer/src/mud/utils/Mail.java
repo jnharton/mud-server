@@ -28,10 +28,14 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 public class Mail {
 	private Integer id;
+	
 	private String sender;
 	private String recipient;
 	private String subject;
 	private String message;
+	
+	private Date date;
+	
 	private Character flag;
 	
 	private static final Character mark = '~';
@@ -47,12 +51,16 @@ public class Mail {
 	 * @param tMessage
 	 * @param tFlag
 	 */
-	public Mail(int tId, String tSender, String tRecipient, String tSubject, String tMessage, Character tFlag) {
+	public Mail(int tId, String tSender, String tRecipient, String tSubject, String tMessage, String tDateString, Character tFlag) {
 		this.id = tId;
+		
 		this.sender = tSender;
 		this.recipient = tRecipient;
 		this.subject = tSubject;
 		this.message = tMessage;
+		
+		this.date = Date.parseDate(tDateString);
+		
 		this.flag = tFlag;
 		
 		switch(tFlag) {
@@ -80,6 +88,10 @@ public class Mail {
 	
 	public String getMessage() {
 		return this.message;
+	}
+	
+	public Date getDate() {
+		return this.date;
 	}
 	
 	public Character getFlag() {
@@ -121,19 +133,38 @@ public class Mail {
     }
 	
 	public String[] toStorage() {
-		String[] out = new String[6];
+		String[] out = new String[7];
 		
 		out[0] = sender;
 		out[1] = recipient;
 		out[2] = subject;
 		out[3] = message;
-		out[4] = flag.toString();
-		out[5] = mark.toString();
+		out[4] = date.toString();
+		out[5] = flag.toString();
+		out[6] = mark.toString();
 		
 		return out;
 	}
 	
+	public String toJson() {
+		final StringBuilder sb = new StringBuilder();
+		
+		sb.append("{ ");
+		
+		sb.append("\"id\"" + ": \"" + id + "\", ");
+		sb.append("\"sender\"" + ": \"" + sender + "\", ");
+		sb.append("\"recipient\"" + ": \"" + recipient + "\", ");
+		sb.append("\"subject\"" + ": \"" + subject + "\", ");
+		sb.append("\"message\"" + ": \"" + message + "\", ");
+		sb.append("\"date\"" + ": \"" + date + "\", ");
+		sb.append("\"flag\"" + ":\"" + flag + "\"");
+		
+		sb.append(" }");
+		
+		return sb.toString();
+	}
+	
 	public String toString() {
-		return "MAIL " + id + " " + recipient + " " + subject + " " + message + " " + flag;
+		return "MAIL " + id + " " + recipient + " " + subject + " " + message + " " + date + " " + flag;
 	}
 }

@@ -1,12 +1,12 @@
 package mud.commands;
 
 import mud.Constants;
-import mud.Editors;
 import mud.MUDServer;
 import mud.objects.Player;
 import mud.utils.EditorData;
 import mud.utils.Mail;
 import mud.utils.Utils;
+import mud.misc.Editors;
 import mud.net.Client;
 
 /*
@@ -61,12 +61,6 @@ public class MailCommand extends Command {
 			// basically we get the mailbox object and then give information for each
 			// piece of mail
 			// should these box headers be configurable either on the server end or the client end?
-
-			//client.write("+---------------------------------------------------------------------------------+\n");
-			//client.write("| Mailbox                                                                         |\n");
-			//client.write("+-------+------+------------+----------------------------------+------------------+\n");
-			//client.write("| ID    | Flag | Subject    | Brief                            | Date             |\n");
-			//client.write("+-------+------+------------+----------------------------------+------------------+\n");
 			client.write("+---------------------------------------------------------------------------+\n");
 			client.write("| Mailbox                                                                   |\n");
 			client.write("+-------+------+------------+----------------------------------+------------+\n");
@@ -83,12 +77,12 @@ public class MailCommand extends Command {
 				client.write(" | ");
 				client.write(Utils.padRight(mail.getMessage(), shortMSG).substring(0, shortMSG));
 				client.write(" | ");
-				client.write("??/??/????");
+				//client.write("??/??/????");
+				client.write(mail.getDate().toString());
 				client.write(" |");
 				client.write("\n");
 			}
 
-			//client.write("+-------+------+------------+----------------------------------+------------------+\n");
 			client.write("+---------------------------------------------------------------------------+\n");
 		}
 		else if (arg.equals("#write")) {

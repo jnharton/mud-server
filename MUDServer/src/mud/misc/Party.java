@@ -1,4 +1,4 @@
-package mud;
+package mud.misc;
 
 import java.util.ArrayList;
 import java.util.Arrays;

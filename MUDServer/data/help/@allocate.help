@@ -2,7 +2,7 @@
 @ALLOCATE
 
 Allocates space to a valid zone up to a max size (in rooms) and re-uses all
-unused dbrefs, and then proceeds to supply a continous block of new dbrefs
+unused dbrefs, and then proceeds to supply a continuous block of new dbrefs
 until the allocation amount is reached.
 
 Syntax: '@allocate <zone> <number of additional rooms beyond default>'

@@ -1,4 +1,4 @@
-package mud;
+package mud.misc;
 
 /*
  * Copyright (c) 2012 Jeremy N. Harton
@@ -23,7 +23,7 @@ public class Currency {
 	private final Currency base; // a smaller form of currency that the value of this is based o
 	private final int value;     // the equivalent value of this in a smaller form of currency
 
-	Currency(String name, String abbrev, Currency base, int value) {
+	public Currency(String name, String abbrev, Currency base, int value) {
 		this.name = name;     // name is the name the player sees
 		this.abbrev = abbrev; // the common two letter abbreviate (used in indicating money)
 		this.base = base;     // base
@@ -54,10 +54,10 @@ public class Currency {
 	 */
 	public Integer toInteger() {
 		if (base != null) {
-			return this.value;
+			return base.toInteger();
 		}
 		else {
-			return -1;
+			return this.value;
 		}
 	}
 	

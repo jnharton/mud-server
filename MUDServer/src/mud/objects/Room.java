@@ -11,13 +11,12 @@ import java.util.List;
 
 import mud.ObjectFlag;
 import mud.MUDObject;
-import mud.Trigger;
-import mud.TriggerType;
 import mud.TypeFlag;
-
 import mud.events.EventSource;
 import mud.events.SayEvent;
 import mud.events.SayEventListener;
+import mud.misc.Trigger;
+import mud.misc.TriggerType;
 import mud.misc.Zone;
 import mud.objects.Thing;
 import mud.utils.Utils;

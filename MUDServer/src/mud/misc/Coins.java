@@ -1,4 +1,4 @@
-package mud;
+package mud.misc;
 
 /*
  * Copyright (c) 2013 Jeremy N. Harton
@@ -17,10 +17,14 @@ package mud;
  */
 public class Coins
 {
-    static final private int 
+    /*static final private int 
         SILVER_RATIO = 100,
         GOLD_RATIO = 100 * 100,
-        PLATINUM_RATIO = 100 * 100 * 100;
+        PLATINUM_RATIO = 100 * 100 * 100;*/
+    static final private int 
+    	SILVER_RATIO = 100,
+    	GOLD_RATIO = SILVER_RATIO * 100,
+    	PLATINUM_RATIO = GOLD_RATIO * 100;
 
     // 230 copper coins: Coins.copper(230)
     // 6 silver coins: Coins.silver(6)
@@ -159,6 +163,16 @@ public class Coins
         else if(!showUnits) { buf.append(0); }
 
         return buf.length() > 0 ? buf.toString().trim() : "0cp";
+    }
+    
+    public static void debug() {
+    	System.out.println( Coins.copper(95) );
+    	System.out.println( Coins.copper(105) );
+    	System.out.println( Coins.silver(95) );
+    	System.out.println( Coins.silver(105) );
+    	System.out.println( Coins.gold(95) );
+    	System.out.println( Coins.gold(105) );
+    	System.out.println( Coins.platinum(15) );
     }
 
     @Override

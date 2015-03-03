@@ -4,11 +4,11 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 
-import mud.Effect;
 import mud.TypeFlag;
 import mud.interfaces.Usable;
 import mud.interfaces.Wearable;
 import mud.magic.Spell;
+import mud.misc.Effect;
 import mud.net.Client;
 import mud.objects.Item;
 import mud.objects.ItemType;
@@ -112,11 +112,5 @@ public class Jewelry extends Item implements Usable<Jewelry>, Wearable<Jewelry>
 
 	public String toString() {
 		return this.getName();
-	}
-
-	@Override
-	public String getType() {
-		// TODO Auto-generated method stub
-		return null;
 	}
 }

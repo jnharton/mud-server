@@ -19,12 +19,37 @@ public class Console {
 	}
 
 	public void processInput(final String _input, final Client client) {
-		String input = _input.trim();
+		String command = "";
+		String arg = "";
 		
-		if( input.equalsIgnoreCase("help") ) {
+		String[] temp = _input.trim().split(" ");
+		
+		if( temp.length > 1 ) {
+			command = temp[0];
+			arg = temp[1];
+		}
+		else {
+			command = _input.trim();
+		}
+		
+		if( command.equalsIgnoreCase("help") ) {
 			client.writeln("Available Commands: clients, help, logout, mem, gc, quit");
 		}
-		else if ( input.equalsIgnoreCase("clients") ) {
+		else if ( command.equalsIgnoreCase("clientinfo") ) {
+			if( !arg.equals("") ) {
+				int c = Utils.toInt(arg, -1);
+				
+				if( c != -1 ) {
+					final Client client1 = server.getClients().get(c);
+					client.writeln("-- " + client1);
+					client.writeln("telnet:  " + client1.usingTelnet());
+					client.writeln("console: " + client1.isConsole());
+					client.writeln("");
+					client.writeln("player: " + server.getPlayer(client).getName());
+				}
+			}
+		}
+		else if ( command.equalsIgnoreCase("clients") ) {
 			int cn = 0;
 			client.writeln("-- " + Utils.padRight("Clients ", '-', 69));
 			for (Client c : server.getClients()) {
@@ -38,19 +63,19 @@ public class Console {
 				cn++;
 			}
 		}
-		else if( input.equalsIgnoreCase("mem") ) {
+		else if( command.equalsIgnoreCase("mem") ) {
 			client.writeln(server.checkMem());
 		}
-		else if( input.equalsIgnoreCase("gc") ) {
+		else if( command.equalsIgnoreCase("gc") ) {
 			System.gc();
 			client.writeln("Garbage Collection requested.");
 		}
-		else if( input.equalsIgnoreCase("logout") ) {
+		else if( command.equalsIgnoreCase("logout") ) {
 			client.write("Logging out of Console...");
 			client.setConsole(false);
 			client.writeln("Done.");
 		}
-		else if( input.equalsIgnoreCase("who") ) {
+		else if( command.equalsIgnoreCase("who") ) {
 			List<String> output = new LinkedList<String>();
 
 			int n = 0;

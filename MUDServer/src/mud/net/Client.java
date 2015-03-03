@@ -30,6 +30,8 @@ public class Client implements Runnable {
 	private boolean telnet = true;
 	private boolean tn_neg_seq = false;
 	
+	private final static int TELNET_COMMAND_LENGTH = 3;
+	
 	private boolean console = false; // indicates to the server that the client is using the admin console (default: false)
 	
 	private final int BUF_SIZE = 4096;
@@ -77,9 +79,12 @@ public class Client implements Runnable {
 				
 				while( input.available() > 0 ) {
 					
+					// read in a value
 					readValue = input.read();
 					
+					// if we are not in a TELNET NEGOTIATON SEQUENCE
 					if( !tn_neg_seq ) {
+						// if we see a TELNET COMMAND BYTE (take notice and enter TELNET NEGOTIATION SEQUENCE)
 						if( (byte) readValue == Telnet.IAC ) {
 							buffer.clear();
 							
@@ -143,14 +148,14 @@ public class Client implements Runnable {
 						System.out.println("current telnet input: " + Utils.stringToArrayList( sb.toString(), "" )); // tell us the whole string
 					}
 					else {
-						if( bytes < 3 ) {
+						if( bytes < TELNET_COMMAND_LENGTH ) {
 							buffer.add( (byte) readValue );
 							bytes++;
 
 							System.out.println("Read: " + readValue);
 						}
 						
-						if( bytes == 3 ) {
+						if( bytes == TELNET_COMMAND_LENGTH ) {
 							Byte[] ba = new Byte[buffer.size()];
 
 							buffer.toArray(ba);
@@ -348,12 +353,16 @@ public class Client implements Runnable {
 		return this.console;
 	}
 	
+	public boolean usingTelnet() {
+		return this.telnet;
+	}
+	
 	public void setResponseExpected(boolean re) {
 		this.response_expected = re;
-		response = "";
+		this.response = null;
 	}
 	
 	public String getResponse() {
-		return response;
+		return this.response;
 	}
 }

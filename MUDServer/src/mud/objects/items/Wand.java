@@ -4,18 +4,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.EnumSet;
 
-import mud.Effect;
 import mud.ObjectFlag;
 import mud.TypeFlag;
-
 import mud.interfaces.Usable;
-
 import mud.magic.Spell;
+import mud.misc.Effect;
 import mud.net.Client;
-
 import mud.objects.Item;
 import mud.objects.ItemType;
-
 import mud.utils.Utils;
 
 public class Wand extends Item implements Usable<Wand>

@@ -1,7 +1,8 @@
-package mud;
+package mud.misc;
 
 import java.lang.reflect.Method;
 
+import mud.MUDServer;
 import mud.utils.Date;
 import mud.utils.Message;
 

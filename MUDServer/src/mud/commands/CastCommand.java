@@ -4,11 +4,11 @@ import java.util.Arrays;
 import java.util.List;
 
 import mud.Constants;
-import mud.Effect;
 import mud.MUDObject;
 import mud.MUDServer;
 import mud.magic.Reagent;
 import mud.magic.Spell;
+import mud.misc.Effect;
 import mud.net.Client;
 import mud.objects.Player;
 import mud.objects.items.Armor;

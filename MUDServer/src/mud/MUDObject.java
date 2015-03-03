@@ -22,6 +22,7 @@ import java.util.LinkedHashMap;
 import java.util.EnumSet;
 import java.util.List;
 
+import mud.misc.Effect;
 import mud.objects.Player;
 import mud.utils.Point;
 
@@ -463,15 +464,18 @@ public abstract class MUDObject {
 	public void setPosition(final Point pos) {
 		setPosition(pos.getX(), pos.getY(), pos.getZ());
 	}
-
-	/* Check Methods */
 	
-	public boolean isType(final TypeFlag type) {
-		return this.type == type;
+	public TypeFlag getType() {
+		return this.type;
 	}
-
+	
 	public String getTypeName() {
 		return this.type.name();
+	}
+	
+	/* Check Methods */
+	public boolean isType(final TypeFlag type) {
+		return this.type == type;
 	}
 
 	/**
