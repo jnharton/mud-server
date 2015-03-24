@@ -24,7 +24,8 @@ Usage: java -jar mud_server.jar [ parameters ]
   --setup               Run first time setup
   --telnet              Indicate that you'd like the server to handle pure telnet
 
-* generally speaking, you will only use setup once, and can run the server with just that parameter if you just want to generate the necessary files and don't need anything else set
+* generally speaking, you will only use setup once, and can run the server with just that
+* parameter if you just want to generate the necessary files and don't need anything else set
 * telnet connections here just means a raw connection sending one character at a time
 ```
 
