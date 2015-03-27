@@ -42,4 +42,4 @@ see the [Wiki](https://github.com/jnharton/mud-server/wiki)
 ## Copyright
 Copyright (c) 2012 Jeremy Harton. See LICENSE.txt for further details.
 
-The license given basically applies to all files in the source (MUDServer/src) directory.
+The license given basically applies to all files in the source (MUDServer/src) directory unless otherwise specified here or in a file (license-exclusions.txt) within the package/folder in question.
