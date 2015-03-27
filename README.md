@@ -5,9 +5,9 @@ A MUD server written in Java.
 
 ## Status
 
-This code is very much in an unfinished state, there may be radical shifts in the inner workings
-in the future. Try not to make too many assumptions about stability and backup the database if you0
-play with this as future code may corrupt the data and/or utilize an alternate approach for data storage.
+This code is very much in an unfinished state, despite the fact that it is fairly stable and usable. As such, there may be radical shifts (unannounced?) in the inner workings in the future. I will attempt to make any such shifts known in the internal wiki on here. It would be wise to regularly backup the database if you use this code as, despite the above, it t may have occasional stability problems and attempting to switch to a newer version may result in corrupted data and/or the server may utilize an alternate approach for data storage.
+
+*For major changes see [Updates](https://github.com/jnharton/mud-server/wiki/Updates) page in wiki.*
 
 This code requires at least Java 7 (1.7)
 
