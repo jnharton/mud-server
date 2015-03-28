@@ -10,6 +10,12 @@
 	<property name="build" location="build"></property>
 	<property name="dist"  location="dist"></property>
 	
+	<tstamp>
+	    <format property="TODAY" pattern="yyyyMMdd"  locale="en,US" />
+	</tstamp>
+	
+	<echo message="date: ${TODAY}"/>
+	
     <target name="build">
         <jar destfile="build/mud_server.jar">
             <manifest>
@@ -25,7 +31,7 @@
         	<fileset dir="data/help"/>
         </copy>
         
-        <zip destfile="${dist}/mudserver.zip" basedir="${build}">
+        <zip destfile="${dist}/mudserver_${TODAY}.zip" basedir="${build}">
         </zip>
     </target>
     <target name="test">

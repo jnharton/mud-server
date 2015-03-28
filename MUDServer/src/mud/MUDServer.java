@@ -559,6 +559,8 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		"@sethour", "@setminute", "@shutdown",
 		"@unload"
 	};
+	
+	private static final int DEFAULT_PORT = 4000;
 
 	public MUDServer() {}
 
@@ -875,8 +877,16 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		System.out.println("");
 
 		System.out.println("Loading Races...");
-
-		loadRaces();
+		
+		// TODO get rid of this kludge and deal with JSON stuff
+		boolean test = true;
+		
+		if( !test && !firstRun ) {
+			loadRaces();
+		}
+		else {
+			for(int i = 0; i < 8; i++) races.add( Races.getRace(i) );
+		}
 
 		System.out.println("Done.");
 		System.out.println("");
