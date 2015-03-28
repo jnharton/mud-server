@@ -1,13 +1,13 @@
 mud-server
 ==========
 
-A MUD server written in Java.
+A MUD server written in Java which aspires to be something of a general purpose framework for such games. For example, I have adopted the MUSH/MUCK convention of allowing exit names to be arbitrary text (rather than n/s/e/w), although there may be some support for reliably using the latter in the future (nothing explicity prevents creating exits with those names). Also, there is a fairly limited internal scripting system highly reminiscent of MPI from Fuzzball MUCK (http://www.belfry.com/fuzzball/mpihelp.html). Which is to say that it allows setting, modifying, and checking properties on each object. In general, though the code sticks closer to the hardcode end (at the moment) regard game systems and mechanics.
 
 ## Status
 
-This code is very much in an unfinished state, there may be radical shifts in the inner workings
-in the future. Try not to make too many assumptions about stability and backup the database if you0
-play with this as future code may corrupt the data and/or utilize an alternate approach for data storage.
+This code is very much in an unfinished state, despite the fact that it is fairly stable and usable. As such, there may be radical shifts (unannounced?) in the inner workings in the future. I will attempt to make any such shifts known in the internal wiki on here. It would be wise to regularly backup the database if you use this code as, despite the above, it t may have occasional stability problems and attempting to switch to a newer version may result in corrupted data and/or the server may utilize an alternate approach for data storage.
+
+*For major changes see [Updates](https://github.com/jnharton/mud-server/wiki/Updates) page in wiki.*
 
 This code requires at least Java 7 (1.7)
 
@@ -24,7 +24,8 @@ Usage: java -jar mud_server.jar [ parameters ]
   --setup               Run first time setup
   --telnet              Indicate that you'd like the server to handle pure telnet
 
-* generally speaking, you will only use setup once, and can run the server with just that parameter if you just want to generate the necessary files and don't need anything else set
+* generally speaking, you will only use setup once, and can run the server with just that
+* parameter if you just want to generate the necessary files and don't need anything else set
 * telnet connections here just means a raw connection sending one character at a time
 ```
 
@@ -41,4 +42,4 @@ see the [Wiki](https://github.com/jnharton/mud-server/wiki)
 ## Copyright
 Copyright (c) 2012 Jeremy Harton. See LICENSE.txt for further details.
 
-The license given basically applies to all files in the source (MUDServer/src) directory.
+The license given basically applies to all files in the source (MUDServer/src) directory unless otherwise specified here or in a file (license-exclusions.txt) within the package/folder in question.
