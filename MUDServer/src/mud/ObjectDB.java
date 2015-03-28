@@ -7,6 +7,7 @@ import mud.objects.items.Arrow;
 import mud.objects.items.Container;
 import mud.utils.Utils;
 import mud.game.PClass;
+import mud.interfaces.ODBI;
 import mud.net.Client;
 
 /*
@@ -27,7 +28,7 @@ import mud.net.Client;
  *
  */
 
-public final class ObjectDB {
+public final class ObjectDB implements ODBI {
 
     private static int nextId = 0;
 
@@ -472,6 +473,8 @@ public final class ObjectDB {
     			System.out.println(obj.getName());
 
     			toSave[index] = obj.toDB();
+    			
+    			System.out.println(toSave[index]);
 
     			index++;
     		}

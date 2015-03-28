@@ -50,6 +50,8 @@ public class Exit extends MUDObject
 	
 	// empty default constructor for subclasses
 	public Exit() {
+		super(-1);
+		
 		this.type  = TypeFlag.EXIT;
 		
 		// set messages to clear
@@ -60,6 +62,8 @@ public class Exit extends MUDObject
 	}
 	
 	public Exit(String name, int location, int destination) {
+		super(-1);
+		
 		this.type = TypeFlag.EXIT;
 		// Set the name
 		this.name = name;

@@ -16,6 +16,7 @@ import mud.misc.Effect;
 import mud.misc.Script;
 import mud.misc.Slot;
 import mud.misc.SlotType;
+import mud.misc.SlotTypes;
 import mud.misc.Trigger;
 import mud.misc.TriggerType;
 import mud.objects.items.Attribute;
@@ -32,12 +33,17 @@ import mud.utils.Utils;
  */
 
 public class Item extends MUDObject implements Cloneable {
-	protected ItemType item_type;             // item type - what type of item is this (supersede equip_type?)
-	protected ItemType equip_type;            // equip type - armor, shield, jewelry, weapon
-	protected SlotType slot_type;             // the type of slot this fits in (if any)
+	protected ItemType item_type = ItemTypes.NONE;  // item type - what type of item is this (supersede equip_type?)
+	protected ItemType equip_type = ItemTypes.NONE; // equip type - armor, shield, jewelry, weapon
+	protected SlotType slot_type = SlotTypes.NONE;  // the type of slot this fits in (if any)
 	
-	public boolean equippable = false;        // is the item equippable? (default: false)
-	public boolean equipped = false;          // is the item equipped? (default: false)
+	public Coins baseValue = Coins.gold(1);         // should be 'protected'?
+	
+	protected double weight = 0;                    // the weight in whatever units are used of the equippable object
+	
+	// game/system level "rules"
+	protected boolean equippable = false;     // is the item equippable? (default: false)
+	protected boolean equipped = false;       // is the item equipped? (default: false)
 	
 	protected boolean canAuction = true;      // allows/disallows auctioning this item (default: true)
     
@@ -45,40 +51,32 @@ public class Item extends MUDObject implements Cloneable {
     protected boolean edible = false;         // edible? -- implies FOOD
 	
     protected boolean unique = false;         // is this item Unique (only one of them, cannot be copied)
-    
-    protected Coins baseValue = Coins.gold(1);
-	protected double weight = 0;              // the weight in whatever units are used of the equippable object
-
+	
+    // environment "rules"
+	protected boolean isAbsorb = true;        // does this item absorb water? (default: true)
+	protected boolean reducesWeight = false;  // does this item reduce the weight of it's contents (default: false)
+	protected boolean isWet = false;          // defines whether the item is wet or not (default: false)
+	
+	public double reduction_factor = 1.0;     // amount of weight reduction (none by default, so 100% == 1) -- should be 'protected'?
+	
 	// original idea was a multiplying factor for weight when wet such as
 	// 1.0 - normal, 1.25 - damp, 1.50 - soaked, 2.00 - saturated, etc ("feels" x times as heavy)
-	
-	public double reduction_factor = 1.0;     // amount of weight reduction (none by default, so 100% == 1)
-	
-	protected boolean isAbsorb = true;        // does this item absorb water? (default: true)
-	protected boolean isWet = false;          // defines whether the item is wet or not (default: false)
-	protected double wet = 1.0;               // degree of water absorbed
+	public double wet = 1.0;                  // degree of water absorbed -- should be 'protected'?
 	
 	public int wear = 0;                      // how much wear and tear the item has been subject to
-	protected int durability = 100;           // how durable the material is (100 is a test value)
+	public int durability = 100;              // how durable the material is (100 is a test value) -- should be 'protected'?
 	
-	protected BitSet attributes;              // item attributes: rusty, glowing, etc
+	//protected BitSet attributes;              // item attributes: rusty, glowing, etc
 	protected Attribute a;                    // conflicting implementation with the above?
 	
 	protected List<Effect> effects;           // effects
 	protected List<Spell> spells;             // spells the item has, which can be cast from it
 	
-	protected Map<String, Slot> slots = null; // handles objects which hold specific things, like sheaths for swords
+	//protected Map<String, Slot> slots = null; // handles objects which hold specific things, like sheaths for swords
 	
-	protected Hashtable<String, Integer> skill_buffs = new Hashtable<String, Integer>();
+	//protected Hashtable<String, Integer> skill_buffs = new Hashtable<String, Integer>();
 	
 	public Trigger onUse = null;
-		
-	/**
-	 * Only for creating test items and then setting their properties/attributes
-	 */
-	public Item() {
-		this.type = TypeFlag.ITEM;
-	}
 	
 	/**
 	 * Only for sub-classes, so they can set a database reference number
@@ -86,14 +84,19 @@ public class Item extends MUDObject implements Cloneable {
 	 */
 	public Item(int tempDBREF) {
 		super(tempDBREF);
+		
 		this.type = TypeFlag.ITEM;
 	}
 	
-	/**
-	 * ?
-	 */
-	public Item(boolean drinkable, boolean weightReduction, boolean isAbsorb) {
+	public Item(int tempDBREF, String name, String description) {
+		super(tempDBREF);
+		
 		this.type = TypeFlag.ITEM;
+		
+		this.name = name;
+		this.flags = EnumSet.noneOf(ObjectFlag.class);
+		this.desc = description;
+		this.location = -1; // ? 
 	}
 	
 	/**
@@ -111,9 +114,11 @@ public class Item extends MUDObject implements Cloneable {
 		this.item_type = template.item_type;
 		this.equip_type = template.equip_type;
 		
+		this.slot_type = template.slot_type;
+		
 		this.equipped = false;
 		this.equippable = template.equippable;
-		this.drinkable = template.isDrinkable();
+		this.drinkable = template.drinkable;
 		
 		this.weight = template.weight;
 		
@@ -147,32 +152,47 @@ public class Item extends MUDObject implements Cloneable {
 		this.type = TypeFlag.ITEM;
 	}
 	
-	public ItemType getItemType() {
-		return this.item_type;
-	}
-	
 	public void setItemType(ItemType newType) {
 		this.item_type = newType;
 	}
 	
-	public ItemType getEquipType() {
+	public ItemType getItemType() {
 		return this.item_type;
 	}
 	
 	public void setEquipType(ItemType newType) {
 		this.equip_type = newType;
 	}
-
+	
+	public ItemType getEquipType() {
+		return this.item_type;
+	}
+	
+	public void setSlotType(SlotType newType) {
+		this.slot_type = newType;
+	}
+	
+	public SlotType getSlotType() {
+		return this.slot_type;
+	}
+	
+	// TODO not setter for value
 	public Coins getValue() {
 		return baseValue;
 	}
 	
+	// TODO not setter for durability
 	public int getDurability() {
 		return this.durability;
 	}
 	
+	// TODO not setter for wear
 	public int getWear() {
 		return this.wear;
+	}
+	
+	public void setWeight(Double newWeight) {
+		this.weight = newWeight;
 	}
 	
 	/**
@@ -199,27 +219,15 @@ public class Item extends MUDObject implements Cloneable {
 		}
 	}
 	
-	public void setWeight(Double newWeight) {
-		this.weight = newWeight;
-	}
-	
 	public void setAbsorb(boolean absorb) {
-	}
-	
-	public boolean isWet() {
-		return this.isWet;
 	}
 	
 	public boolean isAbsorb() {
 		return this.isAbsorb;
 	}
 	
-	public void setAttribute(Attribute newAttribute) {
-		this.a = newAttribute;
-	}
-	
-	public Attribute getAttribute(Attribute newAttribute) {
-		return this.a;
+	public boolean isWet() {
+		return this.isWet;
 	}
 	
 	public void setAuctionable(boolean canAuction) {
@@ -228,6 +236,26 @@ public class Item extends MUDObject implements Cloneable {
 	
 	public boolean isAuctionable() {
 		return canAuction;
+	}
+	
+	public void setEquippable(boolean canEquip) {
+		this.equippable = canEquip;
+	}
+	
+	public boolean isEquippable() {
+		return this.equippable;
+	}
+	
+	public void setEquipped(boolean equipped) {
+		this.equipped = equipped;
+	}
+	
+	public boolean isEquipped() {
+		return this.equipped;
+	}
+	
+	public void setUnique(boolean unique) {
+		this.unique = unique;
 	}
 	
 	public boolean isUnique() {
@@ -247,6 +275,15 @@ public class Item extends MUDObject implements Cloneable {
 
 	public boolean isDrinkable() {
 		return this.drinkable;
+	}
+	
+	// TODO decide if I should have a single or fixed set of attributes and whether to store it in a bitset or an array or ?
+	public void setAttribute(Attribute newAttribute) {
+		this.a = newAttribute;
+	}
+	
+	public Attribute getAttribute(Attribute newAttribute) {
+		return this.a;
 	}
 	
 	/**
@@ -271,6 +308,7 @@ public class Item extends MUDObject implements Cloneable {
 		return this.spells;
 	}
 	
+	/* Scripting stuff */
 	public void setScriptOnTrigger(TriggerType type, String script) {
 		switch(type) {
 		case onUse:
@@ -291,16 +329,22 @@ public class Item extends MUDObject implements Cloneable {
 	}
 	
 	public String toDB() {
-		String[] output = new String[8];
+		String[] output = new String[10];
+		
 		output[0] = this.getDBRef() + "";           // database reference number
 		output[1] = this.getName();                 // name
 		output[2] = TypeFlag.asLetter(type) + "";   // flags
 		output[2] = output[2] + getFlagsAsString();
 		output[3] = this.getDesc();                 // description
 		output[4] = this.getLocation() + "";        // location
-		output[5] = this.item_type.ordinal() + "";  // item type
-		output[6] = "*";                            // blank
-		output[7] = "*";                            // blank
+		
+		output[5] = this.item_type.getId() + "";    // item type
+		output[6] = this.equip_type.getId() + "";   // equip type
+		output[7] = this.slot_type.getId() + "";    // slot type
+		
+		output[8] = "*";                            // blank
+		output[9] = "*";                            // blank
+		
 		return Utils.join(output, "#");
 	}
 

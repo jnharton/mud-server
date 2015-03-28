@@ -14,4 +14,10 @@ public class Agressive extends Strategy {
 		// look for enemies and attack if there are any
 	}
 
+	@Override
+	public void onDetectHostile() {
+		// TODO Auto-generated method stub
+		
+	}
+
 }

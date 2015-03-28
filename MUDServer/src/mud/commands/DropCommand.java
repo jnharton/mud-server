@@ -2,6 +2,7 @@ package mud.commands;
 
 import java.util.ArrayList;
 
+import mud.Command;
 import mud.Constants;
 import mud.MUDServer;
 import mud.ObjectFlag;

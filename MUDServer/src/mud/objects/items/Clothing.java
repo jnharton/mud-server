@@ -9,6 +9,7 @@ import mud.interfaces.Wearable;
 import mud.misc.Effect;
 import mud.objects.Item;
 import mud.objects.ItemType;
+import mud.objects.ItemTypes;
 import mud.utils.Utils;
 
 public class Clothing extends Item implements Usable<Clothing>, Wearable<Clothing>
@@ -29,10 +30,10 @@ public class Clothing extends Item implements Usable<Clothing>, Wearable<Clothin
 	
 	private Effect effect = null;
 	
-	/**
-	 * default constructor for subclassing?
-	 */
 	public Clothing() {
+		super(-1);
+		
+		this.item_type = ItemTypes.CLOTHING;
 	}
 
 	public Clothing(String name, ClothingType cType, double cWeight)
@@ -40,8 +41,8 @@ public class Clothing extends Item implements Usable<Clothing>, Wearable<Clothin
 		super(-1, name, EnumSet.noneOf(ObjectFlag.class), "<TESTING>", 8);
 		this.type = TypeFlag.ITEM;
 		this.equippable = true;
-		this.equip_type = ItemType.CLOTHING; // the type of equipment it is
-		this.item_type = ItemType.CLOTHING;
+		this.equip_type = ItemTypes.CLOTHING; // the type of equipment it is
+		this.item_type = ItemTypes.CLOTHING;
 		this.clothing = cType;               // the actual type of clothing
 		this.weight = cWeight;               // the weight of the clothing
 	}
@@ -63,8 +64,8 @@ public class Clothing extends Item implements Usable<Clothing>, Wearable<Clothin
 		super(tempDBREF, tempName, EnumSet.noneOf(ObjectFlag.class), tempDesc, tempLoc);
 		this.type = TypeFlag.ITEM;
 		this.equippable = true;
-		this.equip_type = ItemType.CLOTHING;
-		this.item_type = ItemType.CLOTHING;
+		this.equip_type = ItemTypes.CLOTHING;
+		this.item_type = ItemTypes.CLOTHING;
 		
 		this.clothing = cType;
 	}
@@ -80,15 +81,20 @@ public class Clothing extends Item implements Usable<Clothing>, Wearable<Clothin
 	
 	@Override
 	public String toDB() {
-		String[] output = new String[8];
-		output[0] = this.getDBRef() + "";          // clothing database reference number
-		output[1] = this.getName();                // clothing name
-		output[2] = this.getFlagsAsString();       // clothing flags
-		output[3] = this.getDesc();                // clothing description
-		output[4] = this.getLocation() + "";       // clothing location (a.k.a parent)
-		output[5] = this.item_type.ordinal() + ""; // item type
-		output[6] = this.clothing.ordinal() + "";  // clothing type
-		//output[7] = this.mod + "";                 // modifier
+		String[] output = new String[10];
+		
+		output[0] = this.getDBRef() + "";         // clothing database reference number
+		output[1] = this.getName();               // clothing name
+		output[2] = this.getFlagsAsString();      // clothing flags
+		output[3] = this.getDesc();               // clothing description
+		output[4] = this.getLocation() + "";      // clothing location (a.k.a parent)
+		output[5] = this.item_type.getId() + "";  // item type
+		output[6] = this.equip_type.getId() + ""; // equip type
+		output[7] = this.slot_type.getId() + "";  // slot type
+		
+		output[8] = this.clothing.ordinal() + ""; // clothing type
+		output[9] = "*";                          // blank (modifier?)
+		
 		return Utils.join(output, "#");
 	}
 	

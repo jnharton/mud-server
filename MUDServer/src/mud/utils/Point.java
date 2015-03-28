@@ -10,27 +10,48 @@ package mud.utils;
  * changes are made to the one referred to.
  */
 
-public class Point {
+public class Point implements Cloneable {
 	public enum Type { PT_2D, PT_3D };
+	
+	private Type type;
 	
 	private Integer x = 0;
 	private Integer y = 0;
 	private Integer z = 0;
-	
-	private Type type;
 
 	public Point(int x, int y) {
+		this.type = Type.PT_2D;
+		
 		this.x = x;
 		this.y = y;
-		
-		this.type = Type.PT_2D;
 	}
 
 	public Point(int x, int y, int z) {
 		this(x, y);
-		this.z = z;
 		
 		this.type = Type.PT_3D;
+		
+		this.z = z;
+	}
+	
+	protected Point(final Point toCopy) {
+		switch(toCopy.type) {
+		case PT_2D:
+			this.type = Type.PT_2D;
+			
+			this.x = toCopy.x;
+			this.y = toCopy.y;
+			break;
+		case PT_3D:
+			this.type = Type.PT_3D;
+			
+			this.x = toCopy.x;
+			this.y = toCopy.y;
+			this.z = toCopy.z;
+			break;
+		default:
+			break;
+		}
 	}
 	
 	//
@@ -86,6 +107,7 @@ public class Point {
 	{
 		// if the two objects are equal in reference, they are equal
 		if (this == object) { return true; }
+		
 		// if the object is a Point, it must have the same coordinates to be equal
 		// for points with different types:
 		// if either point is 2D, then we only compare the X and Y coordinates
@@ -126,11 +148,17 @@ public class Point {
 	 * x = 5, y = 6, z = 0
 	 * String -> (5,6,0)
 	 */
+	@Override
 	public String toString() {
 		switch(type) {
 		case PT_2D: return "(" + x + "," + y + ")";
 		case PT_3D: return "(" + x + "," + y + "," + z + ")";
 		default:    return "";
 		}
+	}
+	
+	@Override
+	public Point clone() {
+		return new Point(this);
 	}
 }

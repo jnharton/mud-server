@@ -11,11 +11,11 @@ public class Door extends Exit implements Lockable<Item> {
 	
 	private boolean isLocked = false;
 	
-	private Item key = new Item();
+	private Item key = null;
 	
-	public Door() {
+	/*public Door() {
 		this.eType = ExitType.DOOR;
-	}
+	}*/
 	
 	public Door(int tempDBRef, String tempName, final EnumSet<ObjectFlag> flagsNotUsed, String tempDesc, int tempLoc, int tempDestination) {
 		super(tempDBRef, tempName, flagsNotUsed, tempDesc, tempLoc, tempDestination);
@@ -82,7 +82,27 @@ public class Door extends Exit implements Lockable<Item> {
 	public String toDB() {
 		String[] output = new String[9];
 		output[0] = this.getDBRef() + "";                // database reference number
-		output[1] = this.getName();                      // name
+
+		final String[] names = this.getName().split("/");
+
+		StringBuilder sb1 = new StringBuilder();
+		StringBuilder sb2 = new StringBuilder();
+
+		for(String s : this.getAliases()) {
+			int i = s.indexOf("|");
+			int l = s.length();
+			
+			if( s.startsWith(names[0]) ) {
+				sb1.append( s.substring(i + 1, l) );
+			}
+			else if( s.startsWith(names[1]) ) {
+				sb2.append( s.substring(i + 1, l) );
+			}
+		}
+		
+		//output[1] = this.getName();                      // name
+		output[1] = this.getName() + ";" + sb1.toString() + "/" + sb2.toString(); // name
+		
 		output[2] = TypeFlag.asLetter(this.type) + "";   // flags
 		output[2] = output[2] + this.getFlagsAsString();
 		output[3] = this.getDesc();                      // description
@@ -90,7 +110,12 @@ public class Door extends Exit implements Lockable<Item> {
 		output[5] = this.getDestination() + "";          // destination
 		output[6] = this.eType.ordinal() + "";           // exit type
 		output[7] = (this.isLocked() ? 1 : 0) + "";      // lock state
-		output[8] = this.key.getDBRef() + "";            // door's key (an Item) dbref
+		
+		if( this.key != null ) {
+			output[8] = this.key.getDBRef() + "";        // door's key (an Item) dbref (-1 if there is no key)
+		}
+		else output[8] = -1 + "";
+		
 		return Utils.join(output, "#");
 	}
 }

@@ -20,7 +20,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Vector;
 
-import mud.MUDServer;
 import mud.net.Client;
 
 public class APIServer implements Runnable {
@@ -39,7 +38,7 @@ public class APIServer implements Runnable {
 	
 	final private List<APIKey> apiKeys = new ArrayList<APIKey>();
 
-	public APIServer(MUDServer p, int port) {
+	public APIServer(MUDServerAPI p, int port) {
 		parent = p;
 		rp = new RequestProcessor(this, parent);
 		

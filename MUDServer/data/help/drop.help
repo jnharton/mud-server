@@ -3,4 +3,7 @@ DROP
 
 Drops whatever you are holding onto the ground in the room your in. Only works for things.
 
-Syntax: 'drop <object dbref#/name>'
+Syntax: 'drop <object dbref#/name>' -- drop the specified object
+        'drop all'                  -- drop everything you are carrying
+
+Last Updated: March 7th, 2015        

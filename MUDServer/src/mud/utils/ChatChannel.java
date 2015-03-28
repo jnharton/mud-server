@@ -70,6 +70,10 @@ public class ChatChannel {
 		return this.shortname;
 	}
 	
+	public void setShortName(final String shortName) {
+		this.shortname = shortName;
+	}
+	
 	/**
 	 * Get the name of the color to be used for displaying the channel name.
 	 * 
@@ -77,6 +81,10 @@ public class ChatChannel {
 	 */
 	public String getChanColor() {
 		return this.chan_color;
+	}
+	
+	public void setChanColor(final String newColor) {
+		this.chan_color = newColor;
 	}
 	
 	/**
@@ -88,13 +96,8 @@ public class ChatChannel {
 		return this.text_color;
 	}
 	
-	/**
-	 * Set a restriction based on an integer (access level?)
-	 * 
-	 * @param newRestrict
-	 */
-	public void setRestrict(int newRestrict) {
-		this.restrict = newRestrict;
+	public void setTextColor(final String newColor) {
+		this.text_color = newColor;
 	}
 	
 	/**
@@ -104,6 +107,15 @@ public class ChatChannel {
 	 */
 	public int getRestrict() {
 		return this.restrict;
+	}
+	
+	/**
+	 * Set a restriction based on an integer (access level?)
+	 * 
+	 * @param newRestrict
+	 */
+	public void setRestrict(int newRestrict) {
+		this.restrict = newRestrict;
 	}
 	
 	public void write(String message) {
@@ -136,18 +148,6 @@ public class ChatChannel {
 	}
 	
 	/**
-	 * Determine if Player, p, is listening to this chat channel
-	 * 
-	 * NOTE: Gagging a channel is considered not listening
-	 * 
-	 * @param p the player to look for
-	 * @return whether or not they are listening to this channel (true/false)
-	 */
-	synchronized public boolean isListener(Player p) {
-		return this.listeners.contains(p);
-	}
-	
-	/**
 	 * Remove a listener (player object) from this chat channel
 	 * <br />
 	 * <br />
@@ -162,5 +162,17 @@ public class ChatChannel {
 	
 	synchronized public ArrayList<Player> getListeners() {
 		return this.listeners;
+	}
+	
+	/**
+	 * Determine if Player, p, is listening to this chat channel
+	 * 
+	 * NOTE: Gagging a channel is considered not listening
+	 * 
+	 * @param p the player to look for
+	 * @return whether or not they are listening to this channel (true/false)
+	 */
+	synchronized public boolean isListener(Player p) {
+		return this.listeners.contains(p);
 	}
 }

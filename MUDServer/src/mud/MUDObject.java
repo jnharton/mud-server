@@ -59,7 +59,7 @@ public abstract class MUDObject {
 	/**
 	 * Parent constructor for no argument subclass constructors
 	 */
-	public MUDObject() {}
+	//public MUDObject() {}
 
 	/**
 	 * Parent constructor for subclasses. Allows you to initialize a subclass with
@@ -172,6 +172,7 @@ public abstract class MUDObject {
 	public String getFlagsAsString()
 	{
 		final StringBuilder buf = new StringBuilder();
+		
 		for (final ObjectFlag f : flags) {
 			buf.append(f.toString().charAt(0));
 		}
@@ -321,6 +322,18 @@ public abstract class MUDObject {
 	 */
 	final public LinkedHashMap<String, Object> getProperties() {
 		return this.properties;
+	}
+	
+	final public LinkedHashMap<String, Object> getProperties(final String propdir) {
+		final LinkedHashMap<String, Object> props = new LinkedHashMap<String, Object>();
+
+		for(final String key : properties.keySet()) {
+			if( key.startsWith(propdir) ) {
+				props.put( key, properties.get(key) );
+			}
+		}
+
+		return props;
 	}
 
 	final public LinkedHashMap<String, Object> getVisualProperties() {

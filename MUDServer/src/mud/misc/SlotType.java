@@ -10,19 +10,25 @@ package mud.misc;
  * changes are made to the one referred to.
  */
 
-public enum SlotType {
-	NONE,
-	HEAD,
-	NECK,
-	BODY,
-	CHEST,
-	BACK,
-	ARMS,
-	LHAND,
-	RHAND,
-	HANDS,
-	FINGER,
-	WAIST,
-	LEGS,
-	FEET;
+public class SlotType {
+	private String name;
+	private Integer id;
+	
+	public SlotType(final String name, final Integer id) {
+		this.name = name;
+		this.id = id;
+	}
+	
+	public String getName() {
+		return this.name;
+	}
+	
+	public Integer getId() {
+		return this.id;
+	}
+	
+	@Override
+	public String toString() {
+		return this.name.toUpperCase();
+	}
 }

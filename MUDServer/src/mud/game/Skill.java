@@ -21,6 +21,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 
+import mud.d20.Abilities;
+
 /* Class Array hold classes for whom the skill is a class skill */
 public class Skill
 {

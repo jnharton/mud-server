@@ -51,16 +51,6 @@ public class Thing extends MUDObject {
 	// triggers
 	public Trigger onUse;
 	
-	/**
-	 * Thing - no parameters
-	 * 
-	 * A no-argument constructor for making a sub-class of Thing
-	 */
-	public Thing() {
-		this.type = TypeFlag.THING;
-		this.attributes = new Hashtable<String, String>();
-	}
-	
 	public Thing(int tempDBREF) {
 		super(tempDBREF);
 		this.type = TypeFlag.THING;
@@ -82,14 +72,14 @@ public class Thing extends MUDObject {
 		this.desc = desc;
 	}
 	
-	public Thing(boolean isContainer) {
+	/*public Thing(boolean isContainer) {
 		this.type = TypeFlag.THING;
 		if( isContainer ) {
 			this.contents = new ArrayList<Item>();
 		}
 		
 		attributes = new Hashtable<String, String>();
-	}
+	}*/
 
 	// usual constructor
 	public Thing(final int tempDBRef, final String tempName, final EnumSet<ObjectFlag> tempFlags, final String tempDesc, final int tempLoc)

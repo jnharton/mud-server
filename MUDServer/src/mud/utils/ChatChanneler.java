@@ -19,7 +19,18 @@ public class ChatChanneler
     }
     
     public ChatChannel getChatChannel(final String channelName) {
-    	return this.channels.get(channelName);
+    	final ChatChannel channel = this.channels.get(channelName);
+    	
+    	if( channel == null ) {
+    		for(final ChatChannel ch : this.channels.values()) {
+    			if( ch.getShortName().equals(channelName) ) {
+    				return ch;
+    			}
+    		}
+    	}
+    	
+    	return channel;
+    	//return this.channels.get(channelName);
     }
     
     public Collection<ChatChannel> getChatChannels() {
@@ -73,7 +84,7 @@ public class ChatChanneler
 	}
 
 	public void send(final String channelName, final Player player, final String message) {
-		ChatChannel chan = channels.get(channelName);
+		ChatChannel chan = getChatChannel(channelName);
 		
 		if (chan != null) {
 			chan.write(player, message); // add message to ChatChannel message queue
@@ -82,7 +93,7 @@ public class ChatChanneler
 	}
 
 	public void send(final String channelName, final String message) {
-		ChatChannel chan = channels.get(channelName);
+		ChatChannel chan = getChatChannel(channelName);
 
 		if (chan != null) {
 			chan.write(message); // add message to ChatChannel message queue

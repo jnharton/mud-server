@@ -12,6 +12,7 @@ import mud.misc.Effect;
 import mud.net.Client;
 import mud.objects.Item;
 import mud.objects.ItemType;
+import mud.objects.ItemTypes;
 import mud.objects.Player;
 import mud.utils.Utils;
 import mud.ObjectFlag;
@@ -24,12 +25,10 @@ public class Jewelry extends Item implements Usable<Jewelry>, Wearable<Jewelry>
 
 	Effect effect;
 
-	public Jewelry() {
-	}
-
 	// ex. new Jewelry(ItemType.RING, "Ring of Invisibility", "A medium-sized gold ring with a smooth, unmarked surface.", new Effect("invisibility"))
 	public Jewelry(final ItemType jType, final String jName, final String jDesc, final Effect jEffect) {
 		super(-1);
+		
 		this.type = TypeFlag.ITEM;
 		this.name = jName;
 		this.desc = jDesc;
@@ -56,14 +55,14 @@ public class Jewelry extends Item implements Usable<Jewelry>, Wearable<Jewelry>
 		this.location = 8;
 
 		this.equippable = true;
-		this.equip_type = ItemType.RING; // the type of equipment it is
+		this.equip_type = ItemTypes.RING; // the type of equipment it is
 		//this.type = jType;               // the actual type of jewelry
 		this.weight = jWeight;           // the weight of the jewelry
 	}
 
 	public void use(String arg, Client client) {
 		System.out.println("[Jewelry->Use]");
-		if (this.equip_type == ItemType.RING) {
+		if (this.equip_type == ItemTypes.RING) {
 			Player player = parent.getPlayer(client);
 			parent.debug(player);
 			System.out.println(parent.applyEffect(player, effect));
@@ -98,15 +97,20 @@ public class Jewelry extends Item implements Usable<Jewelry>, Wearable<Jewelry>
 	}
 
 	public String toDB() {
-		String[] output = new String[8];
-		output[0] = this.getDBRef() + "";             // jewelry database reference number
-		output[1] = this.getName();                   // jewelry name
-		output[2] = this.getFlagsAsString();          // jewelry flags
-		output[3] = this.getDesc();                   // jewelry description
-		output[4] = this.getLocation() + "";          // jewelry location
-		output[5] = this.item_type.ordinal() + "";    // item type
-		output[6] = "*";                              // nothing (placeholder)
-		output[7] = "*";                              // nothing (placeholder)
+		String[] output = new String[10];
+		
+		output[0] = this.getDBRef() + "";         // jewelry database reference number
+		output[1] = this.getName();               // jewelry name
+		output[2] = this.getFlagsAsString();      // jewelry flags
+		output[3] = this.getDesc();               // jewelry description
+		output[4] = this.getLocation() + "";      // jewelry location
+		output[5] = this.item_type.getId() + "";  // item type
+		output[6] = this.equip_type.getId() + ""; // equip type
+		output[7] = this.slot_type.getId() + "";  // slot type
+		
+		output[8] = "*";                          // nothing (placeholder)
+		output[9] = "*";                          // nothing (placeholder)
+		
 		return Utils.join(output, "#");
 	}
 

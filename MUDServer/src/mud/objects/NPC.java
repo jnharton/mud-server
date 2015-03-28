@@ -10,12 +10,12 @@ import java.util.Random;
 import mud.MUDObject;
 import mud.ObjectFlag;
 import mud.TypeFlag;
-import mud.game.Abilities;
+import mud.d20.Abilities;
+import mud.d20.Classes;
+import mud.d20.Races;
+import mud.d20.Skills;
 import mud.game.Ability;
-import mud.game.Classes;
-import mud.game.Races;
 import mud.game.Skill;
-import mud.game.Skills;
 import mud.misc.Coins;
 import mud.misc.Editors;
 import mud.misc.Slot;
@@ -85,6 +85,8 @@ public class NPC extends Player implements InteractiveI
 		this.money = Coins.copper(0);
 		
 		this.slots = new LinkedHashMap<String, Slot>();
+		
+		this.stats = new LinkedHashMap<Ability, Integer>(ruleset.getAbilities().length, 0.75f);
 	}
 
 	// "normal", but not default, constructor
@@ -246,7 +248,7 @@ public class NPC extends Player implements InteractiveI
 		
 		final StringBuilder sb = new StringBuilder();
 		int abilities = ruleset.getAbilities().length;
-		int count = 0;
+		int count = 1;
 		
 		for(Ability ability : ruleset.getAbilities()) {
 			sb.append( this.stats.get(ability) );

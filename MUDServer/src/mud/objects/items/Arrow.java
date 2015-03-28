@@ -4,6 +4,7 @@ import mud.interfaces.Projectile;
 import mud.interfaces.Stackable;
 import mud.objects.Item;
 import mud.objects.ItemType;
+import mud.objects.ItemTypes;
 import mud.utils.Utils;
 import mud.ObjectFlag;
 import mud.TypeFlag;
@@ -20,13 +21,13 @@ public class Arrow extends Item implements Projectile<Arrow>, Stackable<Arrow> {
 		this.desc = "";
 		this.location = -1;
 		this.flags = EnumSet.noneOf(ObjectFlag.class);
-		this.item_type = ItemType.ARROW;
+		this.item_type = ItemTypes.ARROW;
 	}
 
 	public Arrow(int dbref, String name, String desc, int location) {
 		super(dbref, name, EnumSet.noneOf(ObjectFlag.class), desc, location);
 		this.type = TypeFlag.ITEM;
-		this.item_type = ItemType.ARROW;
+		this.item_type = ItemTypes.ARROW;
 	}
 	
 	public int size() {
@@ -103,15 +104,20 @@ public class Arrow extends Item implements Projectile<Arrow>, Stackable<Arrow> {
 
 	@Override
 	public String toDB() {
-		String[] output = new String[8];
-		output[0] = this.getDBRef() + "";          // database reference number
-		output[1] = this.getName();                // name
-		output[2] = this.getFlagsAsString();       // flags
-		output[3] = this.getDesc();                // description
-		output[4] = this.getLocation() + "";       // location
-		output[5] = this.item_type.ordinal() + ""; // type
-		output[6] = this.stackSize() + "";         // how many arrows are stacked together
-		output[7] = "*";                           // 
+		String[] output = new String[10];
+		
+		output[0] = this.getDBRef() + "";         // database reference number
+		output[1] = this.getName();               // name
+		output[2] = this.getFlagsAsString();      // flags
+		output[3] = this.getDesc();               // description
+		output[4] = this.getLocation() + "";      // location
+		
+		output[5] = this.item_type.getId() + "";  // type
+		output[6] = this.equip_type.getId() + ""; // equip type
+		output[7] = this.slot_type.getId() + "";  // slot type
+		
+		output[8] = this.stackSize() + "";         // how many arrows are stacked together
+		output[9] = "*";                           // blank
 		
 		/*
 		 * recording stacks of these is messy

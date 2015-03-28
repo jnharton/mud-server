@@ -1,6 +1,8 @@
-package mud.game;
+package mud.d20;
 
 import java.util.HashMap;
+
+import mud.game.PClass;
 
 /*
   Copyright (c) 2012 Jeremy N. Harton

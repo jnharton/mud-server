@@ -5,12 +5,10 @@ import java.util.EnumSet;
 
 import mud.ObjectFlag;
 import mud.TypeFlag;
-
 import mud.interfaces.Storage;
-
 import mud.objects.Item;
 import mud.objects.ItemType;
-
+import mud.objects.ItemTypes;
 import mud.utils.Utils;
 
 public class Container extends Item implements Storage<Item> {
@@ -31,8 +29,8 @@ public class Container extends Item implements Storage<Item> {
 		this.type = TypeFlag.ITEM;
 		
 		this.equippable = false;
-		this.equip_type = ItemType.CONTAINER; // the type of equipment it is
-		this.item_type = ItemType.CONTAINER;
+		this.equip_type = ItemTypes.CONTAINER; // the type of equipment it is
+		this.item_type = ItemTypes.CONTAINER;
 		
 		this.weight = 1.0;
 		
@@ -61,8 +59,8 @@ public class Container extends Item implements Storage<Item> {
 		this.name = name;
 		
 		this.equippable = false;
-		this.equip_type = ItemType.CONTAINER; // the type of equipment it is
-		this.item_type = ItemType.CONTAINER;
+		this.equip_type = ItemTypes.CONTAINER; // the type of equipment it is
+		this.item_type = ItemTypes.CONTAINER;
 		
 		this.weight = 1.0;
 		
@@ -178,13 +176,21 @@ public class Container extends Item implements Storage<Item> {
 
 	@Override
 	public String toDB() {
-		String[] output = new String[8];
-		output[0] = this.getDBRef() + "";          // database reference number
-		output[1] = this.getName();                // name
-		output[2] = this.getFlagsAsString();       // flags
-		output[3] = this.getDesc();                // description
-		output[4] = this.getLocation() + "";       // location
-		output[5] = this.item_type.ordinal() + ""; // item type
+		String[] output = new String[10];
+		
+		output[0] = this.getDBRef() + "";         // database reference number
+		output[1] = this.getName();               // name
+		output[2] = this.getFlagsAsString();      // flags
+		output[3] = this.getDesc();               // description
+		output[4] = this.getLocation() + "";      // location
+		
+		output[5] = this.item_type.getId() + "";  // item type
+		output[6] = this.equip_type.getId() + ""; // equip type
+		output[7] = this.slot_type.getId() + "";  // slot type
+		
+		output[8] = "*";                          // blank
+		output[9] = "*";                          // blank
+		
 		return Utils.join(output, "#");
 	}
 

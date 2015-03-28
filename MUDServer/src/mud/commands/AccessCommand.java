@@ -1,5 +1,6 @@
 package mud.commands;
 
+import mud.Command;
 import mud.Constants;
 import mud.MUDServer;
 import mud.objects.Player;
@@ -78,6 +79,6 @@ public class AccessCommand extends Command {
 
 	@Override
 	public int getAccessLevel() {
-		return Constants.GOD;
+		return Constants.SUPERUSER;
 	}
 }

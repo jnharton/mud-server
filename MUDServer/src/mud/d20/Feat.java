@@ -1,4 +1,4 @@
-package mud.game;
+package mud.d20;
 
 import java.util.Arrays;
 import java.util.List;

@@ -8,8 +8,10 @@ import mud.ObjectFlag;
 import mud.TypeFlag;
 import mud.interfaces.Editable;
 import mud.misc.SlotType;
+import mud.misc.SlotTypes;
 import mud.objects.Item;
 import mud.objects.ItemType;
+import mud.objects.ItemTypes;
 import mud.utils.Utils;
 
 /* genericized or not? */
@@ -20,50 +22,41 @@ public class Book extends Item implements Editable {
 	private String title = "";
 	private String author = "";
 	private ArrayList<List<String>> pages;
+	
 	private Integer currentPage = 0;
-
+	
 	public Book() {
-		this.flags = EnumSet.noneOf(ObjectFlag.class);
-				
-		this.type = TypeFlag.ITEM;
-		this.item_type = ItemType.BOOK;
-		
-		this.title = "";
-		this.author = "";
-		this.pages = new ArrayList<List<String>>();
+		this("", "", 0);
 	}
 	
 	public Book(String bookTitle) {
-		this.flags = EnumSet.noneOf(ObjectFlag.class);
-		
-		this.type = TypeFlag.ITEM;
-		this.item_type = ItemType.BOOK;
-		
-		this.title = bookTitle;
-		this.author = "";
-		this.pages = new ArrayList<List<String>>();
+		this(bookTitle, "", 0);
 	}
 
 	public Book(String bookTitle, String bookAuthor) {
-		this(bookTitle);
-		
-		this.author = bookAuthor;
+		this(bookTitle, bookAuthor, 0);
 	}
 
 	public Book(String bookTitle, String bookAuthor, int pages) {
+		super(-1);
+		
 		this.flags = EnumSet.noneOf(ObjectFlag.class);
 		
 		this.type = TypeFlag.ITEM;
-		this.item_type = ItemType.BOOK;
+		this.item_type = ItemTypes.BOOK;
+		
+		this.equip_type = ItemTypes.NONE;
 		
 		this.title = bookTitle;
 		this.author = bookAuthor;
+		
 		this.pages = new ArrayList<List<String>>(pages);
 	}
 	
+	// TODO make sure this properly duplicates the template, which it doesn't atm
 	public Book( Book template ) {
 		this(template.title, template.author, template.pages.size());
-		this.item_type = template.item_type;
+		//this.item_type = template.item_type;
 	}
 	
 	/**
@@ -85,8 +78,8 @@ public class Book extends Item implements Editable {
 		super(tempDBREF, tempName, EnumSet.noneOf(ObjectFlag.class), tempDesc, tempLoc);
 		
 		this.type = TypeFlag.ITEM;
-		this.item_type = ItemType.BOOK;
-		this.slot_type = SlotType.NONE;
+		this.item_type = ItemTypes.BOOK;
+		this.slot_type = SlotTypes.NONE;
 		
 		this.pages = new ArrayList<List<String>>(0);
 	}
@@ -178,17 +171,23 @@ public class Book extends Item implements Editable {
 
 	@Override
 	public String toDB() {
-		String[] output = new String[9];
+		String[] output = new String[11];
+		
 		output[0] = this.getDBRef() + "";              // database reference number
 		output[1] = this.getName();                    // name
 		output[2] = TypeFlag.asLetter(this.type) + ""; // flags
 		output[2] = output[2] + getFlagsAsString();
 		output[3] = this.getDesc();                    // description
 		output[4] = this.getLocation() + "";           // location
-		output[5] = this.item_type.ordinal() + "";     // item type
-		output[6] = this.getAuthor();                  // book author
-		output[7] = this.getTitle();                   // book title
-		output[8] = this.pages.size() + "";            // # of pages
+		
+		output[5] = this.item_type.getId() + "";       // item type
+		output[6] = this.equip_type.getId() + "";      // equip type
+		output[7] = this.slot_type.getId() + "";       // slot type
+		
+		output[8] = this.getAuthor();                  // book author
+		output[9] = this.getTitle();                   // book title
+		output[10] = this.pages.size() + "";           // # of pages
+		
 		return Utils.join(output, "#");
 	}
 	

@@ -1,4 +1,6 @@
-package mud.game;
+package mud.d20;
+
+import mud.game.Ability;
 
 
 /*

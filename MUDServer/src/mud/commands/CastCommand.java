@@ -3,6 +3,7 @@ package mud.commands;
 import java.util.Arrays;
 import java.util.List;
 
+import mud.Command;
 import mud.Constants;
 import mud.MUDObject;
 import mud.MUDServer;

@@ -3,4 +3,7 @@ TAKE
 
 Pick an object up off the ground, or retrieve it from some location.
 
-Syntax: 'take <object name/id>'
+Syntax: 'take <object name/id>' -- take the specified object
+        'take all'              -- take everything on the floor
+
+Last Updated: March 7th, 2015

@@ -1,5 +1,6 @@
 package mud.commands;
 
+import mud.Command;
 import mud.Constants;
 import mud.MUDObject;
 import mud.MUDServer;
@@ -43,11 +44,6 @@ public class ExamineCommand extends Command {
 					MUDObject mobj = getObject(dbref);
 
 					if (mobj != null) {
-						if( mobj.isType(TypeFlag.ROOM) ) {
-							examine((Room) mobj, client);
-							return;
-						}
-						
 						examine(mobj, client);
 					}
 					else {

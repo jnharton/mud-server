@@ -15,4 +15,6 @@ import mud.events.SayEventListener;
  */
 public abstract class Strategy implements SayEventListener {
 	public abstract void onRoomChange(); // what the mob should do when it moves to another room
+	public abstract void onDetectHostile();
+	
 }

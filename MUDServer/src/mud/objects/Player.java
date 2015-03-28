@@ -14,21 +14,21 @@ import java.util.Set;
 import java.util.EnumSet;
 
 import mud.net.Client;
+import mud.Command;
 import mud.ObjectFlag;
 import mud.MUDObject;
 import mud.TypeFlag;
 import mud.MUDServer.PlayerMode;
-import mud.commands.Command;
-import mud.game.Abilities;
+import mud.d20.Abilities;
+import mud.d20.Alignments;
+import mud.d20.Classes;
+import mud.d20.Races;
+import mud.d20.Skills;
 import mud.game.Ability;
-import mud.game.Alignments;
-import mud.game.Classes;
 import mud.game.PClass;
 import mud.game.Profession;
 import mud.game.Race;
-import mud.game.Races;
 import mud.game.Skill;
-import mud.game.Skills;
 import mud.interfaces.Mobile;
 import mud.interfaces.Ridable;
 import mud.interfaces.Ruleset;
@@ -40,10 +40,12 @@ import mud.misc.Editors;
 import mud.misc.Faction;
 import mud.misc.Slot;
 import mud.misc.SlotType;
+import mud.misc.SlotTypes;
 import mud.objects.items.Armor;
 import mud.objects.items.ClothingType;
 import mud.objects.items.Handed;
 import mud.objects.items.Shield;
+import mud.objects.items.Weapon;
 import mud.quest.Quest;
 import mud.utils.EditList;
 import mud.utils.Landmark;
@@ -259,6 +261,9 @@ public class Player extends MUDObject implements Mobile
 	// Miscellaneous Editor
 	private EditorData edd = null;
 	
+	private Weapon primary = null;
+	private Weapon secondary = null;
+	
 	protected Player(int tempDBREF) {
 		super(tempDBREF);
 	}
@@ -278,7 +283,7 @@ public class Player extends MUDObject implements Mobile
 		pass = tempPass;
 
 		isNew = true;
-
+		
 		this.name = tempName;
 		this.race = Races.NONE;
 		this.gender = 'N';
@@ -287,6 +292,15 @@ public class Player extends MUDObject implements Mobile
 
 		this.desc = _DESC;
 		this.title = "Newbie";
+		
+		//setName(tempName);
+		//setRace(Races.NONE);
+		//setGender('N');
+		//setPClass(Classes.NONE);
+		//setAlignment(Alignments.NONE);
+		
+		//setDesc(_DESC);
+		//setTitle("Newbie");
 
 		this.hp = 10;
 		this.totalhp = 10;
@@ -309,22 +323,22 @@ public class Player extends MUDObject implements Mobile
 		this.slots = new LinkedHashMap<String, Slot>(11, 0.75f);
 
 		// initialize slots
-		addSlot("helmet", new Slot( SlotType.HEAD, ItemType.HELMET));
-		addSlot("necklace", new Slot( SlotType.NECK, ItemType.NECKLACE));
-		addSlot("armor", new Slot( SlotType.CHEST, ItemType.ARMOR));
-		addSlot("cloak", new Slot( SlotType.BACK, ClothingType.CLOAK));
-		addSlot("ring1", new Slot( SlotType.FINGER, ItemType.RING));
-		addSlot("ring2", new Slot( SlotType.FINGER, ItemType.RING));
-		addSlot("ring3", new Slot( SlotType.FINGER, ItemType.RING));
-		addSlot("ring4", new Slot( SlotType.FINGER, ItemType.RING));
-		addSlot("ring5", new Slot( SlotType.FINGER, ItemType.RING));
-		addSlot("ring6", new Slot( SlotType.FINGER, ItemType.RING));
-		addSlot("gloves", new Slot( SlotType.HANDS, ClothingType.GLOVES));
-		addSlot("weapon", new Slot( SlotType.RHAND, ItemType.WEAPON));
-		addSlot("weapon1", new Slot( SlotType.LHAND, ItemType.WEAPON));
-		addSlot("belt", new Slot( SlotType.WAIST, ClothingType.BELT));
-		addSlot("boots", new Slot( SlotType.FEET, ClothingType.BOOTS));
-		addSlot("other", new Slot( SlotType.NONE, ItemType.NONE ));
+		addSlot("helmet", new Slot( SlotTypes.HEAD, ItemTypes.HELMET));
+		addSlot("necklace", new Slot( SlotTypes.NECK, ItemTypes.NECKLACE));
+		addSlot("armor", new Slot( SlotTypes.CHEST, ItemTypes.ARMOR));
+		addSlot("cloak", new Slot( SlotTypes.BACK, ClothingType.CLOAK));
+		addSlot("ring1", new Slot( SlotTypes.FINGER, ItemTypes.RING));
+		addSlot("ring2", new Slot( SlotTypes.FINGER, ItemTypes.RING));
+		addSlot("ring3", new Slot( SlotTypes.FINGER, ItemTypes.RING));
+		addSlot("ring4", new Slot( SlotTypes.FINGER, ItemTypes.RING));
+		addSlot("ring5", new Slot( SlotTypes.FINGER, ItemTypes.RING));
+		addSlot("ring6", new Slot( SlotTypes.FINGER, ItemTypes.RING));
+		addSlot("gloves", new Slot( SlotTypes.HANDS, ClothingType.GLOVES));
+		addSlot("weapon", new Slot( SlotTypes.RHAND, ItemTypes.WEAPON));
+		addSlot("weapon1", new Slot( SlotTypes.LHAND, ItemTypes.WEAPON));
+		addSlot("belt", new Slot( SlotTypes.WAIST, ClothingType.BELT));
+		addSlot("boots", new Slot( SlotTypes.FEET, ClothingType.BOOTS));
+		addSlot("other", new Slot( SlotTypes.NONE, ItemTypes.NONE ));
 
 		// instantiate stats
 		//stats = new LinkedHashMap<Ability, Integer>(6, 0.75f);
@@ -419,11 +433,16 @@ public class Player extends MUDObject implements Mobile
 		//super(tempDBREF, tempName, tempFlags, tempDesc, tempLoc);
 		super(tempDBREF);
 		type = TypeFlag.PLAYER;
-
+		
 		this.race = Races.NONE;
 		this.gender = 'N';
 		this.pclass = Classes.NONE;
 		this.alignment = Alignments.NONE;
+		
+		//setRace(Races.NONE);
+		//setGender('N');
+		//setPClass(Classes.NONE);
+		//setAlignment(Alignments.NONE);
 
 		this.hp = 10;
 		this.totalhp = 10;
@@ -434,7 +453,10 @@ public class Player extends MUDObject implements Mobile
 		this.level = 0;
 		this.xp = 0;
 		this.money = tempMoney; // use default money criteria from server config or stored player money in future
-
+		
+		//setName(tempName);
+		//setDesc(tempDesc);
+		
 		this.name = tempName;
 		this.pass = tempPass;
 		this.flags = tempFlags;
@@ -449,23 +471,23 @@ public class Player extends MUDObject implements Mobile
 		this.slots = new LinkedHashMap<String, Slot>(11, 0.75f);
 
 		// initialize slots
-		// NOTE: slot names are non-arbitrary and at the moment must match the ItemType they will hold
-		this.slots.put("helmet", new Slot( SlotType.HEAD, ItemType.HELMET));
-		this.slots.put("necklace", new Slot( SlotType.NECK, ItemType.NECKLACE));
-		this.slots.put("armor", new Slot( SlotType.CHEST, ItemType.ARMOR));
-		this.slots.put("cloak", new Slot( SlotType.BACK, ClothingType.CLOAK));
-		this.slots.put("ring1", new Slot( SlotType.FINGER, ItemType.RING));
-		this.slots.put("ring2", new Slot( SlotType.FINGER, ItemType.RING));
-		this.slots.put("ring3", new Slot( SlotType.FINGER, ItemType.RING));
-		this.slots.put("ring4", new Slot( SlotType.FINGER, ItemType.RING));
-		this.slots.put("ring5", new Slot( SlotType.FINGER, ItemType.RING));
-		this.slots.put("ring6", new Slot( SlotType.FINGER, ItemType.RING));
-		this.slots.put("gloves", new Slot( SlotType.HANDS, ClothingType.GLOVES));
-		this.slots.put("weapon", new Slot( SlotType.RHAND, ItemType.WEAPON));
-		this.slots.put("weapon1", new Slot( SlotType.LHAND, ItemType.WEAPON));
-		this.slots.put("belt", new Slot( SlotType.WAIST, ClothingType.BELT));
-		this.slots.put("boots", new Slot( SlotType.FEET, ClothingType.BOOTS));
-		this.slots.put("none", new Slot( SlotType.NONE, ItemType.NONE ));
+		// NOTE: this functionality relegated to GameModule(s) ???
+		addSlot("helmet", new Slot( SlotTypes.HEAD, ItemTypes.HELMET));
+		addSlot("necklace", new Slot( SlotTypes.NECK, ItemTypes.NECKLACE));
+		addSlot("armor", new Slot( SlotTypes.CHEST, ItemTypes.ARMOR));
+		addSlot("cloak", new Slot( SlotTypes.BACK, ClothingType.CLOAK));
+		addSlot("ring1", new Slot( SlotTypes.FINGER, ItemTypes.RING));
+		addSlot("ring2", new Slot( SlotTypes.FINGER, ItemTypes.RING));
+		addSlot("ring3", new Slot( SlotTypes.FINGER, ItemTypes.RING));
+		addSlot("ring4", new Slot( SlotTypes.FINGER, ItemTypes.RING));
+		addSlot("ring5", new Slot( SlotTypes.FINGER, ItemTypes.RING));
+		addSlot("ring6", new Slot( SlotTypes.FINGER, ItemTypes.RING));
+		addSlot("gloves", new Slot( SlotTypes.HANDS, ClothingType.GLOVES));
+		addSlot("weapon", new Slot( SlotTypes.RHAND, ItemTypes.WEAPON));
+		addSlot("weapon1", new Slot( SlotTypes.LHAND, ItemTypes.WEAPON));
+		addSlot("belt", new Slot( SlotTypes.WAIST, ClothingType.BELT));
+		addSlot("boots", new Slot( SlotTypes.FEET, ClothingType.BOOTS));
+		addSlot("other", new Slot( SlotTypes.NONE, ItemTypes.NONE ));
 
 		// instantiate stats
 		//stats = new LinkedHashMap<Ability, Integer>(6, 0.75f);
@@ -587,7 +609,10 @@ public class Player extends MUDObject implements Mobile
 
 	public Race getRace() { return this.race; }
 
-	public void setRace(Race race) { this.race = race; }
+	public void setRace(Race race) {
+		this.race = race;
+		setProperty("_game/race", race.getName().toLowerCase());
+	}
 
 	/**
 	 * Get player gender
@@ -601,7 +626,10 @@ public class Player extends MUDObject implements Mobile
 	 * 
 	 * @param newGender
 	 */
-	public void setGender(Character newGender) { this.gender = newGender; }
+	public void setGender(Character newGender) {
+		this.gender = newGender;
+		setProperty("_game/gender", newGender);
+	}
 
 	/**
 	 * Get Player Class
@@ -619,6 +647,8 @@ public class Player extends MUDObject implements Mobile
 	 */
 	public void setPClass(PClass playerClass) {
 		this.pclass = playerClass;
+		
+		setProperty("_game/class", playerClass.getName().toLowerCase());
 
 		// do some initialization
 		if( playerClass.isCaster() ) {
@@ -633,14 +663,18 @@ public class Player extends MUDObject implements Mobile
 	 * 
 	 * @return
 	 */
-	public String getTitle() { return this.title; }
+	public String getTitle() {
+		return this.title;
+	}
 
 	/**
 	 * Set player title
 	 * 
 	 * @param newTitle
 	 */
-	public void setTitle(String newTitle) { this.title = newTitle; }
+	public void setTitle(String newTitle) {
+		this.title = newTitle;
+	}
 
 	/**
 	 * overrides MUDObject's setName method to prevent player names from being
@@ -701,10 +735,14 @@ public class Player extends MUDObject implements Mobile
 	}
 
 	// get the player's status
-	public String getStatus() { return this.status; }
-
+	public String getStatus() {
+		return this.status;
+	}
+	
 	// set the player's status
-	public void setStatus(String arg) { this.status = arg; }
+	public void setStatus(String arg) {
+		this.status = arg;
+	}
 
 	public Status getPStatus() {
 		return this.pstatus;
@@ -905,7 +943,9 @@ public class Player extends MUDObject implements Mobile
 	}
 
 	public void addSlot(String name, Slot slot) {
-		this.slots.put(name, slot);
+		if( !this.slots.containsKey(name) ) {
+			this.slots.put(name, slot);
+		}
 	}
 
 	public void removeSlot(String name) {
@@ -1352,6 +1392,17 @@ public class Player extends MUDObject implements Mobile
 	public boolean isNew() {
 		return isNew;
 	}
+	
+	// set weapons...
+	public Weapon getWeapon(boolean primary) {
+		if( primary ) return this.primary;
+		else          return this.secondary;
+	}
+	
+	public void setWeapon(Weapon weapon, boolean primary) {
+		if( primary ) this.primary = weapon;
+		else          this.secondary = weapon;
+	}
 
 	/*public void wear(Wearable<Item> w) {
 		List<Slot> sList = new LinkedList<Slot>();
@@ -1423,7 +1474,7 @@ public class Player extends MUDObject implements Mobile
 
 		final StringBuilder sb = new StringBuilder();
 		int abilities = ruleset.getAbilities().length;
-		int count = 0;
+		int count = 1;
 
 		for(Ability ability : ruleset.getAbilities()) {
 			sb.append( this.stats.get(ability) );
@@ -1510,11 +1561,11 @@ public class Player extends MUDObject implements Mobile
 		sb.append("\t{\n");
 
 		String[] mn = { "platinum", "gold", "silver", "copper" };
-		count = 1;
+		count = 0;
 
 		for(final String value : getMoney().toString(false).split(",")) {
 			sb.append("\t\t\"" + mn[count] + "\": \"" + value + "\"");
-			if( count < (4 - 1) ) sb.append(",\n");
+			if( count < 4 ) sb.append(",\n");
 			else            sb.append("\n");
 			count++;
 		}

@@ -3,6 +3,8 @@
  */
 package mud.commands;
 
+import mud.Command;
+import mud.Constants;
 import mud.MUDServer;
 import mud.net.Client;
 
@@ -26,4 +28,8 @@ public class TestCommand extends Command {
 
 	}
 
+	@Override
+	public int getAccessLevel() {
+		return Constants.USER;
+	}
 }

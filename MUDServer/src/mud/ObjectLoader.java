@@ -10,8 +10,8 @@ import mud.objects.npcs.Merchant;
 import mud.objects.things.Box;
 import mud.objects.Item;
 import mud.utils.Utils;
-import mud.game.Classes;
-import mud.game.Races;
+import mud.d20.Classes;
+import mud.d20.Races;
 import mud.interfaces.Ruleset;
 import mud.magic.Spell;
 import mud.misc.Coins;
@@ -55,13 +55,14 @@ public class ObjectLoader {
 
 			if (oInfo.charAt(0) == '&') { // means to ignore that line
 				log.debug("`loadObjects` ignoring line: " + oInfo);
-
+				
+				// grab the dbref number and remove the prefixing & character
 				oDBRef = Integer.parseInt(oInfo.split("#")[0].replace('&', ' ').trim());
 
 				NullObject no = new NullObject(oDBRef);
 				no.lock(); // lock the NullObject
 
-				System.out.println("NULLObject (" + oDBRef + ") Locked?: " + no.isLocked());
+				System.out.println("NULLObject (" + oDBRef + ") Locked?: " + no.isLocked()); // print out the lock state
 
 				objectDB.add(no);
 				continue;
@@ -69,6 +70,7 @@ public class ObjectLoader {
 
 			try {
 				String[] attr = oInfo.split("#");
+				
 				oDBRef = Integer.parseInt(attr[0]);
 				oName = attr[1];
 				oTypeFlag = attr[2].charAt(0);
@@ -83,7 +85,6 @@ public class ObjectLoader {
 				log.debug("Location: " + oLocation);
 
 				if (oTypeFlag == 'C') {
-
 					/*
 					 * int cType = Integer.parseInt(attr[6]);
 					 * 
@@ -111,14 +112,18 @@ public class ObjectLoader {
 					// list of creatures
 					objectDB.add(cre);
 					objectDB.addCreature(cre);
-				} else if (oTypeFlag == 'P') {
+				}
+				
+				else if (oTypeFlag == 'P') {
 					Player player = loadPlayer(oInfo);
 
 					// log.debug("log.debug (db entry): " + player.toDB(), 2);
 
 					objectDB.add(player);
 					objectDB.addPlayer(player);
-				} else if (oFlags.equals("IKV")) {
+				}
+				
+				else if (oFlags.equals("IKV")) {
 					Innkeeper ik = new Innkeeper( parent, oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), oDesc, "Merchant", "VEN", oLocation,
 							Coins.fromArray(new int[] { 1000, 1000, 1000, 1000 }));
 
@@ -128,6 +133,7 @@ public class ObjectLoader {
 					objectDB.add(ik);
 					objectDB.addNPC(ik);
 				}
+				
 				// Exit(String tempName, String tempFlags, String tempDesc, int
 				// tempLoc, int tempDBREF, int tempDestination)
 				else if (oTypeFlag == 'E') {
@@ -145,8 +151,8 @@ public class ObjectLoader {
 
 						objectDB.add(exit);
 						objectDB.addExit(exit);
-
-					} else if (et == ExitType.DOOR) {
+					}
+					else if (et == ExitType.DOOR) {
 						int oDest = Integer.parseInt(attr[5]);
 						
 						// all lock states other than 0 or 1 are invalid
@@ -187,7 +193,8 @@ public class ObjectLoader {
 
 						objectDB.add(door);
 						objectDB.addExit(door);
-					} else if (et == ExitType.PORTAL) {
+					}
+					else if (et == ExitType.PORTAL) {
 						Portal portal;
 
 						int pType = Utils.toInt(attr[7], -1);
@@ -217,7 +224,8 @@ public class ObjectLoader {
 
 							objectDB.add(portal);
 							objectDB.addExit(portal);
-						} else if (oPortalType == PortalType.RANDOM) { // Random
+						}
+						else if (oPortalType == PortalType.RANDOM) { // Random
 							// Portal
 							int[] oDestinations = Utils.stringsToInts(attr[5].split(","));
 
@@ -237,13 +245,16 @@ public class ObjectLoader {
 
 							objectDB.add(portal);
 							objectDB.addExit(portal);
-						} else {
+						}
+						else {
 							log.debug("log.debug (error): Problem with object #" + oDBRef + " - invalid PortalType", 2);
 						}
-					} else {
+					}
+					else {
 						log.debug("log.debug (error): Problem with object #" + oDBRef, 2);
 					}
 				}
+				
 				// NPC(int tempDBRef, String tempName, String tempDesc, int
 				// tempLoc, String tempTitle)
 				else if (oTypeFlag == 'N') {
@@ -273,6 +284,7 @@ public class ObjectLoader {
 						objectDB.addNPC(npc);
 					}
 				}
+				
 				// Room(String tempName, String tempFlags, String tempDesc, int
 				// tempParent, int tempDBREF)
 				else if (oTypeFlag == 'R') {
@@ -310,8 +322,10 @@ public class ObjectLoader {
 					objectDB.add(room);
 					objectDB.addRoom(room);
 				}
+				
 				// Thing(String tempName, String tempFlags, String tempDesc, int
 				// tempLoc, int tempDBREF)
+				// Thing(s)
 				else if (oTypeFlag == 'T') {
 					int tType = Utils.toInt(attr[5], 0); // find a type, else
 					// TYPE 0 (NONE)
@@ -329,159 +343,18 @@ public class ObjectLoader {
 
 					objectDB.add(thing);
 					objectDB.addThing(thing);
-				} else if (oTypeFlag == 'I') {
-					/*final Item item = loadItem(oDBRef, oName, oTypeFlag, oFlags, oDesc, oLocation, attr);
+				}
+				
+				// Item(s)
+				else if (oTypeFlag == 'I') {
+					final Item item = loadItem(oInfo);
 
 					objectDB.add(item);
 					objectDB.addItem(item);
 
-					log.debug("log.debug (db entry): " + item.toDB(), 2);*/
-
-					int itemType = Integer.parseInt(attr[5]); // get the type of item it should be
-					
-					ItemType it = ItemType.values()[itemType];
-
-					if (it == ItemType.CLOTHING) { // Clothing
-						int clothingType = Integer.parseInt(attr[6]);
-						int mod = Integer.parseInt(attr[7]);
-
-						final Clothing clothing = new Clothing(oDBRef, oName, oDesc, oLocation, mod, ClothingType.values()[clothingType]);
-						clothing.setItemType(it);
-
-						objectDB.add(clothing);
-						objectDB.addItem(clothing);
-
-						log.debug("log.debug (db entry): " + clothing.toDB(), 2);
-					}
-					else if (it == ItemType.WAND) { // Wand
-						String spellName = attr[6];
-						int charges = Integer.parseInt(attr[7]);
-
-						Spell spell = parent.getSpell(spellName);
-
-						Wand wand = new Wand(oName, oDesc, oLocation, oDBRef, ItemType.values()[itemType], charges, spell);
-						// wand.item_type = it; // unnecessary
-
-						objectDB.add(wand);
-						objectDB.addItem(wand);
-
-						log.debug("log.debug (db entry): " + wand.toDB(), 2);
-					}
-					else if (it == ItemType.WEAPON) { // Weapon Merchant
-						int weaponType = Integer.parseInt(attr[6]);
-						int mod = Integer.parseInt(attr[7]);
-
-						Weapon weapon = new Weapon(oDBRef, oName, oDesc, oLocation, mod, Handed.ONE, WeaponTypes.getWeaponType(weaponType), 15.0);
-						weapon.setItemType(it);
-
-						objectDB.add(weapon);
-						objectDB.addItem(weapon);
-
-						log.debug("log.debug (db entry): " + weapon.toDB(), 2);
-					}
-					else if (it == ItemType.ARMOR) { // Armor Merchant
-						int armorType = Integer.parseInt(attr[6]);
-						int mod = Integer.parseInt(attr[7]);
-
-						Armor armor = new Armor(oName, oDesc, (int) oLocation, (int) oDBRef, mod, ArmorType.values()[armorType]);
-						armor.setItemType(it);
-
-						objectDB.add(armor);
-						objectDB.addItem(armor);
-
-						log.debug("log.debug (db entry): " + armor.toDB(), 2);
-					}
-					else if (it == ItemType.ARROW) { // Arrow
-						Arrow arrow = new Arrow(oDBRef, oName, oDesc, oLocation);
-						arrow.setItemType(it);
-
-						objectDB.add(arrow);
-						objectDB.addItem(arrow);
-
-						log.debug("log.debug (db entry): " + arrow.toDB(), 2);
-					}
-					else if (it == ItemType.BOOK) { // Book
-						String author = attr[6];
-						String title = attr[7];
-						int pages = Integer.parseInt(attr[8]);
-
-						Book book = new Book(oName, oDesc, oLocation, oDBRef);
-						book.setItemType(it);
-
-						book.setAuthor(author);
-						book.setTitle(title);
-						book.setPageNum(0);
-
-						objectDB.add(book);
-						objectDB.addItem(book);
-
-						log.debug("log.debug (db entry): " + book.toDB(), 2);
-					}
-					else if (it == ItemType.CONTAINER) { // Container
-						Container container = new Container(oName);
-
-						container.setDesc(oDesc);
-						container.setLocation(oLocation);
-						container.setDBRef(oDBRef);
-
-						container.setItemType(it);
-
-						objectDB.add(container);
-						objectDB.addItem(container);
-
-						log.debug("log.debug (db entry): " + container.toDB(), 2);
-					}
-					else if (it == ItemType.POTION) {
-						int stack_size = Integer.parseInt(attr[6]);
-						String sn = attr[7];
-						
-						/*
-						 * whatever I do here needs to recreate the entirety of
-						 * a stack of potions correctly
-						 */
-						
-						Potion potion = new Potion(oDBRef, oName, EnumSet.noneOf(ObjectFlag.class), oDesc, oLocation, sn);
-
-						for (int i = 1; i < stack_size; i++) {
-							Potion potion1 = new Potion(oDBRef, oName, EnumSet.noneOf(ObjectFlag.class), oDesc, oLocation, sn);
-							potion.setItemType(ItemType.POTION);
-
-							potion.stack(potion1);
-						}
-
-						objectDB.add(potion);
-						objectDB.addItem(potion);
-
-						log.debug("log.debug (db entry): " + potion.toDB(), 2);
-					}
-					else if (it == ItemType.SHIELD) { // Armor Merchant
-						int shieldType = Integer.parseInt(attr[6]);
-						int mod = Integer.parseInt(attr[7]);
-
-						Shield shield = new Shield(oName, oDesc, oLocation, oDBRef, mod, it, ShieldType.values()[shieldType]);
-
-						objectDB.add(shield);
-						objectDB.addItem(shield);
-
-						log.debug("log.debug (db entry): " + shield.toDB(), 2);
-					}
-					else if (it == ItemType.RING) {
-						Item ring = new Item(oDBRef, oName, null, oDesc, oLocation);
-
-						ring.setItemType(ItemType.RING);
-
-						objectDB.add(ring);
-						objectDB.addItem(ring);
-					}
-					else {
-						Item item = new Item(oDBRef, oName, null, oDesc, oLocation);
-						
-						item.setItemType(ItemType.NONE);
-						
-						objectDB.add(item);
-						objectDB.addItem(item);
-					}
-				} else if (oTypeFlag == 'Z') { // Zone
+					log.debug("log.debug (db entry): " + item.toDB(), 2);
+				}
+				else if (oTypeFlag == 'Z') { // Zone
 					// not sure about this bit, for some reason I made 'Z' a
 					// TypeFlag
 					// for a Zone, but Zone isn't presently a MUDObject and I'm
@@ -500,7 +373,9 @@ public class ObjectLoader {
 					 * objectDB.add(zone);
 					 */
 
-				} else if (oFlags.contains("null")) {
+				}
+				
+				else if (oFlags.contains("null")) {
 					NullObject Null = new NullObject(oDBRef);
 
 					objectDB.add(Null);
@@ -508,11 +383,9 @@ public class ObjectLoader {
 					log.debug("log.debug (db entry): " + Null.toDB()
 							+ " [Found NULLObject]", 2);
 				}
-			} catch (ConcurrentModificationException cme) {
-				cme.printStackTrace();
-			} catch (ArrayIndexOutOfBoundsException aioobe) {
-				aioobe.printStackTrace();
 			}
+			catch (ConcurrentModificationException cme)   { cme.printStackTrace();    }
+			catch (ArrayIndexOutOfBoundsException aioobe) { aioobe.printStackTrace(); }
 		}
 	}
 
@@ -680,71 +553,101 @@ public class ObjectLoader {
 
 		return npc;
 	}
+	
+	final static private Item loadItem(final String itemData) {
+		String[] attr = itemData.split("#");
+		
+		Integer oDBRef = Integer.parseInt(attr[0]);
+		String oName = attr[1];
+		Character oTypeFlag = attr[2].charAt(0);
+		String oFlags = attr[2].substring(1, attr[2].length());
+		String oDesc = attr[3];
+		Integer oLocation = Integer.parseInt(attr[4]);
 
-	//final static private loadItem(final String itemData) {
-	final static private Item loadItem(Integer oDBRef, String oName, Character oTypeFlag, String oFlags, String oDesc, Integer oLocation, String[] attr) {
-		int itemType = Integer.parseInt(attr[5]); // get the type of item it
-		// should be
-		ItemType it = ItemType.values()[itemType];
+		/*log.debug("Database Reference Number: " + oDBRef);
+		log.debug("Name: " + oName);
+		log.debug("Flags: " + oFlags);
+		log.debug("Description: " + oDesc);
+		log.debug("Location: " + oLocation);*/
+		
+		// TODO equipType, slotType are new, work them in (3-17-2015)
+		int itemType  = Utils.toInt(attr[5], 0); // get the type of item it should be
+		int equipType = Utils.toInt(attr[6], 0);
+		int slotType  = Utils.toInt(attr[7], 0);
+		
+		// TODO fix getting an item type in the loader to use module/etc item types as well
+		//ItemType it = ItemTypes.getType(itemType);
+		ItemType it = getItemType(itemType);
 
-		if (it == ItemType.CLOTHING) { // Clothing
-			int clothingType = Integer.parseInt(attr[6]);
-			int mod = Integer.parseInt(attr[7]);
+		/*ItemType itemType = ItemTypes.getType(typeId);
+
+		// if it's not a default item type, try the game module's set of item types
+		if( itemType == null ) {
+			for(final ItemType it : parent.getGameModule().getItemTypes().values()) {
+				if( it.getId() == typeId ) {
+					itemType = it;
+					break;
+				}
+			}
+		}
+
+		return itemType;*/
+
+		if( it == null ) {
+			return parent.getGameModule().loadItem(itemData);
+		}
+
+		if (it == ItemTypes.CLOTHING) { // Clothing
+			int clothingType = Integer.parseInt(attr[8]);
+			int mod = Integer.parseInt(attr[9]);
 
 			final Clothing clothing = new Clothing(oDBRef, oName, oDesc, oLocation, mod, ClothingType.values()[clothingType]);
 			clothing.setItemType(it);
 
-			clothing.setFlags(EnumSet.noneOf(ObjectFlag.class)); // set an empty flag set
+			//clothing.setEquipType(ItemTypes.getType(equipType);
+			//clothing.setSlotType( );
 
 			return clothing;
 		}
+		else if (it == ItemTypes.WAND) { // Wand
+			String spellName = attr[8];
+			int charges = Integer.parseInt(attr[9]);
 
-		else if (it == ItemType.WAND) { // Wand
-			String spellName = attr[6];
-			int charges = Integer.parseInt(attr[7]);
+			Spell spell = parent.getSpell(spellName);
 
-			/** TODO fix this **/
-			//Spell spell = parent.getSpell(spellName);
-			Spell spell = new Spell();
-			spell.setName("test spell");
-
-			Wand wand = new Wand(oName, oDesc, oLocation, oDBRef, ItemType.values()[itemType], charges, spell);
+			Wand wand = new Wand(oName, oDesc, oLocation, oDBRef, ItemTypes.getType(itemType), charges, spell);
 			// wand.item_type = it; // unnecessary
-
+			
 			return wand;
 		}
-
-		else if (it == ItemType.WEAPON) { // Weapon Merchant
-			int weaponType = Integer.parseInt(attr[6]);
-			int mod = Integer.parseInt(attr[7]);
+		else if (it == ItemTypes.WEAPON) { // Weapon Merchant
+			int weaponType = Integer.parseInt(attr[8]);
+			int mod = Integer.parseInt(attr[9]);
 
 			Weapon weapon = new Weapon(oDBRef, oName, oDesc, oLocation, mod, Handed.ONE, WeaponTypes.getWeaponType(weaponType), 15.0);
 			weapon.setItemType(it);
-
+			
 			return weapon;
 		}
-
-		else if (it == ItemType.ARMOR) { // Armor Merchant
-			int armorType = Integer.parseInt(attr[6]);
-			int mod = Integer.parseInt(attr[7]);
+		else if (it == ItemTypes.ARMOR) { // Armor Merchant
+			int armorType = Integer.parseInt(attr[8]);
+			int mod = Integer.parseInt(attr[9]);
 
 			Armor armor = new Armor(oName, oDesc, (int) oLocation, (int) oDBRef, mod, ArmorType.values()[armorType]);
 			armor.setItemType(it);
-
+			
 			return armor;
 		}
-		
-		else if (it == ItemType.ARROW) { // Arrow
+		else if (it == ItemTypes.ARROW) { // Arrow
 			Arrow arrow = new Arrow(oDBRef, oName, oDesc, oLocation);
 			arrow.setItemType(it);
-
+			
 			return arrow;
 		}
-		
-		else if (it == ItemType.BOOK) { // Book
-			String author = attr[6];
-			String title = attr[7];
-			int pages = Integer.parseInt(attr[8]);
+		else if (it == ItemTypes.BOOK) { // Book
+			String author = attr[8];
+			String title = attr[9];
+			int pages = Integer.parseInt(attr[10]);
 
 			Book book = new Book(oName, oDesc, oLocation, oDBRef);
 			book.setItemType(it);
@@ -752,11 +655,10 @@ public class ObjectLoader {
 			book.setAuthor(author);
 			book.setTitle(title);
 			book.setPageNum(0);
-
+			
 			return book;
 		}
-		
-		else if (it == ItemType.CONTAINER) { // Container
+		else if (it == ItemTypes.CONTAINER) { // Container
 			Container container = new Container(oName);
 
 			container.setDesc(oDesc);
@@ -764,55 +666,58 @@ public class ObjectLoader {
 			container.setDBRef(oDBRef);
 
 			container.setItemType(it);
-
+			
 			return container;
 		}
-
-		else if (it == ItemType.POTION) {
-			int stack_size = Integer.parseInt(attr[6]);
-			String sn = attr[7];
-
+		else if (it == ItemTypes.POTION) {
+			int stack_size = Integer.parseInt(attr[8]);
+			String sn = attr[9];
+			
 			/*
-			 * whatever I do here needs to recreate the entirety of a stack of
-			 * potions correctly
+			 * whatever I do here needs to recreate the entirety of
+			 * a stack of potions correctly
 			 */
-
-			Potion potion = new Potion(oDBRef, oName,
-					EnumSet.noneOf(ObjectFlag.class), oDesc, oLocation, sn);
+			
+			Potion potion = new Potion(oDBRef, oName, EnumSet.noneOf(ObjectFlag.class), oDesc, oLocation, sn);
 
 			for (int i = 1; i < stack_size; i++) {
 				Potion potion1 = new Potion(oDBRef, oName, EnumSet.noneOf(ObjectFlag.class), oDesc, oLocation, sn);
-				potion.setItemType(ItemType.POTION);
+				potion.setItemType(ItemTypes.POTION);
 
 				potion.stack(potion1);
 			}
-
+			
 			return potion;
 		}
-		
-		else if (it == ItemType.SHIELD) { // Armor Merchant
-			int shieldType = Integer.parseInt(attr[6]);
-			int mod = Integer.parseInt(attr[7]);
+		else if (it == ItemTypes.SHIELD) { // Armor Merchant
+			int shieldType = Integer.parseInt(attr[8]);
+			int mod = Integer.parseInt(attr[9]);
 
 			Shield shield = new Shield(oName, oDesc, oLocation, oDBRef, mod, it, ShieldType.values()[shieldType]);
-
+			
 			return shield;
 		}
-		
-		else if (it == ItemType.RING) {
-			Item ring = new Item(oDBRef, oName, null, oDesc, oLocation);
+		else if (it == ItemTypes.RING) {
+			//Item ring = new Item(oDBRef, oName, null, oDesc, oLocation);
+			Item ring = new Item(oDBRef, oName, EnumSet.noneOf(ObjectFlag.class), oDesc, oLocation);
 
-			ring.setItemType(ItemType.RING);
-
+			ring.setItemType(ItemTypes.RING);
+			
 			return ring;
 		}
-		
 		else {
-			Item item = new Item(oDBRef, oName, null, oDesc, oLocation);
-
-			item.setItemType(ItemType.NONE);
-
+			// TODO resolve issue of loading item types not listed in here (3-20-2015)
+			//Item item = new Item(oDBRef, oName, null, oDesc, oLocation);
+			
+			Item item = new Item(oDBRef, oName, EnumSet.noneOf(ObjectFlag.class), oDesc, oLocation);
+			
+			item.setItemType(ItemTypes.NONE);
+			
 			return item;
 		}
+	}
+	
+	private static ItemType getItemType(final int typeId) {
+		return ItemTypes.getType(typeId);
 	}
 }

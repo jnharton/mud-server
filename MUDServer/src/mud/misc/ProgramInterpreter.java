@@ -206,7 +206,7 @@ public class ProgramInterpreter {
 				System.out.println("Parameter (1): " + params[0]);
 
 				if(functionName.equals("create_item")) {
-					final Item item = parent.createItem(params[0]);
+					final Item item = parent.createItem(params[0], true);
 
 					if( item != null ) {
 						return "" + item.getDBRef();

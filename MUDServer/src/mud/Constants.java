@@ -24,22 +24,23 @@ public final class Constants {
 	public static final int RUN = 3;
 	
 	// Permissions (move to another constants class - Perms?)
-	public static final int USER = 0;   // limited permissions, no @commands at all
-	public static final int BUILD = 1;  // building
-	public static final int ADMIN = 2;  // account administration?
-	public static final int WIZARD = 3; // Most permissions
-	public static final int GOD = 4;    // Pff, such arrogant idiots we are! (anyway, max permissions)
+	public static final int USER = 0;      // limited permissions, no @commands at all
+	public static final int BUILD = 1;     // building
+	public static final int ADMIN = 2;     // account administration?
+	public static final int WIZARD = 3;    // Most permissions
+	public static final int SUPERUSER = 4; // Pff, such arrogant idiots we are! (anyway, max permissions)
+	//public static final int GOD = 4;    // Pff, such arrogant idiots we are! (anyway, max permissions)
 	
 	// Flags
 	public static final EnumSet<ObjectFlag> default_room_flags = EnumSet.of(ObjectFlag.DARK,ObjectFlag.SILENT); // RDS, where R is a TypeFlag
 	
 	public static final Map<String, Integer> permissionMap = new Hashtable<String, Integer>() {
 		{
-			put("USER", USER);
-			put("BUILD", BUILD);
-			put("ADMIN", ADMIN);
+			put("USER",   USER);
+			put("BUILD",  BUILD);
+			put("ADMIN",  ADMIN);
 			put("WIZARD", WIZARD);
-			put("GOD", GOD);
+			put("GOD",    SUPERUSER);
 		}
 	};
 	

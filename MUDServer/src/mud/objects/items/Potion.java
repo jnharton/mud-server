@@ -12,6 +12,7 @@ import mud.magic.Spell;
 import mud.misc.Effect;
 import mud.objects.Item;
 import mud.objects.ItemType;
+import mud.objects.ItemTypes;
 import mud.utils.Utils;
 
 public class Potion extends Item implements Stackable<Potion>, Usable<Potion> {
@@ -41,7 +42,7 @@ public class Potion extends Item implements Stackable<Potion>, Usable<Potion> {
 	public Potion() {
 		super(-1, "Potion", EnumSet.noneOf(ObjectFlag.class), "An empty glass potion bottle.", 8);
 		this.type = TypeFlag.ITEM;
-		this.item_type = ItemType.POTION;
+		this.item_type = ItemTypes.POTION;
 		this.setDrinkable(true);
 		this.spell = null;
 		this.effect = null;
@@ -61,7 +62,7 @@ public class Potion extends Item implements Stackable<Potion>, Usable<Potion> {
 	public Potion(Effect effect) {
 		super(-1, "Potion", EnumSet.noneOf(ObjectFlag.class), "A potion of " + effect.getName(), 8);
 		this.type = TypeFlag.ITEM;
-		this.item_type = ItemType.POTION;
+		this.item_type = ItemTypes.POTION;
 		this.setDrinkable(true);
 		this.effect = effect;
 		this.weight = 0.5;
@@ -73,7 +74,7 @@ public class Potion extends Item implements Stackable<Potion>, Usable<Potion> {
 	public Potion(Spell spell) {
 		super(-1, "Potion", EnumSet.noneOf(ObjectFlag.class), "A potion of " + spell.getName(), 8);
 		this.type = TypeFlag.ITEM;
-		this.item_type = ItemType.POTION;
+		this.item_type = ItemTypes.POTION;
 		this.setDrinkable(true);
 		this.spell = spell;
 		this.weight = 0.5;
@@ -117,7 +118,7 @@ public class Potion extends Item implements Stackable<Potion>, Usable<Potion> {
 		this.effects = new ArrayList<Effect>();
 		this.effects.add(this.effect);
 
-		this.item_type = ItemType.POTION;
+		this.item_type = ItemTypes.POTION;
 		this.setDrinkable(true);
 		
 		this.weight = 0.5;
@@ -204,23 +205,24 @@ public class Potion extends Item implements Stackable<Potion>, Usable<Potion> {
 	
 	@Override
 	public String toDB() {
-		String[] output = new String[8];
+		String[] output = new String[10];
+		
 		output[0] = this.getDBRef() + "";           // database reference number
 		output[1] = this.getName();                 // name
 		output[2] = this.getFlagsAsString();        // flags
 		output[3] = this.getDesc();                 // description
 		output[4] = this.getLocation() + "";        // location
-		output[5] = this.item_type.ordinal() + "";  // item type
-		output[6] = this.stackSize() + "";          // how many potion are stacked together
+		output[5] = this.item_type.getId() + "";    // item type
+		output[6] = this.equip_type.getId() + "";   // equip type
+		output[7] = this.slot_type.getId() + "";    // slot type
+		
+		output[8] = this.stackSize() + "";          // how many potion are stacked together
 		if (this.effect == null) {
-			if (this.spell != null) {
-				output[7] = this.spell.getName();   // spell	
-			}
-			else {
-                output[7] ="null";
-            }
+			if (this.spell != null) output[9] = this.spell.getName();   // spell	
+			else                    output[9] ="null";
 		}
-		else { output[7] = this.effect.getName(); } // effect
+		else { output[9] = this.effect.getName(); } // effect
+		
 		return Utils.join(output, "#");
 	}
 	

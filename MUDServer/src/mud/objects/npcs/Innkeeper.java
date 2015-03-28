@@ -6,10 +6,10 @@ import java.util.EnumSet;
 
 import mud.ObjectFlag;
 import mud.MUDServer;
-import mud.game.Abilities;
+import mud.d20.Abilities;
+import mud.d20.Classes;
+import mud.d20.Races;
 import mud.game.Ability;
-import mud.game.Classes;
-import mud.game.Races;
 import mud.interfaces.*;
 import mud.misc.Coins;
 import mud.misc.Currency;

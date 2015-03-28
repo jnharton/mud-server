@@ -1,5 +1,8 @@
 package mud.game;
 
+import mud.d20.Races;
+import mud.interfaces.Ruleset;
+
 
 /*
  * Copyright (c) 2012 Jeremy N. Harton
@@ -12,6 +15,8 @@ package mud.game;
  */
 
 public class Race {
+	private Ruleset rules;
+	
 	private String name;
 	private Subrace sub;
 	private int id;
@@ -29,24 +34,29 @@ public class Race {
 		this.canFly = false;
 	}*/
 	
-	public Race(String name, int id, boolean restricted) {
-		this(name, id, new Integer[] { 0, 0, 0, 0, 0, 0 }, restricted);
+	public Race(Ruleset rs, String name, int id, boolean restricted) {
+		this(rs, name, id, null, restricted);
 	}
 	
-	public Race(String name, int id, boolean restricted, boolean canFly) {
-		this(name, id, new Integer[] { 0, 0, 0, 0, 0, 0 }, restricted, canFly);
+	public Race(Ruleset rs, String name, int id, boolean restricted, boolean canFly) {
+		this(rs, name, id, null, restricted, canFly);
 	}
 
-	public Race(String name, int id, Integer[] statAdj, boolean restricted) {
-		this(name, id, statAdj, restricted, false);
+	public Race(Ruleset rs, String name, int id, Integer[] statAdj, boolean restricted) {
+		this(rs, name, id, statAdj, restricted, false);
 	}
 	
-	public Race(String name, int id, Integer[] statAdj, boolean restricted, boolean canFly) {
+	public Race(Ruleset rs, String name, int id, Integer[] statAdj, boolean restricted, boolean canFly) {
+		this.rules = rs;
 		this.name = name;
 		this.id = id;
 		this.statAdj = statAdj;
 		this.restricted = restricted;
 		this.canFly = canFly;
+	}
+	
+	public Ruleset getRules() {
+		return this.rules;
 	}
 	
 	public String getName() {
@@ -66,6 +76,13 @@ public class Race {
 	}
 
 	public Integer[] getStatAdjust() {
+		if( this.statAdj == null ) {
+			if( this.rules != null ) {
+				return new Integer[this.rules.getAbilities().length];
+			}
+			else return new Integer[0];
+		}
+		
 		return this.statAdj;
 	}
 
@@ -84,6 +101,22 @@ public class Race {
 		else {
 			return this.sub.name;
 		}
+	}
+	
+	@Override
+	public boolean equals(Object object) {
+		if(object instanceof Race) {
+			final Race otherRace = (Race) object;
+			
+			// TODO fix kludge, two races of the same name are equal according to this
+			if(this.getName().equals( otherRace.getName() )) {
+				return true;
+			}
+			
+			return false;
+		}
+		
+		return false;
 	}
 	
 	public class Subrace {

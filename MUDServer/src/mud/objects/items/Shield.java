@@ -9,6 +9,7 @@ import mud.misc.Coins;
 import mud.net.Client;
 import mud.objects.Item;
 import mud.objects.ItemType;
+import mud.objects.ItemTypes;
 import mud.utils.Utils;
 
 public class Shield extends Item
@@ -22,13 +23,12 @@ public class Shield extends Item
 	
 	protected int mod = 0;                    // modifier - +0, +2, +3, +4, ... and so on
 
-	public Shield() {
-	}
-
 	public Shield(int sMod, String sType, double sWeight)
 	{
+		super(-1);
+		
 		this.equippable = true;
-		this.equip_type = ItemType.SHIELD; // the type of equipment it is
+		this.equip_type = ItemTypes.SHIELD; // the type of equipment it is
 		this.mod = sMod;
 		//this.type = sType;                 // the actual type of shield
 		this.weight = sWeight;             // the weight of the shield
@@ -49,7 +49,7 @@ public class Shield extends Item
 		super(sDBREF, sName, EnumSet.noneOf(ObjectFlag.class), sDesc, sLoc);
 		this.type = TypeFlag.ITEM;
 		this.equippable = true;
-		this.equip_type = ItemType.SHIELD;
+		this.equip_type = ItemTypes.SHIELD;
 		
 		this.mod = sMod;
 		this.item_type = item;
@@ -82,15 +82,20 @@ public class Shield extends Item
 	
 	@Override
 	public String toDB() {
-		String[] output = new String[8];
+		String[] output = new String[10];
+		
 		output[0] = this.getDBRef() + "";            // database reference number
 		output[1] = this.getName();                  // name
 		output[2] = this.getFlagsAsString();         // flags
 		output[3] = this.getDesc();                  // description
 		output[4] = this.getLocation() + "";         // location
-		output[5] = this.item_type.ordinal() + "";   // item type
-		output[6] = this.shield_type.ordinal() + ""; // shield type
-		output[7] = this.mod + "";                   // modifier
+		output[5] = this.item_type.getId() + "";     // item type
+		output[6] = this.equip_type.getId() + "";    // equip type
+		output[7] = this.slot_type.getId() + "";     // slot type
+		
+		output[8] = this.shield_type.ordinal() + ""; // shield type
+		output[9] = this.mod + "";                   // modifier
+		
 		return Utils.join(output, "#");
 	}
 

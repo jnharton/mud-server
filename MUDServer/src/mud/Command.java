@@ -1,13 +1,11 @@
-package mud.commands;
+package mud;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.TimerTask;
 
-import mud.Constants;
-import mud.MUDObject;
-import mud.MUDServer;
+import mud.interfaces.ODBI;
 import mud.magic.Spell;
 import mud.misc.Effect;
 import mud.misc.ProgramInterpreter;
@@ -34,6 +32,7 @@ import mud.utils.SpellTimer;
 
 public abstract class Command {
 	private MUDServer parent;
+	private ODBI db;
 	private String description;
 
 	/**
@@ -46,6 +45,7 @@ public abstract class Command {
 	 */
 	protected Command(MUDServer mParent) {
 		this.parent = mParent;
+		this.db = this.parent.getDBInterface();
 	}
 	
 	protected Command(MUDServer mParent, String description) {
@@ -78,9 +78,11 @@ public abstract class Command {
 	 * 
 	 * @return int representing access level
 	 */
-	public int getAccessLevel() {
+	/*public int getAccessLevel() {
 		return Constants.USER;
-	}
+	}*/
+	
+	public abstract int getAccessLevel();
 	
 	/**
 	 * method that passes the thing to be sent for debugging to
@@ -136,19 +138,34 @@ public abstract class Command {
 	}
 	
 	protected final void examine(final MUDObject m, final Client client) {
-		parent.examine(m, client);
+		if( m.isType(TypeFlag.ROOM) ) {
+			parent.examine((Room) m, client);
+			return;
+		}
+		else if( m.isType(TypeFlag.PLAYER) || m.isType(TypeFlag.NPC) ) {
+			parent.examine((Player) m, client);
+			return;
+		}
+		else {
+			parent.examine(m, client);
+		}
 	}
 	
-	protected final void examine(final Room r, final Client client) {
+	/*protected final void examine(final Room r, final Client client) {
 		parent.examine(r, client);
 	}
+	
+	protected final void examine(final Player p, final Client client) {
+		parent.examine(p, client);
+	}*/
 	
 	protected final Spell getSpell(final String name) {
 		return parent.getSpell(name);
 	}
 	
 	protected final MUDObject getObject(final String name) {
-		return parent.getObject(name);
+		return db.getByName(name);
+		//return parent.getObject(name);
 	}
 	
 	/*protected final MUDObject getObject(final String objectName, final Client client) {
@@ -156,7 +173,8 @@ public abstract class Command {
 	}*/
 	
 	protected final MUDObject getObject(Integer dbref) {
-		return parent.getObject(dbref);
+		return db.get(dbref);
+		//return parent.getObject(dbref);
 	}
 	
 	/**
@@ -265,5 +283,13 @@ public abstract class Command {
 	
 	protected final List<Creature> getCreaturesByRoom(final Room room) {
 		return parent.getCreaturesByRoom(room);
+	}
+	
+	protected Item findItem(final List<Item> items, final Integer itemDBRef) {
+		return parent.findItem(items, itemDBRef);
+	}
+	
+	protected Item findItem(final List<Item> items, final String itemName) {
+		return parent.findItem(items, itemName);
 	}
 }

@@ -59,7 +59,12 @@ public class BulletinBoard {
 	}
 	
 	public String getFilename() {
-		return this.filename;
+		if( !filename.equals("") ) {
+			return this.filename;
+		}
+		else {
+			return this.name + ".txt";
+		}
 	}
 	
 	public BBEntry getEntry(int messageNum) {

@@ -12,6 +12,7 @@ import mud.misc.Effect;
 import mud.net.Client;
 import mud.objects.Item;
 import mud.objects.ItemType;
+import mud.objects.ItemTypes;
 import mud.utils.Utils;
 
 public class Wand extends Item implements Usable<Wand>
@@ -22,15 +23,12 @@ public class Wand extends Item implements Usable<Wand>
 	public int charges;
 	public Spell spell;
 	private Handed handed = Handed.ONE;
-
-	protected Wand() {
-	}
-
+	
 	public Wand(int tCharges, String spell) {
 		super(-1, "Wand", EnumSet.noneOf(ObjectFlag.class), "I", 8);
 		this.equippable = true;
-		this.item_type = ItemType.WAND;
-		this.equip_type = ItemType.WEAPON;
+		this.item_type = ItemTypes.WAND;
+		this.equip_type = ItemTypes.WEAPON;
 		this.charges = tCharges;
 		this.spell = parent.getSpell(spell);
 
@@ -56,8 +54,8 @@ public class Wand extends Item implements Usable<Wand>
 		super(tempDBREF, tempName, EnumSet.noneOf(ObjectFlag.class), tempDesc, tempLoc);
 		this.type = TypeFlag.ITEM;
 		this.equippable = true;
-		this.item_type = ItemType.WAND;
-		this.equip_type = ItemType.WEAPON;
+		this.item_type = ItemTypes.WAND;
+		this.equip_type = ItemTypes.WEAPON;
 		this.charges = tCharges;
 		this.spell = spell;
 		
@@ -112,15 +110,21 @@ public class Wand extends Item implements Usable<Wand>
 	}
 
 	public String toDB() {
-		String[] output = new String[8];
-		output[0] = this.getDBRef() + "";          // database reference number
-		output[1] = this.getName();                // name
-		output[2] = this.getFlagsAsString();       // flags
-		output[3] = this.getDesc();                // description
-		output[4] = this.getLocation() + "";       // location
-		output[5] = this.item_type.ordinal() + ""; // item type
-		output[6] = this.spell.getName();          // spell name
-		output[7] = this.charges + "";             // spell charges
+		String[] output = new String[10];
+		
+		output[0] = this.getDBRef() + "";         // database reference number
+		output[1] = this.getName();               // name
+		output[2] = this.getFlagsAsString();      // flags
+		output[3] = this.getDesc();               // description
+		output[4] = this.getLocation() + "";      // location
+		
+		output[5] = this.item_type.getId() + "";  // item type
+		output[6] = this.equip_type.getId() + ""; // equip type
+		output[7] = this.slot_type.getId() + "";  // slot type
+		
+		output[8] = this.spell.getName();         // spell name
+		output[9] = this.charges + "";            // spell charges
+		
 		return Utils.join(output, "#");
 	}
 

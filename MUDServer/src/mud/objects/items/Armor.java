@@ -8,6 +8,7 @@ import mud.interfaces.Wearable;
 import mud.misc.Coins;
 import mud.objects.Item;
 import mud.objects.ItemType;
+import mud.objects.ItemTypes;
 import mud.utils.Utils;
 
 /**
@@ -29,16 +30,13 @@ public class Armor extends Item implements Wearable<Armor>
 	private ArmorType armor_type;
 	
 	protected int mod = 0;                    // modifier - +0, +2, +3, +4, ... and so on
-
-	public Armor() {
-	}
 	
 	public Armor(int aMod, ArmorType armor)
 	{
 		super(-1, armor.getName().toLowerCase(), EnumSet.noneOf(ObjectFlag.class), "armor", 8);
 		this.equippable = true;
-		this.equip_type = ItemType.ARMOR;
-		this.item_type = ItemType.ARMOR;
+		this.equip_type = ItemTypes.ARMOR;
+		this.item_type = ItemTypes.ARMOR;
 		
 		//this.mod = aMod;
 		this.mod = 0;
@@ -51,8 +49,8 @@ public class Armor extends Item implements Wearable<Armor>
 	{
 		super(dbref, armor.getName().toLowerCase(), EnumSet.noneOf(ObjectFlag.class), "armor", 8);
 		this.equippable = true;
-		this.equip_type = ItemType.ARMOR;
-		this.item_type = ItemType.ARMOR;
+		this.equip_type = ItemTypes.ARMOR;
+		this.item_type = ItemTypes.ARMOR;
 		
 		//this.mod = aMod;
 		this.mod = 0;
@@ -90,12 +88,12 @@ public class Armor extends Item implements Wearable<Armor>
 	{
 		super(wDBREF, wName, EnumSet.noneOf(ObjectFlag.class), wDesc, wLoc);
 		this.equippable = true;
-		this.equip_type = ItemType.ARMOR;
+		this.equip_type = ItemTypes.ARMOR;
 		
 		//this.mod = aMod;
 		this.mod = 0;
 		
-		this.item_type = ItemType.ARMOR;
+		this.item_type = ItemTypes.ARMOR;
 		this.armor_type = armor;
 		
 		this.weight = armor.getWeight();
@@ -133,15 +131,21 @@ public class Armor extends Item implements Wearable<Armor>
 	
 	@Override
 	public String toDB() {
-		String[] output = new String[8];
-		output[0] = this.getDBRef() + "";          // database reference number
-		output[1] = this.getName();                // name
-		output[2] = this.getFlagsAsString();       // flags
-		output[3] = this.getDesc();                // description
-		output[4] = this.getLocation() + "";       // location
-		output[5] = this.item_type.ordinal() + ""; // item type
-		output[6] = this.armor_type.ordinal() + "";     // armor type
-		output[7] = this.mod + "";                 // modifier
+		String[] output = new String[10];
+		
+		output[0] = this.getDBRef() + "";           // database reference number
+		output[1] = this.getName();                 // name
+		output[2] = this.getFlagsAsString();        // flags
+		output[3] = this.getDesc();                 // description
+		output[4] = this.getLocation() + "";        // location
+		
+		output[5] = this.item_type.getId() + "";    // item type
+		output[6] = this.equip_type.getId() + "";   // equip type
+		output[7] = this.slot_type.getId() + "";    // slot type
+		
+		output[8] = this.armor_type.ordinal() + ""; // armor type
+		output[9] = this.mod + "";                  // modifier
+		
 		return Utils.join(output, "#");
 	}
 	

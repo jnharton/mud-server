@@ -2,6 +2,7 @@ package mud.commands;
 
 import java.util.List;
 
+import mud.Command;
 import mud.Constants;
 import mud.MUDObject;
 import mud.MUDServer;
@@ -99,7 +100,7 @@ public class AttackCommand extends Command {
 							int criticalCheckRoll = Utils.roll(1, 20);
 							boolean criticalHit = criticalCheckRoll >= wt.getCritMin() && criticalCheckRoll <= wt.getCritMax() ? true : false;
 
-							int damage = calculateDamage(wt, criticalHit);
+							int damage = calculateDamage(weapon, criticalHit);
 
 							// tell us what 
 							if( damage <= 1 ) {
@@ -199,15 +200,25 @@ public class AttackCommand extends Command {
 		return Constants.USER;
 	}
 
-	public int calculateDamage(final WeaponType wType, final boolean critical) {
-		String damageRoll = wType.getDamage();
-
-		if (critical) {
-			return Utils.roll(damageRoll) * wType.getCritical();
+	public int calculateDamage(final Weapon weapon, final boolean critical) {
+		if( weapon == null ) {
+			return 1;
 		}
 		else {
-			return Utils.roll(damageRoll);
-		}		
+			final WeaponType wt = weapon.getWeaponType();
+
+			if(wt != null ) {
+				String damageRoll = wt.getDamage();
+
+				if (critical) {
+					return Utils.roll(damageRoll) * wt.getCritical();
+				}
+				else {
+					return Utils.roll(damageRoll);
+				}
+			}
+			else return weapon.damage;
+		}
 	}
 
 	public boolean canAttack(MUDObject target) {
@@ -232,7 +243,7 @@ public class AttackCommand extends Command {
 			return true;
 		}
 		else { // compare to AC of target
-			return roll > 10;
+			return roll > 5;
 		}
 	}
 }

@@ -19,6 +19,7 @@ package mud.misc;
 
 import mud.objects.Item;
 import mud.objects.ItemType;
+import mud.objects.ItemTypes;
 import mud.objects.items.Clothing;
 import mud.objects.items.ClothingType;
 
@@ -63,7 +64,7 @@ public class Slot {
 	public Slot(final SlotType slotType, final ClothingType clothingType) {
 		//this(slotTypes, clothingType, null);
 		this.slotType = slotType;
-		this.itemType = ItemType.CLOTHING;
+		this.itemType = ItemTypes.CLOTHING;
 		this.clothingType = clothingType;
 		
 		this.item = null;
@@ -119,12 +120,16 @@ public class Slot {
 		this.description = newDescription;
 	}
 	
+	public SlotType getSlotType() {
+		return this.slotType;
+	}
+	
 	/**
 	 * Tell us what type of item can go in the slot.
 	 * 
 	 * @return a string indicating the item type that fits in the slot
 	 */
-	public ItemType getType() {
+	public ItemType getItemType() {
 		return this.itemType;
 	}
 	
@@ -135,10 +140,6 @@ public class Slot {
 	 */
 	public ClothingType getCType() {
 		return this.clothingType;
-	}
-	
-	public SlotType getSlotType() {
-		return this.slotType;
 	}
 	
 	/**

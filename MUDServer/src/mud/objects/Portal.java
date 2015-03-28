@@ -78,7 +78,7 @@ public class Portal extends Exit implements EventSource, SayEventListener {
 
 	// keyed portal (default is inactive)
 	public Portal(Object pKey, int pOrigin, int pDestination) {
-		super();
+		//super();
 		
 		this.eType = ExitType.PORTAL;
 		this.pType = PortalType.STD;

@@ -1,4 +1,4 @@
-package mud.game;
+package mud.d20;
 
 /*
  * Copyright (c) 2012 Jeremy N. Harton
@@ -11,6 +11,9 @@ package mud.game;
  */
 
 import java.util.HashMap;
+
+import mud.game.PClass;
+import mud.game.Skill;
 
 public final class Skills {
 	public static final Skill APPRAISE = new Skill("Appraise", 0, "INT", new PClass[] { Classes.BARD, Classes.ROGUE });

@@ -1,4 +1,6 @@
+/.settings
 /javadoc
 /doc
 /lib
 /config notes.txt
+/.gitignore

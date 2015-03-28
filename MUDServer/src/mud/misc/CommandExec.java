@@ -22,7 +22,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import mud.MUDServer;
 import mud.misc.CMD.Status;
 import mud.net.Client;
-import mud.net.Server;
 
 /**
  * A class which implements the Runnable interface as a means of
@@ -34,28 +33,26 @@ import mud.net.Server;
  *
  */
 public class CommandExec implements Runnable {
-
-	private Server parent;
-	private MUDServer parent1;
+	private MUDServer parent;
 	private ConcurrentLinkedQueue<CMD> cmdQueue;
 	private int sleepTime = 500; // 250ms, 0.25s
 	
 	private CMD newCmd;
 
-	public CommandExec(Server parent, MUDServer parent1, ConcurrentLinkedQueue<CMD> cmdQueue) {
+	public CommandExec(MUDServer parent, ConcurrentLinkedQueue<CMD> cmdQueue) {
 		this.parent = parent;
-		this.parent1 = parent1;
 		this.cmdQueue = cmdQueue;
 	}
 
 	@Override
 	public void run() {
-		while ( parent1.isRunning() ) {
+		while ( parent.isRunning() ) {
 			if (!this.cmdQueue.isEmpty()) {
 				try {
 					newCmd = this.cmdQueue.poll();
 					
-					newCmd.status = CMD.Status.ACTIVE; // mark command as being processed 
+					// should it be set to WAITING before it's put in the queue in the first place?
+					newCmd.status = CMD.Status.WAITING;
 					
 					// parse out stored data
 					final String command = newCmd.getCmdString();
@@ -63,18 +60,22 @@ public class CommandExec implements Runnable {
 					
 					// verify that client is still connected
 					if( !client.isRunning() ) {
-						return;
+						// was return, but we don't want to exit the command queue thread altogether b/c of one missing client
+						continue;
 					}
+					
+					newCmd.status = CMD.Status.ACTIVE; // mark command as being processed
 					
 					// try to capture errors
 					try {
 						// handle command permissions
-						if ( parent1.checkAccess( parent1.getPlayer(client), newCmd.getPermissions() ) )
+						if ( parent.checkAccess( parent.getPlayer(client), newCmd.getPermissions() ) )
 						{
 							// interpret command
-							parent1.cmd(command, client);
+							parent.cmd(command, client);
 						}
 						else {
+							// TODO write "error" to player?
 							System.out.println("Insufficient Access Permissions");
 						}
 					}
@@ -87,14 +88,15 @@ public class CommandExec implements Runnable {
 					// clear the processed command
 					newCmd = null;
 					
-					if ( parent1.loginCheck( client ) ) {
-						parent1.prompt(client); // buggy, especially when you're not logged on yet
+					if ( parent.loginCheck( client ) ) {
+						parent.prompt(client); // buggy, especially when you're not logged on yet
 					}
 					
 					// if the queue isn't empty, print out a list of the unresolved commands
 					if (!this.cmdQueue.isEmpty()) {
 						System.out.println("Queue");
 						System.out.println("------------------------------");
+						
 						for (final CMD c : this.cmdQueue) {
 							System.out.println(c.getCmdString().trim());
 						}
@@ -104,14 +106,20 @@ public class CommandExec implements Runnable {
 					Thread.sleep(sleepTime);
 				}
 				catch (InterruptedException ie) {
-					// if interrupted when we are beginning to process command
+					// if interrupted when we are processing a command
 					System.out.println("Command Execution: Interrupted!");
+					
 					if (newCmd != null) {
-						// if the command is still waiting
+						
+						// if the command is still waiting (i.e. we never got to try to execute it)
 						if (newCmd.status == Status.WAITING) {
 							this.cmdQueue.add(newCmd); // put it back into the queue
-							newCmd = null;             // null our reference to it
 						}
+						else {
+							parent.notify(parent.getPlayer(newCmd.getClient()), "Error: Failed Command Execution!");
+						}
+						
+						newCmd = null; // null our reference to it
 					}
 					ie.printStackTrace();
 				}

@@ -612,6 +612,7 @@ public final class Utils {
 		try {
 			return Integer.parseInt(str);
 		} catch(NumberFormatException nfe) {
+			System.out.println(""); // TODO remove, for testing purposes
 			System.out.println("--- Stack Trace ---");
 			nfe.printStackTrace();
 			return alt;
@@ -954,4 +955,31 @@ public final class Utils {
 		final ArrayList<String> lines = new ArrayList<String>(Arrays.asList(Utils.loadStrings(filename)));
 		return lines.subList(start, end);
 	}
+	
+	public static void handle_newline_in_word(final String word, final Tuple<String, String> temp) {
+		// $n or &n?
+
+		// newline check
+		boolean nl_begin = word.startsWith("&n");
+		boolean nl_middle = word.contains("&n");
+		boolean nl_end = word.endsWith("&n");
+
+		if(nl_begin) {
+			temp.one = "&n";
+			temp.two = word.substring( word.indexOf("&n") + 2 );
+		}
+		else if(nl_middle) {
+			temp.one = word.substring(0, word.indexOf("&n"));
+			temp.two = word.substring(word.indexOf("&n"), word.length());
+		}
+		else if(nl_end) {
+			temp.one = word.substring(0, word.indexOf("&n"));
+			temp.two = "&n";
+		}
+		else {
+			temp.one = word;
+			temp.two = "";
+		}
+	}
+
 }

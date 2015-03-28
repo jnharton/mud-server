@@ -60,8 +60,9 @@ public class Box extends Thing implements Closeable, Lockable<Item>, Storage<Ite
 		thing_type = ThingType.CONTAINER;
 	}
 	
-	public Box(int tempDBRef, String tempName, String tempFlags, String tempDesc, int tempLoc) {
-	}
+	// object loading constructor?
+	/*public Box(int tempDBRef, String tempName, String tempFlags, String tempDesc, int tempLoc) {
+	}*/
 	
 	@Override
 	public void setKey(Item key) {

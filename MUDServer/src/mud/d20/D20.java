@@ -1,14 +1,14 @@
-package mud;
+package mud.d20;
 
 import java.util.HashMap;
 
 import mud.game.Ability;
 import mud.game.PClass;
+import mud.game.Race;
 import mud.game.Skill;
-
 import mud.interfaces.Ruleset;
 
-public final class DND35 implements Ruleset {
+public final class D20 implements Ruleset {
 	// Abilities/Primary Statistics
 	private static final Ability STRENGTH = new Ability("strength", "str", 0);
 	private static final Ability DEXTERITY = new Ability("dexterity", "dex", 1);
@@ -51,7 +51,33 @@ public final class DND35 implements Ruleset {
 	public static PClass SORCERER = new PClass("Sorcerer", "SOR", 10, "d4", false, true, "yellow");    // PC Class
 	public static PClass WARRIOR = new PClass("Warrior", "WAR", 16, "d8", true, false, "green");       // NPC Class
 	public static PClass WIZARD = new PClass("Wizard", "WIZ", 11, "d4", false, true, "yellow");        // PC Class
+	
+	public static final Race DRAGON = new Race(null, "Dragon", 0, true, true);
+	public static final Race DWARF = new Race(null, "Dwarf", 3, new Integer[]{ 0, 0, 2, 0, -2, 0 }, false);
+	public static final Race ELF = new Race(null, "Elf", 1, new Integer[]{ 0, 2, -2, 0, 0, 0 }, false);
+	public static final Race GNOME = new Race(null, "Gnome", 4, new Integer[]{ -2, 0, 2, 0, 0, 0 }, false);
+	public static final Race HALF_ELF = new Race(null, "Half-Elf", 6, true);
+	public static final Race HALF_ORC = new Race(null, "Half-Orc", 10, new Integer[]{ 2, 0, 0, -2, -2, 0 }, true);
+	public static final Race HALFLING = new Race(null, "Halfling", 11, true);
+	public static final Race HUMAN = new Race(null, "Human", 2, false);
+	public static final Race ORC = new Race(null, "Orc", 5, false);
+	public static final Race KOBOLD = new Race(null, "Kobold", 7, new Integer[] { -4, 2, -2, 0, 0, 0 } , true);
+	//public static final Race NONE = new Race(null, "None", 8, true);
+	public static final Race UNKNOWN = new Race(null, "Unknown", 9, true);
 
+	/*
+	 * Strength
+	 * Dexterity
+	 * Constitution
+	 * Intelligence
+	 * Charisma
+	 * Wisdom
+	 */
+	
+	static private final Race[] races = {
+		DRAGON, ELF, HUMAN, DWARF, GNOME, ORC, HALF_ELF, KOBOLD, /*NONE,*/ UNKNOWN, HALF_ORC, HALFLING
+	};
+	
 	// green - npc class
 	// yellow - spell caster
 	// red - melee/ranged fighting
@@ -76,7 +102,7 @@ public final class DND35 implements Ruleset {
 		}
 	};
 
-	private static final PClass[] myValues = {
+	private static final PClass[] classes = {
 		NONE,
 		BARBARIAN, BARD, CLERIC, DRUID, FIGHTER, MONK, PALADIN, RANGER, ROGUE, SORCERER, WIZARD,
 		ADEPT, ARISTOCRAT, COMMONER, EXPERT, WARRIOR
@@ -185,14 +211,14 @@ public final class DND35 implements Ruleset {
 		}
 	};
 
-	private static DND35 instance;
+	private static D20 instance;
 
-	private DND35() {
+	private D20() {
 	}
 
-	public static DND35 getInstance() {
+	public static D20 getInstance() {
 		if( instance == null ) {
-			instance = new DND35();
+			instance = new D20();
 		}
 
 		return instance;
@@ -202,8 +228,9 @@ public final class DND35 implements Ruleset {
 	public String getName() {
 		return "D20";
 	}
-
-	// Abilities Methods
+	
+	/* Abilities */
+	
 	@Override
 	public Ability getAbility(int id) {
 		return abilities[id];
@@ -222,13 +249,14 @@ public final class DND35 implements Ruleset {
 
 	@Override
 	public Ability[] getAbilities() {
-		return DND35.abilities;
+		return D20.abilities;
 	}
-
-	// Classes Methods
+	
+	/* Classes */
+	
 	@Override
 	public PClass getClass(int id) {
-		return myValues[id];
+		return classes[id];
 	}
 	
 	@Override
@@ -238,10 +266,11 @@ public final class DND35 implements Ruleset {
 	
 	@Override
 	public PClass[] getClasses() {
-		return myValues;
+		return classes;
 	}
-
-	// Skills Methods
+	
+	/* Skills */
+	
 	@Override
 	public Skill getSkill(int id) {
 		for(final Skill s : skillMap.values()) {
@@ -263,5 +292,21 @@ public final class DND35 implements Ruleset {
 		skillMap.values().toArray(skills);
 
 		return skills; 
+	}
+	
+	/* Races */
+	
+	public static Race getRace(int id) {
+		return races[id];
+	}
+	
+	public static Race getRace(String name) {
+		for(int r = 0; r < races.length; r++) {
+			if( races[r].getName().equalsIgnoreCase(name) ) {
+				return races[r];
+			}
+		}
+		
+		return null;
 	}
 }

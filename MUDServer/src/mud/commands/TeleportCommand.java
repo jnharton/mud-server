@@ -1,5 +1,6 @@
 package mud.commands;
 
+import mud.Command;
 import mud.Constants;
 import mud.MUDObject;
 import mud.MUDServer;
