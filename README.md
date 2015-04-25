@@ -3,6 +3,8 @@ mud-server
 
 A MUD server written in Java which aspires to be something of a general purpose framework for such games. For example, I have adopted the MUSH/MUCK convention of allowing exit names to be arbitrary text (rather than n/s/e/w), although there may be some support for reliably using the latter in the future (nothing explicity prevents creating exits with those names). Also, there is a fairly limited internal scripting system highly reminiscent of MPI from Fuzzball MUCK (http://www.belfry.com/fuzzball/mpihelp.html). Which is to say that it allows setting, modifying, and checking properties on each object. In general, though the code sticks closer to the hardcode end (at the moment) regard game systems and mechanics.
 
+Incidentally, with almost no exceptions, this code does not, at this time, rely on any external libraries other than the standard java libraries.
+
 ## Status
 
 This code is very much in an unfinished state, despite the fact that it is fairly stable and usable. As such, there may be radical shifts (unannounced?) in the inner workings in the future. I will attempt to make any such shifts known in the internal wiki on here. It would be wise to regularly backup the database if you use this code as, despite the above, it t may have occasional stability problems and attempting to switch to a newer version may result in corrupted data and/or the server may utilize an alternate approach for data storage.
