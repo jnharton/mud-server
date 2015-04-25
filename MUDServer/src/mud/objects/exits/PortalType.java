@@ -1,4 +1,4 @@
-package mud.objects;
+package mud.objects.exits;
 
 /*
  * Copyright (c) 2012 Jeremy N. Harton

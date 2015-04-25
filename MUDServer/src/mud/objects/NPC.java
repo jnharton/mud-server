@@ -17,6 +17,7 @@ import mud.d20.Skills;
 import mud.game.Ability;
 import mud.game.Skill;
 import mud.misc.Coins;
+import mud.misc.Direction;
 import mud.misc.Editors;
 import mud.misc.Slot;
 import mud.misc.SlotType;
@@ -25,7 +26,6 @@ import mud.objects.items.ClothingType;
 import mud.quest.Quest;
 import mud.quest.Task;
 import mud.quest.TaskType;
-import mud.utils.Direction;
 import mud.utils.Message;
 import mud.utils.Utils;
 
@@ -61,7 +61,7 @@ public class NPC extends Player implements InteractiveI
 	
 	private ArrayList<Quest> questList = new ArrayList<Quest>();
 	
-	private Direction lastDir = Direction.NONE;
+	//private Direction lastDir = Direction.NONE;
 
 	// blank constructor for sub classes
 	/*public NPC() {
@@ -285,6 +285,8 @@ public class NPC extends Player implements InteractiveI
 		}
 	}
 	
+	// TODO what is this function supposed to do for us
+	/*
 	public Direction getDirection() {
 		ArrayList<Direction> directions = (ArrayList<Direction>) Utils.mkList(
 				Direction.NORTH,     Direction.SOUTH,
@@ -305,5 +307,5 @@ public class NPC extends Player implements InteractiveI
 			lastDir = temp;
 			return temp;
 		}
-	}
+	}*/
 }

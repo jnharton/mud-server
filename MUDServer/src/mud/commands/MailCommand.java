@@ -62,6 +62,9 @@ public class MailCommand extends Command {
 			// basically we get the mailbox object and then give information for each
 			// piece of mail
 			// should these box headers be configurable either on the server end or the client end?
+			
+			// TODO should I convert to using writeln and building my strings before sending
+			
 			client.write("+---------------------------------------------------------------------------+\n");
 			client.write("| Mailbox                                                                   |\n");
 			client.write("+-------+------+------------+----------------------------------+------------+\n");
@@ -78,7 +81,6 @@ public class MailCommand extends Command {
 				client.write(" | ");
 				client.write(Utils.padRight(mail.getMessage(), shortMSG).substring(0, shortMSG));
 				client.write(" | ");
-				//client.write("??/??/????");
 				client.write(mail.getDate().toString());
 				client.write(" |");
 				client.write("\n");
@@ -110,7 +112,6 @@ public class MailCommand extends Command {
 			final int msg = Utils.toInt(arg, -1);
 
 			if (msg > -1 && msg < player.getMailBox().numMessages()) {
-				//client.write("Checking Mail... " + msg + "\n");
 				send("Checking Mail... " + msg, client);
 
 				Mail mail = player.getMailBox().get(msg);
@@ -124,29 +125,20 @@ public class MailCommand extends Command {
 
 				if (mail.isUnread()) {
 					mail.markRead();
-					//client.write("< mail marked as read >\n");
 					send("< mail marked as read >", client);
 				}
 			}
 			else {
-				//client.write("No such existing message!\n");
 				send("No such existing message!", client);
 			}
 		}
 		else {
-			//client.write("Checking for unread messages...\n");
 			send("Checking for unread messages...", client);
 
 			final int messages = player.getMailBox().numUnreadMessages();
 
-			if (messages == 0) {
-				//client.write("You have no unread messages.\n");
-				send("You have no unread messages.", client);
-			}
-			else {
-				//client.write("You have " + String.valueOf(messages) + " unread messages.\n");
-				send("You have " + String.valueOf(messages) + " unread messages.", client);
-			}
+			if (messages == 0)  send("You have no unread messages.", client);
+			else                send("You have " + String.valueOf(messages) + " unread messages.", client);
 		}
 	}
 

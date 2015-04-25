@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import mud.misc.Faction;
+import mud.misc.SlotType;
 import mud.objects.Item;
 import mud.objects.ItemType;
 import mud.objects.Player;
@@ -21,9 +22,15 @@ public interface GameModule {
 	
 	public void PCInit(Player player);
 	
+	public boolean hasClasses();
+	
 	public List<Faction> getFactions();
 	
 	public Hashtable<String, ItemType> getItemTypes();
+	public Hashtable<String, SlotType> getSlotTypes();
+	
+	public ItemType getItemType(final Integer typeId);
+	public SlotType getSlotType(final Integer typeId);
 	
 	public Map<String, Item> getItemPrototypes();
 	public Map<String, Thing> getThingPrototypes();

@@ -1,5 +1,7 @@
 package mud.misc;
 
+import mud.objects.ItemType;
+
 public class SlotTypes {
 	public static SlotType NONE   = new SlotType("None",    0);
 	public static SlotType HEAD   = new SlotType("Head",    1);
@@ -15,4 +17,38 @@ public class SlotTypes {
 	public static SlotType WAIST  = new SlotType("Waist",  11);
 	public static SlotType LEGS   = new SlotType("Legs",   12);
 	public static SlotType FEET   = new SlotType("Feet",   13);
+	
+	private SlotTypes() {}
+	
+	private static SlotType[] types = {
+		NONE,  HEAD,  NECK,   BODY,  CHEST, BACK, ARMS,
+		LHAND, RHAND, FINGER, WAIST, LEGS,  FEET
+	};
+	
+	public static SlotType getType(Integer typeId) {
+		// TODO fix this? does it need fixing? is it kludgy?
+		if( typeId <= types.length - 1 ) {
+			return types[typeId];
+		}
+		else return null;
+	}
+	
+	public static SlotType getType(String typeName) {
+		switch(typeName.toUpperCase()) {
+		case "NONE":      return NONE;
+		case "HEAD":      return HEAD;
+		case "NECK":      return NECK;
+		case "BODY":      return BODY;
+		case "CHEST":     return CHEST;
+		case "BACK":      return BACK;
+		case "ARMS":      return ARMS;
+		case "LHAND":     return LHAND;
+		case "RHAND":     return RHAND;
+		case "FINGER":    return FINGER;
+		case "WAIST":     return WAIST;
+		case "LEGS":      return LEGS;
+		case "FEET":      return FEET;
+		default:          return NONE;
+		}
+	}
 }

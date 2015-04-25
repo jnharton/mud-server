@@ -31,6 +31,7 @@ public interface ODBI {
 	
 	// Item
 	public Item getItem(final int dbref);
+	public Item getItem(final int roomId, final String name);
 	
 	public List<Item> getItems();
 	public Map<Item, Player> getItemsHeld();

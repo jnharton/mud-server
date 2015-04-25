@@ -1,0 +1,12 @@
+@find
+@FIND
+
+Syntax: 'find [-<parameter>]'
+
+Parameters:
+
+p   players (ONLY!)
+n   npcs (ONLY!)
+r   rooms  (ONLY!)
+
+Last Updated: April 21st, 2015

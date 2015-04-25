@@ -4,6 +4,9 @@ import java.util.*;
 
 import mud.objects.*;
 import mud.objects.creatures.Horse;
+import mud.objects.exits.Door;
+import mud.objects.exits.Portal;
+import mud.objects.exits.PortalType;
 import mud.objects.items.*;
 import mud.objects.npcs.Innkeeper;
 import mud.objects.npcs.Merchant;
@@ -12,9 +15,12 @@ import mud.objects.Item;
 import mud.utils.Utils;
 import mud.d20.Classes;
 import mud.d20.Races;
+import mud.interfaces.GameModule;
 import mud.interfaces.Ruleset;
 import mud.magic.Spell;
 import mud.misc.Coins;
+import mud.misc.SlotType;
+import mud.misc.SlotTypes;
 import mud.misc.Zone;
 
 /*
@@ -72,6 +78,9 @@ public class ObjectLoader {
 				String[] attr = oInfo.split("#");
 				
 				oDBRef = Integer.parseInt(attr[0]);
+				
+				System.out.println(oDBRef);
+				
 				oName = attr[1];
 				oTypeFlag = attr[2].charAt(0);
 				oFlags = attr[2].substring(1, attr[2].length());
@@ -298,10 +307,8 @@ public class ObjectLoader {
 
 					room.setRoomType(RoomType.fromLetter(roomType.charAt(0)));
 
-					// set room dimensions
-					room.x = dimensions[0];
-					room.y = dimensions[1];
-					room.z = dimensions[2];
+					// set room dimensions (x, y, z)
+					room.setDimensions(dimensions[0], dimensions[1], dimensions[2]);
 
 					// set zone
 					if (zoneId != -1) {
@@ -380,8 +387,7 @@ public class ObjectLoader {
 
 					objectDB.add(Null);
 
-					log.debug("log.debug (db entry): " + Null.toDB()
-							+ " [Found NULLObject]", 2);
+					log.debug("log.debug (db entry): " + Null.toDB() + " [Found NULLObject]", 2);
 				}
 			}
 			catch (ConcurrentModificationException cme)   { cme.printStackTrace();    }
@@ -557,18 +563,16 @@ public class ObjectLoader {
 	final static private Item loadItem(final String itemData) {
 		String[] attr = itemData.split("#");
 		
+		System.out.println("");
+		System.out.println("debug(itemData): " + itemData);
+		System.out.println("");
+		
 		Integer oDBRef = Integer.parseInt(attr[0]);
 		String oName = attr[1];
 		Character oTypeFlag = attr[2].charAt(0);
 		String oFlags = attr[2].substring(1, attr[2].length());
 		String oDesc = attr[3];
 		Integer oLocation = Integer.parseInt(attr[4]);
-
-		/*log.debug("Database Reference Number: " + oDBRef);
-		log.debug("Name: " + oName);
-		log.debug("Flags: " + oFlags);
-		log.debug("Description: " + oDesc);
-		log.debug("Location: " + oLocation);*/
 		
 		// TODO equipType, slotType are new, work them in (3-17-2015)
 		int itemType  = Utils.toInt(attr[5], 0); // get the type of item it should be
@@ -578,6 +582,8 @@ public class ObjectLoader {
 		// TODO fix getting an item type in the loader to use module/etc item types as well
 		//ItemType it = ItemTypes.getType(itemType);
 		ItemType it = getItemType(itemType);
+		
+		SlotType st = getSlotType(slotType);
 
 		/*ItemType itemType = ItemTypes.getType(typeId);
 
@@ -592,9 +598,25 @@ public class ObjectLoader {
 		}
 
 		return itemType;*/
-
-		if( it == null ) {
-			return parent.getGameModule().loadItem(itemData);
+		
+		System.out.println("ItemType ID: " + itemType);
+		System.out.println("SlotType ID: " + slotType);
+		
+		if( it.getId() >= 16 || it == null ) {
+			System.out.println("ItemType ID: " + itemType);
+			System.out.println("");
+			
+			final Item item = parent.getGameModule().loadItem(itemData);
+			
+			System.out.println("Item DBRef: " + item.getDBRef());
+			System.out.println("");
+			
+			return item;
+		}
+		
+		if( st != null ) {
+			System.out.println("SlotType: " + st.getName());
+			System.out.println("");
 		}
 
 		if (it == ItemTypes.CLOTHING) { // Clothing
@@ -605,7 +627,7 @@ public class ObjectLoader {
 			clothing.setItemType(it);
 
 			//clothing.setEquipType(ItemTypes.getType(equipType);
-			//clothing.setSlotType( );
+			clothing.setSlotType(st);
 
 			return clothing;
 		}
@@ -625,7 +647,9 @@ public class ObjectLoader {
 			int mod = Integer.parseInt(attr[9]);
 
 			Weapon weapon = new Weapon(oDBRef, oName, oDesc, oLocation, mod, Handed.ONE, WeaponTypes.getWeaponType(weaponType), 15.0);
+			
 			weapon.setItemType(it);
+			weapon.setSlotType(st);
 			
 			return weapon;
 		}
@@ -634,7 +658,9 @@ public class ObjectLoader {
 			int mod = Integer.parseInt(attr[9]);
 
 			Armor armor = new Armor(oName, oDesc, (int) oLocation, (int) oDBRef, mod, ArmorType.values()[armorType]);
+			
 			armor.setItemType(it);
+			armor.setSlotType(st);
 			
 			return armor;
 		}
@@ -718,6 +744,24 @@ public class ObjectLoader {
 	}
 	
 	private static ItemType getItemType(final int typeId) {
-		return ItemTypes.getType(typeId);
+		final GameModule module = parent.getGameModule();
+		
+		if( module != null && typeId >= 16 ) {
+			return module.getItemType(typeId);
+		}
+		else {
+			return ItemTypes.getType(typeId);
+		}
+	}
+	
+	private static SlotType getSlotType(final int typeId) {
+		final GameModule module = parent.getGameModule();
+		
+		if( module != null) {
+			return module.getSlotType(typeId);
+		}
+		else {
+			return SlotTypes.getType(typeId);
+		}
 	}
 }

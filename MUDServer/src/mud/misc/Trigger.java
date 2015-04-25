@@ -38,11 +38,4 @@ public class Trigger {
 	public void setDelay(int newDelay) {
 		this.delay = newDelay;
 	}
-	
-	public String exec() {
-		/*if( !(this.script.contains("{") || this.script.contains("}")) ) {
-			return this.script;
-		}*/
-		return this.script.getText();
-	}
 }

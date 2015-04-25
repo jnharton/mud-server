@@ -141,15 +141,19 @@ public class Player extends MUDObject implements Mobile
 	protected PClass pclass;                       // Class
 	protected Alignments alignment;                // Alignment
 	protected Handed handed = Handed.RIGHT;        // which hand is dominant (irr. but enum encompasses that and weapons hand req.)
+	
 	protected int hp;                              // Hit Points
 	protected int temphp;                          // Temporary Hit Points
 	protected int totalhp;                         // Total Hit Points
 	protected int mana;                            // Mana
 	protected int totalmana;                       // Total Mana
 	protected int speed;                           // Movement Speed (largely pointless without a coordinate system)
+	
 	protected int capacity;                        // Carrying Capacity (pounds/lbs)
+	
 	protected int level;                           // Level
 	protected int xp;                              // Experience
+	
 	protected Coins money;                         // Money (D&D, MUD)
 
 	private Profession prof1 = null;                          // Active Profession (One) **UNUSED
@@ -173,6 +177,8 @@ public class Player extends MUDObject implements Mobile
 
 	protected Faction faction;
 	protected Map<Faction, Integer> reputation;
+	
+	protected Hashtable<String, Boolean> discovered_locations = new Hashtable<String, Boolean>();
 
 	// movement
 	protected boolean moving = false;
@@ -400,6 +406,7 @@ public class Player extends MUDObject implements Mobile
 		addConfigOption("compact-editor",       true);  // compact the output of editor's 'show' commands (default: true)
 		addConfigOption("hud_enabled",          false); // is the "heads-up display" that accompanies the room description enabled (default: false)
 		addConfigOption("notify_newmail",       false); // notify the player on receipt of new mail? (default: false)
+		addConfigOption("silly_messages",       false); // enable sillier/more humorous error messages where used (default: false)
 
 		// instantiate name reference table
 		this.nameRef = new HashMap<String, Integer>(10, 0.75f); // start out assuming 10 name references
@@ -408,8 +415,9 @@ public class Player extends MUDObject implements Mobile
 		Arrays.fill(statMod, 0);
 		Arrays.fill(skillMod, 0);
 
+		// TODO consider this. I shouldn't mark newly created players as no new since they haven't generated their character yet..
 		// mark player as new
-		isNew = true;
+		//isNew = true;
 	}
 
 	/**
@@ -559,8 +567,9 @@ public class Player extends MUDObject implements Mobile
 		addConfigOption("show-weather", true);          // show weather information in room descriptions (default: true)
 		addConfigOption("tagged-chat", false);          // "tag" the beginning chat lines with CHAT for the purpose of triggers, etc (default: false)
 		addConfigOption("compact-editor", true);        // compact the output of editor's 'show' commands (default: true)
-		addConfigOption("hud_enabled", false);           // is the "heads-up display" that accompanies the room description enabled (default: false)
+		addConfigOption("hud_enabled", false);          // is the "heads-up display" that accompanies the room description enabled (default: false)
 		addConfigOption("notify_newmail", false);       // notify the player on receipt of new mail? (default: false)
+		addConfigOption("silly_messages", false);       // enable sillier/more humorous error messages where used (default: false)
 
 		// instantiate name reference table
 		this.nameRef = new HashMap<String, Integer>(10, 0.75f); // start out assuming 10 name references
@@ -957,6 +966,16 @@ public class Player extends MUDObject implements Mobile
 			return slots.get(key);
 		}
 
+		return null;
+	}
+	
+	public Slot getSlot(final Item item) {
+		for(final Slot slot : getSlots().values()) {
+			if( slot.isType(item.getItemType()) && slot.getSlotType().equals(item.getSlotType()) ) {
+				return slot;
+			}
+		}
+		
 		return null;
 	}
 

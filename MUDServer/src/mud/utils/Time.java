@@ -62,14 +62,16 @@ public class Time {
 	 * @return
 	 */
 	public static Time fromString(String timeString) {
-		String[] data = timeString.split(":");
-
-		if( data.length >= 3 ) {
-			int hour = Utils.toInt(data[0], -1);
-			int minute = Utils.toInt(data[1], -1);
-			int second = Utils.toInt(data[2], -1);
-
-			return new Time(hour, minute, second);
+		//String[] data = timeString.split(":");
+		int[] timeData = Utils.stringsToInts(timeString.split(":"));
+		
+		if( timeData.length >= 3 ) {
+			//int hour = Utils.toInt(data[0], -1);
+			//int minute = Utils.toInt(data[1], -1);
+			//int second = Utils.toInt(data[2], -1);
+			
+			return new Time(timeData[0], timeData[1], timeData[2]);
+			//return new Time(hour, minute, second);
 		}
 
 		return null;

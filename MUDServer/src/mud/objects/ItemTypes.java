@@ -31,8 +31,8 @@ public final class ItemTypes {
 	};
 	
 	public static ItemType getType(Integer typeId) {
-		// TODO fix this? does it need fixing?
-		if( typeId < types.length ) {
+		// TODO fix this? does it need fixing? is it kludgy?
+		if( typeId <= types.length - 1 ) {
 			return types[typeId];
 		}
 		else return null;

@@ -15,6 +15,7 @@ import mud.objects.Player;
 import mud.objects.Thing;
 import mud.objects.items.Weapon;
 import mud.objects.items.WeaponType;
+import mud.objects.items.WeaponTypes;
 import mud.utils.Utils;
 
 /*
@@ -78,8 +79,10 @@ public class AttackCommand extends Command {
 
 					if(weapon != null) {
 						// get our weapon type
-						wt = weapon.getWeaponType();
-						//wt = WeaponType.LONGSWORD;
+						//wt = weapon.getWeaponType();
+						
+						// TODO resolve this somewher
+						wt = WeaponTypes.LONGSWORD;
 					}
 
 					// check range

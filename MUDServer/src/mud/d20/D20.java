@@ -2,6 +2,8 @@ package mud.d20;
 
 import java.util.HashMap;
 
+import mud.fallout.SpecialRuleset;
+import mud.foe.FOESpecial;
 import mud.game.Ability;
 import mud.game.PClass;
 import mud.game.Race;
@@ -213,7 +215,7 @@ public final class D20 implements Ruleset {
 
 	private static D20 instance;
 
-	private D20() {
+	public D20() {
 	}
 
 	public static D20 getInstance() {
@@ -222,6 +224,15 @@ public final class D20 implements Ruleset {
 		}
 
 		return instance;
+	}
+	
+	public Integer getVersion() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	public Ruleset getRuleset() {
+		return D20.getInstance();
 	}
 
 	@Override
@@ -287,11 +298,7 @@ public final class D20 implements Ruleset {
 
 	@Override
 	public Skill[] getSkills() {
-		Skill[] skills = null;
-
-		skillMap.values().toArray(skills);
-
-		return skills; 
+		return skillMap.values().toArray(new Skill[0]);
 	}
 	
 	/* Races */

@@ -8,7 +8,7 @@ package mud.events;
 
 import java.util.EventObject;
 
-import mud.objects.Portal;
+import mud.objects.exits.Portal;
 
 public class PortalEvent extends EventObject {
 	private String message;

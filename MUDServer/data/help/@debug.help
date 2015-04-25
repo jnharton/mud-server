@@ -1,29 +1,34 @@
 @debug
 @DEBUG
 
-Syntax:
-
-'@debug <parameter>'
+Syntax: '@debug <parameter>'
 
 Parameters:
 
-on/off           - turn debugging on and off
-client           - tell us about the client object that represents us
-clients          - tell us about all connected clients (ip address, object name)
-colors           - output test data in different colors
-creatures        - list the creatures in the database
-dbdump           - list out the whole database (<index>: <object name> <object dbref>)
-holidays         - list the defined holidays
-listen <room id> - tell us who is listening to that room (players and npcs in the room)
-memory (mem)     - show server memory usage
-position (pos)   - tell us our position data (cartesian coordinate system)
-portals          - list all portals and their current state (active/inactive)
-seasons          - list the defined seasons
-timedata         - tell us the current real world time and in-game time
-timers           - list all current running timers
-udbnstack        - list information about unused database reference numbers
-<a number>       - change the debug level (how much and what gets sent to us)
+on/off                - turn debugging on and off
+client                - tell us about the client object that represents us
+clients               - print info on all connected clients (ip address, object name)
+colors                - test colors (print out single char in all colors)
+creatures             - list the creatures in the database
+dbdump                - list out the whole database*
+holidays              - list the defined holidays
+instanceof <#> <type> - is the specific object of the type/class specified**
+listen <room id>      - who is listening to that room (players, npcs in the room)
+memory (mem)          - show server memory usage
+position (pos)        - print our position data (cartesian coordinate system)
+portals               - print all portals and their current state (active/inactive)
+seasons               - print the defined seasons
+timedata              - print the current real world time and in-game time
+timers                - list all current running timers
+udbnstack             - list information about unused database reference numbers
+<a number>            - change the debug level (how much and what gets sent to us)
 
-Turns debug message reporting on/off and display current information about certain chunks of data.
+Turns debug message reporting on/off and display certain data (live) 
+
+*  database list format: (<index>: <object name> <object dbref>)
+** on the spot checking of the actual class/type of an object
+** ^ requires fully qualified class name
+
+! shorter forms of parameter in parentheses
 
 Last Updated: January 1, 2014

@@ -15,10 +15,12 @@ import mud.TypeFlag;
 import mud.events.EventSource;
 import mud.events.SayEvent;
 import mud.events.SayEventListener;
+import mud.misc.Direction;
 import mud.misc.Trigger;
 import mud.misc.TriggerType;
 import mud.misc.Zone;
 import mud.objects.Thing;
+import mud.objects.exits.Door;
 import mud.utils.Utils;
 import mud.weather.Weather;
 
@@ -43,6 +45,9 @@ public class Room extends MUDObject implements EventSource
 	// NON,FOR,MSH,HILL,MTN,DST,AQU,SKY?
 	public enum Terrain { NONE, FOREST, MARSH, HILLS, MOUNTAIN, DESERT, PLAINS, AQUATIC, SKY };
 	
+	public static final String DAY = "DAY";
+	public static final String NIGHT = "NIGHT";
+	
 	// NOTE: for room, location and "parent" are the same
 
 	private RoomType roomType = RoomType.NONE;                // the type of room (I = Inside, O = Outside, P = Protected, N = None)
@@ -57,15 +62,15 @@ public class Room extends MUDObject implements EventSource
 	private ArrayList<Item> items = new ArrayList<Item>();    // the objects the room contains (items)
 
 	public String music;                                      // the ambient background music for this room (filename, probably a wav file)
-	public String timeOfDay = "DAY";                          // replace this with an enum with one type per each or a hashmap string, boolean?
+	public String timeOfDay = DAY;                            // replace this with an enum with one type per each or a hashmap string, boolean?
 	// DAY or NIGHT
 
 	private Zone zone = null;                                 // the zone this room belongs to
 
 	private Integer instance_id = null;                       // instance_id, if this is the original, it should be null
 
-	public int x = 10, y = 10; // size of the room ( 10x10 default )
-	public int z = 10;         // height of room ( 10 default )
+	private int x = 10, y = 10; // size of the room ( 10x10 default )
+	private int z = 10;         // height of room ( 10 default )
 
 	private BitSet[][] tiles;
 	
@@ -78,9 +83,11 @@ public class Room extends MUDObject implements EventSource
 	{
 		triggers.put(TriggerType.onEnter, new LinkedList<Trigger>());
 		triggers.put(TriggerType.onLeave, new LinkedList<Trigger>());
-		setTrigger(TriggerType.onEnter, new Trigger("TRIGGER: enter"));
-		setTrigger(TriggerType.onLeave, new Trigger("TRIGGER: leave"));
+		setTrigger(TriggerType.onEnter, new Trigger("{tell:TRIGGER: enter,{&player}}"));
+		setTrigger(TriggerType.onLeave, new Trigger("{tell:TRIGGER: leave,{&player}}"));
 	}
+	
+	public Exit[] dirMap = new Exit[9]; // dirMap[Direction.NORTH]
 	
 	// misc note: parent == location
 
@@ -89,7 +96,9 @@ public class Room extends MUDObject implements EventSource
 	 */
 	public Room() {
 		super(-1);
+		
 		this.type = TypeFlag.ROOM;
+		
 		this.name = "room";
 		this.desc = "You see nothing.";
 		this.flags = EnumSet.of(ObjectFlag.SILENT);
@@ -109,7 +118,9 @@ public class Room extends MUDObject implements EventSource
 	public Room(Room toCopy)
 	{
 		super(toCopy.getDBRef());
+		
 		this.type = TypeFlag.ROOM;
+		
 		this.name = toCopy.getName();         // Set the name
 		this.desc = toCopy.getDesc();         // Set the description to the default
 		this.flags = toCopy.getFlags();       // Set the flags
@@ -259,6 +270,25 @@ public class Room extends MUDObject implements EventSource
 			return -1;
 		}
 	}
+	
+	public void setDimension(final String dim, final int size) {
+		if( dim.equalsIgnoreCase("x") )      this.y = size;
+		else if( dim.equalsIgnoreCase("y") ) this.y = size;
+		else if( dim.equalsIgnoreCase("z") ) this.z = size;
+	}
+	
+	public int getDimension(final String dim) {
+		if( dim.equalsIgnoreCase("x") )      return this.x;
+		else if( dim.equalsIgnoreCase("y") ) return this.y;
+		else if( dim.equalsIgnoreCase("z") ) return this.z;
+		else                                 return -1;
+	}
+	
+	public void setDimensions(int xSize, int ySize, int zSize) {
+		this.x = xSize;
+		this.y = ySize;
+		this.z = zSize;
+	}
 
 	public void setTiles(BitSet[][] newTiles) {
 		this.tiles = newTiles;
@@ -279,7 +309,8 @@ public class Room extends MUDObject implements EventSource
 	public void removeListener(Player player) {
 		listeners.remove(player);
 	}
-
+	
+	/* Say Event Stuff */
 	public synchronized void addSayEventListener(SayEventListener listener)  {
 		_listeners.add(listener);
 	}
@@ -292,7 +323,7 @@ public class Room extends MUDObject implements EventSource
 	 * 
 	 * @param item
 	 */
-	public void addItem(Item item) {
+	public void addItem(final Item item) {
 		this.items.add(item);
 	}
 	
@@ -301,18 +332,20 @@ public class Room extends MUDObject implements EventSource
 	 * 
 	 * @param items List of Item(s)
 	 */
-	public void addItems(List<Item> items) {
-		for(Item item : items) {
-			addItem(item);
-		}
+	public void addItems(final List<Item> items) {
+		this.items.addAll(items);
 	}
 	
 	/**
 	 * Remove an Item from the room.
 	 * @param item
 	 */
-	public void removeItem(Item item) {
+	public void removeItem(final Item item) {
 		this.items.remove(item);
+	}
+	
+	public void removeItems(final List<Item> items) {
+		this.items.removeAll(items);
 	}
 	
 	/**
@@ -329,7 +362,7 @@ public class Room extends MUDObject implements EventSource
 	 * 
 	 * @param thing the Thing to add
 	 */
-	public void addThing(Thing thing) {
+	public void addThing(final Thing thing) {
 		this.things.add(thing);
 	}
 	
@@ -338,10 +371,8 @@ public class Room extends MUDObject implements EventSource
 	 * 
 	 * @param things List of Thing(s) to add
 	 */
-	public void addThings(List<Thing> things) {
-		for(Thing thing : things) {
-			addThing(thing);
-		}
+	public void addThings(final List<Thing> things) {
+		this.things.addAll( things );
 	}
 	
 	/**
@@ -349,14 +380,19 @@ public class Room extends MUDObject implements EventSource
 	 * 
 	 * @param thing
 	 */
-	public void removeThing(Thing thing) {
+	public void removeThing(final Thing thing) {
 		this.things.remove(thing);
+	}
+	
+	public void removeThings(final List<Thing> things) {
+		this.things.removeAll( things );
 	}
 
 	public List<Thing> getThings() {
 		return this.things;
 	}
 	
+	/* Triggers & Scripting */
 	public void setTrigger(TriggerType type, Trigger trigger) {
 		this.triggers.get(type).add(trigger);
 	}
@@ -380,6 +416,10 @@ public class Room extends MUDObject implements EventSource
 	public Zone getZone() {
 		return this.zone;
 	}
+	
+	public void setDirectionExit(final Integer direction, final Exit exit) {
+		this.dirMap[direction] = exit;
+	}
 
 	// call this method whenever you want to notify
 	//the event listeners of the particular event
@@ -387,6 +427,7 @@ public class Room extends MUDObject implements EventSource
 	public synchronized void fireEvent(String message) {
 		SayEvent event = new SayEvent(this, message);
 		Iterator<SayEventListener> iter = _listeners.iterator();
+		
 		while(iter.hasNext())  {
 			iter.next().handleSayEvent(event);
 		}

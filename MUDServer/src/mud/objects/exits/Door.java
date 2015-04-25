@@ -1,10 +1,14 @@
-package mud.objects;
+package mud.objects.exits;
 
 import java.util.EnumSet;
 
 import mud.ObjectFlag;
 import mud.TypeFlag;
 import mud.interfaces.Lockable;
+import mud.objects.Exit;
+import mud.objects.ExitType;
+import mud.objects.Item;
+import mud.objects.Player;
 import mud.utils.Utils;
 
 public class Door extends Exit implements Lockable<Item> {

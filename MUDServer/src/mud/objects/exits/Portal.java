@@ -1,8 +1,11 @@
-package mud.objects;
+package mud.objects.exits;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 
@@ -14,6 +17,10 @@ import mud.events.PortalEventListener;
 import mud.events.SayEvent;
 import mud.events.SayEventListener;
 import mud.interfaces.Lockable;
+import mud.misc.Trigger;
+import mud.misc.TriggerType;
+import mud.objects.Exit;
+import mud.objects.ExitType;
 import mud.objects.Player;
 import mud.utils.Utils;
 
@@ -62,6 +69,16 @@ public class Portal extends Exit implements EventSource, SayEventListener {
 	private static Random generator = new Random();
 	
 	private List<PortalEventListener> _listeners = new ArrayList<PortalEventListener>();
+	
+	private HashMap<TriggerType, List<Trigger>> triggers = new HashMap<TriggerType, List<Trigger>>();
+	
+	// initialize trigger lists and some basic triggers
+	{
+		enableTriggers(TriggerType.onEnterPortal);
+		enableTriggers(TriggerType.onLeavePortal);
+		setTrigger(TriggerType.onEnterPortal, new Trigger("TRIGGER: enter"));
+		setTrigger(TriggerType.onLeavePortal, new Trigger("TRIGGER: leave"));
+	}
 
 	// standard, "always open" portal (default is active)
 	public Portal(int pOrigin, int pDestination) {
@@ -293,6 +310,19 @@ public class Portal extends Exit implements EventSource, SayEventListener {
 	
 	public boolean hasKey( Player p ) {
 		return p.getInventory().contains(this.key);
+	}
+	
+	/* Triggers & Scripting */
+	public void enableTriggers(final TriggerType tType) {
+		triggers.put(tType, new LinkedList<Trigger>());
+	}
+	
+	public void setTrigger(TriggerType type, Trigger trigger) {
+		this.triggers.get(type).add(trigger);
+	}
+
+	public List<Trigger> getTriggers(TriggerType triggerType) {
+		return Collections.unmodifiableList(this.triggers.get(triggerType));
 	}
 	
 	@Override

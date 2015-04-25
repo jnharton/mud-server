@@ -27,6 +27,8 @@ public class NullObject extends MUDObject {
 	
 	public NullObject(int dbref) {
 		super(dbref);
+		
+		cleanup();
 	}
 	
 	@Override
@@ -45,6 +47,15 @@ public class NullObject extends MUDObject {
 	
 	public boolean isLocked() {
 		return this.locked;
+	}
+	
+	private void cleanup() {
+		// we don't need properties
+		this.properties = null;
+		// we don't need effects
+		this.effects = null;
+		// we don't need a position
+		this.pos = null;
 	}
 	
 	@Override

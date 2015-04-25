@@ -47,19 +47,14 @@ public abstract class MUDObject {
 	protected int owner = -1; // who owns the object (dbref of owner)
 	
 	/* object data - related to game (persistent) */
-	protected LinkedHashMap<String, Object> properties = new LinkedHashMap<String, Object>(10, 0.75f);
+	protected LinkedHashMap<String, Object> properties = new LinkedHashMap<String, Object>(5, 0.75f);
 
 	protected ArrayList<Effect> effects = new ArrayList<Effect>(); // Effects set on the object
 	
 	protected Point pos = new Point(0, 0, 0); // object's' location/position on a cartesian plane within a room? (3D Point)
 
 	/* object state - transient? */
-	public boolean Edit_Ok = true; // is this object allowed to be edited
-
-	/**
-	 * Parent constructor for no argument subclass constructors
-	 */
-	//public MUDObject() {}
+	public boolean Edit_Ok = true;  // is this object allowed to be edited
 
 	/**
 	 * Parent constructor for subclasses. Allows you to initialize a subclass with
@@ -84,6 +79,11 @@ public abstract class MUDObject {
 		this.location = tempLoc;
 	}
 	
+	/**
+	 * MUDObject Copy Constructor
+	 * 
+	 * @param template
+	 */
 	protected MUDObject(MUDObject template) {
 		this.type = TypeFlag.OBJECT;
 		
@@ -92,6 +92,8 @@ public abstract class MUDObject {
 		this.desc = template.desc;
 		this.flags = template.flags;
 		this.location = -1;
+		
+		// TODO restore/duplicate template properties?
 	}
 
 	/**
@@ -475,7 +477,12 @@ public abstract class MUDObject {
 	}
 	
 	public void setPosition(final Point pos) {
-		setPosition(pos.getX(), pos.getY(), pos.getZ());
+		if( pos.isType(Point.Type.PT_2D ) ) {
+			setPosition(pos.getX(), pos.getY());
+		}
+		else if( pos.isType(Point.Type.PT_3D ) ) {
+			setPosition(pos.getX(), pos.getY(), pos.getZ());
+		}
 	}
 	
 	public TypeFlag getType() {
@@ -501,6 +508,10 @@ public abstract class MUDObject {
 		return this.flags.contains(tempFlag);
 	}
 
+	final public boolean hasProperty(final String key) {
+		return this.properties.containsKey(key);
+	}
+	
 	/**
 	 * Does the specified player own this object?
 	 * 
@@ -509,10 +520,6 @@ public abstract class MUDObject {
 	 */
 	public boolean isOwnedBy(Player player) {
 		return this.owner == player.getDBRef() ? true : false;
-	}
-
-	final public boolean hasProperty(final String key) {
-		return this.properties.containsKey(key);
 	}
 
 	/**
@@ -576,7 +583,8 @@ public abstract class MUDObject {
 	public abstract String toJSON();
 
 	public abstract MUDObject fromJSON();
-
+	
+	@Override
 	public String toString() {
 		return this.name;
 	}

@@ -7,11 +7,11 @@ import mud.objects.Player;
 
 public class ChatChanneler
 {
-	final private MUDServer mud;
+	//final private MUDServer mud;
 	private HashMap<String, ChatChannel> channels = new HashMap<String, ChatChannel>();
 
 	public ChatChanneler(final MUDServer mud) {
-		this.mud = mud;
+		//this.mud = mud;
 	}
 
     public List<Player> getListeners(final String channelName) {
@@ -67,10 +67,10 @@ public class ChatChanneler
             throw new Exception("No channel by the name of " + channelName);
         }
 		
-		ChatChannel channel = channels.get(channelName);
+		final ChatChannel channel = channels.get(channelName);
 		
 		if( player.getAccess() >= channel.getRestrict() ) {
-			channels.get(channelName).addListener(player);
+			channel.addListener(player);
 			return true;
 		}
 		
@@ -88,7 +88,7 @@ public class ChatChanneler
 		
 		if (chan != null) {
 			chan.write(player, message); // add message to ChatChannel message queue
-            mud.debug("(" + channelName + ") <" + player.getName() + "> " + message + "\n");										
+            //mud.debug("(" + channelName + ") <" + player.getName() + "> " + message + "\n");										
         }
 	}
 
@@ -97,7 +97,7 @@ public class ChatChanneler
 
 		if (chan != null) {
 			chan.write(message); // add message to ChatChannel message queue
-			mud.debug("(" + channelName + ") " + message + "\n");
+			//mud.debug("(" + channelName + ") " + message + "\n");
 		}
 	}
 	

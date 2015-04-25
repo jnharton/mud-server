@@ -62,21 +62,17 @@ public class Exit extends MUDObject
 	}
 	
 	public Exit(String name, int location, int destination) {
-		super(-1);
+		super(-1);                                     // Set the dbref (database reference)
 		
-		this.type = TypeFlag.EXIT;
-		// Set the name
-		this.name = name;
-		// Set the description to the default
-		this.desc = "You see nothing.";
-		// Set flags
-		//this.flags = null;
-		// Set the locks
-		this.locks = "";
-		// Set the location
-		this.location = location;
-		// Set the destination
-		this.destination = destination;
+		this.type = TypeFlag.EXIT;                     // Set the type
+		
+		this.name = name;                              // Set the name
+		this.desc = "You see nothing.";                // Set the description to the default
+		this.flags = EnumSet.noneOf(ObjectFlag.class); // Set flags
+		this.locks = "";                               // Set the locks
+		this.location = location;                      // Set the location
+		this.destination = destination;                // Set the destination
+		
 		// set messages to clear
 		this.succMsg = "";  // Success Message
 		this.osuccMsg = ""; // OSuccess Message
@@ -88,22 +84,17 @@ public class Exit extends MUDObject
 	// Name, Flags, Description, DBRef #, Location of exit (DBRef #), destination of exit (DBRef #)
 	public Exit(int tempDBRef, String tempName, final EnumSet<ObjectFlag> flagsNotUsed, String tempDesc, int tempLoc, int tempDestination)
 	{
-		// Set the dbref (database reference)
-		super(tempDBRef);
-		this.type = TypeFlag.EXIT;
+		super(tempDBRef);                   // Set the dbref (database reference)
 		
-		// Set the name
-		this.name = tempName;
-		// Set the description to the default
-		this.desc = "You see nothing.";
-		// Set flags
-		this.flags = flagsNotUsed;
-		// Set the locks
-		this.locks = "";
-		// Set the location
-		this.location = tempLoc;
-		// Set the destination
-		this.destination = tempDestination;
+		this.type = TypeFlag.EXIT;          // Set the type
+		
+		this.name = tempName;               // Set the name
+		this.desc = tempDesc;               // Set the description to the default
+		this.flags = flagsNotUsed;          // Set flags
+		this.locks = "";                    // Set the locks
+		this.location = tempLoc;            // Set the location
+		this.destination = tempDestination; // Set the destination
+		
 		// set messages to clear
 		this.succMsg = "";  // Success Message
 		this.osuccMsg = ""; // OSuccess Message
@@ -120,16 +111,6 @@ public class Exit extends MUDObject
 		return destination;
 	}
 	
-	public boolean hasAlias(String alias) {
-		for(String aliasString : this.aliases) {
-			if( aliasString.equals(alias) ) {
-				return true;
-			}
-		}
-		
-		return false;
-	}
-	
 	public void addAlias(final String alias) {
 		this.aliases.add(alias);
 	}
@@ -137,23 +118,31 @@ public class Exit extends MUDObject
 	public ArrayList<String> getAliases() {
 		return this.aliases;
 	}
+	
+	public boolean hasAlias(final String alias) {
+		return this.aliases.contains( alias );
+	}
 
-	public void setMessage(String name, String newMsg) {
-		if (name.toLowerCase().equals("succmsg")) { this.succMsg = newMsg; }
-		else if (name.toLowerCase().equals("osuccmsg")) { this.osuccMsg = newMsg; }
-		else if (name.toLowerCase().equals("failmsg")) { this.failMsg = newMsg; }
-		else if (name.toLowerCase().equals("ofailmsg")) { this.ofailMsg = newMsg; }
+	public void setMessage(final String name, final String newMsg) {
+		final String msgName = name.toLowerCase();
+		
+		if( msgName.equals("succmsg") )       this.succMsg = newMsg;
+		else if( msgName.equals("osuccmsg") ) this.osuccMsg = newMsg;
+		else if( msgName.equals("failmsg") )  this.failMsg = newMsg;
+		else if( msgName.equals("ofailmsg"))  this.ofailMsg = newMsg;
 	}
 	
-	public String getMessage(String name) {
-		if (name.toLowerCase().equals("succmsg")) { return this.succMsg; }
-		else if (name.toLowerCase().equals("osuccmsg")) { return this.osuccMsg; }
-		else if (name.toLowerCase().equals("failmsg")) { return this.failMsg; }
-		else if (name.toLowerCase().equals("ofailmsg")) { return this.ofailMsg; }
-		else return null;
+	public String getMessage(final String name) {
+		final String msgName = name.toLowerCase();
+		
+		if( msgName.equals("succmsg") )       return this.succMsg;
+		else if( msgName.equals("osuccmsg") ) return this.osuccMsg;
+		else if( msgName.equals("failmsg") )  return this.failMsg;
+		else if( msgName.equals("ofailmsg"))  return this.ofailMsg;
+		else                                  return null;
 	}
 	
-	public void setExitType(ExitType newType) {
+	public void setExitType(final ExitType newType) {
 		this.eType = newType;
 	}
 	

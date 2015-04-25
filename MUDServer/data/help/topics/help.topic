@@ -1,0 +1,20 @@
+help
+aSimpleMU Help System
+
+-- Topics
+auctions - how auctions works
+commands - list of all the available commands
+editors  - available editors
+help     - this page!
+license  - the license for this software
+movement - how moving around works in this game
+olc      - the online creation system
+policies - in-game, and out-of-game policy information
+
+'help <topic/command>' Show the help for the given topic/command.
+'help @reload'         Reload the help files while the game is running.
+                       * works for in-game and out-of-game editing
+               
+* topic names, etc are case sensitive and are usually lowercase
+
+Last Updated: April 8th, 2015

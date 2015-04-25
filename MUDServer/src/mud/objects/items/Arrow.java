@@ -12,8 +12,8 @@ import mud.TypeFlag;
 import java.util.EnumSet;
 
 public class Arrow extends Item implements Projectile<Arrow>, Stackable<Arrow> {
-	private Arrow arrow;
-
+	private Arrow arrow = null;
+	
 	public Arrow() {
 		super(-1);
 		this.type = TypeFlag.ITEM;
@@ -22,12 +22,16 @@ public class Arrow extends Item implements Projectile<Arrow>, Stackable<Arrow> {
 		this.location = -1;
 		this.flags = EnumSet.noneOf(ObjectFlag.class);
 		this.item_type = ItemTypes.ARROW;
+		
+		this.arrow = null;
 	}
 
 	public Arrow(int dbref, String name, String desc, int location) {
 		super(dbref, name, EnumSet.noneOf(ObjectFlag.class), desc, location);
 		this.type = TypeFlag.ITEM;
 		this.item_type = ItemTypes.ARROW;
+		
+		this.arrow = null;
 	}
 	
 	public int size() {
@@ -46,7 +50,7 @@ public class Arrow extends Item implements Projectile<Arrow>, Stackable<Arrow> {
 	 */
 	public int stackSize() {
 		if (this.arrow != null) {
-			return 1 + arrow.stackSize();
+			return 1 + this.arrow.stackSize();
 		}
 		else {
 			return 1;
@@ -56,16 +60,20 @@ public class Arrow extends Item implements Projectile<Arrow>, Stackable<Arrow> {
 	@Override
 	public boolean stack(Arrow object) {
 		if( this.getName().equals( object.getName() ) ) { // name equality is treated as Item equality
-			if (arrow == null && stackSize() < Stackable.maxDepth) {
-				object.setLocation( this.getDBRef() ); // the new location of the arrow in question is the old arrow
-				arrow = object;
-				return true;
+			if( stackSize() < Stackable.maxDepth ) { 
+				if (arrow == null ) {
+					object.setLocation( this.getDBRef() ); // the new location of the arrow in question is the old arrow
+					arrow = object;
+					return true;
+				}
+				else {
+					return arrow.stack(object);
+				}
 			}
-			else {
-				return arrow.stack(object);
-			}
+
+			return false;
 		}
-		
+
 		return false;
 	}
 
