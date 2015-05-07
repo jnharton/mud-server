@@ -981,5 +981,8 @@ public final class Utils {
 			temp.two = "";
 		}
 	}
-
+	
+	public static String jsonify(final String key, final String value) {
+	    return "\t\"" + key + "\"" + ": \"" + value + "\",\n";
+	}
 }

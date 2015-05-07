@@ -4,11 +4,11 @@ import mud.Constants;
 import mud.MUDObject;
 import mud.ObjectFlag;
 import mud.TypeFlag;
-import mud.d20.Races;
 import mud.game.Race;
 import mud.interfaces.Mobile;
 import mud.objects.CreatureType;
 import mud.objects.creatures.Size;
+import mud.rulesets.d20.Races;
 import mud.utils.Point;
 import mud.utils.Utils;
 

@@ -493,6 +493,11 @@ public class ProgramInterpreter {
 					}
 					else return "";
 				}
+				else if( functionName.equals("call" ) ) {
+					if( debug_enabled ) System.out.println("got to CALL");
+					
+					return call( params[0], params[1], params[2] );
+				}
 
 				return "";
 			}
@@ -777,5 +782,28 @@ public class ProgramInterpreter {
 	private void debug(final String output) {
 		if( debug_enabled ) {
 		}
+	}
+
+	private String call(final String functionName, final String...params) {
+		switch(functionName) {
+		case "colors":
+			//if( params.length == 2 ) {
+			if( debug_enabled ) {
+				System.out.println("CALL");
+				System.out.println(functionName);
+				System.out.println(params[0]);
+				System.out.println(params[1]);
+			}
+
+			String result = parent.colors( params[0], params[1] );
+
+			if( debug_enabled ) System.out.println(result);
+
+			return result;
+		default:
+			break;
+		}
+
+		return "";
 	}
 }

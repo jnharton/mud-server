@@ -22,8 +22,8 @@ package mud;
 // mud.api
 import mud.api.MUDServerAPI;
 import mud.auction.*;
+import mud.colors.XTERM256;
 import mud.commands.*;
-import mud.d20.*;
 // mud.foe
 import mud.foe.FOESlotTypes;
 import mud.foe.Terminal;
@@ -62,10 +62,10 @@ import mud.objects.exits.Portal;
 import mud.objects.items.*;
 import mud.objects.npcs.Merchant;
 import mud.objects.things.*;
-// mud.protocols
 import mud.protocols.MSP;
 import mud.protocols.Telnet;
 import mud.quest.*;
+import mud.rulesets.d20.*;
 import mud.utils.*;
 import mud.utils.Console;
 import mud.weather.*;
@@ -281,6 +281,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 	private static final Map<String, String> xterm_colors = new HashMap<String, String>() {              // HashMap to store xterm codes for outputting color (static)
 		{
+			//put("red",   new XTERM256(9));
 			put("red",   "\033[38;5;009m");  put("green",   "\033[38;5;010m"); put("yellow", "\033[38;5;011m");
 			put("blue",  "\033[38;5;012m");  put("magenta", "\033[38;5;013m"); put("cyan",   "\033[38;5;014m");
 			put("white", "\033[38;5;015m");  put("purple",  "\033[38;5;055m"); put("purple2", "\033[38;5;092m");
@@ -622,7 +623,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 							server.module = new mud.foe.FalloutEquestria();
 						}
 						else if( args[a+1].equals("dnd-fr") ) {
-							server.module = new mud.dnd.DND35();
+							server.module = new mud.modules.dnd.DND35();
 						}
 						// load and initialize a GameModule subclass?
 					}
@@ -1731,43 +1732,46 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			box.setLocation(atrium2.getDBRef());
 			atrium2.addThing(box);
 
-			/*Item wsg = new Item(-1);
-			wsg.setName("The Wasteland Survival Guide");
-			wsg.setItemType(ItemType.NONE);
-			wsg.setDesc("A modestly thick, black book with a white equine skull on the cover.");
+			//Item wsg = new Item(-1);
+			//wsg.setName("The Wasteland Survival Guide");
+			//wsg.setItemType(ItemType.NONE);
+			//wsg.setDesc("A modestly thick, black book with a white equine skull on the cover.");
 
-			wsg.setAuctionable(false);
+			//wsg.setAuctionable(false);
 
-			initCreatedItem(wsg);
-			wsg.setLocation(atrium2.getDBRef());
-			atrium2.addItem(wsg);*/
+			//initCreatedItem(wsg);
+			
+			//wsg.setLocation(atrium2.getDBRef());
+			//atrium2.addItem(wsg);
 
 			// PipBuck (foe version of PipBoy from Bethesda's Fallout video games)
-			Item pb = createItem("mud.foe.pipbuck", false);
+			//Item pb = createItem("mud.foe.pipbuck", false);
 
-			initCreatedItem(pb);
+			//initCreatedItem(pb);
+			
 			//pb.setLocation(box.getDBRef());
-			pb.setLocation( atrium2.getDBRef() );
+			//pb.setLocation( atrium2.getDBRef() );
 			//box.insert(pb);
-			atrium2.addItem( pb );
+			//atrium2.addItem( pb );
 
 			// StealthBuck - PipBuck Stealth/Invis Module
-			mud.foe.StealthBuck sb = new mud.foe.StealthBuck();
+			//mud.foe.StealthBuck sb = new mud.foe.StealthBuck();
 
-			initCreatedItem(sb);
+			//initCreatedItem(sb);
+			
 			//sb.setLocation(box.getDBRef());
-			sb.setLocation(atrium2.getDBRef());
+			//sb.setLocation(atrium2.getDBRef());
 			//box.insert(sb);
-			atrium2.addItem(sb);
+			//atrium2.addItem(sb);
 
 			// Disruptor - PipBuck Disruptor Module
-			mud.foe.Disruptor dr = new mud.foe.Disruptor();
+			//mud.foe.Disruptor dr = new mud.foe.Disruptor();
 
-			initCreatedItem(dr);
+			//initCreatedItem(dr);
 			//dr.setLocation(box.getDBRef());
-			dr.setLocation(atrium2.getDBRef());
+			//dr.setLocation(atrium2.getDBRef());
 			//box.insert(dr);
-			atrium2.addItem(dr);
+			//atrium2.addItem(dr);
 
 			// Sparkle Cola Vending Machine
 			Thing vending_machine = new Thing("Vending Machine", "What stand before you is a grime-coated relic of it's former glory. The once glorious purple and gold Sparkle Cola ad has " +
@@ -1989,6 +1993,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			Weapon wing_blades = (Weapon) createItem("mud.foe.wing_blades", false);
 			
 			initCreatedItem(wing_blades);
+			
 			wing_blades.setLocation(atrium2.getDBRef());
 			atrium2.addItem(wing_blades);
 		}
@@ -2321,10 +2326,16 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			}
 			else if ( player.getStatus().equals("CNVS") ) { // Conversation
 				debug(">> In a conversation");
-				// TODO call conversation handler?
-
-				if(input.equalsIgnoreCase("leave")) {
+				
+				if( input.equalsIgnoreCase("leave") || input.equalsIgnoreCase("bye") ) {
+					send("You leave the conversation.", client);
 					player.setStatus("IC");
+				}
+				else {
+					// TODO call conversation handler?
+					//handleConversation(npc, player, option);
+					
+					// TODO make sure we know what npc the player is talking to and what the player type
 				}
 			}
 			else if ( player.getStatus().equals("VIEW") ) { // viewing help files
@@ -5583,6 +5594,24 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			 */
 			for (final Season s : Seasons.getSeasons()) {
 				send(s + ": " + MONTH_NAMES[s.beginMonth - 1] + " to " + MONTH_NAMES[s.endMonth - 1], client);
+			}
+		}
+		else if( param.equals("telnet") ) {
+			final List<Byte[]> msgs = client.received_telnet_msgs;
+			
+			for(final Byte[] ba : msgs) {
+				byte[] ba2 = new byte[ba.length];
+
+				int index = 0;
+
+				for(Byte b : ba) {
+					ba2[index] = b;
+					index++;
+				}
+
+				String msg = Telnet.translate(ba2);
+
+				System.out.println( "] " + msg );
 			}
 		}
 		else if ( param.equals("timedata") ) {
@@ -9161,8 +9190,9 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	private void cmd_quit(final String arg, final Client client) {
 		init_disconn(client);
 	}
-
-	private void cmd_ride(final String arg, final Client client) {
+	
+	// TODO ride command?
+	/*private void cmd_ride(final String arg, final Client client) {
 		final Player player = getPlayer(client);
 		final Room room = getRoom( player );
 
@@ -9179,7 +9209,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 				}
 			}
 		}
-	}
+	}*/
 
 	// Object/Room Recycling Function
 	/**
@@ -9560,7 +9590,12 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			}
 		}
 	}
-
+	
+	/**
+	 * 
+	 * @param arg
+	 * @param client
+	 */
 	private void cmd_setmode(final String arg, final Client client) {
 		if( arg == null ) {
 			mode = GameMode.NORMAL;
@@ -9577,7 +9612,14 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 		send("Game> setting GameMode to -" + mode + "-", client);
 	}
-
+	
+	/* Time */
+	
+	/**
+	 * 
+	 * @param arg
+	 * @param client
+	 */
 	private void cmd_sethour(final String arg, final Client client) {
 		try {
 			int hour = Integer.parseInt(arg);
@@ -9591,7 +9633,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 				send("Game> Invalid hour", client);
 			}
 
-			send("Game> Hour set to " + hour, client);
+			//send("Game> Hour set to " + hour, client);
 		}
 		catch(NumberFormatException nfe) {
 			System.out.println("--- Stack Trace ---");
@@ -9599,7 +9641,12 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			send("Game> Invalid hour", client);
 		}
 	}
-
+	
+	/**
+	 * 
+	 * @param arg
+	 * @param client
+	 */
 	private void cmd_setminute(final String arg, final Client client) {
 		try {
 			int minute = Integer.parseInt(arg);
@@ -10098,7 +10145,8 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 					"-- Conversation (" + npc.getName() + ")",
 					colors("1) What's up?", "green"),
 					colors("2) I'd like to buy something.", "green"),
-					colors("3) Bye. (Ends Conversation)", "green")
+					colors("3) Bye. (Ends Conversation)", "green"),
+					colors("4) 'leave'", "green")
 					);
 			send(convOpts, client);
 			send("* this is test output", client);
@@ -16122,7 +16170,14 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 					}
 				}
 				else {
-					send("Destination: " + ((Exit) m).getDestination(), client);
+					final MUDObject m2 = getObject(((Exit) m).getDestination());
+
+					if( m2 != null ) {
+						send("Destination: " + colors(m2.getName(),getDisplayColor(m2.getTypeName().toLowerCase())) + "(#" + m2.getDBRef() + ")", client);
+					}
+					else {
+						send("Destination: null", client);
+					}
 				}
 			}
 
@@ -19527,18 +19582,10 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		return "Memory: " + in_use + " MB / " + max + " MB";
 	}
 
-	/* Get a Zone Object */
-	/*public Zone getZone(Object obj) {
-		if( obj instanceof Integer) return getZone((Integer) obj);
-		if( obj instanceof String)  return getZone((String) obj);
-
-		return null;
-	}*/
-
-	protected Zone getZone(int id) {
+	protected Zone getZone(int zoneId) {
 		for(Zone z : zones.keySet()) {
 			//System.out.println("Zone ID: " + z.getId());
-			if( z.getId() == id ) {
+			if( z.getId() == zoneId ) {
 				return z;
 			}
 		}
@@ -19927,14 +19974,15 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			return false;
 		}
 	}
-
-	private void mount(final Ridable r, final Player p) {
+	
+	// TODO riding related
+	/*private void mount(final Ridable r, final Player p) {
 		p.mount = r;
 	}
 
 	private void unmount(final Ridable r, final Player p) {
 		p.mount = null;
-	}
+	}*/
 
 	private boolean validateEmailAddress(final String emailAddress) {
 		// matches against *@*.*
@@ -19954,7 +20002,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	public void loadRaces() {
 		com.google.gson.GsonBuilder gb = new com.google.gson.GsonBuilder();
 
-		gb.registerTypeAdapter(Race.class, new mud.json.RaceAdapter());
+		gb.registerTypeAdapter(Race.class, new mud.misc.json.RaceAdapter());
 
 		com.google.gson.Gson gson = gb.create();
 
@@ -20515,5 +20563,34 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	
 	protected GameModule getGameModule() {
 		return this.module;
+	}
+	
+	private void addItemToRoom(final Room room, final Item item) {
+		item.setLocation( room.getDBRef() );
+		room.addItem( item );
+	}
+	
+	private void handleConversation(final NPC npc, final Player player, String input) {
+		if( player != null ) {
+			if( npc != null ) {
+				// send npc response
+				//send(colors(npc.getName(), getDisplayColor("npc")) + ": " + npc.greeting, client);
+				//send("", client);
+
+				// send list of player conversation options
+				final List<String> convOpts = Utils.mkList(
+						"-- Conversation (" + npc.getName() + ")",
+						colors("1) What's up?", "green"),
+						colors("2) I'd like to buy something.", "green"),
+						colors("3) Bye. (Ends Conversation)", "green"),
+						colors("4) 'leave'", "green")
+						);
+				send(convOpts, player.getClient());
+				send("* this is test output", player.getClient());
+			}
+			else {
+				player.setStatus("IC");
+			}
+		}
 	}
 }

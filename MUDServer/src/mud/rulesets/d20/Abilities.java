@@ -1,4 +1,4 @@
-package mud.d20;
+package mud.rulesets.d20;
 
 import mud.game.Ability;
 
@@ -14,10 +14,10 @@ import mud.game.Ability;
  */
 
 public final class Abilities {
-	public static final Ability STRENGTH = new Ability("strength", "str", 0);
-	public static final Ability DEXTERITY = new Ability("dexterity", "dex", 1);
+	public static final Ability STRENGTH     = new Ability("strength",     "str", 0);
+	public static final Ability DEXTERITY    = new Ability("dexterity",    "dex", 1);
 	public static final Ability CONSTITUTION = new Ability("constitution", "con", 2);
 	public static final Ability INTELLIGENCE = new Ability("intelligence", "int", 3);
-	public static final Ability WISDOM = new Ability("wisdom", "wis", 4);
-	public static final Ability CHARISMA = new Ability("charisma", "cha", 5);
+	public static final Ability WISDOM       = new Ability("wisdom",       "wis", 4);
+	public static final Ability CHARISMA     = new Ability("charisma",     "cha", 5);
 }

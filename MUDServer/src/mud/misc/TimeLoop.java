@@ -1,7 +1,5 @@
 package mud.misc;
 
-import java.lang.reflect.Method;
-
 import mud.MUDServer;
 import mud.utils.Date;
 import mud.utils.Message;
@@ -24,22 +22,23 @@ import mud.utils.Message;
  */
 public class TimeLoop implements Runnable
 {
-    private MoonPhase moonPhase = MoonPhase.FULL_MOON;
-
-    private int second;
-    private int minute;
-    private int hour;
+    private boolean running = true;
+    private boolean paused = false;
+    
     private int day;
     private int month;
     private int year;
+    
+    private MoonPhase moonPhase = MoonPhase.FULL_MOON;
+    
+    private int second;
+    private int minute;
+    private int hour;
 
     private TimeOfDay timeOfDay = TimeOfDay.MIDNIGHT;
 
     private boolean isDay = false;
     private String celestialBody = "moon";
-
-    private boolean paused = false;
-    private boolean running = true;
 
     private int ms_per_second = 166;       // 166 ms (1/6 s), runs 6x normal time
     private int ms_per_minute = 10 * 1000; // 10k ms (10 s) , runs 6x normal time
@@ -49,10 +48,6 @@ public class TimeLoop implements Runnable
     final private int[] DAYS;              // array containing the number of days in each month
     
     final private MUDServer server;
-    
-    //private Method onMinuteIncrement;
-    //private Method onHourIncrement;
-    //private Method onDayIncrement;
 
     /**
      * This uses a 6:1 timescale. That is, 6 minutes of game time is equal to 1 minute

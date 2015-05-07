@@ -1,4 +1,4 @@
-package mud.d20;
+package mud.rulesets.d20;
 
 /*
  * Copyright (c) 2012 Jeremy N. Harton

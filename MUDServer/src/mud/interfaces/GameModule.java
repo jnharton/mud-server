@@ -4,7 +4,7 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 
-import mud.misc.Faction;
+import mud.game.Faction;
 import mud.misc.SlotType;
 import mud.objects.Item;
 import mud.objects.ItemType;

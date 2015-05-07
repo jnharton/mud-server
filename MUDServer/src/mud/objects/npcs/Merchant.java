@@ -6,9 +6,6 @@ import java.util.EnumSet;
 
 import mud.ObjectFlag;
 import mud.MUDServer;
-import mud.d20.Abilities;
-import mud.d20.Classes;
-import mud.d20.Races;
 import mud.game.Ability;
 import mud.interfaces.Vendor;
 import mud.misc.Coins;
@@ -18,6 +15,9 @@ import mud.objects.NPC;
 import mud.objects.Player;
 import mud.objects.items.Armor;
 import mud.objects.items.Weapon;
+import mud.rulesets.d20.Abilities;
+import mud.rulesets.d20.Classes;
+import mud.rulesets.d20.Races;
 
 /*
  * Copyright (c) 2012 Jeremy N. Harton

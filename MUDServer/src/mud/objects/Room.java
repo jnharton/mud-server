@@ -15,6 +15,8 @@ import mud.TypeFlag;
 import mud.events.EventSource;
 import mud.events.SayEvent;
 import mud.events.SayEventListener;
+import mud.game.Ability;
+import mud.game.Skill;
 import mud.misc.Direction;
 import mud.misc.Trigger;
 import mud.misc.TriggerType;
@@ -455,7 +457,39 @@ public class Room extends MUDObject implements EventSource
 	}
 
 	public String toJSON() {
-		return null;
+		final StringBuilder sb = new StringBuilder();
+
+		int count = 0;
+
+		sb.append("{\n");
+
+		sb.append("\t\"dbref\"" + ": \"" + getDBRef() + "\",\n");
+		sb.append("\t\"name\"" + ": \"" + getName() + "\",\n");
+		sb.append("\t\"flags\"" + ": \"" + TypeFlag.asLetter(this.type) + getFlagsAsString() + "\",\n");
+		sb.append("\t\"desc\"" + ": \"" + getDesc() + "\",\n");
+		sb.append("\t\"location\"" + ": \"" + getLocation() + "\",\n");
+
+		/*sb.append("\n");
+
+		sb.append("\t\"names\"" + ":\n");
+
+		sb.append("\t{\n");
+
+		int numNames = names.size();
+		count = 0;
+
+		for(final String name : names) {
+			sb.append("\t\t\"name\"" + ": \"" + name + "\"");
+			if( count < numNames ) sb.append(",\n");
+			else                   sb.append("\n");
+			count++;
+		}
+
+		sb.append("\t},\n");*/
+
+		sb.append("}\n");
+
+		return sb.toString();
 	}
 
 	@Override

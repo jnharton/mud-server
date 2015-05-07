@@ -10,26 +10,27 @@ package mud.colors;
  * changes are made to the one referred to.
  */
 
-public enum XTERM256 {
-	BLACK(0, Intensity.NORMAL),
-	RED(1, Intensity.NORMAL),
-	GREEN(2, Intensity.NORMAL),
-	YELLOW(3, Intensity.NORMAL),
-	BLUE(4, Intensity.NORMAL),
-	PURPLE(5, Intensity.NORMAL),
-	CYAN(6, Intensity.NORMAL),
-	GRAY(7, Intensity.NORMAL),
+public class XTERM256 {
+	public static final XTERM256 BLACK  = new XTERM256(0, Intensity.NORMAL);
+	public static final XTERM256 RED    = new XTERM256(1, Intensity.NORMAL);
+	public static final XTERM256 GREEN  = new XTERM256(2, Intensity.NORMAL);
+	public static final XTERM256 YELLOW = new XTERM256(3, Intensity.NORMAL);
+	public static final XTERM256 BLUE   = new XTERM256(4, Intensity.NORMAL);
+	public static final XTERM256 PURPLE = new XTERM256(5, Intensity.NORMAL);
+	public static final XTERM256 CYAN   = new XTERM256(6, Intensity.NORMAL);
+	public static final XTERM256 GRAY   = new XTERM256(7, Intensity.NORMAL);
 	
-	DARK_GRAY(0, Intensity.BRIGHT),
-	BRIGHT_RED(1, Intensity.BRIGHT),
-	BRIGHT_GREEN(2, Intensity.BRIGHT),
-	BRIGHT_YELLOW(3, Intensity.BRIGHT),
-	BRIGHT_BLUE(4, Intensity.BRIGHT),
-	PINK(5, Intensity.BRIGHT),
-	BRIGHT_CYAN(6, Intensity.BRIGHT),
-	WHITE(7, Intensity.BRIGHT);
+	public static final XTERM256 DARK_GRAY     = new XTERM256(0, Intensity.BRIGHT);
+	public static final XTERM256 BRIGHT_RED    = new XTERM256(1, Intensity.BRIGHT);
+	public static final XTERM256 BRIGHT_GREEN  = new XTERM256(2, Intensity.BRIGHT);
+	public static final XTERM256 BRIGHT_YELLOW = new XTERM256(3, Intensity.BRIGHT);
+	public static final XTERM256 BRIGHT_BLUE   = new XTERM256(4, Intensity.BRIGHT);
+	public static final XTERM256 PINK          = new XTERM256(5, Intensity.BRIGHT);
+	public static final XTERM256 BRIGHT_CYAN   = new XTERM256(6, Intensity.BRIGHT);
+	public static final XTERM256 WHITE         = new XTERM256(7, Intensity.BRIGHT);
 	
 	static enum Intensity { NORMAL, BRIGHT };
+	
 	static int state = 3;
 	private int option = 38;
 	
@@ -41,7 +42,7 @@ public enum XTERM256 {
 	
 	private int num;
 	
-	XTERM256(int tColor, Intensity tIntensity) {
+	public XTERM256(int tColor, Intensity tIntensity) {
 		this.color = tColor;
 		this.intensity = tIntensity;
 		this.num = this.color + ( this.intensity.ordinal() * 8 );
@@ -49,8 +50,9 @@ public enum XTERM256 {
 		System.out.println(color);
 	}
 
-	XTERM256(int red, int blue, int green) {
-		if ( ( red >= 0 && red <= 5 ) && ( blue >= 0 && blue <= 5 ) && ( green >= 0 && green <= 5) ) {
+	public XTERM256(int red, int blue, int green) {
+		//if (( red >= 0 && red <= 5 ) && ( blue >= 0 && blue <= 5 ) && ( green >= 0 && green <= 5) ) {
+		if( range(red, 0, 5) && range(green, 0, 5) && range(blue, 0, 5) ) {
 			this.num = (red * 36) + (green * 6) + blue;
 		}
 		else {
@@ -59,11 +61,15 @@ public enum XTERM256 {
 	}
 	
 	// test (does direct RGB with a number between 0-255)
-	XTERM256(int rgb) {
+	/*public XTERM256(int rgb) {
 		this.num = rgb;
-	}
+	}*/
 	
 	public String toString() {
-		return this.prefix + this.option + ";5;" + this.num + suffix;
+		return this.prefix + this.option + ";5;" + this.num + this.suffix;
+	}
+	
+	private boolean range(int value, int min, int max) {
+		return (value >= min && value <= max);
 	}
 }

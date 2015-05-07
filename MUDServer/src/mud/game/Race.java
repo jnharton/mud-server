@@ -1,7 +1,7 @@
 package mud.game;
 
-import mud.d20.Races;
 import mud.interfaces.Ruleset;
+import mud.rulesets.d20.Races;
 
 
 /*

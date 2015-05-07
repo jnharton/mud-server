@@ -162,10 +162,10 @@ public class Weapon extends Item implements Cloneable
 	protected Weapon( Weapon template ) {
 		super( template );
 		
-		this.weight = template.weight;
+		//this.weight = template.weight;
 		
-		this.equip_type = template.equip_type;
-		this.slot_type = template.slot_type;
+		//this.equip_type = template.equip_type;
+		//this.slot_type = template.slot_type;
 		
 		//this.weapon_type = template.weapon_type;
 		//this.handed = template.handed;

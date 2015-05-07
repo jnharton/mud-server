@@ -15,6 +15,7 @@ import java.net.*;
 import java.util.*;
 
 import mud.MUDServerI;
+import mud.protocols.Telnet;
 import mud.utils.Message;
 
 public class Server implements Runnable {
@@ -75,11 +76,63 @@ public class Server implements Runnable {
                 
                 Client client = new Client(socket);
                 
-                parent.clientConnected(client);
-                
+                /*if( client.usingTelnet() ) {
+                	int c = 5;
+
+                	while( c > 0 ) {
+                		if( client.received_telnet_msgs.size() > 0 ) {
+                			final List<Byte[]> msgs = client.received_telnet_msgs;
+
+                			for(final Byte[] ba : msgs) {
+                				byte[] ba2 = new byte[ba.length];
+
+                				int index = 0;
+
+                				for(Byte b : ba) {
+                					ba2[index] = b;
+                					index++;
+                				}
+
+                				String msg = Telnet.translate(ba2);
+
+                				String[] msga = msg.split(" ");
+
+                				System.out.println( "] Received: " + msg );
+
+                				byte[] response = new byte[3];
+
+                				// if asked WILL some unknown option, respond DONT
+                				if( msga[1].equals("WILL") && msga[2].equals("null") ) {
+                					response[0] = Telnet.IAC;
+                					response[1] = Telnet.DONT;
+                					response[2] = ba2[2];
+
+                					client.write(response);
+                					System.out.println( "] Sent: " + Telnet.translate(response) );
+                				}
+
+                				// if asked DO some unknown option, respond WONT
+                				else if( msga[1].equals("DO") && msga[2].equals("null") ) {
+                					response[0] = Telnet.IAC;
+                					response[1] = Telnet.WONT;
+                					response[2] = ba2[2];
+
+                					client.write(response);
+                					System.out.println( "] Sent: " + Telnet.translate(response) );
+                				}
+                			}
+                		}
+                		else {
+                			System.out.println("No Telnet Messages");
+                		}
+                	}
+                }*/
+
                 clients.add(client);
                 
                 System.out.println("Accepted client socket.");
+                
+                parent.clientConnected(client);
             }
         } catch (Exception e) {
             e.printStackTrace();

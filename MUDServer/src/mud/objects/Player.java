@@ -19,12 +19,8 @@ import mud.ObjectFlag;
 import mud.MUDObject;
 import mud.TypeFlag;
 import mud.MUDServer.PlayerMode;
-import mud.d20.Abilities;
-import mud.d20.Alignments;
-import mud.d20.Classes;
-import mud.d20.Races;
-import mud.d20.Skills;
 import mud.game.Ability;
+import mud.game.Faction;
 import mud.game.PClass;
 import mud.game.Profession;
 import mud.game.Race;
@@ -37,7 +33,6 @@ import mud.magic.Spell;
 import mud.magic.SpellBook;
 import mud.misc.Coins;
 import mud.misc.Editors;
-import mud.misc.Faction;
 import mud.misc.Slot;
 import mud.misc.SlotType;
 import mud.misc.SlotTypes;
@@ -47,6 +42,11 @@ import mud.objects.items.Handed;
 import mud.objects.items.Shield;
 import mud.objects.items.Weapon;
 import mud.quest.Quest;
+import mud.rulesets.d20.Abilities;
+import mud.rulesets.d20.Alignments;
+import mud.rulesets.d20.Classes;
+import mud.rulesets.d20.Races;
+import mud.rulesets.d20.Skills;
 import mud.utils.EditList;
 import mud.utils.Landmark;
 import mud.utils.MailBox;
@@ -971,7 +971,7 @@ public class Player extends MUDObject implements Mobile
 	
 	public Slot getSlot(final Item item) {
 		for(final Slot slot : getSlots().values()) {
-			if( slot.isType(item.getItemType()) && slot.getSlotType().equals(item.getSlotType()) ) {
+			if( slot.isType(item.getItemType()) && slot.getSlotType() == item.getSlotType() ) {
 				return slot;
 			}
 		}
@@ -1610,13 +1610,20 @@ public class Player extends MUDObject implements Mobile
 		sb.append("\t},\n");
 
 		sb.append("\n");
+		
+		sb.append( Utils.jsonify("access",  "" + getAccess()) );
+		sb.append( Utils.jsonify("race",    "" + race.getId()) );
+		sb.append( Utils.jsonify("class",   "" + pclass.getId()) );
+		sb.append( Utils.jsonify("status",  "" + status) );
+		sb.append( Utils.jsonify("state",   "" + state.ordinal()) );
+		sb.append( Utils.jsonify("pstatus", "" + pstatus.ordinal()) );
 
-		sb.append("\t\"access\"" + ": \"" + getAccess() + "\",\n");
+		/*sb.append("\t\"access\"" + ": \"" + getAccess() + "\",\n");
 		sb.append("\t\"race\"" + ": \"" + race.getId() + "\",\n");
 		sb.append("\t\"class\"" + ": \"" + pclass.getId() + "\",\n");
 		sb.append("\t\"status\"" + ": \"" + status + "\",\n");
-		sb.append("\t\"status\"" + ": \"" + state.ordinal() + "\",\n");
-		sb.append("\t\"pstatus\"" + ": \"" + pstatus.ordinal() + "\"\n");
+		sb.append("\t\"state\"" + ": \"" + state.ordinal() + "\",\n");
+		sb.append("\t\"pstatus\"" + ": \"" + pstatus.ordinal() + "\"\n");*/
 
 		sb.append("}\n");
 

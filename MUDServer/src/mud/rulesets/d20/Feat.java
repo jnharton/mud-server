@@ -1,4 +1,4 @@
-package mud.d20;
+package mud.rulesets.d20;
 
 import java.util.Arrays;
 import java.util.List;

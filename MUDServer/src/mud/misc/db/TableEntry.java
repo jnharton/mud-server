@@ -1,4 +1,4 @@
-package mud.db;
+package mud.misc.db;
 
 import java.util.Arrays;
 

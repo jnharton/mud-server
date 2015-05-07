@@ -4,6 +4,7 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 
+import mud.game.Faction;
 import mud.interfaces.GameModule;
 import mud.interfaces.Ruleset;
 import mud.objects.Item;
