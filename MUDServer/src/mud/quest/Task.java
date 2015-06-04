@@ -1,8 +1,11 @@
 package mud.quest;
 
+import mud.MUDObject;
+import mud.TypeFlag;
 import mud.misc.Colors;
 import mud.objects.Creature;
 import mud.objects.Room;
+import mud.utils.Data;
 
 /**
  * Task Class
@@ -14,22 +17,22 @@ import mud.objects.Room;
  */
 public class Task {
 	private int id = 0;
-	
+
 	private String description;
 	private TaskType taskType;
 	private boolean isComplete = false; // is the task complete? (this being true should be reflected as marked "complete"/"finished"/etc
-	
+
 	public Room location = null;
-	
+
 	public Integer toKill = 0;
 	public Integer kills = 0;
-	
+
 	public Integer toCollect = 0;
 	public Integer collects = 0;
-	
-	public Creature objective = null;
+
+	public Data objective = null;
 	public boolean hasItem = false;
-	
+
 	/**
 	 * Create a task with a description and the NONE task type.
 	 * 
@@ -38,7 +41,7 @@ public class Task {
 	public Task(String tDescription) {
 		this(tDescription, TaskType.NONE, null);
 	}
-	
+
 	/**
 	 * Create a task with a description and task type.
 	 * 
@@ -50,7 +53,7 @@ public class Task {
 		this.taskType = tType;
 		this.location = location;
 	}
-	
+
 	/**
 	 * Create a task with a description and task type, and
 	 * some objective data related to the type. 
@@ -59,27 +62,34 @@ public class Task {
 	 * @param tType task type
 	 * @param other data about the objectives for the task type
 	 */
-	public Task(String tDescription, TaskType tType, Room location, Object...other) {
+	public Task(String tDescription, TaskType tType, Room location, Data objectiveData) {
 		this.description = tDescription;
 		this.taskType = tType;
 		this.location = location;
+		
+		this.objective = objectiveData;
+
 		if (this.taskType == TaskType.KILL) {
-			if( other.length == 2 ) {
-				if (other[0] instanceof Integer) {
-					final Integer k = (Integer) other[0];
-					
-					this.toKill = k;
-					this.kills = 0;
-				}
-				if(other[1] instanceof Creature) {
-					final Creature c = (Creature) other[1];
-					
-					this.objective = c;
-				}
+			final Object o = objective.getObject("toKill");
+
+			if( o != null ) {
+				final Integer k = (Integer) objective.getObject("toKill");
+				this.toKill = k;
+			}
+			else {
+				this.toKill = 0;
+			}
+
+			this.kills = 0;
+
+			final Object o1 = objectiveData.getObject("target");
+
+			if( o1 != null ) {
+				final MUDObject m = (MUDObject) objective.getObject("target");
 			}
 		}
 	}
-	
+
 	/**
 	 * Copy Constructor
 	 * 
@@ -89,21 +99,21 @@ public class Task {
 		this.description = template.description;
 		this.taskType = template.taskType;
 		this.location = template.location;
-		
+
 		if (template.taskType == TaskType.KILL) {
 			this.toKill = template.toKill;
 			this.kills = 0;
-			
+
 			if(template.objective != null) {
-				this.objective = template.objective;
+				this.objective = new Data( template.objective );
 			}
 		}
 	}
-	
+
 	public int getId() {
 		return this.id;
 	}
-	
+
 	public void setId(int newId) {
 		this.id = newId;
 	}
@@ -123,15 +133,15 @@ public class Task {
 	public void setType(TaskType tType) {
 		this.taskType = tType;
 	}
-	
+
 	public boolean isType(TaskType tType) {
 		return this.taskType == tType;
 	}
-	
+
 	public Room getLocation() {
 		return location;
 	}
-	
+
 	public String getProgress() {
 		switch(taskType) {
 		case NONE:
@@ -146,7 +156,7 @@ public class Task {
 			return "";
 		}
 	}
-	
+
 	private void update() {
 		// if condition is met, then isComplete = true
 		switch(taskType) {
@@ -173,10 +183,10 @@ public class Task {
 		default:
 		}
 	}
-	
+
 	public boolean update(TaskUpdate update) {
 		boolean taskChanged = applyUpdate(update);
-		
+
 		if (taskChanged) {
 			update();
 			return true;
@@ -185,7 +195,7 @@ public class Task {
 			return false;
 		}
 	}
-	
+
 	/**
 	 * Evaluates the update, changing the status of this Task
 	 * to match the new data.
@@ -196,22 +206,22 @@ public class Task {
 	private boolean applyUpdate(TaskUpdate update) {
 		return true;
 	}
-	
+
 	public boolean isComplete() {
 		return this.isComplete;
 	}
 
-    @Override
+	@Override
 	public String toString() {
 		return this.description + "(" + this.taskType + ")";
 	}
 
 	public String toDisplay() {
-        final StringBuilder buf = new StringBuilder();
-        buf.append(isComplete() ? Colors.GREEN : Colors.CYAN).append("      o ").append(getDescription());
-        buf.append(Colors.MAGENTA).append(" ( ").append(location.getName()).append(" ) ").append(Colors.CYAN);
-        buf.append("[+]\n");
-        return buf.toString();
+		final StringBuilder buf = new StringBuilder();
+		buf.append(isComplete() ? Colors.GREEN : Colors.CYAN).append("      o ").append(getDescription());
+		buf.append(Colors.MAGENTA).append(" ( ").append(location.getName()).append(" ) ").append(Colors.CYAN);
+		buf.append("[+]\n");
+		return buf.toString();
 	}
 
 }

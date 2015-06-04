@@ -69,5 +69,4 @@ public final class Constants {
 	// stat generation
 	public static final int ROLL = 0;
 	public static final int ASSIGN = 1;
-	
 }

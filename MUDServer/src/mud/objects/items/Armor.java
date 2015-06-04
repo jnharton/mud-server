@@ -118,7 +118,8 @@ public class Armor extends Item implements Wearable<Armor>
 	
 	@Override
 	public Coins getValue() {
-		return new Coins(armor_type.getCost());
+		return Coins.fromArray(armor_type.getCost());
+		//return new Coins(armor_type.getCost());
 	}
 	
 	public int getMod() {

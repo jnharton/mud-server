@@ -134,12 +134,12 @@ public class Dungeon implements Instance
 	}
 
 	@Override
-	public int getInstanceId() {
+	public Integer getInstanceId() {
 		return this.instance_id;
 	}
 
 	@Override
-	public boolean isInstance() {
+	public Boolean isInstance() {
 		return this.isInstance;
 	}
 }

@@ -24,6 +24,6 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  */
 public interface Instance {
-	public boolean isInstance();
-	public int getInstanceId();
+	public Boolean isInstance();
+	public Integer getInstanceId();
 }

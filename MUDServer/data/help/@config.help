@@ -1,12 +1,12 @@
 @config
 @CONFIG
 
-Syntax:
+Syntax: @config <option> <value>
 
-@config <option> <value>
-
-type,options,values:
+Type    Option    values
+------- --------- -----------
 STRING  color     ansi, xterm
 INTEGER linelimit 0-?
+STRING  msp       on, off
 
-Last Updated: December 27, 2014
+Last Updated: May 20th, 2015

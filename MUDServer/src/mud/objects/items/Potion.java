@@ -11,7 +11,6 @@ import mud.interfaces.Usable;
 import mud.magic.Spell;
 import mud.misc.Effect;
 import mud.objects.Item;
-import mud.objects.ItemType;
 import mud.objects.ItemTypes;
 import mud.utils.Utils;
 
@@ -33,7 +32,7 @@ public class Potion extends Item implements Stackable<Potion>, Usable<Potion> {
 	
 	private Effect effect;             // an effect the potion will give you
 	
-	public ArrayList<Effect> effects; // multiple effects the potion will give you
+	// multiple effects the potion will give you - uses MUDObjects effects
 	
 	public Potion p = null;           // nested copy of itself, for implementing stacks
 	
@@ -196,11 +195,6 @@ public class Potion extends Item implements Stackable<Potion>, Usable<Potion> {
 	@Override
 	public Effect getEffect() {
 		return this.effect;
-	}
-	
-	@Override
-	public ArrayList<Effect> getEffects() {
-		return new ArrayList<Effect>();
 	}
 	
 	@Override

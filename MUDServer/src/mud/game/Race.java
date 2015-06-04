@@ -21,6 +21,7 @@ public class Race {
 	private Subrace sub;
 	private int id;
 	private Integer[] statAdj;  // stats adjustments pertaining to a particular race
+	private boolean playable;   // is the race a playable one
 	private boolean restricted; // is the race restricted (not available from normal selection)
 	private boolean canFly;     // is this race capable of flight
 	

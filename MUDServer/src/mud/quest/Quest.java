@@ -263,6 +263,7 @@ public class Quest implements Cloneable {
         for (final Task task : getTasks()) {
             buf.append(task.toDisplay());
         }
+        
         return buf.toString();
 	}
 	
@@ -293,5 +294,20 @@ public class Quest implements Cloneable {
 	@Override
 	public Quest clone() {
 		return new Quest(this);
+	}
+	
+	@Override
+	public boolean equals(final Object obj) {
+		if(obj == this) {
+			return true;
+		}
+		
+		if(!(obj instanceof Quest)) {
+			return false;
+		}
+		
+		final Quest quest = (Quest) obj;
+		
+		return this.getId() == quest.getId();
 	}
 }

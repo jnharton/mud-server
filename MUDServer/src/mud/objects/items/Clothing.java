@@ -31,20 +31,41 @@ public class Clothing extends Item implements Usable<Clothing>, Wearable<Clothin
 	private Effect effect = null;
 	
 	public Clothing() {
-		super(-1);
+		super(-1, "clothing", "a piece of clothing");
+		
+		/*this.name = "clothing";
+		this.flags = EnumSet.noneOf(ObjectFlag.class);
+		this.desc = "a piece of clothing";
+		this.location = -1;*/
 		
 		this.item_type = ItemTypes.CLOTHING;
+		this.equip_type = ItemTypes.CLOTHING; // the type of equipment it is
+		
+		this.equipped = false;
+		this.equippable = true;
+		
+		this.clothing = ClothingType.NONE; // the actual type of clothing
+		this.weight = 0.0;                 // the weight of the clothing
 	}
 
-	public Clothing(String name, ClothingType cType, double cWeight)
+	public Clothing(final String name, final String description, ClothingType cType, double cWeight)
 	{
-		super(-1, name, EnumSet.noneOf(ObjectFlag.class), "<TESTING>", 8);
-		this.type = TypeFlag.ITEM;
-		this.equippable = true;
-		this.equip_type = ItemTypes.CLOTHING; // the type of equipment it is
+		super(-1, name, description);
+		
 		this.item_type = ItemTypes.CLOTHING;
+		this.equip_type = ItemTypes.CLOTHING; // the type of equipment it is
+		
+		this.equipped = false;
+		this.equippable = true;
+		
 		this.clothing = cType;               // the actual type of clothing
 		this.weight = cWeight;               // the weight of the clothing
+	}
+	
+	protected Clothing(final Clothing template) {
+		super(template);
+		
+		this.clothing = template.clothing;
 	}
 	
 	/**
@@ -102,5 +123,10 @@ public class Clothing extends Item implements Usable<Clothing>, Wearable<Clothin
 	public String toString() {
 		//return this.mod + " " + this.name;
 		return getName();
+	}
+	
+	@Override
+	public Clothing clone() {
+		return new Clothing(this);
 	}
 }

@@ -27,18 +27,24 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  * @author Jeremy
  */
 public class Mail {
+	// flags (need to be char as Character isn't acceptable for switch statements)
+	public static final char UNREAD  = 'U';
+	public static final char READ    = 'R';
+	public static final char DELETED = 'D';
+	
+	public static final Character mark = '~';
+	
+	// instance
 	private Integer id;
+	
+	private Date date;
 	
 	private String sender;
 	private String recipient;
 	private String subject;
 	private String message;
 	
-	private Date date;
-	
 	private Character flag;
-	
-	private static final Character mark = '~';
 	
 	private boolean isUnread;
 	
@@ -64,8 +70,8 @@ public class Mail {
 		this.flag = tFlag;
 		
 		switch(tFlag) {
-		case 'U': markUnread(); break;
-		case 'R': markRead();   break;
+		case UNREAD: markUnread(); break;
+		case READ:   markRead();   break;
 		default:  break;
 		}
 	}
@@ -99,12 +105,12 @@ public class Mail {
 	}
 	
 	public void markRead() {
-		this.flag = 'R';
+		this.flag = READ;
 		this.isUnread = false;
 	}
 	
 	public void markUnread() {
-		this.flag = 'U';
+		this.flag = UNREAD;
 		this.isUnread = true;
 	}
 	
@@ -112,7 +118,7 @@ public class Mail {
 	 * @author joshgit
 	 */
 	public void markDeleted() {
-		this.flag = 'D';
+		this.flag = DELETED;
 	}
 	
 	public boolean isUnread() {

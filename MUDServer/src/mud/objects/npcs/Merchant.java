@@ -41,7 +41,7 @@ public class Merchant extends NPC implements Vendor {
 
 	public Merchant(final MUDServer mudServer, final int tempDBRef, final String tempName, final EnumSet<ObjectFlag> tempFlags, 
             final String tempDesc, final String tempTitle, final String tempPStatus, final int tempLoc, final Coins tempMoney) {
-		super(tempDBRef, tempName, null, tempFlags, tempDesc, tempTitle, tempPStatus, tempLoc, tempMoney);
+		super(tempDBRef, tempName, tempFlags, tempDesc, tempLoc, tempMoney);
 
 		this.parent = mudServer;
 		this.access = 0;

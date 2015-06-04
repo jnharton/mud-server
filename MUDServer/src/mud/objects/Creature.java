@@ -72,6 +72,7 @@ public class Creature extends MUDObject implements Mobile {
 	 */
 	public Creature(final Creature template) {
 		super(-1);
+		
 		this.type = TypeFlag.CREATURE;
 		
 		this.race = template.race;

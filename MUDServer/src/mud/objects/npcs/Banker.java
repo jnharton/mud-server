@@ -27,7 +27,7 @@ public class Banker extends NPC implements BankerI {
 	public Banker(final int tempDBRef, final String tempName, final String tempPass, final EnumSet<ObjectFlag> tempFlags, 
             final String tempDesc, final String tempTitle, final String tempPStatus, final int tempLoc, final Coins tempMoney) {
 
-        super(tempDBRef, tempName, tempPass, tempFlags, tempDesc, tempTitle, tempPStatus, tempLoc, tempMoney);
+        super(tempDBRef, tempName, tempFlags, tempDesc, tempLoc, tempMoney);
 	}
 	
 	@Override

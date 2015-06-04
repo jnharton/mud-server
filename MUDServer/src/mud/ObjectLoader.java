@@ -57,7 +57,7 @@ public class ObjectLoader {
 		for (final String oInfo : in) {
 			Integer oDBRef = 0, oLocation = 0;
 			String oName = "", oFlags = "", oDesc = "";
-			Character oTypeFlag;
+			char oTypeFlag;
 
 			if (oInfo.charAt(0) == '&') { // means to ignore that line
 				log.debug("`loadObjects` ignoring line: " + oInfo);
@@ -152,9 +152,24 @@ public class ObjectLoader {
 
 					if (et == ExitType.STD) {
 						int oDest = Integer.parseInt(attr[5]);
+						
+						// [A]bsolutely [E]verything/[Leave];ae/leave
+						String oAlias = "";
+						
+						if( oName.indexOf(';') != -1 ) {
+							final String[] temp = oName.split(";");
+							
+							oName = oName.substring(0, oName.indexOf(';'));
+							
+							if( temp.length > 1 ) {
+								oAlias = temp[1];
+							}
+						}
 
 						Exit exit = new Exit(oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), oDesc, oLocation, oDest);
 						exit.setExitType(et);
+						
+						if( !oAlias.equals("") ) exit.addAlias(oAlias);
 
 						log.debug("log.debug (db entry): " + exit.toDB(), 2);
 
@@ -228,6 +243,7 @@ public class ObjectLoader {
 							portal.setKey("test");
 
 							parent.getPortals().add(portal);
+							
 							parent.getRoom(portal.getOrigin()).addSayEventListener(portal);
 							parent.getRoom(portal.getDestination()).addSayEventListener(portal);
 
@@ -314,7 +330,7 @@ public class ObjectLoader {
 					if (zoneId != -1) {
 						System.out.println("Zone ID: " + zoneId);
 
-						Zone zone = parent.getZone(zoneId);
+						final Zone zone = parent.getZone(zoneId);
 
 						System.out.println((zone == null));
 
@@ -436,7 +452,7 @@ public class ObjectLoader {
 
 		Integer oDBRef = Utils.toInt(attr[0], -1);
 		String oName = attr[1];
-		Character oTypeFlag = attr[2].charAt(0);
+		char oTypeFlag = attr[2].charAt(0);
 		String oFlags = attr[2].substring(1, attr[2].length());
 		String oDesc = attr[3];
 		Integer oLocation = Utils.toInt(attr[4], Constants.WELCOME_ROOM);
@@ -569,7 +585,7 @@ public class ObjectLoader {
 		
 		Integer oDBRef = Integer.parseInt(attr[0]);
 		String oName = attr[1];
-		Character oTypeFlag = attr[2].charAt(0);
+		char oTypeFlag = attr[2].charAt(0);
 		String oFlags = attr[2].substring(1, attr[2].length());
 		String oDesc = attr[3];
 		Integer oLocation = Integer.parseInt(attr[4]);

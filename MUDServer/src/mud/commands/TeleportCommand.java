@@ -35,22 +35,22 @@ public class TeleportCommand extends Command {
 
 		String[] args = arg.split("=");
 
-		final int dbref;
+		final int destination;
 		MUDObject target = null;
 		
 		if(args.length > 1) {
 			target = getObject(args[0]);
 			
-			dbref = Utils.toInt(args[1], -1);
+			destination = Utils.toInt(args[1], -1);
 		}
 		else {
-			dbref = Utils.toInt(arg, -1);
+			destination = Utils.toInt(arg, -1);
 		}
 		
-		boolean success = false;
+		boolean success = false; // does the destination exist?
 
 		// try to find the room, by dbref or by name
-		Room room = (dbref != -1) ? getRoom(dbref) : getRoom(arg);
+		Room room = (destination != -1) ? getRoom(destination) : getRoom(arg);
 
 		if (room != null) {
 			success = true;
@@ -58,23 +58,32 @@ public class TeleportCommand extends Command {
 
 		// if we found the room, send the player there
 		if ( success ) {
-
 			if( target == null) {
 				getRoom(client).removeListener(player); // remove listener
 
 				send("Teleporting to " + room.getName() + "... ", client);
+				
 				player.setLocation(room.getDBRef());
 				player.setPosition(0, 0);
+				
 				send("Done.", client);
+				
 				room = getRoom(client);
 				//parent.look(room, client);
 
 				room.addListener(player); // add listener
 			}
 			else {
+				if( target instanceof Player ) {
+					final Player player1 = (Player) target; 
+					getRoom(player1.getClient()).removeListener(player1);
+				}
+				
 				send("Teleporting " + target.getName() + " to " + room.getName() + "... ", client);
+				
 				target.setLocation(room.getDBRef());
 				target.setPosition(0, 0);
+				
 				send("Done.", client);
 			}
 		}

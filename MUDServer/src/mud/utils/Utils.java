@@ -24,9 +24,12 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
+
 import java.math.BigInteger;
+
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -34,6 +37,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import java.security.spec.KeySpec;
 
 import javax.crypto.SecretKeyFactory;
@@ -47,11 +51,18 @@ import javax.crypto.spec.PBEKeySpec;
  *
  */
 public final class Utils {
-
-	private static final int LINES = 500;
-
-	// initialize stuff for doing hashing
+	/*
+	 * Hashing was written/implemented/? by joshgit
+	 */
+	
+	/**
+	 * initialize stuff for doing hashing
+	 * 
+	 * NOTE: a failure to get a a key factory will result in the program exiting
+	 * 
+	 */
 	private static SecretKeyFactory f;
+	
 	static {
 		try {
 			f = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
@@ -60,8 +71,11 @@ public final class Utils {
 			System.exit(-1);
 		}
 	}
+	
 	final private static byte[] salt = new byte[16];
+	
 	final private static Random random = new Random(6456856);
+	
 	static {
 		random.nextBytes(salt);
 	}
@@ -107,11 +121,6 @@ public final class Utils {
 		return buf.toString();
 	}
 
-	// defunct, make sure to clear any extant references
-	/*public static String str(Object o) {
-		return o.toString();
-	}*/
-
 	/**
 	 * Saves string arrays to files (the assumption being that said file is a
 	 * collection/list of arbitrary strings in a particular layout
@@ -123,13 +132,15 @@ public final class Utils {
 		try {
 			final File file = new File(filename);
 			final PrintWriter output = new PrintWriter(file);
+			
 			for (final String s : sArray) {
 				output.println(s);
 			}
+			
 			output.close();
 		}
-		catch (Exception e) {
-			e.printStackTrace();
+		catch (FileNotFoundException fnfe) {
+			fnfe.printStackTrace();
 		}
 	}
 
@@ -145,7 +156,7 @@ public final class Utils {
 		try {
 			final File file = new File(filename);
 			final BufferedReader br = new BufferedReader(new FileReader(file));
-			//final ArrayList<String> output = new ArrayList<String>(LINES);
+			
 			final ArrayList<String> output = new ArrayList<String>();
 
 			String line;
@@ -154,7 +165,7 @@ public final class Utils {
 
 			br.close();
 
-			output.trimToSize();
+			//output.trimToSize();
 
 			return output.toArray(new String[0]);
 		}
@@ -166,10 +177,34 @@ public final class Utils {
 		catch(IOException ioe) {
 			ioe.printStackTrace();
 		}
-		catch(Exception e) {
-			e.printStackTrace();
-		}
 
+		return null;
+	}
+	
+	public static List<String> loadStrings(final File file) {
+		if( file != null ) {
+			if( file.exists() && file.isFile() && file.canRead() ) {
+				try {
+					final BufferedReader br = new BufferedReader(new FileReader(file));
+					
+					final ArrayList<String> output = new ArrayList<String>();
+
+					String line;
+
+					while ((line = br.readLine()) != null) output.add(line);
+
+					br.close();
+
+					//output.trimToSize();
+
+					return output;
+				}
+				catch(IOException ioe) {
+					ioe.printStackTrace();
+				}
+			}
+		}
+		
 		return null;
 	}
 
@@ -224,87 +259,61 @@ public final class Utils {
 
 		return new String[0]; // return an non-empty,non-full zero size String[]
 	}*/
-
+	
+	/**
+	 * Load the specified file into an array of bytes. If an exception is caught,
+	 * we will return an EMPTY byte array (i.e. a byte array of length zero).
+	 * 
+	 * @param filename
+	 * @return
+	 */
 	public static byte[] loadBytes(final String filename) {
+		boolean exception_caught = false;
+		
+		// TODO should I throw the exceptions below or just catch and handle them
 		try {
 			final File file = new File(filename);
 			final FileInputStream fis = new FileInputStream(file);
-			final int FILE_LEN = (int) file.length();
+			
+			final int FILE_LEN = (int) file.length();     // WARN: we convert a -long- to an -int- here!
 			final byte[] byte_array = new byte[FILE_LEN]; // create a new byte array to hold the file
+			
 			int index = 0;
+			
 			while (index < FILE_LEN) {
 				final int numRead = fis.read(byte_array, index, FILE_LEN - index);
 				index += numRead;
 			}
+			
 			fis.close();
+			
 			return byte_array;
-		}
-		catch (Exception e) {
-			e.printStackTrace();
-		}
-		finally {
-		}
-
-		return new byte[0];
-	}
-
-	/*public static byte[] loadBytes(String filename) {
-		File file;
-		FileInputStream fis;
-
-		byte[] byte_array = null;
-		int index = 0;
-
-		try {
-			file = new File(filename);         // create a new file object to refer to the file
-			fis = new FileInputStream(file);   // create a new file input stream to read from the file
-
-			byte_array = new byte[(int) file.length()]; // create a new byte array to hold the file
-
-			try {
-				while(fis.available() > 0) {
-					byte_array[index] = (byte) fis.read();
-					index++;
-				}
-			}
-			catch (IOException ioe) {
-				ioe.printStackTrace();
-			}
 		}
 		catch (FileNotFoundException fnfe) {
 			fnfe.printStackTrace();
 		}
-
-		return byte_array;
-	}*/
+		catch (IOException ioe) {
+			ioe.printStackTrace();
+		}
+		
+		return new byte[0];
+	}
 
 	public static String join(final String[] in, final String sep) {
 		return join(Arrays.asList(in), sep);
 	}
-
-	// old
-	/*public static String join(String[] in, String sep) {
-		String out = "";
-
-		for(int l = 0; l < in.length; l++) {
-			if(l < in.length - 1) {
-				out = out + in[l] + sep;
-			}
-			else {
-				out = out + in[l];
-			}
-		}
-
-		return out;
-	}*/
-
-	public static String join(final List<String> in, String sep) {
+	
+	// will eventually replace identical method below
+	public static <E> String join(final List<E> in, String sep) {
 		if (sep == null) sep = "";
 		if (in.size() == 0) return "";
+		
 		final StringBuilder out = new StringBuilder();
-		for (final String s : in) {
-			out.append(sep).append(s);
+		
+		for (final E element : in) {
+			out.append(sep).append( String.valueOf(element) );
 		}
+		
 		return out.delete(0, sep.length()).toString();
 	}
 
@@ -362,14 +371,6 @@ public final class Utils {
 
 		return result;
 	}*/
-
-	public static String padRight(String s) {
-		return String.format("%1$-70s", s);
-	}
-
-	public static String padLeft(String s) {
-		return String.format("%1$70s", s);
-	}
 
 	public static String padRight(String s, int n) {
 		return String.format("%1$-" + n + 's', s);
@@ -490,10 +491,10 @@ public final class Utils {
 		return result;
 	}
 
-	public static String listToString(List<Integer> list) {
+	public static String listToString(final List<Integer> list) {
 		StringBuilder sb = new StringBuilder();
 
-		for(Integer i : list) {
+		for(final Integer i : list) {
 			if( list.indexOf(i) != (list.size() - 1) ) sb.append( i + "," );
 			else sb.append( i );
 		}
@@ -609,14 +610,72 @@ public final class Utils {
 	 * @return
 	 */
 	public static int toInt(final String str, final int alt) {
+		int result = 0;
+		
+		// not particularly important to do anything else here, some input's won't be a number
 		try {
-			return Integer.parseInt(str);
-		} catch(NumberFormatException nfe) {
-			System.out.println(""); // TODO remove, for testing purposes
-			System.out.println("--- Stack Trace ---");
-			nfe.printStackTrace();
-			return alt;
+			result = Integer.parseInt(str);
 		}
+		catch(NumberFormatException nfe) {
+			result = alt;
+		}
+		
+		return result;
+	}
+	
+	/**
+	 * Parse a String representation of an integer and return an int
+	 * 
+	 * @param string integer represented as a string (digits 0-9)
+	 * @return
+	 */
+	public static int parseInt(final String string) {
+		int index = string.length() - 1;
+		int n = 0;
+		int temp = 0;
+
+		int value = 0;
+
+		boolean is_digit;
+		boolean is_negative = false;
+
+		while( index > -1 ) {
+			is_digit = true;
+
+			switch( string.charAt(index) ) {
+			case '0': temp = 0; break;
+			case '1': temp = 1; break;
+			case '2': temp = 2; break;
+			case '3': temp = 3; break;
+			case '4': temp = 4; break;
+			case '5': temp = 5; break;
+			case '6': temp = 6; break;
+			case '7': temp = 7; break;
+			case '8': temp = 8; break;
+			case '9': temp = 9; break;
+			case '-':
+				is_negative = true;
+				is_digit = false;
+				break;
+			default:
+				is_digit = false; break;
+			}
+
+			if( is_digit && !is_negative ) {
+				value += temp * Math.pow(10, n);
+			}
+			else if( is_negative && !is_digit) {
+				value = value * -1;
+			}
+			else {
+				throw new NumberFormatException();
+			}
+
+			index--;
+			n++;
+		}
+
+		return value;
 	}
 
 	public static Point toPoint(final String ptData) {
@@ -728,6 +787,7 @@ public final class Utils {
 		for(Integer i : list) {
 			if( counter < middle ) left.add(i);
 			else right.add(i);
+			
 			counter++;
 		}
 
@@ -744,36 +804,40 @@ public final class Utils {
 	/**
 	 * Merge (merges lists of integers)
 	 * 
+	 * Iterative
+	 * 
 	 * "translated" from pseudo-code at the site below
 	 * https://en.wikipedia.org/wiki/Merge_sort
 	 * 
 	 * text comments from the site copied as well
 	 * 
-	 * @param leftList
-	 * @param rightList
+	 * NOTE: destructively modifies the input lists
+	 * 
+	 * @param left
+	 * @param right
 	 * @return
 	 */
-	public static List<Integer> merge(List<Integer> leftList, List<Integer> rightList) {
-		List<Integer> result = new LinkedList<Integer>();
-
-		while( leftList.size() > 0 || rightList.size() > 0 ) {
-			if( leftList.size() > 0 && rightList.size() > 0 ) {
-				if( leftList.get(0) <= rightList.get(0) ) {
-					result.add( leftList.get(0) );
-					leftList = leftList.subList(1, leftList.size());
+	public static List<Integer> merge(List<Integer> left, List<Integer> right) {
+		final List<Integer> result = new LinkedList<Integer>();
+		
+		while( left.size() > 0 || right.size() > 0 ) {
+			if( left.size() > 0 && right.size() > 0 ) {
+				if( left.get(0) <= right.get(0) ) {
+					result.add( left.get(0) );
+					left = left.subList(1, left.size());
 				}
 				else {
-					result.add( rightList.get(0) );
-					rightList = rightList.subList(1, rightList.size());
+					result.add( right.get(0) );
+					right = right.subList(1, right.size());
 				}
 			}
-			else if( leftList.size() > 0 ) {
-				result.add( leftList.get(0) );
-				leftList = leftList.subList(1, leftList.size());
+			else if( left.size() > 0 ) {
+				result.add( left.get(0) );
+				left = left.subList(1, left.size());
 			}
-			else if( rightList.size() > 0 ) {
-				result.add( rightList.get(0) );
-				rightList = rightList.subList(1, rightList.size());
+			else if( right.size() > 0 ) {
+				result.add( right.get(0) );
+				right = right.subList(1, right.size());
 			}
 		}
 
@@ -789,10 +853,9 @@ public final class Utils {
 	 * @throws ParseException 
 	 */
 	public static String unixToDate(final long timestamp) throws ParseException {
-		SimpleDateFormat sdf = new SimpleDateFormat("MMMM d, yyyy 'at' h:mm a");
-		String date = sdf.format(timestamp);
+		final SimpleDateFormat sdf = new SimpleDateFormat("MMMM d, yyyy 'at' h:mm a");
 
-		return date.toString();
+		return sdf.format(timestamp).toString();
 	}
 
 	/**
@@ -867,71 +930,15 @@ public final class Utils {
 		return count;
 	}
 
-	/**
-	 * Parse a String representation of a positive integer
-	 * and return an int
-	 * 
-	 * @param string integer represented as a string (digits 0-9)
-	 * @return
-	 */
-	public static int parseInt(final String string) {
-		int index = string.length() - 1;
-		int n = 0;
-		int temp = 0;
-
-		int value = 0;
-
-		boolean is_digit;
-
-		while( index > -1 ) {
-			is_digit = true;
-
-			switch( string.charAt(index) ) {
-			case '0':
-				temp = 0; break;
-			case '1':
-				temp = 1; break;
-			case '2':
-				temp = 2; break;
-			case '3':
-				temp = 3; break;
-			case '4':
-				temp = 4; break;
-			case '5':
-				temp = 5; break;
-			case '6':
-				temp = 6; break;
-			case '7':
-				temp = 7; break;
-			case '8':
-				temp = 8; break;
-			case '9':
-				temp = 9; break;
-			default:
-				is_digit = false; break;
-			}
-
-			if( is_digit ) {
-				value += temp * Math.pow(10, n);
-			}
-			else {
-				throw new NumberFormatException();
-			}
-
-			index--;
-			n++;
-		}
-
-		return value;
-	}
-
 	// for the list editor
 	public static ArrayList<String> loadList(String filename) {
 		ArrayList<String> strings = new ArrayList<String>();
+		
+		strings.addAll( Arrays.asList( loadStrings(filename) ) );
 
-		for(final String line : loadStrings(filename)) {
+		/*for(final String line : loadStrings(filename)) {
 			strings.add(line);
-		}
+		}*/
 
 		return strings;
 	}
@@ -982,7 +989,26 @@ public final class Utils {
 		}
 	}
 	
-	public static String jsonify(final String key, final String value) {
-	    return "\t\"" + key + "\"" + ": \"" + value + "\",\n";
+	public static String jsonify(final String key, final Object value) {
+	    return "\t\"" + key + "\"" + ": \"" + value.toString() + "\",\n";
+	}
+	
+	public static double gramsToOunces(double grams) {
+		// 1 gram = 0.0352739619 ounces
+		return grams * 0.0352739619;
+	}
+	
+	public static Integer sum(final Integer[] values) {
+		Integer result = 0;
+		
+		for(final Integer value : values) {
+			result += value;
+		}
+		
+		return result;
+	}
+	
+	public static boolean range(int value, int min, int max) {
+		return (value >= min && value <= max);
 	}
 }

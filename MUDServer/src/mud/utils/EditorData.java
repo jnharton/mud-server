@@ -19,6 +19,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 
 /**
  * Store a collection of arbitrary objects indexed by string keys,
@@ -29,7 +30,6 @@ import java.util.LinkedList;
  */
 public class EditorData {
 	private HashMap<String, Object> objects;
-	private HashMap<Object, Boolean> locks;
 	
 	public EditorData() {
 		this.objects = new HashMap<String, Object>(1, 0.75f);
@@ -47,10 +47,6 @@ public class EditorData {
 		}
 		
 		return success;
-	}
-	
-	public Object removeObject(String key) {
-		return this.objects.remove(key);
 	}
 	
 	/**
@@ -89,35 +85,28 @@ public class EditorData {
 		return success;
 	}
 	
+	public Object removeObject(String key) {
+		if( this.objects.containsKey(key) ) {
+			return this.objects.remove(key);
+		}
+		else {
+			return false;
+		}
+	}
+	
 	public HashMap<String, Object> getObjects() {
 		return this.objects;
 	}
 	
-	public LinkedList<Object> getObjects(String pattern) {
-		LinkedList<Object> objectList = new LinkedList<Object>();
-		
-		for(String key : this.objects.keySet()) {
-			if( key.matches(pattern) ) {
-				objectList.add( this.objects.get(key) );
+	public List<String> getKeysByPrefix(String prefix) {
+		final List<String> keyList = new LinkedList<String>();
+
+		for(final String key : this.objects.keySet()) {
+			if( key.startsWith(prefix) ) {
+				keyList.add( key );
 			}
 		}
-		
-		return objectList;
-	}
-	
-	public void lockObject(String key) {
-		if( this.objects.containsKey(key) ) {
-			this.locks.put( getObject(key), true );
-		}
-	}
-	
-	public void unlockObject(String key) {
-		Object obj = getObject( key );
-		
-		if( obj != null ) {
-			if( this.locks.containsKey( obj ) ) {
-				this.locks.remove( obj );
-			}
-		}
+
+		return keyList;
 	}
 }

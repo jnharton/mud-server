@@ -19,6 +19,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.Map.Entry;
 
 /**
  * Store a collection of arbitrary objects indexed by string keys,
@@ -34,6 +35,18 @@ public class Data {
 	public Data() {
 		this.objects = new HashMap<String, Object>(1, 0.75f);
 		this.locks = new HashMap<Object, Boolean>(1, 0.75f);
+	}
+	
+	public Data(final Data template) {
+		this.objects = new HashMap<String, Object>(1, 0.75f);
+		this.locks = new HashMap<Object, Boolean>(1, 0.75f);
+		
+		for(Entry<String, Object> entry : template.getObjects().entrySet()) {
+			this.objects.put( entry.getKey(), entry.getValue() );
+		}
+		
+		//this.objects.putAll( template.getObjects() );
+		//this.locks.putAll( template.getLocks() );
 	}
 	 
 	public boolean addObject(final String key, final Object object) {

@@ -292,4 +292,7 @@ public abstract class Command {
 	protected Item findItem(final List<Item> items, final String itemName) {
 		return parent.findItem(items, itemName);
 	}
+	protected void addAlias(final String command, final String alias) {
+		parent.addAlias(command, alias);
+	}
 }

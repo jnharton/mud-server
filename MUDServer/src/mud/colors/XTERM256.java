@@ -1,5 +1,7 @@
 package mud.colors;
 
+import mud.utils.Utils;
+
 /*
  * Copyright (c) 2012 Jeremy N. Harton
  * 
@@ -51,8 +53,7 @@ public class XTERM256 {
 	}
 
 	public XTERM256(int red, int blue, int green) {
-		//if (( red >= 0 && red <= 5 ) && ( blue >= 0 && blue <= 5 ) && ( green >= 0 && green <= 5) ) {
-		if( range(red, 0, 5) && range(green, 0, 5) && range(blue, 0, 5) ) {
+		if( Utils.range(red, 0, 5) && Utils.range(green, 0, 5) && Utils.range(blue, 0, 5) ) {
 			this.num = (red * 36) + (green * 6) + blue;
 		}
 		else {
@@ -61,15 +62,15 @@ public class XTERM256 {
 	}
 	
 	// test (does direct RGB with a number between 0-255)
-	/*public XTERM256(int rgb) {
+	public XTERM256(int rgb) {
 		this.num = rgb;
-	}*/
-	
-	public String toString() {
-		return this.prefix + this.option + ";5;" + this.num + this.suffix;
 	}
 	
-	private boolean range(int value, int min, int max) {
-		return (value >= min && value <= max);
+	public String toString() {
+		return this.prefix + this.option + ";5;" + Utils.padLeft("" + this.num, '0', 3) + this.suffix;
+	}
+	
+	public Integer getNumber() {
+		return this.num;
 	}
 }

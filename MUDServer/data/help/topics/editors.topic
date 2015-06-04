@@ -4,15 +4,23 @@ EDITORS
 There are several in-game editors for the purposes of building and extending
 the game. This sort of functionality is sometimes known as OLC (On-line Creation).
 
+-- Miscellaneous
 List Editor (@lsedit or @listedit)
 
-Item Editor (@iedit or @itemedit)
-Room Editor (@redit or @roomedit)
+-- World
+Item Editor     (@iedit)
+Creature editor (@cedit)
+Room Editor     (@redit)
 
-Help Editor (@hedit or @helpedit)
-Quest Editor (@qedit or @questedit)
-Zone Editor (@zedit or @zoneedit)
+-- Meta
+Help Editor     (@hedit)
+Quest Editor    (@qedit)
+Zone Editor     (@zedit)
 
-Skill Editor (@skedit or @skilledit)
+Skill Editor    (@skedit)
 
-Last Updated: Jan 3, 2014
+In addition to these specific commands, the general command '@edit' can be used
+with an argument specifiying any MUDObject and will open the appropriate editor
+based on the object type
+
+Last Updated: June 6th, 2014

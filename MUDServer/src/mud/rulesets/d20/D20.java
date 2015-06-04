@@ -2,12 +2,12 @@ package mud.rulesets.d20;
 
 import java.util.HashMap;
 
-import mud.foe.FOESpecial;
 import mud.game.Ability;
 import mud.game.PClass;
 import mud.game.Race;
 import mud.game.Skill;
 import mud.interfaces.Ruleset;
+import mud.rulesets.foe.FOESpecial;
 import mud.rulesets.special.SpecialRuleset;
 
 public final class D20 implements Ruleset {

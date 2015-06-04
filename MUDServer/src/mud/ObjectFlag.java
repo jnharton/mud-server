@@ -21,18 +21,19 @@ public enum ObjectFlag
 {
 	BANK("BANK",                0, TypeFlag.ROOM),
 	DARK("DARK",                1, TypeFlag.OBJECT),
-    FORGE("FORGE",              2, TypeFlag.ROOM),
-    GUEST("GUEST",              3, TypeFlag.PLAYER),
-    HOUSE("HOUSE",              4, TypeFlag.ROOM),
-    MERCHANT("MERCHANT",        5, TypeFlag.NPC),
-    NO_TELEPORT("NO_TELEPORT",  6), // prevent teleporting to the location (for rooms) or moving the object (for everything else)
-    NO_ENTER("NO_ENTER",        7, TypeFlag.ROOM),
-    NO_LEAVE("NO_LEAVE",        8, TypeFlag.ROOM),
-    QUIET("QUIET",              9), 
-    SHOP("SHOP",               10, TypeFlag.ROOM),
-    SILENT("SILENT",           11),
-    VENDOR("VENDOR",           12),
-	VIRTUAL("VIRTUAL",         13);
+	ENTER_OK("ENTER_OK",        2, TypeFlag.OBJECT),
+    FORGE("FORGE",              3, TypeFlag.ROOM),
+    GUEST("GUEST",              4, TypeFlag.PLAYER),
+    HOUSE("HOUSE",              5, TypeFlag.ROOM),
+    MERCHANT("MERCHANT",        6, TypeFlag.NPC),
+    NO_TELEPORT("NO_TELEPORT",  7), // prevent teleporting to the location (for rooms) or moving the object (for everything else)
+    NO_ENTER("NO_ENTER",        8, TypeFlag.ROOM),
+    NO_LEAVE("NO_LEAVE",        9, TypeFlag.ROOM),
+    QUIET("QUIET",             10), 
+    SHOP("SHOP",               11, TypeFlag.ROOM),
+    SILENT("SILENT",           12),
+    VENDOR("VENDOR",           13, TypeFlag.NPC),
+	VIRTUAL("VIRTUAL",         14);
 	
 	// 13 flags    
 	// 0 1 2 3 5 7 = 0, 1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16, 17, 18

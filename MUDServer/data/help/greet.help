@@ -25,3 +25,5 @@ Syntax: 'greet <character name/non-unique identifier>'
 
 example: 'greet none1', this will attempt to greet the second player that is logged on right now whose class
 is NONE.
+
+Last Updated: ?

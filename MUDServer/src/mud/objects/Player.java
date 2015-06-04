@@ -32,6 +32,7 @@ import mud.interfaces.Wearable;
 import mud.magic.Spell;
 import mud.magic.SpellBook;
 import mud.misc.Coins;
+import mud.misc.Currency;
 import mud.misc.Editors;
 import mud.misc.Slot;
 import mud.misc.SlotType;
@@ -50,6 +51,7 @@ import mud.rulesets.d20.Skills;
 import mud.utils.EditList;
 import mud.utils.Landmark;
 import mud.utils.MailBox;
+import mud.utils.MudUtils;
 import mud.utils.Pager;
 import mud.utils.Point;
 import mud.utils.cgData;
@@ -137,7 +139,7 @@ public class Player extends MUDObject implements Mobile
 	// Game Stuff (most set 'protected' so that an npc can basically have player characteristics
 	protected MUDObject target;                    // Target -- player/npc that will be used for generic interaction
 	protected Race race;                           // Race
-	protected Character gender;                    // Gender
+	protected String gender;                       // Gender
 	protected PClass pclass;                       // Class
 	protected Alignments alignment;                // Alignment
 	protected Handed handed = Handed.RIGHT;        // which hand is dominant (irr. but enum encompasses that and weapons hand req.)
@@ -155,6 +157,7 @@ public class Player extends MUDObject implements Mobile
 	protected int xp;                              // Experience
 	
 	protected Coins money;                         // Money (D&D, MUD)
+	protected Hashtable<String, Currency> money2;  //
 
 	private Profession prof1 = null;                          // Active Profession (One) **UNUSED
 	private Profession prof2 = null;                          // Active Profession (Two) **UNUSED
@@ -219,8 +222,7 @@ public class Player extends MUDObject implements Mobile
 
 	// Knowledge
 	public Map<String, Landmark> landmarks = new HashMap<String, Landmark>(); // contains "landmarks", which are places you've been and h
-
-
+	
 	public static Ruleset ruleset;
 
 	public Ridable mount = null;
@@ -270,7 +272,7 @@ public class Player extends MUDObject implements Mobile
 	private Weapon primary = null;
 	private Weapon secondary = null;
 	
-	protected Player(int tempDBREF) {
+	protected Player(final Integer tempDBREF) {
 		super(tempDBREF);
 	}
 
@@ -281,7 +283,7 @@ public class Player extends MUDObject implements Mobile
 	 * however they can not initialize private members of this class.
 	 * 
 	 */
-	public Player(int tempDBREF, final String tempName, final String tempPass, final int startingRoom) {
+	public Player(final Integer tempDBREF, final String tempName, final String tempPass, final int startingRoom) {
 		super(tempDBREF);
 		type = TypeFlag.PLAYER;
 
@@ -292,7 +294,7 @@ public class Player extends MUDObject implements Mobile
 		
 		this.name = tempName;
 		this.race = Races.NONE;
-		this.gender = 'N';
+		this.gender = "None";
 		this.pclass = Classes.NONE;
 		this.alignment = Alignments.NONE;
 
@@ -329,7 +331,7 @@ public class Player extends MUDObject implements Mobile
 		this.slots = new LinkedHashMap<String, Slot>(11, 0.75f);
 
 		// initialize slots
-		addSlot("helmet", new Slot( SlotTypes.HEAD, ItemTypes.HELMET));
+		/*addSlot("helmet", new Slot( SlotTypes.HEAD, ItemTypes.HELMET));
 		addSlot("necklace", new Slot( SlotTypes.NECK, ItemTypes.NECKLACE));
 		addSlot("armor", new Slot( SlotTypes.CHEST, ItemTypes.ARMOR));
 		addSlot("cloak", new Slot( SlotTypes.BACK, ClothingType.CLOAK));
@@ -344,7 +346,7 @@ public class Player extends MUDObject implements Mobile
 		addSlot("weapon1", new Slot( SlotTypes.LHAND, ItemTypes.WEAPON));
 		addSlot("belt", new Slot( SlotTypes.WAIST, ClothingType.BELT));
 		addSlot("boots", new Slot( SlotTypes.FEET, ClothingType.BOOTS));
-		addSlot("other", new Slot( SlotTypes.NONE, ItemTypes.NONE ));
+		addSlot("other", new Slot( SlotTypes.NONE, ItemTypes.NONE ));*/
 
 		// instantiate stats
 		//stats = new LinkedHashMap<Ability, Integer>(6, 0.75f);
@@ -434,7 +436,7 @@ public class Player extends MUDObject implements Mobile
 	 * @param tempMoney
 	 */
 
-	public Player(final int tempDBREF, final String tempName, final EnumSet<ObjectFlag> tempFlags, final String tempDesc, final int tempLoc, 
+	public Player(final Integer tempDBREF, final String tempName, final EnumSet<ObjectFlag> tempFlags, final String tempDesc, final int tempLoc, 
 			final String tempTitle, final String tempPass, final String tempPStatus, final Integer[] tempStats, final Coins tempMoney)
 	{
 		// use the MUDObject constructor to handle some of the construction?
@@ -443,7 +445,7 @@ public class Player extends MUDObject implements Mobile
 		type = TypeFlag.PLAYER;
 		
 		this.race = Races.NONE;
-		this.gender = 'N';
+		this.gender = "None";
 		this.pclass = Classes.NONE;
 		this.alignment = Alignments.NONE;
 		
@@ -480,7 +482,7 @@ public class Player extends MUDObject implements Mobile
 
 		// initialize slots
 		// NOTE: this functionality relegated to GameModule(s) ???
-		addSlot("helmet", new Slot( SlotTypes.HEAD, ItemTypes.HELMET));
+		/*addSlot("helmet", new Slot( SlotTypes.HEAD, ItemTypes.HELMET));
 		addSlot("necklace", new Slot( SlotTypes.NECK, ItemTypes.NECKLACE));
 		addSlot("armor", new Slot( SlotTypes.CHEST, ItemTypes.ARMOR));
 		addSlot("cloak", new Slot( SlotTypes.BACK, ClothingType.CLOAK));
@@ -495,7 +497,7 @@ public class Player extends MUDObject implements Mobile
 		addSlot("weapon1", new Slot( SlotTypes.LHAND, ItemTypes.WEAPON));
 		addSlot("belt", new Slot( SlotTypes.WAIST, ClothingType.BELT));
 		addSlot("boots", new Slot( SlotTypes.FEET, ClothingType.BOOTS));
-		addSlot("other", new Slot( SlotTypes.NONE, ItemTypes.NONE ));
+		addSlot("other", new Slot( SlotTypes.NONE, ItemTypes.NONE ));*/
 
 		// instantiate stats
 		//stats = new LinkedHashMap<Ability, Integer>(6, 0.75f);
@@ -604,21 +606,21 @@ public class Player extends MUDObject implements Mobile
 	 * 
 	 * @param newAccessLevel integer representing a level of permissions
 	 */
-	public void setAccess(int newAccessLevel) {
+	public void setAccess(final int newAccessLevel) {
 		this.access = newAccessLevel;
 	}
 
-	public void addName(String tName) {
+	public void addName(final String tName) {
 		this.names.add(tName);
 	}
 
-	public void removeName(String tName) {
+	public void removeName(final String tName) {
 		this.names.remove(tName);
 	}
 
 	public Race getRace() { return this.race; }
 
-	public void setRace(Race race) {
+	public void setRace(final Race race) {
 		this.race = race;
 		setProperty("_game/race", race.getName().toLowerCase());
 	}
@@ -628,14 +630,14 @@ public class Player extends MUDObject implements Mobile
 	 * 
 	 * @return
 	 */
-	public Character getGender() { return this.gender; }
+	public String getGender() { return this.gender; }
 
 	/**
 	 * set player gender
 	 * 
 	 * @param newGender
 	 */
-	public void setGender(Character newGender) {
+	public void setGender(final String newGender) {
 		this.gender = newGender;
 		setProperty("_game/gender", newGender);
 	}
@@ -654,7 +656,7 @@ public class Player extends MUDObject implements Mobile
 	 * 
 	 * @param playerClass the character class to set on the player
 	 */
-	public void setPClass(PClass playerClass) {
+	public void setPClass(final PClass playerClass) {
 		this.pclass = playerClass;
 		
 		setProperty("_game/class", playerClass.getName().toLowerCase());
@@ -681,7 +683,7 @@ public class Player extends MUDObject implements Mobile
 	 * 
 	 * @param newTitle
 	 */
-	public void setTitle(String newTitle) {
+	public void setTitle(final String newTitle) {
 		this.title = newTitle;
 	}
 
@@ -690,7 +692,7 @@ public class Player extends MUDObject implements Mobile
 	 * set
 	 */
 	@Override
-	public boolean setName(String newName) {
+	public boolean setName(final String newName) {
 		return false;
 	}
 
@@ -718,7 +720,7 @@ public class Player extends MUDObject implements Mobile
 	 * 
 	 * @param newPass the new password to set on the player
 	 */
-	public void setPass(String newPass) {
+	public void setPass(final String newPass) {
 		this.pass = Utils.hash(newPass);
 	}
 
@@ -749,7 +751,7 @@ public class Player extends MUDObject implements Mobile
 	}
 	
 	// set the player's status
-	public void setStatus(String arg) {
+	public void setStatus(final String arg) {
 		this.status = arg;
 	}
 
@@ -757,7 +759,7 @@ public class Player extends MUDObject implements Mobile
 		return this.pstatus;
 	}
 
-	public void setPStatus(Status newStatus) {
+	public void setPStatus(final Status newStatus) {
 		this.pstatus = newStatus;
 	}
 
@@ -770,7 +772,7 @@ public class Player extends MUDObject implements Mobile
 		}
 	}
 
-	public void setTarget(MUDObject m) {
+	public void setTarget(final MUDObject m) {
 		this.target = m;
 	}
 
@@ -789,8 +791,27 @@ public class Player extends MUDObject implements Mobile
 	// then I need to determine a standard weight for the money
 	// and calculate that, then decide if the player can hold it
 	public void setMoney(final Coins c) {
-		//this.money.add(c);
 		this.money = this.money.add(c);
+		
+		/*if( c.isMoreOrEqual(Coins.copper(0)) ) {
+			this.money = this.money.add(c);
+		}
+		else {
+			this.money = this.money.subtractCopper( c.numOfCopper() );
+		}*/
+		
+		// TODO this does not belong here, probably belongs as part of take command or take all
+		/*double temp = MudUtils.calculateWeight(this);
+		double remaining = this.capacity - temp;
+		
+		if( c.numOfCopper() * ( 0.0625 ) < remaining ) {
+			this.money = this.money.add(c);
+		}
+		else {
+			final int toTake = (int) (remaining / 0.0625 );
+			
+			this.money.add( c.subtractCopper( toTake ) );
+		}*/
 	}
 
 	/**
@@ -831,7 +852,7 @@ public class Player extends MUDObject implements Mobile
 	 * 
 	 * @param xp
 	 */
-	public void setXP(int xp) {
+	public void setXP(final int xp) {
 		this.xp += xp;
 	}
 
@@ -848,7 +869,7 @@ public class Player extends MUDObject implements Mobile
 	}
 
 	/* level[n] = level[n-1] + (n * 1000) */
-	private int getXPToLevel(int level) {
+	private int getXPToLevel(final int level) {
 		if( level == 0 ) return 0;
 		else {
 			return getXPToLevel(level - 1) + ( level * 1000 );
@@ -859,7 +880,7 @@ public class Player extends MUDObject implements Mobile
 		return this.hp + this.temphp;
 	}
 
-	public void setHP(int hp) {
+	public void setHP(final int hp) {
 		// you can only set HP up to the total hp
 		if( (this.hp + hp) < this.totalhp ) {
 			this.hp += hp;
@@ -889,7 +910,7 @@ public class Player extends MUDObject implements Mobile
 		return this.totalhp;
 	}
 
-	public void setTotalHP(int hp) {
+	public void setTotalHP(final int hp) {
 		this.totalhp = hp;
 	}
 
@@ -897,7 +918,7 @@ public class Player extends MUDObject implements Mobile
 		return this.mana;
 	}
 
-	public void setMana(int mana) {
+	public void setMana(final int mana) {
 		this.mana += mana;
 	}
 
@@ -905,45 +926,45 @@ public class Player extends MUDObject implements Mobile
 		return this.totalmana;
 	}
 
-	public void setTotalMana(int mana) {
+	public void setTotalMana(final int mana) {
 		this.totalmana = mana;
 	}
 
-	public int getAbility(Ability ability) {
+	public int getAbility(final Ability ability) {
 		return this.stats.get(ability) + statMod[ability.getId()];
 	}
 
-	public void setAbility(Ability ability, int abilityValue) {
+	public void setAbility(final Ability ability, final int abilityValue) {
 		this.stats.put(ability, abilityValue);
 	}
 
-	public int getAbilityMod(Ability ability) {
+	public int getAbilityMod(final Ability ability) {
 		return this.statMod[ability.getId()];
 	}
 
-	public void setAbilityMod(Ability ability, int abilityMod) {
+	public void setAbilityMod(final Ability ability, final int abilityMod) {
 		this.statMod[ability.getId()] = abilityMod;
 	}
 
-	public void addSkill(Skill skill) {
+	public void addSkill(final Skill skill) {
 		this.skills.put(skill,  0);
 	}
 
-	public int getSkill(Skill skill) {
+	public int getSkill(final Skill skill) {
 		return this.skills.get(skill) + skillMod[skill.getId()];
 	}
 
-	public void setSkill(Skill skill, int skillValue) {
+	public void setSkill(final Skill skill, final int skillValue) {
 		if( this.skills.containsKey(skill) ) {
 			this.skills.put(skill, skillValue);	
 		}
 	}
 
-	public int getSkillMod(Skill skill) {
+	public int getSkillMod(final Skill skill) {
 		return this.skillMod[skill.getId()];
 	}
 
-	public void setSkillMod(Skill skill, int skillMod) {
+	public void setSkillMod(final Skill skill, final int skillMod) {
 		this.skillMod[skill.getId()] = skillMod;
 	}
 
@@ -951,17 +972,17 @@ public class Player extends MUDObject implements Mobile
 		return this.inventory;
 	}
 
-	public void addSlot(String name, Slot slot) {
+	public void addSlot(final String name, final Slot slot) {
 		if( !this.slots.containsKey(name) ) {
 			this.slots.put(name, slot);
 		}
 	}
 
-	public void removeSlot(String name) {
+	public void removeSlot(final String name) {
 		this.slots.remove(name);
 	}
 
-	public Slot getSlot(String key) {
+	public Slot getSlot(final String key) {
 		if( slots.containsKey(key) ) {
 			return slots.get(key);
 		}
@@ -979,7 +1000,7 @@ public class Player extends MUDObject implements Mobile
 		return null;
 	}
 
-	public List<Slot> getSlots(String key) {
+	public List<Slot> getSlots(final String key) {
 		List<Slot> slots = new LinkedList<Slot>();
 
 		for(final String s : getSlots().keySet() ) {
@@ -1003,7 +1024,7 @@ public class Player extends MUDObject implements Mobile
 		return Collections.unmodifiableMap( this.stats );
 	}
 
-	public Quest getQuest(int id) {
+	public Quest getQuest(final int id) {
 		for(final Quest q : this.quests) {
 			if( q.getId() == id ) {
 				return q;
@@ -1052,17 +1073,17 @@ public class Player extends MUDObject implements Mobile
 		return this.mailbox;
 	}
 
-	public void equip(Item item, Slot slot) {
+	public void equip(final Item item, final Slot slot) {
 		slot.insert(item);
 	}
 
-	public void equip(Item item, String location) {
+	public void equip(final Item item, final String location) {
 		if ( this.slots.containsKey(location) ) {
 			this.slots.get(location).insert(item);
 		}
 	}
 
-	public void unequip(Item item, Slot slot) {
+	public void unequip(final Item item, final Slot slot) {
 		if (slot.isFull()) {
 			if (slot.getItem() == item) {
 				slot.remove();
@@ -1070,14 +1091,14 @@ public class Player extends MUDObject implements Mobile
 		}
 	}
 
-	public void unequip(Item item, String location) {
+	public void unequip(final Item item, final String location) {
 		if ( this.slots.containsKey(location) ) {
 			this.slots.get(location);
 			this.inventory.add(item);
 		}
 	}
 
-	public void unequip(Item item) {
+	public void unequip(final Item item) {
 		this.inventory.add(item);
 	}
 
@@ -1102,11 +1123,11 @@ public class Player extends MUDObject implements Mobile
 		return this.cName;
 	}
 
-	public void setCName(String newCName) {
+	public void setCName(final String newCName) {
 		this.cName = newCName;
 	}
 
-	public void setController(boolean isController) {
+	public void setController(final boolean isController) {
 		this.controller = isController;
 	}
 
@@ -1118,7 +1139,7 @@ public class Player extends MUDObject implements Mobile
 		return this.mode;
 	}
 
-	public void setMode(PlayerMode newMode) {
+	public void setMode(final PlayerMode newMode) {
 		this.mode = newMode;
 	}
 
@@ -1138,7 +1159,7 @@ public class Player extends MUDObject implements Mobile
 	 * 
 	 * @param isMoving
 	 */
-	public void setMoving(boolean isMoving) {
+	public void setMoving(final boolean isMoving) {
 		this.moving = isMoving;
 	}
 
@@ -1158,7 +1179,7 @@ public class Player extends MUDObject implements Mobile
 	 * 
 	 * @param isFlying
 	 */
-	public void setFlying(boolean isFlying) {
+	public void setFlying(final boolean isFlying) {
 		this.flying = isFlying;
 	}
 
@@ -1166,11 +1187,11 @@ public class Player extends MUDObject implements Mobile
 		return this.destination;
 	}
 
-	public void setDestination(Point newDest) {
+	public void setDestination(final Point newDest) {
 		this.destination = newDest;
 	}
 
-	public void changePosition(int cX, int cY, int cZ) {
+	public void changePosition(final int cX, final int cY, final int cZ) {
 		this.pos.changeX(cX);
 		this.pos.changeY(cY);
 		this.pos.changeZ(cZ);
@@ -1192,7 +1213,7 @@ public class Player extends MUDObject implements Mobile
 		return this.lineLimit;
 	}
 
-	public void setLineLimit(int newLineLimit) {
+	public void setLineLimit(final int newLineLimit) {
 		this.lineLimit = newLineLimit;
 	}
 
@@ -1200,7 +1221,7 @@ public class Player extends MUDObject implements Mobile
 		return this.state;
 	}
 
-	public void setState(State newState) {
+	public void setState(final State newState) {
 		this.state = newState;
 	}
 
@@ -1229,7 +1250,7 @@ public class Player extends MUDObject implements Mobile
 	 * @param checkState
 	 * @return
 	 */
-	public boolean isState(State checkState) {
+	public boolean isState(final State checkState) {
 		return this.state == checkState;
 	}
 
@@ -1237,13 +1258,13 @@ public class Player extends MUDObject implements Mobile
 		return this.pager;
 	}
 
-	public void setPager(Pager newPager) {
+	public void setPager(final Pager newPager) {
 		this.pager = newPager;
 	}
 
 	/* Name Reference Table (NRT) methods */
 
-	public Integer getNameRef(String key) {
+	public Integer getNameRef(final String key) {
 		return this.nameRef.get(key);
 	}
 
@@ -1251,7 +1272,7 @@ public class Player extends MUDObject implements Mobile
 		return this.nameRef.keySet();
 	}
 
-	public void setNameRef(String key, Integer value) {
+	public void setNameRef(final String key, final Integer value) {
 		this.nameRef.put(key, value);
 	}
 
@@ -1281,28 +1302,31 @@ public class Player extends MUDObject implements Mobile
 	}
 
 	public int getArmorClass() {
+		Integer armorClass = 0;
+		
 		Item armor = slots.get("armor").getItem();
 		Item shield = slots.get("weapon1").getItem();
 
 		if( armor != null && armor instanceof Armor ) {
 			if( shield != null && shield instanceof Shield ) {
-				return 10 + ((Armor) armor).getArmorBonus() + ((Shield) shield).getShieldBonus();
+				armorClass = 10 + ((Armor) armor).getArmorBonus() + ((Shield) shield).getShieldBonus();
 			}
-
-			return 10 + ((Armor) armor).getArmorBonus();
+			else {
+				armorClass = 10 + ((Armor) armor).getArmorBonus();
+			}
 		}
 		else if( shield != null && shield instanceof Shield ) {
-			return 10 + ((Shield) shield).getShieldBonus();
+			armorClass = 10 + ((Shield) shield).getShieldBonus();
 		}
 
-		return 10;
+		return armorClass + getAbilityMod(Abilities.STRENGTH);
 	}
 
 	public int getSpeed() {
 		return this.speed;
 	}
 
-	public void setSpeed(int newSpeed) {
+	public void setSpeed(final int newSpeed) {
 		this.speed = newSpeed;
 	}
 
@@ -1310,11 +1334,11 @@ public class Player extends MUDObject implements Mobile
 		return this.alignment;
 	}
 
-	public void setAlignment(Alignments alignment) {
+	public void setAlignment(final Alignments alignment) {
 		this.alignment = alignment;
 	}
 
-	public void setAlignment(int newAlignment) {
+	public void setAlignment(final int newAlignment) {
 		this.alignment = Alignments.values()[newAlignment];
 	}
 
@@ -1391,7 +1415,7 @@ public class Player extends MUDObject implements Mobile
 		return Collections.unmodifiableMap(this.config);
 	}
 
-	public void setLastSpell(Spell last) {
+	public void setLastSpell(final Spell last) {
 		if( this.isCaster() ) {
 			this.lastSpell = last;
 		}
@@ -1413,12 +1437,12 @@ public class Player extends MUDObject implements Mobile
 	}
 	
 	// set weapons...
-	public Weapon getWeapon(boolean primary) {
+	public Weapon getWeapon(final boolean primary) {
 		if( primary ) return this.primary;
 		else          return this.secondary;
 	}
 	
-	public void setWeapon(Weapon weapon, boolean primary) {
+	public void setWeapon(final Weapon weapon, final boolean primary) {
 		if( primary ) this.primary = weapon;
 		else          this.secondary = weapon;
 	}
@@ -1448,7 +1472,7 @@ public class Player extends MUDObject implements Mobile
 		return this.editor;
 	}
 
-	public void setEditor(Editors editor) {
+	public void setEditor(final Editors editor) {
 		if( editor != Editors.NONE ) setStatus("EDT");
 		this.editor = editor;
 	}
@@ -1457,7 +1481,7 @@ public class Player extends MUDObject implements Mobile
 		return this.edd;
 	}
 
-	public void setEditorData(EditorData newEdD) {
+	public void setEditorData(final EditorData newEdD) {
 		this.edd = newEdD;
 	}
 
@@ -1465,11 +1489,11 @@ public class Player extends MUDObject implements Mobile
 		return this.cgd;
 	}
 
-	public void setCGData(cgData newCGD) {
+	public void setCGData(final cgData newCGD) {
 		this.cgd = newCGD;
 	}
 
-	public void setIdle(boolean idle) {
+	public void setIdle(final boolean idle) {
 		this.idle_state = idle;
 	}
 
@@ -1611,12 +1635,12 @@ public class Player extends MUDObject implements Mobile
 
 		sb.append("\n");
 		
-		sb.append( Utils.jsonify("access",  "" + getAccess()) );
-		sb.append( Utils.jsonify("race",    "" + race.getId()) );
-		sb.append( Utils.jsonify("class",   "" + pclass.getId()) );
-		sb.append( Utils.jsonify("status",  "" + status) );
-		sb.append( Utils.jsonify("state",   "" + state.ordinal()) );
-		sb.append( Utils.jsonify("pstatus", "" + pstatus.ordinal()) );
+		sb.append( Utils.jsonify("access",  getAccess())       );
+		sb.append( Utils.jsonify("race",    race.getId())      );
+		sb.append( Utils.jsonify("class",   pclass.getId())    );
+		sb.append( Utils.jsonify("status",  status)            );
+		sb.append( Utils.jsonify("state",   state.ordinal())   );
+		sb.append( Utils.jsonify("pstatus", pstatus.ordinal()) );
 
 		/*sb.append("\t\"access\"" + ": \"" + getAccess() + "\",\n");
 		sb.append("\t\"race\"" + ": \"" + race.getId() + "\",\n");

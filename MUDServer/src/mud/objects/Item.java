@@ -88,7 +88,7 @@ public class Item extends MUDObject implements Cloneable {
 		this.type = TypeFlag.ITEM;
 	}
 	
-	public Item(int tempDBREF, String name, String description) {
+	public Item(int tempDBREF, final String name, final String description) {
 		super(tempDBREF);
 		
 		this.type = TypeFlag.ITEM;
@@ -178,7 +178,7 @@ public class Item extends MUDObject implements Cloneable {
 	
 	// TODO not setter for value
 	public Coins getValue() {
-		return baseValue;
+		return this.baseValue;
 	}
 	
 	// TODO not setter for durability

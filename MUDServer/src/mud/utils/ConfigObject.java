@@ -8,23 +8,19 @@ package mud.utils;
  */
 public class ConfigObject {
 	private String name;
-	private String typeName;
-	private Object object = null;
+	private Object object;
+	
 	private Class objectClass;
 	
-	public ConfigObject(String name, Object object) {
+	public ConfigObject(final String name, final Object object) {
 		this.name = name;
-		this.typeName = object.getClass().getName();
 		this.object = object;
+		
 		this.objectClass = object.getClass();
 	}
 	
 	public String getName() {
 		return this.name;
-	}
-	
-	public String getTypeName() {
-		return this.typeName;
 	}
 	
 	public Object getObject() {
@@ -35,20 +31,26 @@ public class ConfigObject {
 		if(objectClass == Boolean.class) {
 			return (Boolean) object;
 		}
-		else { return null; }			
+		else {
+			return false;
+		}
 	}
 	
 	public Integer getInteger() {
 		if(objectClass == Integer.class) {
 			return (Integer) object;
 		}
-		else { return null; }
+		else {
+			return -1;
+		}
 	}
 	
 	public String getString() {
 		if(objectClass == String.class) {
 			return (String) object;
 		}
-		else { return null; }
+		else {
+			return "";
+		}
 	}
 }

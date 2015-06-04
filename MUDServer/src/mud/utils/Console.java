@@ -18,11 +18,11 @@ public class Console {
 		this.client = client;
 	}
 
-	public void processInput(final String _input, final Client client) {
+	public void processInput(final String _input) {
 		String command = "";
 		String arg = "";
 		
-		String[] temp = _input.trim().split(" ");
+		final String[] temp = _input.trim().split(" ");
 		
 		if( temp.length > 1 ) {
 			command = temp[0];
@@ -33,9 +33,11 @@ public class Console {
 		}
 		
 		if( command.equalsIgnoreCase("help") ) {
-			client.writeln("Available Commands: clients, help, logout, mem, gc, quit");
+			final List<String> commands = Utils.mkList(
+					"clientinfo", "clients", "gc", "help", "logout", "mem", "who", "quit");
+			client.writeln("Available Commands: " + Utils.join(commands, ","));
 		}
-		else if ( command.equalsIgnoreCase("clientinfo") ) {
+		else if( command.equalsIgnoreCase("clientinfo") ) {
 			if( !arg.equals("") ) {
 				int c = Utils.toInt(arg, -1);
 				
@@ -49,7 +51,7 @@ public class Console {
 				}
 			}
 		}
-		else if ( command.equalsIgnoreCase("clients") ) {
+		else if( command.equalsIgnoreCase("clients") ) {
 			int cn = 0;
 			client.writeln("-- " + Utils.padRight("Clients ", '-', 69));
 			for (Client c : server.getClients()) {
@@ -89,7 +91,7 @@ public class Console {
 				try {
 					String name = player.getName();                       // need to limit name to 10 characters
 					String playerClass = player.getPClass().getName();
-					String playerGender = player.getGender().toString();
+					String playerGender = "" + player.getGender();
 					String race = player.getRace().toString();
 					Integer location = player.getLocation();              // set room # limit to 5 characters (max. 99999)
 					String roomName = server.getRoom(location).getName(); // truncate to 24 characters?

@@ -130,6 +130,10 @@ public class Box extends Thing implements Closeable, Lockable<Item>, Storage<Ite
 		return this.isLocked;
 	}
 	
+	public boolean contains(final Item item) {
+		return contentMap.values().contains(item);
+	}
+	
 	@Override
 	public List<Item> getContents() {
 		return Collections.unmodifiableList(this.contents);

@@ -5,7 +5,6 @@ Syntax: 'find [-<parameter>]'
 
 Parameters:
 
-p   players (ONLY!)
 n   npcs (ONLY!)
 r   rooms  (ONLY!)
 

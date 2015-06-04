@@ -21,9 +21,9 @@ public class Currency {
 	private final String name;   // name of the currency
 	private final String abbrev; // abbreviation to use when a short form is required
 	private final Currency base; // a smaller form of currency that the value of this is based o
-	private final int value;     // the equivalent value of this in a smaller form of currency
+	private final Double value;     // the equivalent value of this in a smaller form of currency
 
-	public Currency(String name, String abbrev, Currency base, int value) {
+	public Currency(String name, String abbrev, Currency base, Double value) {
 		this.name = name;     // name is the name the player sees
 		this.abbrev = abbrev; // the common two letter abbreviate (used in indicating money)
 		this.base = base;     // base
@@ -52,9 +52,9 @@ public class Currency {
 	 * 
 	 * @return
 	 */
-	public Integer toInteger() {
+	public Double toDouble() {
 		if (base != null) {
-			return base.toInteger();
+			return base.toDouble();
 		}
 		else {
 			return this.value;

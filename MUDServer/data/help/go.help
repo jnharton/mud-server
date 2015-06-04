@@ -1,0 +1,11 @@
+go
+GO
+
+Go in the specified direction, to the specified object's position, or
+to the indicated coordinate point.
+
+Syntax: go <n/ne/nw/s/se/sw/e/w>
+        go <object name>
+        go <x> <y> [<z>]
+        
+Last Updated: May 29th, 2015

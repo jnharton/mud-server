@@ -38,7 +38,7 @@ public class ScriptedCommand extends Command {
 		this.pgmi.interpret(script, getPlayer(client), null);
 	}
 	
-	public void setAcessLevel(int newAccessLevel) {
+	public void setAccessLevel(int newAccessLevel) {
 		this.accessLevel = newAccessLevel;
 	}
 

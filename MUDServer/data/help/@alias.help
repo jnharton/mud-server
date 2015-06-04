@@ -4,6 +4,6 @@
 Make a new command alias or list the command aliases that are setup.
 
 Syntax: @alias       - make a new alias (not coded)
-        @alias #list - list existing commandaliases
+        @alias #list - list existing command aliases
 
 Last Updated: August 19, 2013

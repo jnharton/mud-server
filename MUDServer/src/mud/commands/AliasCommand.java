@@ -34,7 +34,16 @@ public class AliasCommand extends Command {
 			send("-------------------------------------------", client);
 		}
 		else {
-			// if no set of things to alias to, just show existing aliases for it if any
+			// @alias command=alias string
+			final String[] args = arg.split("=");
+			
+			if( args.length == 2 ) {
+				// should we be making sure the specified command is valid
+				addAlias(args[0], args[1]);
+			}
+			else {
+				// if no set of things to alias to, just show existing aliases for it if any
+			}
 		}
 	}
 

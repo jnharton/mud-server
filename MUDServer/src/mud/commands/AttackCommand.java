@@ -16,6 +16,7 @@ import mud.objects.Thing;
 import mud.objects.items.Weapon;
 import mud.objects.items.WeaponType;
 import mud.objects.items.WeaponTypes;
+import mud.utils.MudUtils;
 import mud.utils.Utils;
 
 /*
@@ -36,18 +37,16 @@ public class AttackCommand extends Command {
 
 	@Override
 	public void execute(String arg, Client client) {
-		Player player = getPlayer(client);
+		final Player player = getPlayer(client);
+		
+		final String playerName = player.getName();
 
 		try {
 			if (!arg.equals("")) {
-				// here we want to try and get whatever was targeted
-
-				final List<Creature> creatures = getCreaturesByRoom( getRoom( player ) );
-
-				// TODO we shouldn't be able to attack anything not in the same room with us, etc
-				//MUDObject mobj = getObject(arg);
-
+				// here we want to try and get whatever was targeteD
 				MUDObject mobj = null;
+				
+				final List<Creature> creatures = getCreaturesByRoom( getRoom( player ) );
 
 				for(final Creature c : creatures) {
 					if( c.getName().equalsIgnoreCase(arg) ) {
@@ -65,23 +64,26 @@ public class AttackCommand extends Command {
 			if (player.getTarget() != null) {
 
 				// can we attack them?
-				boolean attack = canAttack( player.getTarget() );
+				boolean attack = MudUtils.canAttack( player.getTarget() );
 
 				if (attack) {
-					send("Can attack.", client);
-					send("You attack " + player.getTarget().getName() + ".", client);
+					debug(playerName + ": Can attack");
+					debug(playerName + " attacks " + player.getTarget().getName() + "");
 
 					// start attacking
 
 					// get weapon
-					Weapon weapon = (Weapon) player.getSlots().get("weapon").getItem();
+					//Weapon weapon = (Weapon) player.getSlots().get("weapon").getItem();
+					
+					Weapon weapon = MudUtils.getWeapon(player);
+					
 					WeaponType wt = null;
 
 					if(weapon != null) {
 						// get our weapon type
 						//wt = weapon.getWeaponType();
 						
-						// TODO resolve this somewher
+						// TODO resolve this somewhere
 						wt = WeaponTypes.LONGSWORD;
 					}
 
@@ -89,9 +91,9 @@ public class AttackCommand extends Command {
 					boolean inRange = true;
 
 					if (inRange) { // are they in range of our weapon?
-						send("In range.", client);
+						debug(playerName + ": In range");
 
-						boolean hit = canHit(player.getTarget());
+						boolean hit = MudUtils.canHit(player.getTarget());
 
 						if (hit) { // did we hit?
 
@@ -101,15 +103,18 @@ public class AttackCommand extends Command {
 
 							// figure out damage
 							int criticalCheckRoll = Utils.roll(1, 20);
+							
 							boolean criticalHit = criticalCheckRoll >= wt.getCritMin() && criticalCheckRoll <= wt.getCritMax() ? true : false;
 
-							int damage = calculateDamage(weapon, criticalHit);
-
+							int damage = MudUtils.calculateDamage(weapon, criticalHit);
+							
+							debug(playerName + " hits " + player.getTarget() + " for " + damage + " damage");
+							
 							// tell us what 
 							if( damage <= 1 ) {
 								send("Pff. You practically missed them anyway (" + damage + " damage )", client);
 							}
-							else if ( damage > 1 && damage < 5) {
+							else if ( Utils.range(damage, 2,  5) ) {
 								send("A solid hit! (" + damage + " damage )", client);
 							}
 							else {
@@ -150,6 +155,7 @@ public class AttackCommand extends Command {
 								if( ((Player) target).getHP() <= 0 ) {
 									send("You killed them!" + ((Player) target).getName() + ".", client);
 									handleDeath( (Player) target );
+									player.setTarget(null);
 								}
 							}
 							else {
@@ -159,7 +165,10 @@ public class AttackCommand extends Command {
 								
 								if( creature.getHP() <= 0 ) {
 									send("You killed " + creature.getName() + ".", client);
+									debug(playerName + " killed " + creature.getName() + " (#" + creature.getDBRef() + ")");
+									
 									handleDeath( creature, player );
+									
 									player.setTarget(null);
 								}
 							}
@@ -201,52 +210,5 @@ public class AttackCommand extends Command {
 	@Override
 	public int getAccessLevel() {
 		return Constants.USER;
-	}
-
-	public int calculateDamage(final Weapon weapon, final boolean critical) {
-		if( weapon == null ) {
-			return 1;
-		}
-		else {
-			final WeaponType wt = weapon.getWeaponType();
-
-			if(wt != null ) {
-				String damageRoll = wt.getDamage();
-
-				if (critical) {
-					return Utils.roll(damageRoll) * wt.getCritical();
-				}
-				else {
-					return Utils.roll(damageRoll);
-				}
-			}
-			else return weapon.damage;
-		}
-	}
-
-	public boolean canAttack(MUDObject target) {
-		if (target instanceof Player) {
-			return canAttack( (Player) target );
-		}
-		return true;
-	}
-
-	public boolean canAttack(Player target) {
-		if( target.getState() != Player.State.DEAD ) return true;
-		else return false;
-	}
-
-	public boolean canHit(MUDObject Target) {
-		int roll = Utils.roll(1, 20);
-
-		if (roll == 1) { // Natural 1 (guaranteed miss)
-			return false;
-		}
-		else if (roll == 20) { // Natural 20 (guaranteed hit)
-			return true;
-		}
-		else { // compare to AC of target
-			return roll > 5;
-		}
 	}
 }

@@ -2,30 +2,17 @@ package mud.objects;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.EnumSet;
-import java.util.Random;
 
-import mud.MUDObject;
 import mud.ObjectFlag;
 import mud.TypeFlag;
 import mud.game.Ability;
-import mud.game.Skill;
 import mud.misc.Coins;
-import mud.misc.Direction;
-import mud.misc.Editors;
 import mud.misc.Slot;
-import mud.misc.SlotType;
-import mud.net.Client;
-import mud.objects.items.ClothingType;
 import mud.quest.Quest;
-import mud.quest.Task;
-import mud.quest.TaskType;
-import mud.rulesets.d20.Abilities;
 import mud.rulesets.d20.Classes;
 import mud.rulesets.d20.Races;
-import mud.rulesets.d20.Skills;
 import mud.utils.Message;
 import mud.utils.Utils;
 
@@ -106,18 +93,15 @@ public class NPC extends Player implements InteractiveI
 	 * 
 	 * @param tempDBRef
 	 * @param tempName
-	 * @param tempPass
 	 * @param tempFlags
 	 * @param tempDesc
-	 * @param tempTitle
-	 * @param tempPStatus
 	 * @param tempLoc
 	 * @param tempMoney
 	 */
-	public NPC(final int tempDBRef, final String tempName, final String tempPass, final EnumSet<ObjectFlag> tempFlags, 
-            final String tempDesc, final String tempTitle, final String tempPStatus, final int tempLoc, final Coins tempMoney)
+	public NPC(final int tempDBRef, final String tempName, final EnumSet<ObjectFlag> tempFlags, final String tempDesc, 
+            final int tempLoc, final Coins tempMoney)
 	{
-        super(tempDBRef, tempName, tempFlags, tempDesc, tempLoc, tempTitle, tempPass, tempPStatus, new Integer[] {10, 10, 10, 10, 10, 10}, tempMoney);
+        super(tempDBRef, tempName, tempFlags, tempDesc, tempLoc, null, null, null, new Integer[] {10, 10, 10, 10, 10, 10}, tempMoney);
         this.type = TypeFlag.NPC;
 	}
 	

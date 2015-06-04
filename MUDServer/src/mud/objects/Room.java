@@ -17,6 +17,7 @@ import mud.events.SayEvent;
 import mud.events.SayEventListener;
 import mud.game.Ability;
 import mud.game.Skill;
+import mud.interfaces.Instance;
 import mud.misc.Direction;
 import mud.misc.Trigger;
 import mud.misc.TriggerType;
@@ -42,7 +43,7 @@ import mud.weather.Weather;
  * @author Jeremy N. Harton
  * 
  */
-public class Room extends MUDObject implements EventSource
+public class Room extends MUDObject implements EventSource, Instance
 {
 	// NON,FOR,MSH,HILL,MTN,DST,AQU,SKY?
 	public enum Terrain { NONE, FOREST, MARSH, HILLS, MOUNTAIN, DESERT, PLAINS, AQUATIC, SKY };
@@ -68,8 +69,8 @@ public class Room extends MUDObject implements EventSource
 	// DAY or NIGHT
 
 	private Zone zone = null;                                 // the zone this room belongs to
-
-	private Integer instance_id = null;                       // instance_id, if this is the original, it should be null
+	
+	private Integer instance_id = -1;                         // instance_id
 
 	private int x = 10, y = 10; // size of the room ( 10x10 default )
 	private int z = 10;         // height of room ( 10 default )
@@ -121,10 +122,11 @@ public class Room extends MUDObject implements EventSource
 	{
 		super(toCopy.getDBRef());
 		
-		this.type = TypeFlag.ROOM;
-		
 		this.name = toCopy.getName();         // Set the name
 		this.desc = toCopy.getDesc();         // Set the description to the default
+		
+		this.type = TypeFlag.ROOM;
+		
 		this.flags = toCopy.getFlags();       // Set the flags
 		this.locks = "";                      // Set the locks
 		this.location = toCopy.getLocation(); // Set the location
@@ -146,10 +148,13 @@ public class Room extends MUDObject implements EventSource
 	public Room(int tempDBREF, String tempName, final EnumSet<ObjectFlag> tempFlags, String tempDesc, int tempLocation)
 	{
 		super(tempDBREF);
-		this.type = TypeFlag.ROOM;
 		//this.dbref = tempDBREF;                                    // Set the dbref (database reference)
+		
 		this.name = tempName;                                        // Set the name
 		this.desc = tempDesc;                                        // Set the description
+		
+		this.type = TypeFlag.ROOM;
+		
 		this.flags = tempFlags;                                      // Set room flags
 		this.locks = "";                                             // Set the locks
 		this.location = tempLocation;                                // Set the location
@@ -204,12 +209,12 @@ public class Room extends MUDObject implements EventSource
 	}
 
 	/**
+	 * NOTE: the returned list /should/ be unmodifiable. that is, the
+	 * return here is not for modifying the list the exits
 	 * @return the exits
 	 */
-	public ArrayList<Exit> getExits() {
-		//return new ArrayList<Exit>(exits); // ???
-		return exits;
-
+	public List<Exit> getExits() {
+		return Collections.unmodifiableList(exits);
 	}
 
 	public String getExitNames() {
@@ -263,15 +268,6 @@ public class Room extends MUDObject implements EventSource
 	public void setExits(ArrayList<Exit> exits) {
 		this.exits = exits;
 	}
-
-	public Integer getInstanceId() {
-		if (this.instance_id != null) {
-			return this.instance_id;
-		}
-		else {
-			return -1;
-		}
-	}
 	
 	public void setDimension(final String dim, final int size) {
 		if( dim.equalsIgnoreCase("x") )      this.y = size;
@@ -318,6 +314,14 @@ public class Room extends MUDObject implements EventSource
 	}
 	public synchronized void removeSayEventListener(SayEventListener listener)   {
 		_listeners.remove(listener);
+	}
+	
+	public void addExit(final Exit exit) {
+		this.exits.add(exit);
+	}
+	
+	public void removeExit(final Exit exit) {
+		this.exits.remove(exit);
 	}
 	
 	/**
@@ -434,6 +438,22 @@ public class Room extends MUDObject implements EventSource
 			iter.next().handleSayEvent(event);
 		}
 	}
+	
+	// instancing stuff
+	
+	// implements
+	public Boolean isInstance() {		
+		if( this.instance_id > 0 ) {
+			return true;
+		}
+		
+		return false;
+	}
+	
+	// implements
+	public Integer getInstanceId() {
+		return this.instance_id;
+	}
 
 	/**
 	 * Translate the persistent aspects of the room into the string
@@ -441,17 +461,16 @@ public class Room extends MUDObject implements EventSource
 	 */
 	public String toDB() {
 		String[] output = new String[9];
-		output[0] = this.getDBRef() + "";                         // database reference number
+		output[0] = "" + this.getDBRef();                         // database reference number
 		output[1] = this.getName();                               // name
-		output[2] = TypeFlag.asLetter(this.type) + "";            // flags
+		output[2] = "" + TypeFlag.asLetter(this.type);            // flags
 		output[2] = output[2] + getFlagsAsString();
 		output[3] = this.getDesc();                               // description
-		output[4] = this.getLocation() + "";                      // location (a.k.a parent)
+		output[4] = "" + this.getLocation();                      // location (a.k.a parent)
 		output[5] = "" + this.getRoomType().toString().charAt(0); // room type
 		output[6] = this.x + "," + this.y + "," + this.z;         // room dimensions (x,y,z)
 		output[7] = "-1";                                         // room terrain
-		if( zone != null ) output[8] = "" + zone.getId();         // zone data
-		else output[8] = "-1";
+		output[8] = (zone != null) ? "" + zone.getId() : "-1";    // zone data
 
 		return Utils.join(output, "#");
 	}

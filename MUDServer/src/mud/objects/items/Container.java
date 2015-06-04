@@ -20,6 +20,7 @@ public class Container extends Item implements Storage<Item> {
 	private ArrayList<Item> contents;
 
 	private int displayWidth = 30; // the width for the container display box (check whenever something added)
+	
 	private Character top = '-';
 	private Character side = '|';
 	private Character bottom = '-';
@@ -111,12 +112,14 @@ public class Container extends Item implements Storage<Item> {
 		// check display width, change if necessary (shorten)
 		// this means each item must track how wide it's name/string version is
 		// note: will retrieve only the first item if no specifier
+		
 		for (Item item : this.contents) {
 			if (item.getName().equals(itemName)) {
 				this.weight -= item.getWeight();
 				return this.contents.remove(this.contents.indexOf(item));
 			}
 		}
+		
 		return null;
 	}
 	
@@ -144,6 +147,19 @@ public class Container extends Item implements Storage<Item> {
 	public int indexOf(Item element) {
 		return this.contents.indexOf(element);
 	}
+	
+	@Override
+	public Double getWeight() {
+		final Double containerWeight = super.getWeight();
+		
+		Double temp = 0.0;
+		
+		for(final Item item : contents) {
+			temp += item.getWeight();
+		}
+		
+		return (containerWeight + temp);
+	}
 
 	public boolean isFull() {
 		return this.full;
@@ -170,11 +186,6 @@ public class Container extends Item implements Storage<Item> {
 	}
 
 	@Override
-	public String toString() {
-		return getName();
-	}
-
-	@Override
 	public String toDB() {
 		String[] output = new String[10];
 		
@@ -193,9 +204,9 @@ public class Container extends Item implements Storage<Item> {
 		
 		return Utils.join(output, "#");
 	}
-
+	
 	@Override
-	public String getName() {
-		return this.name;
+	public String toString() {
+		return this.getName();
 	}
 }

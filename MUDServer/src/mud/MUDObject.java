@@ -1,7 +1,7 @@
 package mud;
 
 /*
- * Copyright (c) 2012 Jeremy N. Harton
+ * Copyright (c) 2012-2015 Jeremy N. Harton
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
  * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
@@ -24,6 +24,7 @@ import java.util.List;
 
 import mud.misc.Effect;
 import mud.objects.Player;
+import mud.utils.MudUtils;
 import mud.utils.Point;
 
 /**
@@ -36,15 +37,15 @@ public abstract class MUDObject {
 	protected static MUDServer parent;
 
 	/* object data - persistent */
-	private int dbref;                                                      // database reference number
-	protected String name = "";                                             // object name
-	protected String desc = "";                                             // object description
-	protected TypeFlag type = TypeFlag.OBJECT;                              // object type
-	protected EnumSet<ObjectFlag> flags = EnumSet.noneOf(ObjectFlag.class); // object flags
-	protected String locks = "";                                            // object locks
-	protected int location = 0;                                             // object location
+	private Integer dbref;               // database reference number
+	protected String name;               // object name
+	protected String desc;               // object description
+	protected TypeFlag type;             // object type
+	protected EnumSet<ObjectFlag> flags; // object flags
+	protected String locks;              // object locks
+	protected Integer location;          // object location
 	
-	protected int owner = -1; // who owns the object (dbref of owner)
+	protected Player owner;              // who owns the object (dbref of owner)
 	
 	/* object data - related to game (persistent) */
 	protected LinkedHashMap<String, Object> properties = new LinkedHashMap<String, Object>(5, 0.75f);
@@ -62,21 +63,44 @@ public abstract class MUDObject {
 	 * 
 	 * @param tempDBRef
 	 */
-	protected MUDObject(int tempDBRef)
+	protected MUDObject(final Integer tempDBRef)
 	{
+		this.dbref = tempDBRef;
+		
+		this.name = "";
+		this.desc = "";
+		
 		this.type = TypeFlag.OBJECT;
 		
-		this.dbref = tempDBRef;
+		this.flags = EnumSet.noneOf(ObjectFlag.class);
+		this.locks = "";
+		this.location = -1;
+		
+		this.owner = null;
 	}
-
-	protected MUDObject(final int tempDBRef, final String tempName, final EnumSet<ObjectFlag> tempFlags, final String tempDesc, final int tempLoc) {
+	
+	/**
+	 * object loading constructor?
+	 * 
+	 * @param tempDBRef
+	 * @param tempName
+	 * @param tempFlags
+	 * @param tempDesc
+	 * @param tempLoc
+	 */
+	protected MUDObject(final Integer tempDBRef, final String tempName, final EnumSet<ObjectFlag> tempFlags, final String tempDesc, final int tempLoc) {
+		this.dbref = tempDBRef;
+		
+		this.name = tempName;
+		this.desc = tempDesc;
+		
 		this.type = TypeFlag.OBJECT;
 		
-		this.dbref = tempDBRef;
-		this.name = tempName;
 		this.flags = tempFlags;
-		this.desc = tempDesc;
+		this.locks = "";
 		this.location = tempLoc;
+		
+		this.owner = null;
 	}
 	
 	/**
@@ -85,13 +109,18 @@ public abstract class MUDObject {
 	 * @param template
 	 */
 	protected MUDObject(MUDObject template) {
-		this.type = TypeFlag.OBJECT;
-		
 		this.dbref = -1;
+		
 		this.name = template.name;
 		this.desc = template.desc;
+		
+		this.type = TypeFlag.OBJECT;
+				
 		this.flags = template.flags;
+		this.locks = "";
 		this.location = -1;
+		
+		this.owner = null;
 		
 		// TODO restore/duplicate template properties?
 	}
@@ -101,7 +130,7 @@ public abstract class MUDObject {
 	 * 
 	 * @return
 	 */
-	public final int getDBRef()
+	public final Integer getDBRef()
 	{
 		return this.dbref;
 	}
@@ -111,11 +140,15 @@ public abstract class MUDObject {
 	 * 
 	 * @param newDBRef
 	 */
-	public final void setDBRef(int newDBRef)
+	public final void setDBRef(final Integer newDBRef)
 	{
 		this.dbref = newDBRef;
 	}
-
+	
+	// TODO getName() should be final, but some subclasses do weird stuff with it
+	// TODO I'd make setName() final, but Player names shouldn't be able to change arbitrarily
+	// TODO you'd think getDesc() might be final too, but Wand (subclass) uses it to show a dynamic description
+	
 	/**
 	 * Get the name of the MUDObject.
 	 * 
@@ -131,7 +164,7 @@ public abstract class MUDObject {
 	 * @param newName the new name for the MUDObject
 	 * @return true if succeeded, false if failed
 	 */
-	public boolean setName(String newName) {
+	public boolean setName(final String newName) {
 		this.name = newName;
 		return true;
 	}
@@ -151,7 +184,7 @@ public abstract class MUDObject {
 	 * 
 	 * @param newDescription the new description for the MUDObject
 	 */
-	public void setDesc(String newDescription) {
+	public final void setDesc(final String newDescription) {
 		this.desc = newDescription;
 	}
 
@@ -160,28 +193,24 @@ public abstract class MUDObject {
 	 * 
 	 * @return the flags set on the MUDObject (String)
 	 */
-	public EnumSet<ObjectFlag> getFlags()
+	public final EnumSet<ObjectFlag> getFlags()
 	{
 		return this.flags;
 	}
-
+	
+	// should I remove this and make the call inside from the main program?
 	/**
 	 * Get MUDObject flags as a String, rather than as
 	 * a EnumSet<ObjectFlag>
 	 * 
 	 * @return
 	 */
-	public String getFlagsAsString()
+	public final String getFlagsAsString()
 	{
-		final StringBuilder buf = new StringBuilder();
-		
-		for (final ObjectFlag f : flags) {
-			buf.append(f.toString().charAt(0));
-		}
-		return buf.toString();
+		return MudUtils.flagsToString( this.flags );
 	}
 	
-	public void setFlag(final ObjectFlag flag) {
+	public final void setFlag(final ObjectFlag flag) {
 		this.flags.add(flag);
 	}
 
@@ -190,7 +219,7 @@ public abstract class MUDObject {
 	 * 
 	 * @param tempFlags the new flags for the MUDObject (String)
 	 */
-	public void setFlags(final EnumSet<ObjectFlag> tempFlags)
+	public final void setFlags(final EnumSet<ObjectFlag> tempFlags)
 	{
 		this.flags = tempFlags;
 	}
@@ -200,7 +229,7 @@ public abstract class MUDObject {
 	 * 
 	 * @param flag
 	 */
-	public void removeFlag(final ObjectFlag flag) {
+	public final void removeFlag(final ObjectFlag flag) {
 		this.flags.remove(flag);
 	}
 
@@ -209,7 +238,7 @@ public abstract class MUDObject {
 	 * 
 	 * @param tempFlags
 	 */
-	public void removeFlags(final EnumSet<ObjectFlag> tempFlags)
+	public final void removeFlags(final EnumSet<ObjectFlag> tempFlags)
 	{
 		this.flags.removeAll(tempFlags);
 	}
@@ -222,7 +251,7 @@ public abstract class MUDObject {
 	 * 
 	 * @return
 	 */
-	public String getLocks() {
+	public final String getLocks() {
 		return (String) this.locks;
 	}
 
@@ -234,28 +263,18 @@ public abstract class MUDObject {
 	 * 
 	 * @param newLocks
 	 */
-	public void setLocks(String newLocks) {
+	public final void setLocks(final String newLocks) {
 		this.locks = newLocks;
 	}
-
-	/*public void lock(String tempLock, String tempLockString)
-	{
-		// locks = home:here|teleport:no
-		if( !this.locks.equals("") ) {
-			this.locks = locks + "|" + tempLock + ":" + tempLockString;
-		}
-		else {
-			this.locks = tempLock + ":" + tempLockString;
-		}
-	}*/
+	
+	// locks = home:here|teleport:no ?
 
 	/**
 	 * Get this MUDObject's location.
 	 * 
 	 * @return int database reference of the object this object is located at/in
 	 */
-	public int getLocation()
-	{
+	public final Integer getLocation() {
 		return this.location;
 	}
 
@@ -277,8 +296,7 @@ public abstract class MUDObject {
 	 * 
 	 * @param newLocation integer (database reference) of another MUDObject
 	 */
-	public void setLocation(int newLocation)
-	{
+	public final void setLocation(final Integer newLocation) {
 		this.location = newLocation;
 	}
 
@@ -286,7 +304,7 @@ public abstract class MUDObject {
 	 * Get the ownership of this object
 	 * @return
 	 */
-	public int getOwner() {
+	public final Player getOwner() {
 		return this.owner;
 	}
 
@@ -298,8 +316,8 @@ public abstract class MUDObject {
 	 * 
 	 * @param player
 	 */
-	public void setOwner(Player player) {
-		this.owner = player.getDBRef();
+	public final void setOwner(final Player player) {
+		this.owner = player;
 	}
 
 	/**
@@ -358,7 +376,7 @@ public abstract class MUDObject {
 	 * @param key   property name
 	 * @param value property value
 	 */
-	final public void setProperty(final String key, final Object value) {
+	public final void setProperty(final String key, final Object value) {
 		this.properties.put(key,  value);
 	}
 	
@@ -368,7 +386,7 @@ public abstract class MUDObject {
 	 * @param id
 	 * @return
 	 */
-	public Effect getEffect(int id) {
+	public final Effect getEffect(final Integer id) {
 		return this.effects.get(id);
 	}
 	
@@ -377,7 +395,7 @@ public abstract class MUDObject {
 	 * 
 	 * @return
 	 */
-	public List<Effect> getEffects() {
+	public final List<Effect> getEffects() {
 		return this.effects;
 	}
 
@@ -389,29 +407,20 @@ public abstract class MUDObject {
 	 * 
 	 * @param effect
 	 */
-	public void addEffect(Effect effect)
+	public final void addEffect(final Effect effect)
 	{
 		this.effects.add(effect);
 	}
-
-	// get effects
-	public String listEffects()
-	{
-		String effectList = "Effects: ";
-		String sep = ", ";
-		for (int e = 0; e < this.effects.size(); e++)
-		{
-			if (this.effects.size() - 1 == e)
-			{
-				sep = "";
-			}
-			effectList += this.effects.get(e) + sep;
-		}
-		return effectList;
-	}
-
-	// clear an effect
-	public void removeEffect(String tEffect)
+	
+	/**
+	 * Remove an Effect (String)
+	 * 
+	 * Decides which effect to remove based on whether the String
+	 * supplied matches the name of any effects.
+	 * 
+	 * @param tEffect
+	 */
+	public final void removeEffect(final String tEffect)
 	{
 		Effect effect;
 
@@ -423,16 +432,27 @@ public abstract class MUDObject {
 			}
 		}
 	}
-
-	public void removeEffect(Effect effect) {
+	
+	/**
+	 * Remove an Effect (Effect)
+	 * 
+	 * Removes the specified effects object from the list of effects.
+	 * 
+	 * @param effect
+	 */
+	public final void removeEffect(final Effect effect) {
 		this.effects.remove(effect);
 	}
-
-	// clear all effects
-	public void clearEffects()
+	
+	/**
+	 * Removes all effects from the MUDObject.
+	 */
+	public final void clearEffects()
 	{
 		this.effects.clear();
 	}
+	
+	// TODO make a decision as to whether these should remain commented or be deleted
 	
 	/*
 	 * Coordinate System related methods 
@@ -462,21 +482,21 @@ public abstract class MUDObject {
 		this.pos.setZ(newZCoord);
 	}*/
 
-	public Point getPosition() {
+	public final Point getPosition() {
 		return this.pos;
 	}
 
-	public void setPosition(int x, int y) {
+	public final void setPosition(int x, int y) {
 		setPosition(x, y, 0);
 	}
 
-	public void setPosition(int x, int y, int z) {
+	public final void setPosition(int x, int y, int z) {
 		this.pos.setX(x);
 		this.pos.setY(y);
 		this.pos.setZ(z);
 	}
 	
-	public void setPosition(final Point pos) {
+	public final void setPosition(final Point pos) {
 		if( pos.isType(Point.Type.PT_2D ) ) {
 			setPosition(pos.getX(), pos.getY());
 		}
@@ -485,16 +505,18 @@ public abstract class MUDObject {
 		}
 	}
 	
-	public TypeFlag getType() {
+	public final TypeFlag getType() {
 		return this.type;
 	}
 	
-	public String getTypeName() {
-		return this.type.name();
-	}
-	
 	/* Check Methods */
-	public boolean isType(final TypeFlag type) {
+	/**
+	 * Is this MUDObject of the specified type indicated by the TypeFlag?
+	 * 
+	 * @param type
+	 * @return
+	 */
+	public final boolean isType(final TypeFlag type) {
 		return this.type == type;
 	}
 
@@ -504,10 +526,17 @@ public abstract class MUDObject {
 	 * @param tempFlag
 	 * @return
 	 */
-	public boolean hasFlag(ObjectFlag tempFlag) {
+	public final boolean hasFlag(ObjectFlag tempFlag) {
 		return this.flags.contains(tempFlag);
 	}
-
+	
+	/**
+	 * Does the specified MUDObject have a property of the
+	 * specified name (i.e. does that key exist in the properties map)?
+	 * 
+	 * @param key
+	 * @return
+	 */
 	final public boolean hasProperty(final String key) {
 		return this.properties.containsKey(key);
 	}
@@ -518,8 +547,9 @@ public abstract class MUDObject {
 	 * @param player
 	 * @return
 	 */
-	public boolean isOwnedBy(Player player) {
-		return this.owner == player.getDBRef() ? true : false;
+	public final boolean isOwnedBy(final Player player) {
+		// TODO I'd like to think I could compare player objects, but I'm not sure
+		return this.owner.getDBRef() == player.getDBRef() ? true : false;
 	}
 
 	/**
@@ -528,7 +558,7 @@ public abstract class MUDObject {
 	 * @param arg      name of the effect (String)
 	 * @return does the object have this effect, yes/no? (boolean)
 	 */
-	public boolean hasEffect(String arg)
+	public final boolean hasEffect(final String arg)
 	{
 		for(final Effect effect : this.effects) {
 			if( effect.getName().equalsIgnoreCase( arg ) ) {
@@ -545,7 +575,7 @@ public abstract class MUDObject {
 	 * @param arg      type of the effect (Effect.Type)
 	 * @return does the object have this effect, yes/no? (boolean)
 	 */
-	public boolean hasEffectType(Effect.Type effectType)
+	public final boolean hasEffectType(final Effect.Type effectType)
 	{
 		for (final Effect effect : this.effects) {
 			if ( effect.getType() == effectType ) {
@@ -556,7 +586,7 @@ public abstract class MUDObject {
 		return false;
 	}
 
-	public boolean hasEffect(Effect effect) {
+	public final boolean hasEffect(final Effect effect) {
 		return this.effects.contains(effect);
 	}
 

@@ -1,0 +1,13 @@
+auction
+AUCTION
+
+Auction items on the auction house.
+
+Syntax: auction <item name> <time> <price> <buyout>
+        auction #cancel <item name>
+        
+time   - in minutes
+price  - in copper
+buyout - price at which a player can buy the item outright (also in copper)
+
+Last Updated: May 29th, 2015

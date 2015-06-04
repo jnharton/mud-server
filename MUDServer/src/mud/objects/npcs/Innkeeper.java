@@ -36,7 +36,7 @@ public class Innkeeper extends NPC implements Vendor {
 
 	public Innkeeper(final MUDServer mudServer, final int tempDBRef, final String tempName, final EnumSet<ObjectFlag> tempFlags, 
                     final String tempDesc, final String tempTitle, final String tempPStatus, final int tempLoc, final Coins tempMoney) {
-		super(tempDBRef, tempName, null, tempFlags, tempDesc, tempTitle, tempPStatus, tempLoc, tempMoney);
+		super(tempDBRef, tempName, tempFlags, tempDesc, tempLoc, tempMoney);
 
 		this.parent = mudServer;
 		this.stock = new ArrayList<Item>();

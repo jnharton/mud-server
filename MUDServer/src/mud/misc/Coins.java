@@ -17,10 +17,6 @@ package mud.misc;
  */
 public class Coins
 {
-    /*static final private int 
-        SILVER_RATIO = 100,
-        GOLD_RATIO = 100 * 100,
-        PLATINUM_RATIO = 100 * 100 * 100;*/
     static final private int 
     	SILVER_RATIO = 100,
     	GOLD_RATIO = SILVER_RATIO * 100,

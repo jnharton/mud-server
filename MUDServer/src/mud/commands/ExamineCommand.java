@@ -4,7 +4,6 @@ import mud.Command;
 import mud.Constants;
 import mud.MUDObject;
 import mud.MUDServer;
-import mud.TypeFlag;
 import mud.objects.Player;
 import mud.objects.Room;
 import mud.net.Client;
@@ -76,6 +75,6 @@ public class ExamineCommand extends Command {
 
 	@Override
 	public int getAccessLevel() {
-		return Constants.USER;
+		return Constants.BUILD;
 	}
 }

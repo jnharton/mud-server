@@ -318,11 +318,12 @@ public final class ObjectDB implements ODBI {
 	}
 
 	// TODO kludgy, used for/with cnames
-	public void addName(MUDObject object, String name) {
+	public void addName(final MUDObject object, final String name) {
 		if( this.getByName(name) == null ) {
 			objsByName.put( name, object );
 
 			if( object instanceof Player ) {
+				playersByName.put(name, (Player) object);
 			}
 		}
 	}
@@ -367,13 +368,12 @@ public final class ObjectDB implements ODBI {
 
 		return objects;
 	}
-
-	public void changeName(final MUDObject object, final String newName) {
-		object.setName(newName);
-
+	
+	// the function just below the one below may have rendered this one unnecessary
+	/*public void changeName(final MUDObject object, final String newName) {
 		objsByName.remove( object.getName() );
 		objsByName.put( newName, object );
-
+		
 		if(object instanceof NPC) {
 			final NPC npc = (NPC) object; 
 			npcsByName.remove( npc.getName() );
@@ -389,27 +389,29 @@ public final class ObjectDB implements ODBI {
 			exitsByName.remove( exit.getName() );
 			exitsByName.put( newName, exit );
 		}
-	}
-
-	public void updateName(final MUDObject object) {
+		
+		object.setName(newName);
+	}*/
+	
+	public void updateName(final MUDObject object, final String oldName) {
 		final String newName = object.getName();
 
-		objsByName.remove( object.getName() );
+		objsByName.remove( oldName );
 		objsByName.put( newName, object );
 
 		if(object instanceof NPC) {
 			final NPC npc = (NPC) object; 
-			npcsByName.remove( npc.getName() );
+			npcsByName.remove( oldName );
 			npcsByName.put( newName, npc );
 		}
 		else if(object instanceof Room) {
 			final Room room = (Room) object;
-			roomsByName.remove( room.getName() );
+			roomsByName.remove( oldName );
 			roomsByName.put( newName, room );
 		}
 		else if(object instanceof Exit) {
 			final Exit exit = (Exit) object;
-			exitsByName.remove( exit.getName() );
+			exitsByName.remove( oldName );
 			exitsByName.put( newName, exit );
 		}
 	}
@@ -632,26 +634,27 @@ public final class ObjectDB implements ODBI {
 				final Room room = getRoomById(e.getLocation());
 
 				if (room != null) {
-					room.getExits().add(e);
-					parent.debug("Exit (Door)" + e.getDBRef() + " added to room " + room.getDBRef() + ".", 2);
+					room.addExit(e);
+					parent.debug("Exit " + Utils.padLeft("" + e.getDBRef(), ' ', 4) + " added to room " + room.getDBRef() + ". (Door)", 2);
 				}
 
 				final Room room1 = getRoomById(e.getDestination());
 
 				if (room1 != null) {
-					room1.getExits().add(e);
-					parent.debug("Exit (Door)" + e.getDBRef() + " added to room " + room1.getDBRef() + ".", 2);
+					room1.addExit(e);
+					parent.debug("Exit " + Utils.padLeft("" + e.getDBRef(), ' ', 4) + " added to room " + room1.getDBRef() + ". (Door)", 2);
 				}
 			}
 			else {
 				final Room room = getRoomById(e.getLocation());
 
 				if (room != null) {
-					room.getExits().add(e);
-					parent.debug("Exit " + e.getDBRef() + " added to room " + room.getDBRef() + ".", 2);
+					room.addExit(e);
+					parent.debug("Exit " + Utils.padLeft("" + e.getDBRef(), ' ', 4) + " added to room " + room.getDBRef() + ".", 2);
 				}
 			}
 		}
+		
 		parent.debug("Done loading exits:", 2);
 	}
 

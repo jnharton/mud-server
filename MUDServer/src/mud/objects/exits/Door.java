@@ -9,9 +9,12 @@ import mud.objects.Exit;
 import mud.objects.ExitType;
 import mud.objects.Item;
 import mud.objects.Player;
+import mud.utils.Tuple;
 import mud.utils.Utils;
 
 public class Door extends Exit implements Lockable<Item> {
+	private Tuple<Integer, String> side1;
+	private Tuple<Integer, String> side2;
 	
 	private boolean isLocked = false;
 	
@@ -25,6 +28,19 @@ public class Door extends Exit implements Lockable<Item> {
 		super(tempDBRef, tempName, flagsNotUsed, tempDesc, tempLoc, tempDestination);
 		
 		this.eType = ExitType.DOOR;
+	}
+	
+	public String getName(final Integer origin) {
+		String name = "";
+		
+		if( side1 != null ) {
+			if( side1.one == origin ) name = side1.two;
+		}
+		else if( side2 != null ) {
+			if( side2.one == origin ) name = side2.two;
+		}
+		
+		return name;
 	}
 	
 	@Override
