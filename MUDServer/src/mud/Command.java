@@ -273,8 +273,8 @@ public abstract class Command {
 		parent.handleDeath(creature, player);
 	}
 	
-	protected final void handleMail(final String input, final Client client) {
-		parent.handleMail(input, client);
+	protected final void handle_mail(final String input, final Client client) {
+		parent.handle_mail(input, client);
 	}
 	
 	protected final Map<String, String> getAliases() {

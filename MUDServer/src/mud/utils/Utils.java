@@ -24,12 +24,9 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
-
 import java.math.BigInteger;
-
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -37,7 +34,6 @@ import java.util.List;
 import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import java.security.spec.KeySpec;
 
 import javax.crypto.SecretKeyFactory;
@@ -373,23 +369,27 @@ public final class Utils {
 	}*/
 
 	public static String padRight(String s, int n) {
-		return String.format("%1$-" + n + 's', s);
+		if( n > 0 ) return String.format("%1$-" + n + 's', s);
+		else        return "";
 	}
 
 	public static String padLeft(String s, int n) {
-		return String.format("%1$" + n + 's', s);
+		if( n > 0 ) return String.format("%1$" + n + 's', s);
+		else        return "";
 	}
 
 	public static String padRight(String s, char padChar, int n) {
-		return String.format("%1$-" + n + 's', s).replace(' ', padChar);
+		if( n > 0 ) return String.format("%1$-" + n + 's', s).replace(' ', padChar);
+		else        return "";
 	}
 
 	public static String padLeft(String s, char padChar, int n) {
-		return String.format("%1$" + n + "s", s).replace(' ', padChar);
+		if( n > 0 ) return String.format("%1$" + n + "s", s).replace(' ', padChar);
+		else        return "";
 	}
 
 	/**
-	 * @author joshit?
+	 * @author joshgit?
 	 * 
 	 * @param s
 	 * @param n
@@ -617,6 +617,9 @@ public final class Utils {
 			result = Integer.parseInt(str);
 		}
 		catch(NumberFormatException nfe) {
+			System.out.println("--- Stack Trace ---");
+			nfe.printStackTrace();
+			
 			result = alt;
 		}
 		

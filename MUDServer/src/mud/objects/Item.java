@@ -152,9 +152,9 @@ public class Item extends MUDObject implements Cloneable {
 		this.type = TypeFlag.ITEM;
 	}
 	
-	public void setItemType(ItemType newType) {
+	/*public void setItemType(ItemType newType) {
 		this.item_type = newType;
-	}
+	}*/
 	
 	public ItemType getItemType() {
 		return this.item_type;

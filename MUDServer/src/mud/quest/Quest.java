@@ -19,28 +19,28 @@ import mud.utils.Date;
  *
  */
 public class Quest implements Cloneable {
-	private static int lastId = 0;      // the last quest id issued
+	private static int lastId = 0;       // the last quest id issued
 	
-	private int id;                     // quest id
-	private String name;                // quest name
-	private String description;         // quest description (does it need a short and long version or just this?)
-	private Zone location;              // the quest region (for instance if you must kill the kobolds in region X for the reward)
+	private int id;                      // quest id
+	private String name;                 // quest name
+	private String description;          // quest description (does it need a short and long version or just this?)
+	private Zone location;               // the quest region (for instance if you must kill the kobolds in region X for the reward)
 	
-	private Date issueDate = null;      // the in-game date the quest was given
-	private Date expireDate = null;     // the in-game date that the quests expires (for time-limited things?)
+	private Date issueDate = null;       // the in-game date the quest was given
+	private Date expireDate = null;      // the in-game date that the quests expires (for time-limited things?)
 	
-	private boolean isComplete = false; // is the quest completed? (this should put it in a deletion queue if we delete completed quests)
-	private boolean isIgnored = false;  // is the quest being ignored? (i.e. it shouldn't show up in the main quest list for the player)
-	private boolean isCopy = false;     // is this quest the original object or a copy
+	private boolean isComplete = false;  // is the quest completed? (this should put it in a deletion queue if we delete completed quests)
+	private boolean isIgnored = false;   // is the quest being ignored? (i.e. it shouldn't show up in the main quest list for the player)
+	private boolean isCopy = false;      // is this quest the original object or a copy
 	
 	final private ArrayList<Task> tasks; // a list of tasks that must be completed to finish the quest
 	
-	public boolean Edit_Ok = true; // can the quest be edited safely (no one else is editing it)
+	public boolean Edit_Ok = true;       // can the quest be edited safely (no one else is editing it)
 	
 	/**
 	 * Construct a "blank quest" (for editing purposes)
 	 */
-	public Quest( String qName, String qDescription ) {
+	public Quest( final String qName, final String qDescription ) {
 		this.id = -1;
 		this.name = qName;
 		this.description = qDescription;
@@ -55,7 +55,7 @@ public class Quest implements Cloneable {
 	 * @param qDescription
 	 * @param qLocation
 	 */
-	public Quest( String qName, String qDescription, Zone qLocation ) {
+	public Quest( final String qName, final String qDescription, final Zone qLocation ) {
 		this.id = lastId++;
 		this.name = qName;
 		this.description = qDescription;
@@ -71,7 +71,7 @@ public class Quest implements Cloneable {
 	 * @param qLocation
 	 * @param tasks
 	 */
-	public Quest( String qName, String qDescription, Zone qLocation, Task...tasks ) {
+	public Quest( final String qName, final String qDescription, final Zone qLocation, final Task...tasks ) {
 		this(qName, qDescription, qLocation);
 		this.tasks.addAll(Arrays.asList(tasks));
 	}
@@ -86,7 +86,7 @@ public class Quest implements Cloneable {
 	 * 
 	 * @param template
 	 */
-	protected Quest( Quest template ) {
+	protected Quest( final Quest template ) {
 		this.id = template.id;
 		this.name = template.name;
 		this.description = template.description;
@@ -101,11 +101,11 @@ public class Quest implements Cloneable {
 		}
 	}
 	
-	public void addTask(Task newTask) {
+	public void addTask(final Task newTask) {
 		if( !isCopy ) this.tasks.add(newTask);
 	}
 	
-	public void removeTask(Task toRemove) {
+	public void removeTask(final Task toRemove) {
 		if( !isCopy ) this.tasks.remove(toRemove);
 	}
 	
@@ -118,7 +118,7 @@ public class Quest implements Cloneable {
 		return this.id;
 	}
 	
-	public void setName(String newName) {
+	public void setName(final String newName) {
 		if( !isCopy ) this.name = newName;
 	}
 
@@ -126,7 +126,7 @@ public class Quest implements Cloneable {
 		return this.name;
 	}
 	
-	public void setDescription(String newDescription) {
+	public void setDescription(final String newDescription) {
 		if( !isCopy ) this.description = newDescription;
 	}
 	
@@ -134,7 +134,7 @@ public class Quest implements Cloneable {
 		return this.description;
 	}
 	
-	public void setLocation(Zone newLocation) {
+	public void setLocation(final Zone newLocation) {
 		if( !isCopy ) this.location = newLocation;
 	}
 	
@@ -179,7 +179,7 @@ public class Quest implements Cloneable {
 	 * @param qu the QuestUpdate to apply
 	 * @return true - quest updated, false - quest not updated
 	 */
-	public boolean update(QuestUpdate qu) {
+	public boolean update(final QuestUpdate qu) {
 
 		boolean questChanged = applyUpdate(qu);
 
@@ -203,7 +203,7 @@ public class Quest implements Cloneable {
 	 * @param update
 	 * @return boolean indicates whether or not we changed the Quest
 	 */
-	private boolean applyUpdate(QuestUpdate update) {
+	private boolean applyUpdate(final QuestUpdate update) {
 		boolean questChanged = false;
 		
 		for (final Task task : this.tasks) {
@@ -229,11 +229,11 @@ public class Quest implements Cloneable {
 		return this.isComplete;
 	}
 	
-	public void setIssued(Date issuedDate) {
+	public void setIssued(final Date issuedDate) {
 		this.issueDate = issuedDate;
 	}
 	
-	public void setExpires(Date expirationDate) {
+	public void setExpires(final Date expirationDate) {
 		this.expireDate = expirationDate;
 	}
 	

@@ -12,7 +12,7 @@ import mud.utils.Utils;
 import mud.objects.Item;
 import mud.objects.Player;
 import mud.objects.Room;
-import mud.objects.Room.Terrain;
+import mud.objects.Terrain;
 
 /*
  * Copyright (c) 2012 Jeremy N. Harton
@@ -37,6 +37,7 @@ public class DropCommand extends Command {
 		// get player, room objects to work with
 		Player player = getPlayer(client);
 		Room room = getRoom( player.getLocation() );
+		
 		Item item;
 		
 		ArrayList<Item> inventory = player.getInventory();

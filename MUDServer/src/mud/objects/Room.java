@@ -1,6 +1,7 @@
 package mud.objects;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -44,10 +45,7 @@ import mud.weather.Weather;
  * 
  */
 public class Room extends MUDObject implements EventSource, Instance
-{
-	// NON,FOR,MSH,HILL,MTN,DST,AQU,SKY?
-	public enum Terrain { NONE, FOREST, MARSH, HILLS, MOUNTAIN, DESERT, PLAINS, AQUATIC, SKY };
-	
+{	
 	public static final String DAY = "DAY";
 	public static final String NIGHT = "NIGHT";
 	
@@ -74,8 +72,8 @@ public class Room extends MUDObject implements EventSource, Instance
 
 	private int x = 10, y = 10; // size of the room ( 10x10 default )
 	private int z = 10;         // height of room ( 10 default )
-
-	private BitSet[][] tiles;
+	
+	public char[] tiles;
 	
 	private ArrayList<Player> listeners;                                            // Player(s) in the Room listening to what is being said
 	private List<SayEventListener> _listeners = new ArrayList<SayEventListener>(); // 
@@ -86,8 +84,8 @@ public class Room extends MUDObject implements EventSource, Instance
 	{
 		triggers.put(TriggerType.onEnter, new LinkedList<Trigger>());
 		triggers.put(TriggerType.onLeave, new LinkedList<Trigger>());
-		setTrigger(TriggerType.onEnter, new Trigger("{tell:TRIGGER: enter,{&player}}"));
-		setTrigger(TriggerType.onLeave, new Trigger("{tell:TRIGGER: leave,{&player}}"));
+		//setTrigger(TriggerType.onEnter, new Trigger("{tell:TRIGGER: enter,{&player}}"));
+		//setTrigger(TriggerType.onLeave, new Trigger("{tell:TRIGGER: leave,{&player}}"));
 	}
 	
 	public Exit[] dirMap = new Exit[9]; // dirMap[Direction.NORTH]
@@ -107,9 +105,10 @@ public class Room extends MUDObject implements EventSource, Instance
 		this.flags = EnumSet.of(ObjectFlag.SILENT);
 		this.locks = "";   // Set the locks
 		this.location = 0; // Set the location
-
-		this.tiles = new BitSet[x][y];
-
+		
+		this.tiles = new char[x * y];
+		Arrays.fill(tiles, 'X');
+		
 		this.listeners = new ArrayList<Player>();
 	}
 	
@@ -130,9 +129,10 @@ public class Room extends MUDObject implements EventSource, Instance
 		this.flags = toCopy.getFlags();       // Set the flags
 		this.locks = "";                      // Set the locks
 		this.location = toCopy.getLocation(); // Set the location
-
-		this.tiles = toCopy.getTiles();
-
+		
+		this.tiles = new char[x * y];
+		Arrays.fill(tiles, 'X');
+		
 		this.listeners = new ArrayList<Player>();
 	}
 	
@@ -158,9 +158,10 @@ public class Room extends MUDObject implements EventSource, Instance
 		this.flags = tempFlags;                                      // Set room flags
 		this.locks = "";                                             // Set the locks
 		this.location = tempLocation;                                // Set the location
-
-		this.tiles = new BitSet[x][y];
-
+		
+		this.tiles = new char[x * y];
+		Arrays.fill(tiles, 'X');
+		
 		this.listeners = new ArrayList<Player>();
 	}
 
@@ -286,14 +287,6 @@ public class Room extends MUDObject implements EventSource, Instance
 		this.x = xSize;
 		this.y = ySize;
 		this.z = zSize;
-	}
-
-	public void setTiles(BitSet[][] newTiles) {
-		this.tiles = newTiles;
-	}
-
-	public BitSet[][] getTiles() {
-		return this.tiles;
 	}
 
 	public ArrayList<Player> getListeners() {

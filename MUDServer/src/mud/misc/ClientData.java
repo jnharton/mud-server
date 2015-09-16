@@ -1,14 +1,15 @@
 package mud.misc;
 
 public class ClientData {
-	public String loginstate = "";
+	public String state = "";
 	public String name = "";
 	public String pass = "";
+	public String temp = "";
 	
 	public ClientData() {		
 	}
 	
-	public ClientData(final String loginState) {
-		this.loginstate = loginState;
+	public ClientData(final String state) {
+		this.state = state;
 	}
 }

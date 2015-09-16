@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import mud.MUDObject;
 import mud.ObjectFlag;
 import mud.TypeFlag;
-
+import mud.utils.Point;
 import mud.utils.Utils;
 
 import java.util.EnumSet;
@@ -40,6 +40,8 @@ public class Exit extends MUDObject
 
 	protected Integer origin = 0;      // strictly for doors?
 	protected Integer destination = 0; //
+	
+	protected Point p;                 // the spot in the destination room where you arrive
 	
 	private String succMsg;            // message about successfully using exit
 	private String osuccMsg;           // message others see about you using exit
@@ -102,6 +104,10 @@ public class Exit extends MUDObject
 		this.ofailMsg = ""; // OFailure Message
 	}
 	
+	public void setDestination(final Room newDestination) {
+		if( newDestination != null ) destination = newDestination.getDBRef();
+		else                         destination = -1;
+	}
 	public void setDestination(int newDestination) {
 		this.destination = newDestination;
 	}

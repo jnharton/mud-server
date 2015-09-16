@@ -115,7 +115,6 @@ public class Player extends MUDObject implements Mobile
 	protected String status;                       // The player's status (MU)
 	protected String title;                        // The player's title (for where, MU)
 	private Status pstatus = Status.ACTIVE;        // whether or not the player has been banned
-	protected ArrayList<String> names;             // names of other players that the player actually knows
 
 	final private MailBox mailbox = new MailBox(); // player mailbox
 
@@ -124,6 +123,7 @@ public class Player extends MUDObject implements Mobile
 	private boolean isNew;                         // is the player new? (e.g. hasn't done chargen)
 
 	private boolean controller = false;            // place to indicate if we are controlling an npc (by default, we are not)
+	
 	private HashMap<String, EditList> editMap = new HashMap<String, EditList>(); // array of lists belonging to this player
 
 	// preferences (ACCOUNT DATA?)
@@ -161,6 +161,7 @@ public class Player extends MUDObject implements Mobile
 
 	private Profession prof1 = null;                          // Active Profession (One) **UNUSED
 	private Profession prof2 = null;                          // Active Profession (Two) **UNUSED
+	
 	private Hashtable<String, Profession> professions = null; // holds all your trained professions **UNUSED
 
 	protected SpellBook spells = null;             // spells [null if not a spellcaster]
@@ -176,12 +177,10 @@ public class Player extends MUDObject implements Mobile
 	protected LinkedHashMap<String, Slot> slots;                    // the player's equipped gear
 
 	private ArrayList<Quest> quests;                                // the player's quests
-	public Quest active_quest = null;                               // the quest the player is currently focusing on
+	private Quest active_quest = null;                              // the quest the player is currently focusing on
 
 	protected Faction faction;
 	protected Map<Faction, Integer> reputation;
-	
-	protected Hashtable<String, Boolean> discovered_locations = new Hashtable<String, Boolean>();
 
 	// movement
 	protected boolean moving = false;
@@ -221,7 +220,11 @@ public class Player extends MUDObject implements Mobile
 	public Map<String, Command> commandMap = new HashMap<String, Command>();
 
 	// Knowledge
-	public Map<String, Landmark> landmarks = new HashMap<String, Landmark>(); // contains "landmarks", which are places you've been and h
+	protected ArrayList<String> names;                                           // names of other players that the player actually knows
+	protected Hashtable<String, Boolean> discovered_locations = new Hashtable<String, Boolean>();
+	protected Map<String, Landmark> landmarks = new HashMap<String, Landmark>(); // contains "landmarks", which are places you've been and h
+	
+	/* End */
 	
 	public static Ruleset ruleset;
 
@@ -285,12 +288,13 @@ public class Player extends MUDObject implements Mobile
 	 */
 	public Player(final Integer tempDBREF, final String tempName, final String tempPass, final int startingRoom) {
 		super(tempDBREF);
-		type = TypeFlag.PLAYER;
+		
+		this.type = TypeFlag.PLAYER;
 
-		name = tempName;
-		pass = tempPass;
+		//this.name = tempName;
+		this.pass = tempPass;
 
-		isNew = true;
+		this.isNew = true;
 		
 		this.name = tempName;
 		this.race = Races.NONE;
@@ -416,7 +420,9 @@ public class Player extends MUDObject implements Mobile
 		// initialize modification counters to 0
 		Arrays.fill(statMod, 0);
 		Arrays.fill(skillMod, 0);
-
+		
+		this.reputation = new LinkedHashMap<Faction, Integer>();
+		
 		// TODO consider this. I shouldn't mark newly created players as no new since they haven't generated their character yet..
 		// mark player as new
 		//isNew = true;
@@ -579,6 +585,8 @@ public class Player extends MUDObject implements Mobile
 		// initialize modification counters to 0
 		Arrays.fill(statMod, 0);
 		Arrays.fill(skillMod, 0);
+		
+		this.reputation = new LinkedHashMap<Faction, Integer>();
 
 		// mark player as not new
 		isNew = false;
@@ -1304,8 +1312,10 @@ public class Player extends MUDObject implements Mobile
 	public int getArmorClass() {
 		Integer armorClass = 0;
 		
+		// TODO need a more universal strategy here...
 		Item armor = slots.get("armor").getItem();
-		Item shield = slots.get("weapon1").getItem();
+		//Item shield = slots.get("weapon1").getItem();
+		Item shield = null;
 
 		if( armor != null && armor instanceof Armor ) {
 			if( shield != null && shield instanceof Shield ) {
@@ -1430,6 +1440,18 @@ public class Player extends MUDObject implements Mobile
 			return this.lastSpell;
 		}
 		else { return null; }
+	}
+	
+	public Quest getActiveQuest() {
+		return this.active_quest;
+	}
+	
+	public void setActiveQuest(final Quest newQuest) {
+		this.active_quest = newQuest;
+	}
+	
+	public Map<String, Landmark> getLandmarks() {
+		return this.landmarks;
 	}
 
 	public boolean isNew() {

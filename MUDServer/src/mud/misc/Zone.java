@@ -19,6 +19,8 @@ public class Zone {
 	private String name;
 	private Zone parent;
 	
+	private Room entry_room;
+	
 	private Integer instance_id = -1; // if this is the first one, it should be -1/0
 	
 	private List<Room> rooms = new ArrayList<Room>();
@@ -30,7 +32,7 @@ public class Zone {
 		this.parent = parent;
 	}
 
-	public Zone(Zone toCopy) {
+	public Zone(final Zone toCopy) {
     }
 	
 	public boolean setId(int newId) {
@@ -54,24 +56,36 @@ public class Zone {
 		return this.parent;
 	}
 	
-	public void addRoom(Room room) {
+	public void addRoom(final Room room) {
+		if( this.rooms.size() == 0 ) {
+			this.entry_room = room;
+		}
+		
 		this.rooms.add(room);
 		this.roomsById.put(room.getDBRef(), room);
 		this.roomsByName.put(room.getName(), room);
 	}
 	
-	public void removeRoom(Room room) {
+	public void removeRoom(final Room room) {
 		this.rooms.remove(room);
 		this.roomsById.put(room.getDBRef(), room);
 		this.roomsByName.remove(room.getName());
 	}
 	
-	public boolean hasRoom(Room room) {
+	public boolean hasRoom(final Room room) {
 		return this.rooms.contains(room);
 	}
 	
 	public List<Room> getRooms() {
 		return this.rooms;
+	}
+	
+	public void setEntryRoom(final Room entryRoom) {
+		this.entry_room = entryRoom;
+	}
+	
+	public Room getEntryRoom() {
+		return this.entry_room;
 	}
 
 	public Integer getInstanceId() {

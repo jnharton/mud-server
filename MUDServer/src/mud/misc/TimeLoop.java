@@ -3,6 +3,7 @@ package mud.misc;
 import mud.MUDServer;
 import mud.utils.Date;
 import mud.utils.Message;
+import mud.utils.Time;
 
 /*
  * Copyright (c) 2012 Jeremy N. Harton
@@ -40,8 +41,8 @@ public class TimeLoop implements Runnable
     private boolean isDay = false;
     private String celestialBody = "moon";
 
-    private int ms_per_second = 166;       // 166 ms (1/6 s), runs 6x normal time
-    private int ms_per_minute = 10 * 1000; // 10k ms (10 s) , runs 6x normal time
+    private int ms_per_second = 500;      
+    //private int ms_per_minute = 10 * 1000;
     
     private int weather_update_interval = 3; // how many minutes between weather broadcasts
     
@@ -58,14 +59,17 @@ public class TimeLoop implements Runnable
      * Modifications: x:1 timescale
      */
 
-    public TimeLoop(final MUDServer server, final int[] DAYS, final int year, final int month, final int day, final int hour, final int min) {
-        this.DAYS = DAYS;
+    public TimeLoop(final MUDServer server, final int[] DAYS, final Date startDate, final Time startTime) {
         this.server = server;
-        this.minute = min;  // the initial minute (start time)
-        this.hour = hour;   // the initial hour (start time)
-        this.day = day;     // the initial day (start day)
-        this.month = month; // the initial month (start month)
-        this.year = year;   // the initial year (start year)
+        
+        this.DAYS = DAYS;
+        
+        this.day = startDate.getDay();     // the initial day (start day)
+        this.month = startDate.getMonth(); // the initial month (start month)
+        this.year = startDate.getYear();   // the initial year (start year)
+        
+        this.hour = startTime.hour;        // the initial hour (start time)
+        this.minute = startTime.minute;    // the initial minute (start time)
     }
 
     // message sending with specifics needs a loginCheck(client), but it needs to not cause the game to crash
@@ -73,8 +77,8 @@ public class TimeLoop implements Runnable
     public void run() {
         while (running) {
             try {
-                //Thread.sleep(ms_per_minute);
             	Thread.sleep(ms_per_second);
+            	//Thread.sleep(ms_per_minute);
             }
             catch(InterruptedException ie) {
                 ie.printStackTrace();
@@ -91,6 +95,10 @@ public class TimeLoop implements Runnable
     private void incrementSecond() {
     	second += 1;
     	
+    	if(second % 6 == 0) {
+    		// combat round?
+    	}
+    	
     	if(second > 59) {
     		second = 0;
     		incrementMinute();
@@ -99,8 +107,8 @@ public class TimeLoop implements Runnable
     	server.checkTimers();
     	server.onSecondIncrement();
     }
-    
-    private void incrementMinute() {
+
+	private void incrementMinute() {
         minute += 1;
         
         if (minute > 59) {
@@ -177,10 +185,14 @@ public class TimeLoop implements Runnable
             month = 0;
             incrementYear();
         }
+        
+        server.onMonthIncrement();
     }
     
     private void incrementYear() {
     	year += 1;
+    	
+    	server.onYearIncrement();
     }
 
     public TimeOfDay getTimeOfDay() {
@@ -189,7 +201,9 @@ public class TimeLoop implements Runnable
 
     private void setTimeOfDay(final TimeOfDay tod, final Message msg) {
         server.addMessage(msg);
+        
         timeOfDay = tod;
+        
         if (TimeOfDay.DAWN.equals(tod)) {
             celestialBody = "sun";
             isDay = true;
@@ -223,6 +237,18 @@ public class TimeLoop implements Runnable
     	this.second = 0;
     	unpauseLoop();
     }
+    
+    public int getDay() {
+		return this.day;
+	}
+    
+    public int getMonth() {
+		return this.month;
+	}
+    
+    public int getYear() {
+		return this.year;
+	}
 
     public void setHours(int hour) {
     	pauseLoop();

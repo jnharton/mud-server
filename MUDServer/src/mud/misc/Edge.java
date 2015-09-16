@@ -6,12 +6,12 @@ import mud.utils.Point;
 public class Edge {
 	private Point start;
 	private Point end;
-	private float length;
+	private Double length;
 	
 	public Edge(Point startP, Point endP) {
 		this.start = startP;
 		this.end = endP;
-		this.length = Utils.distance(this.start, this.end);
+		this.length = (double) Utils.distance(this.start, this.end);
 	}
 	
 	public Point getStartPoint() {
@@ -23,6 +23,6 @@ public class Edge {
 	}
 	
 	public int getLength() {
-		return (int) this.length;
+		return (int) Math.floor(length);
 	}
 }

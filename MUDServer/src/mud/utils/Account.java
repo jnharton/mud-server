@@ -81,7 +81,7 @@ public class Account implements Serializable {
 	
 	private static Calendar calendar;
 	
-	// passive properties (might be modified, but not frequently)
+	/* passive properties (might be modified, but not frequently) */
 	private final Date created; // creation date
 	private Date modified;      // modification date (when any of these passive properties were last modified)
 	private Date archived;      // archival date (null, unless account was archived; if unarchived, then when it was last archived)
@@ -97,7 +97,7 @@ public class Account implements Serializable {
 	
 	private String lastIPAddress;
 
-	// active properties (current state)
+	/* active properties (current state) */
 	private transient ArrayList<Player> characters; // all the characters that exist for an account
 	
 	private transient Client client;  // the client object for the the player that is in-game
@@ -261,6 +261,10 @@ public class Account implements Serializable {
 	 */
 	public String getPassword() {
 		return this.password;
+	}
+	
+	public void setCharLimit(final Integer newCharLimit) {
+		this.charLimit = newCharLimit;
 	}
 	
 	public Integer getCharLimit() {

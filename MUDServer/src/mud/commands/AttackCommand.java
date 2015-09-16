@@ -7,6 +7,7 @@ import mud.Constants;
 import mud.MUDObject;
 import mud.MUDServer;
 import mud.MUDServer.PlayerMode;
+import mud.misc.CombatManager;
 import mud.net.Client;
 import mud.objects.Creature;
 import mud.objects.Item;
@@ -170,6 +171,11 @@ public class AttackCommand extends Command {
 									handleDeath( creature, player );
 									
 									player.setTarget(null);
+								}
+								else {
+									// when we hit them and they don't die
+									// problem here because combat manage only takes players
+									new CombatManager();
 								}
 							}
 						}

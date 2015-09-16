@@ -1,6 +1,7 @@
 package mud.objects.npcs;
 
 import java.util.ArrayList;
+import java.util.Hashtable;
 import java.util.LinkedHashMap;
 import java.util.EnumSet;
 
@@ -36,6 +37,9 @@ public class Merchant extends NPC implements Vendor {
 	 */
 	final private MUDServer parent;
 	public ArrayList<Item> stock = new ArrayList<Item>();
+	
+	public Hashtable stockTable = new Hashtable<String, Integer>();
+	// sword, 15
 	
 	public String type = "";
 

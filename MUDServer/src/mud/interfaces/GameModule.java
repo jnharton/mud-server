@@ -18,7 +18,7 @@ public interface GameModule {
 	public Ruleset getRuleset();
 	
 	public void init();                     // initialize the module
-	public void init_player(Player player); // initialize a new player for this game
+	//public void init_player(Player player); // initialize a new player for this game
 	
 	public void PCInit(Player player);
 	

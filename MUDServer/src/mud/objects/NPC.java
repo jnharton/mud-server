@@ -124,6 +124,7 @@ public class NPC extends Player implements InteractiveI
 		this.type = TypeFlag.NPC;
 	}
 	
+	// TODO perhaps these should just return the message object?
 	public void greet(Player player) {
 		parent.addMessage(new Message(this, greeting, player));
 	}
@@ -177,20 +178,39 @@ public class NPC extends Player implements InteractiveI
 		this.givesQuests = givesQuests;
 	}
 	
+	/**
+	 * isQuestgiver
+	 * 
+	 * Does this NPC give quests.
+	 * 
+	 * @return
+	 */
 	public boolean isQuestgiver() {
 		return this.givesQuests;
 	}
 	
+	/**
+	 * getQuestFor
+	 * 
+	 * Get the specified Quest for the Player, which would be the one with it's
+	 * list index equal to the specified integer.
+	 * 
+	 * @param player
+	 * @param questNum
+	 * @return
+	 */
 	public Quest getQuestFor(final Player player, final int questNum) {
         if (questNum < 0) {
             return null;
         }
         
         int foundQuests = -1;
-
+        
+        // for each of the npcs quests, decided if it's suitable for the player or not
         for (final Quest q : questList) {
         	if ( q.isSuitable(player) ) {
                 foundQuests += 1;
+                
                 if (foundQuests == questNum) {
                     return q;
                 }
@@ -230,6 +250,7 @@ public class NPC extends Player implements InteractiveI
 		output[4] = this.getLocation() + "";                // location
 		output[5] = "";                                     // empty (npcs have no password)
 		
+		// convert stats to a string representation
 		final StringBuilder sb = new StringBuilder();
 		int abilities = ruleset.getAbilities().length;
 		int count = 1;
@@ -241,17 +262,12 @@ public class NPC extends Player implements InteractiveI
 		}
 		
 		output[6] = sb.toString();                          // stats 
-		/*output[6] = stats.get(Abilities.STRENGTH) +         // stats
-				"," + stats.get(Abilities.DEXTERITY) +
-				"," + stats.get(Abilities.CONSTITUTION) +
-				"," + stats.get(Abilities.INTELLIGENCE) +
-				"," + stats.get(Abilities.WISDOM) +
-				"," + stats.get(Abilities.CHARISMA);*/
 		output[7] = getMoney().toString(false);             // money
 		output[8] = this.access + "";                       // permissions level
 		output[9] = this.race.getId() + "";                 // race
 		output[10] = this.pclass.getId() + "";              // class
 		output[11] = this.getStatus();                      // status
+		
 		return Utils.join(output, "#");
 	}
 
@@ -268,28 +284,4 @@ public class NPC extends Player implements InteractiveI
 			}
 		}
 	}
-	
-	// TODO what is this function supposed to do for us
-	/*
-	public Direction getDirection() {
-		ArrayList<Direction> directions = (ArrayList<Direction>) Utils.mkList(
-				Direction.NORTH,     Direction.SOUTH,
-				Direction.EAST,      Direction.WEST,
-				Direction.NORTHEAST, Direction.NORTHWEST,
-				Direction.SOUTHEAST, Direction.SOUTHWEST);
-		
-		Random rDir = new Random();		
-		
-		int n = rDir.nextInt( directions.size() );
-		
-		Direction temp = directions.get(n);
-		
-		if( temp == lastDir ) {
-			return getDirection();
-		}
-		else {
-			lastDir = temp;
-			return temp;
-		}
-	}*/
 }

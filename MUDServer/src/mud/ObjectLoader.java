@@ -480,10 +480,12 @@ public class ObjectLoader {
 		raceNum = Utils.toInt(attr[9], Races.NONE.getId());
 		//player.setRace(Races.getRace(raceNum));
 		player.setRace(parent.getRace(raceNum));
+		System.out.println("Race: " + raceNum + " ( " + parent.getRace(raceNum).getName() + " )");
 
 		/* Set Player Class */
 		classNum = Utils.toInt(attr[10], Classes.NONE.getId());
 		player.setPClass(Classes.getClass(classNum));
+		System.out.println("Class: " + classNum + " ( " + Classes.getClass(classNum).getName() + " )");
 
 		/* Set Status */
 		player.setStatus(attr[11]);
@@ -640,7 +642,6 @@ public class ObjectLoader {
 			int mod = Integer.parseInt(attr[9]);
 
 			final Clothing clothing = new Clothing(oDBRef, oName, oDesc, oLocation, mod, ClothingType.values()[clothingType]);
-			clothing.setItemType(it);
 
 			//clothing.setEquipType(ItemTypes.getType(equipType);
 			clothing.setSlotType(st);
@@ -653,8 +654,7 @@ public class ObjectLoader {
 
 			Spell spell = parent.getSpell(spellName);
 
-			Wand wand = new Wand(oName, oDesc, oLocation, oDBRef, ItemTypes.getType(itemType), charges, spell);
-			// wand.item_type = it; // unnecessary
+			final Wand wand = new Wand(oName, oDesc, oLocation, oDBRef, ItemTypes.getType(itemType), charges, spell);
 			
 			return wand;
 		}
@@ -662,9 +662,8 @@ public class ObjectLoader {
 			int weaponType = Integer.parseInt(attr[8]);
 			int mod = Integer.parseInt(attr[9]);
 
-			Weapon weapon = new Weapon(oDBRef, oName, oDesc, oLocation, mod, Handed.ONE, WeaponTypes.getWeaponType(weaponType), 15.0);
+			final Weapon weapon = new Weapon(oDBRef, oName, oDesc, oLocation, mod, Handed.ONE, WeaponTypes.getWeaponType(weaponType), 15.0);
 			
-			weapon.setItemType(it);
 			weapon.setSlotType(st);
 			
 			return weapon;
@@ -673,16 +672,14 @@ public class ObjectLoader {
 			int armorType = Integer.parseInt(attr[8]);
 			int mod = Integer.parseInt(attr[9]);
 
-			Armor armor = new Armor(oName, oDesc, (int) oLocation, (int) oDBRef, mod, ArmorType.values()[armorType]);
+			final Armor armor = new Armor(oName, oDesc, (int) oLocation, (int) oDBRef, mod, ArmorType.values()[armorType]);
 			
-			armor.setItemType(it);
 			armor.setSlotType(st);
 			
 			return armor;
 		}
 		else if (it == ItemTypes.ARROW) { // Arrow
-			Arrow arrow = new Arrow(oDBRef, oName, oDesc, oLocation);
-			arrow.setItemType(it);
+			final Arrow arrow = new Arrow(oDBRef, oName, oDesc, oLocation);
 			
 			return arrow;
 		}
@@ -691,8 +688,7 @@ public class ObjectLoader {
 			String title = attr[9];
 			int pages = Integer.parseInt(attr[10]);
 
-			Book book = new Book(oName, oDesc, oLocation, oDBRef);
-			book.setItemType(it);
+			final Book book = new Book(oName, oDesc, oLocation, oDBRef);
 
 			book.setAuthor(author);
 			book.setTitle(title);
@@ -701,13 +697,11 @@ public class ObjectLoader {
 			return book;
 		}
 		else if (it == ItemTypes.CONTAINER) { // Container
-			Container container = new Container(oName);
+			final Container container = new Container(oName);
 
 			container.setDesc(oDesc);
 			container.setLocation(oLocation);
 			container.setDBRef(oDBRef);
-
-			container.setItemType(it);
 			
 			return container;
 		}
@@ -724,7 +718,6 @@ public class ObjectLoader {
 
 			for (int i = 1; i < stack_size; i++) {
 				Potion potion1 = new Potion(oDBRef, oName, EnumSet.noneOf(ObjectFlag.class), oDesc, oLocation, sn);
-				potion.setItemType(ItemTypes.POTION);
 
 				potion.stack(potion1);
 			}
@@ -741,9 +734,10 @@ public class ObjectLoader {
 		}
 		else if (it == ItemTypes.RING) {
 			//Item ring = new Item(oDBRef, oName, null, oDesc, oLocation);
-			Item ring = new Item(oDBRef, oName, EnumSet.noneOf(ObjectFlag.class), oDesc, oLocation);
-
-			ring.setItemType(ItemTypes.RING);
+			final Item ring = new Item(oDBRef, oName, EnumSet.noneOf(ObjectFlag.class), oDesc, oLocation);
+			
+			// TODO this is special, an 'item type' without an associated class
+			//ring.setItemType(ItemTypes.RING);
 			
 			return ring;
 		}
@@ -751,9 +745,7 @@ public class ObjectLoader {
 			// TODO resolve issue of loading item types not listed in here (3-20-2015)
 			//Item item = new Item(oDBRef, oName, null, oDesc, oLocation);
 			
-			Item item = new Item(oDBRef, oName, EnumSet.noneOf(ObjectFlag.class), oDesc, oLocation);
-			
-			item.setItemType(ItemTypes.NONE);
+			final Item item = new Item(oDBRef, oName, EnumSet.noneOf(ObjectFlag.class), oDesc, oLocation);
 			
 			return item;
 		}

@@ -329,7 +329,17 @@ public abstract class MUDObject {
 	final public Object getProperty(final String key) {
 		return this.properties.get(key);
 	}
-
+	
+	/**
+	 * getProperty
+	 * 
+	 * NOTE: will throw a class cast exception if the object
+	 * is not the type we specify
+	 * 
+	 * @param key
+	 * @param c
+	 * @return
+	 */
 	final public <T> T getProperty(final String key, Class<T> c) {
 		return (T) c.cast(this.properties.get(key));
 	}

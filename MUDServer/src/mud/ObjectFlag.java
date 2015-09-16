@@ -56,6 +56,10 @@ public enum ObjectFlag
     	this.type = type;
     }
     
+    public String getName() {
+    	return this.name;
+    }
+    
     public TypeFlag getAllowedType() {
     	return this.type;
     }
@@ -77,8 +81,12 @@ public enum ObjectFlag
     
     static public ObjectFlag fromString(final String s) {
     	switch(s.toUpperCase()) {
+    	case "ENTER_OK":    return ENTER_OK;
+    	case "NO_TELEPORT": return NO_TELEPORT;
     	case "NO_ENTER":	return NO_ENTER;
     	case "NO_LEAVE":	return NO_LEAVE;
+    	case "SHOP":        return SHOP;
+    	case "VIRTUAL":     return VIRTUAL;
     	default:			throw new IllegalArgumentException("Invalid ObjectFlag string: " + s);
     	}
     }

@@ -106,7 +106,7 @@ public class MailCommand extends Command {
 			
 			player.setEditorData(newEDD);
 			
-			handleMail("", client);
+			handle_mail("", client);
 		}
 		else if(!arg.equals("")) {
 			final int msg = Utils.toInt(arg, -1);
@@ -133,7 +133,7 @@ public class MailCommand extends Command {
 			}
 		}
 		else {
-			send("Checking for unread messages...", client);
+			//send("Checking for unread messages...", client);
 
 			final int messages = player.getMailBox().numUnreadMessages();
 

@@ -30,14 +30,14 @@ import mud.utils.Utils;
  *
  */
 public class ProgramInterpreter {
-	private final MUDServer parent;
-	private Hashtable<String, String> vars;
-	private boolean use_vars;
-
-	private boolean debug_enabled = false;
-	
 	private static final String TRUE = ":true";
 	private static final String FALSE = ":false";
+	
+	private final MUDServer parent;
+	private Hashtable<String, String> vars;
+	
+	private boolean use_vars;
+	private boolean debug_enabled;
 	
 	public ProgramInterpreter(final MUDServer parent) {
 		this(parent, false);
@@ -51,7 +51,7 @@ public class ProgramInterpreter {
 		this.debug_enabled = enable_debug;
 	}
 
-	private List<String> lex(String input) {
+	public List<String> lex(String input) {
 		List<String> tokens = new LinkedList<String>();
 
 		Character ch;

@@ -35,8 +35,10 @@ public class Weapon extends Item implements Cloneable
 		
 		this.item_type = ItemTypes.WEAPON;
 		
-		this.equippable = true;
 		this.equip_type = ItemTypes.WEAPON;       // the type of equipment it is
+		
+		this.equippable = true;
+		this.equipped = false;
 		
 		this.slot_type = SlotTypes.NONE;
 		
@@ -47,18 +49,24 @@ public class Weapon extends Item implements Cloneable
 	}
 	
 	public Weapon(final String name) {
+		this(name, "A generic weapon");
+	}
+	
+	public Weapon(final String name, final String description) {
 		super(-1);
 		
 		this.name = name;
 		
 		this.flags = EnumSet.noneOf(ObjectFlag.class);
-		this.desc = "A generic weapon";
+		this.desc = description;
 		this.location = 8;
 		
 		this.item_type = ItemTypes.WEAPON;
 		
-		this.equippable = true;
 		this.equip_type = ItemTypes.WEAPON;       // the type of equipment it is
+		
+		this.equippable = true;
+		this.equipped = false;
 		
 		this.slot_type = SlotTypes.NONE;
 		
@@ -68,11 +76,14 @@ public class Weapon extends Item implements Cloneable
 	public Weapon(int wMod, Handed handed, WeaponType wType)
 	{
 		super(-1, wType.getName(), EnumSet.noneOf(ObjectFlag.class), "A nice, shiny steel longsword.", 8);
+		
 		this.type = TypeFlag.ITEM;
-		this.equippable = true;
 		
 		this.item_type = ItemTypes.WEAPON;
 		this.equip_type = ItemTypes.WEAPON; // the type of equipment it is
+		
+		this.equippable = true;
+		this.equipped = false;
 		
 		this.slot_type = SlotTypes.NONE;
 		

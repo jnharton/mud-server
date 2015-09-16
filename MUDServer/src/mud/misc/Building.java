@@ -49,21 +49,9 @@ public class Building {
 		return Collections.unmodifiableMap( this.entrances );
 	}
 	
-	/*public List<String> getEntrances() {
-		List<String> keys = new LinkedList<String>();
-		keys.addAll( entrances.keySet() );
-		return Collections.unmodifiableList( keys );
-	}*/
-	
 	public Map<String, Exit> getExits() {
 		return Collections.unmodifiableMap( this.exits );
 	}
-	
-	/*public List<String> getExits() {
-		List<String> keys = new LinkedList<String>();
-		keys.addAll( exits.keySet() );
-		return Collections.unmodifiableList( keys );
-	}*/
 	
 	/**
 	 * Get a List of the Edges (or sides) of the building that

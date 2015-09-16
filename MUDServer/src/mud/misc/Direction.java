@@ -1,29 +1,39 @@
 package mud.misc;
 
 public class Direction {
-	public static final int NONE      = 0;
-	public static final int NORTH     = 1;
-	public static final int NORTHEAST = 3;
-	public static final int NORTHWEST = 4;
-	public static final int SOUTH     = 5;
-	public static final int SOUTHEAST = 6;
-	public static final int SOUTHWEST = 7;
-	public static final int EAST      = 8;
-	public static final int WEST      = 9;
+	public static final Direction NONE      = new Direction(0);
+	public static final Direction NORTH     = new Direction(1);
+	public static final Direction NORTHEAST = new Direction(3);
+	public static final Direction NORTHWEST = new Direction(4);
+	public static final Direction SOUTH     = new Direction(5);
+	public static final Direction SOUTHEAST = new Direction(6);
+	public static final Direction SOUTHWEST = new Direction(7);
+	public static final Direction EAST      = new Direction(8);
+	public static final Direction WEST      = new Direction(9);
+	
+	private Integer value;
+	
+	public Direction(final Integer direction) {
+		this.value = direction;
+	}
+	
+	public Integer getValue() {
+		return this.value;
+	}
 	
 	public static int getDirection(final String direction) {
-		int result = NONE;
+		int result = NONE.value;
 		
 		switch(direction.toLowerCase()) {
-		case "north":     result = NORTH;     break;
-		case "northeast": result = NORTHEAST; break;
-		case "northwest": result = NORTHWEST; break;
-		case "south":     result = SOUTH;     break;
-		case "southeast": result = SOUTHEAST; break;
-		case "southwest": result = SOUTHWEST; break;
-		case "east":      result = EAST;      break;
-		case "west":      result = WEST;      break;
-		default:          result = NONE;      break;
+		case "north":     result = NORTH.value;     break;
+		case "northeast": result = NORTHEAST.value; break;
+		case "northwest": result = NORTHWEST.value; break;
+		case "south":     result = SOUTH.value;     break;
+		case "southeast": result = SOUTHEAST.value; break;
+		case "southwest": result = SOUTHWEST.value; break;
+		case "east":      result = EAST.value;      break;
+		case "west":      result = WEST.value;      break;
+		default:          result = NONE.value;      break;
 		}
 		
 		return result;

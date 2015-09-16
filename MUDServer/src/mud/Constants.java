@@ -69,4 +69,12 @@ public final class Constants {
 	// stat generation
 	public static final int ROLL = 0;
 	public static final int ASSIGN = 1;
+	
+	// backup
+	public static final int FLATFILE = 0;
+	public static final int JSON = 1;
+	
+	// time
+	public static final int REAL = 0;
+	public static final int GAME = 1;
 }

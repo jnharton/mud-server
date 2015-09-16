@@ -2,20 +2,20 @@ package mud.misc;
 
 /*
   Copyright (c) 2012 Jeremy N. Harton
-  
+
   Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
   documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
   rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit
   persons to whom the Software is furnished to do so, subject to the following conditions:
-  
+
   The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
   Software.
-  
+
   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
   MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
   CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
   SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-*/
+ */
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -52,20 +52,27 @@ import mud.utils.Point;
  * @author Jeremy
  *
  */
- 
- public class House
+
+public class House
 {
-	final public HashMap<Thing, Point> thingPos = new HashMap<Thing, Point>();
-	final public HashMap<Item,  Point> itemPos  = new HashMap<Item,  Point>();
-	
-	final public LinkedList<Thing> things = new LinkedList<Thing>();
-	final public LinkedList<Item> items = new LinkedList<Item>();
-	
+	// where dropped stuff goes
+	public final int FLOOR   = 1;
+	public final int STORAGE = 2;
+	public final int TRASH   = 3;
+
 	final public ArrayList<Room> rooms = new ArrayList<Room>();
 
+	final public LinkedList<Thing> things = new LinkedList<Thing>();
+	final public LinkedList<Item> items = new LinkedList<Item>();
+
+	final public HashMap<Thing, Point> thingPos = new HashMap<Thing, Point>();
+	final public HashMap<Item,  Point> itemPos  = new HashMap<Item,  Point>();
+
 	private Player owner;
+
 	private int max_rooms;
-	public HouseSize houseSize;
+
+	public int dropTo = FLOOR; 
 
 	/*
 	 * want to include configurable permissions for the rooms belonging to the house in here,
@@ -90,75 +97,84 @@ import mud.utils.Point;
 		private HouseSize(int tSize) {
 			this.size = tSize;
 		}
-
-		public int getMaxRooms() {
-			// rooms have 5 rooms per size grade
-			// size 1, rooms 5
-			// size 2, rooms 10
-			// size 3  rooms 15
-			return size == -1 ? -1 : 5 * size;
-		}
 	};
 
 	public House(final HouseSize size) {
-        this(null, size);
+		this(null, size);
 	}
 
 	public House(final Player owner, final HouseSize hSize) {
 		this.owner = owner;
-		this.houseSize = hSize;
-		this.max_rooms = this.houseSize.getMaxRooms();
+		this.max_rooms = hSize.size;
 	}
 
 	public House(final Player owner, final int maxRooms) {
 		this.owner = owner;
-		this.houseSize = HouseSize.CUSTOM;
 		this.max_rooms = maxRooms;
 	}
 
-    public int getSize() {
-        return houseSize.size;
-    }
+	public int getMaxRooms() {
+		return this.max_rooms;
+	}
+
+	public int getSize() {
+		return rooms.size();
+	}
 
 	public String[] getInfo() {
-		String[] info = new String[4];
-		info[0] = "House";
-		info[1] = "Owner: " + this.owner.getName();
-		info[2] = "Size: " + getSize();
-		info[3] = "Max Rooms: " + this.max_rooms;
+		final String[] info = new String[] {
+				"House",
+				"Owner: " + this.owner.getName(),
+				"Size:  " + getSize(),
+				"Rooms: " + this.rooms.size() + " / " + this.max_rooms
+		};
+
 		return info;
 	}
-	
-	public void addItem(Item item) {
+
+	public boolean addRoom(final Room room) {
+		boolean success = false;
+
+		if( getSize() < getMaxRooms() ) {
+			this.rooms.add( room );
+			success = true;
+		}
+
+		return success;
+	}
+
+	public void removeRoom(final Room room) {
+		// remove items
+		// remove things
+		// remove the room
+		rooms.remove( room );
+	}
+
+	public void addItem(final Item item) {
 		items.add(item);
 		placeItem(item, new Point(0,0));
 	}
-	
-	public void placeItem(Item item, Point point) {
+
+	public void placeItem(final Item item, final Point point) {
 		itemPos.put(item, point);
 	}
-	
-	public void removeItem(Item item) {
+
+	public void removeItem(final Item item) {
 		items.remove(item);
 		itemPos.remove(item);
 	}
-	
-	public void addThing(Thing thing) {
+
+	public void addThing(final Thing thing) {
 		things.add(thing);
 		placeThing(thing, new Point(0,0));
 	}
-	
-	public void placeThing(Thing thing, Point point) {
+
+	public void placeThing(final Thing thing, final Point point) {
 		thingPos.put(thing, point);
 	}
-	
-	public void removeThing(Thing thing) {
+
+	public void removeThing(final Thing thing) {
 		things.remove(thing);
 		thingPos.remove(thing);
 	}
-	
-	// House
-	// Owner: Nathan
-	// Size: Small (1)
-	// Max. Rooms: 5
 }

@@ -267,6 +267,10 @@ public class Client implements Runnable {
 			catch (IOException ioe) { ioe.printStackTrace(); }
 		}
 	}
+	
+	public Socket getSocket() {
+		return this.socket;
+	}
 
 	public boolean isRunning() {
 		return running;
