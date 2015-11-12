@@ -97,7 +97,7 @@ public class Quest implements Cloneable {
 		this.tasks = new ArrayList<Task>();
 		
 		for(Task task : template.getTasks()) {
-			this.tasks.add( new Task( task ) );
+			this.tasks.add( task.clone() );
 		}
 	}
 	

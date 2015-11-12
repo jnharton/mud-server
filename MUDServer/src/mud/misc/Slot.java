@@ -150,7 +150,8 @@ public class Slot {
 	 * @return a boolean indicative of whether this slot is of that type
 	 */
 	public boolean isType(final ItemType iType) {
-		return this.itemType.equals(iType);
+		// return this.itemType.equals(iType); // not defined as Comparable
+		return this.itemType == iType;
 	}
 	
 	/**

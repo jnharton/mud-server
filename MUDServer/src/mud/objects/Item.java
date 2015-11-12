@@ -10,6 +10,7 @@ import mud.ObjectFlag;
 import mud.TypeFlag;
 import mud.MUDObject;
 import mud.interfaces.Stackable;
+import mud.magic.Enchantment;
 import mud.magic.Spell;
 import mud.misc.Coins;
 import mud.misc.Effect;
@@ -37,7 +38,7 @@ public class Item extends MUDObject implements Cloneable {
 	protected ItemType equip_type = ItemTypes.NONE; // equip type - armor, shield, jewelry, weapon
 	protected SlotType slot_type = SlotTypes.NONE;  // the type of slot this fits in (if any)
 	
-	public Coins baseValue = Coins.gold(1);         // should be 'protected'?
+	protected Coins baseValue = Coins.gold(1);         // should be 'protected'?
 	
 	protected double weight = 0;                    // the weight in whatever units are used of the equippable object
 	
@@ -57,20 +58,21 @@ public class Item extends MUDObject implements Cloneable {
 	protected boolean reducesWeight = false;  // does this item reduce the weight of it's contents (default: false)
 	protected boolean isWet = false;          // defines whether the item is wet or not (default: false)
 	
-	public double reduction_factor = 1.0;     // amount of weight reduction (none by default, so 100% == 1) -- should be 'protected'?
+	protected double reduction_factor = 1.0;  // amount of weight reduction (none by default, so 100% == 1) -- should be 'protected'?
 	
 	// original idea was a multiplying factor for weight when wet such as
 	// 1.0 - normal, 1.25 - damp, 1.50 - soaked, 2.00 - saturated, etc ("feels" x times as heavy)
-	public double wet = 1.0;                  // degree of water absorbed -- should be 'protected'?
+	protected double wet = 1.0;               // degree of water absorbed -- should be 'protected'?
 	
-	public int wear = 0;                      // how much wear and tear the item has been subject to
-	public int durability = 100;              // how durable the material is (100 is a test value) -- should be 'protected'?
+	protected int wear = 0;                   // how much wear and tear the item has been subject to
+	protected int durability = 100;           // how durable the material is (100 is a test value) -- should be 'protected'?
 	
-	//protected BitSet attributes;              // item attributes: rusty, glowing, etc
-	protected Attribute a;                    // conflicting implementation with the above?
 	
-	protected List<Effect> effects;           // effects
-	protected List<Spell> spells;             // spells the item has, which can be cast from it
+	Enchantment enchant;
+	
+	// item attributes: rusty, glowing, etc ?
+	
+	//protected List<Effect> effects;           // effects that are on this object
 	
 	//protected Map<String, Slot> slots = null; // handles objects which hold specific things, like sheaths for swords
 	
@@ -152,9 +154,12 @@ public class Item extends MUDObject implements Cloneable {
 		this.type = TypeFlag.ITEM;
 	}
 	
-	/*public void setItemType(ItemType newType) {
+	public void setItemData(final ItemType itemType, final ItemType equipType, final SlotType slotType) {
+	}
+	
+	public void setItemType(ItemType newType) {
 		this.item_type = newType;
-	}*/
+	}
 	
 	public ItemType getItemType() {
 		return this.item_type;
@@ -184,6 +189,10 @@ public class Item extends MUDObject implements Cloneable {
 	// TODO not setter for durability
 	public int getDurability() {
 		return this.durability;
+	}
+	
+	public void modifyWear(int change) {
+		this.wear += change;
 	}
 	
 	// TODO not setter for wear
@@ -277,15 +286,6 @@ public class Item extends MUDObject implements Cloneable {
 		return this.drinkable;
 	}
 	
-	// TODO decide if I should have a single or fixed set of attributes and whether to store it in a bitset or an array or ?
-	public void setAttribute(Attribute newAttribute) {
-		this.a = newAttribute;
-	}
-	
-	public Attribute getAttribute(Attribute newAttribute) {
-		return this.a;
-	}
-	
 	/**
 	 * Get Effective Item Level (EIL)
 	 * @return
@@ -294,18 +294,6 @@ public class Item extends MUDObject implements Cloneable {
 		// TODO fix this kludge
 		return 0;
 		//return this.mod * 2;
-	}
-	
-	public Spell getSpell() {
-		if( this.spells.size() >= 1 ) {
-			return this.spells.get(0);
-		}
-		
-		return null;
-	}
-
-	public List<Spell> getSpells() {
-		return this.spells;
 	}
 	
 	/* Scripting stuff */

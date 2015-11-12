@@ -61,7 +61,6 @@ public class APIServer implements Runnable {
 	
 	@Override
 	public void run() {
-		
 		while( running ) {
 			if( !processed.isEmpty() ) { // send response if there are any
 				Request request = processed.poll();
@@ -106,7 +105,8 @@ public class APIServer implements Runnable {
 				as.requests.add( new Request(new String[] { "request-data", "978419ff", string } , null) );
 				System.out.print("> ");
 			}
-		} catch (IOException ioe) {
+		}
+		catch (IOException ioe) {
 			ioe.printStackTrace();
 		}
 	}

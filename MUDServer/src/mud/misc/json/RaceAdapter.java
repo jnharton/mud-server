@@ -38,8 +38,6 @@ public class RaceAdapter extends TypeAdapter<Race> {
 
 			try {
 				key = reader.nextName();
-
-				System.out.println("Key: " + key);
 				
 				// i'm omitting subrace here.
 				switch(key) {
@@ -53,15 +51,17 @@ public class RaceAdapter extends TypeAdapter<Race> {
 					id = reader.nextInt();
 					break;
 				case "statAdj":
-					if( reader.peek() == JsonToken.BEGIN_ARRAY ) { reader.beginArray(); }
+					if( reader.peek() == JsonToken.BEGIN_ARRAY ) {
+						reader.beginArray();
+					}
+					
 					int index = 0;
-					int temp1;
+					
 					while( reader.peek() != JsonToken.END_ARRAY ) {
-						temp1 = reader.nextInt();
-						System.out.println("int: " + temp1);
-						statAdj[index] = temp1;
+						statAdj[index] = reader.nextInt();
 						index++;
 					}
+					
 					reader.endArray();
 					break;
 				case "playable":
@@ -87,12 +87,17 @@ public class RaceAdapter extends TypeAdapter<Race> {
 		
 		switch(rules) {
 		case "foe.FOESpecial":
-			return new Race(FOESpecial.getInstance(), name, id, statAdj, restricted, canFly);
+			newRace = new Race(FOESpecial.getInstance(), name, id, statAdj, restricted, canFly);
+			break;
 		case "d20.D20":
-			return new Race(D20.getInstance(), name, id, statAdj, restricted, canFly);
+			newRace = new Race(D20.getInstance(), name, id, statAdj, restricted, canFly);
+			break;
 		default:
-			return new Race(null, name, id, statAdj, restricted, canFly);
+			newRace = new Race(null, name, id, statAdj, restricted, canFly);
+			break;
 		}
+		
+		return newRace;
 	}
 
 	@Override
@@ -100,7 +105,9 @@ public class RaceAdapter extends TypeAdapter<Race> {
 		writer.beginObject();
 		
 		writer.name("rules");
-		writer.value(race.getRules().getName());
+		
+		if(race.getRules() == null ) writer.value("null");
+		else                         writer.value(race.getRules().getName());
 		
 		writer.name("name");
 		writer.value(race.getName());

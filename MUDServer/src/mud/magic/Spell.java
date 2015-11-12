@@ -21,8 +21,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import mud.misc.Effect;
+import mud.utils.Utils;
 
 /**
  * class to implement Dungeons and Dragons spells
@@ -65,8 +67,8 @@ public class Spell
 	protected List<SpellClass> sc;
 	protected SpellType sType;
 	protected String name, castMsg;
-	protected ArrayList<Effect> effects;  // an arraylist of spell effects (e.g. invisibility, acid resistance)
-	protected HashMap<String, Reagent> reagents; // a matched set of reagent:quantity spell requirements?
+	protected List<Effect> effects;  // an arraylist of spell effects (e.g. invisibility, acid resistance)
+	protected Map<String, Reagent> reagents; // a matched set of reagent:quantity spell requirements?
 	
 	public int target = 0;
 
@@ -217,7 +219,7 @@ public class Spell
 		}
 	}
 	
-	public HashMap<String, Reagent> getReagents() {
+	public Map<String, Reagent> getReagents() {
 		return this.reagents;
 	}
 	
@@ -239,16 +241,38 @@ public class Spell
 
 		// decode targets
 		// S, F, E
-		if( temp > 3 && temp <= 7 ) {
+		
+		/*switch(temp) {
+		case 0: sb.append("none");                break;
+		case 1: sb.append("enemy");               break;
+		case 2: sb.append("friend");              break;
+		case 3: sb.append("friend, enemy");       break;
+		case 4: sb.append("self");                break;
+		case 5: sb.append("self, enemy");         break;
+		case 6: sb.append("self, friend");        break;
+		case 7: sb.append("self, friend, enemy"); break;
+		default: break;
+		}*/
+		
+		if( temp < 0  || temp > 7 ) {
+			return "none";
+		}
+		
+		if( Utils.range(temp, 4, 7) ) {
 			temp = temp ^ SELF;
-			if( temp > 0 && temp <= 3 ) {
+			
+			if( Utils.range(temp, 1, 3) ) {
 				sb.append("self, ");
+				
 				temp = temp ^ FRIEND;
-				if( temp > 0 && temp <= 1) {
+				
+				if( Utils.range(temp, 1, 1) ) {
 					sb.append("friend, ");
+					
 					temp = temp ^ ENEMY;
+					
 					if( temp > 0 && temp <= 0 ) sb.append("enemy, ");
-					else if( temp == 0 ) sb.append("enemy");
+					else if( temp == 0 )        sb.append("enemy");
 				}
 				else if( temp == 0 ) sb.append("friend");
 			}
@@ -258,7 +282,7 @@ public class Spell
 		else if( temp == 2 ) sb.append("friend");
 		else if( temp == 1 ) sb.append("enemy");
 		else sb.append("none");
-
+		
 		return sb.toString();
 	}
 	
@@ -276,15 +300,15 @@ public class Spell
 		int FRIEND = 2;
 		int ENEMY = 1;
 
-		for(String s : tTargets) {
+		for(final String s : tTargets) {
 			if( s.equals("none") ) {
 				targets = 0;
 				break;
 			}
 			else {
 				switch(s) {
-				case "self":   targets |= SELF; break;
-				case "enemy":  targets |= ENEMY; break;
+				case "self":   targets |= SELF;   break;
+				case "enemy":  targets |= ENEMY;  break;
 				case "friend": targets |= FRIEND; break;
 				default: break;
 				}

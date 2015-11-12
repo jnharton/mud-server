@@ -350,10 +350,10 @@ public class Room extends MUDObject implements EventSource, Instance
 	/**
 	 * Get a List of the Item(s) in the Room.
 	 * 
-	 * @return
+	 * @return an unmodifiable list
 	 */
 	public List<Item> getItems() {
-		return this.items;
+		return Collections.unmodifiableList(this.items);
 	}
 	
 	/**

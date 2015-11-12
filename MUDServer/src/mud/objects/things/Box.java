@@ -11,13 +11,15 @@ import mud.TypeFlag;
 import mud.interfaces.Closeable;
 import mud.interfaces.Lockable;
 import mud.interfaces.Storage;
+import mud.misc.Lock;
 import mud.objects.Item;
-import mud.objects.Player;
 import mud.objects.Thing;
 import mud.objects.ThingType;
 import mud.utils.Utils;
 
 public class Box extends Thing implements Closeable, Lockable<Item>, Storage<Item> {
+	
+	private Lock lock = null;
 	
 	private Item key = null;
 	private boolean isLocked = false;
@@ -72,11 +74,6 @@ public class Box extends Thing implements Closeable, Lockable<Item>, Storage<Ite
 	@Override
 	public Item getKey() {
 		return this.key;
-	}
-	
-	@Override
-	public boolean hasKey(Player p) {
-		return p.getInventory().contains(key);
 	}
 	
 	@Override

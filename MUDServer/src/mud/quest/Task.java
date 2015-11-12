@@ -15,32 +15,27 @@ import mud.utils.Data;
  * @author Jeremy
  *
  */
-public class Task {
+public abstract class Task {
 	private int id = 0;
-
-	private String description;
-	private TaskType taskType;
-	private boolean isComplete = false; // is the task complete? (this being true should be reflected as marked "complete"/"finished"/etc
-
-	public Room location = null;
-
-	public Integer toKill = 0;
-	public Integer kills = 0;
-
-	public Integer toCollect = 0;
-	public Integer collects = 0;
+	
+	protected TaskType taskType;          // what kind of task is it? (see TaskType)
+	
+	protected String name;
+	protected String description;
+	protected Room location = null;        // a specific location associated with the task, may be null
+	
+	protected boolean isComplete = false; // is the task complete?
 
 	public Data objective = null;
-	public boolean hasItem = false;
 
 	/**
 	 * Create a task with a description and the NONE task type.
 	 * 
 	 * @param tDescription task description
 	 */
-	public Task(String tDescription) {
+	/*public Task(String tDescription) {
 		this(tDescription, TaskType.NONE, null);
-	}
+	}*/
 
 	/**
 	 * Create a task with a description and task type.
@@ -48,7 +43,7 @@ public class Task {
 	 * @param tDescription task description
 	 * @param tType task type
 	 */
-	public Task(String tDescription, TaskType tType, Room location) {
+	protected Task(String tDescription, TaskType tType, Room location) {
 		this.description = tDescription;
 		this.taskType = tType;
 		this.location = location;
@@ -62,33 +57,13 @@ public class Task {
 	 * @param tType task type
 	 * @param other data about the objectives for the task type
 	 */
-	public Task(String tDescription, TaskType tType, Room location, Data objectiveData) {
+	/*public Task(String tDescription, TaskType tType, Room location, Data objectiveData) {
 		this.description = tDescription;
 		this.taskType = tType;
 		this.location = location;
 		
 		this.objective = objectiveData;
-
-		if (this.taskType == TaskType.KILL) {
-			final Object o = objective.getObject("toKill");
-
-			if( o != null ) {
-				final Integer k = (Integer) objective.getObject("toKill");
-				this.toKill = k;
-			}
-			else {
-				this.toKill = 0;
-			}
-
-			this.kills = 0;
-
-			final Object o1 = objectiveData.getObject("target");
-
-			if( o1 != null ) {
-				final MUDObject m = (MUDObject) objective.getObject("target");
-			}
-		}
-	}
+	}*/
 
 	/**
 	 * Copy Constructor
@@ -100,14 +75,14 @@ public class Task {
 		this.taskType = template.taskType;
 		this.location = template.location;
 
-		if (template.taskType == TaskType.KILL) {
+		/*if (template.taskType == TaskType.KILL) {
 			this.toKill = template.toKill;
 			this.kills = 0;
 
 			if(template.objective != null) {
 				this.objective = new Data( template.objective );
 			}
-		}
+		}*/
 	}
 
 	public int getId() {
@@ -130,10 +105,6 @@ public class Task {
 		return this.taskType;
 	}
 
-	public void setType(TaskType tType) {
-		this.taskType = tType;
-	}
-
 	public boolean isType(TaskType tType) {
 		return this.taskType == tType;
 	}
@@ -141,49 +112,11 @@ public class Task {
 	public Room getLocation() {
 		return location;
 	}
-
-	public String getProgress() {
-		switch(taskType) {
-		case NONE:
-			return "";
-		case COLLECT:
-			return "" + this.collects + " / " + this.toCollect;
-		case KILL:
-			return "" + this.kills + " / " + this.toKill;
-		case RETRIEVE:
-			return ( this.hasItem ) ? "true" : "false";
-		default:
-			return "";
-		}
-	}
-
-	private void update() {
-		// if condition is met, then isComplete = true
-		switch(taskType) {
-		case NONE:
-			break;
-		case COLLECT:
-			if (this.collects == this.toCollect) {
-				this.isComplete = true;
-			}
-			else { this.isComplete = false; }
-			break;
-		case KILL:
-			if (this.kills == this.toKill) {
-				this.isComplete = true;
-			}
-			else { this.isComplete = false; }
-			break;
-		case RETRIEVE:
-			if ( this.hasItem ) {
-				this.isComplete = true;
-			}
-			else { this.isComplete = false; }
-			break;
-		default:
-		}
-	}
-
+	
+	public abstract String getProgress();
+	
+	public abstract void update();
+	
 	public boolean update(TaskUpdate update) {
 		boolean taskChanged = applyUpdate(update);
 
@@ -210,6 +143,9 @@ public class Task {
 	public boolean isComplete() {
 		return this.isComplete;
 	}
+	
+	@Override
+	protected abstract Task clone();
 
 	@Override
 	public String toString() {
@@ -223,5 +159,4 @@ public class Task {
 		buf.append("[+]\n");
 		return buf.toString();
 	}
-
 }

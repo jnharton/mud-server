@@ -9,6 +9,7 @@ import mud.interfaces.Usable;
 import mud.interfaces.Wearable;
 import mud.magic.Spell;
 import mud.misc.Effect;
+import mud.misc.SlotTypes;
 import mud.net.Client;
 import mud.objects.Item;
 import mud.objects.ItemType;
@@ -19,13 +20,12 @@ import mud.ObjectFlag;
 
 public class Jewelry extends Item implements Usable<Jewelry>, Wearable<Jewelry>
 {
-
-	// type - necklace, bracelet, ring, earring, tiara
+	// ex. new Jewelry(ItemType.RING, "Ring of Invisibility", "A medium-sized gold ring with a smooth, unmarked surface.", new Effect("invisibility"))
+	// types - necklace, bracelet, ring, earring, tiara
 	//String type = "";
 
-	Effect effect;
-
-	// ex. new Jewelry(ItemType.RING, "Ring of Invisibility", "A medium-sized gold ring with a smooth, unmarked surface.", new Effect("invisibility"))
+	public Effect effect;
+	
 	public Jewelry(final ItemType jType, final String jName, final String jDesc, final Effect jEffect) {
 		super(-1);
 		
@@ -59,14 +59,27 @@ public class Jewelry extends Item implements Usable<Jewelry>, Wearable<Jewelry>
 		//this.type = jType;               // the actual type of jewelry
 		this.weight = jWeight;           // the weight of the jewelry
 	}
+	
+	public Jewelry(final int tempDBREF, final String tempName, final EnumSet<ObjectFlag> tempFlags, final String tempDesc, final int tempLoc)
+	{
+		super(tempDBREF, tempName, tempFlags, tempDesc, tempLoc);
+
+		this.equippable = true;
+		this.equipped = false;
+		
+		// TODO we'll just make ring the only kind of jewelry for now
+		this.item_type = ItemTypes.RING;
+		this.equip_type = ItemTypes.RING;
+		this.slot_type = SlotTypes.FINGER;
+	}
 
 	public void use(String arg, Client client) {
-		System.out.println("[Jewelry->Use]");
+		/*System.out.println("[Jewelry->Use]");
 		if (this.equip_type == ItemTypes.RING) {
 			Player player = parent.getPlayer(client);
 			parent.debug(player);
 			System.out.println(parent.applyEffect(player, effect));
-		}
+		}*/
 	}
 
 	@Override
@@ -92,8 +105,7 @@ public class Jewelry extends Item implements Usable<Jewelry>, Wearable<Jewelry>
 
 	@Override
 	public Effect getEffect() {
-		// TODO Auto-generated method stub
-		return null;
+		return this.effect;
 	}
 
 	public String toDB() {

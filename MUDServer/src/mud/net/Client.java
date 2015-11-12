@@ -39,7 +39,9 @@ public class Client implements Runnable {
 
 	private boolean telnet = true;
 	private boolean tn_neg_seq = false; // indicates if the bytes currently being recieved are part of a negotiation sequence
-
+	
+	private boolean debug = true;
+	
 	private boolean console = false; // indicates to the server that the client is using the admin console (default: false)
 	
 	private boolean response_expected = false;
@@ -63,6 +65,8 @@ public class Client implements Runnable {
 
 	public Client(final Socket socket) throws IOException {
 		this.socket = socket;
+		
+		this.socket.setOOBInline(true);
 
 		this.input = socket.getInputStream();
 		this.output = socket.getOutputStream();
@@ -90,13 +94,13 @@ public class Client implements Runnable {
 					// read in a value
 					readValue = input.read();
 
-					// if we are TELNET NEGOTIATON SEQUENCE
+					// if we are in a TELNET NEGOTIATON SEQUENCE
 					if( tn_neg_seq ) {
 						if( bytes < TELNET_COMMAND_LENGTH ) {
 							buffer.add( (byte) readValue );
 							bytes++;
-
-							System.out.println("Read: " + readValue);
+							
+							debug("Read: " + readValue);
 						}
 
 						if( bytes == TELNET_COMMAND_LENGTH ) {
@@ -124,8 +128,7 @@ public class Client implements Runnable {
 
 							String msg = Telnet.translate(ba2);
 							String[] msga = msg.split(" ");
-
-
+							
 							System.out.println( "] Received: " + msg );
 
 							byte[] response = new byte[3];
@@ -180,11 +183,11 @@ public class Client implements Runnable {
 						// are ignored because it introduces an extra line into the command
 
 						if (ch == '\012') { // newline (\n)
-							if( last_ch == '\015') sb.delete(0, sb.length()); // clear stringbuffer
+							if( last_ch == '\015') sb.delete(0, sb.length());
 							else                   received_line = true;
 						}
 						else if(ch == '\015') { // carriage-return (\r)
-							if( last_ch == '\012') sb.delete(0, sb.length()); // clear stringbuffer
+							if( last_ch == '\012') sb.delete(0, sb.length());
 							else                   received_line = true;
 						}
 						else if (ch == '\010') { // backspace
@@ -193,26 +196,29 @@ public class Client implements Runnable {
 							}
 						}
 						else { // any other character
-							System.out.println("Read: " + ch + "(" + readValue + ")");
+							debug("Read: " + ch + "(" + readValue + ")");
+							
 							sb.append(ch);
+							
+							debug("current telnet input: " + Utils.stringToList( sb.toString() )); // tell us the whole string
 						}
 
 						last_ch = ch;
 
 						if( received_line ) {
+							final String line = sb.toString().trim();
+							
 							if( !response_expected ) {
-								this.queuedLines.add( sb.toString().trim() ); // convert stringbuffer to string
+								this.queuedLines.add( line );
 							}
 							else {
-								this.response = sb.toString().trim();
-								//System.out.println("RESPONSE: " + response);
+								this.response = line;
 							}
 
-							sb.delete(0, sb.length());                    // clear stringbuffer
-							received_line = false;
+							sb.delete(0, sb.length());
+							
+							received_line = false;     // reset received line indicator
 						}
-
-						System.out.println("current telnet input: " + Utils.stringToArrayList( sb.toString(), "" )); // tell us the whole string
 					}
 
 					// ---------------------------------------------------------------------------------
@@ -273,17 +279,17 @@ public class Client implements Runnable {
 	}
 
 	public boolean isRunning() {
-		return running;
+		return this.running;
 	}
 
 	public void stopRunning() {
-		running = false;
+		this.running = false;
 		
 		// clean up after ourselves
 		try {
-			if( input != null )  input.close();
-			if( output != null ) output.close();
-			if( socket != null ) socket.close();
+			if( input != null )  this.input.close();
+			if( output != null ) this.output.close();
+			if( socket != null ) this.socket.close();
 		}
 		catch(IOException ioe) {ioe.printStackTrace(); }
 	}
@@ -294,14 +300,6 @@ public class Client implements Runnable {
 
 	public String getInput() {
 		return queuedLines.poll();
-	}
-	
-	public InputStream getInputStream() {
-		return this.input;
-	}
-	
-	public OutputStream getOutputStream() {
-		return this.output;
 	}
 
 	public void write(final char ch) {
@@ -351,6 +349,10 @@ public class Client implements Runnable {
 		}
 	}
 	
+	public void setDebug(boolean state) {
+		this.debug = state;
+	}
+	
 	public void setConsole(boolean console) {
 		this.console = console;
 	}
@@ -371,6 +373,12 @@ public class Client implements Runnable {
 	public String getResponse() {
 		return this.response;
 	}
+	
+	private void debug(final String message) {
+		if( debug ) {
+			System.out.println(message);
+		}
+    }
 	
 	/*
 	// special commands?

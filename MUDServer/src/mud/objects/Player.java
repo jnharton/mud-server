@@ -18,7 +18,6 @@ import mud.Command;
 import mud.ObjectFlag;
 import mud.MUDObject;
 import mud.TypeFlag;
-import mud.MUDServer.PlayerMode;
 import mud.game.Ability;
 import mud.game.Faction;
 import mud.game.PClass;
@@ -34,6 +33,7 @@ import mud.magic.SpellBook;
 import mud.misc.Coins;
 import mud.misc.Currency;
 import mud.misc.Editors;
+import mud.misc.PlayerMode;
 import mud.misc.Slot;
 import mud.misc.SlotType;
 import mud.misc.SlotTypes;
@@ -157,10 +157,10 @@ public class Player extends MUDObject implements Mobile
 	protected int xp;                              // Experience
 	
 	protected Coins money;                         // Money (D&D, MUD)
-	protected Hashtable<String, Currency> money2;  //
+	public Hashtable<Currency, Integer> money2; //
 
-	private Profession prof1 = null;                          // Active Profession (One) **UNUSED
-	private Profession prof2 = null;                          // Active Profession (Two) **UNUSED
+	private Profession prof1 = null;               // Active Profession (One) **UNUSED
+	private Profession prof2 = null;               // Active Profession (Two) **UNUSED
 	
 	private Hashtable<String, Profession> professions = null; // holds all your trained professions **UNUSED
 
@@ -220,9 +220,9 @@ public class Player extends MUDObject implements Mobile
 	public Map<String, Command> commandMap = new HashMap<String, Command>();
 
 	// Knowledge
-	protected ArrayList<String> names;                                           // names of other players that the player actually knows
-	protected Hashtable<String, Boolean> discovered_locations = new Hashtable<String, Boolean>();
-	protected Map<String, Landmark> landmarks = new HashMap<String, Landmark>(); // contains "landmarks", which are places you've been and h
+	protected ArrayList<String> names;                         // names of other players
+	protected Hashtable<String, Boolean> discovered_locations; // places you've been to
+	protected Map<String, Landmark> landmarks;
 	
 	/* End */
 	
@@ -234,9 +234,6 @@ public class Player extends MUDObject implements Mobile
 	private Editors editor;
 
 	/* Editor Data */ 
-
-	// Character Editor
-	private cgData cgd = null;
 
 	// List Editor
 	private EditList currentEdit;
@@ -261,7 +258,7 @@ public class Player extends MUDObject implements Mobile
 
 	/* save the current list */
 	public void saveCurrentEdit() {
-		editMap.put(currentEdit.name, currentEdit);
+		editMap.put(currentEdit.getName(), currentEdit);
 	}
 
 	/* stop editing -- clears the current list in a final manner */
@@ -275,10 +272,6 @@ public class Player extends MUDObject implements Mobile
 	private Weapon primary = null;
 	private Weapon secondary = null;
 	
-	protected Player(final Integer tempDBREF) {
-		super(tempDBREF);
-	}
-
 	/**
 	 * No argument constructor for subclasses
 	 * 
@@ -286,13 +279,22 @@ public class Player extends MUDObject implements Mobile
 	 * however they can not initialize private members of this class.
 	 * 
 	 */
+	protected Player(final Integer tempDBREF) {
+		super(tempDBREF);
+	}
+	
+	/**
+	 * NEW PLAYER CONSTRUCTOR ?
+	 * 
+	 * @param tempDBREF
+	 * @param tempName
+	 * @param tempPass
+	 * @param startingRoom
+	 */
 	public Player(final Integer tempDBREF, final String tempName, final String tempPass, final int startingRoom) {
 		super(tempDBREF);
 		
 		this.type = TypeFlag.PLAYER;
-
-		//this.name = tempName;
-		this.pass = tempPass;
 
 		this.isNew = true;
 		
@@ -304,6 +306,8 @@ public class Player extends MUDObject implements Mobile
 
 		this.desc = _DESC;
 		this.title = "Newbie";
+		
+		this.pass = tempPass;
 		
 		//setName(tempName);
 		//setRace(Races.NONE);
@@ -332,7 +336,8 @@ public class Player extends MUDObject implements Mobile
 		this.locks = "";
 
 		// instantiate slots
-		this.slots = new LinkedHashMap<String, Slot>(11, 0.75f);
+		//this.slots = new LinkedHashMap<String, Slot>(11, 0.75f);
+		this.slots = new LinkedHashMap<String, Slot>();
 
 		// initialize slots
 		/*addSlot("helmet", new Slot( SlotTypes.HEAD, ItemTypes.HELMET));
@@ -354,8 +359,8 @@ public class Player extends MUDObject implements Mobile
 
 		// instantiate stats
 		//stats = new LinkedHashMap<Ability, Integer>(6, 0.75f);
-
-		stats = new LinkedHashMap<Ability, Integer>(ruleset.getAbilities().length, 0.75f);
+		//stats = new LinkedHashMap<Ability, Integer>(ruleset.getAbilities().length, 0.75f);
+		stats = new LinkedHashMap<Ability, Integer>();
 
 		// initialize stats
 		/*this.stats.put(Abilities.STRENGTH, _STATS[0]);     // Strength
@@ -365,15 +370,16 @@ public class Player extends MUDObject implements Mobile
 		this.stats.put(Abilities.WISDOM, _STATS[4]);       // Wisdom
 		this.stats.put(Abilities.CHARISMA, _STATS[5]);     // Charisma*/
 
-		for(Ability ability : ruleset.getAbilities()) {
+		/*for(Ability ability : ruleset.getAbilities()) {
 			this.stats.put(ability, 0);
-		}
+		}*/
 
 		// instantiate skills
-		skills = new LinkedHashMap<Skill, Integer>(36, 0.75f);
+		//skills = new LinkedHashMap<Skill, Integer>(36, 0.75f);
+		skills = new LinkedHashMap<Skill, Integer>();
 
 		// these should be all -1, since no class is specified initially
-		this.skills.put(Skills.APPRAISE, -1);            this.skills.put(Skills.BALANCE, -1);            this.skills.put(Skills.BLUFF, -1);
+		/*this.skills.put(Skills.APPRAISE, -1);            this.skills.put(Skills.BALANCE, -1);            this.skills.put(Skills.BLUFF, -1);
 		this.skills.put(Skills.CLIMB, -1);               this.skills.put(Skills.CONCENTRATION, -1);      this.skills.put(Skills.CRAFT, -1);
 		this.skills.put(Skills.DECIPHER_SCRIPT, -1);     this.skills.put(Skills.DIPLOMACY, -1);          this.skills.put(Skills.DISGUISE, -1);
 		this.skills.put(Skills.ESCAPE_ARTIST, -1);       this.skills.put(Skills.GATHER_INFORMATION, -1); this.skills.put(Skills.HANDLE_ANIMAL, -1);
@@ -390,13 +396,15 @@ public class Player extends MUDObject implements Mobile
 		this.skills.put(Skills.SEARCH, -1);              this.skills.put(Skills.SENSE_MOTIVE, -1);       this.skills.put(Skills.SLEIGHT_OF_HAND, -1);
 		this.skills.put(Skills.SPEAK_LANGUAGE, -1);      this.skills.put(Skills.SPELLCRAFT, -1);         this.skills.put(Skills.SPOT, -1);
 		this.skills.put(Skills.SURVIVAL, -1);            this.skills.put(Skills.SWIM, -1);               this.skills.put(Skills.TRACKING, -1);
-		this.skills.put(Skills.TUMBLE, -1);              this.skills.put(Skills.USE_MAGIC_DEVICE, -1);   this.skills.put(Skills.USE_ROPE, -1);
+		this.skills.put(Skills.TUMBLE, -1);              this.skills.put(Skills.USE_MAGIC_DEVICE, -1);   this.skills.put(Skills.USE_ROPE, -1);*/
 
 		// instantiate quest list
 		this.quests = new ArrayList<Quest>();
 
 		// instantiate list of known names (memory - names)
 		this.names = new ArrayList<String>(); // we get a new blank list this way, not a loaded state
+		this.discovered_locations = new Hashtable<String, Boolean>();
+		this.landmarks = new HashMap<String, Landmark>();
 
 		// initialize list editor variables
 		this.editor = Editors.NONE;
@@ -562,6 +570,8 @@ public class Player extends MUDObject implements Mobile
 
 		// instantiate list of known names (memory - names)
 		this.names = new ArrayList<String>(); // we get a new blank list this way, not a loaded state
+		this.discovered_locations = new Hashtable<String, Boolean>();
+		this.landmarks = new HashMap<String, Landmark>();
 
 		// initialize list editor variables
 		this.editor = Editors.NONE;
@@ -830,7 +840,7 @@ public class Player extends MUDObject implements Mobile
 	 * @return
 	 */
 	public int getLevel() {
-		return this.level - negativeLevels;
+		return this.level - this.negativeLevels;
 	}
 
 	/**
@@ -914,7 +924,6 @@ public class Player extends MUDObject implements Mobile
 	}
 
 	public int getTotalHP() {
-		//return this.totalhp + this.temphp;
 		return this.totalhp;
 	}
 
@@ -1133,6 +1142,10 @@ public class Player extends MUDObject implements Mobile
 
 	public void setCName(final String newCName) {
 		this.cName = newCName;
+	}
+	
+	public boolean knowsName(final String name) {
+		return this.names.contains(name);
 	}
 
 	public void setController(final boolean isController) {
@@ -1506,15 +1519,7 @@ public class Player extends MUDObject implements Mobile
 	public void setEditorData(final EditorData newEdD) {
 		this.edd = newEdD;
 	}
-
-	public cgData getCGData() {
-		return this.cgd;
-	}
-
-	public void setCGData(final cgData newCGD) {
-		this.cgd = newCGD;
-	}
-
+	
 	public void setIdle(final boolean idle) {
 		this.idle_state = idle;
 	}

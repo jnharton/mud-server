@@ -8,7 +8,6 @@ import mud.interfaces.Lockable;
 import mud.objects.Exit;
 import mud.objects.ExitType;
 import mud.objects.Item;
-import mud.objects.Player;
 import mud.utils.Tuple;
 import mud.utils.Utils;
 
@@ -87,15 +86,6 @@ public class Door extends Exit implements Lockable<Item> {
 	@Override
 	public Item getKey() {
 		return this.key;
-	}
-
-	@Override
-	public boolean hasKey(Player p) {
-		if( p.hasItem(this.key) ) {
-			return true;
-		}
-		
-		return false;
 	}
 	
 	// TODO check loader etc and fix for new data field

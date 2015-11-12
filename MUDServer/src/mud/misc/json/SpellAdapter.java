@@ -1,9 +1,8 @@
 package mud.misc.json;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import mud.magic.Reagent;
 import mud.magic.Spell;
@@ -75,7 +74,7 @@ public class SpellAdapter extends TypeAdapter<Spell> {
 					break;
 				case "reagents":
 					if( reader.peek() == JsonToken.BEGIN_ARRAY ) { reader.beginArray(); }
-					HashMap<String, Reagent> reagents = spell.getReagents();
+					Map<String, Reagent> reagents = spell.getReagents();
 					while( reader.peek() != JsonToken.END_ARRAY ) {
 						String data = reader.nextString();
 						try { reagents.put(data, new Reagent(data)); }

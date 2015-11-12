@@ -200,8 +200,21 @@ public final class MudUtils {
 
 	// utility function
 	public static void addRoomToZone(final Zone zone, final Room room) {
-		zone.addRoom( room );
-		room.setZone( zone );
+		if( zone != null && room != null ) {
+			zone.addRoom( room );
+			room.setZone( zone );
+		}
 	}
-
+	
+	public static void addItemToRoom(final Room room, final Item item) {
+		if( room != null && item != null ) {
+			item.setLocation(room.getDBRef());
+			room.addItem(item);
+		}
+	}
+	
+	public static boolean validateEmailAddress(final String emailAddress) {
+		// matches against *@*.* | ex: test@gmail.com
+		return emailAddress.matches("([\\w-+]+(?:\\.[\\w-+]+)*@(?:[\\w-]+\\.)+[a-zA-Z]{2,7})");
+	}
 }

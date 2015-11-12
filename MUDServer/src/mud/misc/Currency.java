@@ -21,7 +21,7 @@ public class Currency {
 	private final String name;   // name of the currency
 	private final String abbrev; // abbreviation to use when a short form is required
 	private final Currency base; // a smaller form of currency that the value of this is based o
-	private final Double value;     // the equivalent value of this in a smaller form of currency
+	private final Double value;  // the equivalent value of this in a smaller form of currency
 
 	public Currency(String name, String abbrev, Currency base, Double value) {
 		this.name = name;     // name is the name the player sees

@@ -29,6 +29,7 @@ public class Server implements Runnable {
 
     public Server(final MUDServerI p, final int port) {
         parent = p;
+        
         try {
             server = new ServerSocket(port);
             thread = new Thread(this);
@@ -134,10 +135,11 @@ public class Server implements Runnable {
                 
                 parent.clientConnected(client);
             }
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             e.printStackTrace();
-
-        } finally {
+        }
+        finally {
             for (final Client c : clients) {
                 c.stopRunning();
             }

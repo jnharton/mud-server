@@ -501,6 +501,17 @@ public final class Utils {
 
 		return sb.toString();
 	}
+	
+	public static List<String> stringToList(final String str) {
+		final LinkedList<String> result = new LinkedList<String>();
+		final char[] temp = str.toCharArray();
+		
+		for(final char ch : temp) {
+			result.add("" + ch);
+		}
+		
+		return result;
+	}
 
 	public static ArrayList<String> stringToArrayList(String s, String sep) {
 		String[] stringArray = s.split(sep);

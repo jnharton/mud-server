@@ -54,6 +54,8 @@ public class Race {
 		this.statAdj = statAdj;
 		this.restricted = restricted;
 		this.canFly = canFly;
+		
+		this.playable = true;
 	}
 	
 	public Ruleset getRules() {
@@ -64,9 +66,9 @@ public class Race {
 		return this.name;
 	}
 	
-	public void setSubrace(Subrace sub) {
+	/*public void setSubrace(Subrace sub) {
 		this.sub = sub;
-	}
+	}*/
 	
 	public Subrace getSubrace() {
 		return this.sub;
@@ -85,6 +87,10 @@ public class Race {
 		}
 		
 		return this.statAdj;
+	}
+	
+	public boolean isPlayable() {
+		return this.playable;
 	}
 
 	public boolean isRestricted() {

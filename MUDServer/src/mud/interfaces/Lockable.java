@@ -17,9 +17,6 @@ CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTH
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-import mud.objects.Item;
-import mud.objects.Player;
-
 /**
  * Defines an interface for lockable objects.
  * 
@@ -27,17 +24,15 @@ import mud.objects.Player;
  *
  * @param <L> Some object type that will be used as the key
  */
-public interface Lockable<L> {
-	public void setKey(L key);
-	public L getKey();
-	
-	public boolean hasKey( Player p );
+public interface Lockable<K> {
+	public void setKey(K key);
+	public K getKey();
 	
 	public boolean lock();
-	public boolean lock(L key);
+	public boolean lock(K key);
 	
 	public boolean unlock();
-	public boolean unlock(L key);
+	public boolean unlock(K key);
 	
 	public boolean isLocked();
 }

@@ -34,8 +34,10 @@ import mud.utils.Point;
  * 
  */
 public abstract class MUDObject {
-	protected static MUDServer parent;
-
+	// internal reference, only want one at a time, no need to persist
+	// (might be an issue for multiple server instances)
+	protected static transient MUDServer parent;
+	
 	/* object data - persistent */
 	private Integer dbref;               // database reference number
 	protected String name;               // object name
@@ -45,14 +47,14 @@ public abstract class MUDObject {
 	protected String locks;              // object locks
 	protected Integer location;          // object location
 	
-	protected Player owner;              // who owns the object (dbref of owner)
+	protected Player owner;              // who owns the object (dbref of owner? only player can own?)
 	
 	/* object data - related to game (persistent) */
+	protected Point pos = new Point(0, 0, 0); // object's position on a cartesian plane (3D Point)
+	
 	protected LinkedHashMap<String, Object> properties = new LinkedHashMap<String, Object>(5, 0.75f);
 
-	protected ArrayList<Effect> effects = new ArrayList<Effect>(); // Effects set on the object
-	
-	protected Point pos = new Point(0, 0, 0); // object's' location/position on a cartesian plane within a room? (3D Point)
+	protected List<Effect> effects = new ArrayList<Effect>(); // Effects set on the object
 
 	/* object state - transient? */
 	public boolean Edit_Ok = true;  // is this object allowed to be edited
@@ -326,7 +328,7 @@ public abstract class MUDObject {
 	 * @param key property name
 	 * @return property value
 	 */
-	final public Object getProperty(final String key) {
+	public final Object getProperty(final String key) {
 		return this.properties.get(key);
 	}
 	
@@ -340,7 +342,7 @@ public abstract class MUDObject {
 	 * @param c
 	 * @return
 	 */
-	final public <T> T getProperty(final String key, Class<T> c) {
+	public final <T> T getProperty(final String key, Class<T> c) {
 		return (T) c.cast(this.properties.get(key));
 	}
 
@@ -350,32 +352,28 @@ public abstract class MUDObject {
 	 * 
 	 * @return
 	 */
-	final public LinkedHashMap<String, Object> getProperties() {
+	public final LinkedHashMap<String, Object> getProperties() {
 		return this.properties;
 	}
 	
-	final public LinkedHashMap<String, Object> getProperties(final String propdir) {
-		final LinkedHashMap<String, Object> props = new LinkedHashMap<String, Object>();
-
-		for(final String key : properties.keySet()) {
-			if( key.startsWith(propdir) ) {
-				props.put( key, properties.get(key) );
+	public final LinkedHashMap<String, Object> getProperties(final String propdir) {
+		if( propdir.endsWith("/") ) {
+			final LinkedHashMap<String, Object> props = new LinkedHashMap<String, Object>();
+			
+			for(final String key : properties.keySet()) {
+				if( key.startsWith(propdir) ) {
+					props.put( key, properties.get(key) );
+				}
 			}
+			
+			return props;
 		}
-
-		return props;
+		
+		return null;
 	}
 
-	final public LinkedHashMap<String, Object> getVisualProperties() {
-		final LinkedHashMap<String, Object> visual_props = new LinkedHashMap<String, Object>();
-
-		for(final String key : properties.keySet()) {
-			if( key.startsWith("visual/") ) {
-				visual_props.put( key, properties.get(key) );
-			}
-		}
-
-		return visual_props;
+	public final LinkedHashMap<String, Object> getVisualProperties() {
+		return getProperties("visual/");
 	}
 
 	/**
@@ -461,36 +459,6 @@ public abstract class MUDObject {
 	{
 		this.effects.clear();
 	}
-	
-	// TODO make a decision as to whether these should remain commented or be deleted
-	
-	/*
-	 * Coordinate System related methods 
-	 */
-
-	/*public int getXCoord() {
-		return this.pos.getX();
-	}
-
-	public void setXCoord(int newXCoord) {
-		this.pos.setX(newXCoord);
-	}
-
-	public int getYCoord() {
-		return this.pos.getY();
-	}
-
-	public void setYCoord(int newYCoord) {
-		this.pos.setY(newYCoord);
-	}
-
-	public int getZCoord() {
-		return this.pos.getZ();
-	}
-
-	public void setZCoord(int newZCoord) {
-		this.pos.setZ(newZCoord);
-	}*/
 
 	public final Point getPosition() {
 		return this.pos;
@@ -547,7 +515,7 @@ public abstract class MUDObject {
 	 * @param key
 	 * @return
 	 */
-	final public boolean hasProperty(final String key) {
+	public final boolean hasProperty(final String key) {
 		return this.properties.containsKey(key);
 	}
 	
@@ -558,7 +526,7 @@ public abstract class MUDObject {
 	 * @return
 	 */
 	public final boolean isOwnedBy(final Player player) {
-		// TODO I'd like to think I could compare player objects, but I'm not sure
+		// TODO I'd like to think I could compare player objects, but I'm not sure it would work
 		return this.owner.getDBRef() == player.getDBRef() ? true : false;
 	}
 

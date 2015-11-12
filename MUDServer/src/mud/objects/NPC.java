@@ -137,6 +137,8 @@ public class NPC extends Player implements InteractiveI
 		parent.addMessage(new Message(this, message, player));
 	}
 	
+	// pose/do/act
+	
 	// THIS IS A HACKED-UP SOLUTION THAT NEEDS FIXING
 	/*public ArrayList<Message> interact(final int n) {
 		final ArrayList<Message> ret = new ArrayList<Message>(2);

@@ -3,18 +3,23 @@ package mud.utils;
 import java.util.*;
 
 public class EditList {
-    final public String name;
-
+	private final String name;
+    private final LinkedList<String> lines;
+    
     private int currentLine;
-    private LinkedList<String> lines = new LinkedList<String>();
     
     public EditList(final String n) {
     	this.name = n;
+    	this.lines = new LinkedList<String>();
     }
 
     public EditList(final String n, List<String> init) {
     	this.name = n;
         this.lines = new LinkedList<String>(init);
+    }
+    
+    public String getName() {
+    	return this.name;
     }
 
     public int getNumLines() {
@@ -43,8 +48,8 @@ public class EditList {
 
     public void addLine(final String line) {
     	if( atEnd() ) {
-    		this.lines.add(line);
     		this.currentLine = this.lines.size();
+    		this.lines.add(line);
     	}
     	else {
     		this.lines.add(this.currentLine, line);

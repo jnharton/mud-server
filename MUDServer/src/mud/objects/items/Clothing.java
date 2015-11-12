@@ -1,14 +1,15 @@
 package mud.objects.items;
 
 import java.util.EnumSet;
+import java.util.List;
 
 import mud.ObjectFlag;
 import mud.TypeFlag;
 import mud.interfaces.Usable;
 import mud.interfaces.Wearable;
+import mud.magic.Spell;
 import mud.misc.Effect;
 import mud.objects.Item;
-import mud.objects.ItemType;
 import mud.objects.ItemTypes;
 import mud.utils.Utils;
 
@@ -98,6 +99,18 @@ public class Clothing extends Item implements Usable<Clothing>, Wearable<Clothin
 	@Override
 	public String getName() {
 		return this.name;
+	}
+
+	@Override
+	public Spell getSpell() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<Spell> getSpells() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 	
 	@Override

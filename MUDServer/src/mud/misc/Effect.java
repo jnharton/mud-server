@@ -62,7 +62,7 @@ public class Effect
 		durationType = eDurationType;
 		duration = eDuration;
 		
-		if (name.toLowerCase().contains("heal")) {
+		/*if (name.toLowerCase().contains("heal")) {
 			type = Type.HEAL;
 		}
 		else if (name.toLowerCase().contains("invis")) {
@@ -70,7 +70,7 @@ public class Effect
 		}
 		else if (name.toLowerCase().contains("dam")) {
 			type = Type.DAMAGE;
-		}
+		}*/
 	}
 	
 	public Effect(String eName, Type eType, DurationType eDurationType, int eDuration, boolean ePermanent)

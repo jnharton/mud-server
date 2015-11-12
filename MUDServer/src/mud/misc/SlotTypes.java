@@ -22,7 +22,7 @@ public class SlotTypes {
 	
 	private static SlotType[] types = {
 		NONE,  HEAD,  NECK,   BODY,  CHEST, BACK, ARMS,
-		LHAND, RHAND, FINGER, WAIST, LEGS,  FEET
+		LHAND, RHAND, HANDS, FINGER, WAIST, LEGS,  FEET
 	};
 	
 	public static SlotType getType(Integer typeId) {
@@ -44,6 +44,7 @@ public class SlotTypes {
 		case "ARMS":      return ARMS;
 		case "LHAND":     return LHAND;
 		case "RHAND":     return RHAND;
+		case "HANDS":     return HANDS;
 		case "FINGER":    return FINGER;
 		case "WAIST":     return WAIST;
 		case "LEGS":      return LEGS;

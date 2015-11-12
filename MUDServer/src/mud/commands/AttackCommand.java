@@ -6,8 +6,8 @@ import mud.Command;
 import mud.Constants;
 import mud.MUDObject;
 import mud.MUDServer;
-import mud.MUDServer.PlayerMode;
 import mud.misc.CombatManager;
+import mud.misc.PlayerMode;
 import mud.net.Client;
 import mud.objects.Creature;
 import mud.objects.Item;
@@ -74,8 +74,6 @@ public class AttackCommand extends Command {
 					// start attacking
 
 					// get weapon
-					//Weapon weapon = (Weapon) player.getSlots().get("weapon").getItem();
-					
 					Weapon weapon = MudUtils.getWeapon(player);
 					
 					WeaponType wt = null;
@@ -105,7 +103,7 @@ public class AttackCommand extends Command {
 							// figure out damage
 							int criticalCheckRoll = Utils.roll(1, 20);
 							
-							boolean criticalHit = criticalCheckRoll >= wt.getCritMin() && criticalCheckRoll <= wt.getCritMax() ? true : false;
+							boolean criticalHit = (criticalCheckRoll >= wt.getCritMin() && criticalCheckRoll <= wt.getCritMax()) ? true : false;
 
 							int damage = MudUtils.calculateDamage(weapon, criticalHit);
 							
@@ -121,27 +119,7 @@ public class AttackCommand extends Command {
 							else {
 								send("Ouch! That had to hurt (" + damage + " damage )", client);
 							}
-
-							// damage the target
-							MUDObject target = player.getTarget();
-
-							if(target instanceof Player) {
-								((Player) target).setHP(-damage);
-								((Player) target).updateCurrentState();
-							}
-							else if(target instanceof Creature) {
-								((Creature) target).setHP(-damage);
-							}
-							else if(target instanceof Item) {
-								((Item) target).wear += damage;
-							}
-							else if(target instanceof Thing) {
-								// ?
-							}
-							else {
-								// ?
-							}
-
+							
 							/*
 							 * TODO revise this to handle different states, if we're still
 							 * attacking a dead creature tell us that it's dead already, otherwise
@@ -150,25 +128,34 @@ public class AttackCommand extends Command {
 							 * in case a state change occurred. Or maybe, we should be recording elsewhere
 							 * whether a call to updateCurrentState() actually resulted in a state change.
 							 */
-							if(target instanceof Player) {
-								//final Player player1 = (Player) target;
 
-								if( ((Player) target).getHP() <= 0 ) {
-									send("You killed them!" + ((Player) target).getName() + ".", client);
-									handleDeath( (Player) target );
+							// damage the target
+							MUDObject target = player.getTarget();
+
+							if(target instanceof Player) {
+								final Player p = (Player) target;
+								
+								p.setHP(-damage);
+								p.updateCurrentState();
+								
+								if( p.getState() == Player.State.DEAD ) {
+									send("You killed them!" + p.getName() + ".", client);
+									handleDeath( p );
 									player.setTarget(null);
 								}
 							}
-							else {
-								final Creature creature = (Creature) target;
-
-								debug("Creature HP: " + creature.getHP());
+							else if(target instanceof Creature) {
+								final Creature c = (Creature) target;
 								
-								if( creature.getHP() <= 0 ) {
-									send("You killed " + creature.getName() + ".", client);
-									debug(playerName + " killed " + creature.getName() + " (#" + creature.getDBRef() + ")");
+								c.setHP(-damage);
+
+								debug("Creature HP: " + c.getHP());
+								
+								if( c.getHP() <= 0 ) {
+									send("You killed " + c.getName() + ".", client);
+									debug(playerName + " killed " + c.getName() + " (#" + c.getDBRef() + ")");
 									
-									handleDeath( creature, player );
+									handleDeath( c, player );
 									
 									player.setTarget(null);
 								}
@@ -178,24 +165,28 @@ public class AttackCommand extends Command {
 									new CombatManager();
 								}
 							}
+							else if(target instanceof Item) {
+								((Item) target).modifyWear( damage );
+							}
+							else if(target instanceof Thing) {
+								// ?
+							}
+							else {
+								// ?
+							}
 						}
 						else {
 							// reason we didn't hit? (this should determine our message)
 							send("Wow, that was terrible, you barely touched them with that.", client);
-
 						}
 					}
 					else { // else
 						switch(wt.getName().toUpperCase()) {
-						case "LONGSWORD":
-							send("Really? You aren't even close enough to hit!", client);
-							break;
-						case "BOW":
-							send("Well, that was a waste of effort -AND- a good arrow!", client);
-							break;
-						default:
-							break;
+						case "LONGSWORD": send("Really? You aren't even close enough to hit!", client);         break;
+						case "BOW":       send("Well, that was a waste of effort -AND- a good arrow!", client); break;
+						default:          break;
 						}
+						
 						send("Your attack was ineffectual, since you couldn't reach your target.", client);
 					}
 				}

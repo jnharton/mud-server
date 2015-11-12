@@ -13,7 +13,7 @@ public class Console {
 	private MUDServer server;
 	private Client client;
 	
-	public Console(MUDServer server, Client client) {
+	public Console(final MUDServer server, final Client client) {
 		this.server = server;
 		this.client = client;
 	}
@@ -43,6 +43,7 @@ public class Console {
 				
 				if( c != -1 ) {
 					final Client client1 = server.getClients().get(c);
+					
 					client.writeln("-- " + client1);
 					client.writeln("telnet:  " + client1.usingTelnet());
 					client.writeln("console: " + client1.isConsole());

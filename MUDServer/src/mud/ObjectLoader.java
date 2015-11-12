@@ -19,9 +19,11 @@ import mud.interfaces.GameModule;
 import mud.interfaces.Ruleset;
 import mud.magic.Spell;
 import mud.misc.Coins;
+import mud.misc.Effect;
 import mud.misc.SlotType;
 import mud.misc.SlotTypes;
 import mud.misc.Zone;
+import mud.misc.Effect.DurationType;
 
 /*
  Copyright (c) 2012 Jeremy N. Harton
@@ -734,10 +736,17 @@ public class ObjectLoader {
 		}
 		else if (it == ItemTypes.RING) {
 			//Item ring = new Item(oDBRef, oName, null, oDesc, oLocation);
-			final Item ring = new Item(oDBRef, oName, EnumSet.noneOf(ObjectFlag.class), oDesc, oLocation);
+			//final Item ring = new Item(oDBRef, oName, EnumSet.noneOf(ObjectFlag.class), oDesc, oLocation);
+			
+			final Jewelry ring = new Jewelry(oDBRef, oName, EnumSet.noneOf(ObjectFlag.class), oDesc, oLocation);
+			
+			//int effect = Integer.parseInt(attr[]);
 			
 			// TODO this is special, an 'item type' without an associated class
 			//ring.setItemType(ItemTypes.RING);
+			
+			// TODO fix this, all rings are rings of invisibility now...
+			ring.effect = new Effect("Invisibility", Effect.Type.INVIS, DurationType.PERMANENT, -1);
 			
 			return ring;
 		}
