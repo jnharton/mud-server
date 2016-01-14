@@ -28,14 +28,8 @@ import mud.utils.SpellTimer;
  */
 
 public class CastCommand extends Command {
-
-	public CastCommand(final MUDServer mParent) {
-		super(mParent);
-	}
-
 	@Override
 	public void execute(final String spellName, final Client client) {
-
 		final Player player = getPlayer(client);
 		
 		if (!player.isCaster()) {

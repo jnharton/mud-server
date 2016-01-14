@@ -64,6 +64,8 @@ public class Merchant extends NPC implements Vendor {
 	
 	@Override
 	public void interact(Player player) {
+		super.interact( player ); // make sure we call the super class's method...
+		
 		final Client client = player.getClient();
 		
 		parent.send(this.getName(), client);

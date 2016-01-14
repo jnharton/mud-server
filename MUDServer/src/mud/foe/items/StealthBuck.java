@@ -6,7 +6,6 @@ import java.util.Map;
 
 import mud.Command;
 import mud.Constants;
-import mud.MUDObject;
 import mud.ObjectFlag;
 import mud.TypeFlag;
 import mud.foe.FOEItemTypes;
@@ -17,7 +16,6 @@ import mud.misc.Effect;
 import mud.misc.Effect.DurationType;
 import mud.net.Client;
 import mud.objects.Item;
-import mud.objects.ItemType;
 import mud.objects.ItemTypes;
 
 /**
@@ -39,11 +37,11 @@ public final class StealthBuck extends Item implements Module, ExtraCommands {
 	
 	private Map<String, Command> commands = new Hashtable<String, Command>() {
 		{
-			put("stealth", new Command(MUDObject.parent, "turn stealth field ON or OFF.") {
+			put("stealth", new Command("turn stealth field ON or OFF.") {
 				public void execute(final String arg, final Client client) {
 					send("stealth: command not implemented", client);
 					
-					applyEffect(parent.getPlayer(client), new Effect(stealth));
+					applyEffect(getPlayer(client), new Effect(stealth));
 				}
 				public int getAccessLevel() { return Constants.USER; }
 			});

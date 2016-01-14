@@ -35,7 +35,7 @@ public class Ability {
 		return this.id;
 	}
 	
-	
+	@Override
 	public String toString() {
 		return this.getName();
 	}

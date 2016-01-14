@@ -27,14 +27,14 @@ public class ScriptedCommand extends Command {
 	private ProgramInterpreter pgmi;
 	private Script script;
 	
-	public ScriptedCommand(MUDServer mParent, String description, ProgramInterpreter pgmi,  Script script) {
-		super(mParent, description);
+	public ScriptedCommand(final String description, final ProgramInterpreter pgmi, final Script script) {
+		super(description);
 		
 		this.pgmi = pgmi;
 		this.script = script;
 	}
 	
-	public void execute(String arg, Client client) {
+	public void execute(final String arg, final Client client) {
 		this.pgmi.interpret(script, getPlayer(client), null);
 	}
 	

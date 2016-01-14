@@ -14,9 +14,9 @@ import java.util.List;
  *
  */
 public final class MemorySegment {
-	public Hashtable<String, Actor> characters;
-	public Hashtable<Actor, List<String>> lines;
-	public Hashtable<Integer, String> narrative;
+	private Hashtable<String, Actor> characters;
+	private Hashtable<Actor, List<String>> lines;
+	private Hashtable<Integer, String> narrative;
 	
 	public MemorySegment() {
 		this.characters = new Hashtable<String, Actor>();
@@ -26,5 +26,9 @@ public final class MemorySegment {
 	
 	public void addActor(final Actor actor) {
 		this.characters.put( actor.getName(), actor );
+	}
+	
+	public Actor getActor(final String actorName) {
+		return this.characters.get( actorName );
 	}
 }

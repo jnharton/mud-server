@@ -36,7 +36,7 @@ import mud.utils.Point;
 public abstract class MUDObject {
 	// internal reference, only want one at a time, no need to persist
 	// (might be an issue for multiple server instances)
-	protected static transient MUDServer parent;
+	//protected static transient MUDServer parent;
 	
 	/* object data - persistent */
 	private Integer dbref;               // database reference number
@@ -110,7 +110,7 @@ public abstract class MUDObject {
 	 * 
 	 * @param template
 	 */
-	protected MUDObject(MUDObject template) {
+	protected MUDObject(final MUDObject template) {
 		this.dbref = -1;
 		
 		this.name = template.name;
@@ -345,6 +345,18 @@ public abstract class MUDObject {
 	public final <T> T getProperty(final String key, Class<T> c) {
 		return (T) c.cast(this.properties.get(key));
 	}
+	
+	/**
+	 * Set a property on this object, where the name
+	 * of the property is the key and the value of the
+	 * property is the value.
+	 * 
+	 * @param key   property name
+	 * @param value property value
+	 */
+	public final void setProperty(final String key, final Object value) {
+		this.properties.put(key,  value);
+	}
 
 	/**
 	 * Get the Properties HashMap, a mutable hashmap of strings and objects
@@ -374,18 +386,6 @@ public abstract class MUDObject {
 
 	public final LinkedHashMap<String, Object> getVisualProperties() {
 		return getProperties("visual/");
-	}
-
-	/**
-	 * Set a property on this object, where the name
-	 * of the property is the key and the value of the
-	 * property is the value.
-	 * 
-	 * @param key   property name
-	 * @param value property value
-	 */
-	public final void setProperty(final String key, final Object value) {
-		this.properties.put(key,  value);
 	}
 	
 	/**
@@ -488,15 +488,6 @@ public abstract class MUDObject {
 	}
 	
 	/* Check Methods */
-	/**
-	 * Is this MUDObject of the specified type indicated by the TypeFlag?
-	 * 
-	 * @param type
-	 * @return
-	 */
-	public final boolean isType(final TypeFlag type) {
-		return this.type == type;
-	}
 
 	/**
 	 * Does this MUDObject have the indicated ObjectFlag?
@@ -519,17 +510,6 @@ public abstract class MUDObject {
 		return this.properties.containsKey(key);
 	}
 	
-	/**
-	 * Does the specified player own this object?
-	 * 
-	 * @param player
-	 * @return
-	 */
-	public final boolean isOwnedBy(final Player player) {
-		// TODO I'd like to think I could compare player objects, but I'm not sure it would work
-		return this.owner.getDBRef() == player.getDBRef() ? true : false;
-	}
-
 	/**
 	 * Is an effect with the name specified set on the object?
 	 * 
@@ -566,6 +546,27 @@ public abstract class MUDObject {
 
 	public final boolean hasEffect(final Effect effect) {
 		return this.effects.contains(effect);
+	}
+	
+	/**
+	 * Is this MUDObject of the specified type indicated by the TypeFlag?
+	 * 
+	 * @param type
+	 * @return
+	 */
+	public final boolean isType(final TypeFlag type) {
+		return this.type == type;
+	}
+	
+	/**
+	 * Does the specified player own this object?
+	 * 
+	 * @param player
+	 * @return
+	 */
+	public final boolean isOwnedBy(final Player player) {
+		// TODO I'd like to think I could compare player objects, but I'm not sure it would work
+		return this.owner.getDBRef() == player.getDBRef() ? true : false;
 	}
 
 	/**

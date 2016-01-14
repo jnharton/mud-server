@@ -1,13 +1,11 @@
 package mud.objects.items;
 
-import java.util.ArrayList;
 import java.util.EnumSet;
 
 import mud.ObjectFlag;
 import mud.interfaces.Wearable;
 import mud.misc.Coins;
 import mud.objects.Item;
-import mud.objects.ItemType;
 import mud.objects.ItemTypes;
 import mud.utils.Utils;
 

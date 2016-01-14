@@ -5,13 +5,11 @@ import java.util.List;
 import mud.Command;
 import mud.Constants;
 import mud.MUDObject;
-import mud.MUDServer;
 import mud.misc.CombatManager;
 import mud.misc.PlayerMode;
 import mud.net.Client;
 import mud.objects.Creature;
 import mud.objects.Item;
-import mud.objects.NPC;
 import mud.objects.Player;
 import mud.objects.Thing;
 import mud.objects.items.Weapon;
@@ -31,11 +29,6 @@ import mud.utils.Utils;
  */
 
 public class AttackCommand extends Command {
-
-	public AttackCommand(MUDServer mParent) {
-		super(mParent);
-	}
-
 	@Override
 	public void execute(String arg, Client client) {
 		final Player player = getPlayer(client);
@@ -43,27 +36,28 @@ public class AttackCommand extends Command {
 		final String playerName = player.getName();
 
 		try {
-			if (!arg.equals("")) {
-				// here we want to try and get whatever was targeteD
-				MUDObject mobj = null;
-				
-				final List<Creature> creatures = getCreaturesByRoom( getRoom( player ) );
-
-				for(final Creature c : creatures) {
-					if( c.getName().equalsIgnoreCase(arg) ) {
-						mobj = c;
-					}
-				}
-
+			if ( !arg.equals("") ) {
 				// TODO fix this kludge (designed to allow use of the target command to
 				// take precedence over creature target
+				
 				if( player.getTarget() == null ) {
+					// if we haven't preselected a target, we'll try and find the one specified
+					MUDObject mobj = null;
+
+					final List<Creature> creatures = getCreaturesByRoom( getRoom( player ) );
+
+					for(final Creature c : creatures) {
+						if( c.getName().equalsIgnoreCase(arg) ) {
+							mobj = c;
+						}
+					}
+					
 					player.setTarget(mobj);
 				}
 			}
-
+			
+			// if we have a target
 			if (player.getTarget() != null) {
-
 				// can we attack them?
 				boolean attack = MudUtils.canAttack( player.getTarget() );
 
@@ -95,12 +89,13 @@ public class AttackCommand extends Command {
 						boolean hit = MudUtils.canHit(player.getTarget());
 
 						if (hit) { // did we hit?
+							debug(playerName + ": Can hit");
 
 							if( player.getMode() != PlayerMode.COMBAT ) {
 								player.setMode(PlayerMode.COMBAT); // we are now in combat mode (allows us to limit command set?)
 							}
-
-							// figure out damage
+							
+							// figure out damage (should have way to tell if weapon can hit critically)
 							int criticalCheckRoll = Utils.roll(1, 20);
 							
 							boolean criticalHit = (criticalCheckRoll >= wt.getCritMin() && criticalCheckRoll <= wt.getCritMax()) ? true : false;
@@ -170,6 +165,7 @@ public class AttackCommand extends Command {
 							}
 							else if(target instanceof Thing) {
 								// ?
+								//((Thing) target);
 							}
 							else {
 								// ?
@@ -181,6 +177,7 @@ public class AttackCommand extends Command {
 						}
 					}
 					else { // else
+						// trying to provided different messages for different weapons
 						switch(wt.getName().toUpperCase()) {
 						case "LONGSWORD": send("Really? You aren't even close enough to hit!", client);         break;
 						case "BOW":       send("Well, that was a waste of effort -AND- a good arrow!", client); break;

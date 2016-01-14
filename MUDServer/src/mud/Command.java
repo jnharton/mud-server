@@ -9,6 +9,7 @@ import mud.interfaces.ODBI;
 import mud.magic.Spell;
 import mud.misc.Effect;
 import mud.misc.ProgramInterpreter;
+import mud.misc.TimeLoop;
 import mud.net.Client;
 import mud.objects.Creature;
 import mud.objects.Exit;
@@ -19,6 +20,7 @@ import mud.objects.Room;
 import mud.utils.EffectTimer;
 import mud.utils.Message;
 import mud.utils.SpellTimer;
+import mud.utils.Time;
 
 /*
  * Copyright (c) 2012 Jeremy N. Harton
@@ -33,7 +35,8 @@ import mud.utils.SpellTimer;
 public abstract class Command {
 	private MUDServer parent;
 	private ODBI db;
-	private String description;
+	
+	protected String description;
 
 	/**
 	 * Construct a command object with a parent
@@ -43,14 +46,19 @@ public abstract class Command {
 	 * 
 	 * @param mParent
 	 */
-	protected Command(MUDServer mParent) {
-		this.parent = mParent;
-		this.db = this.parent.getDBInterface();
+	protected Command() {
 	}
 	
-	protected Command(MUDServer mParent, String description) {
-		this(mParent);
+	protected Command(String description) {
 		this.description = description;
+	}
+	
+	public void init(final MUDServer mParent) {
+		this.parent = mParent;
+		
+		if( this.parent != null ) {
+			this.db = this.parent.getDBInterface();
+		}
 	}
 	
 	/**
@@ -62,7 +70,7 @@ public abstract class Command {
 	 * @param arg
 	 * @param client
 	 */
-	public abstract void execute(String arg, Client client);
+	public abstract void execute(final String arg, final Client client);
 	
 	public String getDescription() {
 		return this.description;
@@ -78,10 +86,6 @@ public abstract class Command {
 	 * 
 	 * @return int representing access level
 	 */
-	/*public int getAccessLevel() {
-		return Constants.USER;
-	}*/
-	
 	public abstract int getAccessLevel();
 	
 	/**
@@ -292,7 +296,14 @@ public abstract class Command {
 	protected Item findItem(final List<Item> items, final String itemName) {
 		return parent.findItem(items, itemName);
 	}
+	
 	protected void addAlias(final String command, final String alias) {
 		parent.addAlias(command, alias);
+	}
+	
+	protected Time getGameTime() {
+		final TimeLoop game_time = parent.game_time;
+		
+		return new Time(game_time.getHours(), game_time.getMinutes(), game_time.getSeconds());
 	}
 }

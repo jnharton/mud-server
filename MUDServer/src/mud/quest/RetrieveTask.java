@@ -6,10 +6,8 @@ import mud.utils.Data;
 public class RetrieveTask extends Task {
 	public boolean hasItem = false;
 	
-	public RetrieveTask(String tDescription, TaskType tType, Room location, Data objectiveData) {
-		super(tDescription, tType, location);
-		
-		this.taskType = TaskType.RETRIEVE;
+	public RetrieveTask(String tDescription, Room location, Data objectiveData) {
+		super(tDescription, TaskType.RETRIEVE, location);
 	}
 
 	private RetrieveTask(RetrieveTask rt) {

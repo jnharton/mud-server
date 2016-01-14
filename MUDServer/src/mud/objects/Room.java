@@ -305,6 +305,7 @@ public class Room extends MUDObject implements EventSource, Instance
 	public synchronized void addSayEventListener(SayEventListener listener)  {
 		_listeners.add(listener);
 	}
+	
 	public synchronized void removeSayEventListener(SayEventListener listener)   {
 		_listeners.remove(listener);
 	}

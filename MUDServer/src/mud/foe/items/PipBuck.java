@@ -23,8 +23,10 @@ import mud.objects.Item;
 import mud.objects.ItemTypes;
 import mud.objects.Player;
 import mud.objects.Room;
+import mud.utils.Time;
 import mud.utils.Utils;
 
+// TODO need to deal with these commands having a null parent here...
 public class PipBuck extends Item implements Device, ExtraCommands {
 	private String name;
 	private Tag tag;
@@ -42,7 +44,7 @@ public class PipBuck extends Item implements Device, ExtraCommands {
 	private static Map<String, Command> commands = new Hashtable<String, Command>() {
 		{
 			put("enable",
-					new Command(MUDObject.parent, "enable a module") {
+					new Command("enable a module") {
 				public void execute(final String arg, final Client client) {
 					final Player player = getPlayer(client);      // get player
 					final PipBuck p = PipBuck.getPipBuck(player); // get pipbuck
@@ -81,7 +83,7 @@ public class PipBuck extends Item implements Device, ExtraCommands {
 				public int getAccessLevel() { return Constants.USER; }
 			});
 			put("disable",
-					new Command(MUDObject.parent, "disable a module") {
+					new Command("disable a module") {
 				public void execute(final String arg, final Client client) {
 					final Player player = getPlayer(client);      // get player
 					final PipBuck p = PipBuck.getPipBuck(player); // get pipbuck
@@ -117,7 +119,7 @@ public class PipBuck extends Item implements Device, ExtraCommands {
 				public int getAccessLevel() { return Constants.USER; }
 			});
 			put("slot",
-					new Command(MUDObject.parent, "attach a module to your device") {
+					new Command("attach a module to your device") {
 				public void execute(final String arg, final Client client) {
 					final Player player = getPlayer(client);      // get player
 					final PipBuck p = PipBuck.getPipBuck(player); // get pipbuck
@@ -158,7 +160,7 @@ public class PipBuck extends Item implements Device, ExtraCommands {
 				public int getAccessLevel() { return Constants.USER; }
 			});
 			put("unslot",
-					new Command(MUDObject.parent, "detach a module from your device") {
+					new Command("detach a module from your device") {
 				public void execute(final String arg, final Client client) {
 					final Player player = getPlayer(client);      // get player
 					final PipBuck p = PipBuck.getPipBuck(player); // get pipbuck
@@ -180,7 +182,7 @@ public class PipBuck extends Item implements Device, ExtraCommands {
 				public int getAccessLevel() { return Constants.USER; }
 			});
 			put("modules",
-					new Command(MUDObject.parent, "list the modules attached to your device") {
+					new Command("list the modules attached to your device") {
 				public void execute(final String arg, final Client client) {
 					final Player player = getPlayer(client);      // get player
 					final PipBuck p = PipBuck.getPipBuck(player); // get pipbuck
@@ -198,7 +200,7 @@ public class PipBuck extends Item implements Device, ExtraCommands {
 				public int getAccessLevel() { return Constants.USER; }
 			});
 			put("vp",
-					new Command(MUDObject.parent, "view pipbuck") {
+					new Command("view pipbuck") {
 				public void execute(final String arg, final Client client) {
 					final Player player = getPlayer(client);      // get player
 					final PipBuck p = PipBuck.getPipBuck(player); // get pipbuck
@@ -214,8 +216,10 @@ public class PipBuck extends Item implements Device, ExtraCommands {
 						final StringBuilder sb = new StringBuilder();
 						
 						// TODO really need a nice utility function for this (did it elsewhere in main class I think)
-						int hours = parent.game_time.getHours();
-						int minutes = parent.game_time.getMinutes();
+						final Time game_time = getGameTime();
+						
+						int hours = game_time.hour;
+						int minutes = game_time.minute;
 						
 						if( hours < 9 ) sb.append(" " + hours);
 						else            sb.append(hours);
@@ -251,7 +255,7 @@ public class PipBuck extends Item implements Device, ExtraCommands {
 			});
 			// scan/efs
 			put("efs",
-					new Command(MUDObject.parent, "eyes-forward sparkle") {
+					new Command("eyes-forward sparkle") {
 				public void execute(final String arg, final Client client) {
 					final Player player = getPlayer(client);      // get player
 					final PipBuck p = PipBuck.getPipBuck(player); // get pipbuck
@@ -428,14 +432,13 @@ public class PipBuck extends Item implements Device, ExtraCommands {
 	}
 
 	private static final PipBuck getPipBuck(final Player player) {
-		//PipBuck p = (PipBuck) player.getSlots().get("pipbuck").getItem();
 		PipBuck p = null;
 
-		final Slot slot = player.getSlots().get("special"); // TODO deal with this kludge
+		final Slot slot = player.getSlots().get("special");
+		final Slot slot1 = player.getSlots().get("special2");
 
-		if( slot != null ) {
-			p = (PipBuck) slot.getItem();
-		}
+		if( slot != null && !slot.isEmpty() )       p = (PipBuck) slot.getItem();
+		else if( slot1 != null && !slot.isEmpty() ) p = (PipBuck) slot.getItem();
 
 		return p;
 	}

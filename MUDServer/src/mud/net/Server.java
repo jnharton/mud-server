@@ -10,7 +10,6 @@ package mud.net;
  * changes are made to the one referred to.
  */
 
-import java.io.InputStream;
 import java.net.*;
 import java.util.*;
 
@@ -33,11 +32,13 @@ public class Server implements Runnable {
         try {
             server = new ServerSocket(port);
             thread = new Thread(this);
+            
             thread.start();
             
             running = true;
 
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             e.printStackTrace();
             System.exit(-1);
         }

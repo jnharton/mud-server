@@ -22,6 +22,8 @@ public enum Alignments {
 	NEUTRAL_EVIL("Neutral Evil"),       // 8
 	CHAOTIC_EVIL("Chaotic Evil");       // 9
 	
+	// http://www.d20srd.org/srd/description.htm -- Alignments
+	
 	//       Good
 	//         |
 	// Lawful --- Chaotic

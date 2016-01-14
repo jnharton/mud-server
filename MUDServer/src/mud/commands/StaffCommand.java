@@ -9,8 +9,8 @@ import mud.utils.Utils;
 
 public class StaffCommand extends Command {
 
-	public StaffCommand(MUDServer mParent) {
-		super(mParent);
+	public StaffCommand() {
+		super("lists the staff members who are currently connected/logged-in");
 	}
 
 	@Override

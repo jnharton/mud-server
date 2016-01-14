@@ -7,10 +7,8 @@ public class CollectTask extends Task {
 	public Integer toCollect = 0;
 	public Integer collects = 0;
 	
-	public CollectTask(String tDescription, TaskType tType, Room location, Data objectiveData) {
-		super(tDescription, tType, location);
-		
-		this.taskType = TaskType.COLLECT;
+	public CollectTask(String tDescription, Room location, Data objectiveData) {
+		super(tDescription, TaskType.COLLECT, location);
 	}
 	
 	private CollectTask(final CollectTask ct) {

@@ -41,7 +41,6 @@ public class FlatFile implements Database {
 	
 	@Override
 	public void load() {
-		ObjectLoader.loadObjects(loadListDatabase(mainDB), null, objectDB, null);
 	}
 
 	@Override

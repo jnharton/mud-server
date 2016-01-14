@@ -8,10 +8,8 @@ public class KillTask extends Task {
 	public Integer toKill = 0;
 	public Integer kills = 0;
 	
-	public KillTask(String tDescription, TaskType tType, Room location, Data objectiveData) {
-		super(tDescription, tType, location);
-		
-		this.taskType = TaskType.KILL;
+	public KillTask(final String description, final Room location, final Data objectiveData) {
+		super(description, TaskType.KILL, location);
 		
 		final Object o = objectiveData.getObject("toKill");
 

@@ -209,8 +209,7 @@ public final class FalloutEquestria implements GameModule, ExtraCommands {
 		mud.foe.Terminal terminal = new mud.foe.Terminal(
 				"Terminal",
 				"A Stable-Tec terminal, old pre-war technology whose durability is plain to see. On the screen, passively glowing green text indicates that it awaits input.",
-				mud.foe.Terminal.Power.POWER_ON
-				);
+				mud.foe.Terminal.Power.POWER_ON, null, null);
 
 		prototypes1.put("mud.foe.terminal", terminal);
 
@@ -275,6 +274,7 @@ public final class FalloutEquestria implements GameModule, ExtraCommands {
 		player.addSlot("weapon2",       new Slot(FOESlotTypes.HOOVES, ItemTypes.WEAPON));
 		
 		player.addSlot("special",       new Slot(FOESlotTypes.LFHOOF, FOEItemTypes.PIPBUCK));
+		player.addSlot("special2",      new Slot(FOESlotTypes.RFHOOF, FOEItemTypes.PIPBUCK));
 		
 		// initialize faction reputation
 		for(final Faction faction : getFactions()) {

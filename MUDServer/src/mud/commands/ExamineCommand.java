@@ -20,11 +20,6 @@ import mud.utils.Utils;
  */
 
 public class ExamineCommand extends Command {
-
-	public ExamineCommand(MUDServer mParent) {
-		super(mParent);
-	}
-
 	@Override
 	public void execute(String arg, Client client) {
 		if ( arg.equals("") || arg.equals("here") ) {

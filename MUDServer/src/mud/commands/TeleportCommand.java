@@ -20,15 +20,10 @@ import mud.utils.Utils;
  */
 
 public class TeleportCommand extends Command {
-	
 	// Syntax:
 	// @tel <dbref> -> '@tel 4'
 	// @tel <object>=<dbref> -> '@tel Iridan=4'
 	
-	public TeleportCommand(MUDServer mParent) {
-		super(mParent);
-	}
-
 	@Override
 	public void execute(String arg, Client client) {
 		final Player player = getPlayer(client);

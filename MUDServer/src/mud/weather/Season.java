@@ -39,17 +39,17 @@ public class Season {
 		this.weatherPattern = null;
 	}
 	
-	private Season(String name, int beginMonth, int endMonth, WeatherState...sWeatherStates) {
-		this.name = name;
-		this.beginMonth = beginMonth;
-		this.endMonth = endMonth;
-		this.weatherPattern = new WeatherPattern(sWeatherStates);
-	}
-	
 	public Season(String sName, WeatherState...sWeatherStates) {
 		this.name = sName;
 		this.beginMonth = -1;
 		this.endMonth = -1;
+		this.weatherPattern = new WeatherPattern(sWeatherStates);
+	}
+	
+	public Season(String name, int beginMonth, int endMonth, WeatherState...sWeatherStates) {
+		this.name = name;
+		this.beginMonth = beginMonth;
+		this.endMonth = endMonth;
 		this.weatherPattern = new WeatherPattern(sWeatherStates);
 	}
 	

@@ -25,11 +25,6 @@ import mud.objects.Terrain;
  */
 
 public class DropCommand extends Command {
-
-	public DropCommand(MUDServer mParent) {
-		super(mParent);
-	}
-
 	@Override
 	public void execute(String arg, Client client) {
 		debug("Drop Command");

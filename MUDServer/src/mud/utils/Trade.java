@@ -25,14 +25,15 @@ import mud.objects.Item;
 import mud.objects.Player;
 
 public class Trade {
-	private final Player p1;
-	private final Player p2;
+	// public or method access?
+	public final Player p1;
+	public final Player p2;
 	
 	private final Coins p1_coins; // money player 1 is offering
 	private final Coins p2_coins; // money player 2 is offering
 	
-	private final List<Item> p1_items; // items player 1 is offering to trade
-	private final List<Item> p2_items; // items player 2 is offering to trade
+	public final List<Item> p1_items; // items player 1 is offering to trade
+	public final List<Item> p2_items; // items player 2 is offering to trade
 	
 	public Trade(final Player player1, final Player player2) {
 		this.p1 = player1;
@@ -45,7 +46,11 @@ public class Trade {
 		this.p2_items = new ArrayList<Item>(10);
 	}
 	
-	void addCoins(final Player player, final Coins coins) {
+	public Tuple<Player, Player> getTraders() {
+		return new Tuple<Player, Player>(p1, p2); 
+	}
+	
+	public void addCoins(final Player player, final Coins coins) {
 		if( player == p1 ) {
 			p1_coins.add( coins );
 		}
@@ -54,7 +59,7 @@ public class Trade {
 		}
 	}
 	
-	void removeCoins(final Player player, final Coins coins) {
+	public void removeCoins(final Player player, final Coins coins) {
 		if( player == p1 ) {
 			p1_coins.subtractCopper( coins.numOfCopper() );
 		}
@@ -63,7 +68,7 @@ public class Trade {
 		}
 	}
 	
-	void addItem(final Player player, final Item item) {
+	public void addItem(final Player player, final Item item) {
 		if( player == p1 ) {
 			p1_items.add( item );
 		}
@@ -72,7 +77,7 @@ public class Trade {
 		}
 	}
 	
-	void removeItem(final Player player, final Item item) {
+	public void removeItem(final Player player, final Item item) {
 		if( player == p1 ) {
 			p1_items.remove( item );
 		}

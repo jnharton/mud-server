@@ -1,11 +1,6 @@
 package mud.foe;
 
 import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.EnumSet;
@@ -49,19 +44,6 @@ public class Terminal extends Thing implements Device, ExtraCommands {
 	// login state:  LOGGED_IN, LOGGED_OUT, GET_USER, GET_PASS
 	// usable state: USABLE, LOCKOUT, BROKEN
 
-	/*public static final int NO_POWER = 0;
-	public static final int POWER_OFF = 1;
-	public static final int POWER_ON = 2;
-
-	public static final int LOCKOUT = 0;
-	public static final int LOGGED_OUT = 1;
-	public static final int GET_USER = 2;
-	public static final int GET_PASS = 3;
-	public static final int LOGGED_IN = 4;
-
-	public static final int BROKEN = 0;
-	public static final int USABLE = 1;*/
-
 	public enum Power { NO_POWER, POWER_OFF, POWER_ON };
 	public enum Login { LOGGED_IN, LOGGED_OUT, GET_USER, GET_PASS, LOCKOUT};
 	public enum Use { USABLE, BROKEN };
@@ -99,16 +81,12 @@ public class Terminal extends Thing implements Device, ExtraCommands {
 	private Hashtable<String, User> users;             // no null values
 
 	// I/O
-	//private InputStream input;
-	//private OutputStream output;
 	private Queue<String> input;
 	private Queue<String> output;
 
 	private BufferedReader reader;
 
 	// Screen
-	private PrintWriter screen;
-
 	private Queue<String> screen_buffer;
 	private int screen_height = 25;
 
@@ -140,19 +118,17 @@ public class Terminal extends Thing implements Device, ExtraCommands {
 		this.desc = tDesc;
 	}
 
-	public Terminal(final String tName, final String tDesc, final Power tPState) {
-		this(tName, tDesc);
-		this.power_state = tPState;
-	}
-
-	public Terminal(final String tName, final String tDesc, final Power tPState, final Login tLState) {
-		this(tName, tDesc, tPState);
-		this.login_state = tLState;
-	}
-
 	public Terminal(final String tName, final String tDesc, final Power tPState, final Login tLState, final Use tUState) {
-		this(tName, tDesc, tPState, tLState);
-		this.usable_state = tUState;
+		this(tName, tDesc);
+
+		if(tPState != null) this.power_state = tPState;
+		else                this.power_state = Power.POWER_OFF;
+
+		if(tLState != null) this.login_state = tLState;
+		else                this.login_state = Login.LOGGED_OUT;
+
+		if(tUState != null) this.usable_state = tUState;
+		else                this.usable_state = Use.USABLE;
 	}
 
 	public Terminal(int tempDBRef, String tempName, EnumSet<ObjectFlag> tempFlags, String tempDesc, int tempLoc) {
@@ -213,40 +189,15 @@ public class Terminal extends Thing implements Device, ExtraCommands {
 		users = new Hashtable<String, User>();
 
 		screen_buffer = new LinkedList<String>();
-		
-		input = new LinkedList();
-		output = new LinkedList();
+
+		input = new LinkedList<String>();
+		output = new LinkedList<String>();
 
 		running = true;
 		paused = false;
-		
+
 		addUser("admin", PASSWORD);
 	}
-
-	/* this should only be used for testing at this point */
-	/*public void setup() {
-		// all systems have an admin user with a predefined password
-
-		output = System.out;
-		input = System.in;
-
-		System.out.println("1");
-		scanPorts();
-
-		Port port = new Port(id++, DeviceType.PIPBUCK, true);
-
-		ports.add( port );
-
-		System.out.println("2");
-		scanPorts();
-
-		//Device device = new PipBuck("Pipbuck 3000");
-
-		//connect( device );
-
-		System.out.println("3");
-		scanPorts();
-	}*/
 
 	public void exec() {
 		if( this.running ) {
@@ -254,15 +205,15 @@ public class Terminal extends Thing implements Device, ExtraCommands {
 				if( this.input != null && this.output != null ) {
 					int code = -1;
 					String s = "";
-					
+
 					synchronized(input) {
 						s = input.poll();
-						
+
 						if( s != null ) {
 							code = processInput(s); // process input
 						}
 					}
-					
+
 					synchronized(output) {
 						if( !this.screen_buffer.isEmpty() ) {
 							s = this.screen_buffer.poll();
@@ -274,54 +225,13 @@ public class Terminal extends Thing implements Device, ExtraCommands {
 							}
 						}
 					}
-					
+
 					if( code == 0 ) {
 						this.paused = true;
 					}
 				}
 			}
 		}
-	}
-
-	public void run() {
-		/*
-		// main sequence
-		while( running && !paused ) {
-			Scanner s = new Scanner( input );
-
-			if( power_state == Terminal.pwr_states.POWER_ON ) {
-				while( !screen_buffer.isEmpty() ) {
-					output.println( screen_buffer.poll() );
-				}
-
-				switch( login_state ) {
-				case LOGGED_OUT:
-					output.print("User?> ");
-					String user = s.nextLine();
-					output.print("Password?> ");
-					String pass = s.nextLine();
-					login(user, pass);
-					break;
-				case LOGGED_IN:
-					System.out.print("TERM> ");
-					processInput( s.nextLine() );
-					break;
-				case LOCKOUT:
-					break;
-				default:
-					power_state = Terminal.pwr_states.POWER_OFF;
-					break;
-				}
-			}
-		}
-
-		// shutdown (if started)
-		if( power_state == Terminal.pwr_states.POWER_ON ) {
-			// deinit
-			power_state = pwr_states.POWER_OFF;
-		}
-
-		 */
 	}
 
 	public String getDeviceName() {
@@ -383,11 +293,6 @@ public class Terminal extends Thing implements Device, ExtraCommands {
 	}
 
 	public List<String> getScreen() {
-		/*return Arrays.asList( new String[] {
-				"STABLE-TEC INDUSTRIES UNIFIED OPERATING SYSTEM",
-				"COPYRIGHT 1015-1020 STABLE-TEC INDUSTRIES"
-		} );*/
-
 		return Arrays.asList( (String[]) screen_buffer.toArray() );
 	}
 
@@ -415,14 +320,14 @@ public class Terminal extends Thing implements Device, ExtraCommands {
 		if( login_state == Login.GET_USER ) {
 			// store input as user
 			ldat.username = input;
-			
+
 			writeToScreen( "Password?> " );
 			login_state = Login.GET_PASS;
 		}
 		else if( login_state == Login.GET_PASS ) {
 			// store input as password
 			ldat.password = input;
-			
+
 			if( login( ldat.username, ldat.password ) ) {
 				writeToScreen("Logged in as \'" + ldat.username + "\'." );
 				writeToScreen( "\n\n" );
@@ -431,9 +336,11 @@ public class Terminal extends Thing implements Device, ExtraCommands {
 			}
 			else {
 				writeToScreen( "" );
-				
+				writeToScreen( "No such user." );
+				writeToScreen( "" );
+
 				writeToScreen( "User?> " );
-				
+
 				login_state = Login.GET_USER;
 			}
 		}
@@ -442,17 +349,19 @@ public class Terminal extends Thing implements Device, ExtraCommands {
 				if( current_dir.equals("/") ) {
 					if( !arg.equals("") ) {
 						if( fs.hasDir(arg) ) current_dir = arg;
-						else writeToScreen("Invalid Directory.");
+						else writeToScreen( "Invalid Directory." );
 					}
 				}
 				else if( arg.equals("..") ) current_dir = "/";
+
+				writeToScreen( "Changed directory to " + current_dir );
 			}
 			else if( cmd.equalsIgnoreCase("copy") ) { // ex. copy admin userguide test
 				String[] params = arg.split(",");
 
 				if( params.length == 3 ) {
 					fs.copyFile(params[0], params[1], params[2]);
-					writeToScreen("'" + params[1] + "' copied to " + params[2] + " from " + params[0] + ".");
+					writeToScreen( "'" + params[1] + "' copied to " + params[2] + " from " + params[0] + "." );
 				}
 			}
 			else if( cmd.equalsIgnoreCase("delete") ) {
@@ -460,19 +369,19 @@ public class Terminal extends Thing implements Device, ExtraCommands {
 
 				if( params.length == 2 ) {
 					fs.deleteFile(params[0], params[1]);
-					writeToScreen("'" + params[1] + "' deleted.");
+					writeToScreen( "'" + params[1] + "' deleted." );
 				}
 				else if( params.length == 1) {
 					fs.deleteFile(current_dir, params[1]);
-					writeToScreen("'" + params[1] + "' deleted.");
+					writeToScreen( "'" + params[1] + "' deleted." );
 				}
 			}
 			else if( cmd.equalsIgnoreCase("done") ) {
 				return 0;
 			}
 			else if ( cmd.equalsIgnoreCase("help") ) {
-				writeToScreen("Commands");
-				writeToScreen("\t cd, copy, delete, done, help, logout, ls, mkdir, pwd, time, view");
+				writeToScreen( "Commands" );
+				writeToScreen( "\t cd, copy, delete, done, help, logout, ls, mkdir, pwd, time, view" );
 			}
 			else if( cmd.equalsIgnoreCase("ls") ) {
 				if( !arg.equals("") ) {
@@ -484,33 +393,39 @@ public class Terminal extends Thing implements Device, ExtraCommands {
 						for(final String fileName : fs.files.keySet()) {
 							final File file = fs.files.get(fileName);
 
-							if( file.isDir ) writeToScreen( "D " + fileName);
-							else             writeToScreen( "F " + fileName);
+							if( file.isDir ) writeToScreen( "D " + fileName + "\n" );
+							else             writeToScreen( "F " + fileName + "\n" );
 						}
 					}
 				}
 				else writeToScreen( fs.getDirectoryNames(current_dir) );
 			}
 			else if( cmd.equalsIgnoreCase("mkdir") ) {
-				fs.newDir(arg);
+				boolean newDirCreated = fs.newDir(arg);
+
+				if( newDirCreated ) {
+					writeToScreen( "Created new directory: " + arg );
+				}
 			}
 			else if( cmd.equalsIgnoreCase("logout") ) {
-				writeToScreen("Logging out...");
+				writeToScreen( "Logging out..." );
 
 				login_state = Terminal.Login.LOGGED_OUT;
 
-				writeToScreen("Logged out.");
+				writeToScreen( "Logged out." );
 
 				writeToScreen( Utils.center( "STABLE-TEC INDUSTRIES UNIFIED OPERATING SYSTEM", 80 ) );
 				writeToScreen( Utils.center( "COPYRIGHT 1015-1020 STABLE-TEC INDUSTRIES", 80 ) );
 				writeToScreen( "" );
-				
+
 				writeToScreen( "User?> " );
-				
+
 				login_state = Login.GET_USER;
 			}
 			else if( cmd.equalsIgnoreCase("pwd") ) {
-				if( !current_dir.equals("/") ) writeToScreen("/" + current_dir);
+				if( !current_dir.equals("/") ) {
+					writeToScreen( "/" + current_dir );
+				}
 				else writeToScreen("/");
 			}
 			else if( input.equalsIgnoreCase("time") ) {
@@ -523,15 +438,15 @@ public class Terminal extends Thing implements Device, ExtraCommands {
 					final FileSystem.File file = fs.getFile(current_dir, arg);
 
 					for(String str : file.getContents()) {
-						writeToScreen(str);
+						writeToScreen( str );
 					}
 				}
-				else writeToScreen("No such file.");
+				else writeToScreen( "No such file." );
 			}
-			
+
 			writeToScreen( "\n" + getPrompt() );
 		}
-		
+
 		return code;
 	}
 
@@ -539,13 +454,14 @@ public class Terminal extends Thing implements Device, ExtraCommands {
 		if( this.users.containsKey(user) ) {
 			if( this.users.get(user).getPassword().equals( pass ) ) {
 				this.login_state = Login.LOGGED_IN;
+
 				this.current_user = user;
-				this.current_dir = user;
-				
+				this.current_dir = "/" + user;
+
 				return true;
 			}
 		}
-		
+
 		return false;
 	}
 
@@ -575,20 +491,15 @@ public class Terminal extends Thing implements Device, ExtraCommands {
 	}
 
 	private void writeToScreen(final String line) {
-		/*if( screen_buffer.size() < 25 ) {
-			this.screen_buffer.add(line);
+		/*if( screen_buffer.size() < screen_height ) {
+			screen_buffer.add(line);
 		}
 		else {
-			this.screen_buffer.poll(); // toss out an old line?
-			this.screen_buffer.add(line);
+			screen_buffer.poll();    // toss out an old line?
+			screen_buffer.add(line);
 		}*/
 
 		this.screen_buffer.add(line);
-
-		/*try {
-			output.write( (line + "\n").getBytes() );
-		}
-		catch (IOException e) { e.printStackTrace(); }*/
 	}
 
 	private void clearScreen() {
@@ -709,25 +620,11 @@ public class Terminal extends Thing implements Device, ExtraCommands {
 	public Power getPowerState() {
 		return this.power_state;
 	}
-	
-	private void setInput(final Queue<String> in) {
-		this.input = in;
-	}
-	
-	private void setOutput(final Queue<String> out) {
-		this.output = out;
-	}
-	
+
 	public void write(final String string) {
 		this.input.add(string);
 	}
-	
-	public void write(final List<String> strings) {
-		for(final String s : strings) {
-			write(s);
-		}
-	}
-	
+
 	public String read() {
 		return output.poll();
 	}
@@ -755,34 +652,54 @@ public class Terminal extends Thing implements Device, ExtraCommands {
 	}
 
 	public String powerOn() {
-		String report = "";
+		String report = "no power";
 
-		if( this.power_state == Power.POWER_OFF ) {
-			if( this.usable_state == Use.USABLE ) {
-				this.power_state = Power.POWER_ON;
+		if( !(this.power_state == Power.NO_POWER) ) {
+			if( this.power_state == Power.POWER_OFF ) {
+				if( this.usable_state == Use.USABLE ) {
+					this.power_state = Power.POWER_ON;
 
-				//set initial screen data
-				writeToScreen( Utils.center( "STABLE-TEC INDUSTRIES UNIFIED OPERATING SYSTEM", 80 ) );
-				writeToScreen( Utils.center( "COPYRIGHT 1015-1020 STABLE-TEC INDUSTRIES", 80 ) );
-				writeToScreen( "" );
-				
-				if( login_state == Login.LOGGED_OUT ) {
-					writeToScreen( "User?> " );
-					login_state = Login.GET_USER;
+					//set initial screen data
+					writeToScreen( Utils.center( "STABLE-TEC INDUSTRIES UNIFIED OPERATING SYSTEM", 80 ) );
+					writeToScreen( Utils.center( "COPYRIGHT 1015-1020 STABLE-TEC INDUSTRIES", 80 ) );
+					writeToScreen( "" );
+
+					if( login_state == Login.LOGGED_OUT ) {
+						writeToScreen( "User?> " );
+						login_state = Login.GET_USER;
+					}
+
+					report = "usable";
 				}
 
-				report = "powered on";
+				report = "unusable";
 			}
-
-			report = "unusable";
+			else report = "power on";
 		}
-
-		report = "no power";
 
 		return report;
 	}
 
 	public String powerOff() {
-		return "";
+		String report = "no power";
+
+		if( !(this.power_state == Power.NO_POWER) ) {
+			if( this.power_state == Power.POWER_ON ) {
+				if( this.usable_state == Use.USABLE ) {
+					this.login_state = Login.LOGGED_OUT;
+
+					writeToScreen("Powering Down...");
+
+					this.power_state = Power.POWER_OFF;
+
+					report = "usable";
+				}
+
+				report = "unusable";
+			}
+			else report = "power off";	
+		}
+
+		return report;
 	}
 }

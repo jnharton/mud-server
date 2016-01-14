@@ -50,19 +50,22 @@ import mud.misc.Effect.DurationType;
  */
 
 public class ObjectLoader {
-	static public MUDServer parent;
-
-	static public void loadObjects(final List<String> in, final LoggerI log, final ObjectDB objectDB, final MUDServer parent) {
-		/** TODO: resolve this kludge somehow **/
-		ObjectLoader.parent = parent;
-		
+	private final MUDServer parent;
+	private final ObjectDB objectDB;
+	
+	public ObjectLoader(final MUDServer parent, final ObjectDB objectDB) {
+		this.parent = parent;
+		this.objectDB = objectDB;
+	}
+	
+	public void loadObjects(final List<String> in, final LoggerI logger) {
 		for (final String oInfo : in) {
 			Integer oDBRef = 0, oLocation = 0;
 			String oName = "", oFlags = "", oDesc = "";
 			char oTypeFlag;
 
 			if (oInfo.charAt(0) == '&') { // means to ignore that line
-				log.debug("`loadObjects` ignoring line: " + oInfo);
+				logger.debug("`loadObjects` ignoring line: " + oInfo);
 				
 				// grab the dbref number and remove the prefixing & character
 				oDBRef = Integer.parseInt(oInfo.split("#")[0].replace('&', ' ').trim());
@@ -70,7 +73,7 @@ public class ObjectLoader {
 				NullObject no = new NullObject(oDBRef);
 				no.lock(); // lock the NullObject
 
-				System.out.println("NULLObject (" + oDBRef + ") Locked?: " + no.isLocked()); // print out the lock state
+				logger.debug("NULLObject (" + oDBRef + ") Locked?: " + no.isLocked()); // print out the lock state
 
 				objectDB.add(no);
 				continue;
@@ -89,11 +92,11 @@ public class ObjectLoader {
 				oDesc = attr[3];
 				oLocation = Integer.parseInt(attr[4]);
 
-				log.debug("Database Reference Number: " + oDBRef);
-				log.debug("Name: " + oName);
-				log.debug("Flags: " + oFlags);
-				log.debug("Description: " + oDesc);
-				log.debug("Location: " + oLocation);
+				logger.debug("Database Reference Number: " + oDBRef);
+				logger.debug("Name: " + oName);
+				logger.debug("Flags: " + oFlags);
+				logger.debug("Description: " + oDesc);
+				logger.debug("Location: " + oLocation);
 
 				if (oTypeFlag == 'C') {
 					/*
@@ -138,8 +141,8 @@ public class ObjectLoader {
 					Innkeeper ik = new Innkeeper( parent, oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), oDesc, "Merchant", "VEN", oLocation,
 							Coins.fromArray(new int[] { 1000, 1000, 1000, 1000 }));
 
-					log.debug("log.debug (db entry): " + ik.toDB(), 2);
-					log.debug("Innkeeper", 2);
+					logger.debug("log.debug (db entry): " + ik.toDB(), 2);
+					logger.debug("Innkeeper", 2);
 
 					objectDB.add(ik);
 					objectDB.addNPC(ik);
@@ -173,7 +176,7 @@ public class ObjectLoader {
 						
 						if( !oAlias.equals("") ) exit.addAlias(oAlias);
 
-						log.debug("log.debug (db entry): " + exit.toDB(), 2);
+						logger.debug("log.debug (db entry): " + exit.toDB(), 2);
 
 						objectDB.add(exit);
 						objectDB.addExit(exit);
@@ -215,7 +218,7 @@ public class ObjectLoader {
 							door.lock();
 						}
 
-						log.debug("log.debug (db entry): " + door.toDB(), 2);
+						logger.debug("log.debug (db entry): " + door.toDB(), 2);
 
 						objectDB.add(door);
 						objectDB.addExit(door);
@@ -240,7 +243,7 @@ public class ObjectLoader {
 							portal.name = attr[1]; // name
 							portal.setPosition(0, 0); // set x and y coordinate of position
 
-							log.debug("log.debug (db entry): " + portal.toDB(), 2);
+							logger.debug("log.debug (db entry): " + portal.toDB(), 2);
 
 							portal.setKey("test");
 
@@ -265,7 +268,7 @@ public class ObjectLoader {
 
 							portal.setKey("test");
 
-							log.debug("log.debug (db entry): " + portal.toDB(), 2);
+							logger.debug("log.debug (db entry): " + portal.toDB(), 2);
 
 							parent.getPortals().add(portal);
 							parent.getRoom(portal.getOrigin()).addSayEventListener(portal);
@@ -274,11 +277,11 @@ public class ObjectLoader {
 							objectDB.addExit(portal);
 						}
 						else {
-							log.debug("log.debug (error): Problem with object #" + oDBRef + " - invalid PortalType", 2);
+							logger.debug("log.debug (error): Problem with object #" + oDBRef + " - invalid PortalType", 2);
 						}
 					}
 					else {
-						log.debug("log.debug (error): Problem with object #" + oDBRef, 2);
+						logger.debug("log.debug (error): Problem with object #" + oDBRef, 2);
 					}
 				}
 				
@@ -289,8 +292,8 @@ public class ObjectLoader {
 						Merchant merchant = new Merchant(parent, oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), "A merchant.", "Merchant", "VEN", oLocation,
 								Coins.fromArray(new int[] { 1000, 1000, 1000, 1000 }));
 
-						log.debug("log.debug (db entry): " + merchant.toDB(), 2);
-						log.debug("Merchant", 2);
+						logger.debug("log.debug (db entry): " + merchant.toDB(), 2);
+						logger.debug("Merchant", 2);
 
 						objectDB.add(merchant);
 						objectDB.addNPC(merchant);
@@ -305,7 +308,7 @@ public class ObjectLoader {
 						// npc.addQuest(new Quest("Test", "Test", new
 						// Task("Test")));
 
-						log.debug("log.debug (db entry): " + npc.toDB(), 2);
+						logger.debug("log.debug (db entry): " + npc.toDB(), 2);
 
 						objectDB.add(npc);
 						objectDB.addNPC(npc);
@@ -321,7 +324,7 @@ public class ObjectLoader {
 
 					final Room room = new Room(oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), oDesc, oLocation);
 
-					log.debug("log.debug (db entry): " + room.toDB(), 2);
+					logger.debug("log.debug (db entry): " + room.toDB(), 2);
 
 					room.setRoomType(RoomType.fromLetter(roomType.charAt(0)));
 
@@ -364,7 +367,7 @@ public class ObjectLoader {
 						thing = new Thing(oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), oDesc, oLocation);
 					}
 
-					log.debug("log.debug (db entry): " + thing.toDB(), 2);
+					logger.debug("log.debug (db entry): " + thing.toDB(), 2);
 
 					objectDB.add(thing);
 					objectDB.addThing(thing);
@@ -377,7 +380,7 @@ public class ObjectLoader {
 					objectDB.add(item);
 					objectDB.addItem(item);
 
-					log.debug("log.debug (db entry): " + item.toDB(), 2);
+					logger.debug("log.debug (db entry): " + item.toDB(), 2);
 				}
 				else if (oTypeFlag == 'Z') { // Zone
 					// not sure about this bit, for some reason I made 'Z' a
@@ -405,7 +408,7 @@ public class ObjectLoader {
 
 					objectDB.add(Null);
 
-					log.debug("log.debug (db entry): " + Null.toDB() + " [Found NULLObject]", 2);
+					logger.debug("log.debug (db entry): " + Null.toDB() + " [Found NULLObject]", 2);
 				}
 			}
 			catch (ConcurrentModificationException cme)   { cme.printStackTrace();    }
@@ -434,7 +437,7 @@ public class ObjectLoader {
 	 * @param playerData
 	 * @return a player object
 	 */
-	public static Player loadPlayer(String playerData) {
+	public Player loadPlayer(String playerData) {
 
 		String[] attr = playerData.split("#");
 
@@ -520,7 +523,7 @@ public class ObjectLoader {
 	 * @param playerData
 	 * @return a player object
 	 */
-	static private NPC loadNPC(String npcData) {
+	private NPC loadNPC(String npcData) {
 
 		String[] attr = npcData.split("#");
 
@@ -580,7 +583,7 @@ public class ObjectLoader {
 		return npc;
 	}
 	
-	final static private Item loadItem(final String itemData) {
+	final private Item loadItem(final String itemData) {
 		String[] attr = itemData.split("#");
 		
 		System.out.println("");
@@ -760,7 +763,7 @@ public class ObjectLoader {
 		}
 	}
 	
-	private static ItemType getItemType(final int typeId) {
+	private ItemType getItemType(final int typeId) {
 		final GameModule module = parent.getGameModule();
 		
 		if( module != null && typeId >= 16 ) {
@@ -771,7 +774,7 @@ public class ObjectLoader {
 		}
 	}
 	
-	private static SlotType getSlotType(final int typeId) {
+	private SlotType getSlotType(final int typeId) {
 		final GameModule module = parent.getGameModule();
 		
 		if( module != null) {

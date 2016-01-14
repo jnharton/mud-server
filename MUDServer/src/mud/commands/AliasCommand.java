@@ -18,11 +18,6 @@ import mud.net.Client;
  */
 
 public class AliasCommand extends Command {
-
-	public AliasCommand(MUDServer mParent) {
-		super(mParent);
-	}
-
 	@Override
 	public void execute(String arg, Client client) {
 		if ( arg.equals("#list") ) {

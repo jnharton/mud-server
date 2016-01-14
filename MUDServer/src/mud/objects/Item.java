@@ -67,7 +67,6 @@ public class Item extends MUDObject implements Cloneable {
 	protected int wear = 0;                   // how much wear and tear the item has been subject to
 	protected int durability = 100;           // how durable the material is (100 is a test value) -- should be 'protected'?
 	
-	
 	Enchantment enchant;
 	
 	// item attributes: rusty, glowing, etc ?

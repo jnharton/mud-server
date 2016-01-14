@@ -24,13 +24,13 @@ public class Wand extends Item implements Usable<Wand>
 	public Spell spell;
 	private Handed handed = Handed.ONE;
 	
-	public Wand(int tCharges, String spell) {
+	public Wand(final Spell spell, final int tCharges) {
 		super(-1, "Wand", EnumSet.noneOf(ObjectFlag.class), "I", 8);
 		this.equippable = true;
 		this.item_type = ItemTypes.WAND;
 		this.equip_type = ItemTypes.WEAPON;
 		this.charges = tCharges;
-		this.spell = parent.getSpell(spell);
+		this.spell = spell;
 
 		this.name = "Wand of " + this.spell.getName();
 	}

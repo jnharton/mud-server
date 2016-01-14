@@ -360,11 +360,11 @@ public final class ObjectDB implements ODBI {
 	public List<MUDObject> getByRoom(final Room room) {
 		List<MUDObject> objects = new ArrayList<MUDObject>(100);
 
-		objects.addAll( getExitsByRoom( room.getDBRef() )   );
-		objects.addAll( getThingsForRoom( room.getDBRef() ) );
+		objects.addAll( getExitsByRoom( room ) );
+		objects.addAll( getThingsForRoom( room ) );
 		objects.addAll( getItemsByLoc( room.getDBRef() )    );
-		objects.addAll( getNPCsByRoom( room.getDBRef() )    );
-		objects.addAll( getPlayersByRoom( room.getDBRef() ) );
+		objects.addAll( getNPCsByRoom( room ) );
+		objects.addAll( getPlayersByRoom( room ) );
 
 		return objects;
 	}
@@ -588,13 +588,17 @@ public final class ObjectDB implements ODBI {
 		return exitsById.get(dbref);
 	}
 
-	public List<Exit> getExitsByRoom(final int loc) {
+	public List<Exit> getExitsByRoom(final Room room) {
 		final List<Exit> acc = new LinkedList<Exit>();
+		
+		int loc = room.getDBRef();
+		
 		for (final Exit e : exitsById.values()) {
 			if (e.getLocation() == loc) {
 				acc.add(e);
 			}
 		}
+		
 		return acc;
 	}
 
@@ -670,13 +674,17 @@ public final class ObjectDB implements ODBI {
 		return new ArrayList<Creature>(creeps);
 	}
 
-	public List<Creature> getCreaturesByRoom(final int loc) {
+	public List<Creature> getCreaturesByRoom(final Room room) {
 		final List<Creature> acc = new LinkedList<Creature>();
+		
+		int loc = room.getDBRef();
+		
 		for (final Creature c : creeps) {
 			if (c.getLocation() == loc) {
 				acc.add(c);
 			}
 		}
+		
 		return acc;
 	}
 
@@ -712,8 +720,11 @@ public final class ObjectDB implements ODBI {
 		return new ArrayList<NPC>(npcsById.values());
 	}
 
-	public List<NPC> getNPCsByRoom(final int loc) {
+	public List<NPC> getNPCsByRoom(final Room room) {
 		final List<NPC> acc = new LinkedList<NPC>();
+		
+		int loc = room.getDBRef();
+		
 		for (final NPC n : npcsById.values()) {
 			if (n.getLocation() == loc) {
 				acc.add(n);
@@ -863,13 +874,17 @@ public final class ObjectDB implements ODBI {
 		return new ArrayList<Thing>(thingsById.values());
 	}
 
-	public List<Thing> getThingsForRoom(final int roomId) {
+	public List<Thing> getThingsForRoom(final Room room) {
 		final List<Thing> acc = new LinkedList<Thing>();
+		
+		int roomId = room.getDBRef();
+		
 		for (final Thing t : things) {
 			if (t.getLocation() == roomId) {
 				acc.add(t);
 			}
 		}
+		
 		return acc;
 	}
 
@@ -893,13 +908,14 @@ public final class ObjectDB implements ODBI {
 
 	public Player getPlayer(final String name) {
 		// TODO fix kludginess, used with/for cnames
-		Player player = playersByName.get(name);
+		final Player player = playersByName.get(name);
 
 		if( player == null ) {
 			MUDObject object = getByName(name);
 
 			if( object instanceof Player ) {
-				player = (Player) object;
+				//player = (Player) object;
+				return (Player) object;
 			}
 		}
 
@@ -909,21 +925,27 @@ public final class ObjectDB implements ODBI {
 
 	public int getNumPlayers(final PClass c) {
 		int count = 0;
+		
 		for (final Player p : playersByName.values()) {
-			if (c.equals(p.getPClass())) {
+			if ( c.equals(p.getPClass()) ) {
 				count += 1;
 			}
 		}
+		
 		return count;
 	}
 
-	public List<Player> getPlayersByRoom(final int loc) {
+	public List<Player> getPlayersByRoom(final Room room) {
 		final List<Player> acc = new LinkedList<Player>();
+		
+		int loc = room.getDBRef();
+		
 		for (final Player p : playersByName.values()) {
 			if (p.getLocation() == loc) {
 				acc.add(p);
 			}
 		}
+		
 		return acc;
 	}
 

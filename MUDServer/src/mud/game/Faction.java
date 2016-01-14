@@ -5,6 +5,11 @@ import java.util.List;
 import java.util.Map;
 
 public class Faction {
+	public static int HOSTILE = -100;
+	public static int NEUTRAL = 0;
+	public static int FRIENDLY = 100;
+	//public static int
+	
 	private String name;
 	private Map<Faction, Integer> reputation; // what this faction thinks of other factions
 	

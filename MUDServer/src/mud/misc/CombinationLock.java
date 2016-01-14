@@ -3,6 +3,8 @@ package mud.misc;
 public class CombinationLock extends Lock {
 	public static final int LEFT = -1;
 	public static final int RIGHT = 1;
+	
+	// NOTE: these sorts of locks are usually opened by left, right, left with the respective numbers
 
 	// combination
 	private Combination combination;

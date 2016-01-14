@@ -12,6 +12,13 @@ import mud.objects.Player;
 import mud.objects.Room;
 import mud.objects.Thing;
 
+/**
+ * This is kind of a weird interface/class that provides a mask of
+ * ObjectDB where you can only retrieve objects
+ * 
+ * @author Jeremy
+ *
+ */
 public interface ODBI {
 	// MUDObject
 	public MUDObject get(final int n);
@@ -27,7 +34,7 @@ public interface ODBI {
 	public Exit getExit(final int dbref);
 	public Exit getExit(final String name);
 	
-	public List<Exit> getExitsByRoom(final int loc);
+	public List<Exit> getExitsByRoom(final Room room);
 	
 	// Item
 	public Item getItem(final int dbref);
@@ -42,7 +49,7 @@ public interface ODBI {
 	public Thing getThing(final int roomId, final String name);
 	
 	public List<Thing> getThings();
-	public List<Thing> getThingsForRoom(final int roomId);
+	public List<Thing> getThingsForRoom(final Room room);
 	
 	// Player
 	public Player getPlayer(final String name);
@@ -52,9 +59,9 @@ public interface ODBI {
 	public NPC getNPC(final String name);
 	
 	public List<NPC> getNPCs();
-	public List<NPC> getNPCsByRoom(final int loc);
+	public List<NPC> getNPCsByRoom(final Room room);
 	
 	// Creature
 	public List<Creature> getCreatures();
-	public List<Creature> getCreaturesByRoom(final int loc);
+	public List<Creature> getCreaturesByRoom(final Room room);
 }

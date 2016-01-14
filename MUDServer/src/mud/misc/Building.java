@@ -17,7 +17,6 @@ CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTH
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-import java.awt.Point;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;

@@ -27,16 +27,7 @@ public abstract class Task {
 	protected boolean isComplete = false; // is the task complete?
 
 	public Data objective = null;
-
-	/**
-	 * Create a task with a description and the NONE task type.
-	 * 
-	 * @param tDescription task description
-	 */
-	/*public Task(String tDescription) {
-		this(tDescription, TaskType.NONE, null);
-	}*/
-
+	
 	/**
 	 * Create a task with a description and task type.
 	 * 

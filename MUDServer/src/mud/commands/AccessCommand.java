@@ -17,29 +17,33 @@ import mud.net.Client;
  */
 
 public class AccessCommand extends Command {
-
-	public AccessCommand(MUDServer mParent) {
-		super(mParent);
+	public AccessCommand() {
+		super("provides a mechanism to change/manage player permissions");
 	}
+	
+	// syntax: access <player>=<access level> (access level denoted by integer -- see CONSTANTS)
 
 	@Override
 	public void execute(String arg, Client client) {
-		// syntax: access <player>=<access level> (access level denoted by integer -- see CONSTANTS)
-		String[] args = arg.split("=");
+		final String[] args = arg.split("=");
 
 		if (args.length > 0) {
-			
-			Player player;
+			Player player = null;
 			
 			if( args[0].equalsIgnoreCase("me") ) {
+				debug("@access: retrieving calling player");
 				player = getPlayer(client);
 			}
 			else {
-				 player = getPlayer(args[0]);
+				debug("@access: retrieving player by name");
+				player = getPlayer(args[0]);
 			}
 
-			if (player != null) { // if we have a valid player
-				if (args.length > 1) { // if we have specified a new access level
+			if (player != null) {
+				// if we have a valid player
+				
+				if (args.length > 1) {
+					// if we have specified a new access level
 					//Integer aL = player.getAccess();
 					Integer aL = Constants.USER;
 					

@@ -18,6 +18,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
 import mud.net.Client;
+import mud.utils.Message;
 
 /**
  * Defines a interface for npcs, etc that can be interacted with
@@ -28,5 +29,5 @@ import mud.net.Client;
 public interface InteractiveI
 {
 	public abstract void interact(Player player);
-	public abstract void say(String message);
+	public abstract Message say(String message);
 }

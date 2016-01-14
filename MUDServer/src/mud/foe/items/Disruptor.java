@@ -6,7 +6,6 @@ import java.util.Map;
 
 import mud.Command;
 import mud.Constants;
-import mud.MUDObject;
 import mud.ObjectFlag;
 import mud.TypeFlag;
 import mud.foe.FOEItemTypes;
@@ -15,7 +14,6 @@ import mud.foe.misc.Module;
 import mud.interfaces.ExtraCommands;
 import mud.net.Client;
 import mud.objects.Item;
-import mud.objects.ItemType;
 import mud.objects.ItemTypes;
 
 /**
@@ -36,7 +34,7 @@ public class Disruptor extends Item implements Module, ExtraCommands {
 	
 	private Map<String, Command> commands = new Hashtable<String, Command>() {
 		{
-			put("disrupt", new Command(MUDObject.parent, "Emit a disruption pulse.") {
+			put("disrupt", new Command("Emit a disruption pulse.") {
 				public void execute(final String arg, final Client client) {
 					send("disrupt: command not implemented", client);
 				}

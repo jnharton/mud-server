@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <project default="javadoc">
     <target name="javadoc">
-        <javadoc access="private" author="true" classpath="lib/gson-2.2.2.jar" destdir="javadoc" doctitle="MUDServer Documentation" nodeprecated="false" nodeprecatedlist="false" noindex="false" nonavbar="false" notree="false" packagenames="mud.interfaces,mud.colors,mud.utils,mud.net,mud.objects.things,mud.api,mud.miscellaneous,mud.commands,mud.quest,mud,mud.protocols,mud.objects,mud.magic,mud.objects.items,mud.db,mud.weather" source="1.7" sourcepath="src" splitindex="true" use="true" version="true"/>
+        <javadoc access="private" author="true" classpath="lib/gson-2.2.2.jar" destdir="javadoc" doctitle="MUDServer Documentation" nodeprecated="false" nodeprecatedlist="false" noindex="false" nonavbar="false" notree="false" packagenames="mud.net,mud.commands,mud.objects.creatures,mud.objects,mud.weather,mud.game,mud.protocols,mud.api,mud.rulesets.special,mud.misc.json,mud.quest,mud.auction,mud.misc,mud.utils,mud.colors,mud.foe,mud.misc.fsm,mud.objects.npcs,mud.foe.misc,mud.objects.items,mud.objects.exits,mud.objects.things,mud.magic,mud,mud.rulesets.d20,mud.modules,mud.events,mud.misc.db,mud.rulesets.foe,mud.foe.items,mud.interfaces" source="1.7" sourcepath="src" splitindex="true" use="true" version="true"/>
     </target>
 </project>

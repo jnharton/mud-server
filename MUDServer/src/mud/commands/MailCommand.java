@@ -21,14 +21,9 @@ import mud.net.Client;
  */
 
 public class MailCommand extends Command {
-
 	private final int shortSUB = 10;
 	private final int shortMSG = 32;
 	
-	public MailCommand(MUDServer mParent) {
-		super(mParent);
-	}
-
 	@Override
 	public void execute(String arg, Client client) {
 

@@ -13,15 +13,6 @@ import mud.objects.Player;
 import mud.utils.Utils;
 
 public final class EquipCommand extends Command {
-
-	public EquipCommand(MUDServer mParent) {
-		super(mParent);
-	}
-
-	public EquipCommand(MUDServer mParent, String description) {
-		super(mParent, description);
-	}
-
 	@Override
 	public void execute(String arg, Client client) {
 		final Player player = getPlayer(client);

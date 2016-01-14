@@ -7,15 +7,6 @@ import mud.net.Client;
 import mud.utils.Message;
 
 public class SayCommand extends Command {
-
-	public SayCommand(MUDServer mParent) {
-		super(mParent);
-	}
-
-	public SayCommand(MUDServer mParent, String description) {
-		super(mParent, description);
-	}
-
 	@Override
 	public void execute(String arg, Client client) {
 		send("You say, \"" + arg + "\"", client);

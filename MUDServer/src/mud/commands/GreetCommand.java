@@ -17,8 +17,8 @@ import mud.objects.Player;
  */
 
 public class GreetCommand extends Command {
-	public GreetCommand(final MUDServer mParent) {
-		super(mParent, "Greet another player (this tells them your name with some specificity).");
+	public GreetCommand() {
+		super("Greet another player (this tells them your name with some specificity).");
 	}
 
 	@Override

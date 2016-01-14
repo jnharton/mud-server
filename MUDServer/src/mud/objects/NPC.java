@@ -125,16 +125,16 @@ public class NPC extends Player implements InteractiveI
 	}
 	
 	// TODO perhaps these should just return the message object?
-	public void greet(Player player) {
-		parent.addMessage(new Message(this, greeting, player));
+	public Message greet(Player player) {
+		return new Message(this, greeting, player);
 	}
 	
-	public void say(String message) {
-		parent.addMessage(new Message(this, message));
+	public Message say(String message) {
+		return new Message(this, message);
 	}
 	
-	public void tell(Player player, String message) {
-		parent.addMessage(new Message(this, message, player));
+	public Message tell(Player player, String message) {
+		return new Message(this, message, player);
 	}
 	
 	// pose/do/act

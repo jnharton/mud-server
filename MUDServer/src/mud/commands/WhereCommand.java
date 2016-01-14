@@ -20,11 +20,6 @@ import mud.utils.Utils;
  */
 
 public class WhereCommand extends Command {
-	
-	public WhereCommand(MUDServer mParent) {
-		super(mParent);
-	}
-
 	@Override
 	public void execute(String arg, Client client) {
 		int n = 0;

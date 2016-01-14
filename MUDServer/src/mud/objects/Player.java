@@ -15,6 +15,7 @@ import java.util.EnumSet;
 
 import mud.net.Client;
 import mud.Command;
+import mud.Constants;
 import mud.ObjectFlag;
 import mud.MUDObject;
 import mud.TypeFlag;
@@ -107,7 +108,8 @@ public class Player extends MUDObject implements Mobile
 
 	// SuperGame Stuff
 	private int id;                                // unique player id (for the account system) **UNUSED
-	private boolean idle_state = false;            // Whether or not the player is currently idle (default: false) **UNUSED
+	private boolean idle_state = false;            // Whether or not the player is currently ide (default: false) **UNUSED
+	private String prev_status = "";
 	public int idle = 0;                           // the amount of time that the player has been idle (MU)
 	private String pass;                           // The player's password in it's hashed state (timed lockout w/ password verification)
 	private PlayerMode mode = PlayerMode.NORMAL;   // Play Mode (default: normal)
@@ -308,15 +310,6 @@ public class Player extends MUDObject implements Mobile
 		this.title = "Newbie";
 		
 		this.pass = tempPass;
-		
-		//setName(tempName);
-		//setRace(Races.NONE);
-		//setGender('N');
-		//setPClass(Classes.NONE);
-		//setAlignment(Alignments.NONE);
-		
-		//setDesc(_DESC);
-		//setTitle("Newbie");
 
 		this.hp = 10;
 		this.totalhp = 10;
@@ -336,46 +329,26 @@ public class Player extends MUDObject implements Mobile
 		this.locks = "";
 
 		// instantiate slots
-		//this.slots = new LinkedHashMap<String, Slot>(11, 0.75f);
 		this.slots = new LinkedHashMap<String, Slot>();
-
-		// initialize slots
-		/*addSlot("helmet", new Slot( SlotTypes.HEAD, ItemTypes.HELMET));
-		addSlot("necklace", new Slot( SlotTypes.NECK, ItemTypes.NECKLACE));
-		addSlot("armor", new Slot( SlotTypes.CHEST, ItemTypes.ARMOR));
-		addSlot("cloak", new Slot( SlotTypes.BACK, ClothingType.CLOAK));
-		addSlot("ring1", new Slot( SlotTypes.FINGER, ItemTypes.RING));
-		addSlot("ring2", new Slot( SlotTypes.FINGER, ItemTypes.RING));
-		addSlot("ring3", new Slot( SlotTypes.FINGER, ItemTypes.RING));
-		addSlot("ring4", new Slot( SlotTypes.FINGER, ItemTypes.RING));
-		addSlot("ring5", new Slot( SlotTypes.FINGER, ItemTypes.RING));
-		addSlot("ring6", new Slot( SlotTypes.FINGER, ItemTypes.RING));
-		addSlot("gloves", new Slot( SlotTypes.HANDS, ClothingType.GLOVES));
-		addSlot("weapon", new Slot( SlotTypes.RHAND, ItemTypes.WEAPON));
-		addSlot("weapon1", new Slot( SlotTypes.LHAND, ItemTypes.WEAPON));
-		addSlot("belt", new Slot( SlotTypes.WAIST, ClothingType.BELT));
-		addSlot("boots", new Slot( SlotTypes.FEET, ClothingType.BOOTS));
-		addSlot("other", new Slot( SlotTypes.NONE, ItemTypes.NONE ));*/
-
+		
 		// instantiate stats
-		//stats = new LinkedHashMap<Ability, Integer>(6, 0.75f);
-		//stats = new LinkedHashMap<Ability, Integer>(ruleset.getAbilities().length, 0.75f);
 		stats = new LinkedHashMap<Ability, Integer>();
 
 		// initialize stats
-		/*this.stats.put(Abilities.STRENGTH, _STATS[0]);     // Strength
+		/*
+		this.stats.put(Abilities.STRENGTH, _STATS[0]);     // Strength
 		this.stats.put(Abilities.DEXTERITY, _STATS[1]);    // Dexterity
 		this.stats.put(Abilities.CONSTITUTION, _STATS[2]); // Constitution
 		this.stats.put(Abilities.INTELLIGENCE, _STATS[3]); // Intelligence
 		this.stats.put(Abilities.WISDOM, _STATS[4]);       // Wisdom
-		this.stats.put(Abilities.CHARISMA, _STATS[5]);     // Charisma*/
+		this.stats.put(Abilities.CHARISMA, _STATS[5]);     // Charisma
+		*/
 
 		/*for(Ability ability : ruleset.getAbilities()) {
 			this.stats.put(ability, 0);
 		}*/
 
 		// instantiate skills
-		//skills = new LinkedHashMap<Skill, Integer>(36, 0.75f);
 		skills = new LinkedHashMap<Skill, Integer>();
 
 		// these should be all -1, since no class is specified initially
@@ -463,11 +436,6 @@ public class Player extends MUDObject implements Mobile
 		this.pclass = Classes.NONE;
 		this.alignment = Alignments.NONE;
 		
-		//setRace(Races.NONE);
-		//setGender('N');
-		//setPClass(Classes.NONE);
-		//setAlignment(Alignments.NONE);
-
 		this.hp = 10;
 		this.totalhp = 10;
 		this.mana = 40;
@@ -478,9 +446,6 @@ public class Player extends MUDObject implements Mobile
 		this.xp = 0;
 		this.money = tempMoney; // use default money criteria from server config or stored player money in future
 		
-		//setName(tempName);
-		//setDesc(tempDesc);
-		
 		this.name = tempName;
 		this.pass = tempPass;
 		this.flags = tempFlags;
@@ -489,30 +454,12 @@ public class Player extends MUDObject implements Mobile
 		this.status = tempPStatus;
 		this.title = tempTitle;
 		this.location = tempLoc;
+		
 		this.target = null;
 
 		// instantiate slots
-		this.slots = new LinkedHashMap<String, Slot>(11, 0.75f);
-
-		// initialize slots
-		// NOTE: this functionality relegated to GameModule(s) ???
-		/*addSlot("helmet", new Slot( SlotTypes.HEAD, ItemTypes.HELMET));
-		addSlot("necklace", new Slot( SlotTypes.NECK, ItemTypes.NECKLACE));
-		addSlot("armor", new Slot( SlotTypes.CHEST, ItemTypes.ARMOR));
-		addSlot("cloak", new Slot( SlotTypes.BACK, ClothingType.CLOAK));
-		addSlot("ring1", new Slot( SlotTypes.FINGER, ItemTypes.RING));
-		addSlot("ring2", new Slot( SlotTypes.FINGER, ItemTypes.RING));
-		addSlot("ring3", new Slot( SlotTypes.FINGER, ItemTypes.RING));
-		addSlot("ring4", new Slot( SlotTypes.FINGER, ItemTypes.RING));
-		addSlot("ring5", new Slot( SlotTypes.FINGER, ItemTypes.RING));
-		addSlot("ring6", new Slot( SlotTypes.FINGER, ItemTypes.RING));
-		addSlot("gloves", new Slot( SlotTypes.HANDS, ClothingType.GLOVES));
-		addSlot("weapon", new Slot( SlotTypes.RHAND, ItemTypes.WEAPON));
-		addSlot("weapon1", new Slot( SlotTypes.LHAND, ItemTypes.WEAPON));
-		addSlot("belt", new Slot( SlotTypes.WAIST, ClothingType.BELT));
-		addSlot("boots", new Slot( SlotTypes.FEET, ClothingType.BOOTS));
-		addSlot("other", new Slot( SlotTypes.NONE, ItemTypes.NONE ));*/
-
+		this.slots = new LinkedHashMap<String, Slot>();
+		
 		// instantiate stats
 		//stats = new LinkedHashMap<Ability, Integer>(6, 0.75f);
 
@@ -546,7 +493,7 @@ public class Player extends MUDObject implements Mobile
 
 		// initialize skills
 		// these should be all -1, since no class is specified initially
-		this.skills.put(Skills.APPRAISE, -1);            this.skills.put(Skills.BALANCE, -1);            this.skills.put(Skills.BLUFF, -1);
+		/*this.skills.put(Skills.APPRAISE, -1);            this.skills.put(Skills.BALANCE, -1);            this.skills.put(Skills.BLUFF, -1);
 		this.skills.put(Skills.CLIMB, -1);               this.skills.put(Skills.CONCENTRATION, -1);      this.skills.put(Skills.CRAFT, -1);
 		this.skills.put(Skills.DECIPHER_SCRIPT, -1);     this.skills.put(Skills.DIPLOMACY, -1);          this.skills.put(Skills.DISGUISE, -1);
 		this.skills.put(Skills.ESCAPE_ARTIST, -1);       this.skills.put(Skills.GATHER_INFORMATION, -1); this.skills.put(Skills.HANDLE_ANIMAL, -1);
@@ -563,7 +510,7 @@ public class Player extends MUDObject implements Mobile
 		this.skills.put(Skills.SEARCH, -1);              this.skills.put(Skills.SENSE_MOTIVE, -1);       this.skills.put(Skills.SLEIGHT_OF_HAND, -1);
 		this.skills.put(Skills.SPEAK_LANGUAGE, -1);      this.skills.put(Skills.SPELLCRAFT, -1);         this.skills.put(Skills.SPOT, -1);
 		this.skills.put(Skills.SURVIVAL, -1);            this.skills.put(Skills.SWIM, -1);               this.skills.put(Skills.TRACKING, -1);
-		this.skills.put(Skills.TUMBLE, -1);              this.skills.put(Skills.USE_MAGIC_DEVICE, -1);   this.skills.put(Skills.USE_ROPE, -1);
+		this.skills.put(Skills.TUMBLE, -1);              this.skills.put(Skills.USE_MAGIC_DEVICE, -1);   this.skills.put(Skills.USE_ROPE, -1);*/
 
 		// instantiate quest list
 		this.quests = new ArrayList<Quest>();
@@ -1522,10 +1469,22 @@ public class Player extends MUDObject implements Mobile
 	
 	public void setIdle(final boolean idle) {
 		this.idle_state = idle;
+		 
+		if( idle ) {
+			this.prev_status = this.status;
+			setStatus("IDL");
+		}
+		else {
+			setStatus(this.prev_status);
+		}
 	}
 
 	public boolean isIdle() {
 		return this.idle_state;
+	}
+	
+	public void addCommand(final String text, final Command cmd) {
+		this.commandMap.put(text, cmd);
 	}
 
 	/**

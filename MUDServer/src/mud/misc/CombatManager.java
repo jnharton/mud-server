@@ -31,18 +31,18 @@ public class CombatManager {
 	
 	public void addCombatant(Player player) {
 		this.addCombatant(player);
-		this.calculateAndSortByInitiative();
+		this.sortByInitiative();
 	}
 	
 	public void removeCombatant(Player player) {
 		combatants.remove(player);
 	}
 	
-	private void calculateAndSortByInitiative() {
+	private void sortByInitiative() {
 		Hashtable<Player, Integer> plrInits = new Hashtable<Player, Integer>(combatants.size());
 		List<Player> temp = new LinkedList<Player>();
 		
-		for(Player p : combatants) {
+		for(final Player p : combatants) {
 			// roll initiative
 			int initiative = Utils.roll(1, 20);
 			
