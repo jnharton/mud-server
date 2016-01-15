@@ -4356,7 +4356,8 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 				if ( auction.placeBid(bid) ) {
 					send("You successfully placed a bid of " + coins.toString(true) + " on " + itemName, client);
-					return;
+					
+					// TODO handle max bid check?
 				}
 				else send("You failed to place a bid (Cause?)", client);
 			}
@@ -4377,29 +4378,73 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	 */
 	private void cmd_boards(final String arg, final Client client) {
 		if (!arg.equals("")) {
-			String[] args = arg.split(" ");
+			final String[] args = arg.split(" ");
 
 			if (args[0].charAt(0) == '+') {
 				final String param = args[0].substring(1);
 
-				if (args.length == 2) {
-					final String board_name = args[1].toLowerCase();
+				final String board_name = args[1].toLowerCase();
 
+				if (args.length == 2) {
 					if (param.equalsIgnoreCase("add")) {
 						this.boards.put(board_name, new BulletinBoard(board_name));
 						send("Board Added - " + board_name, client);
 					}
 					else if (param.equalsIgnoreCase("del")) {
-						// ask for confirmation?
-						this.boards.remove(board_name);
-						send("Board Removed - " + board_name, client);
+						final BulletinBoard board = this.boards.get(board_name);
+
+						if( board != null ) {
+							final Player player = getPlayer(client);
+
+							if( board.getOwner() == player || checkAccess(player, Constants.ADMIN) ) {
+								// TODO ask for confirmation?
+								this.boards.remove(board_name);
+								send("Board Removed - " + board_name, client);
+							}
+							else {
+								send("ERROR: You do not own that board!", client);
+							}
+						}
+					}
+					else if(param.equalsIgnoreCase("info")) {
+						final BulletinBoard board = this.boards.get(board_name);
+
+						if( board != null ) {
+							final List<String> data = Utils.mkList(
+									Utils.padRight("", '-', 75),
+									"    Name: " + board.getName(),
+									"   Owner: " + board.getOwner().getName(),
+									"Messages: " + board.getNumMessages(),
+									Utils.padRight("", '-', 75)
+									);
+							send(data, client);
+						}
+					}
+				}
+				else if(args.length == 3) {
+					// +transfer board new_owner
+					if(param.equalsIgnoreCase("transfer")) {
+						final BulletinBoard board = this.boards.get(board_name);
+
+						if( board != null ) {
+							final Player player = getPlayer(client);
+							final Player player1 = getPlayer(args[2]);
+
+							if( board.getOwner() == player || checkAccess(player, Constants.ADMIN) ) {
+								if( player1 != null ) {
+									board.setOwner(player1);
+								}
+							}
+						}
 					}
 				}
 			}
 		}
 		else {
 			send("Boards", client);
+			
 			send(Utils.padRight("", '-', 40), client);
+			
 			for (final Map.Entry<String, BulletinBoard> entry : this.boards.entrySet()) {
 				BulletinBoard bb1 = entry.getValue();
 				String shortName = entry.getKey();
@@ -7878,40 +7923,31 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 		List<MUDObject> objects = objectDB.getByRoom(room);
 
-		MUDObject object = null;
+		MUDObject obj = null;
 
-		for (MUDObject obj : objects) {
+		for (MUDObject object : objects) {
 			if (obj.getName().equals(arg)) {
-				object = obj;
+				obj = object;
 			}
 		}
+		
+		if (obj != null) {
+			if( obj instanceof Lockable ) {
+				Lockable l = (Lockable) obj;
 
-		// Exit exit = getExit(arg);
-		// if( exit != null ) {
-
-		if (object != null) {
-			// if( object.isType(TypeFlag.EXIT) ) {
-			if (object instanceof Exit) {
-				Exit exit = (Exit) object;
-
-				if (exit instanceof Lockable) {
-					// TODO how to fix this? I guess I need to be able to detect
-					// what sort of locking is used
-					Lockable l = (Lockable) exit;
-
-					if (!l.isLocked()) {
-						l.lock();
-						send("You lock " + exit.getName() + ".", client);
-						return;
-					}
-
-					send("It's already locked.", client);
-
+				if ( !l.isLocked() ) {
+					l.lock();
+					
+					send("You lock " + obj.getName() + ".", client);
+					
 					return;
 				}
-
-				send("It's a good thing no one saw you trying to lock a " + exit.getExitType().toString() + " with no lock.", client);
+				else {
+					send("That's already locked.", client);
+				}
 			}
+			
+			//send("It's a good thing no one saw you trying to lock a " + exit.getExitType().toString() + " with no lock.", client);
 		}
 	}
 

@@ -19,6 +19,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 import java.util.ArrayList;
 import mud.net.Client;
+import mud.objects.Player;
 
 /**
  * optional class that defines an accessible collection of in-game bulletin board messages
@@ -35,6 +36,8 @@ public class BulletinBoard {
 	private final String name;
 	private String filename;
 	private int lastId = 0;
+	
+	private Player owner;
 	
 	private ArrayList<BBEntry> entries;
 
@@ -67,6 +70,15 @@ public class BulletinBoard {
 		}
 	}
 	
+	public Player getOwner() {
+		return this.owner;
+	}
+	
+	public void setOwner(final Player newOwner) {
+		this.owner = newOwner;
+	}
+	
+	//
 	public BBEntry getEntry(int messageNum) {
 		return this.entries.get(messageNum);
 	}

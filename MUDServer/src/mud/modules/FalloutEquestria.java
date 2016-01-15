@@ -28,6 +28,10 @@ import mud.rulesets.foe.FOESpecial;
 import mud.rulesets.special.SpecialRuleset;
 import mud.utils.Utils;
 
+/*
+ * a module to implement some Fallout Equestria (original fanfiction by Kkat) stuff
+ */
+
 /* this class is marked final because there shouldn't ever be a subclass */
 public final class FalloutEquestria implements GameModule, ExtraCommands {
 	/* the class members are static because this is a class where

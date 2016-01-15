@@ -28,7 +28,15 @@ public class Bid {
 		this.max_bid = max_bid;
 	}
 	
+	public Player getBidder() {
+		return this.bidder;
+	}
+	
 	public Coins getAmount() {
+		return this.bid;
+	}
+	
+	public Coins getMax() {
 		return this.bid;
 	}
 }

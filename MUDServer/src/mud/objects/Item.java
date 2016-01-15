@@ -67,7 +67,9 @@ public class Item extends MUDObject implements Cloneable {
 	protected int wear = 0;                   // how much wear and tear the item has been subject to
 	protected int durability = 100;           // how durable the material is (100 is a test value) -- should be 'protected'?
 	
-	Enchantment enchant;
+	Enchantment enchant = null;
+	
+	protected boolean isEnchanted = false;
 	
 	// item attributes: rusty, glowing, etc ?
 	
@@ -283,6 +285,11 @@ public class Item extends MUDObject implements Cloneable {
 
 	public boolean isDrinkable() {
 		return this.drinkable;
+	}
+	
+	public boolean isEnchanted() {
+		//return this.isEnchanted;
+		return ( enchant != null ) ? true : false;
 	}
 	
 	/**

@@ -110,7 +110,6 @@ public class Auction {
 	}
 	
 	public boolean placeBid(Bid newBid) {
-		
 		boolean success = false;
 
 		if( getTimeLeft() > 0 ) {
