@@ -36,12 +36,11 @@ public class Client implements Runnable {
 	private final OutputStream output;
 	
 	private boolean running;
-
+	
+	//
 	private boolean telnet = true;
 	private boolean tn_neg_seq = false; // indicates if the bytes currently being recieved are part of a negotiation sequence
-	
-	private boolean debug = true;
-	
+	private boolean debug = false; // start out with debug disabled
 	private boolean console = false; // indicates to the server that the client is using the admin console (default: false)
 	
 	private boolean response_expected = false;

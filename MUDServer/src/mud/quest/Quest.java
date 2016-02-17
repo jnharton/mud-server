@@ -280,6 +280,7 @@ public class Quest implements Cloneable {
 	 * @return
 	 */
 	public boolean isSuitable(final Player player) {
+		// TODO quest suitability, this is a kludge
 		return true;
 	}
 	
@@ -311,3 +312,4 @@ public class Quest implements Cloneable {
 		return this.getId() == quest.getId();
 	}
 }
+// this is a test

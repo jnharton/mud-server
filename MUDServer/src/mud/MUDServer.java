@@ -2983,7 +2983,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 					else if ( cmdIs(cmd, "auction") ) {
 						cmd_auction(arg, client);
 					}
-					else if ( cmdIs(cmd, "auction") ) {
+					else if ( cmdIs(cmd, "auctions") ) {
 						cmd_auctions(arg, client);
 					}
 					else if ( cmdIs(cmd, "balance") ) {
@@ -3872,6 +3872,8 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	 * @param client
 	 */
 	private void cmd_auction(final String arg, final Client client) {
+		// TODO should auctioning something remove it from your inventory?
+		// TODO if I don't remove the item I need to mark it so it can't be auctioned more than once
 		// ideas:
 		// auction <item> <time> <price> <buyout>
 		// ex. auction longsword 2d 50gp 100gp
