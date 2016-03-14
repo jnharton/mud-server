@@ -42,7 +42,7 @@ public class Creature extends MUDObject implements Mobile {
 	protected String race;
 	protected Size size;
 	
-	private boolean ridable = false; // can this creature be ridden (default: false)
+	protected boolean ridable = false; // can this creature be ridden (default: false)
 	
 	int hp = 10;
 	int maxhp = 10;
@@ -51,20 +51,18 @@ public class Creature extends MUDObject implements Mobile {
 	protected boolean moving;
 	protected Point destination;
 	
+	public Player target = null;
+	public boolean isHostile = false;
+	
 	public Creature() {
 		super(-1);
 		this.type = TypeFlag.CREATURE;
 	}
 	
 	public Creature(final String name, final String desc) {
-		super(-1);
-		this.type = TypeFlag.CREATURE;
+		super(-1, name, EnumSet.noneOf(ObjectFlag.class), desc, Constants.VOID);
 		
-		this.name = name;
-		this.flags = EnumSet.noneOf(ObjectFlag.class);
-		this.locks = ""; // should take tempLocks argument  
-		this.desc = desc;
-		this.location = Constants.VOID;
+		this.type = TypeFlag.CREATURE;
 	}
 	
 	/**

@@ -10,8 +10,10 @@ import mud.TypeFlag;
 import mud.misc.Coins;
 import mud.misc.Direction;
 import mud.misc.Effect;
+import mud.misc.Slot;
 import mud.misc.Zone;
 import mud.objects.Item;
+import mud.objects.ItemTypes;
 import mud.objects.Player;
 import mud.objects.Room;
 import mud.objects.items.Weapon;
@@ -145,7 +147,7 @@ public final class MudUtils {
 	public static Weapon getWeapon(final Player player) {
 		Weapon weapon = null;
 
-		if( weapon == null ) {
+		/*if( weapon == null ) {
 			weapon = (Weapon) player.getSlots().get("weapon").getItem();
 		}
 
@@ -155,6 +157,20 @@ public final class MudUtils {
 
 		if( weapon == null ) {
 			weapon = (Weapon) player.getSlots().get("weapon2").getItem();
+		}*/
+
+		if( weapon == null ) {
+			// skim through slots and find first weapon
+			for(final String k : player.getSlots().keySet()) {
+				Slot s = player.getSlot(k);
+
+				if( s.isType(ItemTypes.WEAPON) ) {
+					if( s.isFull() ) {
+						weapon = (Weapon) s.getItem();
+						break;
+					}
+				}
+			}
 		}
 
 		return weapon;

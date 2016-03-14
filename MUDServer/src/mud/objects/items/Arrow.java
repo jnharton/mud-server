@@ -3,7 +3,6 @@ package mud.objects.items;
 import mud.interfaces.Projectile;
 import mud.interfaces.Stackable;
 import mud.objects.Item;
-import mud.objects.ItemType;
 import mud.objects.ItemTypes;
 import mud.utils.Utils;
 import mud.ObjectFlag;

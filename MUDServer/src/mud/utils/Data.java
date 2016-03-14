@@ -128,10 +128,6 @@ public class Data {
 				this.locks.put( getObject(key), true );
 			}
 		}
-		
-		/*if( this.objects.containsKey(key) ) {
-			this.locks.put( getObject(key), true );
-		}*/
 	}
 	
 	public void unlockObject(final String key) {

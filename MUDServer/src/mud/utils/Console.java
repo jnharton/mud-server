@@ -48,7 +48,14 @@ public class Console {
 					client.writeln("telnet:  " + client1.usingTelnet());
 					client.writeln("console: " + client1.isConsole());
 					client.writeln("");
-					client.writeln("player: " + server.getPlayer(client).getName());
+					
+					try {
+						String playerName = server.getPlayer(client).getName();
+						client.writeln("player: " + playerName);
+					}
+					catch(NullPointerException npe) {
+						npe.printStackTrace();
+					}
 				}
 			}
 		}
@@ -67,16 +74,32 @@ public class Console {
 			}
 		}
 		else if( command.equalsIgnoreCase("mem") ) {
-			client.writeln(server.checkMem());
+			client.writeln(Utils.checkMem());
 		}
 		else if( command.equalsIgnoreCase("gc") ) {
 			System.gc();
 			client.writeln("Garbage Collection requested.");
 		}
 		else if( command.equalsIgnoreCase("logout") ) {
-			client.write("Logging out of Console...");
+			/*client.write("Logging out of Console...");
 			client.setConsole(false);
-			client.writeln("Done.");
+			client.writeln("Done.");*/
+			
+			client.setConsole(false);
+			
+			client.writeln("Logged out of Console.");
+			
+			client.writeln("");
+			
+			client.write( Utils.mkList(
+					"To connect to your character use 'connect <playername> <password>'",
+					"To connect to your account use 'connect <username> <password>'",
+					"To create a character use 'create <playername> <password>'",
+					"To connect as a guest use 'connect guest'"
+					));
+			client.writeln("");
+			
+			//client.writeln("Mode: " + ser
 		}
 		else if( command.equalsIgnoreCase("who") ) {
 			List<String> output = new LinkedList<String>();

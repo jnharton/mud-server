@@ -80,6 +80,8 @@ import mud.utils.EditorData;
  */
 public class Player extends MUDObject implements Mobile
 {	
+	public static Ruleset ruleset;
+	
 	private static final EnumSet<ObjectFlag> _FLAGS = EnumSet.noneOf(ObjectFlag.class);
 	private static final String _STATUS = "NEW";
 	private static final String _DESC = "There is nothing to see.";
@@ -118,7 +120,7 @@ public class Player extends MUDObject implements Mobile
 	protected String title;                        // The player's title (for where, MU)
 	private Status pstatus = Status.ACTIVE;        // whether or not the player has been banned
 
-	final private MailBox mailbox = new MailBox(); // player mailbox
+	private transient MailBox mailbox = new MailBox(); // player mailbox
 
 	protected int access = 0;                      // the player's access level (permissions) - 0=player,1=admin (default: 0)
 
@@ -166,9 +168,9 @@ public class Player extends MUDObject implements Mobile
 	
 	private Hashtable<String, Profession> professions = null; // holds all your trained professions **UNUSED
 
-	protected SpellBook spells = null;             // spells [null if not a spellcaster]
-	protected LinkedList<Spell> spellQueue = null; // spell queue [null if not a spellcaster]
-	protected Spell lastSpell = null;              // last spell cast [null if not a spellcaster]
+	protected SpellBook spells = null;                       // spells [null if not a spellcaster]
+	protected transient LinkedList<Spell> spellQueue = null; // spell queue [null if not a spellcaster]
+	protected transient Spell lastSpell = null;              // last spell cast [null if not a spellcaster]
 
 	private State state = State.ALIVE;             // character's "state of health" (ALIVE, INCAPACITATED, DEAD)
 
@@ -205,8 +207,8 @@ public class Player extends MUDObject implements Mobile
 	public BitSet item_creation_feats = new BitSet(8);
 
 	// temporary states
-	private int[] statMod =  new int[7];  // temporary modifications to stats (i.e. stat drains, etc)
-	private int[] skillMod = new int[44]; // temporary modifications to skills
+	private transient int[] statMod =  new int[7];  // temporary modifications to stats (i.e. stat drains, etc)
+	private transient int[] skillMod = new int[44]; // temporary modifications to skills
 	private int negativeLevels = 0;
 
 	// borrowed from DIKU -> ROM, etc?
@@ -215,23 +217,24 @@ public class Player extends MUDObject implements Mobile
 	// m - mana, M - total mana
 	private String custom_prompt = "< %h/%H  %mv/%MV %m/%M >"; // ACCOUNT DATA?
 
-	private Pager pager = null; // a pager (ex. 'less' for linux), displays a page's/screen's worth of text at a time
+	private transient Pager pager = null; // a pager (ex. 'less' for linux), displays a page's/screen's worth of text at a time
 
-	private Client client;
+	private transient Client client;
 
-	public Map<String, Command> commandMap = new HashMap<String, Command>();
+	public transient Map<String, Command> commandMap = new HashMap<String, Command>();
 
 	// Knowledge
 	protected ArrayList<String> names;                         // names of other players
 	protected Hashtable<String, Boolean> discovered_locations; // places you've been to
 	protected Map<String, Landmark> landmarks;
 	
+	public Ridable mount = null;
+	
+	private Weapon primary = null;
+	private Weapon secondary = null;
+	
 	/* End */
 	
-	public static Ruleset ruleset;
-
-	public Ridable mount = null;
-
 	// Editors, General
 	private Editors editor;
 
@@ -239,7 +242,10 @@ public class Player extends MUDObject implements Mobile
 
 	// List Editor
 	private EditList currentEdit;
-
+	
+	//Miscellaneous Editor
+	private EditorData edd = null;
+	
 	public EditList getEditList() {
 		return currentEdit;
 	}
@@ -267,12 +273,6 @@ public class Player extends MUDObject implements Mobile
 	public void abortEditing() {
 		currentEdit = null;
 	}
-
-	// Miscellaneous Editor
-	private EditorData edd = null;
-	
-	private Weapon primary = null;
-	private Weapon secondary = null;
 	
 	/**
 	 * No argument constructor for subclasses

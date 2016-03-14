@@ -13,6 +13,11 @@ import mud.utils.Utils;
  */
 
 public class XTERM256 {
+	private static final String prefix = "\033[";
+	private static final String suffix = "m";
+	
+	public static enum Intensity { NORMAL, BRIGHT };
+	
 	public static final XTERM256 BLACK  = new XTERM256(0, Intensity.NORMAL);
 	public static final XTERM256 RED    = new XTERM256(1, Intensity.NORMAL);
 	public static final XTERM256 GREEN  = new XTERM256(2, Intensity.NORMAL);
@@ -31,39 +36,34 @@ public class XTERM256 {
 	public static final XTERM256 BRIGHT_CYAN   = new XTERM256(6, Intensity.BRIGHT);
 	public static final XTERM256 WHITE         = new XTERM256(7, Intensity.BRIGHT);
 	
-	static enum Intensity { NORMAL, BRIGHT };
-	
 	static int state = 3;
-	private int option = 38;
+	private int option = 38; // this numbers matter, but what does it mean?
 	
-	private Intensity intensity = null;
 	private int color = -1;
-	
-	private final String prefix = "\033[";
-	private final String suffix = "m";
+	private Intensity intensity = null;
 	
 	private int num;
 	
-	public XTERM256(int tColor, Intensity tIntensity) {
+	public XTERM256(final Integer tColor, final Intensity tIntensity) {
 		this.color = tColor;
 		this.intensity = tIntensity;
+		
 		this.num = this.color + ( this.intensity.ordinal() * 8 );
 		
 		System.out.println(color);
 	}
-
-	public XTERM256(int red, int blue, int green) {
+	
+	public XTERM256 parseRGB(int red, int blue, int green) {
+		int number = 0;
+		
 		if( Utils.range(red, 0, 5) && Utils.range(green, 0, 5) && Utils.range(blue, 0, 5) ) {
-			this.num = (red * 36) + (green * 6) + blue;
+			number = (red * 36) + (green * 6) + blue;
 		}
 		else {
-			this.num = 15;
+			number = 15;
 		}
-	}
-	
-	// test (does direct RGB with a number between 0-255)
-	public XTERM256(int rgb) {
-		this.num = rgb;
+		
+		return new XTERM256(number, Intensity.BRIGHT);
 	}
 	
 	public String toString() {
@@ -72,5 +72,9 @@ public class XTERM256 {
 	
 	public Integer getNumber() {
 		return this.num;
+	}
+	
+	public Intensity getIntensity() {
+		return this.intensity;
 	}
 }

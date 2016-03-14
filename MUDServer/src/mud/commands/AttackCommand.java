@@ -152,12 +152,19 @@ public class AttackCommand extends Command {
 									
 									handleDeath( c, player );
 									
+									removeHostile( c );
+									
 									player.setTarget(null);
 								}
 								else {
+									c.target = player;
+									c.isHostile = true;
+									
+									addHostile( c );
+									
 									// when we hit them and they don't die
 									// problem here because combat manage only takes players
-									new CombatManager();
+									//new CombatManager();
 								}
 							}
 							else if(target instanceof Item) {

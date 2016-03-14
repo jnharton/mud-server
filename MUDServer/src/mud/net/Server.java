@@ -59,10 +59,6 @@ public class Server implements Runnable {
  	public List<Client> getClients() {
 		return new ArrayList<Client>(clients);
  	}
- 	
- 	public Client[] getClients_alt() {
- 		return clients.toArray(new Client[0]);
- 	}
 
     public void disconnect(final Client client) {
         client.stopRunning();

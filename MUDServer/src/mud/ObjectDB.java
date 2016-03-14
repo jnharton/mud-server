@@ -539,7 +539,14 @@ public final class ObjectDB implements ODBI {
 	}
 
 	public Room getRoomById(final int id) {
-		return roomsById.get(id);
+		//return roomsById.get(id);
+		Room room = null;
+		
+		if( id > 0) {
+			room = roomsById.get(id);
+		}
+		
+		return room;
 	}
 
 	public List<Room> getRoomsByType(final RoomType type) {
