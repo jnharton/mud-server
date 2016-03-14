@@ -22,7 +22,6 @@ import mud.foe.misc.User;
 import mud.foe.misc.Module;
 import mud.interfaces.ExtraCommands;
 import mud.net.Client;
-import mud.objects.Player;
 import mud.objects.Thing;
 import mud.utils.Time;
 import mud.utils.Utils;
@@ -322,6 +321,7 @@ public class Terminal extends Thing implements Device, ExtraCommands {
 			ldat.username = input;
 
 			writeToScreen( "Password?> " );
+			
 			login_state = Login.GET_PASS;
 		}
 		else if( login_state == Login.GET_PASS ) {
@@ -332,6 +332,7 @@ public class Terminal extends Thing implements Device, ExtraCommands {
 				writeToScreen("Logged in as \'" + ldat.username + "\'." );
 				writeToScreen( "\n\n" );
 				writeToScreen( "TERM> ");
+				
 				login_state = Login.LOGGED_IN;
 			}
 			else {
@@ -344,12 +345,12 @@ public class Terminal extends Thing implements Device, ExtraCommands {
 				login_state = Login.GET_USER;
 			}
 		}
-		else if( login_state == Login.LOGGED_IN) {
+		else if( login_state == Login.LOGGED_IN ) {
 			if( cmd.equalsIgnoreCase("cd") ) {
 				if( current_dir.equals("/") ) {
 					if( !arg.equals("") ) {
 						if( fs.hasDir(arg) ) current_dir = arg;
-						else writeToScreen( "Invalid Directory." );
+						else                 writeToScreen( "Invalid Directory." );
 					}
 				}
 				else if( arg.equals("..") ) current_dir = "/";

@@ -11,7 +11,8 @@ you have, with their id, subject, brief portion of message, etc.
 
 Syntax: 'mail'
         'mail <message #>'         read mail with the id of <message #>
-        'mail #delete <message #>' delete mail with the id of <message #>
         'mail #list'               show the contents of your mailbox
+        'mail #write'              write a mail message
+        'mail #delete <message #>' delete mail with the id of <message #>
         
 Last Updated: June 14, 2014

@@ -14,7 +14,6 @@ import mud.net.Client;
 import mud.objects.Item;
 import mud.objects.ItemType;
 import mud.objects.ItemTypes;
-import mud.objects.Player;
 import mud.utils.Utils;
 import mud.ObjectFlag;
 

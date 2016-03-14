@@ -17,7 +17,5 @@ public class Agressive extends Strategy {
 	@Override
 	public void onDetectHostile() {
 		// TODO Auto-generated method stub
-		
 	}
-
 }

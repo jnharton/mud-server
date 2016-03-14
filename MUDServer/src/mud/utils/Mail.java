@@ -76,6 +76,10 @@ public class Mail {
 		}
 	}
 	
+	public void setId(final Integer newId) {
+		this.id = newId;
+	}
+	
 	public Integer getId() {
 		return this.id;
 	}

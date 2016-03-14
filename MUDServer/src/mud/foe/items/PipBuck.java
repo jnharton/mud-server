@@ -71,6 +71,7 @@ public class PipBuck extends Item implements Device, ExtraCommands {
 
 									for(Map.Entry<String, Command> cmd : ec.getCommands().entrySet()) {
 										//p.commands.put( cmd.getKey(), cmd.getValue() );
+										initCmd(cmd.getValue());
 										player.commandMap.put( cmd.getKey(), cmd.getValue() );
 										debug("Added " + cmd.getKey() + " to player's command map from " + p.getName() + " module: " + module.getName());
 									}
@@ -229,7 +230,10 @@ public class PipBuck extends Item implements Device, ExtraCommands {
 						if( minutes < 9 ) sb.append("0" + minutes);
 						else            sb.append(minutes);
 
-						send("You note that: ", client);
+						send("Looking at your Pipbuck, you note that: ", client);
+						
+						send(Utils.padRight("", '-', 40), client);
+						
 						send("the time is " + sb.toString(), client);
 						send("current radiation exposure is: " + rads + " rads/sec.", client);
 						
@@ -247,7 +251,16 @@ public class PipBuck extends Item implements Device, ExtraCommands {
 						final int curr_p = p.getPower();
 						final int max_p = p.getMaxPower();
 						
-						send("Remaining Power: [" + Utils.padRight("",  '|', curr_p) + Utils.padRight("", ' ', max_p - curr_p) + "]", client);
+						sb.delete(0, sb.length());
+						
+						sb.append( Utils.padRight("",  '|', curr_p) );
+						sb.append( Utils.padRight("", ' ', max_p - curr_p) );
+						
+						send("Remaining Power: [" + colors(sb.toString(), "green") + "]", client);
+						
+						sb.delete(0, sb.length());
+						
+						send(Utils.padRight("", '-', 40), client);
 					}
 				}
 
@@ -268,7 +281,7 @@ public class PipBuck extends Item implements Device, ExtraCommands {
 							final Room room = getRoom(player);
 							
 							// get a list of all living creatures in range
-							final List list = null;
+							final List list = new LinkedList();
 							
 							// for each creature decide if they are a threat
 							for(final Object obj : list) {

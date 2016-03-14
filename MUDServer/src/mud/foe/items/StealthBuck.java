@@ -17,6 +17,7 @@ import mud.misc.Effect.DurationType;
 import mud.net.Client;
 import mud.objects.Item;
 import mud.objects.ItemTypes;
+import mud.objects.Player;
 
 /**
  * The StealthBuck modules provides the following functionality via
@@ -27,22 +28,44 @@ import mud.objects.ItemTypes;
  *
  */
 public final class StealthBuck extends Item implements Module, ExtraCommands {
-	private static final Effect stealth = new Effect("Stealth", null, DurationType.PERMANENT, -1);
+	private static final Effect stealth = new Effect("stealth", null, DurationType.PERMANENT, -1);
 	private static final Effect jam = new Effect("Jam", null, DurationType.PERMANENT, -1);
 	
 	private boolean enabled;
+	
 	private boolean charged;
 	private boolean charging;
 	private int charge;
+	
+	private boolean stealth_mode = false;
 	
 	private Map<String, Command> commands = new Hashtable<String, Command>() {
 		{
 			put("stealth", new Command("turn stealth field ON or OFF.") {
 				public void execute(final String arg, final Client client) {
-					send("stealth: command not implemented", client);
+					final Player player = getPlayer(client);
 					
-					applyEffect(getPlayer(client), new Effect(stealth));
+					if( stealth_mode ) {
+						stealth_mode = false;
+						charging = true;
+						
+						player.removeEffect("stealth");
+						
+						send("Stealth Field DISABLED", client);
+					}
+					else {
+						if( charge > 0 ) {
+							charging = false;
+							charged = false;
+							stealth_mode = true;
+							
+							applyEffect(player, new Effect(stealth));
+							
+							send("Stealth Field ENABLED", client);
+						}
+					}
 				}
+				
 				public int getAccessLevel() { return Constants.USER; }
 			});
 		}

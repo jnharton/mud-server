@@ -46,7 +46,7 @@ public class Thing extends MUDObject {
 	
 	public Hashtable<String, String> attributes; 
 	
-	protected ArrayList<Item> contents = null;
+	public ArrayList<Item> contents = null;
 	
 	// triggers
 	public Trigger onUse;

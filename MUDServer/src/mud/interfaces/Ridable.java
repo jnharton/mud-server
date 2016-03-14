@@ -51,5 +51,5 @@ public interface Ridable {
 	 * 
 	 * @return
 	 */
-	public boolean isLargeEnough(Size riderSize);
+	public boolean isLargeEnough(final Size riderSize);
 }

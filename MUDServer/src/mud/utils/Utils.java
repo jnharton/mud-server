@@ -1025,4 +1025,13 @@ public final class Utils {
 	public static boolean range(int value, int min, int max) {
 		return (value >= min && value <= max);
 	}
+	
+	public static String checkMem() {
+		Runtime r = Runtime.getRuntime();
+
+		double in_use = r.totalMemory() / 1000000; // MB
+		double max = r.maxMemory() / 1000000; // MB
+
+		return "Memory: " + in_use + " MB / " + max + " MB";
+	}
 }

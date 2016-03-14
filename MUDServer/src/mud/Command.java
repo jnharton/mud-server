@@ -306,4 +306,22 @@ public abstract class Command {
 		
 		return new Time(game_time.getHours(), game_time.getMinutes(), game_time.getSeconds());
 	}
+	
+	/**
+	 * Initialize a Command object so that it has a reference to the current
+	 * instance of MUDServer.
+	 * 
+	 * @param cmd
+	 */
+	protected void initCmd(final Command cmd) {
+		cmd.init(parent);
+	}
+	
+	protected void addHostile(final Creature hostile) {
+		parent.hostiles.add( hostile );
+	}
+	
+	protected void removeHostile(final Creature hostile) {
+		parent.hostiles.remove( hostile );
+	}
 }

@@ -11,6 +11,18 @@ public class Horse extends Creature implements Ridable, Mobile {
 		this.ctype = CreatureType.HORSE;
 		this.race = "horse";
 		this.size = Size.MEDIUM;
+		
+		this.ridable = true;
+	}
+	
+	public Horse(final String hName, final String hDesc) {
+		super(hName, hDesc);
+		
+		this.ctype = CreatureType.HORSE;
+		this.race = "horse";
+		this.size = Size.MEDIUM;
+		
+		this.ridable = true;
 	}
 	
 	@Override
@@ -29,7 +41,7 @@ public class Horse extends Creature implements Ridable, Mobile {
 	}
 
 	@Override
-	public boolean isLargeEnough(Size riderSize) {
+	public boolean isLargeEnough(final Size riderSize) {
 		if( size.ordinal() >= riderSize.ordinal() ) {
 			return true;
 		}

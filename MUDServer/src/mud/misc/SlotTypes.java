@@ -1,7 +1,5 @@
 package mud.misc;
 
-import mud.objects.ItemType;
-
 public class SlotTypes {
 	public static SlotType NONE   = new SlotType("None",    0);
 	public static SlotType HEAD   = new SlotType("Head",    1);
