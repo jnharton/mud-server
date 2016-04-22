@@ -7,6 +7,7 @@ commands - list of all the available commands
 editors  - available editors
 help     - this page!
 license  - the license for this software
+lore     - a little about the world this game is set in
 movement - how moving around works in this game
 olc      - the online creation system
 policies - in-game, and out-of-game policy information
@@ -17,4 +18,4 @@ policies - in-game, and out-of-game policy information
                
 * topic names, etc are case sensitive and are usually lowercase
 
-Last Updated: April 8th, 2015
+Last Updated: March 18th, 2015

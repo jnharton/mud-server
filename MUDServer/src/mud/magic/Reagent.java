@@ -20,7 +20,8 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 public class Reagent
 {
 	private String name;
-
+	
+	// TODO is this an appropriate place to be throwing exception
 	public Reagent(final String tName) throws Exception {
         if (tName == "" || "".equals(tName)) {
             throw new Exception("Bad reagent name [" + tName + "].");

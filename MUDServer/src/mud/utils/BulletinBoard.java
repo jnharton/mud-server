@@ -18,7 +18,9 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
 import java.util.ArrayList;
-import mud.net.Client;
+import java.util.Collections;
+import java.util.List;
+
 import mud.objects.Player;
 
 /**
@@ -29,25 +31,22 @@ import mud.objects.Player;
  *
  */
 public class BulletinBoard {
-
-	/**
-	 * 
-	 */
-	private final String name;
-	private String filename;
-	private int lastId = 0;
-	
-	private Player owner;
+	private String name;        // the name of the board
+	public String shortname;    // a shorter name for the board?
+	private String filename;    // the filename we'll save this board's messages to
+	private Integer lastId = 0; // the id of the last message written to this board
 	
 	private ArrayList<BBEntry> entries;
+	
+	private Player owner;
 
-	public BulletinBoard(String name) {
+	public BulletinBoard(final String name) {
 		this.name = name;
 		this.filename = "";
 		this.entries = new ArrayList<BBEntry>();
 	}
 	
-	public BulletinBoard(String name, String filename) {
+	public BulletinBoard(final String name, final String filename) {
 		this.name = name;
 		this.filename = filename;
 		this.entries = new ArrayList<BBEntry>();
@@ -57,8 +56,8 @@ public class BulletinBoard {
 		return this.name;
 	}
 	
-	public void setFilename(final String filename) {
-		this.filename = filename;
+	public void setName(final String newName) {
+		this.name = newName;
 	}
 	
 	public String getFilename() {
@@ -70,6 +69,10 @@ public class BulletinBoard {
 		}
 	}
 	
+	public void setFilename(final String filename) {
+		this.filename = filename;
+	}
+	
 	public Player getOwner() {
 		return this.owner;
 	}
@@ -78,76 +81,60 @@ public class BulletinBoard {
 		this.owner = newOwner;
 	}
 	
-	//
 	public BBEntry getEntry(int messageNum) {
 		return this.entries.get(messageNum);
 	}
+	
+	public List<BBEntry> getEntries() {
+		return Collections.unmodifiableList(this.entries);
+	}
 
-	public void addEntry(BBEntry entry) {
+	public void addEntry(final BBEntry entry) {
 		this.entries.add(entry);
+	}
+	
+	public void loadEntry(final BBEntry entry) {
+		this.addEntry(entry);
+		this.lastId = entry.getId();
 	}
 
 	public void removeEntry(int index) {
 		this.entries.remove(index);
 	}
+
+	public void write(final String message) {
+		write("", "", message);
+	}
 	
-	public ArrayList<BBEntry> getEntries() {
-		return this.entries;
+	public void write(final String subject, final String message) {
+		write("", subject, message);
 	}
-
+	
+	public void write(final String author, final String subject, final String message) {
+		this.addEntry( new BBEntry(++lastId, author, subject, message) );
+	}
+	
 	/**
-	 * if class extracted, revise to send a
-	 * string array or arraylist of strings
-	 * instead of directly using send?
+	 * renumber
+	 * 
+	 * renumbers the messages (changes their IDs) for a delete action,
+	 * essentially just slides them all back one (5 would become 4).
+	 * 
+	 * @param start where to start the renumber process
 	 */
-	public ArrayList<String> scan() {
-		ArrayList<String> out = new ArrayList<String>();
-		
-		out.add(name);
-		out.add("+------------------------------------------------------------------------------+");
-		for (BBEntry entry : this.entries) {
-			//out.add("| " + Utils.padRight(entry.toView(), 78) + " |");
-			out.add("| " + Utils.padRight(entry.toView(), 76) + " |");
-		}
-		out.add("+------------------------------------------------------------------------------+");
-		
-		return out;
-	}
-
-	public void write(String message) {
-		BBEntry entry = new BBEntry(++lastId, "", message);
-		this.addEntry(entry);
-	}
-
-	public void write(String subject, String message) {
-		BBEntry entry = new BBEntry(++lastId, subject, message);
-		this.addEntry(entry);
-	}
-
-	public void write(String author, String message, Client client) {
-		BBEntry entry = new BBEntry(++lastId, author, message);
-		this.addEntry(entry);
-	}
-
-	public void write(String author, String subject, String message, Client client) {
-		BBEntry entry = new BBEntry(++lastId, author, subject, message);
-		this.addEntry(entry);
-	}
-
 	public void renumber(int start) {
 		for(int i = start; i < entries.size(); i++) {
 			final BBEntry entry = entries.get(i);
 			
-			int tid = entry.getId() - 1;
-			System.out.println("Old Entry Id: " + entry.getId());
-			entry.setId(tid);
-			System.out.println("New Entry Id: " + entry.getId());
+			entry.setId( entry.getId() - 1);
 		}
 	}
 
-	public void renumber() { renumber(0); }
+	public void renumber() {
+		renumber(0);
+	}
 	
-	public void ensureCapacity(int capacity) {
+	public void setInitialCapacity(int capacity) {
 		this.entries.ensureCapacity(capacity);
 	}
 	

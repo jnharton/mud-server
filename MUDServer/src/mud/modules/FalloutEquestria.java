@@ -137,7 +137,7 @@ public final class FalloutEquestria implements GameModule, ExtraCommands {
 		SparkleCola.setEquipped(false);
 
 		SparkleCola.setScriptOnTrigger(TriggerType.onUse,
-				"{do:{give:{&player},{create_item:mud.foe.bottlecap_sc}},{tell:You toss the bottle, keeping just the bottlecap.,{&player}}}"
+				"{do:{give:{&player},{create_item:mud.foe.bottlecap_sc}},{tell:You toss the bottle#c keeping just the bottlecap.,{&player}}}"
 				);
 
 		System.out.println("SparkleCola(onUse Script): " + SparkleCola.getScript(TriggerType.onUse).getText());
@@ -148,7 +148,7 @@ public final class FalloutEquestria implements GameModule, ExtraCommands {
 		BottleCap BottleCap = new BottleCap();
 
 		BottleCap.setName("Bottle Cap");
-		BottleCap.setDesc("A slightly bent metal bottle cap. Once a common waste product of the drinking habits of the Equestrian nation,"
+		BottleCap.setDesc("A slightly bent metal bottle cap. Once a common waste product of the drinking habits of the Equestrian nation, "
 				+ "now a valuable currency in the Equestrian Wasteland");
 		BottleCap.setLocation(-1);
 		

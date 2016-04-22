@@ -1,5 +1,7 @@
 package mud.utils;
 
+import java.util.List;
+
 /*
 Copyright (c) 2012 Jeremy N. Harton
 
@@ -31,12 +33,7 @@ public class BBEntry {
 	
 	private Integer topic = 0;
 	
-	public BBEntry(Integer id, String tempSubject, String tempMessage) {
-		this(id, "", tempSubject, tempMessage);
-	}
-
-	// for reloading existing entries
-	public BBEntry(Integer id, String author, String tempSubject, String message) {
+	public BBEntry(final Integer id, final String author, final String tempSubject, final String message) {
 		this.id = id;
 		this.author = author;
 		this.subject = tempSubject;
@@ -68,7 +65,8 @@ public class BBEntry {
 	}
 
 	public String toDB() {
-		return this.id + "#" + this.author + "#" + this.message;
+		//return this.id + "#" + this.author + "#" + this.subject + "#" + this.message;
+		return Utils.join(Utils.mkList("" + this.id, this.author, this.subject, this.message), "#");
 	}
 
 	public String toView() {

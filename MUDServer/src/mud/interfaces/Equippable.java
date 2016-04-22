@@ -1,33 +1,27 @@
 package mud.interfaces;
 
+import mud.misc.SlotType;
+import mud.objects.ItemType;
+
 /*
-Copyright (c) 2012 Jeremy N. Harton
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
-documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
-rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit
-persons to whom the Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
-Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
-CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-*/
-
-import mud.objects.Player;
+ * Copyright (c) 2012 Jeremy N. Harton
+ * 
+ * Released under the MIT License:
+ * LICENSE.txt, http://opensource.org/licenses/MIT
+ * 
+ * NOTE: license provided with code controls, if any
+ * changes are made to the one referred to.
+ */
 
 /**
  * Defines an interface for "equippable" objects. (items)
  * 
  * @author Jeremy
- *
- * @param <T> Some object type that will implement equippable.
  */
-public interface Equippable<T> {
-	public void equip();
-	public void equip(Player p);
-	public T unequip();
+public interface Equippable {
+	public ItemType getItemType();
+	public SlotType getSlotType();
+	
+	public boolean isEquipped();
+	public void setEquipped(boolean equipped);
 }

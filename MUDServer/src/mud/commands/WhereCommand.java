@@ -20,6 +20,10 @@ import mud.utils.Utils;
  */
 
 public class WhereCommand extends Command {
+	public WhereCommand() {
+		super("");
+	}
+	
 	@Override
 	public void execute(String arg, Client client) {
 		int n = 0;

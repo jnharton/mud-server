@@ -62,8 +62,10 @@ public class APIServer implements Runnable {
 	@Override
 	public void run() {
 		while( running ) {
+			Request request = null;
+			
 			if( !processed.isEmpty() ) { // send response if there are any
-				Request request = processed.poll();
+				request = processed.poll();
 				System.out.println(request.response);
 			}
 			
@@ -77,6 +79,15 @@ public class APIServer implements Runnable {
 	        catch (IOException e) {
 	            System.err.println("Accept failed.");
 	            System.exit(1);
+	        }
+	        
+	        if( request != null && clientSocket != null ) {
+	        	try {
+					clientSocket.getOutputStream().write( request.response.getBytes() );
+				}
+	        	catch (IOException e) {
+					e.printStackTrace();
+				}
 	        }
 		}
 		

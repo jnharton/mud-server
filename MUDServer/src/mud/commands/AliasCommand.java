@@ -18,6 +18,10 @@ import mud.net.Client;
  */
 
 public class AliasCommand extends Command {
+	public AliasCommand() {
+		super("");
+	}
+	
 	@Override
 	public void execute(String arg, Client client) {
 		if ( arg.equals("#list") ) {

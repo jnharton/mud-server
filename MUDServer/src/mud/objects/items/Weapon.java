@@ -13,8 +13,7 @@ import mud.objects.items.Handed;
 import mud.utils.Tuple;
 import mud.utils.Utils;
 
-public class Weapon extends Item implements Cloneable
-{
+public class Weapon extends Item {
 	private WeaponType weapon_type = null;
 	//Handed handed;
 	
@@ -24,42 +23,25 @@ public class Weapon extends Item implements Cloneable
 	//protected int mod = 0;                    // modifier - +0, +2, +3, +4, ... and so on
 	
 	public int damage = 1;
-
+	
+	/**
+	 * Default Constructor
+	 */
 	public Weapon() {
-		super(-1);
-		
-		this.name = "weapon";
-		this.flags = EnumSet.noneOf(ObjectFlag.class);
-		this.desc = "A generic weapon";
-		this.location = 8;
-		
-		this.item_type = ItemTypes.WEAPON;
-		
-		this.equip_type = ItemTypes.WEAPON;       // the type of equipment it is
-		
-		this.equippable = true;
-		this.equipped = false;
-		
-		this.slot_type = SlotTypes.NONE;
-		
-		//this.mod = 0;
-		//this.handed = Handed.ONE;
-		//this.weapon_type = WeaponTypes.LONGSWORD; // weapon type
-		//this.weight = 7.0;                       // the weight of the weapon (lbs)
+		this("weapon", "A generic weapon.");
 	}
+	
+	//this.mod = 0;
+	//this.handed = Handed.ONE;
+	//this.weapon_type = WeaponTypes.LONGSWORD; // weapon type
+	//this.weight = 7.0;                       // the weight of the weapon (lbs)
 	
 	public Weapon(final String name) {
 		this(name, "A generic weapon");
 	}
 	
 	public Weapon(final String name, final String description) {
-		super(-1);
-		
-		this.name = name;
-		
-		this.flags = EnumSet.noneOf(ObjectFlag.class);
-		this.desc = description;
-		this.location = 8;
+		super(-1, name, description);
 		
 		this.item_type = ItemTypes.WEAPON;
 		
@@ -95,7 +77,10 @@ public class Weapon extends Item implements Cloneable
 	}
 	
 	/**
+	 * Template Constructor
+	 * 
 	 * Create a Weapon object using the WeaponType as a template
+	 * 
 	 * @param wType
 	 */
 	public Weapon(WeaponType wType) {
@@ -217,7 +202,7 @@ public class Weapon extends Item implements Cloneable
 	
 	@Override
 	public Coins getValue() {
-		return Coins.copper(1);
+		return Coins.gold(5);
 		//return new Coins(weapon_type.getCost());
 	}
 	
@@ -242,12 +227,12 @@ public class Weapon extends Item implements Cloneable
 	public WeaponType getWeaponType() {
 		return this.weapon_type;
 	}
-	
+
 	@Override
-	public Weapon clone() {
+	public Weapon getCopy() {
 		return new Weapon(this);
 	}
-	
+
 	@Override
 	public String toDB() {
 		String[] output = new String[10];

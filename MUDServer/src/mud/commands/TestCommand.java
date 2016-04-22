@@ -16,6 +16,11 @@ public class TestCommand extends Command {
 	/* (non-Javadoc)
 	 * @see mud.commands.Command#execute(java.lang.String, mud.net.Client)
 	 */
+	
+	public TestCommand() {
+		super("");
+	}
+	
 	@Override
 	public void execute(String arg, Client client) {
 	}

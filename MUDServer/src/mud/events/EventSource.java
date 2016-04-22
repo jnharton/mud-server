@@ -1,5 +1,7 @@
 package mud.events;
 
+import java.util.EventListener;
+
 /*
  * Copyright (c) 2013 Jeremy N. Harton
  * Released under the MIT License:
@@ -9,8 +11,10 @@ package mud.events;
 //import java.util.EventListener;
 
 public interface EventSource {
-	public void fireEvent(String message);
+	public void fireEvent(final String message);
 	
-	//public void addEventListener(EventListener listener);
-	//public void removeEventListener(EventListener listener);
+	/*
+	public void addEventListener(final EventListener listener);
+	public void removeEventListener(final EventListener listener);
+	*/
 }

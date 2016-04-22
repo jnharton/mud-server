@@ -2,7 +2,6 @@ package mud.objects;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.BitSet;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -16,8 +15,6 @@ import mud.TypeFlag;
 import mud.events.EventSource;
 import mud.events.SayEvent;
 import mud.events.SayEventListener;
-import mud.game.Ability;
-import mud.game.Skill;
 import mud.interfaces.Instance;
 import mud.misc.Direction;
 import mud.misc.Trigger;
@@ -46,16 +43,19 @@ import mud.weather.Weather;
  */
 public class Room extends MUDObject implements EventSource, Instance
 {	
-	public static final String DAY = "DAY";
-	public static final String NIGHT = "NIGHT";
+	//public static final String DAY = "DAY";
+	//public static final String NIGHT = "NIGHT";
 	
 	// NOTE: for room, location and "parent" are the same
 
 	private RoomType roomType = RoomType.NONE;                // the type of room (I = Inside, O = Outside, P = Protected, N = None)
 	private Terrain terrain = Terrain.NONE;                   // terrain type of the room (affects movement speed?)
 	
-	private Weather weather;                                  // the weather in this room
-
+	private int x = 10, y = 10; // size of the room ( 10x10 default )
+	private int z = 10;         // height of room ( 10 default )
+	
+	private Zone zone = null;                                 // the zone this room belongs to
+	
 	private ArrayList<Exit> exits = new ArrayList<Exit>();    // the exits leading away from the room
 	private String exitNames;                                 // formatted string containing the usable exit names
 
@@ -63,20 +63,18 @@ public class Room extends MUDObject implements EventSource, Instance
 	private ArrayList<Item> items = new ArrayList<Item>();    // the objects the room contains (items)
 
 	public String music;                                      // the ambient background music for this room (filename, probably a wav file)
-	public String timeOfDay = DAY;                            // replace this with an enum with one type per each or a hashmap string, boolean?
+	//public String timeOfDay = DAY;                            // replace this with an enum with one type per each or a hashmap string, boolean?
 	// DAY or NIGHT
-
-	private Zone zone = null;                                 // the zone this room belongs to
 	
+	private Weather weather;                                  // the weather in this room
+	
+	// Transient?
 	private Integer instance_id = -1;                         // instance_id
-
-	private int x = 10, y = 10; // size of the room ( 10x10 default )
-	private int z = 10;         // height of room ( 10 default )
 	
 	public char[] tiles;
 	
 	private ArrayList<Player> listeners;                                            // Player(s) in the Room listening to what is being said
-	private List<SayEventListener> _listeners = new ArrayList<SayEventListener>(); // 
+	private List<SayEventListener> _listeners = new ArrayList<SayEventListener>();  // Other things listening to say events? 
 
 	private HashMap<TriggerType, List<Trigger>> triggers = new HashMap<TriggerType, List<Trigger>>();
 	
@@ -217,7 +215,8 @@ public class Room extends MUDObject implements EventSource, Instance
 	public List<Exit> getExits() {
 		return Collections.unmodifiableList(exits);
 	}
-
+	
+	// TODO excise method
 	public String getExitNames() {
 		if( exits.size() > 0 ) {
 			final StringBuilder buf = new StringBuilder();
@@ -240,7 +239,8 @@ public class Room extends MUDObject implements EventSource, Instance
 		}
 		else { return ""; }
 	}
-
+	
+	// TODO excise method
 	public String getVisibleExitNames() {
 		final StringBuilder buf = new StringBuilder();
 		for (final Exit e : exits) {
@@ -266,8 +266,16 @@ public class Room extends MUDObject implements EventSource, Instance
 	/**
 	 * @param exits the exits to set
 	 */
-	public void setExits(ArrayList<Exit> exits) {
+	public void setExits(final ArrayList<Exit> exits) {
 		this.exits = exits;
+	}
+	
+	public void addExit(final Exit exit) {
+		this.exits.add(exit);
+	}
+	
+	public void removeExit(final Exit exit) {
+		this.exits.remove(exit);
 	}
 	
 	public void setDimension(final String dim, final int size) {
@@ -308,14 +316,6 @@ public class Room extends MUDObject implements EventSource, Instance
 	
 	public synchronized void removeSayEventListener(SayEventListener listener)   {
 		_listeners.remove(listener);
-	}
-	
-	public void addExit(final Exit exit) {
-		this.exits.add(exit);
-	}
-	
-	public void removeExit(final Exit exit) {
-		this.exits.remove(exit);
 	}
 	
 	/**

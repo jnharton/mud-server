@@ -13,9 +13,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.EnumSet;
 
-import mud.net.Client;
 import mud.Command;
-import mud.Constants;
 import mud.ObjectFlag;
 import mud.MUDObject;
 import mud.TypeFlag;
@@ -28,7 +26,6 @@ import mud.game.Skill;
 import mud.interfaces.Mobile;
 import mud.interfaces.Ridable;
 import mud.interfaces.Ruleset;
-import mud.interfaces.Wearable;
 import mud.magic.Spell;
 import mud.magic.SpellBook;
 import mud.misc.Coins;
@@ -36,10 +33,8 @@ import mud.misc.Currency;
 import mud.misc.Editors;
 import mud.misc.PlayerMode;
 import mud.misc.Slot;
-import mud.misc.SlotType;
-import mud.misc.SlotTypes;
+import mud.net.Client;
 import mud.objects.items.Armor;
-import mud.objects.items.ClothingType;
 import mud.objects.items.Handed;
 import mud.objects.items.Shield;
 import mud.objects.items.Weapon;
@@ -52,10 +47,8 @@ import mud.rulesets.d20.Skills;
 import mud.utils.EditList;
 import mud.utils.Landmark;
 import mud.utils.MailBox;
-import mud.utils.MudUtils;
 import mud.utils.Pager;
 import mud.utils.Point;
-import mud.utils.cgData;
 import mud.utils.Utils;
 import mud.utils.EditorData;
 
@@ -110,15 +103,16 @@ public class Player extends MUDObject implements Mobile
 
 	// SuperGame Stuff
 	private int id;                                // unique player id (for the account system) **UNUSED
-	private boolean idle_state = false;            // Whether or not the player is currently ide (default: false) **UNUSED
-	private String prev_status = "";
-	public int idle = 0;                           // the amount of time that the player has been idle (MU)
 	private String pass;                           // The player's password in it's hashed state (timed lockout w/ password verification)
 	private PlayerMode mode = PlayerMode.NORMAL;   // Play Mode (default: normal)
-	protected String cName = "";                   // name that show up for players who have initiated greeting, etc
 	protected String status;                       // The player's status (MU)
 	protected String title;                        // The player's title (for where, MU)
 	private Status pstatus = Status.ACTIVE;        // whether or not the player has been banned
+	
+	private transient String cName = "";           // name that show up for players who have initiated greeting, etc
+	private transient boolean idle_state = false;  // Whether or not the player is currently ide (default: false) **UNUSED
+	private transient int idle = 0;                // the amount of time that the player has been idle (MU)
+	private transient String prev_status = "";
 
 	private transient MailBox mailbox = new MailBox(); // player mailbox
 
@@ -126,10 +120,11 @@ public class Player extends MUDObject implements Mobile
 
 	private boolean isNew;                         // is the player new? (e.g. hasn't done chargen)
 
-	private boolean controller = false;            // place to indicate if we are controlling an npc (by default, we are not)
+	private transient boolean controller = false;  // place to indicate if we are controlling an npc (by default, we are not)
 	
 	private HashMap<String, EditList> editMap = new HashMap<String, EditList>(); // array of lists belonging to this player
-
+	
+	// TODO move this to account data? does that mean I can't keep it for non-account players OR?
 	// preferences (ACCOUNT DATA?)
 	private int lineLimit = 80;                    // how wide the client's screen is in columns (shouldn't be in Player class)
 	public int invDispWidth = 60;                  // display width for the complex version of inventory display
@@ -169,10 +164,12 @@ public class Player extends MUDObject implements Mobile
 	private Hashtable<String, Profession> professions = null; // holds all your trained professions **UNUSED
 
 	protected SpellBook spells = null;                       // spells [null if not a spellcaster]
+	
 	protected transient LinkedList<Spell> spellQueue = null; // spell queue [null if not a spellcaster]
 	protected transient Spell lastSpell = null;              // last spell cast [null if not a spellcaster]
-
-	private State state = State.ALIVE;             // character's "state of health" (ALIVE, INCAPACITATED, DEAD)
+	
+	// TODO transient, since I can recalculate
+	private transient State state = State.ALIVE;             // character's "state of health" (ALIVE, INCAPACITATED, DEAD)
 
 	protected LinkedHashMap<Ability, Integer> stats;                // Player Statistics (D&D, MUD)
 	protected LinkedHashMap<Skill, Integer> skills;                 // Player Skills (D&D, MUD)
@@ -206,9 +203,12 @@ public class Player extends MUDObject implements Mobile
 	// Craft Wand  (4) Craft Wondrous Item        (5) Forge Ring (6) Scribe Scroll(7)
 	public BitSet item_creation_feats = new BitSet(8);
 
+	// TODO transient because I should be able to recalculate
 	// temporary states
 	private transient int[] statMod =  new int[7];  // temporary modifications to stats (i.e. stat drains, etc)
 	private transient int[] skillMod = new int[44]; // temporary modifications to skills
+	
+	// TODO do I need some kind of theme specific component to keep data in?
 	private int negativeLevels = 0;
 
 	// borrowed from DIKU -> ROM, etc?
@@ -217,17 +217,16 @@ public class Player extends MUDObject implements Mobile
 	// m - mana, M - total mana
 	private String custom_prompt = "< %h/%H  %mv/%MV %m/%M >"; // ACCOUNT DATA?
 
-	private transient Pager pager = null; // a pager (ex. 'less' for linux), displays a page's/screen's worth of text at a time
+	private transient Pager pager = null;             // a pager (ex. 'less' for linux)
+	private transient Client client;                  //
+	public transient Map<String, Command> commandMap; //
 
-	private transient Client client;
-
-	public transient Map<String, Command> commandMap = new HashMap<String, Command>();
-
-	// Knowledge
+	// Knowledge (protected so NPCs can have this stuff too)
 	protected ArrayList<String> names;                         // names of other players
 	protected Hashtable<String, Boolean> discovered_locations; // places you've been to
 	protected Map<String, Landmark> landmarks;
 	
+	// TODO is this really a good place to keep mount stuff?
 	public Ridable mount = null;
 	
 	private Weapon primary = null;
@@ -237,7 +236,8 @@ public class Player extends MUDObject implements Mobile
 	
 	// Editors, General
 	private Editors editor;
-
+	
+	// TODO love to rip this out and put it in an list editor class
 	/* Editor Data */ 
 
 	// List Editor
@@ -404,6 +404,8 @@ public class Player extends MUDObject implements Mobile
 		
 		this.reputation = new LinkedHashMap<Faction, Integer>();
 		
+		this.commandMap = new HashMap<String, Command>();
+		
 		// TODO consider this. I shouldn't mark newly created players as no new since they haven't generated their character yet..
 		// mark player as new
 		//isNew = true;
@@ -544,7 +546,9 @@ public class Player extends MUDObject implements Mobile
 		Arrays.fill(skillMod, 0);
 		
 		this.reputation = new LinkedHashMap<Faction, Integer>();
-
+		
+		this.commandMap = new HashMap<String, Command>();
+		
 		// mark player as not new
 		isNew = false;
 	}
@@ -595,7 +599,9 @@ public class Player extends MUDObject implements Mobile
 	 * 
 	 * @return
 	 */
-	public String getGender() { return this.gender; }
+	public String getGender() {
+		return this.gender;
+	}
 
 	/**
 	 * set player gender
@@ -688,12 +694,12 @@ public class Player extends MUDObject implements Mobile
 	public void setPass(final String newPass) {
 		this.pass = Utils.hash(newPass);
 	}
-
+	
+	// TODO idling
+	// doesn't seem like something that really belongs in here, may belong in some kind
+	// of session, client data
+	
 	// get the player's idle time
-	public int getIdle() {
-		return this.idle;
-	}
-
 	public String getIdleString() {
 		if ( this.idle > 0 ) {
 			if (this.idle > 60) {
@@ -708,6 +714,30 @@ public class Player extends MUDObject implements Mobile
 		else {
 			return "----";
 		}
+	}
+	
+	public void setIdle(final boolean idle) {
+		this.idle_state = idle;
+		 
+		if( idle ) {
+			this.prev_status = this.status;
+			setStatus("IDL");
+		}
+		else {
+			setStatus(this.prev_status);
+		}
+	}
+
+	public boolean isIdle() {
+		return this.idle_state;
+	}
+	
+	public void setIdleTime(int s) {
+		this.idle = s;
+	}
+	
+	public int getIdleTime() {
+		return this.idle;
 	}
 
 	// get the player's status
@@ -756,7 +786,8 @@ public class Player extends MUDObject implements Mobile
 	// then I need to determine a standard weight for the money
 	// and calculate that, then decide if the player can hold it
 	public void setMoney(final Coins c) {
-		this.money = this.money.add(c);
+		this.money = c;
+		//this.money = this.money.add(c);
 		
 		/*if( c.isMoreOrEqual(Coins.copper(0)) ) {
 			this.money = this.money.add(c);
@@ -987,7 +1018,13 @@ public class Player extends MUDObject implements Mobile
 	public Map<Ability, Integer> getStats() {
 		return Collections.unmodifiableMap( this.stats );
 	}
-
+	
+	/**
+	 * Get the quest with the specified id, if the player has it.
+	 * 
+	 * @param id
+	 * @return
+	 */
 	public Quest getQuest(final int id) {
 		for(final Quest q : this.quests) {
 			if( q.getId() == id ) {
@@ -1002,10 +1039,16 @@ public class Player extends MUDObject implements Mobile
 	 * 
 	 * @return
 	 */
-	public ArrayList<Quest> getQuests() {
-		// it'd be nice to have an immutable/unmodifiable list to see what we have, but I need it modifiable asis
-		return this.quests;
-		//return Collections.unmodifiableList(this.quests);
+	public List<Quest> getQuests() {
+		return Collections.unmodifiableList(this.quests);
+	}
+	
+	public void addQuest(final Quest newQuest) {
+		this.quests.add(newQuest);
+	}
+	
+	public void removeQuest(final Quest oldQuest) {
+		this.quests.remove(oldQuest);
 	}
 
 	/**
@@ -1311,6 +1354,10 @@ public class Player extends MUDObject implements Mobile
 	public void setAlignment(final int newAlignment) {
 		this.alignment = Alignments.values()[newAlignment];
 	}
+	
+	public Faction getFaction() {
+		return this.faction;
+	}
 
 	public void modifyReputation(final Faction faction, final Integer value) {
 		setReputation(faction, getReputation(faction) + value);
@@ -1465,22 +1512,6 @@ public class Player extends MUDObject implements Mobile
 
 	public void setEditorData(final EditorData newEdD) {
 		this.edd = newEdD;
-	}
-	
-	public void setIdle(final boolean idle) {
-		this.idle_state = idle;
-		 
-		if( idle ) {
-			this.prev_status = this.status;
-			setStatus("IDL");
-		}
-		else {
-			setStatus(this.prev_status);
-		}
-	}
-
-	public boolean isIdle() {
-		return this.idle_state;
 	}
 	
 	public void addCommand(final String text, final Command cmd) {

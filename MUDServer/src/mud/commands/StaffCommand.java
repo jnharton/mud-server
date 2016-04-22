@@ -8,7 +8,6 @@ import mud.objects.Player;
 import mud.utils.Utils;
 
 public class StaffCommand extends Command {
-
 	public StaffCommand() {
 		super("lists the staff members who are currently connected/logged-in");
 	}

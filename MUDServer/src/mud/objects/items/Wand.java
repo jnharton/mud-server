@@ -6,6 +6,7 @@ import java.util.EnumSet;
 
 import mud.ObjectFlag;
 import mud.TypeFlag;
+import mud.interfaces.MagicItem;
 import mud.interfaces.Usable;
 import mud.magic.Spell;
 import mud.misc.Effect;
@@ -15,8 +16,7 @@ import mud.objects.ItemType;
 import mud.objects.ItemTypes;
 import mud.utils.Utils;
 
-public class Wand extends Item implements Usable<Wand>
-{
+public class Wand extends Item implements MagicItem, Usable<Wand> {
 	// wand should really have the itemType WAND, but it needs weapon right now, so that it can
 	// fit in the slot it needs to be in
 
@@ -24,8 +24,13 @@ public class Wand extends Item implements Usable<Wand>
 	public Spell spell;
 	private Handed handed = Handed.ONE;
 	
+	// TODO is there a such a thing as a wand with no spell/charges or one with a generic spell/num charges?
+	
 	public Wand(final Spell spell, final int tCharges) {
-		super(-1, "Wand", EnumSet.noneOf(ObjectFlag.class), "I", 8);
+		super(-1, "Wand", "A magic wand.");
+		
+		//super(-1, "Wand", EnumSet.noneOf(ObjectFlag.class), "A magic wand.", 8);
+		
 		this.equippable = true;
 		this.item_type = ItemTypes.WAND;
 		this.equip_type = ItemTypes.WEAPON;
@@ -52,13 +57,25 @@ public class Wand extends Item implements Usable<Wand>
 	 */
 	public Wand(String tempName, String tempDesc, int tempLoc, int tempDBREF, ItemType itemType, int tCharges, Spell spell) {
 		super(tempDBREF, tempName, EnumSet.noneOf(ObjectFlag.class), tempDesc, tempLoc);
-		this.type = TypeFlag.ITEM;
+		
 		this.equippable = true;
 		this.item_type = ItemTypes.WAND;
 		this.equip_type = ItemTypes.WEAPON;
 		this.charges = tCharges;
 		this.spell = spell;
 		
+		this.name = "Wand of " + this.spell.getName();
+	}
+	
+	protected Wand(final Wand template) {
+		super(template);
+		
+		this.equippable = true;
+		this.item_type = ItemTypes.WAND;
+		this.equip_type = ItemTypes.WEAPON;
+		this.charges = template.charges;
+		this.spell = template.getSpell();
+
 		this.name = "Wand of " + this.spell.getName();
 	}
 
@@ -127,8 +144,14 @@ public class Wand extends Item implements Usable<Wand>
 		
 		return Utils.join(output, "#");
 	}
-
+	
+	@Override
 	public String toString() {
 		return "Wand of " + this.spell.getName();
+	}
+	
+	@Override
+	public Wand getCopy() {
+		return new Wand(this);
 	}
 }

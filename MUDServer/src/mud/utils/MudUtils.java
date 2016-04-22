@@ -31,6 +31,23 @@ public final class MudUtils {
 		weight += coins[3] * ( 0.5000 );  // platinum (1/2 oz./coin)
 
 		return ( weight / 16 ); // 16 oz = 1 lb
+		
+		// in order to set weight of a coin I need to establish values and relative values
+				// i.e. 100 copper = 1 silver, 100 silver = 1 gold, 100 gold = 1 platinum
+				// need to establish density of each material, and then calculate weight
+				// weight of coin: amount of material (g) -> amount of material (oz).
+				// copper coin = 4.5g
+				// silver coin = 4.5g
+				// gold coin = 4.5g
+				// platinum coin = 4.5g
+				//send(gramsToOunces(4.5));
+				
+				/*final int[] coins = player.getMoney().toArray();
+				weight += coins[0] * ( 0.0625 );  // copper (1/16 oz./coin)
+				weight += coins[1] * ( 0.1250 );  // silver (1/8 oz./coin)
+				weight += coins[2] * ( 0.2500 );  // gold (1/4 oz./coin)
+				weight += coins[3] * ( 0.5000 );  // platinum (1/2 oz./coin)
+				return ( weight / 16 ); // 16 oz = 1 lb*/
 	}
 
 	public static double calculateWeight(final Player player) {
@@ -44,22 +61,8 @@ public final class MudUtils {
 				weight += item.getWeight();
 			}
 		}
-
-		// in order to set weight of a coin I need to establish values and relative values
-		// i.e. 100 copper = 1 silver, 100 silver = 1 gold, 100 gold = 1 platinum
-		// need to establish density of each material, and then calculate weight
-		// weight of coin: amount of material (g) -> amount of material (oz).
-		// copper coin = 4.5g
-		// silver coin = 4.5g
-		// gold coin = 4.5g
-		// platinum coin = 4.5g
-		//send(gramsToOunces(4.5));
-		final int[] coins = player.getMoney().toArray();
-		weight += coins[0] * ( 0.0625 );  // copper (1/16 oz./coin)
-		weight += coins[1] * ( 0.1250 );  // silver (1/8 oz./coin)
-		weight += coins[2] * ( 0.2500 );  // gold (1/4 oz./coin)
-		weight += coins[3] * ( 0.5000 );  // platinum (1/2 oz./coin)
-		return ( weight / 16 ); // 16 oz = 1 lb
+		
+		return weight;
 	}
 
 	public static String getTypeName(final TypeFlag tFlag) {
@@ -99,7 +102,8 @@ public final class MudUtils {
 	public static int calculateDamage(final Weapon weapon, final boolean critical) {
 		if( weapon == null ) {
 			// TODO this really should return the character's ability to cause damage by themselves
-			return 1;
+			if( critical ) return 2;
+			else           return 1;
 		}
 		else {
 			final WeaponType wtype = weapon.getWeaponType();

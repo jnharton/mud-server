@@ -17,18 +17,19 @@ CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTH
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-import java.util.ArrayList;
+import java.util.List;
 
+import mud.misc.Coins;
 import mud.objects.Item;
 
 public interface Vendor {
-	public ArrayList<Item> list();
+	public List<Item> list();
 	
-	public Item buy(String name);
+	public Item buy(final String name, final Coins payment);
 	
-	public void sell(Item item);
+	public Coins sell(final Item item);
 
-	public boolean hasItem(String arg);
+	public boolean hasItem(final String arg);
 
-	public Item getItem(String arg);
+	public Item getItem(final String arg);
 }

@@ -153,20 +153,18 @@ public class Server implements Runnable {
 
     public void writeToAllClients(final byte data[]) {
         for (final Client c : new ArrayList<Client>(clients)) {
-            if (c.isRunning()) {
-                c.write(data);
-            }
-            else {
-                clients.remove(c);
-            }
+            if (c.isRunning())  c.write(data);
+            else                clients.remove(c); // TODO is this a concurrent modification problem?
         }
     }
-
-    public void sendMessage(final Client aclient, final Message msg) {
-        for (final Client client : clients) {
-            if (client.equals(aclient)) {
-                client.writeln(msg.getSender().getName() + " says, \"" + msg.getMessage() + "\" to you. (tell)");
-            }
-        }
+    
+    /*
+     * TODO fix/remove this kludge which was sort of intended for a say command anyway
+     */
+    public void sendMessage(final Message msg, final Client client) {
+    	final String sender = msg.getSender().getName();
+    	final String message = msg.getMessage();
+    	
+    	client.writeln(sender + " says, \"" + message + "\" to you. (tell)");
     }
 }

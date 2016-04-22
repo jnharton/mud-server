@@ -16,7 +16,6 @@ import mud.utils.Utils;
 
 
 public class Book extends Item implements Editable {
-
 	private String title = "";
 	private String author = "";
 	private ArrayList<List<String>> pages;
@@ -52,8 +51,10 @@ public class Book extends Item implements Editable {
 	}
 	
 	// TODO make sure this properly duplicates the template, which it doesn't atm
-	public Book( Book template ) {
+	protected Book( Book template ) {
 		this(template.title, template.author, template.pages.size());
+		
+		this.pages.addAll( template.pages );
 		//this.item_type = template.item_type;
 	}
 	
@@ -192,5 +193,10 @@ public class Book extends Item implements Editable {
 	@Override
 	public String toString() {
 		return getTitle();
+	}
+	
+	@Override
+	public Book getCopy() {
+		return new Book(this);
 	}
 }

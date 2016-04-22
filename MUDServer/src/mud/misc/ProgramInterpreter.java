@@ -1,6 +1,5 @@
 package mud.misc;
 
-import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
@@ -40,7 +39,7 @@ public class ProgramInterpreter {
 	private Log log;
 	
 	//
-	private Hashtable<String, String> vars;
+	private Hashtable<String, String> vars; // TODO HashMap or go back to using a Hashtable
 	
 	// configuration
 	private boolean use_vars;
@@ -57,16 +56,23 @@ public class ProgramInterpreter {
 		
 		this.debug_enabled = enable_debug;
 	}
-
+	
+	/**
+	 * lex
+	 * 
+	 * break the input into tokens
+	 * 
+	 * NOTE: not currently used
+	 * 
+	 * @param input
+	 * @return
+	 */
 	public List<String> lex(String input) {
 		List<String> tokens = new LinkedList<String>();
-
-		Character ch;
+		
 		StringBuilder sb = new StringBuilder();
-
-		for(int c = 0; c < input.length(); c++) {
-			ch = input.charAt(c);
-
+		
+		for(final char ch : input.toCharArray()) {
 			switch(ch) {
 			case '{':
 				if(sb.length() > 0) {
@@ -116,19 +122,17 @@ public class ProgramInterpreter {
 			}
 		}
 
-		if( debug_enabled ) System.out.println("Tokens: " + tokens);
+		if( debug_enabled ) {
+			for( final String token : tokens) {
+				System.out.println(token);
+			}
+			
+			//System.out.println("Tokens: " + tokens);
+		}
 
 		return tokens;
 	}
-
-	/*public String interpret(final Script script, final Player player) {
-		return interpret( script.getText(), player, null);
-	}
-
-	public String interpret(final String script, final Player player) {
-		return interpret( script, player, null );
-	}*/
-
+	
 	public String interpret(final Script script, final Player player, final MUDObject object) {
 		return interpret( script.getText(), player, object );
 	}
@@ -146,26 +150,40 @@ public class ProgramInterpreter {
 		if ( isValidScript( script ) ) {
 			if( debug_enabled ) System.out.println("Interpret: " + script);
 			
+			// no script function equals no script
 			if( script.indexOf(":") != -1 ) {
+				// TODO fix this, we are assuming it's all one nested script...
 				String work = script.substring(1, script.length() - 1); // strip off the outermost squiggly braces ( {} )
-				//String work = script.replace("{", "").replace("}", "");
 
 				if( debug_enabled ) System.out.println("work: " + work);
+				
+				final String[] temp = work.split(":", 2);
 
-				String[] temp = work.split(":", 2);
-
-				String functionName = temp[0];
-				List<String> params = null;
+				String functionName = temp[0]; // FUNCTION NAME
 
 				if( debug_enabled ) System.out.println("Function: " + functionName); // tell us the script function used
-
+				
+				List<String> params = null;    // FUNCTION PARAMETERS 
+				
+				// find the parameters if there are any
 				if( temp.length > 1 ) {
 					params = Utils.mkList(temp[1].split(",")); // split the arguments on commas ( , )
-
+					
+					if( debug_enabled ) System.out.println("Fixing Params");
+					
 					fixParams( params ); // sort of fixes the params
-
-					if( debug_enabled ) System.out.println("Params: " + params);
-
+					
+					//if( debug_enabled ) System.out.println("Params: " + params);
+					
+					if( debug_enabled ) {
+						System.out.println("Params:");
+						
+						for(final String param : params) {
+							System.out.println(param);
+						}
+					}
+					
+					// evaluate parameters
 					int index = 0;
 
 					// whenever the function called isn't 'if' or 'with' or 'do', we want to evaluate all parameters as we get them
@@ -197,13 +215,14 @@ public class ProgramInterpreter {
 				return evaluate(script, new String[0], player, object);
 			}
 		}
-
-		return "Invalid Script!" + "\n'" + script + "\'";
+		else {
+			return "Invalid Script!" + "\n'" + script + "\'";
+		}
 	}
 
 	private String evaluate(final String functionName, final String[] params, final Player player, final MUDObject object) {
-		if( debug_enabled ) System.out.println("Params: " + params.length);
-
+		if( debug_enabled ) System.out.println("# Params: " + params.length);
+		
 		if( params.length > 0 ) {
 			/*
 			 * TODO: resolve this kludge and figure out a way to ensure that each
@@ -213,21 +232,20 @@ public class ProgramInterpreter {
 			// this a kludge, since a do function call may contain 1 or more parameters/sub scripts.
 			if ( functionName.equals("do") ) {
 				// {do:script1, script2, ...}
-				
-				//String temp;
+				String temp;
 
 				for(final String param : params) {
 					if( debug_enabled ) System.out.println("(DO) INTERPRET: " + param);
 					
-					//temp = interpret(param, player, object);
-					interpret(param, player, object);
+					temp = interpret(param, player, object);
 					
-					//if( debug_enabled ) System.out.println("(DO) Result: " + temp);
+					if( debug_enabled ) System.out.println("(DO) Result: " + temp);
 				}
 
 				return "";
 			}
-
+			
+			// Functions that take 1 parameter
 			if( params.length == 1 ) {
 				if( debug_enabled ) System.out.println("Parameter (1): " + params[0]);
 
@@ -256,12 +274,15 @@ public class ProgramInterpreter {
 				}
 				else if (functionName.equals("rainbow")) {
 					if( debug_enabled ) System.out.println(params[0]);
-					return parent.rainbow(params[0]) + parent.colorCode("white");
+					
+					return parent.rainbow(params[0]);
 				}
 				else { return "PGM: No such function!"; }
 				//else { return "Incomplete function statement, no parameters!"; }
 				//else { return "PGM: Error!"; }
 			}
+			
+			// Functions that take 2 parameters
 			else if( params.length == 2 ) {
 				if( debug_enabled ) {
 					System.out.println("Parameter (1): " + params[0]);
@@ -291,6 +312,7 @@ public class ProgramInterpreter {
 						}
 						catch(NumberFormatException nfe) {
 							if( debug_enabled ) System.out.println("-- Stack Trace --");
+							
 							nfe.printStackTrace();
 
 							failNumParse = true;
@@ -423,6 +445,7 @@ public class ProgramInterpreter {
 
 					if( object1 != null ) {
 						if( debug_enabled ) System.out.println("Object1: " + object1.getName());
+						
 						return "" +  object1.getProperty(property);
 					}
 					else return "";
@@ -431,7 +454,8 @@ public class ProgramInterpreter {
 				else if( functionName.equals("tell") ) {
 					// {tell:message, player}
 					
-					final String message = params[0];
+					// TODO resolve this kludge, since I may need to parse for hidden formatting data
+					final String message = params[0].replace("#c", ",");
 					final Player p = parent.getPlayer(Utils.toInt(params[1], -1));
 					
 					if( message != null && p != null ) {
@@ -493,6 +517,8 @@ public class ProgramInterpreter {
 				}
 				else { return "PGM: No such function! ( " + functionName + " )"; }
 			}
+			
+			// Functions that take 3 parameters
 			else if( params.length == 3 ) {
 				if( debug_enabled ) {
 					System.out.println("Parameter (1): " + params[0]);
@@ -500,7 +526,7 @@ public class ProgramInterpreter {
 					System.out.println("Parameter (3): " + params[2]);
 				}
 
-				if(functionName.equals("if")) {
+				if( functionName.equals("if") ) {
 					// {if: test condition, true: do this, false: do this}
 					
 					final String result = interpret(params[0], player, object);
@@ -515,7 +541,7 @@ public class ProgramInterpreter {
 						return interpret(params[2], player, object);
 					}
 				}
-				else if(functionName.equals("set")) {
+				else if( functionName.equals("set") ) {
 					// {set: propname, object, value }
 					
 					final String property = params[0];
@@ -527,12 +553,14 @@ public class ProgramInterpreter {
 
 					if( object1 != null ) {
 						if( debug_enabled ) System.out.println("Object: " + object1.getName());
+						
 						object1.setProperty(property, value);
+						
 						return "" +  object1.getProperty(property);
 					}
 					else return "";
 				}
-				else if (functionName.equals("with")) {
+				else if( functionName.equals("with") ) {
 					String result = "";
 					
 					if( use_vars ) {
@@ -559,9 +587,10 @@ public class ProgramInterpreter {
 
 				return "";
 			}
+			
+			// functions that take some arbitrary number of parameters
 			else {
-				// functions that take some arbitrary number of parameters
-				if(functionName.equals("distance")) {
+				if( functionName.equals("distance") ) {
 					/*
 					 * parameters:
 					 * 	2d/3d
@@ -599,10 +628,11 @@ public class ProgramInterpreter {
 				else { return "PGM: No such function!"; }
 			}
 		}
+		
 		else {
 			switch(functionName) {
 			case "{&arg}":
-				return "";
+				return vars.get("arg");
 			case "{&cmd}":
 				return "";
 			case "{&how}":
@@ -619,10 +649,14 @@ public class ProgramInterpreter {
 				return "Incomplete function statement, no inputs!";
 			default:
 				if( use_vars ) {
-					String temp = functionName.replace("{", "").replace("}", "").replace("&", "");
-					String temp1 = vars.get(temp);
+					//String temp = functionName.replace("{", "").replace("}", "").replace("&", "");
+					String varName = functionName.substring(1, functionName.length() - 1).replace("&", "");
+					
+					String value = vars.get(varName);
 
-					if( temp1 != null ) return temp1;
+					if( value != null ) {
+						return value;
+					}
 					else return "";					
 				}
 				else return functionName;
@@ -631,9 +665,16 @@ public class ProgramInterpreter {
 	}
 
 	// TODO fix this, this is low quality function checking
-	private static boolean isFunction(String s) {
-		if( s.startsWith("{") && s.endsWith("}") ) return true;
-		else return false;
+	private static boolean isFunction(final String s) {
+		boolean isFunction = false;
+		
+		if( s.startsWith("{") && s.endsWith("}") && Utils.countNumOfChar(s, ':') == 1 ) {
+			if( Utils.countNumOfChar(s, '{') == Utils.countNumOfChar(s, '}') ) {
+				isFunction = true;
+			}
+		}
+		
+		return isFunction;
 	}
 
 	/**
@@ -682,7 +723,12 @@ public class ProgramInterpreter {
 		int index = 0;    // index of the param we started fixing at
 		int offset = 0;
 		String temp = "";
-
+		
+		// TODO fix kludge to hide debug info inside fixParams..
+		boolean old_debug = debug_enabled;
+		
+		debug_enabled = (old_debug) ? false : old_debug;
+		
 		// while we haven't run out of parameters to process
 		while( index < params.size() - 1 ) {
 			int count = 0; // counter that is is used to place a number next to params as we print them out
@@ -697,8 +743,9 @@ public class ProgramInterpreter {
 				System.out.println("Params: ");
 			}
 
-			for(String s : params) {
+			for(final String s : params) {
 				if( debug_enabled ) System.out.println(count + " " + s);
+				
 				count++;
 			}
 
@@ -724,6 +771,7 @@ public class ProgramInterpreter {
 				if( leftCurlyCount != rightCurlyCount ) {
 					offset++;                                       // increase offset
 					temp = temp + "," + params.get(index + offset); // pull in the next param in initial list
+					
 					if( debug_enabled ) System.out.println("TEMP: " + temp);
 				}
 				else {
@@ -752,6 +800,8 @@ public class ProgramInterpreter {
 				index++;
 			}
 		}
+		
+		debug_enabled = (old_debug) ? true : false;
 
 		/*for(int i = 0; i < params.size(); i++) {
 			//leftCurlyCount = Utils.count(params.get(i), '{');
@@ -773,11 +823,37 @@ public class ProgramInterpreter {
 		}*/
 	}
 	
-	private void debug(final String output) {
-		if( debug_enabled ) {
-		}
+	/**
+	 * Add a variable to the interpreter's vars.
+	 * 
+	 * @param name  String variable name
+	 * @param value String variable value
+	 */
+	public void addVar(final String name, final String value) {
+		this.vars.put(name, value);
 	}
 	
+	/**
+	 * Set an -existing- variable in the interpreter's vars
+	 * to a new value.
+	 * 
+	 * @param name     String variable name
+	 * @param newValue String variable value
+	 * @return
+	 */
+	public boolean setVar(final String name, final String newValue) {
+		return (this.vars.replace(name, newValue) != null);
+	}
+	
+	/**
+	 * Remove a variable from the interpreter's vars.
+	 * 
+	 * @param name String variable name
+	 */
+	public void delVar(final String name) {
+		this.vars.remove(name);
+	}
+
 	// TODO: what exactly is this supposed to do?
 	/*private String call(final String functionName, final String...params) {
 		return interpret("{" + functionName + ":" + params[0] + "," + params[1] + "}", null, null);

@@ -3,7 +3,7 @@ package mud.objects.items;
 import java.util.EnumSet;
 
 import mud.ObjectFlag;
-import mud.interfaces.Wearable;
+import mud.interfaces.Equippable;
 import mud.misc.Coins;
 import mud.objects.Item;
 import mud.objects.ItemTypes;
@@ -16,8 +16,7 @@ import mud.utils.Utils;
  * @param aMod Armor bonus modifier (integer)
  * @param aGroup err, no idea.
  */
-public class Armor extends Item implements Wearable<Armor>
-{
+public class Armor extends Item implements Equippable {
 	/**
 	 * Flag: I
 	 * ItemType: Armor
@@ -162,7 +161,7 @@ public class Armor extends Item implements Wearable<Armor>
 	}
 	
 	@Override
-	public Armor clone() {
+	public Armor getCopy() {
 		return new Armor(this);
 	}
 }

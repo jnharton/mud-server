@@ -12,7 +12,7 @@ package mud.net;
 
 import java.io.*;
 import java.net.*;
-import java.util.BitSet;
+//import java.util.BitSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -21,50 +21,40 @@ import mud.protocols.Telnet;
 import mud.utils.Utils;
 
 public class Client implements Runnable {
-	public static final int CHAR_MODE = 0;
-	public static final int LINE_MODE = 1;
 	public static final int TELNET_COMMAND_LENGTH = 3;
 	public static final int BUF_SIZE = 4096;
-	
-	private final static int MCCP1 = 0;
-	private final static int MCCP2 = 1;
-	private final static int MSP = 2;
-	private final static int MXP = 3;
 	
 	private final Socket socket;
 	private final InputStream input;
 	private final OutputStream output;
+
+	private boolean running = false;
 	
-	private boolean running;
-	
-	//
 	private boolean telnet = true;
-	private boolean tn_neg_seq = false; // indicates if the bytes currently being recieved are part of a negotiation sequence
-	private boolean debug = false; // start out with debug disabled
-	private boolean console = false; // indicates to the server that the client is using the admin console (default: false)
-	
-	private boolean response_expected = false;
-	
-	final BitSet protocol_status = new BitSet(8);
-	
-	private int input_mode = CHAR_MODE;
-	
+	private boolean tn_neg_seq = false; // indicates if the bytes currently being received are part of a negotiation sequence
+	private boolean debug = false;      // start out with debug disabled
+
+	//final BitSet protocol_status = new BitSet(8); // NOT USED
+
 	// temporary storage
 	private final StringBuffer sb = new StringBuffer(80);
 	private List<Byte> buffer = new LinkedList<Byte>();
-	
+
 	// received data
 	public final List<Byte[]> received_telnet_msgs = new LinkedList<Byte[]>();
 	private final ConcurrentLinkedQueue<String> queuedLines = new ConcurrentLinkedQueue<String>();
+	
+	// response
 	private String response = "";
+	private boolean response_expected = false;
 
-	public Client(final String host, final int port) throws IOException {
+	public Client(final String host, final int port) throws IOException, UnknownHostException {
 		this(new Socket(host, port));
 	}
 
-	public Client(final Socket socket) throws IOException {
+	public Client(final Socket socket) throws IOException, SocketException {
 		this.socket = socket;
-		
+
 		this.socket.setOOBInline(true);
 
 		this.input = socket.getInputStream();
@@ -89,7 +79,6 @@ public class Client implements Runnable {
 				bytes = 0;
 
 				while( input.available() > 0 ) {
-
 					// read in a value
 					readValue = input.read();
 
@@ -98,7 +87,7 @@ public class Client implements Runnable {
 						if( bytes < TELNET_COMMAND_LENGTH ) {
 							buffer.add( (byte) readValue );
 							bytes++;
-							
+
 							debug("Read: " + readValue);
 						}
 
@@ -111,46 +100,8 @@ public class Client implements Runnable {
 							Byte[] ba = new Byte[buffer.size()];
 
 							buffer.toArray(ba);
-							
-							received_telnet_msgs.add( ba );
-							
-							//ba = null;
-							
-							byte[] ba2 = new byte[ba.length];
 
-							int index = 0;
-
-							for(Byte b : ba) {
-								ba2[index] = b;
-								index++;
-							}
-
-							String msg = Telnet.translate(ba2);
-							String[] msga = msg.split(" ");
-							
-							System.out.println( "] Received: " + msg );
-
-							byte[] response = new byte[3];
-
-							// if asked WILL some unknown option, respond DONT
-							if( msga[1].equals("WILL") && msga[2].equals("null") ) {
-								response[0] = Telnet.IAC;
-								response[1] = Telnet.DONT;
-								response[2] = ba2[2];
-
-								write(response);
-								System.out.println( "] Sent: " + Telnet.translate(response) );
-							}
-
-							// if asked DO some unknown option, respond WONT
-							else if( msga[1].equals("DO") && msga[2].equals("null") ) {
-								response[0] = Telnet.IAC;
-								response[1] = Telnet.WONT;
-								response[2] = ba2[2];
-
-								write(response);
-								System.out.println( "] Sent: " + Telnet.translate(response) );
-							}
+							received_telnet_msgs.add(ba);
 
 							/* end response section */
 
@@ -164,8 +115,8 @@ public class Client implements Runnable {
 						if( (byte) readValue == Telnet.IAC ) {
 							buffer.clear();
 
-							System.out.println("TELNET Command");
-							System.out.println("Read: " + readValue);
+							debug("TELNET Command");
+							debug("Read: " + readValue);
 
 							buffer.add( (byte) readValue );
 							bytes++;
@@ -182,12 +133,12 @@ public class Client implements Runnable {
 						// are ignored because it introduces an extra line into the command
 
 						if (ch == '\012') { // newline (\n)
-							if( last_ch == '\015') sb.delete(0, sb.length());
-							else                   received_line = true;
+							if( last_ch == '\015' ) sb.delete(0, sb.length());
+							else                    received_line = true;
 						}
 						else if(ch == '\015') { // carriage-return (\r)
-							if( last_ch == '\012') sb.delete(0, sb.length());
-							else                   received_line = true;
+							if( last_ch == '\012' ) sb.delete(0, sb.length());
+							else                    received_line = true;
 						}
 						else if (ch == '\010') { // backspace
 							if( !(sb.length() == 0) ) {
@@ -196,9 +147,9 @@ public class Client implements Runnable {
 						}
 						else { // any other character
 							debug("Read: " + ch + "(" + readValue + ")");
-							
+
 							sb.append(ch);
-							
+
 							debug("current telnet input: " + Utils.stringToList( sb.toString() )); // tell us the whole string
 						}
 
@@ -206,7 +157,7 @@ public class Client implements Runnable {
 
 						if( received_line ) {
 							final String line = sb.toString().trim();
-							
+
 							if( !response_expected ) {
 								this.queuedLines.add( line );
 							}
@@ -215,7 +166,7 @@ public class Client implements Runnable {
 							}
 
 							sb.delete(0, sb.length());
-							
+
 							received_line = false;     // reset received line indicator
 						}
 					}
@@ -254,7 +205,7 @@ public class Client implements Runnable {
 				}
 			}
 		}
-		catch (SocketException se) {
+		catch (final SocketException se) {
 			// if we catch a SocketException, we have likely stopped the client intentionally,
 			// in which case no warning is really necessary, otherwise we want to print a stack
 			// trace and stop the client.
@@ -263,18 +214,23 @@ public class Client implements Runnable {
 				stopRunning();
 			}
 		}
-		catch (IOException ioe) {
+		catch (final IOException ioe) {
 			ioe.printStackTrace();
 			stopRunning();
 		}
 		finally {
+			// do I really need to do this? stopRunning() should handle closing the socket
 			try { socket.close(); }
-			catch (IOException ioe) { ioe.printStackTrace(); }
+			catch (final IOException ioe) { ioe.printStackTrace(); }
 		}
 	}
-	
+
 	public Socket getSocket() {
 		return this.socket;
+	}
+
+	public String getIPAddress() {
+		return socket.getInetAddress().getHostAddress();
 	}
 
 	public boolean isRunning() {
@@ -283,18 +239,16 @@ public class Client implements Runnable {
 
 	public void stopRunning() {
 		this.running = false;
-		
+
 		// clean up after ourselves
 		try {
 			if( input != null )  this.input.close();
 			if( output != null ) this.output.close();
 			if( socket != null ) this.socket.close();
 		}
-		catch(IOException ioe) {ioe.printStackTrace(); }
-	}
-
-	public String getIPAddress() {
-		return socket.getInetAddress().getHostAddress();
+		catch(final IOException ioe) {
+			ioe.printStackTrace();
+		}
 	}
 
 	public String getInput() {
@@ -304,20 +258,18 @@ public class Client implements Runnable {
 	public void write(final char ch) {
 		try {
 			output.write(ch);
-			//output.flush();
 		}
-		catch (IOException ioe) {
+		catch (final IOException ioe) {
 			ioe.printStackTrace();
 			stopRunning();
 		}
 	}
-	
+
 	public void write(final byte b) {
 		try {
 			output.write(b);
-			//output.flush();
 		}
-		catch (IOException ioe) {
+		catch (final IOException ioe) {
 			ioe.printStackTrace();
 			stopRunning();
 		}
@@ -328,71 +280,47 @@ public class Client implements Runnable {
 			output.write(data);
 			output.flush();
 		}
-		catch (IOException ioe) {
+		catch (final IOException ioe) {
 			ioe.printStackTrace();
 			stopRunning();
 		}
 	}
-	
+
 	public void write(final String data) {
-		write(data.getBytes());
+		write( data.getBytes() );
 	}
-	
+
 	public void writeln(final String data) {
-		write((data + "\r\n").getBytes());
+		write( (data + "\r\n").getBytes() );
 	}
-	
+
 	public void write(final List<String> data) {
 		for(final String string : data) {
-			writeln(string);
+			// remove any leading/trailing whitespace (like newlines) before writing
+			writeln( string.trim() );
 		}
 	}
-	
+
 	public void setDebug(boolean state) {
 		this.debug = state;
 	}
-	
-	public void setConsole(boolean console) {
-		this.console = console;
-	}
-	
-	public boolean isConsole() {
-		return this.console;
-	}
-	
+
 	public boolean usingTelnet() {
 		return this.telnet;
 	}
-	
+
 	public void setResponseExpected(boolean re) {
 		this.response_expected = re;
 		this.response = null;
 	}
-	
+
 	public String getResponse() {
 		return this.response;
 	}
-	
+
 	private void debug(final String message) {
 		if( debug ) {
 			System.out.println(message);
 		}
-    }
-	
-	/*
-	// special commands?
-	final String cmd = sb.toString().trim();
-	
-	if( cmd.startsWith("/") ) {
-		if( cmd.substring(1).equalsIgnoreCase("char-mode") ) {
-			this.input_mode = CHAR_MODE;
-		}
-		else if( cmd.substring(1).equalsIgnoreCase("line-mode") ) {
-			this.input_mode = LINE_MODE;
-		}
 	}
-	else {
-		this.queuedLines.add( sb.toString().trim() ); // convert stringbuffer to string
-	}
-	*/
 }

@@ -33,7 +33,7 @@ import mud.objects.items.ClothingType;
  * @author Jeremy
  * @version %M%.%m%
  */
-public class Slot {
+public class Slot<T extends Item> {
 	private String description;        // descriptive text
 	private SlotType slotType;         // the type of slot this is
 	private ItemType itemType;         // the type of item the slot can hold

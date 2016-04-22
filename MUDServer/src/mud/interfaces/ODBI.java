@@ -13,6 +13,8 @@ import mud.objects.Room;
 import mud.objects.Thing;
 
 /**
+ * ObjectDB Interface
+ * 
  * This is kind of a weird interface/class that provides a mask of
  * ObjectDB where you can only retrieve objects. There is no functionality
  * in here to provide deletion or object renames.

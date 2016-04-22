@@ -13,6 +13,7 @@ import mud.misc.Slot;
 import mud.quest.Quest;
 import mud.rulesets.d20.Classes;
 import mud.rulesets.d20.Races;
+import mud.utils.CNode;
 import mud.utils.Message;
 import mud.utils.Utils;
 
@@ -38,41 +39,35 @@ import mud.utils.Utils;
  */
 public class NPC extends Player implements InteractiveI
 {
-	/**
-	 * 
-	 */
-	//protected String greeting = "Lovely weather we're having around these parts.";
 	public String greeting = "Lovely weather we're having around these parts.";
-	
+
 	private boolean givesQuests = false;
-	
+
 	private ArrayList<Quest> questList = new ArrayList<Quest>();
-	
+
+	private CNode conversation = null;
+
 	//private Direction lastDir = Direction.NONE;
 
-	// blank constructor for sub classes
-	/*public NPC() {
-	}*/
-	
 	// TODO make the below work (may need to modify Player)
 	public NPC(String name) {
 		super(-1);
-		
+
 		this.type = TypeFlag.NPC;
-		
+
 		this.name = name;
 		this.desc = "A generic npc.";
 		this.flags = EnumSet.noneOf(ObjectFlag.class);
 		this.locks = "";
 		this.status = "NPC";
-		
+
 		this.race = Races.NONE;
 		this.pclass = Classes.NONE;
-		
+
 		this.money = Coins.copper(0);
-		
+
 		this.slots = new LinkedHashMap<String, Slot>();
-		
+
 		this.stats = new LinkedHashMap<Ability, Integer>(ruleset.getAbilities().length, 0.75f);
 	}
 
@@ -88,7 +83,7 @@ public class NPC extends Player implements InteractiveI
 		this.location = tempLoc;
 		this.money = new Integer[]{ 0, 0, 0 ,0 };
 	}*/
-	
+
 	/**
 	 * 
 	 * @param tempDBRef
@@ -99,12 +94,12 @@ public class NPC extends Player implements InteractiveI
 	 * @param tempMoney
 	 */
 	public NPC(final int tempDBRef, final String tempName, final EnumSet<ObjectFlag> tempFlags, final String tempDesc, 
-            final int tempLoc, final Coins tempMoney)
+			final int tempLoc, final Coins tempMoney)
 	{
-        super(tempDBRef, tempName, tempFlags, tempDesc, tempLoc, null, null, null, new Integer[] {10, 10, 10, 10, 10, 10}, tempMoney);
-        this.type = TypeFlag.NPC;
+		super(tempDBRef, tempName, tempFlags, tempDesc, tempLoc, null, null, null, new Integer[] {10, 10, 10, 10, 10, 10}, tempMoney);
+		this.type = TypeFlag.NPC;
 	}
-	
+
 	/**
 	 * 
 	 * @param tempDBRef
@@ -118,27 +113,34 @@ public class NPC extends Player implements InteractiveI
 	 * @param tempMoney
 	 */
 	public NPC(final int tempDBRef, final String tempName, final EnumSet<ObjectFlag> tempFlags, final String tempDesc, 
-            final int tempLoc, final String tempTitle, final String tempPStatus, final Integer[] tempStats, final Coins tempMoney)
+			final int tempLoc, final String tempTitle, final String tempPStatus, final Integer[] tempStats, final Coins tempMoney)
 	{
 		super(tempDBRef, tempName, tempFlags, tempDesc, tempLoc, tempTitle, "", tempPStatus, tempStats, tempMoney);
 		this.type = TypeFlag.NPC;
 	}
 	
+	/* copy constructor */
+	protected NPC(final NPC template) {
+		super(-1);
+		
+		this.type = TypeFlag.NPC;
+	}
+
 	// TODO perhaps these should just return the message object?
 	public Message greet(Player player) {
 		return new Message(this, greeting, player);
 	}
-	
+
 	public Message say(String message) {
 		return new Message(this, message);
 	}
-	
+
 	public Message tell(Player player, String message) {
 		return new Message(this, message, player);
 	}
-	
+
 	// pose/do/act
-	
+
 	// THIS IS A HACKED-UP SOLUTION THAT NEEDS FIXING
 	/*public ArrayList<Message> interact(final int n) {
 		final ArrayList<Message> ret = new ArrayList<Message>(2);
@@ -175,11 +177,11 @@ public class NPC extends Player implements InteractiveI
 	public void setGreeting(String newGreeting) {
 		this.greeting = newGreeting;
 	}
-	
+
 	public void setQuestGiver(boolean givesQuests) {
 		this.givesQuests = givesQuests;
 	}
-	
+
 	/**
 	 * isQuestgiver
 	 * 
@@ -190,7 +192,7 @@ public class NPC extends Player implements InteractiveI
 	public boolean isQuestgiver() {
 		return this.givesQuests;
 	}
-	
+
 	/**
 	 * getQuestFor
 	 * 
@@ -202,42 +204,42 @@ public class NPC extends Player implements InteractiveI
 	 * @return
 	 */
 	public Quest getQuestFor(final Player player, final int questNum) {
-        if (questNum < 0) {
-            return null;
-        }
-        
-        int foundQuests = -1;
-        
-        // for each of the npcs quests, decided if it's suitable for the player or not
-        for (final Quest q : questList) {
-        	if ( q.isSuitable(player) ) {
-                foundQuests += 1;
-                
-                if (foundQuests == questNum) {
-                    return q;
-                }
-            }
-        }
-        
-        return null;
+		if (questNum < 0) {
+			return null;
+		}
+
+		int foundQuests = -1;
+
+		// for each of the npcs quests, decided if it's suitable for the player or not
+		for (final Quest q : questList) {
+			if ( q.isSuitable(player) ) {
+				foundQuests += 1;
+
+				if (foundQuests == questNum) {
+					return q;
+				}
+			}
+		}
+
+		return null;
 	}
 
 	public List<Quest> getQuestsFor(final Player player) {
-        final ArrayList<Quest> suitable = new ArrayList<Quest>();
-        
-        for (final Quest quest : questList) {
-        	if ( quest.isSuitable(player) ) {
-        		suitable.add( quest );
-            }
-        }
-        
-        return suitable;
+		final ArrayList<Quest> suitable = new ArrayList<Quest>();
+
+		for (final Quest quest : questList) {
+			if ( quest.isSuitable(player) ) {
+				suitable.add( quest );
+			}
+		}
+
+		return suitable;
 	}
 
 	public void addQuest(Quest newQuest) {
 		this.questList.add(newQuest);
 	}
-	
+
 	/**
 	 * Translate the persistent aspects of the player into the string
 	 * format used by the database
@@ -251,25 +253,25 @@ public class NPC extends Player implements InteractiveI
 		output[3] = this.getDesc();                         // description
 		output[4] = this.getLocation() + "";                // location
 		output[5] = "";                                     // empty (npcs have no password)
-		
+
 		// convert stats to a string representation
 		final StringBuilder sb = new StringBuilder();
 		int abilities = ruleset.getAbilities().length;
 		int count = 1;
-		
+
 		for(Ability ability : ruleset.getAbilities()) {
 			sb.append( this.stats.get(ability) );
 			if( count < abilities) sb.append(",");
 			count++;
 		}
-		
+
 		output[6] = sb.toString();                          // stats 
 		output[7] = getMoney().toString(false);             // money
 		output[8] = this.access + "";                       // permissions level
 		output[9] = this.race.getId() + "";                 // race
 		output[10] = this.pclass.getId() + "";              // class
 		output[11] = this.getStatus();                      // status
-		
+
 		return Utils.join(output, "#");
 	}
 
@@ -285,5 +287,13 @@ public class NPC extends Player implements InteractiveI
 				tell(player, greeting);
 			}
 		}
+	}
+
+	public CNode getConversation() {
+		return this.conversation;
+	}
+
+	public void setConversation(final CNode conversation) {
+		this.conversation = conversation;
 	}
 }

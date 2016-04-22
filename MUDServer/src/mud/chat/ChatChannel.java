@@ -1,4 +1,4 @@
-package mud.utils;
+package mud.chat;
 
 /*
 Copyright (c) 2012 Jeremy N. Harton
@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import mud.objects.Player;
+import mud.utils.Message;
 
 public class ChatChannel { 
 	private String name;      // channel name
@@ -28,23 +29,22 @@ public class ChatChannel {
 	private int restrict;     // restrict access based on some integer
 	
 	// output format
-	private String chan_color = "magenta"; // channel title color
-	private String text_color = "green";   // the color of the channel text
+	private String chan_color; // channel title color
+	private String text_color; // the color of the channel text
 	
 	private ArrayList<Player> listeners;           // players who are listening to the channel
 	private LinkedBlockingQueue<Message> messages; // messages 'written' to the channel
 	
-	public ChatChannel(String name) {
+	public ChatChannel(final String name) {
 		this.name = name;
 		this.shortname = name.substring(0, 3).toLowerCase();
-		this.messages = new LinkedBlockingQueue<Message>();
+		this.restrict = 0;
+		
+		this.chan_color = "white";
+		this.text_color = "white";
+		
 		this.listeners = new ArrayList<Player>();
-	}
-	
-	public ChatChannel(String name, String channel_color, String text_color) {
-		this(name);
-		this.chan_color = channel_color;
-		this.text_color = text_color;
+		this.messages = new LinkedBlockingQueue<Message>();
 	}
 	
 	/**
@@ -54,7 +54,7 @@ public class ChatChannel {
 	 */
 	public void setName(String chanName) {
 		this.name = chanName;
-		this.shortname = name.substring(0, 3).toLowerCase();
+		this.shortname = chanName.substring(0, 3).toLowerCase();
 	}
 	
 	/**
@@ -130,37 +130,29 @@ public class ChatChannel {
 		return this.messages.poll();
 	}
 	
-	public LinkedBlockingQueue<Message> getMessages() {
-		return this.messages;
-	}
-	
+	// is there some reason the addListener(...), removeListener(...) and getListeners(...) methods
+	// were marked synchronized?
 	/**
 	 * Add a listener (Player object) to this chat channel
-	 * <br />
-	 * <br />
-	 * <i>synchronized</i>: on listeners arraylist
 	 * 
 	 * @param p the player object to add to listeners
 	 * @return whether we succeeded in adding the player to listeners
 	 */
-	synchronized public boolean addListener(Player p) {
+	public boolean addListener(Player p) {
 		return this.listeners.add(p);
 	}
 	
 	/**
 	 * Remove a listener (player object) from this chat channel
-	 * <br />
-	 * <br />
-	 * <i>synchronized</i>: on listeners arraylist
 	 * 
 	 * @param p the player object to remove from listeners
 	 * @return whether we succeeded in removing the player from listeners
 	 */
-	synchronized public boolean removeListener(Player p) {
+	public boolean removeListener(Player p) {
 		return this.listeners.remove(p);
 	}
 	
-	synchronized public ArrayList<Player> getListeners() {
+	public ArrayList<Player> getListeners() {
 		return this.listeners;
 	}
 	
@@ -172,7 +164,7 @@ public class ChatChannel {
 	 * @param p the player to look for
 	 * @return whether or not they are listening to this channel (true/false)
 	 */
-	synchronized public boolean isListener(Player p) {
+	public boolean isListener(Player p) {
 		return this.listeners.contains(p);
 	}
 }

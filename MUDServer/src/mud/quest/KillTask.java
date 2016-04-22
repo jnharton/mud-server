@@ -28,6 +28,9 @@ public class KillTask extends Task {
 		if( o1 != null ) {
 			final MUDObject m = (MUDObject) objectiveData.getObject("target");
 		}
+		
+		// TODO fix kludge
+		this.objective = objectiveData;
 	}
 	
 	private KillTask(final KillTask kt) {

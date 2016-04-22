@@ -33,12 +33,12 @@ import mud.utils.Utils;
  * changes are made to the one referred to.
  */
 
-public class Item extends MUDObject implements Cloneable {
+public class Item extends MUDObject {
 	protected ItemType item_type = ItemTypes.NONE;  // item type - what type of item is this (supersede equip_type?)
 	protected ItemType equip_type = ItemTypes.NONE; // equip type - armor, shield, jewelry, weapon
 	protected SlotType slot_type = SlotTypes.NONE;  // the type of slot this fits in (if any)
 	
-	protected Coins baseValue = Coins.gold(1);         // should be 'protected'?
+	protected Coins baseValue = Coins.gold(1);      // should be 'protected'?
 	
 	protected double weight = 0;                    // the weight in whatever units are used of the equippable object
 	
@@ -50,6 +50,8 @@ public class Item extends MUDObject implements Cloneable {
     
 	protected boolean drinkable = false;      // drinkable? (0 = no, 1 = yes) -- implies DRINK
     protected boolean edible = false;         // edible? -- implies FOOD
+    
+    protected boolean magical = false;
 	
     protected boolean unique = false;         // is this item Unique (only one of them, cannot be copied)
 	
@@ -92,9 +94,7 @@ public class Item extends MUDObject implements Cloneable {
 	}
 	
 	public Item(int tempDBREF, final String name, final String description) {
-		super(tempDBREF);
-		
-		this.type = TypeFlag.ITEM;
+		this(tempDBREF);
 		
 		this.name = name;
 		this.flags = EnumSet.noneOf(ObjectFlag.class);
@@ -153,9 +153,6 @@ public class Item extends MUDObject implements Cloneable {
 	{
 		super(tempDBREF, tempName, tempFlags, tempDesc, tempLoc);
 		this.type = TypeFlag.ITEM;
-	}
-	
-	public void setItemData(final ItemType itemType, final ItemType equipType, final SlotType slotType) {
 	}
 	
 	public void setItemType(ItemType newType) {
@@ -354,8 +351,8 @@ public class Item extends MUDObject implements Cloneable {
 		return null;
 	}
 	
-	@Override
-	public Item clone() {
+	//public abstract Item getCopy();
+	public Item getCopy() {
 		return new Item(this);
 	}
 }

@@ -10,7 +10,7 @@ package mud.utils;
  * changes are made to the one referred to.
  */
 
-public class Point implements Cloneable {
+public class Point {
 	public enum Type { PT_2D, PT_3D };
 	
 	private Type type;
@@ -157,8 +157,7 @@ public class Point implements Cloneable {
 		}
 	}
 	
-	@Override
-	public Point clone() {
+	public Point getCopy() {
 		return new Point(this);
 	}
 }

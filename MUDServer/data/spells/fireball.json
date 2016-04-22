@@ -1,0 +1,11 @@
+{
+    "class": "wizard",
+    "level": 1,
+    "school": "conjuration",
+    "manacost": 5,
+    "name": "fireball",
+    "castmsg": "You cast fireball.",
+    "effects": [ "burning_5s", "dam-10" ],
+    "reagents": "none",
+    "targets": [ "enemy" ]
+}

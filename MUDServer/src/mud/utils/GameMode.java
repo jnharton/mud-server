@@ -29,16 +29,6 @@ public enum GameMode {
 		this.name = name;
 	}
 
-    static public boolean isValidString(final char c) {
-		switch (c) {
-            case 'n':   return true;
-            case 'd':   return true;
-            case 'w':   return true;
-            case 'm':   return true;
-            default:    return false;
-        }
-    }
-
     static public GameMode fromChar(final char c) {
 		switch (c) {
 			case 'n':   return GameMode.NORMAL;

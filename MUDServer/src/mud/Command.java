@@ -37,17 +37,6 @@ public abstract class Command {
 	private ODBI db;
 	
 	protected String description;
-
-	/**
-	 * Construct a command object with a parent
-	 * MUDServer. Cannot construct an ordinary Command
-	 * object because it is an abstract class. This
-	 * is effectively a dummy constructor for subclasses.
-	 * 
-	 * @param mParent
-	 */
-	protected Command() {
-	}
 	
 	protected Command(String description) {
 		this.description = description;
@@ -120,8 +109,8 @@ public abstract class Command {
 		return this.parent.gameError(source, type);
 	}
 	
-	protected final ProgramInterpreter getProgInt() {
-		return parent.getProgInt();
+	protected final ProgramInterpreter getProgramInterpreter() {
+		return parent.getProgramInterpreter();
 	}
 	
 	protected final void scheduleAtFixedRate(final TimerTask task, final long delay, final long period) {

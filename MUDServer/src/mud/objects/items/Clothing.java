@@ -5,16 +5,15 @@ import java.util.List;
 
 import mud.ObjectFlag;
 import mud.TypeFlag;
+import mud.interfaces.Equippable;
 import mud.interfaces.Usable;
-import mud.interfaces.Wearable;
 import mud.magic.Spell;
 import mud.misc.Effect;
 import mud.objects.Item;
 import mud.objects.ItemTypes;
 import mud.utils.Utils;
 
-public class Clothing extends Item implements Usable<Clothing>, Wearable<Clothing>
-{
+public class Clothing extends Item implements Usable<Clothing>, Equippable {
 	/**
 	 * Additional stuff that I need to figure into the persistence:
 	 * - modifiers
@@ -32,32 +31,42 @@ public class Clothing extends Item implements Usable<Clothing>, Wearable<Clothin
 	private Effect effect = null;
 	
 	public Clothing() {
-		super(-1, "clothing", "a piece of clothing");
+		//super(-1);
+		this("clothing", "a piece of clothing");
 		
 		/*this.name = "clothing";
 		this.flags = EnumSet.noneOf(ObjectFlag.class);
 		this.desc = "a piece of clothing";
-		this.location = -1;*/
+		this.location = -1;
 		
 		this.item_type = ItemTypes.CLOTHING;
 		this.equip_type = ItemTypes.CLOTHING; // the type of equipment it is
 		
 		this.equipped = false;
-		this.equippable = true;
+		this.equippable = true;*/
 		
 		this.clothing = ClothingType.NONE; // the actual type of clothing
 		this.weight = 0.0;                 // the weight of the clothing
 	}
-
-	public Clothing(final String name, final String description, ClothingType cType, double cWeight)
-	{
-		super(-1, name, description);
+	
+	public Clothing(final String name, final String description) {
+		super(-1);
+		
+		this.name = name;
+		this.flags = EnumSet.noneOf(ObjectFlag.class);
+		this.desc = description;
+		this.location = -1;
 		
 		this.item_type = ItemTypes.CLOTHING;
 		this.equip_type = ItemTypes.CLOTHING; // the type of equipment it is
 		
 		this.equipped = false;
 		this.equippable = true;
+	}
+
+	public Clothing(final String name, final String description, ClothingType cType, double cWeight)
+	{
+		this(name, description);
 		
 		this.clothing = cType;               // the actual type of clothing
 		this.weight = cWeight;               // the weight of the clothing
@@ -139,7 +148,7 @@ public class Clothing extends Item implements Usable<Clothing>, Wearable<Clothin
 	}
 	
 	@Override
-	public Clothing clone() {
+	public Clothing getCopy() {
 		return new Clothing(this);
 	}
 }

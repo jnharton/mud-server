@@ -18,7 +18,7 @@ import mud.utils.Date;
  * @author Jeremy
  *
  */
-public class Quest implements Cloneable {
+public class Quest {
 	private static int lastId = 0;       // the last quest id issued
 	
 	private int id;                      // quest id
@@ -32,6 +32,7 @@ public class Quest implements Cloneable {
 	private boolean isComplete = false;  // is the quest completed? (this should put it in a deletion queue if we delete completed quests)
 	private boolean isIgnored = false;   // is the quest being ignored? (i.e. it shouldn't show up in the main quest list for the player)
 	private boolean isCopy = false;      // is this quest the original object or a copy
+	private boolean isRepeatable = true; // can you repeat the quest 
 	
 	final private ArrayList<Task> tasks; // a list of tasks that must be completed to finish the quest
 	
@@ -292,8 +293,7 @@ public class Quest implements Cloneable {
 		return isIgnored;
 	}
 	
-	@Override
-	public Quest clone() {
+	public Quest getCopy() {
 		return new Quest(this);
 	}
 	

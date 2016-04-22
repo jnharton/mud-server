@@ -108,6 +108,8 @@ public abstract class MUDObject {
 	/**
 	 * MUDObject Copy Constructor
 	 * 
+	 * exists here for what reason?
+	 * 
 	 * @param template
 	 */
 	protected MUDObject(final MUDObject template) {
@@ -342,7 +344,7 @@ public abstract class MUDObject {
 	 * @param c
 	 * @return
 	 */
-	public final <T> T getProperty(final String key, Class<T> c) {
+	public final <T> T getProperty(final String key, Class<T> c) throws ClassCastException {
 		return (T) c.cast(this.properties.get(key));
 	}
 	
@@ -484,7 +486,7 @@ public abstract class MUDObject {
 	}
 	
 	public final TypeFlag getType() {
-		return this.type;
+		return ((this.type != null) ? this.type : TypeFlag.OBJECT);
 	}
 	
 	/* Check Methods */

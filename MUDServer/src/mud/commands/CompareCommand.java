@@ -19,6 +19,10 @@ import mud.objects.Room;
  */
 
 public class CompareCommand extends Command {
+	public CompareCommand() {
+		super("");
+	}
+	
 	@Override
 	public void execute(String arg, Client client) {
 		// get player, room objects to work with

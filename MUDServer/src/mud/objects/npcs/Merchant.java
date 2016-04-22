@@ -1,6 +1,8 @@
 package mud.objects.npcs;
 
+import java.util.List;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Hashtable;
 import java.util.LinkedHashMap;
 import java.util.EnumSet;
@@ -60,10 +62,13 @@ public class Merchant extends NPC implements Vendor {
 
 		this.race = Races.HUMAN;
 		this.pclass = Classes.COMMONER;
+		
+		this.title = tempTitle;
+		this.status = tempPStatus;
 	}
 	
 	@Override
-	public void interact(Player player) {
+	public void interact(final Player player) {
 		super.interact( player ); // make sure we call the super class's method...
 		
 		final Client client = player.getClient();
@@ -88,34 +93,36 @@ public class Merchant extends NPC implements Vendor {
 		parent.send("----------------------------------", client);
 	}
 
-	public ArrayList<Item> list() {
-		return this.stock;
+	public List<Item> list() {
+		return Collections.unmodifiableList(this.stock);
 	}
 
-	public Item buy(String name) {
+	public Item buy(final String name, final Coins payment) {
 		Item bought = null;
 		
-		for (Item item : this.stock) {
-			if (item.getName().equals(name)) {
-				
+		for (final Item item : this.stock) {
+			if( item.getName().equals(name) ) {
 				bought = item;
-				
-				if (this.stock.remove(item)) {
-					return bought;
-				}
+				break;
 			}
+		}
+		
+		if( bought != null ) {
+			this.stock.remove(bought);
+			this.setMoney(payment);
 		}
 		
 		return bought;
 	}
 
-	public void sell(Item item) {
-		// decide if we'll buy it or not
-		// then?
+	public Coins sell(final Item item) {
+		this.stock.add(item);
+		
+		return item.getValue();
 	}
 
-	public boolean hasItem(String name) {
-		for (Item item : this.stock) {
+	public boolean hasItem(final String name) {
+		for (final Item item : this.stock) {
 			if (item.getName().equals(name)) {
 				return true;
 			}
@@ -124,8 +131,8 @@ public class Merchant extends NPC implements Vendor {
 		return false;
 	}
 
-	public Item getItem(String name) {
-		for (Item item : this.stock) {
+	public Item getItem(final String name) {
+		for (final Item item : this.stock) {
 			if (item.getName().equals(name)) {
 				return item;
 			}
@@ -135,7 +142,7 @@ public class Merchant extends NPC implements Vendor {
 	}
 	
 	// hacked in functionality for setting what sort of merchant this is
-	public void setType(String type) {
+	public void setMerchantType(final String type) {
 		this.type = type;
 	}
 	

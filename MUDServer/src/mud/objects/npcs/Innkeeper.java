@@ -60,7 +60,7 @@ public class Innkeeper extends NPC implements Vendor {
 		return this.stock;
 	}
 
-	public Item buy(String name) {
+	public Item buy(final String name, final Coins payment) {
 		Item bought = null;
 
 		for (Item item : this.stock) {
@@ -77,9 +77,8 @@ public class Innkeeper extends NPC implements Vendor {
 		return bought;
 	}
 
-	public void sell(Item item) {
-		// decide if we'll buy it or not
-		// then?
+	public Coins sell(Item item) {
+		return Coins.copper(0);
 	}
 
 	public boolean hasItem(String name) {

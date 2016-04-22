@@ -10,12 +10,19 @@ import mud.net.Client;
 import mud.objects.Player;
 
 public class Console {
-	private MUDServer server;
+	private ConsoleMonitor cm;
 	private Client client;
 	
-	public Console(final MUDServer server, final Client client) {
-		this.server = server;
+	public Console(final Client client) {
 		this.client = client;
+	}
+	
+	public void setMonitor(final ConsoleMonitor cmon) {
+		this.cm = cmon;
+	}
+	
+	public Client getClient() {
+		return this.client;
 	}
 
 	public void processInput(final String _input) {
@@ -33,12 +40,11 @@ public class Console {
 		}
 		
 		if( command.equalsIgnoreCase("help") ) {
-			final List<String> commands = Utils.mkList(
-					"clientinfo", "clients", "gc", "help", "logout", "mem", "who", "quit");
+			final List<String> commands = Utils.mkList( "clientinfo", "clients", "gc", "help", "logout", "mem", "who", "quit");
 			client.writeln("Available Commands: " + Utils.join(commands, ","));
 		}
 		else if( command.equalsIgnoreCase("clientinfo") ) {
-			if( !arg.equals("") ) {
+			/*if( !arg.equals("") ) {
 				int c = Utils.toInt(arg, -1);
 				
 				if( c != -1 ) {
@@ -46,7 +52,7 @@ public class Console {
 					
 					client.writeln("-- " + client1);
 					client.writeln("telnet:  " + client1.usingTelnet());
-					client.writeln("console: " + client1.isConsole());
+					client.writeln("console: " + cm.hasConsole(client1));
 					client.writeln("");
 					
 					try {
@@ -57,13 +63,17 @@ public class Console {
 						npe.printStackTrace();
 					}
 				}
-			}
+			}*/
+			
+			client.writeln("clientinfo: disabled");
 		}
 		else if( command.equalsIgnoreCase("clients") ) {
-			int cn = 0;
+			/*int cn = 0;
+			
 			client.writeln("-- " + Utils.padRight("Clients ", '-', 69));
-			for (Client c : server.getClients()) {
-				final String ident = c.isConsole() ? "Console" : server.loginCheck(c) ? "Logged-In" : "Not Logged-In";
+			
+			for (final Client c : server.getClients()) {
+				final String ident = cm.hasConsole(client) ? "Console" : server.loginCheck(c) ? "Logged-In" : "Not Logged-In";
 				
 				if (c != null) {
 					client.writeln(cn + " " + c.getIPAddress() + " " + c.toString() + " " + ident );
@@ -71,38 +81,25 @@ public class Console {
 
 				//client.writeln(cn + " " + "---.---.---.--- null");
 				cn++;
-			}
+			}*/
+			
+			client.writeln("clientinfo: disabled");
 		}
 		else if( command.equalsIgnoreCase("mem") ) {
-			client.writeln(Utils.checkMem());
+			//client.writeln(Utils.checkMem());
+			client.writeln("mem: disabled");
 		}
 		else if( command.equalsIgnoreCase("gc") ) {
-			System.gc();
-			client.writeln("Garbage Collection requested.");
+			/*System.gc();
+			client.writeln("Garbage Collection requested.");*/
+			client.writeln("gc: disabled");
 		}
 		else if( command.equalsIgnoreCase("logout") ) {
-			/*client.write("Logging out of Console...");
-			client.setConsole(false);
-			client.writeln("Done.");*/
-			
-			client.setConsole(false);
-			
 			client.writeln("Logged out of Console.");
-			
-			client.writeln("");
-			
-			client.write( Utils.mkList(
-					"To connect to your character use 'connect <playername> <password>'",
-					"To connect to your account use 'connect <username> <password>'",
-					"To create a character use 'create <playername> <password>'",
-					"To connect as a guest use 'connect guest'"
-					));
-			client.writeln("");
-			
-			//client.writeln("Mode: " + ser
+			cm.fireEvent(this, "logout");
 		}
 		else if( command.equalsIgnoreCase("who") ) {
-			List<String> output = new LinkedList<String>();
+			/*List<String> output = new LinkedList<String>();
 
 			int n = 0;
 
@@ -145,10 +142,12 @@ public class Console {
 			
 			output.add(n + " players currently online.");
 
-			client.write( output );
+			client.write( output );*/
+			
+			client.writeln("who: disabled");
 		}
 		else {
-			client.writeln("Not Implemented!");
+			client.writeln("No such command.");
 		}
 	}
 }

@@ -24,6 +24,10 @@ public class MailCommand extends Command {
 	private final int shortSUB = 10;
 	private final int shortMSG = 32;
 	
+	public MailCommand() {
+		super("");
+	}
+	
 	@Override
 	public void execute(String arg, Client client) {
 

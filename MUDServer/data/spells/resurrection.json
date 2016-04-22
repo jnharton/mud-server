@@ -1,0 +1,11 @@
+{
+    "class": "cleric",
+    "level": 1,
+    "school": "divine",
+    "manacost": 5,
+    "name": "resurrection",
+    "castmsg": "You cast Resurrection on &target",
+    "effects": [ "revive" ],
+    "reagents": "none",
+    "targets": [ "friend", "enemy" ]
+}

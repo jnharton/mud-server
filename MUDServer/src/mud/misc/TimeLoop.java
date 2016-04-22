@@ -4,6 +4,7 @@ import mud.MUDServer;
 import mud.utils.Date;
 import mud.utils.Message;
 import mud.utils.Time;
+import mud.utils.Utils;
 
 /*
  * Copyright (c) 2012 Jeremy N. Harton
@@ -42,7 +43,6 @@ public class TimeLoop implements Runnable
 	private String celestialBody = "moon";
 
 	private int ms_per_second = 167;
-	//private int ms_per_minute = 10 * 1000;
 
 	private int weather_update_interval = 3; // how many minutes between weather broadcasts
 
@@ -78,13 +78,14 @@ public class TimeLoop implements Runnable
 		while (running) {
 			try {
 				Thread.sleep(ms_per_second);
-				//Thread.sleep(ms_per_minute);
 			}
 			catch(InterruptedException ie) {
 				ie.printStackTrace();
 			}
 
-			if (!paused)    doLoop();
+			if (!paused) doLoop();
+			
+			//System.out.println( Utils.padLeft("" + hour, '0', 2) + ":" + Utils.padLeft("" + minute, '0', 2)+ ":" + Utils.padLeft("" + second, '0', 2));
 		}
 	}
 

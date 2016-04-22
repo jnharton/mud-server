@@ -34,13 +34,13 @@ public class PipBuck extends Item implements Device, ExtraCommands {
 
 	private List<Module> modules;
 	private List<Tag> tags;
-	
+
 	// TODO these should probably be private variables
 	boolean efs_enabled = false;
 
 	private int max_power = 6;
 	private int current_power = 6;
-	
+
 	private static Map<String, Command> commands = new Hashtable<String, Command>() {
 		{
 			put("enable",
@@ -55,7 +55,7 @@ public class PipBuck extends Item implements Device, ExtraCommands {
 							send("Eyes-Forward Sparkle ENABLED", client);
 							return;
 						}
-						
+
 						// get the intended module
 						final Module module = p.getModule(arg);
 
@@ -63,7 +63,7 @@ public class PipBuck extends Item implements Device, ExtraCommands {
 						if( module != null ) {
 							if( module.getPowerReq() <= p.current_power) {
 								send("Enabling Module: " + module.getName(), client);
-								
+
 								p.enableModule( module );
 
 								if( module instanceof ExtraCommands ) {
@@ -95,7 +95,7 @@ public class PipBuck extends Item implements Device, ExtraCommands {
 							send("Eyes-Forward Sparkle DISABLED", client);
 							return;
 						}
-						
+
 						// get the intended module
 						final Module module = p.getModule(arg);
 
@@ -112,7 +112,7 @@ public class PipBuck extends Item implements Device, ExtraCommands {
 							}
 
 							send("Disabling Module: " + module.getName(), client);
-							
+
 							p.disableModule( module );
 						}
 					}
@@ -128,15 +128,15 @@ public class PipBuck extends Item implements Device, ExtraCommands {
 					if( p != null ) {
 						// get modules list
 						final List<Module> modules = p.getModules();
-						
+
 						Module module = null;
 						Item item = null;
-						
+
 						for(final Item item2 : player.getInventory()) {
 							if( item2 != null ) {
 								if(item2 instanceof Module) {
 									debug("Found a Module - \'" + item2.getName() + "\'");
-									
+
 									item = item2;
 									module = (Module) item;
 
@@ -147,7 +147,7 @@ public class PipBuck extends Item implements Device, ExtraCommands {
 								else debug("Not a Module - \'" + item2.getName() + "\'");
 							}
 						}
-						
+
 						player.getInventory().remove( item );
 
 						// slot module
@@ -190,7 +190,7 @@ public class PipBuck extends Item implements Device, ExtraCommands {
 
 					if( p != null ) {
 						final List<Module> modules = p.getModules();
-						
+
 						if( modules.size() > 0 ) {
 							send("Modules", client);
 							for(Module module : modules) { send(module.getName(), client); }
@@ -207,60 +207,73 @@ public class PipBuck extends Item implements Device, ExtraCommands {
 					final PipBuck p = PipBuck.getPipBuck(player); // get pipbuck
 
 					if( p != null ) {
-						// get the current amount of ambient radiation (rads/sec)
-						int rads = 0;
+						if( arg.equals("") ) {
+							// get the current amount of ambient radiation (rads/sec)
+							int rads = 0;
 
-						final Object value = getRoom( player.getLocation() ).getProperty("_game/rads");
+							final Object value = getRoom( player.getLocation() ).getProperty("_game/rads");
 
-						if( value != null) rads = Integer.parseInt((String) value);
-						
-						final StringBuilder sb = new StringBuilder();
-						
-						// TODO really need a nice utility function for this (did it elsewhere in main class I think)
-						final Time game_time = getGameTime();
-						
-						int hours = game_time.hour;
-						int minutes = game_time.minute;
-						
-						if( hours < 9 ) sb.append(" " + hours);
-						else            sb.append(hours);
-						
-						sb.append(":");
-						
-						if( minutes < 9 ) sb.append("0" + minutes);
-						else            sb.append(minutes);
+							if( value != null) rads = Integer.parseInt((String) value);
 
-						send("Looking at your Pipbuck, you note that: ", client);
-						
-						send(Utils.padRight("", '-', 40), client);
-						
-						send("the time is " + sb.toString(), client);
-						send("current radiation exposure is: " + rads + " rads/sec.", client);
-						
-						sb.delete(0, sb.length());
+							final StringBuilder sb = new StringBuilder();
 
-						for(final Module module : p.getModules()) {
-							if( module.isEnabled() ) sb.append( colors(module.getName(), "green") + ", " );
-							else                     sb.append( colors(module.getName(), "yellow") + ", " );
+							// TODO really need a nice utility function for this (did it elsewhere in main class I think)
+							final Time game_time = getGameTime();
+
+							int hours = game_time.hour;
+							int minutes = game_time.minute;
+
+							if( hours < 9 ) sb.append(" " + hours);
+							else            sb.append(hours);
+
+							sb.append(":");
+
+							if( minutes < 9 ) sb.append("0" + minutes);
+							else            sb.append(minutes);
+							
+							// TODO consider using String.format for time here
+
+							send("Looking at your Pipbuck, you note that: ", client);
+
+							send(Utils.padRight("", '-', 40), client);
+
+							send("the time is " + sb.toString(), client);
+							send("current radiation exposure is: " + rads + " rads/sec.", client);
+
+							sb.delete(0, sb.length());
+
+							for(final Module module : p.getModules()) {
+								if( module.isEnabled() ) sb.append( colors(module.getName(), "green") + ", " );
+								else                     sb.append( colors(module.getName(), "yellow") + ", " );
+							}
+
+							if( sb.length() > 2 ) sb.delete(sb.length() - 2, sb.length());
+
+							send("Currently slotted modules: " + sb.toString(), client);
+
+							final int curr_p = p.getPower();
+							final int max_p = p.getMaxPower();
+
+							sb.delete(0, sb.length());
+
+							sb.append( Utils.padRight("",  '|', curr_p) );
+							sb.append( Utils.padRight("", ' ', max_p - curr_p) );
+
+							send("Remaining Power: [" + colors(sb.toString(), "green") + "]", client);
+
+							sb.delete(0, sb.length());
+
+							send(Utils.padRight("", '-', 40), client);
 						}
-
-						if( sb.length() > 2 ) sb.delete(sb.length() - 2, sb.length());
-
-						send("Currently slotted modules: " + sb.toString(), client);
-						
-						final int curr_p = p.getPower();
-						final int max_p = p.getMaxPower();
-						
-						sb.delete(0, sb.length());
-						
-						sb.append( Utils.padRight("",  '|', curr_p) );
-						sb.append( Utils.padRight("", ' ', max_p - curr_p) );
-						
-						send("Remaining Power: [" + colors(sb.toString(), "green") + "]", client);
-						
-						sb.delete(0, sb.length());
-						
-						send(Utils.padRight("", '-', 40), client);
+						else if( arg.equalsIgnoreCase("items") ) {
+							send(Utils.padRight("", '-', 40), client);
+							
+							for(final Item item : player.getInventory()) {
+								send(item.getName(), client);
+							}
+							
+							send(Utils.padRight("", '-', 40), client);
+						}
 					}
 				}
 
@@ -272,31 +285,31 @@ public class PipBuck extends Item implements Device, ExtraCommands {
 				public void execute(final String arg, final Client client) {
 					final Player player = getPlayer(client);      // get player
 					final PipBuck p = PipBuck.getPipBuck(player); // get pipbuck
-					
+
 					if( p != null ) {
 						if( p.efs_enabled ) {
 							// the idea here is to look for living things and/or pipbuck tags and mark them as:
 							// hostile, neutral, friendly (red, yellow, green)
-							
+
 							final Room room = getRoom(player);
-							
+
 							// get a list of all living creatures in range
 							final List list = new LinkedList();
-							
+
 							// for each creature decide if they are a threat
 							for(final Object obj : list) {
 							}
-							
+
 							// it'd be nice to use tags to see if we know/know of any of the identified creatures
-							
+
 							// scan for other pipbucks
-							
+
 							// check against known ids (tags are set/acquired and associated with device ids)
 							//for(final Tag tag : p.tags) {}
 						}
 					}
 				}
-				
+
 				public int getAccessLevel() { return Constants.USER; }
 
 			});
@@ -331,11 +344,11 @@ public class PipBuck extends Item implements Device, ExtraCommands {
 		this.fs = template.fs; // need to give FileSystem a clone method
 		this.modules = new LinkedList<Module>();
 	}
-	
+
 	/*public String getName() {
 		return this.name;
 	}*/
-	
+
 	public String getDeviceName() {
 		return "";
 	}
@@ -373,17 +386,17 @@ public class PipBuck extends Item implements Device, ExtraCommands {
 
 		return null;
 	}
-	
+
 	@Override
 	public List<Module> getModules() {
 		return this.modules;
 	}
-	
+
 	private void enableModule(final Module module) {
 		current_power -= module.getPowerReq();
 		module.enable();
 	}
-	
+
 	private void disableModule(final Module module) {
 		module.disable();
 		current_power += module.getPowerReq();
@@ -395,45 +408,45 @@ public class PipBuck extends Item implements Device, ExtraCommands {
 		//temp.putAll( commands );
 		return commands;
 	}
-	
+
 	public int getPower() {
 		return this.current_power;
 	}
-	
+
 	public int getMaxPower() {
 		return this.max_power;
 	}
-	
+
 	public void addTag(final Tag tag) {
 		this.tags.add(tag);
 	}
-	
+
 	public void removeTag(final Tag tag) {
 		this.tags.remove(tag);
 	}
-	
+
 	public void setTag(final String tag) {
 		// test for appropriate format
 		if( tag.length() == 10 ) {
 			final String alpha = tag.substring(0, 3);
 			final String numeric = tag.substring(3, tag.length());
-			
+
 			for(final char ch : alpha.toCharArray()) {
 				if( !Character.isLetter(ch) ) return;
 			}
-			
+
 			for(final char ch : numeric.toCharArray()) {
 				if( !Character.isDigit(ch) ) return;
 			}
-			
+
 			this.tag = new Tag(tag);
 		}
 	}
-	
+
 	public Tag getTag() {
 		return this.tag;
 	}
-	
+
 	@Override
 	public String toString() {
 		return name + "(" + type.toString() + ")";

@@ -24,6 +24,10 @@ public class TeleportCommand extends Command {
 	// @tel <dbref> -> '@tel 4'
 	// @tel <object>=<dbref> -> '@tel Iridan=4'
 	
+	public TeleportCommand() {
+		super("");
+	}
+	
 	@Override
 	public void execute(String arg, Client client) {
 		final Player player = getPlayer(client);

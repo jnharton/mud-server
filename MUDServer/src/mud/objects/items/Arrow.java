@@ -33,6 +33,19 @@ public class Arrow extends Item implements Projectile<Arrow>, Stackable<Arrow> {
 		this.arrow = null;
 	}
 	
+	protected Arrow(Arrow template) {
+		super(template);
+		
+		//this.type = TypeFlag.ITEM;
+		this.name = template.name;
+		this.desc = template.desc;
+		this.location = template.location;
+		this.flags = EnumSet.noneOf(ObjectFlag.class);
+		this.item_type = ItemTypes.ARROW;
+		
+		this.arrow = null;
+	}
+	
 	public int size() {
 		return stackSize();
 	}
@@ -138,5 +151,9 @@ public class Arrow extends Item implements Projectile<Arrow>, Stackable<Arrow> {
 		 */
 		
 		return Utils.join(output, "#");
+	}
+	
+	public Arrow getCopy() {
+		return new Arrow(this);
 	}
 }

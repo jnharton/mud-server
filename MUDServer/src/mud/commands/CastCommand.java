@@ -28,6 +28,22 @@ import mud.utils.SpellTimer;
  */
 
 public class CastCommand extends Command {
+	/*
+	 * This stuff here places you in the interactive spell
+	 * editor, it should not do so normally, or for every
+	 * spell. the editor should only be launched under
+	 * certain conditions, such as:
+	 * 
+	 * Constants.ST_EDIT
+	 * Editors.INTCAST
+	 * 
+	 * NOTE: not used this way anymore
+	 */
+	
+	public CastCommand() {
+		super("");
+	}
+	
 	@Override
 	public void execute(final String spellName, final Client client) {
 		final Player player = getPlayer(client);

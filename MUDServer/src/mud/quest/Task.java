@@ -26,7 +26,7 @@ public abstract class Task {
 	
 	protected boolean isComplete = false; // is the task complete?
 
-	public Data objective = null;
+	protected Data objective = null;
 	
 	/**
 	 * Create a task with a description and task type.
@@ -62,9 +62,13 @@ public abstract class Task {
 	 * @param template
 	 */
 	public Task(Task template) {
-		this.description = template.description;
 		this.taskType = template.taskType;
+		
+		this.name = template.name;
+		this.description = template.description;
 		this.location = template.location;
+		
+		this.objective = template.objective;
 
 		/*if (template.taskType == TaskType.KILL) {
 			this.toKill = template.toKill;
@@ -82,6 +86,10 @@ public abstract class Task {
 
 	public void setId(int newId) {
 		this.id = newId;
+	}
+
+	public String getName() {
+		return this.name;
 	}
 
 	public String getDescription() {
@@ -133,6 +141,10 @@ public abstract class Task {
 
 	public boolean isComplete() {
 		return this.isComplete;
+	}
+	
+	public Data getObjective() {
+		return this.objective;
 	}
 	
 	@Override

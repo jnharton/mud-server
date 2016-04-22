@@ -1,5 +1,6 @@
-package mud;
+package mud.commands;
 
+import mud.Command;
 import mud.misc.ProgramInterpreter;
 import mud.misc.Script;
 import mud.net.Client;
@@ -33,9 +34,22 @@ public class ScriptedCommand extends Command {
 		this.pgmi = pgmi;
 		this.script = script;
 	}
-	
+
 	public void execute(final String arg, final Client client) {
-		this.pgmi.interpret(script, getPlayer(client), null);
+		String result = "";
+		
+		// make sure we have exclusive control of the interpreter?
+		synchronized(this.pgmi) {
+			this.pgmi.addVar("arg", arg);
+			
+			//final String newScript = this.script.getText().replace("{&arg}", arg);
+			//final String result = this.pgmi.interpret(script, getPlayer(client), null);
+			result = this.pgmi.interpret(script, getPlayer(client), null);
+			
+			this.pgmi.delVar("arg");
+		}
+
+		send(result, client);
 	}
 	
 	public void setAccessLevel(int newAccessLevel) {

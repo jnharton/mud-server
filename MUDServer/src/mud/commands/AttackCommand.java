@@ -29,6 +29,10 @@ import mud.utils.Utils;
  */
 
 public class AttackCommand extends Command {
+	public AttackCommand() {
+		super("");
+	}
+	
 	@Override
 	public void execute(String arg, Client client) {
 		final Player player = getPlayer(client);
@@ -168,7 +172,11 @@ public class AttackCommand extends Command {
 								}
 							}
 							else if(target instanceof Item) {
-								((Item) target).modifyWear( damage );
+								final Item item = (Item) target;
+								
+								int resistance = 5;
+								
+								item.modifyWear( damage - resistance ); 
 							}
 							else if(target instanceof Thing) {
 								// ?

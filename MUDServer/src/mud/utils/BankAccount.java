@@ -86,15 +86,15 @@ public class BankAccount {
 		 * possibly insecure, if we can modify it after
 		 * being returned and actually change the one in the bank
 		 */
-		return this.balance;
+		return Coins.copper( this.balance.numOfCopper() );
 	}
 	
 	/**
 	 * 
 	 * @param deposit
 	 */
-	public void deposit(Coins deposit) {
-		this.balance.add( deposit );
+	public void deposit(final Coins deposit) {
+		this.balance = this.balance.add( deposit );
 	}
 	
 	/**
@@ -102,7 +102,8 @@ public class BankAccount {
 	 * @param withdrawal
 	 * @return
 	 */
-	public Coins withdraw(Coins withdrawal) {
-		return this.balance.subtractCopper( withdrawal.numOfCopper() );
+	public Coins withdraw(final Coins withdrawal) {
+		this.balance = this.balance.subtract(withdrawal);
+		return withdrawal;
 	}
 }

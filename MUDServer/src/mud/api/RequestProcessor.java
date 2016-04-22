@@ -22,6 +22,8 @@ public class RequestProcessor implements Runnable {
 	private final APIServer as;
 	private final MUDServerAPI msa;
 	
+	private final boolean debug_enabled = false;
+	
 	protected RequestProcessor(APIServer parent, MUDServerAPI mudSrv) {
 		as = parent;
 		msa = mudSrv;
@@ -32,34 +34,40 @@ public class RequestProcessor implements Runnable {
 		running = true;
 		
 		while( running ) {
-			Request request = as.requests.poll();
+			final Request request = as.requests.poll();
 
 			if(request != null) {
 				if( as.validate( request.getAPIKey() ) ) {
-					System.out.println("API Key is valid!");
+					debug("API Key is valid!");
 					
-					System.out.println("Processing Request...");
+					debug("Processing Request...");
+					
 					processRequest(request);
-					System.out.println("Done");
+					
+					debug("Done");
 				}
 				else {
-					System.out.println("API Key is invalid!");
+					debug("API Key is invalid!");
+					
 					request.response = "APIServer> Invalid API Key!";
 				}
 				
 				as.processed.add(request);
-				System.out.println("Added processed request to processed queue!");
+				
+				debug("Added processed request to processed queue!");
 			}
 		}
 	}
 	
-	private void processRequest(Request request) {			
+	private void processRequest(final Request request) {			
 		if(request.getType() == RequestType.DATA) {
 			if(request.getParam().equals("who")) {
-				List<String> responseData = new LinkedList<String>();
+				final List<String> responseData = new LinkedList<String>();
+				
 				for( Player p : msa.getPlayers()) {
 					responseData.add("P(" + p.getName() + "," + p.getPClass().getAbrv() + "," + p.getLevel() + ")"); 
 				}
+				
 				request.response = "response-data " + "for:" + request.getAPIKey() + " " + responseData; 
 			}
 			else {
@@ -72,5 +80,11 @@ public class RequestProcessor implements Runnable {
 
 	public void stop() {
 		this.running = false;
+	}
+	
+	private void debug(final String s) {
+		if( debug_enabled ) {
+			System.out.println(s);
+		}
 	}
 }

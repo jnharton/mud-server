@@ -9,6 +9,9 @@ public class WeaponType {
 	
 	public enum DamageType { PIERCING, SLASHING };
 	
+	public static final int MELEE = 0;
+	public static final int RANGED = 1;
+	
 	private int id;
 	private String name;
 	private double weight;         // base weapon weight

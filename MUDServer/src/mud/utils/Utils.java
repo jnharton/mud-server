@@ -165,12 +165,12 @@ public final class Utils {
 
 			return output.toArray(new String[0]);
 		}
-		catch(FileNotFoundException fnfe) {
+		catch(final FileNotFoundException fnfe) {
 			System.out.println("Error: file not found. (FileNotFoundException)");
 			System.out.println("--- Stack Trace ---");
 			fnfe.printStackTrace();
 		}
-		catch(IOException ioe) {
+		catch(final IOException ioe) {
 			ioe.printStackTrace();
 		}
 
@@ -1034,4 +1034,14 @@ public final class Utils {
 
 		return "Memory: " + in_use + " MB / " + max + " MB";
 	}
+	
+	/*public static boolean getBoolean(final int value) {
+		if(value <= 0) return false;
+		else           return true;
+	}
+	
+	public static boolean getBoolean(final String value) {
+		if( Utils.mkList("t", "T", "true", "True", "TRUE").contains(value) )         return true;
+		else if (Utils.mkList("f", "F", "false", "False", "FALSE").contains(value) ) return false;
+	}*/
 }

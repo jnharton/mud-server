@@ -5,8 +5,9 @@ import java.util.EnumSet;
 import java.util.List;
 
 import mud.TypeFlag;
+import mud.interfaces.Equippable;
+import mud.interfaces.MagicItem;
 import mud.interfaces.Usable;
-import mud.interfaces.Wearable;
 import mud.magic.Spell;
 import mud.misc.Effect;
 import mud.misc.SlotTypes;
@@ -17,48 +18,43 @@ import mud.objects.ItemTypes;
 import mud.utils.Utils;
 import mud.ObjectFlag;
 
-public class Jewelry extends Item implements Usable<Jewelry>, Wearable<Jewelry>
-{
-	// ex. new Jewelry(ItemType.RING, "Ring of Invisibility", "A medium-sized gold ring with a smooth, unmarked surface.", new Effect("invisibility"))
+public class Jewelry extends Item implements MagicItem, Usable<Jewelry>, Equippable {
 	// types - necklace, bracelet, ring, earring, tiara
-	//String type = "";
+	
+	// ex. new Jewelry(ItemType.RING, "Ring of Invisibility", "A medium-sized gold ring with a smooth, unmarked surface.", new Effect("invisibility"))
+	// ex. new Jewelry("Ring of Invisibility", "A medium-sized gold ring with a smooth, unmarked surface.", ItemType.RING, new Effect("invisibility"))
 
 	public Effect effect;
 	
 	public Jewelry(final ItemType jType, final String jName, final String jDesc, final Effect jEffect) {
-		super(-1);
+		//super(-1);
+		super(-1, jName, jDesc);
 		
-		this.type = TypeFlag.ITEM;
-		this.name = jName;
-		this.desc = jDesc;
-		this.flags = EnumSet.noneOf(ObjectFlag.class);
-		this.location = 8;
+		this.item_type = jType;
+		this.equip_type = jType;
 
 		this.equippable = true;
+		this.equipped = false;
 
 		this.effect = jEffect;
 		this.effect.setPermanent(true);
+		
+		this.weight = 1.0;
 	}
 
 	public Jewelry(final ItemType jType, final String jName, final String jDesc, final String jEffectString) {
 		this(jType, jName, jDesc, new Effect(jEffectString));
 	}
-
-	public Jewelry(String jType, double jWeight)
-	{
-		super(-1);
-		this.type = TypeFlag.ITEM;
-		this.name = "Ring of Invisibility";
-		this.desc = "A medium-sized gold ring with a smooth, unmarked surface.";
-		this.flags = EnumSet.noneOf(ObjectFlag.class);
-		this.location = 8;
-
-		this.equippable = true;
-		this.equip_type = ItemTypes.RING; // the type of equipment it is
-		//this.type = jType;               // the actual type of jewelry
-		this.weight = jWeight;           // the weight of the jewelry
-	}
 	
+	/**
+	 * Object Loading Constructor
+	 * 
+	 * @param tempDBREF
+	 * @param tempName
+	 * @param tempFlags
+	 * @param tempDesc
+	 * @param tempLoc
+	 */
 	public Jewelry(final int tempDBREF, final String tempName, final EnumSet<ObjectFlag> tempFlags, final String tempDesc, final int tempLoc)
 	{
 		super(tempDBREF, tempName, tempFlags, tempDesc, tempLoc);
@@ -71,7 +67,7 @@ public class Jewelry extends Item implements Usable<Jewelry>, Wearable<Jewelry>
 		this.equip_type = ItemTypes.RING;
 		this.slot_type = SlotTypes.FINGER;
 	}
-
+	
 	public void use(String arg, Client client) {
 		/*System.out.println("[Jewelry->Use]");
 		if (this.equip_type == ItemTypes.RING) {
@@ -80,31 +76,23 @@ public class Jewelry extends Item implements Usable<Jewelry>, Wearable<Jewelry>
 			System.out.println(parent.applyEffect(player, effect));
 		}*/
 	}
-
-	@Override
-	public String getName() {
-		return this.name;
-	}
-
-	public ArrayList<String> look() {
-		return null;
-	}
-
-	@Override
+	
 	public Spell getSpell() {
 		// TODO Auto-generated method stub
 		return null;
 	}
-
-	@Override
+	
 	public List<Spell> getSpells() {
 		// TODO Auto-generated method stub
 		return null;
 	}
-
-	@Override
+	
 	public Effect getEffect() {
 		return this.effect;
+	}
+	
+	public void setEffect(final Effect newEffect) {
+		this.effect = newEffect;
 	}
 
 	public String toDB() {

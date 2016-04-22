@@ -57,27 +57,48 @@ public class Spell
 	
 	public enum RangeClass { CONICAL, LINEAR, PLANAR, SPHERICAL }
 	
-	protected int spellLevel;
-	protected RangeType rangeT;
-	protected RangeClass rangeC;
-	protected int castTime; // time taken to cast the spell
-	protected int duration; // duration of the spell 
-	protected int range;    // range of the spell in feet (spherical, radius length?)
+	protected String name;
+	
+	protected SpellType sType;
 	protected School school;
 	protected List<SpellClass> sc;
-	protected SpellType sType;
-	protected String name, castMsg;
-	protected List<Effect> effects;  // an arraylist of spell effects (e.g. invisibility, acid resistance)
-	protected Map<String, Reagent> reagents; // a matched set of reagent:quantity spell requirements?
+	
+	protected int spellLevel;
+	protected int castTime; // time taken to cast the spell
+	protected int duration; // duration of the spell
+	protected int manaCost; 
+	
+	protected int range;    // range of the spell in feet (spherical, radius length?)
+	protected RangeType rangeT;
+	protected RangeClass rangeC;
+	
+	protected String castMsg;
+	
+	protected List<Effect> effects;          // list of spell effects
+	protected Map<String, Reagent> reagents; // map of spell requirements (reagent, quantity)
 	
 	public int target = 0;
-
-	protected int manaCost = 5;
 	
 	public Spell() {
-		effects = new ArrayList<Effect>();
-		reagents = new HashMap<String, Reagent>();
-		sc = new LinkedList<SpellClass>();
+		this.name = "NoName";
+		
+		this.sType = SpellType.ARCANE;
+		this.school = School.OTHER;
+		this.sc = new LinkedList<SpellClass>();
+		
+		this.spellLevel = 0;
+		this.castTime = 1;
+		this.manaCost = 5;
+		this.duration = 5;
+		
+		this.rangeT = RangeType.STD;
+		this.rangeC = RangeClass.LINEAR;
+		this.range = 3;
+		
+		this.castMsg = "You cast " + this.name + " at &target.";
+		
+		this.effects = new ArrayList<Effect>();
+		this.reagents = new HashMap<String, Reagent>();
 	}
 
 	public Spell(String tName, School tSchool, String tCastMsg, ArrayList<Effect> tEffects)

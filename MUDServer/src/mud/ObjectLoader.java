@@ -1,5 +1,6 @@
 package mud;
 
+import java.io.File;
 import java.util.*;
 
 import mud.objects.*;
@@ -337,10 +338,15 @@ public class ObjectLoader {
 
 						final Zone zone = parent.getZone(zoneId);
 
-						System.out.println((zone == null));
-
-						room.setZone(parent.getZone(zoneId));
-						parent.getZone(zoneId).addRoom(room);
+						System.out.println("Zone is NULL: " + (zone == null));
+						
+						if( zone != null ) {
+							room.setZone(zone);
+							zone.addRoom(room);
+							
+							//room.setZone(parent.getZone(zoneId));
+							//parent.getZone(zoneId).addRoom(room);
+						}
 					}
 
 					if (room.getRoomType().equals(RoomType.OUTSIDE)) {
@@ -524,46 +530,50 @@ public class ObjectLoader {
 	 * @return a player object
 	 */
 	private NPC loadNPC(String npcData) {
-
-		String[] attr = npcData.split("#");
+		final String[] attr = npcData.split("#");
 
 		int oDBRef = 0, oLocation = 0;
 		String oName = "", oFlags = "", oDesc = "";
-		String[] os, om;
+		Integer[] oStats;
+		int[] oMoney;
 
 		int len = attr[2].length();
 
-		oDBRef = Integer.parseInt(attr[0]); // 0 - npc database reference number
-		oName = attr[1]; // 1 - npc name
-		oFlags = attr[2].substring(1, len); // 2 - npc flags
-		oDesc = attr[3]; // 3 - npc description
+		oDBRef = Integer.parseInt(attr[0]);    // 0 - npc database reference number
+		oName = attr[1];                       // 1 - npc name
+		oFlags = attr[2].substring(1, len);    // 2 - npc flags
+		oDesc = attr[3];                       // 3 - npc description
 		oLocation = Integer.parseInt(attr[4]); // 4 - npc location
-
+		
 		// 5 - npc doesn't have a password
-		os = attr[6].split(","); // 6 - npc stats
-		om = attr[7].split(","); // 7 - npc money
-		int access; // 8 - npc permissions
-		int raceNum; // 9 - npc race number (enum ordinal)
-		int classNum; // 10 - npc class number (enum ordinal)
-
+		
+		oStats = Utils.stringsToIntegers( attr[6].split(",") ); // 6 - npc stats
+		oMoney = Utils.stringsToInts( attr[7].split(",") );     // 7 - npc money
+		
 		/*
-		 * debug("Database Reference Number: " + oDBRef); debug("Name: " +
-		 * oName); debug("Flags: " + oFlags); debug("Description: " + oDesc);
-		 * debug("Location: " + oLocation);
-		 */
-
-		Integer[] oStats = Utils.stringsToIntegers(os);
-		int[] oMoney = Utils.stringsToInts(om);
-
-		NPC npc = new NPC(oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags),
-				oDesc, oLocation, "", "IC", oStats, Coins.fromArray(oMoney));
+		debug("Database Reference Number: " + oDBRef);
+		debug("Name: " + oName);
+		debug("Flags: " + oFlags);
+		debug("Description: " + oDesc);
+		debug("Location: " + oLocation);
+		*/
+		
+		NPC npc = new NPC(oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), oDesc, oLocation, "", "IC", oStats, Coins.fromArray(oMoney));
+		
+		int access;   // 8 - npc permissions
+		int raceNum;  // 9 - npc race number (enum ordinal)
+		int classNum; // 10 - npc class number (enum ordinal)
+		
+		// Set NPC Access
+		npc.setAccess(Constants.USER);
 
 		// Set NPC Race
 		try {
 			raceNum = Integer.parseInt(attr[9]);
 			//npc.setRace(Races.getRace(raceNum));
 			npc.setRace(parent.getRace(raceNum));
-		} catch (NumberFormatException nfe) {
+		}
+		catch (NumberFormatException nfe) {
 			nfe.printStackTrace();
 			npc.setRace(Races.NONE);
 		}
@@ -572,10 +582,13 @@ public class ObjectLoader {
 		try {
 			classNum = Integer.parseInt(attr[10]);
 			npc.setPClass(Classes.getClass(classNum));
-		} catch (NumberFormatException nfe) {
+		}
+		catch (NumberFormatException nfe) {
 			nfe.printStackTrace();
 			npc.setPClass(Classes.NONE);
 		}
+		
+		npc.setStatus(attr[11]); // 11 - npc status
 		
 		// mark ownership
 		npc.setOwner( npc );
@@ -761,6 +774,68 @@ public class ObjectLoader {
 			
 			return item;
 		}
+	}
+	
+	private Book loadBook(final String bookName) {
+		//final String bookFile = DATA_DIR + "\\book\\" + bookName + ".book";
+		final String bookFile = "";
+
+		boolean header = true;
+		
+		boolean page = false;
+
+		File file;
+		List<String> strings;
+
+		Book book;
+
+		String author = "";
+		String title = "";
+		String desc = "";
+		Integer pages = 0;
+		
+		// -----
+
+		file = new File(bookFile);
+
+		strings = Utils.loadStrings(file);
+
+		for(final String s : strings) {
+			if( header ) {
+				if( s.charAt(0) == '#' ) {
+					String[] temp = s.substring(1).split(":");
+
+					if( temp[0].equalsIgnoreCase("author") ) {
+						author = temp[1];
+					}
+					else if( temp[0].equalsIgnoreCase("title") ) {
+						title = temp[1];
+					}
+					else if( temp[0].equalsIgnoreCase("desc") ) {
+						desc = temp[1];
+					}
+					else if( temp[0].equalsIgnoreCase("pages") ) {
+						pages = Utils.toInt(temp[1], 0);
+						
+						header = false;
+					}
+				}
+				
+				if( !header ) {
+					book = new Book(title, author, pages);
+					
+					book.setDesc(desc);
+				}
+			}
+			else {
+				if( page ) {
+				}
+				else {
+				}
+			}
+		}
+		
+		return null;
 	}
 	
 	private ItemType getItemType(final int typeId) {

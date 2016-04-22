@@ -15,7 +15,7 @@ final class Condition {
 	private Integer value1;
 	private Integer value2;
 	
-	public Condition(String comparison, Integer value1, Integer value2) {
+	public Condition(final String comparison, final  Integer value1, final  Integer value2) {
 		this.comparison = comparison;
 		this.value1 = value1;
 		this.value2 = value2;

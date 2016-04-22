@@ -13,6 +13,10 @@ import mud.objects.Player;
 import mud.utils.Utils;
 
 public final class EquipCommand extends Command {
+	public EquipCommand() {
+		super("");
+	}
+	
 	@Override
 	public void execute(String arg, Client client) {
 		final Player player = getPlayer(client);

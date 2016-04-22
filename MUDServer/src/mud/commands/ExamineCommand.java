@@ -20,6 +20,10 @@ import mud.utils.Utils;
  */
 
 public class ExamineCommand extends Command {
+	public ExamineCommand() {
+		super("");
+	}
+	
 	@Override
 	public void execute(String arg, Client client) {
 		if ( arg.equals("") || arg.equals("here") ) {

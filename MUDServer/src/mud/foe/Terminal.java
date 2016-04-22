@@ -23,6 +23,7 @@ import mud.foe.misc.Module;
 import mud.interfaces.ExtraCommands;
 import mud.net.Client;
 import mud.objects.Thing;
+import mud.utils.Pair;
 import mud.utils.Time;
 import mud.utils.Utils;
 import mud.utils.loginData;
@@ -78,7 +79,9 @@ public class Terminal extends Thing implements Device, ExtraCommands {
 	// Firmware/Software?
 	private FileSystem fs;
 	private Hashtable<String, User> users;             // no null values
-
+	
+	private Time localTime;
+	
 	// I/O
 	private Queue<String> input;
 	private Queue<String> output;
@@ -100,6 +103,11 @@ public class Terminal extends Thing implements Device, ExtraCommands {
 
 	// misc?
 	private loginData ldat;
+	
+	private String input_state = "";
+	private Pair<String> action = null;
+	private String data = "";
+	
 	private static String PASSWORD = "CMC-ARE-AWESOME";
 
 	/*
@@ -181,6 +189,7 @@ public class Terminal extends Thing implements Device, ExtraCommands {
 	}
 
 	public void init() {
+		// initialize port list and device map
 		ports = new LinkedList<Port>();
 		devices = new Hashtable<Device, Port>();
 
@@ -188,14 +197,19 @@ public class Terminal extends Thing implements Device, ExtraCommands {
 		users = new Hashtable<String, User>();
 
 		screen_buffer = new LinkedList<String>();
-
+		
+		// initialize input and output 
 		input = new LinkedList<String>();
 		output = new LinkedList<String>();
-
+		
+		// start running, not paused
 		running = true;
 		paused = false;
-
+		
+		// add users
 		addUser("admin", PASSWORD);
+		
+		users.get("admin").setPerm(4);
 	}
 
 	public void exec() {
@@ -258,6 +272,10 @@ public class Terminal extends Thing implements Device, ExtraCommands {
 			devices.remove( device );
 		}
 	}
+	
+	public boolean isDeviceConnected( Device device ) {
+		return devices.containsKey( device );
+	}
 
 	private Port getPort(final DeviceType deviceType) {
 		for(final Port port : ports) {
@@ -295,14 +313,24 @@ public class Terminal extends Thing implements Device, ExtraCommands {
 		return Arrays.asList( (String[]) screen_buffer.toArray() );
 	}
 
-	public boolean isDeviceConnected( Device device ) {
-		return devices.containsKey( device );
-	}
-
-
 	/* Terminal Interaction Stuff */
 
 	public int processInput(final String input) {
+		/*
+		 * -- commands
+		 * cd     change current directory
+		 * copy   copy a file
+		 * delete delete a file
+		 * done   stop using the terminal (META)
+		 * help   print help information
+		 * ls     list files
+		 * mkdir  make a new directory
+		 * logout logout of the current user
+		 * pwd    print working directory
+		 * time   show the current time
+		 * date?  show the current date
+		 * view   print a file out to the console
+		 */
 		String[] args = input.split(" ");
 
 		String cmd = "";
@@ -310,7 +338,7 @@ public class Terminal extends Thing implements Device, ExtraCommands {
 
 		if( args.length > 1 ) {
 			cmd = args[0];
-			arg = args[1];
+			arg = Utils.join( Arrays.asList(args).subList(1, args.length), " ");
 		}
 		else cmd = input;
 
@@ -346,23 +374,42 @@ public class Terminal extends Thing implements Device, ExtraCommands {
 			}
 		}
 		else if( login_state == Login.LOGGED_IN ) {
-			if( cmd.equalsIgnoreCase("cd") ) {
+			if( input_state == "confirm" ) {
+				if( input.equalsIgnoreCase("y") || input.equalsIgnoreCase("yes") ) {
+					doAction(action);
+					action = null;
+					input_state = "";
+				}
+				else if( input.equalsIgnoreCase("n") || input.equalsIgnoreCase("no") ) {
+					action = null;
+					input_state = "";
+				}
+			}
+			else if( cmd.equalsIgnoreCase("cd") ) {
 				if( current_dir.equals("/") ) {
-					if( !arg.equals("") ) {
-						if( fs.hasDir(arg) ) current_dir = arg;
+					if( !arg.equals("") && !arg.startsWith("../") ) {
+						if( fs.hasDir(arg) ) current_dir = current_dir + arg;
 						else                 writeToScreen( "Invalid Directory." );
 					}
 				}
 				else if( arg.equals("..") ) current_dir = "/";
+				else if( arg.equals(".") )  current_dir = "/" + current_user + "/";
 
 				writeToScreen( "Changed directory to " + current_dir );
 			}
+			else if ( cmd.equalsIgnoreCase("new") ) {
+				// commence edit session?
+				// create a new file?
+			}
 			else if( cmd.equalsIgnoreCase("copy") ) { // ex. copy admin userguide test
-				String[] params = arg.split(",");
+				final String[] params = arg.split(",");
 
 				if( params.length == 3 ) {
 					fs.copyFile(params[0], params[1], params[2]);
 					writeToScreen( "'" + params[1] + "' copied to " + params[2] + " from " + params[0] + "." );
+				}
+				else {
+					writeToScreen("COPY: Error, insufficient parameters.");
 				}
 			}
 			else if( cmd.equalsIgnoreCase("delete") ) {
@@ -370,7 +417,7 @@ public class Terminal extends Thing implements Device, ExtraCommands {
 
 				if( params.length == 2 ) {
 					fs.deleteFile(params[0], params[1]);
-					writeToScreen( "'" + params[1] + "' deleted." );
+					writeToScreen( "file deleted ('" + params[1] + "')" );
 				}
 				else if( params.length == 1) {
 					fs.deleteFile(current_dir, params[1]);
@@ -401,6 +448,9 @@ public class Terminal extends Thing implements Device, ExtraCommands {
 				}
 				else writeToScreen( fs.getDirectoryNames(current_dir) );
 			}
+			else if ( cmd.equalsIgnoreCase("clear") ) {
+				clearScreen();
+			}
 			else if( cmd.equalsIgnoreCase("mkdir") ) {
 				boolean newDirCreated = fs.newDir(arg);
 
@@ -425,7 +475,7 @@ public class Terminal extends Thing implements Device, ExtraCommands {
 			}
 			else if( cmd.equalsIgnoreCase("pwd") ) {
 				if( !current_dir.equals("/") ) {
-					writeToScreen( "/" + current_dir );
+					writeToScreen( current_dir );
 				}
 				else writeToScreen("/");
 			}
@@ -444,11 +494,109 @@ public class Terminal extends Thing implements Device, ExtraCommands {
 				}
 				else writeToScreen( "No such file." );
 			}
+			else if( users.get(current_user).getPerm() == 4 ) {
+				// ADMIN commands
+				if( cmd.equalsIgnoreCase("adduser") ) {
+					requestAction("add_user", arg);
+					return code;
+				}
+				else if( cmd.equalsIgnoreCase("deluser") ) {
+					if( !arg.contains(" ") ) {
+						requestAction("delete_user", arg);
+						return code;
+					}
+				}
+				else if( cmd.equalsIgnoreCase("modperm") ) {
+					if( !arg.contains(" ") ) {
+						requestAction("modify_user_perms", arg);
+						return code;
+					}
+				}
+				else if( cmd.equalsIgnoreCase("users") ) {
+					for(final User user : users.values()) {
+						writeToScreen(user.getName() + "\n");
+					}
+				}
+			}
 
 			writeToScreen( "\n" + getPrompt() );
 		}
 
 		return code;
+	}
+	
+	private void requestAction(final String actionKey, final String actionParams) {
+		switch(actionKey) {
+		case "add_user":
+			writeToScreen("CONFIRM adding user 'Stormy' (yes/no)?");
+			input_state = "confirm";
+			action = new Pair<String>(actionKey, actionParams);
+			break;
+		case "delete_user":
+			writeToScreen("* WARNING: deleting user will destroy all their files, irreversably. *");
+			writeToScreen("CONFIRM deleting user 'Stormy' (yes/no)?");
+			input_state = "confirm";
+			action = new Pair<String>(actionKey, actionParams);
+			break;
+		case "modify_user_perms":
+			writeToScreen("CONFIRM modifying user permissions for Stormy (yes/no)?");
+			input_state = "confirm";
+			action = new Pair<String>(actionKey, actionParams);
+			break;
+		}
+	}
+	
+	private void doAction(final Pair<String> action) {
+		switch(action.one) {
+		case "add_user":
+			final String[] temp = action.two.split(" ");
+			
+			if( temp.length == 2 ) {
+				if( addUser(temp[0], temp[1]) ) {
+					writeToScreen("ADDUSER: Added user '" + temp[0] + "' with password '" + temp[1] + "'.");
+				}
+				else {
+					writeToScreen("ADDUSER: Error, that user already exists!");
+				}
+			}
+			else writeToScreen("ADDUSER: Error, missing parameter.");
+			
+			break;
+		case "delete_user":
+			if( deleteUser(action.two, users.get(action.two).getPassword()) ) {
+				writeToScreen("DELUSER: Deleted user '" + action.two + "'.");
+			}
+			else {
+				writeToScreen("DELUSER: Error, no such user!");
+			}
+			
+			break;
+		case "modify_user_perms":
+			final String[] temp1 = action.two.split(" ");
+			
+			if( temp1.length == 2 ) {
+				final User user = users.get(temp1[0]);
+				
+				if( user != null ) {
+					final Integer oldPerm = user.getPerm();
+					final Integer newPerm = Utils.toInt(temp1[0], oldPerm);
+					
+					if( newPerm != oldPerm ) {
+						user.setPerm( newPerm );
+						writeToScreen("MODPERM: Permissions changed to " + user.getPerm() + " for user '" + user.getName() + "'.");
+					}
+					else {
+						writeToScreen("MODPERM: Error, new permissions same as old permissions, no changes made.");
+					}
+				}
+				else {
+					writeToScreen("MODPERM: Error, no such user!");
+				}
+			}
+			else writeToScreen("MODPERM: Error, missing parameter.");
+			
+			break;
+		}
 	}
 
 	private boolean login(final String user, final String pass) {
@@ -512,15 +660,23 @@ public class Terminal extends Thing implements Device, ExtraCommands {
 	 * @param username
 	 * @param password
 	 */
-	private void addUser(final String username, final String password) {
+	private boolean addUser(final String username, final String password) {
+		boolean success = false;
+		
 		// if such a user does not exist already
 		if( !this.users.containsKey(username) ) {
 			final User user = new User(username, password, 0);
-
-			this.users.put(username, user); // put the username and password in the users table
-
-			initUser(username); // intialize user space
+			
+			// put the username and password in the users table
+			this.users.put(username, user);
+			
+			// intialize user space
+			initUser(username);
+			
+			success = true;
 		}
+		
+		return success;
 	}
 
 	private void initUser(final String username) {
@@ -530,12 +686,18 @@ public class Terminal extends Thing implements Device, ExtraCommands {
 		}
 	}
 
-	private void deleteUser(final String username, final String password) {
+	private boolean deleteUser(final String username, final String password) {
+		boolean success = false;
+		
 		if( this.users.containsKey(username) ) {
 			if( this.users.get(username).equals( password ) ) {
 				this.users.remove(username);
+				
+				success = true;
 			}
 		}
+		
+		return success;
 	}
 
 	public void handle_login(final String input, final Client client) {
@@ -621,11 +783,20 @@ public class Terminal extends Thing implements Device, ExtraCommands {
 	public Power getPowerState() {
 		return this.power_state;
 	}
-
+	
+	/**
+	 * Write a line to the terminal input;
+	 * @param string
+	 */
 	public void write(final String string) {
 		this.input.add(string);
 	}
-
+	
+	/**
+	 * Read a line of terminal output.
+	 * 
+	 * @return
+	 */
 	public String read() {
 		return output.poll();
 	}

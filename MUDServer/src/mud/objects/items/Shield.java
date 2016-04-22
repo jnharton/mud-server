@@ -56,6 +56,10 @@ public class Shield extends Item
 		this.weight = 0;
 	}
 	
+	protected Shield(Shield template) {
+		super(-1);
+	}
+
 	public int getShieldBonus() {
 		return this.shield_type.getShieldBonus();
 	}
@@ -101,5 +105,10 @@ public class Shield extends Item
 	public String getName() {
 		if( this.mod > 0 ) { return "+" + this.mod + " " + this.shield_type.getName() + " Wooden Shield"; }
 		else { return this.shield_type.getName() + " Wooden Shield"; }
+	}
+	
+	@Override
+	public Shield getCopy() {
+		return new Shield(this);
 	}
 }
