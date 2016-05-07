@@ -5,17 +5,18 @@ import java.util.List;
 import java.util.EnumSet;
 
 import mud.ObjectFlag;
-import mud.TypeFlag;
+
+import mud.interfaces.Drinkable;
+import mud.interfaces.MagicItem;
 import mud.interfaces.Stackable;
-import mud.interfaces.Usable;
+
 import mud.magic.Spell;
 import mud.misc.Effect;
 import mud.objects.Item;
 import mud.objects.ItemTypes;
 import mud.utils.Utils;
 
-public class Potion extends Item implements Stackable<Potion>, Usable<Potion> {
-
+public class Potion extends Item implements Drinkable, MagicItem, Stackable<Potion> {
 	/**
 	 * Flag: I
 	 * ItemType: Potion
@@ -28,21 +29,18 @@ public class Potion extends Item implements Stackable<Potion>, Usable<Potion> {
 	 * that it is a potion of 'polymorph to cat' for instance.
 	 */
 	
-	private Spell spell;               // a spell the potion will cast on you
+	public Potion p = null; // nested copy of itself, for implementing stacks
 	
-	private Effect effect;             // an effect the potion will give you
-	
-	// multiple effects the potion will give you - uses MUDObjects effects
-	
-	public Potion p = null;           // nested copy of itself, for implementing stacks
-	
-	//private static double weight = 0.5;
+	private Spell spell;    // a spell the potion will cast on you
+	private Effect effect;  // an effect the potion will give you
 
 	public Potion() {
 		super(-1, "Potion", EnumSet.noneOf(ObjectFlag.class), "An empty glass potion bottle.", 8);
-		this.type = TypeFlag.ITEM;
+		
 		this.item_type = ItemTypes.POTION;
-		this.setDrinkable(true);
+		
+		this.drinkable = true;
+		
 		this.spell = null;
 		this.effect = null;
 		this.weight = 0.5;
@@ -60,9 +58,11 @@ public class Potion extends Item implements Stackable<Potion>, Usable<Potion> {
 	
 	public Potion(Effect effect) {
 		super(-1, "Potion", EnumSet.noneOf(ObjectFlag.class), "A potion of " + effect.getName(), 8);
-		this.type = TypeFlag.ITEM;
+		
 		this.item_type = ItemTypes.POTION;
-		this.setDrinkable(true);
+		
+		this.drinkable = true;
+		
 		this.effect = effect;
 		this.weight = 0.5;
 		
@@ -72,9 +72,10 @@ public class Potion extends Item implements Stackable<Potion>, Usable<Potion> {
 
 	public Potion(Spell spell) {
 		super(-1, "Potion", EnumSet.noneOf(ObjectFlag.class), "A potion of " + spell.getName(), 8);
-		this.type = TypeFlag.ITEM;
 		this.item_type = ItemTypes.POTION;
-		this.setDrinkable(true);
+		
+		this.drinkable = true;
+		
 		this.spell = spell;
 		this.weight = 0.5;
 		
@@ -101,13 +102,12 @@ public class Potion extends Item implements Stackable<Potion>, Usable<Potion> {
 	 * @param spellName
 	 */
 	public Potion(int tempDBRef, String tempName, final EnumSet<ObjectFlag> tempFlags, String tempDesc, int tempLoc, String s) {
-		super(tempDBRef);
+		super(tempDBRef, tempName, tempFlags, tempDesc, tempLoc);
 		
-		this.name = tempName;
-		this.desc = tempDesc;
-		this.flags = tempFlags;
-		this.location = tempLoc;
-
+		this.item_type = ItemTypes.POTION;
+		
+		this.drinkable = true;
+		
 		/*String spellName = s;
 		this.spell = parent.getSpell(spellName);*/
 
@@ -116,11 +116,11 @@ public class Potion extends Item implements Stackable<Potion>, Usable<Potion> {
 		
 		this.effects = new ArrayList<Effect>();
 		this.effects.add(this.effect);
-
-		this.item_type = ItemTypes.POTION;
-		this.setDrinkable(true);
-		
-		this.weight = 0.5;
+	}
+	
+	@Override
+	public Double getWeight() {
+		return 0.5;
 	}
 	
 	public int size() {
@@ -199,25 +199,17 @@ public class Potion extends Item implements Stackable<Potion>, Usable<Potion> {
 	
 	@Override
 	public String toDB() {
-		String[] output = new String[10];
+		final String[] output = new String[2];
 		
-		output[0] = this.getDBRef() + "";           // database reference number
-		output[1] = this.getName();                 // name
-		output[2] = this.getFlagsAsString();        // flags
-		output[3] = this.getDesc();                 // description
-		output[4] = this.getLocation() + "";        // location
-		output[5] = this.item_type.getId() + "";    // item type
-		output[6] = this.equip_type.getId() + "";   // equip type
-		output[7] = this.slot_type.getId() + "";    // slot type
+		output[0] = this.stackSize() + "";          // how many potion are stacked together
 		
-		output[8] = this.stackSize() + "";          // how many potion are stacked together
 		if (this.effect == null) {
-			if (this.spell != null) output[9] = this.spell.getName();   // spell	
-			else                    output[9] ="null";
+			if (this.spell != null) output[1] = this.spell.getName(); // spell	
+			else                    output[1] = "null";
 		}
-		else { output[9] = this.effect.getName(); } // effect
+		else { output[1] = this.effect.getName(); } // effect
 		
-		return Utils.join(output, "#");
+		return super.toDB() + "#" + Utils.join(output, "#");
 	}
 	
 	@Override

@@ -19,25 +19,22 @@ package mud.misc;
 
 import mud.objects.Item;
 import mud.objects.ItemType;
-import mud.objects.ItemTypes;
-import mud.objects.items.Clothing;
-import mud.objects.items.ClothingType;
 
 /**
  * Slot is a class which represents the logical possibility of equipping/wearing
  * something on the body of a Player in a text-based game, here known generally
  * as a MUD
  * 
- * Last edited: April 20, 2012 (4/20/2012)
  * 
  * @author Jeremy
  * @version %M%.%m%
  */
-public class Slot<T extends Item> {
+public class Slot {
 	private String description;        // descriptive text
+	
 	private SlotType slotType;         // the type of slot this is
 	private ItemType itemType;         // the type of item the slot can hold
-	private ClothingType clothingType; // the type of clothing item the slot can hold
+	
 	private Item item;                 // the item the slot currently holds
 
 	/**
@@ -51,23 +48,6 @@ public class Slot<T extends Item> {
 	public Slot(final SlotType slotType, final ItemType itemType) {
 		this.slotType = slotType;
 		this.itemType = itemType;
-	}
-	
-	/**
-	 * Constructs a slot based on a single parameter, an
-	 * item type that it can hold.
-	 * 
-	 * @param slotType
-	 * @param clothingType
-	 */
-	//public Slot(final SlotType[] slotTypes, final ClothingType clothingType) {
-	public Slot(final SlotType slotType, final ClothingType clothingType) {
-		//this(slotTypes, clothingType, null);
-		this.slotType = slotType;
-		this.itemType = ItemTypes.CLOTHING;
-		this.clothingType = clothingType;
-		
-		this.item = null;
 	}
 	
 	/**
@@ -134,23 +114,12 @@ public class Slot<T extends Item> {
 	}
 	
 	/**
-	 * Tell us what type of of clothing, if any, can go in the slot
 	 * 
-	 * @return a string indicating the clothing type that fits in the slot
-	 */
-	public ClothingType getCType() {
-		return this.clothingType;
-	}
-	
-	/**
-	 * Returns a true/false value telling whether a specific item
-	 * type will fit in this slot.
 	 * 
 	 * @param tType the type to check against
 	 * @return a boolean indicative of whether this slot is of that type
 	 */
 	public boolean isType(final ItemType iType) {
-		// return this.itemType.equals(iType); // not defined as Comparable
 		return this.itemType == iType;
 	}
 	

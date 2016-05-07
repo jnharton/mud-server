@@ -135,18 +135,25 @@ public class Box extends Thing implements Closeable, Lockable<Item>, Storage<Ite
 	public List<Item> getContents() {
 		return Collections.unmodifiableList(this.contents);
 	}
-	
-	public void insert(Item item) {
-		if( !full ) {
+
+	public boolean insert(Item item) {
+		boolean success = false;
+
+		if( !isFull() ) {
 			if( item != null ) {
 				this.contents.add( item );
 				this.contentMap.put( item.getName(), this.contents.indexOf(item) );
-				if( this.contents.size() > 0 ) this.empty = false;
-				if( this.contents.size() == this.size ) full = true;
+				
+				if( this.contents.size() > 0 )          this.empty = false;
+				if( this.contents.size() == this.size ) this.full = true;
+				
+				success = true;
 			}
 		}
+
+		return success;
 	}
-	
+
 	public Item retrieve(int index) {
 		if( !empty ) {
 			Item item = contents.remove(index);
@@ -190,6 +197,11 @@ public class Box extends Thing implements Closeable, Lockable<Item>, Storage<Ite
 	
 	public boolean isOpen() {
 		return this.isOpen;
+	}
+	
+	@Override
+	public boolean requiresKey() {
+		return false;
 	}
 	
 	/**

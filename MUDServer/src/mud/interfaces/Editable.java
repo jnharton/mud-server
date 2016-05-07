@@ -22,7 +22,5 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  * @author Jeremy
  *
  */
-public interface Editable {
-	public String read();
-	public void write(String s);
+public interface Editable extends Readable, Writeable {
 }

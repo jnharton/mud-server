@@ -18,7 +18,7 @@ import mud.utils.Utils;
 public class Book extends Item implements Editable {
 	private String title = "";
 	private String author = "";
-	private ArrayList<List<String>> pages;
+	private List<List<String>> pages;
 	
 	private Integer currentPage = 0;
 	
@@ -40,9 +40,8 @@ public class Book extends Item implements Editable {
 		this.flags = EnumSet.noneOf(ObjectFlag.class);
 		
 		this.type = TypeFlag.ITEM;
-		this.item_type = ItemTypes.BOOK;
 		
-		this.equip_type = ItemTypes.NONE;
+		this.item_type = ItemTypes.BOOK;
 		
 		this.title = bookTitle;
 		this.author = bookAuthor;
@@ -55,7 +54,6 @@ public class Book extends Item implements Editable {
 		this(template.title, template.author, template.pages.size());
 		
 		this.pages.addAll( template.pages );
-		//this.item_type = template.item_type;
 	}
 	
 	/**
@@ -76,77 +74,78 @@ public class Book extends Item implements Editable {
 	public Book(String tempName, String tempDesc, int tempLoc, int tempDBREF) {
 		super(tempDBREF, tempName, EnumSet.noneOf(ObjectFlag.class), tempDesc, tempLoc);
 		
-		this.type = TypeFlag.ITEM;
 		this.item_type = ItemTypes.BOOK;
 		this.slot_type = SlotTypes.NONE;
 		
 		this.pages = new ArrayList<List<String>>(0);
 	}
-
+	
 	@Override
-	public String read() {
-		return this.getPage(currentPage).toString();
-	}
-
-	@Override
-	public void write(String text) {
-		getPage(currentPage).add(text);
+	public String getName() {
+		return getTitle();
 	}
 	
-	public void addPage(Integer newPageNum, List<String> list) {
-		this.pages.add(list);
-	}
-	public List<String> getPage(int pageNum) {
-		return this.pages.get(pageNum);
-	}
-
-	public List<String> setPage(Integer newPageNum, List<String> list) {
-		if( this.pages.get(newPageNum) != null ) {
-			return this.pages.set(newPageNum, list);
-		}
-		else {
-			this.pages.add(list);
-			return null;
-		}
+	public String getTitle() {
+		return this.title;
 	}
 	
-	public Integer getPageNum() {
-		return this.currentPage;
-	}
-
-	public void setPageNum(Integer newPageNum) {
-		this.currentPage = newPageNum;
+	public void setTitle(final String newTitle) {
+		this.title = newTitle;
 	}
 	
 	public String getAuthor() {
 		return this.author;
 	}
 	
-	public void setAuthor(String newAuthor) {
+	public void setAuthor(final String newAuthor) {
 		this.author = newAuthor;
 	}
-
-	public String getTitle() {
-		return this.title;
+	
+	public Integer getPageNum() {
+		return this.currentPage;
 	}
 	
-	public void setTitle(String newTitle) {
-		this.title = newTitle;
+	public void setPageNum(int newPageNum) {
+		this.currentPage = newPageNum;
+	}
+	
+	/* Editable Methods */
+	@Override
+	public String read() {
+		return this.getPage(currentPage).toString();
 	}
 
-	/* should increase the size of the array, but needs to preserve
-	 * existing content and it's location in relation to the whole
-	 */
-	public void setSize(int newSize) {
-		this.pages = new ArrayList<List<String>>(newSize);
+	@Override
+	public void write(final String text) {
+		//if( text.equals("+newpage") )
+		getPage(currentPage).add(text);
+	}
+	
+	public List<String> getPage(int pageNum) {
+		return this.pages.get(pageNum);
 	}
 
-	public int getSize() {
-		return this.pages.size();
+	public void setPage(final Integer newPageNum, final List<String> list) {
+		if( newPageNum > -1 ) {
+			if( this.pages.get(newPageNum) != null ) {
+				this.pages.set(newPageNum, list);
+			}
+			else this.pages.add(list);
+		}
 	}
+	
+	public void addPage(final List<String> list) {
+		this.pages.add(list);
+	}
+	
+	/* Navigation */
 	
 	public void turnToPage(int newPage) {
-		this.currentPage = newPage;
+		if( newPage > -1 ) {
+			if( newPage < numPages() ) this.currentPage = newPage;
+			else                       this.currentPage = numPages() - 1;
+		}
+		else this.currentPage = 0;
 	}
 	
 	public List<String> nextPage() {
@@ -159,44 +158,28 @@ public class Book extends Item implements Editable {
 		return getPage(this.currentPage);
 	}
 	
-	public ArrayList<String> look() {
-		return null;
-	}
-	
-	@Override
-	public String getName() {
-		return getTitle();
-	}
-
-	@Override
-	public String toDB() {
-		String[] output = new String[11];
-		
-		output[0] = this.getDBRef() + "";              // database reference number
-		output[1] = this.getName();                    // name
-		output[2] = TypeFlag.asLetter(this.type) + ""; // flags
-		output[2] = output[2] + getFlagsAsString();
-		output[3] = this.getDesc();                    // description
-		output[4] = this.getLocation() + "";           // location
-		
-		output[5] = this.item_type.getId() + "";       // item type
-		output[6] = this.equip_type.getId() + "";      // equip type
-		output[7] = this.slot_type.getId() + "";       // slot type
-		
-		output[8] = this.getAuthor();                  // book author
-		output[9] = this.getTitle();                   // book title
-		output[10] = this.pages.size() + "";           // # of pages
-		
-		return Utils.join(output, "#");
-	}
-	
-	@Override
-	public String toString() {
-		return getTitle();
+	public int numPages() {
+		return this.pages.size();
 	}
 	
 	@Override
 	public Book getCopy() {
 		return new Book(this);
+	}
+
+	@Override
+	public String toDB() {
+		final String[] output = new String[3];
+		
+		output[0] = this.getAuthor();       // book author
+		output[1] = this.getTitle();        // book title
+		output[2] = this.pages.size() + ""; // # of pages
+		
+		return super.toDB() + "#" + Utils.join(output, "#");
+	}
+	
+	@Override
+	public String toString() {
+		return getTitle();
 	}
 }

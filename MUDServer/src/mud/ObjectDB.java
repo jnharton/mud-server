@@ -3,12 +3,12 @@ package mud;
 import java.util.*;
 
 import mud.objects.*;
+import mud.objects.exits.Door;
 import mud.objects.items.Arrow;
 import mud.objects.items.Container;
 import mud.utils.Utils;
 import mud.game.PClass;
 import mud.interfaces.ODBI;
-import mud.net.Client;
 
 /*
  * Copyright (c) 2012 Jeremy N. Harton, joshgit?
@@ -29,12 +29,11 @@ import mud.net.Client;
  */
 
 public final class ObjectDB implements ODBI {
-
-	private static int nextId = 0;
+	private int nextId = 0;
 
 	// TreeMap allows instant retrieval by id and by name.
-	final private TreeMap<String, MUDObject>  objsByName = new TreeMap<String, MUDObject>();
-	final private TreeMap<Integer, MUDObject> objsById = new TreeMap<Integer, MUDObject>();
+	private final TreeMap<String, MUDObject>  objsByName = new TreeMap<String, MUDObject>();
+	private final TreeMap<Integer, MUDObject> objsById = new TreeMap<Integer, MUDObject>();
 
 	// holds unused database references, that exist due to "recycled" objects
 	private Stack<Integer> unusedDBNs = new Stack<Integer>();
@@ -49,8 +48,12 @@ public final class ObjectDB implements ODBI {
 	 * or never add them to this db.
 	 */
 	public int peekNextId() {
-		if( !unusedDBNs.empty() ) { return unusedDBNs.peek(); }
-		else { return nextId; }
+		if( !unusedDBNs.empty() ) {
+			return this.unusedDBNs.peek();
+		}
+		else {
+			return this.nextId;
+		}
 	}
 
 	// do not use, yet
@@ -145,7 +148,7 @@ public final class ObjectDB implements ODBI {
 
 				if( !no.isLocked() ) {
 					System.out.println("dbref isn't in use");
-					unusedDBNs.push(unusedId);
+					this.unusedDBNs.push(unusedId);
 				}
 				else {
 					System.out.println("NullObject is locked");
@@ -155,7 +158,7 @@ public final class ObjectDB implements ODBI {
 				System.out.println("That id is reserved!");
 			}
 			else if(unusedDBNs.empty() && unusedId == next - 1) { // we just made a new one, but it's the most recent one in the db, just go back one
-				nextId--;
+				this.nextId--;
 			}
 			else {
 				System.out.println("Something is already using that id!");
@@ -178,15 +181,15 @@ public final class ObjectDB implements ODBI {
     }*/
 
 	public int getSize() {
-		return objsById.size();
+		return this.objsById.size();
 	}
 
 	public void addAsNew(final MUDObject item) {
-		if( !unusedDBNs.empty() ) {
-			item.setDBRef( unusedDBNs.pop() );
+		if( !this.unusedDBNs.empty() ) {
+			item.setDBRef( this.unusedDBNs.pop() );
 		}
 		else {
-			item.setDBRef( nextId );
+			item.setDBRef( this.nextId );
 		}
 
 		add(item);
@@ -217,15 +220,18 @@ public final class ObjectDB implements ODBI {
 			// TODO fix this code, seriously! it will fill up the database with nullobjects if it hits ONE problem!
 			System.out.println("nextId: " + nextId);
 			System.out.println("dbref:  " + item.getDBRef());
-
+			System.out.println("");
+			
 			NullObject no = new NullObject(nextId);
 			no.lock();
 
-			objsById.put(no.getDBRef(), no);
+			this.objsById.put(no.getDBRef(), no);
 
 			System.out.println("Inserted NullObject!");
+			System.out.println("");
 
-			nextId++;
+			this.nextId++;
+			
 			continue;
 		}
 
@@ -241,6 +247,7 @@ public final class ObjectDB implements ODBI {
 			objsById.put(no.getDBRef(), no);
 
 			System.out.println("Inserted NullObject!");
+			System.out.println("");
 
 			if( !no.isLocked() ) {
 				addUnused(item.getDBRef());
@@ -249,12 +256,18 @@ public final class ObjectDB implements ODBI {
 			nextId++;
 		}
 		else {
-			// kludge for doors here (give one object two different name entries)
-			if( item.getName().contains("/") ) {
-				String[] temp = item.getName().split("/");
+			if( item.isType(TypeFlag.EXIT) ) {
+				if( ((Exit) item).getExitType() == ExitType.DOOR ) {
+					final Door d = (Door) item;
+					
+					// kludge for doors here (give one object two different name entries)
+					if( d.getName().contains("/") ) {
+						String[] temp = d.getName().split("/");
 
-				objsByName.put(temp[0], item);
-				objsByName.put(temp[1], item);
+						objsByName.put(temp[0], item);
+						objsByName.put(temp[1], item);
+					}
+				}
 			}
 			else {
 				objsByName.put(item.getName(), item);
@@ -265,35 +278,25 @@ public final class ObjectDB implements ODBI {
 			nextId++;
 		}
 	}
-
-	/*public void allocate(final int n) {
-        // Until we travel back to 1970 and convert this codebase into C, we probably don't need to pre-allocate things.
-        // Unless users are creating rooms faster that the JVM can allocate objects...
-    }*/
-
+	
 	// Send all objects
-	public void dump(final Client client, final MUDServer server) {
+	public List<String> dump() {
 		int i = 0;
-		//for (final MUDObject obj : objsByName.values()) {
+		
+		final List<String> output = new ArrayList<String>(this.objsById.size());
+		
 		for (final MUDObject obj : objsById.values()) {
-			server.send(String.format("%s: %s (#%s)", i, obj.getName(), obj.getDBRef()), client);
+			output.add( String.format("%s: %s (#%s)", i, obj.getName(), obj.getDBRef()) );
 			i += 1;
 		}
-	}
-
-	public void dump() {
-		int i = 0;
-		//for (final MUDObject obj : objsByName.values()) {
-		for (final MUDObject obj : objsById.values()) {
-			System.out.println(String.format("%s: %s (#%s)", i, obj.getName(), obj.getDBRef()));
-			i += 1;
-		}
+		
+		return output;
 	}
 
 	// remove object from DB, but insert a NullObject placeholder
 	public void remove(final MUDObject item) {    	
-		objsById.put(item.getDBRef(), new NullObject(item.getDBRef()));
-		objsByName.remove(item.getName());
+		this.objsById.put(item.getDBRef(), new NullObject(item.getDBRef()));
+		this.objsByName.remove(item.getName());
 	}
 
 	// Ensure object is in both maps, overwriting any object in the id map.
@@ -306,24 +309,27 @@ public final class ObjectDB implements ODBI {
 	 * Get an object by it's Database Reference Number (DBRef)
 	 * which is unique in the database
 	 * 
-	 * @param n the DBRef of the object you wish to get
+	 * @param dbref the DBRef of the object you wish to get
 	 * @return the object with that DBRef (if it exists)
 	 */
-	public MUDObject get(final int n) {
-		return objsById.get(n);
+	public MUDObject get(final int dbref) {
+		return this.objsById.get(dbref);
 	}
 
 	public List<MUDObject> getObjects() {
-		return new ArrayList<MUDObject>(objsById.values());
+		return Collections.unmodifiableList( new ArrayList<MUDObject>(this.objsById.values()) );
 	}
 
 	// TODO kludgy, used for/with cnames
 	public void addName(final MUDObject object, final String name) {
-		if( this.getByName(name) == null ) {
-			objsByName.put( name, object );
+		if( getByName(name) == null ) {
+			this.objsByName.put( name, object );
 
 			if( object instanceof Player ) {
-				playersByName.put(name, (Player) object);
+				this.playersByName.put(name, (Player) object);
+			}
+			else if( object instanceof Exit ) {
+				this.exitsByName.put(name, (Exit) object);
 			}
 		}
 	}
@@ -336,7 +342,7 @@ public final class ObjectDB implements ODBI {
 	 * @return true if there is object with the specified name
 	 */
 	public boolean hasName(final String name) {
-		return objsByName.containsKey(name);
+		return this.objsByName.containsKey(name);
 	}
 
 	/**
@@ -347,7 +353,7 @@ public final class ObjectDB implements ODBI {
 	 * @return the object with the specified name (if there is one)
 	 */
 	public MUDObject getByName(final String name) {
-		return objsByName.get(name);
+		return this.objsByName.get(name);
 	}
 
 	/**
@@ -393,26 +399,30 @@ public final class ObjectDB implements ODBI {
 		object.setName(newName);
 	}*/
 	
+	// TODO test for object equality or some other so I can't accidentally pass in a similarly named object
 	public void updateName(final MUDObject object, final String oldName) {
 		final String newName = object.getName();
 
-		objsByName.remove( oldName );
-		objsByName.put( newName, object );
+		this.objsByName.remove( oldName );
+		this.objsByName.put( newName, object );
 
 		if(object instanceof NPC) {
 			final NPC npc = (NPC) object; 
-			npcsByName.remove( oldName );
-			npcsByName.put( newName, npc );
+			
+			this.npcsByName.remove( oldName );
+			this.npcsByName.put( newName, npc );
 		}
 		else if(object instanceof Room) {
 			final Room room = (Room) object;
-			roomsByName.remove( oldName );
-			roomsByName.put( newName, room );
+			
+			this.roomsByName.remove( oldName );
+			this.roomsByName.put( newName, room );
 		}
 		else if(object instanceof Exit) {
 			final Exit exit = (Exit) object;
-			exitsByName.remove( oldName );
-			exitsByName.put( newName, exit );
+			
+			this.exitsByName.remove( oldName );
+			this.exitsByName.put( newName, exit );
 		}
 	}
 
@@ -426,11 +436,13 @@ public final class ObjectDB implements ODBI {
 	 */
 	public List<MUDObject> findByLower(final String name) {
 		final LinkedList<MUDObject> acc = new LinkedList<MUDObject>();
-		for (final MUDObject obj : objsByName.values()) {
+		
+		for (final MUDObject obj : this.objsByName.values()) {
 			if(obj.getName().toLowerCase().startsWith(name.toLowerCase())) {
 				acc.add(obj);
 			}
 		}
+		
 		return acc;
 	}
 
@@ -448,7 +460,7 @@ public final class ObjectDB implements ODBI {
 		Arrays.fill(counts, 0);
 
 		// objsById returns more objects than objsByName
-		for (final MUDObject obj : objsById.values()) {
+		for (final MUDObject obj : this.objsById.values()) {
 			for (int i = 0; i < letters.length; i++) {
 				if (obj.type.toString().startsWith(letters[i])) {
 					counts[i] += 1;
@@ -462,13 +474,18 @@ public final class ObjectDB implements ODBI {
 	// Serialize all objects via `toDB` and save array to file.
 	// TODO fix save method, this one depends on saving over the old database
 	public void save(final String filename) {
-		final String[] old = Utils.loadStrings(filename);    // old (current in file) database
-		final String[] toSave = new String[objsById.size()]; // new (save to file) database
+		final String[] old = Utils.loadStrings(filename);         // old (current in file) database
+		final String[] toSave = new String[this.objsById.size()]; // new (save to file) database
+		
+		// TODO sometimes has issues with NullPointerException(s)
+		
+		System.out.println("Old Size: " + old.length);
+		System.out.println("New Size: " + toSave.length);
 
 		int index = 0;
 
 		if( old != null ) {
-			for (final MUDObject obj : objsById.values()) {
+			for (final MUDObject obj : this.objsById.values()) {
 				if(obj instanceof NullObject) {
 					NullObject no = (NullObject) obj;
 
@@ -519,43 +536,54 @@ public final class ObjectDB implements ODBI {
 	}
 
 	////////////// ROOMS
-	final private Map<Integer, Room> roomsById   = new HashMap<Integer, Room>();
-	final private Map<String, Room>  roomsByName = new HashMap<String, Room>();
-
+	private final Map<Integer, Room> roomsById   = new HashMap<Integer, Room>();
+	private final Map<String, Room>  roomsByName = new HashMap<String, Room>();
+	
 	// must add room to both maps
 	public void addRoom(final Room room) {
-		roomsByName.put(room.getName(), room);
-		roomsById.put(room.getDBRef(), room);
+		this.roomsByName.put(room.getName(), room);
+		this.roomsById.put(room.getDBRef(), room);
 	}
 
 	// must remove room from both maps
 	public void removeRoom(final Room r) {
-		roomsByName.values().remove(r);
-		roomsById.values().remove(r);
+		this.roomsByName.values().remove(r);
+		this.roomsById.values().remove(r);
 	}
 
 	public Room getRoomByName(final String name) {
-		return roomsByName.get(name);
+		return this.roomsByName.get(name);
 	}
-
+	
+	/**
+	 * getRoomById
+	 * 
+	 * NOTE: dbref #s <0 are considered invalid
+	 */
 	public Room getRoomById(final int id) {
 		//return roomsById.get(id);
 		Room room = null;
 		
-		if( id > 0) {
-			room = roomsById.get(id);
+		if( id >= 0) {
+			room = this.roomsById.get(id);
 		}
 		
 		return room;
 	}
+	
+	public List<Room> getRooms() {
+		return Collections.unmodifiableList( new ArrayList<Room>(this.roomsById.values()) );
+	}
 
 	public List<Room> getRoomsByType(final RoomType type) {
 		final List<Room> acc = new LinkedList<Room>();
-		for (final Room r : roomsById.values()) {
+		
+		for (final Room r : this.roomsById.values()) {
 			if (r.getRoomType() == type) {
 				acc.add(r);
 			}
 		}
+		
 		return acc;
 	}
 
@@ -565,42 +593,50 @@ public final class ObjectDB implements ODBI {
 
 	public List<Room> getRoomsByParentLocation(final int loc) {
 		final List<Room> acc = new LinkedList<Room>();
-		for (final Room r : roomsById.values()) {
+		
+		for (final Room r : this.roomsById.values()) {
 			if (r.getParent() == loc) {
 				acc.add(r);
 			}
 		}
+		
 		return acc;
 	}
 
 	public List<Room> getRoomsByLocation(final int loc) {
 		final List<Room> acc = new LinkedList<Room>();
-		for (final Room r : roomsById.values()) {
+		
+		for (final Room r : this.roomsById.values()) {
 			if (r.getLocation() == loc) {
 				acc.add(r);
 			}
 		}
+		
 		return acc;
 	}
 
 	/////////////// EXITS
 	private final Map<Integer, Exit> exitsById   = new HashMap<Integer, Exit>();
 	private final Map<String, Exit>  exitsByName = new HashMap<String, Exit>();
-
+	
 	public Exit getExit(final String name) {
-		return exitsByName.get(name);
+		return this.exitsByName.get(name);
 	}
 
 	public Exit getExit(final int dbref) {
-		return exitsById.get(dbref);
+		return this.exitsById.get(dbref);
 	}
-
+	
+	public List<Exit> getExits() {
+		return Collections.unmodifiableList( new ArrayList<Exit>(this.exitsById.values()) );
+	}
+	
 	public List<Exit> getExitsByRoom(final Room room) {
 		final List<Exit> acc = new LinkedList<Exit>();
 		
 		int loc = room.getDBRef();
 		
-		for (final Exit e : exitsById.values()) {
+		for (final Exit e : this.exitsById.values()) {
 			if (e.getLocation() == loc) {
 				acc.add(e);
 			}
@@ -608,17 +644,19 @@ public final class ObjectDB implements ODBI {
 		
 		return acc;
 	}
-
+	
 	public void addExit(final Exit exit) {
 		if( exit.getExitType() == ExitType.DOOR ) {
 			String[] names = exit.getName().split("/");
 
-			exitsByName.put(names[0], exit);
-			exitsByName.put(names[1], exit);
+			this.exitsByName.put(names[0], exit);
+			this.exitsByName.put(names[1], exit);
 		}
-		else { exitsByName.put(exit.getName(), exit); }
+		else {
+			this.exitsByName.put(exit.getName(), exit);
+		}
 
-		exitsById.put(exit.getDBRef(), exit);
+		this.exitsById.put(exit.getDBRef(), exit);
 	}
 
 	public void removeExit(final Exit e) {
@@ -626,59 +664,26 @@ public final class ObjectDB implements ODBI {
 			String[] temp = e.getName().split(";");
 			String[] names = temp[0].split("/");
 
-			exitsByName.values().remove(names[0]);
-			exitsByName.values().remove(names[1]);
+			this.exitsByName.values().remove(names[0]);
+			this.exitsByName.values().remove(names[1]);
 		}
-		else { exitsByName.remove(e.getName()); }
-
-		exitsById.values().remove(e.getDBRef());
-	}
-
-	/**
-	 * Go through all the exits that exist in the database and
-	 * place/attach them in/to the respective rooms they are part of
-	 */
-	public void loadExits(final MUDServer parent) {
-		parent.debug("Loading exits:", 2);
-		for (final Exit e : exitsById.values()) {
-			if( e.getExitType() == ExitType.DOOR ) {
-				final Room room = getRoomById(e.getLocation());
-
-				if (room != null) {
-					room.addExit(e);
-					parent.debug("Exit " + Utils.padLeft("" + e.getDBRef(), ' ', 4) + " added to room " + room.getDBRef() + ". (Door)", 2);
-				}
-
-				final Room room1 = getRoomById(e.getDestination());
-
-				if (room1 != null) {
-					room1.addExit(e);
-					parent.debug("Exit " + Utils.padLeft("" + e.getDBRef(), ' ', 4) + " added to room " + room1.getDBRef() + ". (Door)", 2);
-				}
-			}
-			else {
-				final Room room = getRoomById(e.getLocation());
-
-				if (room != null) {
-					room.addExit(e);
-					parent.debug("Exit " + Utils.padLeft("" + e.getDBRef(), ' ', 4) + " added to room " + room.getDBRef() + ".", 2);
-				}
-			}
+		else {
+			this.exitsByName.remove(e.getName());
 		}
-		
-		parent.debug("Done loading exits:", 2);
+
+		this.exitsById.values().remove(e.getDBRef());
 	}
 
 	//////////////////// CREATURES
 	// Should rooms store their own creatures?
-	final private ArrayList<Creature> creeps = new ArrayList<Creature>();
+	private final ArrayList<Creature> creeps = new ArrayList<Creature>();
 
 	public void addCreature(final Creature c) {
-		creeps.add(c);
+		this.creeps.add(c);
 	}
 
 	public List<Creature> getCreatures() {
-		return new ArrayList<Creature>(creeps);
+		return new ArrayList<Creature>(this.creeps);
 	}
 
 	public List<Creature> getCreaturesByRoom(final Room room) {
@@ -686,7 +691,7 @@ public final class ObjectDB implements ODBI {
 		
 		int loc = room.getDBRef();
 		
-		for (final Creature c : creeps) {
+		for (final Creature c : this.creeps) {
 			if (c.getLocation() == loc) {
 				acc.add(c);
 			}
@@ -700,9 +705,9 @@ public final class ObjectDB implements ODBI {
 	private final Map<String, NPC>  npcsByName = new HashMap<String, NPC>();
 
 	public void addNPC(final NPC npc) {
-		npcsById.put(npc.getDBRef(), npc);
-		npcsByName.put(npc.getName(), npc);
-		npcsByName.put(npc.getCName(), npc);
+		this.npcsById.put(npc.getDBRef(), npc);
+		this.npcsByName.put(npc.getName(), npc);
+		this.npcsByName.put(npc.getCName(), npc);
 	}
 
 	/**
@@ -715,16 +720,18 @@ public final class ObjectDB implements ODBI {
 	 */
 	public NPC getNPC(final String name) {
 		if( name.equals("") ) return null;
-		return npcsByName.get(name);
+		
+		return this.npcsByName.get(name);
 	}
 
 	public NPC getNPC(final int dbref) {
 		if( dbref < 0 ) return null;
-		return npcsById.get(dbref);
+		
+		return this.npcsById.get(dbref);
 	}
 
 	public List<NPC> getNPCs() {
-		return new ArrayList<NPC>(npcsById.values());
+		return new ArrayList<NPC>(this.npcsById.values());
 	}
 
 	public List<NPC> getNPCsByRoom(final Room room) {
@@ -732,49 +739,54 @@ public final class ObjectDB implements ODBI {
 		
 		int loc = room.getDBRef();
 		
-		for (final NPC n : npcsById.values()) {
+		for (final NPC n : this.npcsById.values()) {
 			if (n.getLocation() == loc) {
 				acc.add(n);
 			}
 		}
+		
 		return acc;
 	}
 
 	////////////////// ITEMS
-	private final ArrayList<Item> items = new ArrayList<Item>();
+	private final List<Item> items = new ArrayList<Item>();
 
 	// these are not presently loaded with anything by the code (8-23-2013)
 	private final Map<Integer, Item> itemsById   = new HashMap<Integer, Item>();
-
+	
+	public List<Item> getItems() {
+		return Collections.unmodifiableList( new ArrayList<Item>(this.itemsById.values()) );
+	}
+	
 	public void addItem(final Item item) {
-		items.add(item);
-		itemsById.put(item.getDBRef(), item);
+		this.items.add(item);
+		this.itemsById.put(item.getDBRef(), item);
 	}
 
 	public void removeItem(final Item item) {
-		items.remove(item);
-		itemsById.remove(item.getDBRef());
+		this.items.remove(item);
+		this.itemsById.remove(item.getDBRef());
 	}
 
 	public Item getItem(final int dbref) {
-		return itemsById.get(dbref);
+		return this.itemsById.get(dbref);
 	}
 
 	// somewhat pointless, since items are more likely to have the same name than most other objects
-	public Item getItem(final int roomId, final String name) {
-		for (final Item item : items) {
-			if (item.getLocation() == roomId && item.getName().equals(name)) return item;
+	public Item getItem(final String name) {
+		Item item = null;
+		
+		for (final Item item1 : this.items) {
+			if ( item1.getName().equals(name) ) {
+				item = item1;
+			}
 		}
 		
-		return null;
+		return item;
 	}
-
-	public List<Item> getItems() {
-		return new ArrayList<Item>(itemsById.values());
-	}
-
+	
 	public void addItemsToRooms() {
-		for (final Item item : items) {
+		for (final Item item : this.items) {
 			final Room r = getRoomById(item.getLocation());
 			
 			if (r != null) {
@@ -784,7 +796,7 @@ public final class ObjectDB implements ODBI {
 	}
 
 	public void addItemsToContainers() {
-		for (final Item item : items) {
+		for (final Item item : this.items) {
 			if( item instanceof Container ) {
 				Container c = (Container) item;
 				
@@ -804,12 +816,15 @@ public final class ObjectDB implements ODBI {
 	 */
 	public Map<Item, Player> getItemsHeld() {
 		final Map<Item, Player> acc = new HashMap<Item, Player>();
-		for (final Item item : items) {
+		
+		for (final Item item : this.items) {
 			final MUDObject obj = get(item.getLocation());
+			
 			if (obj instanceof Player) {
 				acc.put(item, (Player) obj);
 			}
 		}
+		
 		return acc;
 	}
 
@@ -822,11 +837,13 @@ public final class ObjectDB implements ODBI {
 	 */
 	public List<Item> getItemsByLoc(final int loc) {
 		final List<Item> acc = new LinkedList<Item>();
-		for (final Item item : items) {
+		
+		for (final Item item : this.items) {
 			if (item.getLocation() == loc) {
 				acc.add(item);
 			}
 		}
+		
 		return acc;
 	}
 
@@ -852,33 +869,35 @@ public final class ObjectDB implements ODBI {
 	}
 
 	///////////// THINGS
-	final private ArrayList<Thing> things = new ArrayList<Thing>();
-	final private Map<Integer, Thing> thingsById = new HashMap<Integer, Thing>();
+	private final ArrayList<Thing> things = new ArrayList<Thing>();
+	private final Map<Integer, Thing> thingsById = new HashMap<Integer, Thing>();
 
 	public void addThing(final Thing thing) {
-		things.add(thing);
-		thingsById.put(thing.getDBRef(), thing);
+		this.things.add(thing);
+		this.thingsById.put(thing.getDBRef(), thing);
 	}
 
 	public void removeThing(final Thing thing) {
-		things.remove(thing);
-		thingsById.remove(thing.getDBRef());
+		this.things.remove(thing);
+		this.thingsById.remove(thing.getDBRef());
 	}
 
 	public Thing getThing(int dbref) {
-		return thingsById.get(dbref);
+		return this.thingsById.get(dbref);
 	}
-
-	public Thing getThing(final int roomId, final String name) {
-		for (final Thing thing : things) {
-			if (thing.getLocation() == roomId && thing.getName().equals(name)) return thing;
+	
+	public Thing getThing(final String name) {
+		for (final Thing thing : this.things) {
+			if ( thing.getName().equals(name) ) {
+				return thing;
+			}
 		}
 		
 		return null;
 	}
 
 	public List<Thing> getThings() {
-		return new ArrayList<Thing>(thingsById.values());
+		return new ArrayList<Thing>(this.thingsById.values());
 	}
 
 	public List<Thing> getThingsForRoom(final Room room) {
@@ -886,7 +905,7 @@ public final class ObjectDB implements ODBI {
 		
 		int roomId = room.getDBRef();
 		
-		for (final Thing t : things) {
+		for (final Thing t : this.things) {
 			if (t.getLocation() == roomId) {
 				acc.add(t);
 			}
@@ -896,9 +915,10 @@ public final class ObjectDB implements ODBI {
 	}
 
 	public void placeThingsInRooms(final MUDServer parent) {
-		for (final Thing thing : things) {
+		for (final Thing thing : this.things) {
 			if (thing != null) {
 				final Room room = parent.getRoom(thing.getLocation());
+				
 				if (room != null) {
 					room.addThing( thing );
 				}
@@ -910,12 +930,12 @@ public final class ObjectDB implements ODBI {
 	private final Map<String, Player> playersByName = new HashMap<String, Player>();
 
 	public void addPlayer(final Player p) {
-		playersByName.put(p.getName(), p);
+		this.playersByName.put(p.getName(), p);
 	}
 
 	public Player getPlayer(final String name) {
 		// TODO fix kludginess, used with/for cnames
-		final Player player = playersByName.get(name);
+		final Player player = this.playersByName.get(name);
 
 		if( player == null ) {
 			MUDObject object = getByName(name);
@@ -933,7 +953,7 @@ public final class ObjectDB implements ODBI {
 	public int getNumPlayers(final PClass c) {
 		int count = 0;
 		
-		for (final Player p : playersByName.values()) {
+		for (final Player p : this.playersByName.values()) {
 			if ( c.equals(p.getPClass()) ) {
 				count += 1;
 			}
@@ -947,7 +967,7 @@ public final class ObjectDB implements ODBI {
 		
 		int loc = room.getDBRef();
 		
-		for (final Player p : playersByName.values()) {
+		for (final Player p : this.playersByName.values()) {
 			if (p.getLocation() == loc) {
 				acc.add(p);
 			}
@@ -960,27 +980,27 @@ public final class ObjectDB implements ODBI {
 	 * Erase the entire database
 	 */
 	 public void clear() {
-		 things.clear();
+		 this.things.clear();
+		 
+		 this.items.clear();
 
-		 items.clear();
+		 this.creeps.clear();
 
-		 creeps.clear();
+		 this.npcsById.clear();
+		 this.npcsByName.clear();
 
-		 npcsById.clear();
-		 npcsByName.clear();
+		 this.playersByName.clear();
 
-		 playersByName.clear();
+		 this.exitsById.clear();
+		 this.exitsByName.clear();
 
-		 exitsById.clear();
-		 exitsByName.clear();
+		 this.roomsById.clear();
+		 this.roomsByName.clear();
 
-		 roomsById.clear();
-		 roomsByName.clear();
+		 this.objsById.clear();
+		 this.objsByName.clear();
 
-		 objsById.clear();
-		 objsByName.clear();
-
-		 unusedDBNs.clear();
-		 reservedDBNs.clear();
+		 this.unusedDBNs.clear();
+		 this.reservedDBNs.clear();
 	 }
 }

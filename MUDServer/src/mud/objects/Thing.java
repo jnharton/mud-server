@@ -39,8 +39,6 @@ public class Thing extends MUDObject {
 	/**
 	 * 
 	 */
-
-	protected double weight = 0; // the weight in whatever units are used of the equippable object
 	
 	public ThingType thing_type = ThingType.NONE;
 	
@@ -125,12 +123,14 @@ public class Thing extends MUDObject {
 		}
 	}
 	
-	public double getWeight() {
+	@Override
+	public Double getWeight() {
 		return this.weight;
 	}
 
 	public String toDB() {
 		String[] output = new String[6];
+		
 		output[0] = this.getDBRef() + "";                // database reference number
 		output[1] = this.getName();                      // name
 		output[2] = TypeFlag.asLetter(this.type) + "";   // flags
@@ -138,6 +138,7 @@ public class Thing extends MUDObject {
 		output[3] = this.getDesc();                      // description
 		output[4] = this.getLocation() + "";             // location (a.k.a parent)
 		output[5] = this.thing_type.ordinal() + "";      // thing type
+		
 		return Utils.join(output, "#"); 
 	}
 

@@ -1,0 +1,12 @@
+@jump
+@JUMP
+
+Moves you to the specified room, very much like an unlimited version of the
+teleport spell. Requires knowledge of the room id number and format and is
+considered an Out of Character (OOC) action, which will be reflected in an
+automatic status change.
+
+Syntax: @jump <destination id>
+        @jump *<zone id/name>
+
+Last Updated: May 3rd, 2016

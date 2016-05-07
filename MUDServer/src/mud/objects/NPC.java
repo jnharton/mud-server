@@ -58,7 +58,6 @@ public class NPC extends Player implements InteractiveI
 		this.name = name;
 		this.desc = "A generic npc.";
 		this.flags = EnumSet.noneOf(ObjectFlag.class);
-		this.locks = "";
 		this.status = "NPC";
 
 		this.race = Races.NONE;
@@ -235,9 +234,29 @@ public class NPC extends Player implements InteractiveI
 
 		return suitable;
 	}
-
+	
+	@Override
 	public void addQuest(Quest newQuest) {
 		this.questList.add(newQuest);
+	}
+	
+	@Override
+	public void removeQuest(final Quest oldQuest) {
+		this.questList.remove(oldQuest);
+	}
+
+	@Override
+	public boolean hasQuest(final Quest quest) {
+		boolean success = false;
+
+		for(final Quest q : this.questList) {
+			if( quest.getId() == q.getId() ) {
+				success = true;
+				break;
+			}
+		}
+		
+		return success;
 	}
 
 	/**
@@ -246,6 +265,7 @@ public class NPC extends Player implements InteractiveI
 	 */
 	public String toDB() {
 		String[] output = new String[12];
+		
 		output[0] = this.getDBRef() + "";                   // database reference number
 		output[1] = this.getName();                         // name
 		output[2] = TypeFlag.asLetter(this.type) + "";      // flags

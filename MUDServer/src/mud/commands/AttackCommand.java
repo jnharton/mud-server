@@ -48,7 +48,7 @@ public class AttackCommand extends Command {
 					// if we haven't preselected a target, we'll try and find the one specified
 					MUDObject mobj = null;
 
-					final List<Creature> creatures = getCreaturesByRoom( getRoom( player ) );
+					final List<Creature> creatures = getCreaturesByRoom( getRoom( player.getLocation() ) );
 
 					for(final Creature c : creatures) {
 						if( c.getName().equalsIgnoreCase(arg) ) {
@@ -81,7 +81,7 @@ public class AttackCommand extends Command {
 						//wt = weapon.getWeaponType();
 						
 						// TODO resolve this somewhere
-						wt = WeaponTypes.LONGSWORD;
+						wt = WeaponTypes.LONG_SWORD;
 					}
 
 					// check range

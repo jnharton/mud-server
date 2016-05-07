@@ -22,10 +22,9 @@ import java.util.List;
 import mud.objects.Item;
 
 public interface Storage<T extends Item> {
-	public T retrieve(final int index);
 	public T retrieve(final String tName);
-	public void insert(final T element);
+	public T retrieve(final int index);
+	public boolean insert(final T element);
 	public boolean isFull();
-	public boolean contains(final T element);
 	public List<T> getContents();
 }

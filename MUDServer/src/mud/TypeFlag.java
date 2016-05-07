@@ -37,6 +37,10 @@ public enum TypeFlag
     	this.flag = flagChar;
     }
     
+    public String getName() {
+    	return this.name;
+    }
+    
     static public TypeFlag fromLetter(final char c) {
     	switch(c) {
     	case 'C':	return CREATURE;
@@ -56,6 +60,6 @@ public enum TypeFlag
     }
     
     public String toString() {
-    	return "" + this.name;
+    	return "" + this.flag;
     }
 }

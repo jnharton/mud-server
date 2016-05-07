@@ -1,9 +1,11 @@
 package mud.utils;
 
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Random;
 
+import mud.Constants;
 import mud.MUDObject;
 import mud.ObjectFlag;
 import mud.TypeFlag;
@@ -16,6 +18,7 @@ import mud.objects.Item;
 import mud.objects.ItemTypes;
 import mud.objects.Player;
 import mud.objects.Room;
+import mud.objects.items.Container;
 import mud.objects.items.Weapon;
 import mud.objects.items.WeaponType;
 
@@ -31,18 +34,18 @@ public final class MudUtils {
 		weight += coins[3] * ( 0.5000 );  // platinum (1/2 oz./coin)
 
 		return ( weight / 16 ); // 16 oz = 1 lb
-		
+
 		// in order to set weight of a coin I need to establish values and relative values
-				// i.e. 100 copper = 1 silver, 100 silver = 1 gold, 100 gold = 1 platinum
-				// need to establish density of each material, and then calculate weight
-				// weight of coin: amount of material (g) -> amount of material (oz).
-				// copper coin = 4.5g
-				// silver coin = 4.5g
-				// gold coin = 4.5g
-				// platinum coin = 4.5g
-				//send(gramsToOunces(4.5));
-				
-				/*final int[] coins = player.getMoney().toArray();
+		// i.e. 100 copper = 1 silver, 100 silver = 1 gold, 100 gold = 1 platinum
+		// need to establish density of each material, and then calculate weight
+		// weight of coin: amount of material (g) -> amount of material (oz).
+		// copper coin = 4.5g
+		// silver coin = 4.5g
+		// gold coin = 4.5g
+		// platinum coin = 4.5g
+		//send(gramsToOunces(4.5));
+
+		/*final int[] coins = player.getMoney().toArray();
 				weight += coins[0] * ( 0.0625 );  // copper (1/16 oz./coin)
 				weight += coins[1] * ( 0.1250 );  // silver (1/8 oz./coin)
 				weight += coins[2] * ( 0.2500 );  // gold (1/4 oz./coin)
@@ -61,7 +64,7 @@ public final class MudUtils {
 				weight += item.getWeight();
 			}
 		}
-		
+
 		return weight;
 	}
 
@@ -100,10 +103,12 @@ public final class MudUtils {
 	}
 
 	public static int calculateDamage(final Weapon weapon, final boolean critical) {
+		int damage = 0;
+		
 		if( weapon == null ) {
 			// TODO this really should return the character's ability to cause damage by themselves
-			if( critical ) return 2;
-			else           return 1;
+			if( critical ) damage = 2;
+			else           damage = 1;
 		}
 		else {
 			final WeaponType wtype = weapon.getWeaponType();
@@ -112,14 +117,16 @@ public final class MudUtils {
 				final String damageRoll = wtype.getDamage();
 
 				if (critical) {
-					return Utils.roll(damageRoll) * wtype.getCritical();
+					damage = Utils.roll(damageRoll) * wtype.getCritical();
 				}
 				else {
-					return Utils.roll(damageRoll);
+					damage = Utils.roll(damageRoll);
 				}
 			}
-			else return weapon.damage;
+			else damage = weapon.damage;
 		}
+		
+		return damage;
 	}
 
 	public static boolean canAttack(final MUDObject target) {
@@ -225,16 +232,71 @@ public final class MudUtils {
 			room.setZone( zone );
 		}
 	}
-	
-	public static void addItemToRoom(final Room room, final Item item) {
+
+	/*public static void addItemToRoom(final Room room, final Item item) {
 		if( room != null && item != null ) {
 			item.setLocation(room.getDBRef());
 			room.addItem(item);
 		}
+	}*/
+
+	public static List<String> scan(final BulletinBoard bb) {
+		List<String> out = null;
+
+		if(bb != null) {
+			out = new ArrayList<String>();
+
+			out.add(bb.getName());
+
+			out.add("+------------------------------------------------------------------------------+");
+
+			for (final BBEntry entry : bb.getEntries()) {
+				out.add("| " + Utils.padRight(entry.toView(), 76) + " |");
+			}
+
+			out.add("+------------------------------------------------------------------------------+");
+		}
+
+		return out;
 	}
-	
+
 	public static boolean validateEmailAddress(final String emailAddress) {
 		// matches against *@*.* | ex: test@gmail.com
 		return emailAddress.matches("([\\w-+]+(?:\\.[\\w-+]+)*@(?:[\\w-]+\\.)+[a-zA-Z]{2,7})");
+	}
+	
+	// container stuff
+	public static String getTop(final Container c) {
+		return Utils.padRight("", Container.top, c.getDisplayWidth());
+	}
+	
+	public static String getSide() {
+		return "" + Container.side;
+	}
+	
+	public static String getBottom(final Container c) {
+		return Utils.padRight("", Container.bottom, c.getDisplayWidth());
+	}
+	
+	/**
+	 * Checks access/permissions level against the queried access and returns
+	 * true or false depending on whether they meet/exceed the specified access
+	 * level or not. If the client is associated with a player, then the
+	 * player's access is checked, otherwise it's checked against 0 (basic user
+	 * permissions).
+	 * 
+	 * @param client
+	 * @param accessLevel
+	 * 
+	 * @return
+	 */
+	public static boolean checkAccess(final Player player, final int accessLevel) {
+		int check = Constants.USER;
+
+		if (player != null) {
+			check = player.getAccess();
+		}
+
+		return check >= accessLevel;
 	}
 }

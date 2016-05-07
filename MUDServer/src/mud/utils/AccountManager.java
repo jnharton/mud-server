@@ -14,68 +14,77 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Hashtable;
 
-import mud.MUDServer;
 import mud.objects.Player;
 
 public final class AccountManager {
 	private Integer last_account_id = -1;
 	
-	private MUDServer parent;
+	private final Hashtable<Integer, Account> iamap; // integer account map
 	
-	private final Hashtable<Integer, Account> iamap;
-	private final Hashtable<Player, Account> pamap;
-	
-	public AccountManager(MUDServer ms) {
-		this.parent = ms;
+	public AccountManager() {
 		this.iamap = new Hashtable<Integer, Account>();
-		this.pamap = new Hashtable<Player, Account>();
+	}
+	
+	public int nextId() {
+		return ++(this.last_account_id);
 	}
 	
 	public void addAccount(final String name, final String password, final int char_limit) {
 		int aId = nextId();
-		iamap.put( aId, new Account(aId, name, password, char_limit) );
+		this.iamap.put( aId, new Account(aId, name, password, char_limit) );
 	}
 	
-	public void addAccount(Account account) {
-		if( !iamap.containsKey(account.getId()) ) {
-			iamap.put( account.getId(), account );
+	public void addAccount(final Account account) {
+		// if we don't already have an account with that ID
+		if( !this.iamap.containsKey( account.getId() ) ) {
+			this.iamap.put( account.getId(), account );
 			
-			/*for(Player p : account.getCharacters()) {
-				pamap.put(p, account);
-			}*/
-			
-			if( account.getId() > last_account_id ) last_account_id = account.getId();
+			// if this account has an id later than our current last, update that
+			if( account.getId() > this.last_account_id ) {
+				this.last_account_id = account.getId();
+			}
 		}
 	}
-
-	public void removeAccount() {
+	
+	public void removeAccount(final Account toRemove) {
+		this.iamap.remove(toRemove);
+	}
+	
+	public void removeAccount(final Integer id) {
+		final Account toRemove = this.iamap.get(id);
+		
+		removeAccount(toRemove);
 	}
 
 	public Account getAccount(int accountId) {
 		return iamap.get(accountId);
 	}
 
-	public Account getAccount(Player player) {
+	public Account getAccount(final Player player) {
+		Account a = null;
+		
 		// TODO properly fix this, without kludging
-		// kludge
-		for(Account account : iamap.values()) {
+		for(final Account account : iamap.values()) {
 			if( account.getCharacters().contains(player) ) {
-				return account;
+				a = account;
+				break;
 			}
 		}
 		
-		return null;
-		//return pamap.get(player);
+		return a;
 	}
 	
 	public Account getAccount(final String name, final String pass) {
+		Account a = null;
+		
 		for (final Account account : iamap.values()) {
 			if (account.getUsername().equals(name) && account.getPassword().equals(pass)) {
-				return account;
+				a = account;
+				break;
 			}
 		}
 
-		return null;
+		return a;
 	}
 	
 	public Collection<Account> getAccounts() {
@@ -84,9 +93,5 @@ public final class AccountManager {
 	
 	public int numAccounts() {
 		return this.iamap.size();
-	}
-	
-	public int nextId() {
-		return ++last_account_id;
 	}
 }

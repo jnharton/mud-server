@@ -21,15 +21,7 @@ public class Reagent
 {
 	private String name;
 	
-	// TODO is this an appropriate place to be throwing exception
-	public Reagent(final String tName) throws Exception {
-        if (tName == "" || "".equals(tName)) {
-            throw new Exception("Bad reagent name [" + tName + "].");
-        }
-		this.name = tName;
-	}
-
-	public void setName(final String tName) {
+	public Reagent(final String tName) {
 		this.name = tName;
 	}
 
@@ -51,5 +43,4 @@ public class Reagent
 	public int hashCode() {
 		return name.hashCode();
 	}
-
 }

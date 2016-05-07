@@ -16,19 +16,17 @@ public class PortalEvent extends EventObject {
 	
 	public enum EventType { ACTIVATE, DEACTIVATE, USE, NONE };
 	
-	public PortalEvent(Portal source) {
+	public PortalEvent(final Portal source) {
 		super(source);
 		this.eventType = EventType.NONE;
 		this.message = "";
 	}
 	
-	public PortalEvent(Portal source, EventType eType) {
-		super(source);
-		this.eventType = eType;
-		this.message = "";
+	public PortalEvent(final Portal source, final EventType eType) {
+		this(source, eType, "");
 	}
 	
-	public PortalEvent(Portal source, EventType eType, String message) {
+	public PortalEvent(final Portal source, final EventType eType, final String message) {
 		super(source);
 		this.eventType = eType;
 		this.message = message;

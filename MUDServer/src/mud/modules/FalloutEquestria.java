@@ -23,6 +23,7 @@ import mud.objects.ItemType;
 import mud.objects.ItemTypes;
 import mud.objects.Player;
 import mud.objects.Thing;
+import mud.objects.items.Drink;
 import mud.objects.items.Weapon;
 import mud.rulesets.foe.FOESpecial;
 import mud.rulesets.special.SpecialRuleset;
@@ -118,23 +119,18 @@ public final class FalloutEquestria implements GameModule, ExtraCommands {
 						+ "substance swirls in ever-changing patterns. It emits gently pulsing "
 						+ "light which shifts through the whole spectrum of visible colors.");
 		MemoryOrb.setLocation(-1);
-		MemoryOrb.setEquippable(false);
-		MemoryOrb.setEquipped(false);
 
 		prototypes.put("mud.foe.memory_orb", MemoryOrb);
 
 		// prototype - Sparkle Cola soda
-		Item SparkleCola = new Item(-1);
+		//Item SparkleCola = new Item(-1);
+		Drink SparkleCola = new Drink(-1); // item - drinkable
 
 		SparkleCola.setName("Sparkle Cola");
 		SparkleCola.setDesc(
 				"A bottle of ancient, lukewarm Sparkle Cola. Probably just as good as it ever was.\n\n" +
 				"Your Choice.\nThe Best in Equestria.\nSparkle Cola\nSoar into the sky."); 
 		SparkleCola.setLocation(-1);
-		SparkleCola.setDrinkable(true);
-		SparkleCola.setEquipType(ItemTypes.NONE);
-		SparkleCola.setEquippable(false);
-		SparkleCola.setEquipped(false);
 
 		SparkleCola.setScriptOnTrigger(TriggerType.onUse,
 				"{do:{give:{&player},{create_item:mud.foe.bottlecap_sc}},{tell:You toss the bottle#c keeping just the bottlecap.,{&player}}}"
@@ -152,11 +148,6 @@ public final class FalloutEquestria implements GameModule, ExtraCommands {
 				+ "now a valuable currency in the Equestrian Wasteland");
 		BottleCap.setLocation(-1);
 		
-		BottleCap.setEquipType(ItemTypes.NONE);
-		
-		BottleCap.setEquippable(false);
-		BottleCap.setEquipped(false);
-
 		BottleCap.setProperty("type", "sc"); // Sparkle Cola bottle cap
 		BottleCap.setProperty("value", 1);
 
@@ -253,7 +244,7 @@ public final class FalloutEquestria implements GameModule, ExtraCommands {
 		
 		// goggles, glasses? (FOESlotTypes.HEAD, ItemTypes.NONE)
 		
-		player.addSlot("helmet",        new Slot(FOESlotTypes.HEAD, ItemTypes.HELMET));
+		player.addSlot("helmet",        new Slot(FOESlotTypes.HEAD, ItemTypes.ARMOR));
 		player.addSlot("clothes_head",  new Slot(FOESlotTypes.HEAD, ItemTypes.CLOTHING));
 		player.addSlot("eyes",          new Slot(FOESlotTypes.EYES, ItemTypes.NONE));
 

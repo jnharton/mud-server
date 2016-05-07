@@ -5,24 +5,20 @@ import java.util.List;
 import java.util.EnumSet;
 
 import mud.ObjectFlag;
-import mud.TypeFlag;
 import mud.interfaces.MagicItem;
-import mud.interfaces.Usable;
 import mud.magic.Spell;
 import mud.misc.Effect;
-import mud.net.Client;
 import mud.objects.Item;
 import mud.objects.ItemType;
 import mud.objects.ItemTypes;
 import mud.utils.Utils;
 
-public class Wand extends Item implements MagicItem, Usable<Wand> {
+public class Wand extends Item implements MagicItem {
 	// wand should really have the itemType WAND, but it needs weapon right now, so that it can
 	// fit in the slot it needs to be in
 
 	public int charges;
 	public Spell spell;
-	private Handed handed = Handed.ONE;
 	
 	// TODO is there a such a thing as a wand with no spell/charges or one with a generic spell/num charges?
 	
@@ -30,14 +26,14 @@ public class Wand extends Item implements MagicItem, Usable<Wand> {
 		super(-1, "Wand", "A magic wand.");
 		
 		//super(-1, "Wand", EnumSet.noneOf(ObjectFlag.class), "A magic wand.", 8);
+		this.item_type = ItemTypes.WAND;
 		
 		this.equippable = true;
-		this.item_type = ItemTypes.WAND;
-		this.equip_type = ItemTypes.WEAPON;
+		
 		this.charges = tCharges;
 		this.spell = spell;
 
-		this.name = "Wand of " + this.spell.getName();
+		//this.name = "Wand of " + this.spell.getName();
 	}
 	
 	/**
@@ -58,25 +54,27 @@ public class Wand extends Item implements MagicItem, Usable<Wand> {
 	public Wand(String tempName, String tempDesc, int tempLoc, int tempDBREF, ItemType itemType, int tCharges, Spell spell) {
 		super(tempDBREF, tempName, EnumSet.noneOf(ObjectFlag.class), tempDesc, tempLoc);
 		
-		this.equippable = true;
 		this.item_type = ItemTypes.WAND;
-		this.equip_type = ItemTypes.WEAPON;
+		
+		this.equippable = true;
+		
 		this.charges = tCharges;
 		this.spell = spell;
 		
-		this.name = "Wand of " + this.spell.getName();
+		//this.name = "Wand of " + this.spell.getName();
 	}
 	
 	protected Wand(final Wand template) {
 		super(template);
 		
-		this.equippable = true;
 		this.item_type = ItemTypes.WAND;
-		this.equip_type = ItemTypes.WEAPON;
+		
+		this.equippable = true;
+		
 		this.charges = template.charges;
 		this.spell = template.getSpell();
 
-		this.name = "Wand of " + this.spell.getName();
+		//this.name = "Wand of " + this.spell.getName();
 	}
 
 	@Override
@@ -127,27 +125,23 @@ public class Wand extends Item implements MagicItem, Usable<Wand> {
 	}
 
 	public String toDB() {
-		String[] output = new String[10];
+		final String[] output = new String[2];
 		
-		output[0] = this.getDBRef() + "";         // database reference number
-		output[1] = this.getName();               // name
-		output[2] = this.getFlagsAsString();      // flags
-		output[3] = this.getDesc();               // description
-		output[4] = this.getLocation() + "";      // location
+		if (this.spell != null) output[0] = this.spell.getName(); // spell name	
+		else                    output[0] = "null";
 		
-		output[5] = this.item_type.getId() + "";  // item type
-		output[6] = this.equip_type.getId() + ""; // equip type
-		output[7] = this.slot_type.getId() + "";  // slot type
+		//output[0] = this.spell.getName(); // spell name
+		output[1] = this.charges + "";    // spell charges
 		
-		output[8] = this.spell.getName();         // spell name
-		output[9] = this.charges + "";            // spell charges
-		
-		return Utils.join(output, "#");
+		return super.toDB() + "#" + Utils.join(output, "#");
 	}
 	
 	@Override
 	public String toString() {
-		return "Wand of " + this.spell.getName();
+		// TODO fix this nonsense, since a wand might not have a spell set...
+		if (this.spell != null) return "Wand of " + this.spell.getName();
+		else                    return "Wand of NULL";
+		// return "Wand of " + this.spell.getName();
 	}
 	
 	@Override

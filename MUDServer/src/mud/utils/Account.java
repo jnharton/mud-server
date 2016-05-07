@@ -11,7 +11,7 @@ package mud.utils;
  */
 
 import java.io.Serializable;
-import java.net.InetAddress;
+
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
@@ -24,7 +24,6 @@ import mud.objects.Player;
 
 //public class MUDAccount
 public class Account implements Serializable {
-
 	/**
 	 * 
 	 */
@@ -67,19 +66,15 @@ public class Account implements Serializable {
 	 */
 
 	// static constants
-	/*
-	 * STATUS
-	 * Active Accounts - normal state
-	 * Inactive Accounts - haven't been played recently, flagged as inactive
-	 * Suspended Accounts - temporarily banned or suspended for the time being for behavioral infractions
-	 * Frozen Accounts - permanently banned and not yet purged (PURGE)
-	 * Locked Accounts - accounts that are locked out and cannot be logged into (for instance, in the case of a hacked account)
-	 * Archived Accounts - accounts archived after 3-6 months of being inactive (inactive timer reset whenever a successful login occurs),
-	 * not usable until unarchived and restored to active status.
-	 */
 	public static enum Status { ACTIVE, INACTIVE, SUSPENDED, FROZEN, LOCKED, ARCHIVED };
-	
-	private static Calendar calendar;
+	/*
+	 * Active    - normal state
+	 * Inactive  - haven't been played recently, flagged as inactive
+	 * Suspended - temporarily banned or suspended for the time being for behavioral infractions
+	 * Frozen    - permanently banned and not yet purged (PURGE)
+	 * Locked    - locked out and cannot be logged into (for instance, in the case of a hacked account)
+	 * Archived  - archived after 3-6 months of being inactive (inactive timer reset whenever a successful login occurs)
+	 */
 	
 	/* passive properties (might be modified, but not frequently) */
 	private final Date created; // creation date
@@ -110,15 +105,14 @@ public class Account implements Serializable {
 	 * @param aId
 	 */
 	public Account(int aId) {
-		Account.calendar = Calendar.getInstance(TimeZone.getTimeZone("America/New_York"), new Locale("ENGLISH", "US"));
-
 		this.id = aId;
 		this.status = Status.ACTIVE;
 		
-		final Date newDate = new Date(Account.calendar.get(Calendar.MONTH), Account.calendar.get(Calendar.DATE), Account.calendar.get(Calendar.YEAR));
+		final Date newDate = Account.getDate();
 
 		this.created = new Date(newDate);
 		this.modified = new Date(newDate);
+		this.archived = null;
 	}
 
 	/**
@@ -153,6 +147,7 @@ public class Account implements Serializable {
 
 		this.created = aCreated;   // account's creation date
 		this.modified = aModified; // account's last modification date
+		this.archived = null;
 
 		this.username = aUsername;
 		this.password = aPassword;
@@ -166,62 +161,60 @@ public class Account implements Serializable {
 	}
 	
 	/**
-	 * 
-	 * defensive copying used
+	 * get the date this account was created
 	 * 
 	 * @return
 	 */
 	public Date getCreated() {
+		// defensive copying
 		return new Date(this.created);
 	}
 	
-	public void setModified(Date modDate) {
-		this.modified = modDate;
-	}
-	
 	/**
-	 * 
-	 * defensive copying used
+	 * get the date this account was last modified
 	 * 
 	 * @return
 	 */
 	public Date getModified() {
+		// defensive copying
 		return new Date(this.modified);
 	}
 	
-	public void setArchived(Date arcDate) {
-		this.archived = arcDate;
+	/**
+	 * set the date this account was last modified
+	 * 
+	 * @param modDate
+	 */
+	private void setModified(final Date modDate) {
+		this.modified = modDate;
 	}
 	
 	/**
+	 * get the account archived date
 	 * 
-	 * defensive copying used
-	 * 
-	 * @return
+	 * @return Date
 	 */
 	public Date getArchived() {
+		// defensive copy
 		return new Date(this.archived);
+	}
+	
+	/**
+	 * set the account archived date
+	 * 
+	 * @param archiveDate
+	 */
+	private void setArchived(final Date archiveDate) {
+		this.archived = archiveDate;
 	}
 
 	/**
+	 * get the account id
 	 * 
-	 * @return
+	 * @return int
 	 */
 	public int getId() {
 		return this.id;
-	}
-
-	/**
-	 * Set account status
-	 * 
-	 * @param newStatus the status to change the account status too
-	 */
-	public void setStatus(Status newStatus) {
-		this.status = newStatus;
-		
-		Account.calendar = Calendar.getInstance(TimeZone.getTimeZone("America/New_York"), new Locale("ENGLISH", "US"));
-		final Date newDate = new Date(Account.calendar.get(Calendar.MONTH), Account.calendar.get(Calendar.DATE), Account.calendar.get(Calendar.YEAR));
-		setModified(newDate);
 	}
 
 	/**
@@ -232,7 +225,18 @@ public class Account implements Serializable {
 	public Status getStatus() {
 		return this.status;
 	}
-
+	
+	/**
+	 * Set account status
+	 * 
+	 * @param newStatus the status to change the account status too
+	 */
+	public void setStatus(final Status newStatus) {
+		this.status = newStatus;
+		
+		setModified( Account.getDate() );
+	}
+	
 	/**
 	 * Get username
 	 * 
@@ -241,20 +245,7 @@ public class Account implements Serializable {
 	public String getUsername() {
 		return this.username;
 	}
-
-	/**
-	 * Set account password
-	 * 
-	 * @param newPassword the password to set on the account 
-	 */
-	public void setPassword(String newPassword) {
-		this.password = newPassword;
-		
-		Account.calendar = Calendar.getInstance(TimeZone.getTimeZone("America/New_York"), new Locale("ENGLISH", "US"));
-		final Date newDate = new Date(Account.calendar.get(Calendar.MONTH), Account.calendar.get(Calendar.DATE), Account.calendar.get(Calendar.YEAR));
-		setModified(newDate);
-	}
-
+	
 	/**
 	 * Get account password
 	 * 
@@ -264,26 +255,65 @@ public class Account implements Serializable {
 		return this.password;
 	}
 	
-	public void setCharLimit(final Integer newCharLimit) {
-		this.charLimit = newCharLimit;
+	/**
+	 * Set account password
+	 * 
+	 * @param newPassword the password to set on the account 
+	 */
+	public void setPassword(final String newPassword) {
+		this.password = newPassword;
+		
+		setModified( Account.getDate() );
 	}
 	
 	public Integer getCharLimit() {
 		return this.charLimit;
 	}
+	
+	public void setCharLimit(final Integer newCharLimit) {
+		this.charLimit = newCharLimit;
+		
+		setModified( Account.getDate() );
+	}
+	
+	public void disable() {
+		this.disabled = true;
+	}
+	
+	public void enable() {
+		this.disabled = false;
+	}
+	
+	public boolean isDisabled() {
+		return this.disabled;
+	}
+	
+	public String getLastIPAddress() {
+		return this.lastIPAddress;
+	}
+	
+	/*public void setLastIPAddress(final String ipAddress) {
+		this.lastIPAddress = ipAddress;
+	}*/
 
 	/**
 	 * Link an existing character to this account
 	 * 
 	 * @param newCharacter the character to link
 	 */
-	public boolean linkCharacter(Player newCharacter) {
+	public boolean linkCharacter(final Player newCharacter) {
+		boolean success = false;
+		
 		if( this.characters.size() < charLimit ) {
 			//this.playerIds.add(newCharacter.getDBRef());
-			return this.characters.add(newCharacter);
+			success = this.characters.add(newCharacter);
+			
+			if( success ) {
+				setModified( Account.getDate() );
+			}
 		}
 
-		return false;
+		return success;
 	}
 
 	/**
@@ -291,22 +321,25 @@ public class Account implements Serializable {
 	 * 
 	 * @param currCharacter the character to unlink
 	 */
-	public boolean unlinkCharacter(Player currCharacter) {
+	public boolean unlinkCharacter(final Player currCharacter) {
+		boolean success = false;
+		
 		if( this.characters.contains(currCharacter) ) {
 			//this.playerIds.remove(currCharacter.getDBRef());
-			return this.characters.remove(currCharacter);
+			success = this.characters.remove(currCharacter);
+			
+			if( success ) {
+				setModified( Account.getDate() );
+			}
 		}
 
-		return false;
+		return success;
 	}
-
-	/**
-	 * 
-	 * @param tClient
-	 */
-	public void setClient(Client newClient) {
-		this.client = newClient;
+	
+	public List<Player> getCharacters() {
+		return Collections.unmodifiableList(this.characters);
 	}
+	
 
 	/**
 	 * 
@@ -315,15 +348,17 @@ public class Account implements Serializable {
 	public Client getClient() {
 		return this.client;
 	}
-
+	
 	/**
 	 * 
-	 * @param tPlayer
+	 * @param tClient
 	 */
-	public void setPlayer(Player newPlayer) {
-		this.player = newPlayer;
+	public void setClient(final Client newClient) {
+		if( newClient == null ) this.lastIPAddress = this.client.getInput();
+		
+		this.client = newClient;
 	}
-
+	
 	/**
 	 * 
 	 * @return
@@ -331,11 +366,15 @@ public class Account implements Serializable {
 	public Player getPlayer() {
 		return this.player;
 	}
-
-	public List<Player> getCharacters() {
-		return Collections.unmodifiableList(this.characters);
+	
+	/**
+	 * 
+	 * @param tPlayer
+	 */
+	public void setPlayer(final Player newPlayer) {
+		this.player = newPlayer;
 	}
-
+	
 	public void setOnline(boolean online) {
 		this.online = online;
 	}
@@ -353,38 +392,31 @@ public class Account implements Serializable {
 		}
 	}
 	
-	public void setLastIPAddress(final String ipAddress) {
-		this.lastIPAddress = ipAddress;
-	}
-	
-	public String getLastIPAddress() {
-		return this.lastIPAddress;
-	}
-	
-	public boolean isDisabled() {
-		return this.disabled;
-	}
-
 	public String display() {
 		String username = Utils.padRight(getUsername(), 8);
 		String id = Utils.padRight(String.valueOf(getId()), 6);
+		
 		String name;
-		if (player != null) { name = Utils.padRight(player.getName(), 40); }
-		else { name = Utils.padRight("- No Player -", 40); };
+		
+		if (player != null) name = Utils.padRight(player.getName(), 40);
+		else                name = Utils.padRight("- No Player -", 40);
+		
 		String state = Utils.padRight(isOnline(), 6);
 		String creationDate = Utils.padRight(created.toString(), 10);
 
 		return username + " " + id + " " + name + " " + state + " " + creationDate;
 	}
-
-	public static void main(String[] args) {
-		Account b = new Account(5);
-		Account c = new Account(123);
-		System.out.println("Id: " + b.id);
-		System.out.println("Created " + b.created);
-		System.out.println("Modified " + b.modified);
-		System.out.println("Id: " + c.id);
-		System.out.println("Created " + c.created);
-		System.out.println("Modified " + c.modified);
+	
+	private static Date getDate() {
+		// TODO should I get the timezone and local as separate variables first? should they use the default?
+		
+		//final Calendar calendar = Calendar.getInstance(tz, lc);
+		final Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("America/New_York"), new Locale("ENGLISH", "US"));
+		
+		int month = calendar.get(Calendar.MONTH);
+		int day = calendar.get(Calendar.DATE);
+		int year = calendar.get(Calendar.YEAR);
+				
+		return new Date(month, day, year);
 	}
 }

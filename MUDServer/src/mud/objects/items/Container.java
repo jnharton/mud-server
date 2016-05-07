@@ -1,7 +1,9 @@
 package mud.objects.items;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.EnumSet;
+import java.util.List;
 
 import mud.ObjectFlag;
 import mud.TypeFlag;
@@ -11,140 +13,72 @@ import mud.objects.ItemTypes;
 import mud.utils.Utils;
 
 public class Container extends Item implements Storage<Item> {
+	// these only need to be private if they are non-static, non-final and thus changeable
+	public static final Character top = '-';
+	public static final Character side = '|';
+	public static final Character bottom = '-';
 	
-	private int size = 5;
-	private boolean accessible;
-	private boolean full;
+	public static final int DEFAULT_SIZE = 5;
 	
-	private ArrayList<Item> contents;
+	private int size;
+	private List<Item> contents;
+	
+	//protected Map<String, Slot> slots = null; // handles objects which hold specific things, like sheaths for swords
 
 	private int displayWidth = 30; // the width for the container display box (check whenever something added)
-	
-	private Character top = '-';
-	private Character side = '|';
-	private Character bottom = '-';
 
 	public Container() {
-		super(-1, "Container", EnumSet.noneOf(ObjectFlag.class), "A generic container", 4);
-		this.type = TypeFlag.ITEM;
+		super(-1, "Container", "A generic container");
 		
-		this.equippable = false;
-		this.equip_type = ItemTypes.CONTAINER; // the type of equipment it is
 		this.item_type = ItemTypes.CONTAINER;
 		
-		this.weight = 1.0;
+		this.size = Container.DEFAULT_SIZE;
 		
-		this.accessible = true;
-		this.full = false;
-		
-		this.contents = new ArrayList<Item>(5);
+		this.contents = new ArrayList<Item>(this.size);
+	}
+
+	public Container(final String name) {
+		this(name, "A generic container", Container.DEFAULT_SIZE);
 	}
 	
-	// initial size
-	public Container(int size) {
-		this();
+	public Container(final String name, final String description) {
+		this(name, description, Container.DEFAULT_SIZE);
+	}
+
+	public Container(final String name, final String description, final int size) {
+		super(-1, name, description);
+
+		this.item_type = ItemTypes.CONTAINER;
+		
+		this.equippable = false;
+
+		this.size = size;
+
+		this.contents = new ArrayList<Item>(this.size);
+	}
+	
+	// TODO does not copy contents, should it?
+	protected Container(final Container template) {
+		super(template);
+		
+		this.item_type = ItemTypes.CONTAINER;
+		
+		this.size = template.size;
+		
+		this.contents = new ArrayList<Item>(this.size);
+		
+		this.displayWidth = template.displayWidth;
+	}
+
+	public Container(final int tempDBREF, final String tempName, final EnumSet<ObjectFlag> tempFlags, final String tempDesc, final int tempLoc, final int size)
+	{
+		super(tempDBREF, tempName, tempFlags, tempDesc, tempLoc);
+		
+		this.item_type = ItemTypes.CONTAINER;
 		
 		this.size = size;
-	}
-	
-	// initial size, base weight
-	public Container(int size, double weight) {
-		this(size);
 		
-		this.weight = weight;
-	}
-
-	public Container(String name) {
-		this(5, 0.0);
-		this.name = name;
-		
-		this.equippable = false;
-		this.equip_type = ItemTypes.CONTAINER; // the type of equipment it is
-		this.item_type = ItemTypes.CONTAINER;
-		
-		this.weight = 1.0;
-		
-		this.accessible = true;
-		this.full = false;
-		
-		this.contents = new ArrayList<Item>(5);
-	}
-	
-	public Container(String name, int size) {
-		this(size, 0.0);
-		this.name = name;
-	}
-	
-	public Container(String name, int size, double weight) {
-		this(size, weight);
-		this.name = name;
-	}
-	
-	public ArrayList<String> look() {
-		ArrayList<String> result = new ArrayList<String>();
-		
-		result.add(name + " (#" + getDBRef() + ")");
-		result.add(this.desc);
-		for (Item item : contents) {
-			result.add(item.getName() + " (#" + item.getName() + ")");
-		}
-		
-		return result;
-	}
-	
-	public Item retrieve(int index) {
-		/*check display width, change if necessary (shorten)
-		 * this means each item must track how wide it's name/string version is
-		 * note: will retrieve only the first item if no specifier
-		 */
-		for (Item item : this.contents) {
-			if (item.getDBRef() == index) {
-				return this.contents.get(index);
-			}
-		}
-		
-		return null; 
-	}
-
-	
-	public Item retrieve(String itemName) {
-		// check display width, change if necessary (shorten)
-		// this means each item must track how wide it's name/string version is
-		// note: will retrieve only the first item if no specifier
-		
-		for (Item item : this.contents) {
-			if (item.getName().equals(itemName)) {
-				this.weight -= item.getWeight();
-				return this.contents.remove(this.contents.indexOf(item));
-			}
-		}
-		
-		return null;
-	}
-	
-	public void insert(final Item item) {
-		// check display width, change if necessary (shorten/lengthen)
-		item.setLocation( this.getDBRef() ); // should I be doing this here?
-		this.contents.add(item);
-		this.weight += item.getWeight();
-	}
-	
-	/* internal ArrayList wrapper functions */
-	
-	public void add(Item element) {
-		this.contents.add(element);
-	}
-	
-	public Item remove(int index) {
-		return this.contents.remove(index);
-	}
-	
-	public boolean contains(Item element) {
-		return this.contents.contains(element);
-	}
-	
-	public int indexOf(Item element) {
-		return this.contents.indexOf(element);
+		this.contents = new ArrayList<Item>(this.size);
 	}
 	
 	@Override
@@ -153,55 +87,93 @@ public class Container extends Item implements Storage<Item> {
 		
 		Double temp = 0.0;
 		
-		for(final Item item : contents) {
+		for(final Item item : this.contents) {
 			temp += item.getWeight();
 		}
 		
 		return (containerWeight + temp);
-	}
-
-	public boolean isFull() {
-		return this.full;
-	}
-	
-	public String getTop() {
-		return Utils.padRight("", top, displayWidth);
-	}
-	
-	public String getSide() {
-		return side.toString();
-	}
-	
-	public String getBottom() {
-		return Utils.padRight("", bottom, displayWidth);
 	}
 	
 	public int getDisplayWidth() {
 		return this.displayWidth;
 	}
 	
-	public ArrayList<Item> getContents() {
-		return this.contents;
+	public Item retrieve(final String itemName) {
+		Item item = null;
+		
+		// check display width, change if necessary (shorten)
+		// this means each item must track how wide it's name/string version is
+		// note: will retrieve only the first item if no specifier
+		
+		for (final Item item1 : this.contents) {
+			if (item1.getName().equals(itemName)) {
+				this.weight -= item1.getWeight();
+				
+				return this.contents.remove(this.contents.indexOf(item));
+			}
+		}
+		
+		return null;
 	}
-
+	
+	public Item retrieve(int index) {
+		Item item = null;
+		
+		/*check display width, change if necessary (shorten)
+		 * this means each item must track how wide it's name/string version is
+		 * note: will retrieve only the first item if no specifier
+		 */
+		for (final Item item1 : this.contents) {
+			if (item1.getDBRef() == index) {
+				item = this.contents.remove(index);
+			}
+		}
+		
+		return item;
+	}
+	
+	public boolean insert(final Item item) {
+		boolean success = false;
+		
+		if( !isFull() ) {
+			this.contents.add(item);
+			success = true;
+		}
+		
+		return success;
+	}
+	
+	public boolean isFull() {
+		return this.contents.size() == this.size;
+	}
+	
+	public List<Item> getContents() {
+		return Collections.unmodifiableList(this.contents);
+	}
+	
+	@Override
+	public Container getCopy() {
+		return new Container(this);
+	}
+	
 	@Override
 	public String toDB() {
-		String[] output = new String[10];
+		/*final StringBuilder sb = new StringBuilder();
 		
-		output[0] = this.getDBRef() + "";         // database reference number
-		output[1] = this.getName();               // name
-		output[2] = this.getFlagsAsString();      // flags
-		output[3] = this.getDesc();               // description
-		output[4] = this.getLocation() + "";      // location
+		int n = 0;
 		
-		output[5] = this.item_type.getId() + "";  // item type
-		output[6] = this.equip_type.getId() + ""; // equip type
-		output[7] = this.slot_type.getId() + "";  // slot type
+		for(final Item item : this.contents) {
+			sb.append(item.getDBRef());
+			if( n < this.contents.size() ) sb.append(",");	
+			n++;
+		}*/
 		
-		output[8] = "*";                          // blank
-		output[9] = "*";                          // blank
+		final String[] output = new String[1];
 		
-		return Utils.join(output, "#");
+		output[0] = "" + this.size;
+		//output[1] = sb.toString();
+		
+		return super.toDB() + "#" + Utils.join(output, "#");
 	}
 	
 	@Override

@@ -4,7 +4,6 @@ import java.io.File;
 import java.util.*;
 
 import mud.objects.*;
-import mud.objects.creatures.Horse;
 import mud.objects.exits.Door;
 import mud.objects.exits.Portal;
 import mud.objects.exits.PortalType;
@@ -12,12 +11,10 @@ import mud.objects.items.*;
 import mud.objects.npcs.Innkeeper;
 import mud.objects.npcs.Merchant;
 import mud.objects.things.Box;
-import mud.objects.Item;
 import mud.rulesets.d20.Classes;
 import mud.rulesets.d20.Races;
 import mud.utils.Utils;
 import mud.interfaces.GameModule;
-import mud.interfaces.Ruleset;
 import mud.magic.Spell;
 import mud.misc.Coins;
 import mud.misc.Effect;
@@ -67,14 +64,16 @@ public class ObjectLoader {
 
 			if (oInfo.charAt(0) == '&') { // means to ignore that line
 				logger.debug("`loadObjects` ignoring line: " + oInfo);
+				logger.debug("");
 				
 				// grab the dbref number and remove the prefixing & character
 				oDBRef = Integer.parseInt(oInfo.split("#")[0].replace('&', ' ').trim());
 
 				NullObject no = new NullObject(oDBRef);
 				no.lock(); // lock the NullObject
-
+				
 				logger.debug("NULLObject (" + oDBRef + ") Locked?: " + no.isLocked()); // print out the lock state
+				logger.debug("");
 
 				objectDB.add(no);
 				continue;
@@ -84,20 +83,18 @@ public class ObjectLoader {
 				String[] attr = oInfo.split("#");
 				
 				oDBRef = Integer.parseInt(attr[0]);
-				
-				System.out.println(oDBRef);
-				
 				oName = attr[1];
 				oTypeFlag = attr[2].charAt(0);
 				oFlags = attr[2].substring(1, attr[2].length());
 				oDesc = attr[3];
 				oLocation = Integer.parseInt(attr[4]);
 
-				logger.debug("Database Reference Number: " + oDBRef);
+				logger.debug("DBRef: " + oDBRef);
 				logger.debug("Name: " + oName);
 				logger.debug("Flags: " + oFlags);
 				logger.debug("Description: " + oDesc);
 				logger.debug("Location: " + oLocation);
+				logger.debug("");
 
 				if (oTypeFlag == 'C') {
 					/*
@@ -139,8 +136,8 @@ public class ObjectLoader {
 				}
 				
 				else if (oFlags.equals("IKV")) {
-					Innkeeper ik = new Innkeeper( parent, oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), oDesc, "Merchant", "VEN", oLocation,
-							Coins.fromArray(new int[] { 1000, 1000, 1000, 1000 }));
+					Innkeeper ik = new Innkeeper(oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), oDesc, "Merchant",
+							"VEN", oLocation, Coins.fromArray(new int[] { 1000, 1000, 1000, 1000 }));
 
 					logger.debug("log.debug (db entry): " + ik.toDB(), 2);
 					logger.debug("Innkeeper", 2);
@@ -152,6 +149,7 @@ public class ObjectLoader {
 				// Exit(String tempName, String tempFlags, String tempDesc, int
 				// tempLoc, int tempDBREF, int tempDestination)
 				else if (oTypeFlag == 'E') {
+					//String oDest = attr[5];
 					int eType = Integer.parseInt(attr[6]);
 
 					ExitType et = ExitType.values()[eType];
@@ -173,7 +171,6 @@ public class ObjectLoader {
 						}
 
 						Exit exit = new Exit(oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), oDesc, oLocation, oDest);
-						exit.setExitType(et);
 						
 						if( !oAlias.equals("") ) exit.addAlias(oAlias);
 
@@ -185,40 +182,53 @@ public class ObjectLoader {
 					else if (et == ExitType.DOOR) {
 						int oDest = Integer.parseInt(attr[5]);
 						
-						// all lock states other than 0 or 1 are invalid
-						int lockState = Utils.toInt(attr[7], 0);
-
+						int lockState = Utils.toInt(attr[7], 0); //valid lock states are: 0, 1
+						int keyDBRef = Utils.toInt(attr[8], -1);
+						
+						System.out.println("   Location: " + oLocation);
+						System.out.println("Destination: "  + oDest);
+						
 						String[] temp = oName.split(";");
+						
 						System.out.println(Arrays.asList(temp));
+						
 						oName = temp[0];
 
 						Door door = new Door(oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), oDesc, oLocation, oDest);
-						door.setExitType(et);
 
 						if (temp.length == 2) {
 							String[] names = temp[0].split("/");
-							System.out.println(Arrays.asList(names));
 							String[] aliases = temp[1].split("/");
-							System.out.println(Arrays.asList(aliases));
-
+							
+							System.out.println("  Names: " + Arrays.asList(names));
+							System.out.println("Aliases: " + Arrays.asList(aliases));
+							
+							// set up any aliases
 							if (aliases.length > 0) {
-								for (String a : aliases[0].split(",")) {
-									door.addAlias(names[0] + "|" + a);
-								}
+								for (final String a : aliases[0].split(",")) door.addAlias(names[0] + "|" + a);
 
 								if (aliases.length == 2) {
-									for (String a : aliases[1].split(",")) {
-										door.addAlias(names[1] + "|" + a);
-									}
+									for (String a : aliases[1].split(",")) door.addAlias(names[1] + "|" + a);
 								}
 							}
 						}
-
-						// default is unlocked
-						if (lockState == 1) {
-							door.lock();
+						
+						if ( lockState == 1 ) door.lock();
+						
+						if ( keyDBRef != -1 ) {
+							final Item item = objectDB.getItem(keyDBRef);
+							
+							if( item != null ) door.setKey(item);
 						}
-
+						
+						door.init();
+						
+						logger.debug( "exit (origin): " + door.getName(oLocation) );
+						logger.debug( "exit (dest): " + door.getName(oDest) );
+						
+						logger.debug( door.side1.toString() );
+						logger.debug( door.side2.toString() );
+						
 						logger.debug("log.debug (db entry): " + door.toDB(), 2);
 
 						objectDB.add(door);
@@ -237,8 +247,8 @@ public class ObjectLoader {
 							int oDestination = Integer.parseInt(attr[5]);
 
 							portal = new Portal(PortalType.STD, oLocation, oDestination);
+							
 							portal.setDBRef(oDBRef); // NOTE: ought to handle this in the constructor
-							portal.setExitType(et);
 							portal.setDesc(oDesc);
 
 							portal.name = attr[1]; // name
@@ -247,12 +257,7 @@ public class ObjectLoader {
 							logger.debug("log.debug (db entry): " + portal.toDB(), 2);
 
 							portal.setKey("test");
-
-							parent.getPortals().add(portal);
 							
-							parent.getRoom(portal.getOrigin()).addSayEventListener(portal);
-							parent.getRoom(portal.getDestination()).addSayEventListener(portal);
-
 							objectDB.add(portal);
 							objectDB.addExit(portal);
 						}
@@ -261,19 +266,17 @@ public class ObjectLoader {
 							int[] oDestinations = Utils.stringsToInts(attr[5].split(","));
 
 							portal = new Portal(PortalType.RANDOM, oLocation, oDestinations);
+							
 							portal.setDBRef(oDBRef); // NOTE: ought to handle this in the constructor
-							portal.setExitType(et);
-
+							portal.setDesc(oDesc);
+							
 							portal.name = attr[1]; // name
 							portal.setPosition(0, 0); // set x and y coordinate of position
 
 							portal.setKey("test");
 
 							logger.debug("log.debug (db entry): " + portal.toDB(), 2);
-
-							parent.getPortals().add(portal);
-							parent.getRoom(portal.getOrigin()).addSayEventListener(portal);
-
+							
 							objectDB.add(portal);
 							objectDB.addExit(portal);
 						}
@@ -290,8 +293,8 @@ public class ObjectLoader {
 				// tempLoc, String tempTitle)
 				else if (oTypeFlag == 'N') {
 					if (oFlags.contains("M")) {
-						Merchant merchant = new Merchant(parent, oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), "A merchant.", "Merchant", "VEN", oLocation,
-								Coins.fromArray(new int[] { 1000, 1000, 1000, 1000 }));
+						Merchant merchant = new Merchant(oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), "A merchant.",
+								"Merchant", "VEN", oLocation, Coins.fromArray(new int[] { 1000, 1000, 1000, 1000 }));
 
 						logger.debug("log.debug (db entry): " + merchant.toDB(), 2);
 						logger.debug("Merchant", 2);
@@ -409,7 +412,7 @@ public class ObjectLoader {
 
 				}
 				
-				else if (oFlags.contains("null")) {
+				else if ( oName.equals("null") ) {
 					NullObject Null = new NullObject(oDBRef);
 
 					objectDB.add(Null);
@@ -595,7 +598,7 @@ public class ObjectLoader {
 
 		return npc;
 	}
-	
+
 	final private Item loadItem(final String itemData) {
 		String[] attr = itemData.split("#");
 		
@@ -610,16 +613,14 @@ public class ObjectLoader {
 		String oDesc = attr[3];
 		Integer oLocation = Integer.parseInt(attr[4]);
 		
-		// TODO equipType, slotType are new, work them in (3-17-2015)
 		int itemType  = Utils.toInt(attr[5], 0); // get the type of item it should be
-		int equipType = Utils.toInt(attr[6], 0);
-		int slotType  = Utils.toInt(attr[7], 0);
+		int slotType  = Utils.toInt(attr[6], 0);
 		
 		// TODO fix getting an item type in the loader to use module/etc item types as well
 		//ItemType it = ItemTypes.getType(itemType);
-		ItemType it = getItemType(itemType);
 		
-		SlotType st = getSlotType(slotType);
+		final ItemType it = getItemType(itemType);
+		final SlotType st = getSlotType(slotType);
 
 		/*ItemType itemType = ItemTypes.getType(typeId);
 
@@ -639,9 +640,6 @@ public class ObjectLoader {
 		System.out.println("SlotType ID: " + slotType);
 		
 		if( it.getId() >= 16 || it == null ) {
-			System.out.println("ItemType ID: " + itemType);
-			System.out.println("");
-			
 			final Item item = parent.getGameModule().loadItem(itemData);
 			
 			System.out.println("Item DBRef: " + item.getDBRef());
@@ -656,39 +654,39 @@ public class ObjectLoader {
 		}
 
 		if (it == ItemTypes.CLOTHING) { // Clothing
-			int clothingType = Integer.parseInt(attr[8]);
-			int mod = Integer.parseInt(attr[9]);
-
-			final Clothing clothing = new Clothing(oDBRef, oName, oDesc, oLocation, mod, ClothingType.values()[clothingType]);
-
-			//clothing.setEquipType(ItemTypes.getType(equipType);
+			final Clothing clothing = new Clothing(oDBRef, oName, oDesc, oLocation);
+			
 			clothing.setSlotType(st);
 
 			return clothing;
 		}
 		else if (it == ItemTypes.WAND) { // Wand
-			String spellName = attr[8];
-			int charges = Integer.parseInt(attr[9]);
+			String spellName = attr[7];
+			int charges = Integer.parseInt(attr[8]);
 
 			Spell spell = parent.getSpell(spellName);
 
 			final Wand wand = new Wand(oName, oDesc, oLocation, oDBRef, ItemTypes.getType(itemType), charges, spell);
 			
+			wand.setSlotType(st);
+			
 			return wand;
 		}
 		else if (it == ItemTypes.WEAPON) { // Weapon Merchant
-			int weaponType = Integer.parseInt(attr[8]);
-			int mod = Integer.parseInt(attr[9]);
+			int weaponType = Integer.parseInt(attr[7]);
+			int mod = Integer.parseInt(attr[8]);
 
-			final Weapon weapon = new Weapon(oDBRef, oName, oDesc, oLocation, mod, Handed.ONE, WeaponTypes.getWeaponType(weaponType), 15.0);
+			final Weapon weapon = new Weapon(oDBRef, oName, oDesc, oLocation, WeaponTypes.getWeaponType(weaponType));
 			
 			weapon.setSlotType(st);
+			
+			weapon.setModifier(mod);
 			
 			return weapon;
 		}
 		else if (it == ItemTypes.ARMOR) { // Armor Merchant
-			int armorType = Integer.parseInt(attr[8]);
-			int mod = Integer.parseInt(attr[9]);
+			int armorType = Integer.parseInt(attr[7]);
+			int mod = Integer.parseInt(attr[8]);
 
 			final Armor armor = new Armor(oName, oDesc, (int) oLocation, (int) oDBRef, mod, ArmorType.values()[armorType]);
 			
@@ -702,9 +700,9 @@ public class ObjectLoader {
 			return arrow;
 		}
 		else if (it == ItemTypes.BOOK) { // Book
-			String author = attr[8];
-			String title = attr[9];
-			int pages = Integer.parseInt(attr[10]);
+			String author = attr[7];
+			String title = attr[8];
+			int pages = Integer.parseInt(attr[9]);
 
 			final Book book = new Book(oName, oDesc, oLocation, oDBRef);
 
@@ -715,24 +713,22 @@ public class ObjectLoader {
 			return book;
 		}
 		else if (it == ItemTypes.CONTAINER) { // Container
-			final Container container = new Container(oName);
-
-			container.setDesc(oDesc);
-			container.setLocation(oLocation);
-			container.setDBRef(oDBRef);
+			int size = Utils.toInt(attr[7], Container.DEFAULT_SIZE);
+			
+			final Container container = new Container(oDBRef, oName, EnumSet.noneOf(ObjectFlag.class), oDesc, oLocation, size);
 			
 			return container;
 		}
 		else if (it == ItemTypes.POTION) {
-			int stack_size = Integer.parseInt(attr[8]);
-			String sn = attr[9];
+			int stack_size = Integer.parseInt(attr[7]);
+			String sn = attr[8];
 			
 			/*
 			 * whatever I do here needs to recreate the entirety of
 			 * a stack of potions correctly
 			 */
 			
-			Potion potion = new Potion(oDBRef, oName, EnumSet.noneOf(ObjectFlag.class), oDesc, oLocation, sn);
+			final Potion potion = new Potion(oDBRef, oName, EnumSet.noneOf(ObjectFlag.class), oDesc, oLocation, sn);
 
 			for (int i = 1; i < stack_size; i++) {
 				Potion potion1 = new Potion(oDBRef, oName, EnumSet.noneOf(ObjectFlag.class), oDesc, oLocation, sn);
@@ -743,8 +739,8 @@ public class ObjectLoader {
 			return potion;
 		}
 		else if (it == ItemTypes.SHIELD) { // Armor Merchant
-			int shieldType = Integer.parseInt(attr[8]);
-			int mod = Integer.parseInt(attr[9]);
+			int shieldType = Integer.parseInt(attr[7]);
+			int mod = Integer.parseInt(attr[8]);
 
 			Shield shield = new Shield(oName, oDesc, oLocation, oDBRef, mod, it, ShieldType.values()[shieldType]);
 			
@@ -780,14 +776,16 @@ public class ObjectLoader {
 		//final String bookFile = DATA_DIR + "\\book\\" + bookName + ".book";
 		final String bookFile = "";
 
-		boolean header = true;
-		
+		boolean header = false;
 		boolean page = false;
 
 		File file;
+		Book book = null;
+		
 		List<String> strings;
-
-		Book book;
+		
+		List<String> strings2 = new LinkedList<String>();
+		StringBuilder sb = new StringBuilder();
 
 		String author = "";
 		String title = "";
@@ -801,41 +799,57 @@ public class ObjectLoader {
 		strings = Utils.loadStrings(file);
 
 		for(final String s : strings) {
+			if( s.equals("") ) {
+				continue;
+			}
+			else if( s.equals("HEADER") ) {
+				header = true;
+				continue;
+			}
+			else if( s.equals("PAGE") ) {
+				page = true;
+				continue;
+			}
+			
 			if( header ) {
-				if( s.charAt(0) == '#' ) {
-					String[] temp = s.substring(1).split(":");
-
-					if( temp[0].equalsIgnoreCase("author") ) {
-						author = temp[1];
-					}
-					else if( temp[0].equalsIgnoreCase("title") ) {
-						title = temp[1];
-					}
-					else if( temp[0].equalsIgnoreCase("desc") ) {
-						desc = temp[1];
-					}
-					else if( temp[0].equalsIgnoreCase("pages") ) {
-						pages = Utils.toInt(temp[1], 0);
-						
-						header = false;
-					}
-				}
+				if( s.equals("/HEADER") ) header = false;
 				
 				if( !header ) {
 					book = new Book(title, author, pages);
 					
 					book.setDesc(desc);
 				}
+				else {
+					if( s.charAt(0) == '#' ) {
+						String[] temp = s.substring(1).split(":");
+						
+						String key = temp[0];
+						String val= temp[1];
+
+						if( key.equalsIgnoreCase("author") ) author = val;
+						if( key.equalsIgnoreCase("title") ) title = val;
+						if( key.equalsIgnoreCase("desc") )  desc = val;
+						if( key.equalsIgnoreCase("pages") ) pages = Utils.toInt(val, 0);
+					}
+				}
 			}
-			else {
-				if( page ) {
+			else if( page ) {
+				if( s.equals("/PAGE") ) page = false;
+				
+				if( !page ) {
+					book.addPage(strings2);
+					
+					sb.delete(0, sb.length());
+					strings2.clear();
 				}
 				else {
+					sb.append(s).append(" ");
+					strings2.add(s);
 				}
 			}
 		}
 		
-		return null;
+		return book;
 	}
 	
 	private ItemType getItemType(final int typeId) {

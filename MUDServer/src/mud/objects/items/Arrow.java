@@ -46,10 +46,6 @@ public class Arrow extends Item implements Projectile<Arrow>, Stackable<Arrow> {
 		this.arrow = null;
 	}
 	
-	public int size() {
-		return stackSize();
-	}
-
 	@Override
 	/**
 	 * Calculates and returns the size of the stack of arrows. I
@@ -124,21 +120,6 @@ public class Arrow extends Item implements Projectile<Arrow>, Stackable<Arrow> {
 
 	@Override
 	public String toDB() {
-		String[] output = new String[10];
-		
-		output[0] = this.getDBRef() + "";         // database reference number
-		output[1] = this.getName();               // name
-		output[2] = this.getFlagsAsString();      // flags
-		output[3] = this.getDesc();               // description
-		output[4] = this.getLocation() + "";      // location
-		
-		output[5] = this.item_type.getId() + "";  // type
-		output[6] = this.equip_type.getId() + ""; // equip type
-		output[7] = this.slot_type.getId() + "";  // slot type
-		
-		output[8] = this.stackSize() + "";         // how many arrows are stacked together
-		output[9] = "*";                           // blank
-		
 		/*
 		 * recording stacks of these is messy
 		 * 
@@ -150,7 +131,12 @@ public class Arrow extends Item implements Projectile<Arrow>, Stackable<Arrow> {
 		 * data for whether a thing is in a stack?
 		 */
 		
-		return Utils.join(output, "#");
+		final String[] output = new String[2];
+		
+		output[0] = this.stackSize() + ""; // how many arrows are stacked together
+		output[1] = "*";                   // blank
+		
+		return super.toDB() + "#" + Utils.join(output, "#");
 	}
 	
 	public Arrow getCopy() {

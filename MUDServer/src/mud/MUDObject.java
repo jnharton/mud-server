@@ -34,27 +34,28 @@ import mud.utils.Point;
  * 
  */
 public abstract class MUDObject {
-	// internal reference, only want one at a time, no need to persist
-	// (might be an issue for multiple server instances)
-	//protected static transient MUDServer parent;
+	private static final int NUM_PROPS = 10;
+	private static final float LOAD_FACT = 0.75f;
 	
 	/* object data - persistent */
 	private Integer dbref;               // database reference number
 	protected String name;               // object name
 	protected String desc;               // object description
-	protected TypeFlag type;             // object type
 	protected EnumSet<ObjectFlag> flags; // object flags
-	protected String locks;              // object locks
 	protected Integer location;          // object location
+	
+	protected TypeFlag type;             // object type
 	
 	protected Player owner;              // who owns the object (dbref of owner? only player can own?)
 	
 	/* object data - related to game (persistent) */
-	protected Point pos = new Point(0, 0, 0); // object's position on a cartesian plane (3D Point)
+	protected double weight = 0;        // the weight in whatever units are used of the equippable object
 	
-	protected LinkedHashMap<String, Object> properties = new LinkedHashMap<String, Object>(5, 0.75f);
+	protected Point pos;                 // object's position on a cartesian plane (3D Point)
+	
+	protected LinkedHashMap<String, Object> properties;
 
-	protected List<Effect> effects = new ArrayList<Effect>(); // Effects set on the object
+	protected List<Effect> effects;      // Effects set on the object
 
 	/* object state - transient? */
 	public boolean Edit_Ok = true;  // is this object allowed to be edited
@@ -71,14 +72,16 @@ public abstract class MUDObject {
 		
 		this.name = "";
 		this.desc = "";
+		this.flags = EnumSet.noneOf(ObjectFlag.class);
+		this.location = -1;
 		
 		this.type = TypeFlag.OBJECT;
 		
-		this.flags = EnumSet.noneOf(ObjectFlag.class);
-		this.locks = "";
-		this.location = -1;
-		
 		this.owner = null;
+		
+		this.pos = new Point(0, 0, 0);
+		this.properties = new LinkedHashMap<String, Object>(MUDObject.NUM_PROPS, MUDObject.LOAD_FACT);
+		this.effects = new ArrayList<Effect>();
 	}
 	
 	/**
@@ -99,10 +102,13 @@ public abstract class MUDObject {
 		this.type = TypeFlag.OBJECT;
 		
 		this.flags = tempFlags;
-		this.locks = "";
 		this.location = tempLoc;
 		
 		this.owner = null;
+		
+		this.pos = new Point(0, 0, 0);
+		this.properties = new LinkedHashMap<String, Object>(MUDObject.NUM_PROPS, MUDObject.LOAD_FACT);
+		this.effects = new ArrayList<Effect>();
 	}
 	
 	/**
@@ -121,12 +127,14 @@ public abstract class MUDObject {
 		this.type = TypeFlag.OBJECT;
 				
 		this.flags = template.flags;
-		this.locks = "";
 		this.location = -1;
 		
 		this.owner = null;
 		
 		// TODO restore/duplicate template properties?
+		this.pos = new Point(0, 0, 0);
+		this.properties = new LinkedHashMap<String, Object>(MUDObject.NUM_PROPS, MUDObject.LOAD_FACT);
+		this.effects = new ArrayList<Effect>();
 	}
 
 	/**
@@ -248,32 +256,6 @@ public abstract class MUDObject {
 	}
 
 	/**
-	 * Return the "lock string" set on this object.
-	 * 
-	 * <br><br>
-	 * <b>NOTE:</b> Not currently used for anything.
-	 * 
-	 * @return
-	 */
-	public final String getLocks() {
-		return (String) this.locks;
-	}
-
-	/**
-	 * Set the "lock string" on this object.
-	 * 
-	 * <br><br>
-	 * <b>NOTE:</b> Not currently used for anything.
-	 * 
-	 * @param newLocks
-	 */
-	public final void setLocks(final String newLocks) {
-		this.locks = newLocks;
-	}
-	
-	// locks = home:here|teleport:no ?
-
-	/**
 	 * Get this MUDObject's location.
 	 * 
 	 * @return int database reference of the object this object is located at/in
@@ -323,7 +305,15 @@ public abstract class MUDObject {
 	public final void setOwner(final Player player) {
 		this.owner = player;
 	}
-
+	
+	public Double getWeight() {
+		return this.weight;
+	}
+	
+	public void setWeight(Double newWeight) {
+		this.weight = newWeight;
+	}
+	
 	/**
 	 * Retrieve the property by it's key
 	 * 
@@ -345,6 +335,18 @@ public abstract class MUDObject {
 	 * @return
 	 */
 	public final <T> T getProperty(final String key, Class<T> c) throws ClassCastException {
+		// TODO this is an ugly, ugly kludge...
+		if( c.getSimpleName().equals("Boolean") ) {
+			final Object obj = this.properties.get(key);
+			
+			if( obj instanceof String ) {
+				final String s = (String) obj;
+				
+				if( s.equals(":true") ) return (T) c.cast(true);
+				else                    return (T) c.cast(false);
+			}
+		}
+		
 		return (T) c.cast(this.properties.get(key));
 	}
 	
@@ -570,7 +572,7 @@ public abstract class MUDObject {
 		// TODO I'd like to think I could compare player objects, but I'm not sure it would work
 		return this.owner.getDBRef() == player.getDBRef() ? true : false;
 	}
-
+	
 	/**
 	 * Convert the object to a String based representation
 	 * for storage in the plain text database.

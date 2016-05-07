@@ -1,9 +1,11 @@
 package mud.misc;
 
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 
+import mud.chat.ChatChannel;
 import mud.objects.Player;
 
 /**
@@ -17,19 +19,23 @@ import mud.objects.Player;
  *
  */
 public class Party {
-	private static int MAX_SIZE = 6;
-	private List<Player> members;
+	private static final int MAX_SIZE = 6;
 
 	private Player leader;
-	
+	private List<Player> members;
+
+	private ChatChannel party_chat;
+
 	/**
 	 * Create a new, empty party without a leader.
 	 */
 	public Party() {
-		members = new ArrayList<Player>();
-		leader = null;
+		this.leader = null;
+		this.members = new LinkedList<Player>();
+		
+		this.party_chat = null;
 	}
-	
+
 	/**
 	 * Create a new part which includes the specified players. This will
 	 * only add up to MAX_SIZE players from amongst those specified, first
@@ -39,55 +45,82 @@ public class Party {
 	 * 
 	 * @param players
 	 */
-	public Party(Player...players) {
-		if( players.length > MAX_SIZE) {
-			members = new ArrayList<Player>(MAX_SIZE);
-			members.addAll(Arrays.asList(players).subList(0, MAX_SIZE));
+	public Party(final Player...players) {
+		if( players.length > Party.MAX_SIZE) {
+			this.members = new LinkedList<Player>();
+			this.members.addAll( Arrays.asList(players).subList(0, Party.MAX_SIZE) );
 		}
 		else {
-			members = new ArrayList<Player>(players.length);
-			members.addAll(Arrays.asList(players));
+			this.members = new LinkedList<Player>();
+			this.members.addAll( Arrays.asList(players) );
 		}
-		leader = members.get(0);
-	}
 
-	public boolean addPlayer(Player newPlayer) {
-		if( members.size() < MAX_SIZE ) {
-			if( members.size() == 0 ) {
-				leader = newPlayer;
-			}
-
-			return members.add(newPlayer);
-		}
+		this.leader = this.members.get(0);
 		
-		return false;
-	}
-	
-	public boolean removePlayer(final Player player) {
-		if( members.size() > 1 ) {
-			if( leader == player ) {
-				leader = members.get(1);
-			}
-			
-			return this.members.remove(player);
-		}
-		
-		return false;
-	}
-
-	public boolean hasPlayer(final Player player) {
-		return this.members.contains(player);
+		this.party_chat = null;
 	}
 	
 	public Player getLeader() {
 		return this.leader;
 	}
 
-	public boolean isLeader(final Player player) {
-		return leader == player;
+	public void setLeader(final Player newLeader) {
+		this.leader = newLeader;
 	}
 
+	public boolean isLeader(final Player player) {
+		return (this.leader == player);
+	}
+
+	public boolean addPlayer(final Player newPlayer) {
+		boolean success = false;
+		
+		if( this.members.size() < MAX_SIZE ) {
+			if( this.members.size() == 0 ) {
+				this.leader = newPlayer;
+			}
+
+			success = this.members.add(newPlayer);
+			
+			if( success ) {
+				this.party_chat.addListener(newPlayer);
+			}
+		}
+		
+		return success;
+	}
+
+	public boolean removePlayer(final Player currPlayer) {
+		boolean success = false;
+		
+		if( this.members.size() > 1 ) {
+			if( this.leader == currPlayer ) {
+				this.leader = this.members.get(0);
+			}
+
+			success = this.members.remove(currPlayer);
+			
+			if( success ) {
+				this.party_chat.removeListener(currPlayer);
+			}
+		}
+		
+		return success;
+	}
+
+	public boolean hasPlayer(final Player player) {
+		return this.members.contains(player);
+	}
+	
 	public List<Player> getPlayers() {
-		return this.members;
+		return Collections.unmodifiableList(this.members);
+	}
+	
+	public ChatChannel getChannel() {
+		return this.party_chat;
+	}
+	
+	public void setChannel(final ChatChannel newChannel) {
+		this.party_chat = newChannel;
 	}
 }

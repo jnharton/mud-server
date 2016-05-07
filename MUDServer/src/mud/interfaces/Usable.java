@@ -17,45 +17,11 @@ CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTH
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-import java.util.List;
-
-import mud.magic.Spell;
-import mud.misc.Effect;
-
 /**
- * Defines an interface for "usable" objects. (i.e. potions, wands, etc)
+ * Defines an interface for "usable" objects.
  * 
  * @author Jeremy
- *
- * @param <T> Some object type that will implement usable.
  */
-public interface Usable<T> {
-	// TODO should this interface be renamed or something, a LEVER might be usable, but not have a spell or effect...
-	public Spell getSpell();
-	
-	/**
-	 * getSpells
-	 * 
-	 * NOTE: Object types that either have no effects, or only one
-	 * should implement this method as below.
-	 * 
-	 * return new List<Effect>(); // return an empty list with no effects by default
-	 * 
-	 * @return
-	 */
-	public List<Spell> getSpells();
-	
-	public Effect getEffect();
-	
-	/**
-	 * getEffects
-	 * 
-	 * NOTE: Object types that either have no effects, or only one
-	 * should implement this method as below.
-	 * 
-	 * return new List<Effect>(); // return an empty list with no effects by default
-	 * 
-	 * @return
-	 */
-	public List<Effect> getEffects();
+public interface Usable {
+	public void fireEvent();
 }

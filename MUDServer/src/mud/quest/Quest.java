@@ -5,6 +5,7 @@ import java.util.Arrays;
 
 import mud.misc.Colors;
 import mud.misc.Zone;
+import mud.objects.Item;
 import mud.objects.Player;
 import mud.utils.Date;
 
@@ -21,11 +22,12 @@ import mud.utils.Date;
 public class Quest {
 	private static int lastId = 0;       // the last quest id issued
 	
-	private int id;                      // quest id
+	private int id;                      // quest id (int for easier comparison)
 	private String name;                 // quest name
 	private String description;          // quest description (does it need a short and long version or just this?)
 	private Zone location;               // the quest region (for instance if you must kill the kobolds in region X for the reward)
 	
+	// TODO should I really be using dates here?
 	private Date issueDate = null;       // the in-game date the quest was given
 	private Date expireDate = null;      // the in-game date that the quests expires (for time-limited things?)
 	
@@ -35,6 +37,8 @@ public class Quest {
 	private boolean isRepeatable = true; // can you repeat the quest 
 	
 	final private ArrayList<Task> tasks; // a list of tasks that must be completed to finish the quest
+	
+	private Reward reward;
 	
 	public boolean Edit_Ok = true;       // can the quest be edited safely (no one else is editing it)
 	
@@ -100,6 +104,12 @@ public class Quest {
 		for(Task task : template.getTasks()) {
 			this.tasks.add( task.clone() );
 		}
+		
+		if( !(template.reward == null) ) {
+			//this.reward = new Reward( template.reward.getCoins(), ((Item[]) template.reward.getItems().toArray()));
+			this.reward = template.reward;
+		}
+		else System.out.println("Quest: reward is NULL.");
 	}
 	
 	public void addTask(final Task newTask) {
@@ -226,10 +236,6 @@ public class Quest {
 		return questChanged;
 	}
 	
-	public boolean isComplete() {
-		return this.isComplete;
-	}
-	
 	public void setIssued(final Date issuedDate) {
 		this.issueDate = issuedDate;
 	}
@@ -238,34 +244,20 @@ public class Quest {
 		this.expireDate = expirationDate;
 	}
 	
+	public Reward getReward() {
+		return this.reward;
+	}
+	
+	public void setReward(final Reward newReward) {
+		this.reward = newReward;
+	}
+	
+	public boolean isComplete() {
+		return this.isComplete;
+	}
+	
 	public void init() {
 		if( this.id == -1 ) this.id = lastId++;
-	}
-
-    @Override
-	public String toString() {
-		return this.name + "\n" + this.description;
-	}
-
-	public String toDisplay(boolean useColor) {
-        final StringBuilder buf = new StringBuilder();
-        
-        if( useColor ) {
-        	buf.append(Colors.YELLOW).append("   o ").append(getName());
-        	buf.append(Colors.MAGENTA).append(" ( ").append(location.getName()).append(" ) ").append(Colors.CYAN);
-        }
-        else {
-        	buf.append("   o ").append(getName());
-        	buf.append(" ( ").append(location.getName()).append(" ) ");
-        }
-        
-        buf.append("\n");
-        
-        for (final Task task : getTasks()) {
-            buf.append(task.toDisplay());
-        }
-        
-        return buf.toString();
 	}
 	
 	/**
@@ -297,6 +289,27 @@ public class Quest {
 		return new Quest(this);
 	}
 	
+	public String toDisplay(boolean useColor) {
+        final StringBuilder buf = new StringBuilder();
+        
+        if( useColor ) {
+        	buf.append(Colors.YELLOW).append("   o ").append(getName());
+        	buf.append(Colors.MAGENTA).append(" ( ").append(location.getName()).append(" ) ").append(Colors.CYAN);
+        }
+        else {
+        	buf.append("   o ").append(getName());
+        	buf.append(" ( ").append(location.getName()).append(" ) ");
+        }
+        
+        buf.append("\n");
+        
+        for (final Task task : getTasks()) {
+            buf.append(task.toDisplay());
+        }
+        
+        return buf.toString();
+	}
+	
 	@Override
 	public boolean equals(final Object obj) {
 		if(obj == this) {
@@ -311,5 +324,9 @@ public class Quest {
 		
 		return this.getId() == quest.getId();
 	}
+	
+	@Override
+	public String toString() {
+		return this.name + "\n" + this.description;
+	}
 }
-// this is a test

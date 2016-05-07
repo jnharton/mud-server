@@ -3,12 +3,12 @@ package mud.misc.json;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
+import mud.game.PClass;
 import mud.magic.Reagent;
 import mud.magic.Spell;
-import mud.magic.SpellClass;
 import mud.misc.Effect;
+import mud.rulesets.d20.Classes;
 
 import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
@@ -47,12 +47,13 @@ public class SpellAdapter extends TypeAdapter<Spell> {
 				case "class":
 					if( reader.peek() == JsonToken.BEGIN_ARRAY ) { reader.beginArray(); }
 					
-					final List<SpellClass> spellClasses = spell.getSpellClasses();
+					final List<PClass> spellClasses = spell.getSpellClasses();
 					
 					while( reader.peek() != JsonToken.END_ARRAY ) {
 						final String className = reader.nextString().toUpperCase();
 						
-						spellClasses.add( SpellClass.valueOf( className ) );
+						//spellClasses.add( Classes.getClass( className ) );
+						spell.setSpellClass( Classes.getClass( className ) );
 					}
 					
 					reader.endArray();
@@ -76,14 +77,14 @@ public class SpellAdapter extends TypeAdapter<Spell> {
 				case "reagents":
 					if( reader.peek() == JsonToken.BEGIN_ARRAY ) { reader.beginArray(); }
 					
-					Map<String, Reagent> reagents = spell.getReagents();
+					List<Reagent> reagents = spell.getReagents();
 					
 					while( reader.peek() != JsonToken.END_ARRAY ) {
 						String data = reader.nextString();
 						
 						try {
 							// uses exception for error checkings
-							reagents.put(data, new Reagent(data));
+							reagents.add( new Reagent(data) );
 						}
 						catch (final Exception e) {
 							e.printStackTrace();
@@ -140,7 +141,7 @@ public class SpellAdapter extends TypeAdapter<Spell> {
 		
 		writer.beginArray();
 		
-		for(mud.magic.SpellClass spellClass : spell.getSpellClasses()) {
+		for(PClass spellClass : spell.getSpellClasses()) {
 			writer.value(spellClass.toString().toLowerCase());
 		}
 		
@@ -181,7 +182,7 @@ public class SpellAdapter extends TypeAdapter<Spell> {
 		
 		writer.beginArray();
 		
-		for(final Reagent reagent : spell.getReagents().values()) {
+		for(final Reagent reagent : spell.getReagents()) {
 			writer.value(reagent.toString());
 		}
 		

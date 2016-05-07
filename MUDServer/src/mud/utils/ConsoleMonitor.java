@@ -1,8 +1,6 @@
 package mud.utils;
 
 import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 
 import mud.MUDServer;
@@ -34,8 +32,8 @@ public class ConsoleMonitor {
 	public boolean hasConsole(final Client client) {
 		boolean response = false;
 		
-		if( consoles.containsKey(client) ) {
-			if( consoles.get(client) != null ) {
+		if( this.consoles.containsKey(client) ) {
+			if( this.consoles.get(client) != null ) {
 				response = true;
 			}
 		}
@@ -46,7 +44,7 @@ public class ConsoleMonitor {
 	protected void fireEvent(final Console source, final String message) {
 		if( source != null ) {
 			if( message.equals("logout") ) {
-				removeConsole(source.getClient());
+				this.removeConsole(source.getClient());
 			}
 		}
 	}

@@ -7,6 +7,7 @@ import mud.Command;
 import mud.Constants;
 import mud.MUDObject;
 import mud.MUDServer;
+import mud.magic.RangeData;
 import mud.magic.Reagent;
 import mud.magic.Spell;
 import mud.misc.Effect;
@@ -80,7 +81,9 @@ public class CastCommand extends Command {
 
 			// target check, if no target then auto-target self, etc, dependent on spell
 			if (player.getTarget() == null) {
-				int range = spell.getRange(player.getLevel());
+				final RangeData rd = spell.getRangeData();
+				
+				int range = rd.getRange(player.getLevel());
 				if( range == 0 ) player.setTarget(player); // auto-target to self, if spell takes self
 			}
 

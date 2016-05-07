@@ -6,7 +6,6 @@ package mud.objects.items;
  */
 
 public class WeaponType {
-	
 	public enum DamageType { PIERCING, SLASHING };
 	
 	public static final int MELEE = 0;

@@ -8,28 +8,30 @@ import java.util.Map;
 
 import mud.Command;
 import mud.Constants;
-import mud.MUDObject;
 import mud.ObjectFlag;
+
 import mud.foe.FOEItemTypes;
 import mud.foe.FOESlotTypes;
 import mud.foe.misc.Device;
 import mud.foe.misc.FileSystem;
 import mud.foe.misc.Module;
 import mud.foe.misc.Tag;
+
 import mud.interfaces.ExtraCommands;
 import mud.misc.Slot;
 import mud.net.Client;
+
 import mud.objects.Item;
-import mud.objects.ItemTypes;
 import mud.objects.Player;
 import mud.objects.Room;
+
 import mud.utils.Time;
 import mud.utils.Utils;
 
 // TODO need to deal with these commands having a null parent here...
 public class PipBuck extends Item implements Device, ExtraCommands {
+	private Integer id;
 	private String name;
-	private Tag tag;
 	private FileSystem fs;
 
 	private List<Module> modules;
@@ -69,11 +71,15 @@ public class PipBuck extends Item implements Device, ExtraCommands {
 								if( module instanceof ExtraCommands ) {
 									ExtraCommands ec = (ExtraCommands) module;
 
-									for(Map.Entry<String, Command> cmd : ec.getCommands().entrySet()) {
-										//p.commands.put( cmd.getKey(), cmd.getValue() );
-										initCmd(cmd.getValue());
-										player.commandMap.put( cmd.getKey(), cmd.getValue() );
-										debug("Added " + cmd.getKey() + " to player's command map from " + p.getName() + " module: " + module.getName());
+									for(Map.Entry<String, Command> cmdE : ec.getCommands().entrySet()) {
+										final String text = cmdE.getKey();
+										final Command cmd = cmdE.getValue();
+										
+										initCmd(cmd);
+										
+										player.commandMap.put( cmdE.getKey(), cmdE.getValue() );
+										
+										debug("Added " + cmdE.getKey() + " to player's command map from " + p.getName() + " module: " + module.getName());
 									}
 								}
 							}
@@ -119,6 +125,29 @@ public class PipBuck extends Item implements Device, ExtraCommands {
 				}
 				public int getAccessLevel() { return Constants.USER; }
 			});
+			put("register",
+					new Command("register a pipbuck tag") {
+				public void execute(final String arg, final Client client) {
+					final Player player = getPlayer(client);      // get player
+					final PipBuck p = PipBuck.getPipBuck(player); // get pipbuck
+					
+					// register <tag name>=<tag id>
+					if( p != null ) {
+						final String[] args = arg.split("=");
+						
+						if( args.length == 2 ) {
+							final String tagName = args[0];
+							final Integer tagId = Utils.toInt(args[1], -1);
+							
+							if( tagId != -1 ) {
+								p.setTag(tagName, tagId);
+							}
+						}
+					}
+				}
+				
+				public int getAccessLevel() { return Constants.USER; }
+				});
 			put("slot",
 					new Command("attach a module to your device") {
 				public void execute(final String arg, final Client client) {
@@ -160,6 +189,23 @@ public class PipBuck extends Item implements Device, ExtraCommands {
 				}
 				public int getAccessLevel() { return Constants.USER; }
 			});
+			put("tags",
+					new Command("list your registed pipbuck tags") {
+				public void execute(final String arg, final Client client) {
+					final Player player = getPlayer(client);      // get player
+					final PipBuck p = PipBuck.getPipBuck(player); // get pipbuck
+
+					if( p != null ) {
+						send("--- Tags", client);
+						
+						for(final Tag tag : p.tags) {
+							send("" + tag, client);
+						}
+					}
+				}
+				
+				public int getAccessLevel() { return Constants.USER; }
+				});
 			put("unslot",
 					new Command("detach a module from your device") {
 				public void execute(final String arg, final Client client) {
@@ -291,7 +337,7 @@ public class PipBuck extends Item implements Device, ExtraCommands {
 							// the idea here is to look for living things and/or pipbuck tags and mark them as:
 							// hostile, neutral, friendly (red, yellow, green)
 
-							final Room room = getRoom(player);
+							final Room room = getRoom( player.getLocation() );
 
 							// get a list of all living creatures in range
 							final List list = new LinkedList();
@@ -324,14 +370,11 @@ public class PipBuck extends Item implements Device, ExtraCommands {
 		super(dbref, "PipBuck", EnumSet.noneOf(ObjectFlag.class), "A Stable-Tec PipBuck", -1);
 
 		this.item_type = FOEItemTypes.PIPBUCK;
-		this.equip_type = ItemTypes.NONE;
 		this.slot_type = FOESlotTypes.LFHOOF;
 
 		this.equippable = true;
-		this.equipped = false;
 
 		this.name = name;
-		this.tag = null;
 		this.fs = new FileSystem();
 		this.modules = new LinkedList<Module>();
 	}
@@ -340,7 +383,6 @@ public class PipBuck extends Item implements Device, ExtraCommands {
 		super( template );
 
 		this.name = template.name;
-		this.tag = null;
 		this.fs = template.fs; // need to give FileSystem a clone method
 		this.modules = new LinkedList<Module>();
 	}
@@ -417,34 +459,31 @@ public class PipBuck extends Item implements Device, ExtraCommands {
 		return this.max_power;
 	}
 
-	public void addTag(final Tag tag) {
-		this.tags.add(tag);
-	}
-
-	public void removeTag(final Tag tag) {
-		this.tags.remove(tag);
-	}
-
-	public void setTag(final String tag) {
+	public boolean setTag(final String tag, final Integer id) {
+		boolean valid_tag = true;
+		
 		// test for appropriate format
-		if( tag.length() == 10 ) {
+		if( tag.length() != 10 ) {
+			valid_tag = false;
+		}
+		else {
 			final String alpha = tag.substring(0, 3);
 			final String numeric = tag.substring(3, tag.length());
 
 			for(final char ch : alpha.toCharArray()) {
-				if( !Character.isLetter(ch) ) return;
+				if( !Character.isLetter(ch) ) valid_tag = false;
 			}
 
 			for(final char ch : numeric.toCharArray()) {
-				if( !Character.isDigit(ch) ) return;
+				if( !Character.isDigit(ch) ) valid_tag = false;
 			}
-
-			this.tag = new Tag(tag);
 		}
-	}
-
-	public Tag getTag() {
-		return this.tag;
+		
+		if( valid_tag ) {
+			this.tags.add( new Tag(tag, id) );
+		}
+		
+		return valid_tag;
 	}
 
 	@Override

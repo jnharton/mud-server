@@ -1,5 +1,7 @@
 package mud.net;
 
+import java.io.IOException;
+
 /*
  * Copyright (c) 2012 Jeremy N. Harton
  * 
@@ -27,50 +29,53 @@ public class Server implements Runnable {
     private boolean running;
 
     public Server(final MUDServerI p, final int port) {
-        parent = p;
+        this.parent = p;
         
         try {
-            server = new ServerSocket(port);
-            thread = new Thread(this);
+        	this.server = new ServerSocket(port);
+        	this.thread = new Thread(this);
             
-            thread.start();
+        	this.thread.start();
             
-            running = true;
-
+        	this.running = true;
         }
-        catch (Exception e) {
-            e.printStackTrace();
+        catch (final IOException ioe) {
+        	System.out.println("could not open server socket");
+        	System.out.println("--- Stack Trace ---");
+            ioe.printStackTrace();
+            
+            // TODO is a full exit appropriate here
             System.exit(-1);
         }
     }
 
 	public void stopRunning() {
-        running = false;
+		this.running = false;
 	}
 
 	public boolean isRunning() {
-		return running;
+		return this.running;
 	}
 
 	public boolean hasClients() {
-		return !clients.isEmpty();
+		return !this.clients.isEmpty();
 	}
  	
  	public List<Client> getClients() {
-		return new ArrayList<Client>(clients);
+		return new ArrayList<Client>(this.clients);
  	}
 
     public void disconnect(final Client client) {
         client.stopRunning();
-        clients.remove(client);
+        this.clients.remove(client);
     }
 
     public void run() {
         try {
-            running = true;
+        	this.running = true;
             
-            while (running) {
-                Socket socket = server.accept();             
+            while (this.running) {
+                Socket socket = this.server.accept();             
                 
                 Client client = new Client(socket);
                 
@@ -125,15 +130,16 @@ public class Server implements Runnable {
                 		}
                 	}
                 }*/
-
-                clients.add(client);
+                
+                this.clients.add(client);
                 
                 System.out.println("Accepted client socket.");
                 
                 parent.clientConnected(client);
             }
         }
-        catch (Exception e) {
+        catch (final Exception e) {
+        	System.out.println("--- Stack Trace ---");
             e.printStackTrace();
         }
         finally {

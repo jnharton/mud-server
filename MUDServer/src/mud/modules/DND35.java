@@ -17,7 +17,6 @@ import mud.objects.ItemType;
 import mud.objects.ItemTypes;
 import mud.objects.Player;
 import mud.objects.Thing;
-import mud.objects.items.ClothingType;
 import mud.rulesets.d20.D20;
 
 public class DND35 implements GameModule {
@@ -61,23 +60,23 @@ public class DND35 implements GameModule {
 	@Override
 	public void PCInit(Player player) {
 		// add/initialize slots
-		player.addSlot("helmet",   new Slot( SlotTypes.HEAD,   ItemTypes.HELMET));
-		player.addSlot("necklace", new Slot( SlotTypes.NECK,   ItemTypes.NECKLACE));
-		player.addSlot("armor",    new Slot( SlotTypes.CHEST,  ItemTypes.ARMOR));
-		player.addSlot("cloak",    new Slot( SlotTypes.BACK,   ClothingType.CLOAK));
-		player.addSlot("ring1",    new Slot( SlotTypes.FINGER, ItemTypes.RING));
-		player.addSlot("ring2",    new Slot( SlotTypes.FINGER, ItemTypes.RING));
-		player.addSlot("ring3",    new Slot( SlotTypes.FINGER, ItemTypes.RING));
-		player.addSlot("ring4",    new Slot( SlotTypes.FINGER, ItemTypes.RING));
-		player.addSlot("ring5",    new Slot( SlotTypes.FINGER, ItemTypes.RING));
-		player.addSlot("ring6",    new Slot( SlotTypes.FINGER, ItemTypes.RING));
-		player.addSlot("gloves",   new Slot( SlotTypes.HANDS,  ClothingType.GLOVES));
-		player.addSlot("weapon",   new Slot( SlotTypes.RHAND,  ItemTypes.WEAPON));
-		player.addSlot("weapon1",  new Slot( SlotTypes.LHAND,  ItemTypes.WEAPON));
-		player.addSlot("weapon2",  new Slot( SlotTypes.HANDS,  ItemTypes.WEAPON));
-		player.addSlot("belt",     new Slot( SlotTypes.WAIST,  ClothingType.BELT));
-		player.addSlot("boots",    new Slot( SlotTypes.FEET,   ClothingType.BOOTS));
-		player.addSlot("other",    new Slot( SlotTypes.NONE,   ItemTypes.NONE ));
+		player.addSlot("helmet",   new Slot(SlotTypes.HEAD,   ItemTypes.ARMOR));
+		player.addSlot("necklace", new Slot(SlotTypes.NECK,   ItemTypes.NECKLACE));
+		player.addSlot("armor",    new Slot(SlotTypes.CHEST,  ItemTypes.ARMOR));
+		player.addSlot("cloak",    new Slot(SlotTypes.BACK,   ItemTypes.CLOTHING));
+		player.addSlot("ring1",    new Slot(SlotTypes.FINGER, ItemTypes.RING));
+		player.addSlot("ring2",    new Slot(SlotTypes.FINGER, ItemTypes.RING));
+		player.addSlot("ring3",    new Slot(SlotTypes.FINGER, ItemTypes.RING));
+		player.addSlot("ring4",    new Slot(SlotTypes.FINGER, ItemTypes.RING));
+		player.addSlot("ring5",    new Slot(SlotTypes.FINGER, ItemTypes.RING));
+		player.addSlot("ring6",    new Slot(SlotTypes.FINGER, ItemTypes.RING));
+		player.addSlot("gloves",   new Slot(SlotTypes.HANDS,  ItemTypes.CLOTHING));
+		player.addSlot("weapon",   new Slot(SlotTypes.RHAND,  ItemTypes.WEAPON));
+		player.addSlot("weapon1",  new Slot(SlotTypes.LHAND,  ItemTypes.WEAPON));
+		player.addSlot("weapon2",  new Slot(SlotTypes.HANDS,  ItemTypes.WEAPON));
+		player.addSlot("belt",     new Slot(SlotTypes.WAIST,  ItemTypes.CLOTHING));
+		player.addSlot("boots",    new Slot(SlotTypes.FEET,   ItemTypes.CLOTHING));
+		player.addSlot("other",    new Slot(SlotTypes.NONE,   ItemTypes.NONE ));
 	}
 
 	@Override

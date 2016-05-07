@@ -35,7 +35,7 @@ public class EditorData {
 		this.objects = new HashMap<String, Object>(1, 0.75f);
 	}
 	 
-	public boolean addObject(String key, Object object) {
+	public boolean addObject(final String key, final Object object) {
 		boolean success = false;
 		
 		if( !this.objects.containsKey(key) ) {
@@ -56,7 +56,7 @@ public class EditorData {
 	 * @param key
 	 * @return the mapped object (or null)
 	 */
-	public Object getObject(String key) {
+	public Object getObject(final String key) {
 		return this.objects.get(key);
 	}
 	
@@ -71,7 +71,7 @@ public class EditorData {
 	 * @param object
 	 * @return
 	 */
-	public boolean setObject(String key, Object object) {
+	public boolean setObject(final String key, final Object object) {
 		boolean success = false;
 		
 		if ( this.objects.containsKey(key) ) {
@@ -85,7 +85,7 @@ public class EditorData {
 		return success;
 	}
 	
-	public Object removeObject(String key) {
+	public Object removeObject(final String key) {
 		if( this.objects.containsKey(key) ) {
 			return this.objects.remove(key);
 		}
@@ -98,7 +98,7 @@ public class EditorData {
 		return this.objects;
 	}
 	
-	public List<String> getKeysByPrefix(String prefix) {
+	public List<String> getKeysByPrefix(final String prefix) {
 		final List<String> keyList = new LinkedList<String>();
 
 		for(final String key : this.objects.keySet()) {

@@ -1,26 +1,17 @@
 package mud.objects;
 
-import java.util.BitSet;
 import java.util.EnumSet;
-import java.util.Hashtable;
-import java.util.List;
-import java.util.Map;
 
 import mud.ObjectFlag;
 import mud.TypeFlag;
 import mud.MUDObject;
-import mud.interfaces.Stackable;
 import mud.magic.Enchantment;
-import mud.magic.Spell;
 import mud.misc.Coins;
-import mud.misc.Effect;
 import mud.misc.Script;
-import mud.misc.Slot;
 import mud.misc.SlotType;
 import mud.misc.SlotTypes;
 import mud.misc.Trigger;
 import mud.misc.TriggerType;
-import mud.objects.items.Attribute;
 import mud.utils.Utils;
 
 /*
@@ -34,37 +25,33 @@ import mud.utils.Utils;
  */
 
 public class Item extends MUDObject {
-	protected ItemType item_type = ItemTypes.NONE;  // item type - what type of item is this (supersede equip_type?)
-	protected ItemType equip_type = ItemTypes.NONE; // equip type - armor, shield, jewelry, weapon
-	protected SlotType slot_type = SlotTypes.NONE;  // the type of slot this fits in (if any)
+	protected ItemType item_type = ItemTypes.NONE;  // item type - what type of item is this
+	protected SlotType slot_type = SlotTypes.NONE;  // the type of slot this fits in (if any) -- used for Equippable
 	
 	protected Coins baseValue = Coins.gold(1);      // should be 'protected'?
 	
-	protected double weight = 0;                    // the weight in whatever units are used of the equippable object
-	
 	// game/system level "rules"
-	protected boolean equippable = false;     // is the item equippable? (default: false)
-	protected boolean equipped = false;       // is the item equipped? (default: false)
 	
 	protected boolean canAuction = true;      // allows/disallows auctioning this item (default: true)
     
-	protected boolean drinkable = false;      // drinkable? (0 = no, 1 = yes) -- implies DRINK
-    protected boolean edible = false;         // edible? -- implies FOOD
+	protected boolean drinkable = false;      // drinkable -- implies DRINK
+    protected boolean edible = false;         // edible -- implies FOOD
+    protected boolean equippable = false;     // equippable -- implies Equippable (default: false)
     
-    protected boolean magical = false;
+    //protected boolean magical = false;
 	
     protected boolean unique = false;         // is this item Unique (only one of them, cannot be copied)
 	
     // environment "rules"
-	protected boolean isAbsorb = true;        // does this item absorb water? (default: true)
-	protected boolean reducesWeight = false;  // does this item reduce the weight of it's contents (default: false)
+	protected boolean isAbsorb = false;        // does this item absorb water? (default: false)
 	protected boolean isWet = false;          // defines whether the item is wet or not (default: false)
 	
-	protected double reduction_factor = 1.0;  // amount of weight reduction (none by default, so 100% == 1) -- should be 'protected'?
+	protected boolean reducesWeight = false;  // does this item reduce the weight of it's contents (default: false)
+	protected double reduction_factor = 1.0;  // weight reduction multiplier (default: 1 = 100% of original weight)
 	
 	// original idea was a multiplying factor for weight when wet such as
 	// 1.0 - normal, 1.25 - damp, 1.50 - soaked, 2.00 - saturated, etc ("feels" x times as heavy)
-	protected double wet = 1.0;               // degree of water absorbed -- should be 'protected'?
+	protected double wet_factor = 1.0;        // degree of water absorbed (default: 1 = 100% of original weight)
 	
 	protected int wear = 0;                   // how much wear and tear the item has been subject to
 	protected int durability = 100;           // how durable the material is (100 is a test value) -- should be 'protected'?
@@ -74,10 +61,6 @@ public class Item extends MUDObject {
 	protected boolean isEnchanted = false;
 	
 	// item attributes: rusty, glowing, etc ?
-	
-	//protected List<Effect> effects;           // effects that are on this object
-	
-	//protected Map<String, Slot> slots = null; // handles objects which hold specific things, like sheaths for swords
 	
 	//protected Hashtable<String, Integer> skill_buffs = new Hashtable<String, Integer>();
 	
@@ -109,19 +92,17 @@ public class Item extends MUDObject {
 	 * 
 	 * @param template
 	 */
-	protected Item(Item template) {
+	protected Item(final Item template) {
 		super( template );
 		
 		this.type = TypeFlag.ITEM;
 		
 		this.item_type = template.item_type;
-		this.equip_type = template.equip_type;
-		
 		this.slot_type = template.slot_type;
 		
-		this.equipped = false;
-		this.equippable = template.equippable;
 		this.drinkable = template.drinkable;
+		this.edible = template.edible;
+		this.equippable = template.equippable;
 		
 		this.weight = template.weight;
 		
@@ -152,6 +133,7 @@ public class Item extends MUDObject {
 	public Item(final int tempDBREF, final String tempName, final EnumSet<ObjectFlag> tempFlags, final String tempDesc, final int tempLoc)
 	{
 		super(tempDBREF, tempName, tempFlags, tempDesc, tempLoc);
+		
 		this.type = TypeFlag.ITEM;
 	}
 	
@@ -160,14 +142,6 @@ public class Item extends MUDObject {
 	}
 	
 	public ItemType getItemType() {
-		return this.item_type;
-	}
-	
-	public void setEquipType(ItemType newType) {
-		this.equip_type = newType;
-	}
-	
-	public ItemType getEquipType() {
 		return this.item_type;
 	}
 	
@@ -198,10 +172,6 @@ public class Item extends MUDObject {
 		return this.wear;
 	}
 	
-	public void setWeight(Double newWeight) {
-		this.weight = newWeight;
-	}
-	
 	/**
 	 * Calculate weight (in lbs?) as a double. This
 	 * takes into account the weight of the water absorbed
@@ -215,7 +185,7 @@ public class Item extends MUDObject {
 	public Double getWeight() {
 		if(isAbsorb) {
 			if (isWet) {
-				return (this.weight * reduction_factor) * wet;
+				return (this.weight * reduction_factor) * wet_factor;
 			}
 			else {
 				return this.weight * reduction_factor;
@@ -245,20 +215,8 @@ public class Item extends MUDObject {
 		return canAuction;
 	}
 	
-	public void setEquippable(boolean canEquip) {
-		this.equippable = canEquip;
-	}
-	
 	public boolean isEquippable() {
 		return this.equippable;
-	}
-	
-	public void setEquipped(boolean equipped) {
-		this.equipped = equipped;
-	}
-	
-	public boolean isEquipped() {
-		return this.equipped;
 	}
 	
 	public void setUnique(boolean unique) {
@@ -269,19 +227,12 @@ public class Item extends MUDObject {
 		return this.unique;
 	}
 	
-	public boolean isEdible() {
-		return this.edible;
-	}
-	
-	/**
-	 * @param drinkable the drinkable to set
-	 */
-	public void setDrinkable(boolean drinkable) {
-		this.drinkable = drinkable;
-	}
-
 	public boolean isDrinkable() {
 		return this.drinkable;
+	}
+	
+	public boolean isEdible() {
+		return this.edible;
 	}
 	
 	public boolean isEnchanted() {
@@ -320,21 +271,16 @@ public class Item extends MUDObject {
 	}
 	
 	public String toDB() {
-		String[] output = new String[10];
+		final String[] output = new String[7];
 		
-		output[0] = this.getDBRef() + "";           // database reference number
-		output[1] = this.getName();                 // name
-		output[2] = TypeFlag.asLetter(type) + "";   // flags
-		output[2] = output[2] + getFlagsAsString();
-		output[3] = this.getDesc();                 // description
-		output[4] = this.getLocation() + "";        // location
+		output[0] = this.getDBRef() + "";        // database reference number
+		output[1] = this.getName();              // name
+		output[2] = type + getFlagsAsString();   // flags;
+		output[3] = this.getDesc();              // description
+		output[4] = this.getLocation() + "";     // location
 		
-		output[5] = this.item_type.getId() + "";    // item type
-		output[6] = this.equip_type.getId() + "";   // equip type
-		output[7] = this.slot_type.getId() + "";    // slot type
-		
-		output[8] = "*";                            // blank
-		output[9] = "*";                            // blank
+		output[5] = this.item_type.getId() + ""; // item type
+		output[6] = this.slot_type.getId() + ""; // slot type
 		
 		return Utils.join(output, "#");
 	}
@@ -351,7 +297,6 @@ public class Item extends MUDObject {
 		return null;
 	}
 	
-	//public abstract Item getCopy();
 	public Item getCopy() {
 		return new Item(this);
 	}

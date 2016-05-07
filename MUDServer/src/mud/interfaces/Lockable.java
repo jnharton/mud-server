@@ -25,6 +25,9 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  * @param <L> Some object type that will be used as the key
  */
 public interface Lockable<K> {
+	public boolean isLocked();
+	public boolean requiresKey();
+	
 	public void setKey(K key);
 	public K getKey();
 	
@@ -33,6 +36,4 @@ public interface Lockable<K> {
 	
 	public boolean unlock();
 	public boolean unlock(K key);
-	
-	public boolean isLocked();
 }

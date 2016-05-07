@@ -23,7 +23,7 @@ import mud.misc.Coins;
 import mud.objects.Item;
 
 public interface Vendor {
-	public List<Item> list();
+	public List<Item> getStock();
 	
 	public Item buy(final String name, final Coins payment);
 	

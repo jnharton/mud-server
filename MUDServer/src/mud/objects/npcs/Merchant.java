@@ -8,16 +8,11 @@ import java.util.LinkedHashMap;
 import java.util.EnumSet;
 
 import mud.ObjectFlag;
-import mud.MUDServer;
 import mud.game.Ability;
 import mud.interfaces.Vendor;
 import mud.misc.Coins;
-import mud.net.Client;
 import mud.objects.Item;
 import mud.objects.NPC;
-import mud.objects.Player;
-import mud.objects.items.Armor;
-import mud.objects.items.Weapon;
 import mud.rulesets.d20.Abilities;
 import mud.rulesets.d20.Classes;
 import mud.rulesets.d20.Races;
@@ -33,23 +28,19 @@ import mud.rulesets.d20.Races;
  */
 
 public class Merchant extends NPC implements Vendor {
-
 	/**
 	 * 
 	 */
-	final private MUDServer parent;
 	public ArrayList<Item> stock = new ArrayList<Item>();
-	
 	public Hashtable<String, Integer> stockTable = new Hashtable<String, Integer>();
 	// sword, 15
 	
 	public String type = "";
 
-	public Merchant(final MUDServer mudServer, final int tempDBRef, final String tempName, final EnumSet<ObjectFlag> tempFlags, 
-            final String tempDesc, final String tempTitle, final String tempPStatus, final int tempLoc, final Coins tempMoney) {
+	public Merchant(final int tempDBRef, final String tempName, final EnumSet<ObjectFlag> tempFlags, final String tempDesc,
+			final String tempTitle, final String tempPStatus, final int tempLoc, final Coins tempMoney) {
 		super(tempDBRef, tempName, tempFlags, tempDesc, tempLoc, tempMoney);
 
-		this.parent = mudServer;
 		this.access = 0;
 		this.stats = new LinkedHashMap<Ability, Integer>(6, 0.75f);
 
@@ -68,32 +59,7 @@ public class Merchant extends NPC implements Vendor {
 	}
 	
 	@Override
-	public void interact(final Player player) {
-		super.interact( player ); // make sure we call the super class's method...
-		
-		final Client client = player.getClient();
-		
-		parent.send(this.getName(), client);
-		parent.send("-----< Stock >--------------------", client);
-		for (Item item : this.stock) {
-			if (item instanceof Armor) {
-				Armor a = (Armor) item;
-				//parent.send(parent.colors("+" + a.getMod() + " " + a.getName() + " (" + a.getWeight() + ") Cost: " + a.getCost(), "yellow"), client);
-				parent.send(parent.colors(a.toString() + " (" + a.getWeight() + ") Cost: " + a.getValue(), "yellow"), client);
-			}
-			else if (item instanceof Weapon) {
-				final Weapon w = (Weapon) item;
-				//parent.send(parent.colors("+" + w.getMod() + " " + w.getName() + " (" + w.getWeight() + ") Cost: " + w.getCost(), "yellow"), client);
-				parent.send(parent.colors(w.toString()  + " (" + w.getWeight() + ") Cost: " + w.getValue(), "yellow"), client);
-			}
-			else {
-				parent.send("?", client);
-			}
-		}
-		parent.send("----------------------------------", client);
-	}
-
-	public List<Item> list() {
+	public List<Item> getStock() {
 		return Collections.unmodifiableList(this.stock);
 	}
 

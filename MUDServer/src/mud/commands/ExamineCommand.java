@@ -3,7 +3,6 @@ package mud.commands;
 import mud.Command;
 import mud.Constants;
 import mud.MUDObject;
-import mud.MUDServer;
 import mud.objects.Player;
 import mud.objects.Room;
 import mud.net.Client;
@@ -25,13 +24,14 @@ public class ExamineCommand extends Command {
 	}
 	
 	@Override
-	public void execute(String arg, Client client) {
+	public void execute(final String arg, final Client client) {
+		final Player player = getPlayer(client);
+		final Room room = getRoom( player.getLocation() );
+		
 		if ( arg.equals("") || arg.equals("here") ) {
-			Room room = getRoom( getPlayer( client ) );
 			examine(room, client);
 		}
 		else if (arg.equals("me")) {
-			Player player = getPlayer(client);
 			examine(player, client);
 		}
 		else {
@@ -58,7 +58,7 @@ public class ExamineCommand extends Command {
 				
 				if( mobj != null ) {
 					/** TODO: fix the following kludge **/
-					if( mobj.getLocation() != getPlayer(client).getLocation() ) {
+					if( mobj.getLocation() != player.getLocation() ) {
 						send("That doesn't exist.", client);
 						return;
 					}

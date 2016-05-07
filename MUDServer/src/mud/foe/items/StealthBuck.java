@@ -79,7 +79,6 @@ public final class StealthBuck extends Item implements Module, ExtraCommands {
 		super(dbref, "StealthBuck", "");
 		
 		this.item_type = FOEItemTypes.STEALTH_BUCK;
-		this.equip_type = ItemTypes.NONE;
 		this.slot_type = FOESlotTypes.NONE;
 		
 		this.enabled = false;

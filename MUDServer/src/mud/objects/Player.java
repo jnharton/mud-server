@@ -35,7 +35,6 @@ import mud.misc.PlayerMode;
 import mud.misc.Slot;
 import mud.net.Client;
 import mud.objects.items.Armor;
-import mud.objects.items.Handed;
 import mud.objects.items.Shield;
 import mud.objects.items.Weapon;
 import mud.quest.Quest;
@@ -49,6 +48,7 @@ import mud.utils.Landmark;
 import mud.utils.MailBox;
 import mud.utils.Pager;
 import mud.utils.Point;
+import mud.utils.Tuple;
 import mud.utils.Utils;
 import mud.utils.EditorData;
 
@@ -141,7 +141,7 @@ public class Player extends MUDObject implements Mobile
 	protected String gender;                       // Gender
 	protected PClass pclass;                       // Class
 	protected Alignments alignment;                // Alignment
-	protected Handed handed = Handed.RIGHT;        // which hand is dominant (irr. but enum encompasses that and weapons hand req.)
+	//protected Handed handed = Handed.RIGHT;        // which hand is dominant (irr. but enum encompasses that and weapons hand req.)
 	
 	protected int hp;                              // Hit Points
 	protected int temphp;                          // Temporary Hit Points
@@ -326,7 +326,6 @@ public class Player extends MUDObject implements Mobile
 		this.pass = tempPass;
 		this.flags = _FLAGS;
 		this.status = _STATUS;
-		this.locks = "";
 
 		// instantiate slots
 		this.slots = new LinkedHashMap<String, Slot>();
@@ -451,7 +450,6 @@ public class Player extends MUDObject implements Mobile
 		this.name = tempName;
 		this.pass = tempPass;
 		this.flags = tempFlags;
-		this.locks = ""; // should take tempLocks argument
 		this.desc = tempDesc;
 		this.status = tempPStatus;
 		this.title = tempTitle;
@@ -1026,13 +1024,16 @@ public class Player extends MUDObject implements Mobile
 	 * @return
 	 */
 	public Quest getQuest(final int id) {
+		Quest quest = null;
+		
 		for(final Quest q : this.quests) {
 			if( q.getId() == id ) {
-				return q;
+				quest = q;
+				break;
 			}
 		}
 
-		return null;
+		return quest;
 	}
 
 	/**
@@ -1056,12 +1057,17 @@ public class Player extends MUDObject implements Mobile
 	 * @param quest
 	 * @return
 	 */
-	public boolean hasQuest( Quest quest ) {
-		for(final Quest quest1 : this.quests) {
-			if( quest.getId() == quest1.getId() ) return true;
-		}
+	public boolean hasQuest(final Quest quest) {
+		boolean success = false;
 
-		return false;
+		for(final Quest quest1 : this.quests) {
+			if( quest1.getId() == quest.getId() ) {
+				success = true;
+				break;
+			}
+		}
+		
+		return success;
 	}
 
 	public int getCapacity() {
@@ -1079,7 +1085,15 @@ public class Player extends MUDObject implements Mobile
 	public MailBox getMailBox() {
 		return this.mailbox;
 	}
-
+	
+	// TODO does this sort of thing even belong in here?
+	public Tuple<Boolean, String> equip(final Item item) {
+		if( item.isEquippable() ) {
+		}
+		
+		return new Tuple<Boolean, String>(false, "");
+	}
+	
 	public void equip(final Item item, final Slot slot) {
 		slot.insert(item);
 	}

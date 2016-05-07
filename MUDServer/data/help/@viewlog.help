@@ -1,0 +1,11 @@
+@viewlog
+@VIEWLOG
+
+View some or all of the current log file.
+
+Syntax: @viewlog +info
+        @viewlog +lines [<start> <end>]
+        @viewlog +size
+        @viewlog +since [<hour>:<minute>:<second>]
+
+Last Updated: May 3rd, 2016

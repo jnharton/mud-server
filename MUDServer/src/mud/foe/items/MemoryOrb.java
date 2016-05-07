@@ -25,7 +25,6 @@ public class MemoryOrb extends Item {
 		this.type = TypeFlag.ITEM;
 		
 		this.item_type = FOEItemTypes.MEMORY_ORB;
-		this.equip_type = ItemTypes.NONE;
 		this.slot_type = FOESlotTypes.NONE;
 		
 		this.durability = 20;

@@ -77,7 +77,6 @@ public class Creature extends MUDObject implements Mobile {
 		
 		this.name = template.name;
 		this.flags = template.flags;
-		this.locks = template.locks;
 		this.desc = template.desc;
 		this.location = template.location;
 		
@@ -100,8 +99,7 @@ public class Creature extends MUDObject implements Mobile {
 		this.type = TypeFlag.CREATURE;
 		
 		this.name = tempName;
-		this.flags = tempFlags;
-		this.locks = ""; // should take tempLocks argument  
+		this.flags = tempFlags; 
 		this.desc = tempDesc;
 		this.location = tempLoc;
 	}

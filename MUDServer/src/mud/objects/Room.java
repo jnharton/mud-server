@@ -86,7 +86,7 @@ public class Room extends MUDObject implements EventSource, Instance
 		//setTrigger(TriggerType.onLeave, new Trigger("{tell:TRIGGER: leave,{&player}}"));
 	}
 	
-	public Exit[] dirMap = new Exit[9]; // dirMap[Direction.NORTH]
+	private Exit[] dirMap = new Exit[9]; // dirMap[Direction.NORTH]
 	
 	// misc note: parent == location
 
@@ -101,7 +101,6 @@ public class Room extends MUDObject implements EventSource, Instance
 		this.name = "room";
 		this.desc = "You see nothing.";
 		this.flags = EnumSet.of(ObjectFlag.SILENT);
-		this.locks = "";   // Set the locks
 		this.location = 0; // Set the location
 		
 		this.tiles = new char[x * y];
@@ -125,7 +124,6 @@ public class Room extends MUDObject implements EventSource, Instance
 		this.type = TypeFlag.ROOM;
 		
 		this.flags = toCopy.getFlags();       // Set the flags
-		this.locks = "";                      // Set the locks
 		this.location = toCopy.getLocation(); // Set the location
 		
 		this.tiles = new char[x * y];
@@ -154,7 +152,6 @@ public class Room extends MUDObject implements EventSource, Instance
 		this.type = TypeFlag.ROOM;
 		
 		this.flags = tempFlags;                                      // Set room flags
-		this.locks = "";                                             // Set the locks
 		this.location = tempLocation;                                // Set the location
 		
 		this.tiles = new char[x * y];
@@ -206,7 +203,10 @@ public class Room extends MUDObject implements EventSource, Instance
 	public Weather getWeather() {
 		return this.weather;
 	}
-
+	
+	public Exit getExit(final Direction dir) {
+		return this.dirMap[dir.getValue()];
+	}
 	/**
 	 * NOTE: the returned list /should/ be unmodifiable. that is, the
 	 * return here is not for modifying the list the exits
@@ -302,20 +302,20 @@ public class Room extends MUDObject implements EventSource, Instance
 	}
 
 	public void addListener(Player player) {
-		listeners.add(player);
+		this.listeners.add(player);
 	}
 
 	public void removeListener(Player player) {
-		listeners.remove(player);
+		this.listeners.remove(player);
 	}
 	
 	/* Say Event Stuff */
 	public synchronized void addSayEventListener(SayEventListener listener)  {
-		_listeners.add(listener);
+		this._listeners.add(listener);
 	}
 	
 	public synchronized void removeSayEventListener(SayEventListener listener)   {
-		_listeners.remove(listener);
+		this._listeners.remove(listener);
 	}
 	
 	/**
@@ -421,15 +421,13 @@ public class Room extends MUDObject implements EventSource, Instance
 		this.dirMap[direction] = exit;
 	}
 
-	// call this method whenever you want to notify
-	//the event listeners of the particular event
+	// call this method whenever you want to notify the event listeners
 	@Override
 	public synchronized void fireEvent(String message) {
-		SayEvent event = new SayEvent(this, message);
-		Iterator<SayEventListener> iter = _listeners.iterator();
+		final SayEvent sayEvent = new SayEvent(this, message);
 		
-		while(iter.hasNext())  {
-			iter.next().handleSayEvent(event);
+		for(final SayEventListener sl : this._listeners) {
+			sl.handleSayEvent(sayEvent);
 		}
 	}
 	

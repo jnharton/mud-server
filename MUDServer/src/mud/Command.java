@@ -36,17 +36,17 @@ public abstract class Command {
 	private MUDServer parent;
 	private ODBI db;
 	
-	protected String description;
+	private String description;
 	
-	protected Command(String description) {
+	protected Command(final String description) {
 		this.description = description;
 	}
 	
-	public void init(final MUDServer mParent) {
+	protected void init(final MUDServer mParent) {
 		this.parent = mParent;
 		
-		if( this.parent != null ) {
-			this.db = this.parent.getDBInterface();
+		if( mParent != null ) {
+			this.db = mParent.getDBInterface();
 		}
 	}
 	
@@ -84,7 +84,8 @@ public abstract class Command {
 	 * 
 	 * @param toSend
 	 */
-	protected final void send(String toSend, Client client) {
+	protected final void send(final String toSend, final Client client) {
+		// TODO eliminate with intermediate object
 		this.parent.send(toSend, client);
 	}
 	
@@ -97,15 +98,18 @@ public abstract class Command {
 	 * 
 	 * @param toSend
 	 */
-	protected final void debug(String toSend) {
+	protected final void debug(final String toSend) {
+		// TODO eliminate with intermediate object
 		this.parent.debug(toSend);
 	}
 	
 	protected final void addMessage(final Message msg) {
+		// TODO eliminate with intermediate object
 		parent.addMessage(msg);
 	}
 	
-	protected final String gameError(String source, int type) {
+	protected final String gameError(final String source, final int type) {
+		// TODO eliminate with intermediate object
 		return this.parent.gameError(source, type);
 	}
 	
@@ -115,93 +119,80 @@ public abstract class Command {
 	
 	protected final void scheduleAtFixedRate(final TimerTask task, final long delay, final long period) {
 		parent.timer.scheduleAtFixedRate(task, delay, period);
-		
 	}
 	
 	protected final String colors(final String arg, final String cc) {
 		return parent.colors(arg,  cc);
 	}
 	
-	protected final String[] getHelpFile(String name) {
+	/*protected final String[] getHelpFile(final String name) {
 		return parent.getHelpFile(name);
 	}
 	
-	protected final String[] getTopicFile(String name) {
+	protected final String[] getTopicFile(final String name) {
 		return parent.getTopicFile(name);
-	}
+	}*/
 	
 	protected final void examine(final MUDObject m, final Client client) {
 		if( m.isType(TypeFlag.ROOM) ) {
 			parent.examine((Room) m, client);
-			return;
 		}
 		else if( m.isType(TypeFlag.PLAYER) || m.isType(TypeFlag.NPC) ) {
 			parent.examine((Player) m, client);
-			return;
 		}
 		else {
 			parent.examine(m, client);
 		}
 	}
 	
-	/*protected final void examine(final Room r, final Client client) {
-		parent.examine(r, client);
-	}
-	
-	protected final void examine(final Player p, final Client client) {
-		parent.examine(p, client);
-	}*/
-	
 	protected final Spell getSpell(final String name) {
 		return parent.getSpell(name);
 	}
 	
 	protected final MUDObject getObject(final String name) {
-		return db.getByName(name);
-		//return parent.getObject(name);
+		return this.db.getByName(name);
 	}
 	
-	/*protected final MUDObject getObject(final String objectName, final Client client) {
-		return parent.getObject(objectName, client);
-	}*/
-	
 	protected final MUDObject getObject(Integer dbref) {
-		return db.get(dbref);
-		//return parent.getObject(dbref);
+		return this.db.get(dbref);
 	}
 	
 	/**
-	 * method that calls the parent MUDServer instance's getPlayer
+	 * method that calls the database interface's getPlayer
 	 * method on the object provided and returns either a Player object
-	 * or null (when the object can't be used to get a player, or when
-	 * no player was found)
+	 * or null.
 	 * 
-	 * @param object
+	 * @param name
 	 * @return
 	 */
-	protected final Player getPlayer(Object object) {
-		if( object instanceof String ) {
-			return parent.getPlayer((String) object);
-		}
-		else if( object instanceof Integer ) {
-			return parent.getPlayer((Integer) object);
-		}
-		else if( object instanceof Client ) {
-			return parent.getPlayer((Client) object);
-		}
-		
-		return null;
+	protected final Player getPlayer(final String name) {
+		return this.db.getPlayer(name);
 	}
 	
-	protected final NPC getNPC(Object object) {
-		if( object instanceof String ) {
-			return parent.getNPC((String) object);
-		}
-		else if( object instanceof Integer ) {
-			return parent.getNPC((Integer) object);
-		}
-		
-		return null;
+	protected final Player getPlayer(final String name, boolean online) {
+		if( online ) return parent.getPlayer(name);
+		else         return getPlayer(name);
+	}
+	
+	protected final Player getPlayer(final int DBRef) {
+		return getPlayer(DBRef, true);
+	}
+	
+	protected final Player getPlayer(final int DBRef, boolean online) {
+		if( online ) return parent.getPlayer(DBRef);
+		else         return getPlayer(DBRef);
+	}
+	
+	protected final Player getPlayer(final Client client) {
+		return parent.getPlayer(client);
+	}
+	
+	protected final NPC getNPC(final String npcName) {
+		return this.db.getNPC(npcName);
+	}
+	
+	protected final NPC getNPC(final int DBRef) {
+		return this.db.getNPC(DBRef);
 	}
 	
 	/**
@@ -212,38 +203,37 @@ public abstract class Command {
 	 * 
 	 * @param object
 	 * @return
-	 */
-	protected final Room getRoom(Object object) {
-		if( object instanceof String ) {
-			return parent.getRoom((String) object);
-		}
-		else if( object instanceof Player ) {
-			return parent.getRoom((Player) object);
-		}
-		else if( object instanceof Integer ) {
-			return parent.getRoom((Integer) object);
-		}
-		
-		return null;
+	 */	
+	protected final Room getRoom(final String name) {
+		return this.db.getRoomByName(name);
+	}
+	
+	protected final Room getRoom(final int DBRef) {
+		return this.db.getRoomById(DBRef);
 	}
 	
 	protected final Exit getExit(final String exitName) {
-		return parent.getExit(exitName);
+		return this.db.getExit(exitName);
 	}
 	
-	protected final Item getItem(Object object) {
-		/*if( object instanceof String ) {
-			return parent.getItem((String) object);
-		}*/
-		if( object instanceof Integer ) {
-			return parent.getItem((Integer) object);
-		}
-		
-		return null;
+	protected final Exit getExit(final int DBRef) {
+		return this.db.getExit(DBRef);
+	}
+	
+	protected final Item getItem(final String itemName) {
+		return this.db.getItem(itemName);
+	}
+	
+	protected final Item getItem(final int DBRef) {
+		return this.db.getItem(DBRef);
 	}
 	
 	protected final ArrayList<Player> getPlayers() {
 		return parent.getPlayers();
+	}
+	
+	protected final List<Creature> getCreaturesByRoom(final Room room) {
+		return this.db.getCreaturesByRoom(room);
 	}
 	
 	protected final void addSpellTimer(final Player player, final SpellTimer s) {
@@ -258,11 +248,11 @@ public abstract class Command {
 		return parent.applyEffect(m, effect);
 	}
 	
-	protected final void handleDeath(Player player) {
+	protected final void handleDeath(final Player player) {
 		parent.handleDeath(player);
 	}
 	
-	protected final void handleDeath(Creature creature, Player player) {
+	protected final void handleDeath(final Creature creature, final Player player) {
 		parent.handleDeath(creature, player);
 	}
 	
@@ -274,20 +264,12 @@ public abstract class Command {
 		return parent.getAliases();
 	}
 	
-	protected final List<Creature> getCreaturesByRoom(final Room room) {
-		return parent.getCreaturesByRoom(room);
-	}
-	
 	protected Item findItem(final List<Item> items, final Integer itemDBRef) {
 		return parent.findItem(items, itemDBRef);
 	}
 	
 	protected Item findItem(final List<Item> items, final String itemName) {
 		return parent.findItem(items, itemName);
-	}
-	
-	protected void addAlias(final String command, final String alias) {
-		parent.addAlias(command, alias);
 	}
 	
 	protected Time getGameTime() {

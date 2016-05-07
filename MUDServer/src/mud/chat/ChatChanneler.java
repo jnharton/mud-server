@@ -2,21 +2,29 @@ package mud.chat;
 
 import java.util.*;
 
+import mud.Constants;
 import mud.objects.Player;
 import mud.utils.Log;
+import mud.utils.MudUtils;
 
 public class ChatChanneler
 {
-	private HashMap<String, ChatChannel> channels;
+	private Map<String, ChatChannel> channels;
 	private Log log;
 	
-	boolean enable_logging = false;
+	private boolean enable_logging = false;
 
 	public ChatChanneler() {
-		this.channels = new HashMap<String, ChatChannel>();
+		this.channels = new LinkedHashMap<String, ChatChannel>();
 	}
 	
-	public ChatChanneler(Log log) {
+	public ChatChanneler(boolean enable_logging) {
+		this();
+		
+		this.enable_logging = true;
+		
+		this.log = new Log("chat");
+		this.log.openLog();
 	}
     
     public List<String> getChannelNames() {
@@ -66,22 +74,28 @@ public class ChatChanneler
 	}
 	
 	public void destroyChannel(final String channelName) {
-		if (channels.containsKey(channelName)) {
+		if( hasChannel(channelName) ) {
 			channels.remove(channelName);
 		}
 	}
 	
-	public boolean modifyRestriction(final String channelName, final int newRestrict) {
-		boolean success = false;
+	public Result modifyRestriction(final String channelName, final int newRestrict) {
+		Result result = Result.NIL;
 		
 		final ChatChannel channel = channels.get(channelName);
 		
-		if( newRestrict != channel.getRestrict() ) {
-			channel.setRestrict(newRestrict);
-			success = true;
+		if( channel != null ) {
+			if( newRestrict != channel.getRestrict() ) {
+				channel.setRestrict(newRestrict);
+				result = Result.MODIFY_OK;
+			}
+			else result = Result.MODIFY_NOK;
+			
+			//if( player.getAccess() >= channel.getRestrict() ) {}
 		}
+		else result = Result.NO_CHANNEL;
 		
-		return success;
+		return result;
 	}
 	
 	/**
@@ -95,18 +109,60 @@ public class ChatChanneler
 	 * 
 	 * @param player
 	 * @param channelName
+	 * 
 	 * @return
-	 * @throws Exception
+	 * 
+	 * @throws NoSuchChannelException
 	 */
-	public boolean add(final Player player, final String channelName) throws NoSuchChannelException {
-		boolean success = false;
+	public Result add(final Player player, final String channelName) throws NoSuchChannelException {
+		return add(player, channelName, "");
+	}
+	
+	/**
+	 * 
+	 * NOTE: this used to have an exception, because I'd like to properly report an invalid/
+	 * non-existent channel... unless a failed add means that there is no such channel?
+	 * 
+	 * NOTE2: elsewhere the messages claim that a failed add is a restricted channel, while
+	 * 
+	 * NOTE3: an unsuccessful add, without a thrown exception, implies a restriction failure.
+	 * 
+	 * @param player
+	 * @param channelName
+	 * @param password
+	 * 
+	 * @return
+	 * 
+	 * @throws NoSuchChannelException
+	 */
+	public Result add(final Player player, final String channelName, final String password) {
+		Result result = Result.NIL;
+		
+		boolean valid = false;
 		
 		final ChatChannel channel = channels.get(channelName);
 		
 		if( channel != null ) {
-			if( player.getAccess() >= channel.getRestrict() ) {
-				success = channel.addListener(player);
+			if( !channel.isListener(player) ) {
+				// do we pass the restriction?
+				if( player.getAccess() >= channel.getRestrict() ) {
+					if( channel.isProtected() ) {
+						if( channel.checkPassword(password) || MudUtils.checkAccess(player, Constants.ADMIN) ) {
+							valid = true;
+						}
+						else result = Result.WRONG_PASS; // message about incorrect password
+					}
+					else valid = true;
+				}
+				else result = Result.RESTRICTED; // message about channel restriction
+				
+				if( valid ) {
+					if( channel.addListener(player) ) {
+						result = Result.JOIN;
+					}
+				}
 			}
+			else result = Result.CURR_LISTEN; // message about already listening to that channel
 		}
 		else {
 			// test to see whether a mapping to null exists...
@@ -114,19 +170,24 @@ public class ChatChanneler
 				channels.remove(channelName); // explicit remove a mapping to a null value
 			}
 			
-			throw new NoSuchChannelException(channelName);
+			result = Result.NO_CHANNEL;
 		}
 		
-		return success;
+		return result;
 	}
 
-	public boolean remove(final Player player, final String channelName) throws NoSuchChannelException {
-		boolean success = false;
+	public Result remove(final Player player, final String channelName) {
+		Result result = Result.NIL;
 		
 		final ChatChannel channel = channels.get(channelName);
 		
 		if( channel != null ) {
-			success = channel.removeListener(player);
+			if( channel.isListener(player) ) {
+				if( channel.removeListener(player) ) {
+					result = Result.LEAVE;
+				}
+			}
+			else result = Result.CURR_NOLISTEN;
 		}
 		else {
 			// test to see whether a mapping to null exists...
@@ -134,10 +195,10 @@ public class ChatChanneler
 				channels.remove(channelName); // explicit remove a mapping to a null value
 			}
 			
-			throw new NoSuchChannelException(channelName);
+			result = Result.NO_CHANNEL;
 		}
 		
-		return success;
+		return result;
 	}
 	
 	public boolean isPlayerListening(final String channelName, final Player player) {

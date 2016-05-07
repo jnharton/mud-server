@@ -21,10 +21,12 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
+
 /**
  * Log Class
  * 
@@ -39,29 +41,21 @@ import java.util.TimeZone;
  * @author Jeremy N. Harton
  *
  */
-public class Log
-{
-	private static String DATA_DIR = "data//";
-
-	private Calendar calendar;
-
-	private String date;
-	private String time;
+public class Log {
+	private static final String DATA_DIR = "data//";
+	
+	private static final Integer BUFFER_SIZE = 1000;
+	private static final Integer MAX_LOG_SIZE = 10000;
 
 	private String filename;
-	private File file;
 	private PrintWriter output;
-	
-	private int lognum = 1;
 	
 	private boolean isOpen = false;
 	private boolean isFull = false;
-	
 	private boolean useBuffer = false;
 	
-	private int length;
-	private int max_log_size = 5000;
-	private int buffer_size = 1000;
+	private int lines_written;
+	private int log_num = 1;
 	
 	private List<String> buffer = null;
 
@@ -74,247 +68,49 @@ public class Log
 	/**
 	 * Default, No Argument Log constructor
 	 */
-	public Log()
-	{
-		this.calendar = Calendar.getInstance(TimeZone.getTimeZone("America/New_York"), new Locale("ENGLISH", "US"));
-
-		this.date = str(month() + 1) + "-" + str(day()) + "-" + str(year());
-		this.time = str(hour()) + "-" + str(minute());
-		this.filename = "log_" + this.date + "_" + this.time + ".txt";
-
-		this.length = 0;
+	public Log() {
+		this("log");
 	}
 
 	/**
 	 * Alternate Log constructor that takes a specific filename
 	 * and prefixes it to the default name in place of 'log'.
 	 * 
-	 * NOTE: Should this allow an entirely alternate name, i.e. is that
-	 * something a person might expect?
-	 * 
-	 * @param filename
+	 * @param name
 	 */
-	public Log(String filename)
-	{
-		this.calendar = Calendar.getInstance(TimeZone.getTimeZone("America/New_York"), new Locale("ENGLISH", "US"));
-
-		this.date = str(month() + 1) + "-" + str(day()) + "-" + str(year());
-		this.time = str(hour()) + "-" + str(minute());
-		this.filename = filename + "_" + this.date + "_" + this.time + ".txt";
-
-		this.length = 0;
+	public Log(final String name) {
+		this(name, false);
 	}
 	
-	public Log(String filename, Boolean buffer) {
-		this(filename);
+	public Log(final String name, final boolean buffer) {
+		final TimeZone tz = TimeZone.getTimeZone("America/New_York");
+		final Locale lc = new Locale("ENGLISH", "US");
+		
+		final Calendar cal = Calendar.getInstance(tz, lc);
+		
+		int month = cal.get(Calendar.MONTH);
+		int day = cal.get(Calendar.DAY_OF_MONTH);
+		int year = cal.get(Calendar.YEAR);
+		
+		int hour = cal.get(Calendar.HOUR);
+		int minute = cal.get(Calendar.MINUTE);
+		
+		final String date = (month + 1) + "-" + day + "-" + year;
+		final String time = hour + "-" + minute;
+		
+		this.filename = name + "_" + date + "_" + time + ".txt";
 		
 		this.useBuffer = buffer;
+		
+		if( this.useBuffer ) this.buffer = new ArrayList<String>(Log.BUFFER_SIZE);
+		
+		this.lines_written = 0;
 	}
 	
-	/**
-	 * Alternate Log constructor that takes a specific filename
-	 * and prefixes it to the default name in place of 'log'. This
-	 * version also takes a maximum log length.
-	 * 
-	 * NOTE: Should this allow an entirely alternate name, i.e. is that
-	 * something a person might expect?
-	 * 
-	 * @param filename
-	 */
-	public Log(String filename, Boolean buffer, int maxLength) {
-		this(filename, buffer);
-
-		this.max_log_size = maxLength;
+	public String getFileName() {
+		return this.filename;
 	}
-
-	/**
-	 * Opens the log (and it's associated file) for writing.
-	 */
-	public void openLog()
-	{
-		if (!this.isOpen) {
-			try {
-				this.file = new File(DATA_DIR + "logs/" + this.filename);
-				this.output = new PrintWriter(file);
-
-				this.isOpen = true;
-			}
-			catch (FileNotFoundException fnfe) {
-				try {
-					System.out.println("File not found!");
-
-					System.out.println("Creating file...");
-					this.file.createNewFile();
-
-					this.output = new PrintWriter(file);
-
-					this.isOpen = true;
-				}
-				catch (IOException e) {
-					System.out.println("Bad path: " + file);
-					e.printStackTrace();
-				}
-			}
-		}
-		else {
-			System.out.println("Game> Log File already open, debug coding.");
-		}
-	}
-
-	/**
-	 * 
-	 * @param message
-	 */
-	public void writeln(String message)
-	{
-		if (this.isOpen)
-		{
-			if (!this.isFull) {
-				final String timeString = getTimeString();
-				final String logString = timeString + " " + message;
-
-				logString.trim();
-
-				if( useBuffer ) {
-					if( buffer.size() >= buffer_size ) {
-						for(final String s : buffer) {
-							this.output.println(s);
-						}
-						
-						this.output.flush();
-					}
-					
-					buffer.add( logString );
-				}
-				else {
-					this.output.println(logString);
-					this.output.flush();
-				}
-				
-				this.length++;
-
-				if (max_log_size != -1 && this.length == max_log_size) {
-					this.isFull = true;
-				}
-			}
-			else {
-				if( useBuffer ) {
-					for(final String s : buffer) {
-						this.output.println(s);
-					}
-					
-					this.output.flush();
-					
-					buffer.clear();
-				}
-				
-				// report full log
-				
-				// close current log file and open a new one and call write again
-				closeLog();
-				
-				// change filename
-				final String prefix = filename.substring(0, filename.indexOf('_'));
-				
-				filename.replace(prefix, prefix + lognum);
-
-				// open log
-				openLog();
-			}
-		}
-		else
-		{
-			System.out.println("Game> Log File not open, debug coding.");
-		}
-	}
-
-	// method for logging player actions
-	/**
-	 * 
-	 * @param temp
-	 * @param action
-	 */
-	public void writeln(String playerName, int playerLoc, String action)
-	{
-		if (this.isOpen)
-		{
-			if (!this.isFull) {
-				final String timeString = getTimeString();
-				final String logString = timeString + " " + "(" + playerName + ") {Location: #" + playerLoc +  "}  " + action;
-
-				logString.trim();
-				
-				if( useBuffer ) {
-					if( buffer.size() >= buffer_size ) {
-						for(final String s : buffer) {
-							this.output.println(s);
-						}
-						
-						this.output.flush();
-						
-						buffer.clear();
-					}
-					
-					buffer.add( logString );
-				}
-				else {
-					this.output.println(logString);
-					this.output.flush();
-				}
-				
-				this.length++;
-				
-				if (max_log_size != -1 && this.length == max_log_size) {
-					this.isFull = true;
-				}
-			}
-			else {
-				if( useBuffer ) {
-					for(final String s : buffer) {
-						this.output.println(s);
-					}
-					
-					this.output.flush();
-				}
-				
-				// report full log
-				
-				// close current log file and open a new one and call write again
-				closeLog();
-				
-				// change filename
-				final String prefix = filename.substring(0, filename.indexOf('_'));
-				
-				filename.replace(prefix, prefix + lognum);
-
-				// open log
-				openLog();
-			}
-		}
-		else
-		{
-			System.out.println("Game> Log File not open, debug coding.");
-		}
-	}
-
-	/**
-	 * A method to close the log (and it's corresponding file).
-	 * 
-	 * NOTE: Doing so does result in the stream being flushed.
-	 */
-	public void closeLog()
-	{
-		// if the log is open
-		if ( this.isOpen() ) {
-			this.output.flush();
-			this.output.close();
-			this.isOpen = false;
-		}
-		else {
-			System.out.println("Game> Log File not open, debug coding.");
-		}
-	}
-
+	
 	/**
 	 * A method to determine if the log is open (active)
 	 * 
@@ -328,34 +124,124 @@ public class Log
 		return this.isFull;
 	}
 	
-	public int getLength() {
-		return this.length;
+	public int getLinesWritten() {
+		return this.lines_written;
 	}
 	
-	public String getFileName() {
-		return this.filename;
+	/**
+	 * Opens the log (and it's associated file) for writing.
+	 */
+	public void openLog()
+	{
+		if ( !this.isOpen ) {
+			final File file = new File(DATA_DIR + "logs/" + this.filename);
+			
+			try {
+				// make sure we have a real file
+				if( !file.exists() ) {
+					System.out.println("Creating file...");
+					file.createNewFile();
+				}
+				
+				this.output = new PrintWriter(file);
+				this.isOpen = true;
+			}
+			catch (final FileNotFoundException fnfe) {
+				System.out.println("File not found!");
+				System.out.println("--- Stack Trace ---");
+				fnfe.printStackTrace();
+			}
+			catch (final IOException e) {
+				System.out.println("Bad path: " + file);
+				System.out.println("--- Stack Trace ---");
+				e.printStackTrace();
+			}
+		}
+		else {
+			System.out.println("Game> Log File already open, debug coding.");
+		}
 	}
 
-	private int second() {
-		return this.calendar.get(Calendar.SECOND);
-	}
-	private int minute() {
-		return this.calendar.get(Calendar.MINUTE);
+	/**
+	 * 
+	 * @param message
+	 */
+	public void writeln(final String message)
+	{
+		if ( this.isOpen ) {
+			if ( !this.isFull ) {
+				final String timeString = getTimeString();
+				final String logString = timeString + " " + message;
+
+				logString.trim();
+
+				if( this.useBuffer ) {
+					// flush buffer to file if full
+					if( this.buffer.size() >= Log.BUFFER_SIZE ) {
+						for(final String s : this.buffer) this.output.println(s);
+						
+						this.output.flush();
+						this.buffer.clear();
+					}
+					
+					this.buffer.add( logString );
+				}
+				else {
+					this.output.println(logString);
+					this.output.flush();
+				}
+				
+				this.lines_written++;
+
+				if ( this.lines_written == Log.MAX_LOG_SIZE ) {
+					this.isFull = true;
+				}
+			}
+			else {
+				if( this.useBuffer ) {
+					// flush ENTIRE buffer since we're closing this log file
+					for(final String s : this.buffer) this.output.println(s);
+					
+					this.output.flush();
+					this.buffer.clear();
+				}
+				
+				// report full log
+				
+				// close current log file and open a new one and call write again
+				closeLog();
+				
+				// change filename (e.g. test_date.log > test_date_1.log)
+				final String prefix = filename.substring(0, filename.indexOf('_'));
+				
+				filename.replace(prefix, prefix + this.log_num);
+				
+				this.log_num++;
+
+				// open log
+				openLog();
+			}
+		}
+		else System.out.println("Game> Log File not open, debug coding.");
 	}
 
-	private int hour() {
-		return this.calendar.get(Calendar.HOUR);
-	}
-	private int day() {
-		return this.calendar.get(Calendar.DAY_OF_MONTH);
-	}
-
-	private int month() {
-		return this.calendar.get(Calendar.MONTH);
-	}
-
-	private int year() {
-		return this.calendar.get(Calendar.YEAR);
+	/**
+	 * A method to close the log (and it's corresponding file).
+	 * 
+	 * NOTE: Doing so does result in the stream being flushed.
+	 */
+	public void closeLog()
+	{
+		// if the log is open
+		if ( this.isOpen ) {
+			this.output.flush();
+			this.output.close();
+			
+			this.isOpen = false;
+		}
+		else {
+			System.out.println("Game> Log File not open, debug coding.");
+		}
 	}
 	
 	/**
@@ -365,23 +251,26 @@ public class Log
 	 * @return
 	 */
 	private String getTimeString() {
-		this.calendar = Calendar.getInstance(TimeZone.getTimeZone("America/New_York"), new Locale("ENGLISH", "US"));
-
+		final TimeZone tz = TimeZone.getTimeZone("America/New_York");
+		final Locale lc =new Locale("ENGLISH", "US");
+		
+		final Calendar cal = Calendar.getInstance(tz, lc);
+		
 		String hour, minute, second;
+		
+		int h = cal.get(Calendar.HOUR);
+		int m = cal.get(Calendar.MINUTE);
+		int s = cal.get(Calendar.SECOND);
 
-		if (hour() < 10) hour = "0" + str(hour());
-		else             hour = str(hour());
+		if (h < 10) hour = "0" + h;
+		else        hour = "" + h;
 
-		if (minute() < 10) minute = "0" + str(minute());
-		else               minute = str(minute());
+		if (m < 10) minute = "0" + m;
+		else        minute = "" + m;
 
-		if (second() < 10) second = "0" + str(second());
-		else               second = str(second());
+		if (s < 10) second = "0" + s;
+		else        second = "" + s;
 		
 		return "[" + hour + ":" + minute + ":" + second + "]";
-	}
-
-	public static String str(Object o) {
-		return o.toString();
 	}
 }

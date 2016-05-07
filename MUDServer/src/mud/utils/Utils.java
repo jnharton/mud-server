@@ -319,19 +319,24 @@ public final class Utils {
 	 * @param in a string array
 	 * @return an integer array 
 	 */
-	public static Integer[] stringsToIntegers(String[] in) {
-		Integer[] out = new Integer[in.length];
-		for (int l = 0; l < in.length; l++)
-		{
+	public static Integer[] stringsToIntegers(final String[] in) {
+		final Integer[] out = new Integer[in.length];
+		
+		int n = 0;
+		
+		for(final String s : in) {
+			// not using Utils.toInt because I want to know if something doesn't parse
 			try {
-				out[l] = Integer.parseInt(in[l]);
+				out[n] = Integer.parseInt(s);
+				n++;
 			}
-			catch(NumberFormatException nfe) {
+			catch(final NumberFormatException nfe) {
+				System.out.println("stringsToIntegers: cannot parse element");
 				System.out.println("--- Stack Trace ---");
 				nfe.printStackTrace();
-				System.out.println("Cannot parse element");
 			}
 		}
+		
 		return out;
 	}
 

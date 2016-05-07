@@ -8,4 +8,9 @@ public class Tuple<A, B> {
 		this.one = one;
 		this.two = two;
 	}
+	
+	@Override
+	public String toString() {
+		return "(" + this.one + ", " + this.two + ")";
+	}
 }

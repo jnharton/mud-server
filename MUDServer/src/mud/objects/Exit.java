@@ -71,7 +71,6 @@ public class Exit extends MUDObject
 		this.name = name;                              // Set the name
 		this.desc = "You see nothing.";                // Set the description to the default
 		this.flags = EnumSet.noneOf(ObjectFlag.class); // Set flags
-		this.locks = "";                               // Set the locks
 		this.location = location;                      // Set the location
 		this.destination = destination;                // Set the destination
 		
@@ -93,7 +92,6 @@ public class Exit extends MUDObject
 		this.name = tempName;               // Set the name
 		this.desc = tempDesc;               // Set the description to the default
 		this.flags = flagsNotUsed;          // Set flags
-		this.locks = "";                    // Set the locks
 		this.location = tempLoc;            // Set the location
 		this.destination = tempDestination; // Set the destination
 		
@@ -148,27 +146,29 @@ public class Exit extends MUDObject
 		else                                  return null;
 	}
 	
-	public void setExitType(final ExitType newType) {
+	/*public void setExitType(final ExitType newType) {
 		this.eType = newType;
-	}
-	
+	}*/
+
 	public ExitType getExitType() {
 		return this.eType;
 	}
 
 	public String toDB() {
-		String[] output = new String[7];
-		output[0] = this.getDBRef() + "";                // database reference number
-		output[1] = this.getName();                      // name
-		output[2] = TypeFlag.asLetter(this.type) + "";   // flags
-		output[2] = output[2] + this.getFlagsAsString();
-		output[3] = this.getDesc();                      // description
-		output[4] = this.getLocation() + "";             // location (a.k.a source)
-		output[5] = this.getDestination() + "";          // destination
-		output[6] = this.eType.ordinal() + "";           // exit type
+		final String[] output = new String[7];
+
+		output[0] = this.getDBRef() + "";        // database reference number
+		output[1] = this.getName();              // name
+		output[2] = type + getFlagsAsString();   // flags;
+		output[3] = this.getDesc();              // description
+		output[4] = this.getLocation() + "";     // location (a.k.a source)
+
+		output[5] = this.getDestination() + "";  // destination
+		output[6] = this.eType.ordinal() + "";   // exit type
+
 		return Utils.join(output, "#");
 	}
-	
+
 	@Override
 	public String toString() {
 		return "";

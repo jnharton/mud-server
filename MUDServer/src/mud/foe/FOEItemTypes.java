@@ -5,11 +5,11 @@ import mud.objects.ItemType;
 import mud.objects.ItemTypes;
 
 public final class FOEItemTypes {
-	public static ItemType BOTTLE_CAP   = new ItemType("Bottle_Cap",   16);
-	public static ItemType DISRUPTOR    = new ItemType("Disruptor",    17);
-	public static ItemType MEMORY_ORB   = new ItemType("Memory_Orb",   18);
-	public static ItemType PIPBUCK      = new ItemType("PipBuck",      19);
-	public static ItemType STEALTH_BUCK = new ItemType("Stealth_Buck", 20);
+	public static final ItemType BOTTLE_CAP   = new ItemType("Bottle_Cap",   16);
+	public static final ItemType DISRUPTOR    = new ItemType("Disruptor",    17);
+	public static final ItemType MEMORY_ORB   = new ItemType("Memory_Orb",   18);
+	public static final ItemType PIPBUCK      = new ItemType("PipBuck",      19);
+	public static final ItemType STEALTH_BUCK = new ItemType("Stealth_Buck", 20);
 
 	private FOEItemTypes() {}
 

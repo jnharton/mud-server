@@ -48,29 +48,27 @@ public class Session {
 	private Client client;     // network client 
 	private Player player;     // current player
 	
-	public Time connect;       // connection time
-	public Time disconnect;    // disconnect time
-	
-	public Time sessionLength; // the total time the player was connected for this session
+	public Tuple<Date, Time> connect;    // connection time
+	public Tuple<Date, Time> disconnect; // disconnect time
 	
 	private Log session;       // session log
 	private Log transactions;  //
 	
 	/*
-	 * this would be false if the player's connection failed,a
+	 * this would be false if the player's connection failed
 	 */
 	public boolean connected;
 	
-	public Session(Client client, Account account, Player player) {
+	public Session(final Client client, final Player player) {
+		this.account = null;
 		this.client = client;
-		this.account = account;
 		this.player = player;
 	}
 	
-	public Session(Client client, Player player) {
-		this.client = client;
-		this.account = null;
-		this.player = player;
+	public Session(final Account account) {
+		this.account = account;
+		this.client = account.getClient();
+		this.player = account.getPlayer();
 	}
 	
 	public Player getPlayer() {
@@ -94,8 +92,8 @@ public class Session {
 	 * 
 	 * @param newClient
 	 */
-	public void setClient(Client newClient) {
-		if ( !connected ) { this.client = newClient; }
+	public void setClient(final Client newClient) {
+		if ( !connected ) this.client = newClient;
 	}
 	
 	public boolean isConnected() {
@@ -123,7 +121,7 @@ public class Session {
 		ArrayList<String> output = new ArrayList<String>();
 		
 		// account id, client ip, player name
-		output.add(String.valueOf(account.getId()));
+		output.add("" + account.getId());
 		output.add(client.getIPAddress());
 		output.add(player.getName());
 		
@@ -139,7 +137,7 @@ public class Session {
 		return (String[]) output.toArray();
 	}
 	
-	public static Session fromFile(String[] fileData) {
+	public static Session fromFile(final String[] fileData) {
 		if( fileData.length == 5 ) { 
 		}
 		

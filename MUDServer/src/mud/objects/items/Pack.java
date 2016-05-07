@@ -45,20 +45,9 @@ public class Pack extends Clothing {
 	
 	@Override
 	public String toDB() {
-		String[] output = new String[10];
+		//final String[] output = new String[10];
+		//return Utils.join(output, "#");
 		
-		output[0] = this.getDBRef() + "";         // pack database reference number
-		output[1] = this.getName();               // pack name
-		output[2] = this.getFlagsAsString();      // pack flags
-		output[3] = this.getDesc();               // pack description
-		output[4] = this.getLocation() + "";      // pack location
-		output[5] = this.item_type.getId() + "";  // item type
-		output[6] = this.equip_type.getId() + ""; // equip type
-		output[7] = this.slot_type.getId() + "";  // slot type
-		
-		output[8] = "*";                          // nothing (placeholder)
-		output[9] = "*";                          // nothing (placeholder)
-		
-		return Utils.join(output, "#");
+		return super.toDB();
 	}
 }

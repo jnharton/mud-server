@@ -296,8 +296,7 @@ public class Client implements Runnable {
 
 	public void write(final List<String> data) {
 		for(final String string : data) {
-			// remove any leading/trailing whitespace (like newlines) before writing
-			writeln( string.trim() );
+			writeln(string);
 		}
 	}
 

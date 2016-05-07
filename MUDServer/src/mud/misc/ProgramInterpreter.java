@@ -67,7 +67,7 @@ public class ProgramInterpreter {
 	 * @param input
 	 * @return
 	 */
-	public List<String> lex(String input) {
+	public List<String> lex(final String input) {
 		List<String> tokens = new LinkedList<String>();
 		
 		StringBuilder sb = new StringBuilder();
@@ -687,7 +687,7 @@ public class ProgramInterpreter {
 	 * @param script
 	 * @return
 	 */
-	public boolean isValidScript(String script) {
+	public boolean isValidScript(final String script) {
 		if (script.startsWith("{") && script.endsWith("}")) {
 			final int numLeftBrace = Utils.countNumOfChar(script, '{');
 			final int numRightBrace = Utils.countNumOfChar(script, '}');
@@ -700,11 +700,11 @@ public class ProgramInterpreter {
 		return false;
 	}
 
-	public void exec(Script script) {
+	public void exec(final Script script) {
 		exec(script, null);
 	}
 
-	public void exec(Script script, Client client) {
+	public void exec(final Script script, final Client client) {
 		interpret( script, parent.getPlayer(client), null );
 	}
 
@@ -714,7 +714,7 @@ public class ProgramInterpreter {
 	 * TODO should this be private, public or ?
 	 * @param params
 	 */
-	private void fixParams(List<String> params) {
+	private void fixParams(final List<String> params) {
 		boolean done = false; // are we done fixing any incorrect breaks
 
 		int leftCurlyCount = 0;

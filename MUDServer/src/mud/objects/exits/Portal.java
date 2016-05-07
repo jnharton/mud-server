@@ -3,25 +3,22 @@ package mud.objects.exits;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
-import java.util.EventListener;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 
 import mud.ObjectFlag;
-import mud.TypeFlag;
 import mud.events.EventSource;
 import mud.events.PortalEvent;
 import mud.events.PortalEventListener;
 import mud.events.SayEvent;
 import mud.events.SayEventListener;
-import mud.interfaces.Lockable;
 import mud.misc.Trigger;
 import mud.misc.TriggerType;
 import mud.objects.Exit;
 import mud.objects.ExitType;
+import mud.objects.Item;
 import mud.objects.Player;
 import mud.utils.Utils;
 
@@ -59,12 +56,10 @@ import mud.utils.Utils;
 public class Portal extends Exit implements EventSource, SayEventListener {
 	private PortalType pType;                       // type of portal
 	private Object key;                             // if it's locked with a key what is it
-	//private int origin;                             // portal origin
-	//private Integer destination = null;             // a single destination (single destination portal)
 	private ArrayList<Integer> destinations = null; // a list of destinations by dbref (multi-destination portal)
 	
 	// portal state
-	private boolean active;                         // is the portal currently active?
+	private boolean active = false;                 // is the portal currently active?
 	private boolean requiresKey = false;            // does it require a key?
 
 	private static Random generator = new Random();
@@ -80,11 +75,13 @@ public class Portal extends Exit implements EventSource, SayEventListener {
 		setTrigger(TriggerType.onEnterPortal, new Trigger("TRIGGER: enter"));
 		setTrigger(TriggerType.onLeavePortal, new Trigger("TRIGGER: leave"));
 	}
-
-	// standard, "always open" portal (default is active)
-	public Portal(int pOrigin, int pDestination) {
+	
+	public Portal(final PortalType pType, int pOrigin, int pDestination) {
+		super();
+		
 		this.eType = ExitType.PORTAL;
-		this.pType = PortalType.STD;
+		
+		this.pType = pType;
 		this.key = null;
 		
 		this.location = pOrigin;
@@ -92,81 +89,70 @@ public class Portal extends Exit implements EventSource, SayEventListener {
 		this.origin = pOrigin;
 		this.destination = pDestination;
 		this.active = true;
-	}
-
-	// keyed portal (default is inactive)
-	public Portal(Object pKey, int pOrigin, int pDestination) {
-		//super();
-		
-		this.eType = ExitType.PORTAL;
-		this.pType = PortalType.STD;
-		this.key = pKey;
-		if (pKey != null) { this.requiresKey = true; }
-		
-		this.location = pOrigin;
-		
-		this.origin = pOrigin;
-		this.destination = pDestination;
-		this.active = false;
 	}
 	
-	public Portal(PortalType pType, int pOrigin, int pDestination) {
+	// TODO what about multi-destination portals that aren't random
+	
+	public Portal(final PortalType pType, int pOrigin, int[] pDestinations) {
 		super();
 		
 		this.eType = ExitType.PORTAL;
+		
 		this.pType = pType;
 		this.key = null;
 		
 		this.location = pOrigin;
 		
 		this.origin = pOrigin;
-		this.destination = pDestination;
-		this.active = true;
-	}
-
-	// typed portal (default is active)
-	public Portal(PortalType pType, int pOrigin, int[] pDestinations) {
-		super();
 		
-		this.eType = ExitType.PORTAL;
-		this.pType = pType;
-		this.key = null;
-		
-		this.location = pOrigin;
-		
-		this.origin = pOrigin;
 		if (pType == PortalType.STD) {
 			this.destination = pDestinations[0];
 		}
 		else if (pType == PortalType.RANDOM) {
 			this.destinations = new ArrayList<Integer>(pDestinations.length);
-			for (int d : pDestinations) {
-				this.destinations.add(d);
-			}
+			
+			for (int d : pDestinations) this.destinations.add(d);
 		}
+		
 		this.active = true;
 	}
+	
+	// convenience constructors?
 
-	// typed, keyed portal (default is inactive)
-	public Portal(PortalType pType, Object pKey, int pOrigin, int[] pDestinations) {
-		super();
+	// standard, "always open" and one-way portal (default is active)
+	public Portal(int pOrigin, int pDestination) {
+		this(PortalType.STD, pOrigin, pDestination);
+	}
+	
+	// standard, "always open" and one-way portal (default is active) -- multi destination
+	public Portal(int pOrigin, int[] pDestinations) {
+		this(PortalType.STD, pOrigin, pDestinations);
+	}
+
+	// keyed portal (default is inactive)
+	public Portal(int pOrigin, int pDestination, final Object pKey) {
+		this(PortalType.STD, pOrigin, pDestination);
 		
-		this.eType = ExitType.PORTAL;
-		this.pType = pType;
-		this.key = pKey;
-		if (pKey != null) { this.requiresKey = true; }
-		
-		this.location = pOrigin;
-		
-		this.origin = pOrigin;
-		if (pType == PortalType.STD) { this.destination = pDestinations[0]; }
-		else if (pType == PortalType.RANDOM) {
-			this.destinations = new ArrayList<Integer>(pDestinations.length);
-			for (int d : pDestinations) {
-				this.destinations.add(d);
-			}
+		if (pKey != null) {
+			this.key = pKey;
+			
+			this.requiresKey = true;
+			
+			this.active = false;
 		}
-		this.active = false;
+	}
+
+	// keyed portal (default is inactive) -- multi destination
+	public Portal(PortalType pType, int pOrigin, int[] pDestinations, Object pKey) {
+		this(PortalType.STD, pOrigin, pDestinations);
+		
+		if (pKey != null) {
+			this.key = pKey;
+			
+			this.requiresKey = true;
+			
+			this.active = false;
+		}
 	}
 	
 	public Portal(int tempDBRef, String tempName, final EnumSet<ObjectFlag> flagsNotUsed, String tempDesc, int tempLocation, int tempDestination) {
@@ -209,7 +195,7 @@ public class Portal extends Exit implements EventSource, SayEventListener {
 	 * 
 	 * @param newKey
 	 */
-	public void setKey(Object newKey) {
+	public void setKey(final Object newKey) {
 		this.key = newKey;
 	}
 	
@@ -273,11 +259,10 @@ public class Portal extends Exit implements EventSource, SayEventListener {
 	 * 
 	 * @param key
 	 */
-	public boolean activate(Object pKey) {
+	public boolean activate(final Object pKey) {
 		if (key instanceof String) {
-			if ( ( (String) pKey ).equals( (String) this.key ) ) {
+			if ( ((String) pKey).equals((String) this.key) ) {
 				this.active = true;
-				System.out.println("Portal: activated");
 				return true;
 			}
 		}
@@ -289,11 +274,10 @@ public class Portal extends Exit implements EventSource, SayEventListener {
 	 * Deactivation via words
 	 * @param key
 	 */
-	public boolean deactivate(Object pKey) {
+	public boolean deactivate(final Object pKey) {
 		if (key instanceof String) {
-			if (((String) pKey).equals((String) this.key)) {
+			if ( ((String) pKey).equals((String) this.key) ) {
 				this.active = false;
-				System.out.println("Portal: deactivated");
 				return true;
 			}
 		}
@@ -309,7 +293,11 @@ public class Portal extends Exit implements EventSource, SayEventListener {
 		return this.requiresKey;
 	}
 	
-	public boolean hasKey( Player p ) {
+	public boolean isKey(final Item item) {
+		return false;
+	}
+	
+	public boolean hasKey(final Player p) {
 		return p.getInventory().contains(this.key);
 	}
 	
@@ -318,56 +306,62 @@ public class Portal extends Exit implements EventSource, SayEventListener {
 		triggers.put(tType, new LinkedList<Trigger>());
 	}
 	
-	public void setTrigger(TriggerType type, Trigger trigger) {
+	public void setTrigger(final TriggerType type, final Trigger trigger) {
 		this.triggers.get(type).add(trigger);
 	}
 
-	public List<Trigger> getTriggers(TriggerType triggerType) {
+	public List<Trigger> getTriggers(final TriggerType triggerType) {
 		return Collections.unmodifiableList(this.triggers.get(triggerType));
 	}
 	
 	@Override
 	public String toDB() {
-		String[] output = new String[8];
+		final String[] output = new String[8];
+		
 		output[0] = this.getDBRef() + "";                // database reference number
-		output[1] = this.getName();                      // name
-		output[2] = TypeFlag.asLetter(this.type) + "";   // flags
-		output[2] = output[2] + this.getFlagsAsString();
+		output[1] = this.getName();                      // name 
+		output[2] = type + getFlagsAsString();           // flags;
 		output[3] = this.getDesc();                      // description
-		output[4] = this.getLocation() + "";             // portal location (a.k.a source)
+		output[4] = this.getLocation() + "";             // location (a.k.a source)
+		
 		if (this.pType == PortalType.STD) {
 			output[5] = this.destination + "";           // portal destination
 		}
 		else if (this.pType == PortalType.RANDOM) {
-			final ArrayList<String> d = new ArrayList<String>();
-			for (int dest : this.destinations) {
-				d.add(dest + "");
-			}
+			final List<String> d = new ArrayList<String>();
+			
+			for (int dest : this.destinations) d.add(dest + "");
+			
 			output[5] = Utils.join(d, ",");              // portal destination(s)
 		}
-		output[6] = this.getExitType().ordinal() + "";   // exit type
-		output[7] = pType.ordinal() + "";                // portal type
+		
+		output[6] = this.eType.ordinal() + "";           // exit type
+		output[7] = this.pType.ordinal() + "";           // portal type
+		
 		return Utils.join(output, "#");
 	}
 
 	@Override
-	public void handleSayEvent(SayEvent se) {
+	public void handleSayEvent(final SayEvent se) {
+		// TODO these messages should probably be communicated via events or something
 		if( active ) {
 			if( deactivate(se.getMessage() ) ) {
+				System.out.println("Portal: deactivated");
 			}
 		}
 		else {
 			if( activate(se.getMessage()) ) {
+				System.out.println("Portal: activated");
 			}
 		}
 	}
 
 	@Override
-	public void fireEvent(String message) {
-		PortalEvent event = new PortalEvent(this);
-		Iterator<PortalEventListener> iter = _listeners.iterator();
-		while(iter.hasNext())  {
-			 iter.next().handlePortalEvent(event);
+	public void fireEvent(final String message) {
+		final PortalEvent portalEvent = new PortalEvent(this);
+		
+		for(final PortalEventListener pl : this._listeners) {
+			pl.handlePortalEvent(portalEvent);
 		}
 	}
 }

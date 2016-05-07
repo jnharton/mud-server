@@ -53,7 +53,6 @@ public class Disruptor extends Item implements Module, ExtraCommands {
 		this.type = TypeFlag.ITEM;
 		
 		this.item_type = FOEItemTypes.DISRUPTOR;
-		this.equip_type = ItemTypes.NONE;
 		this.slot_type = FOESlotTypes.NONE;
 		
 		this.enabled = false;

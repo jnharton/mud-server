@@ -7,7 +7,6 @@ import mud.TypeFlag;
 import mud.foe.FOEItemTypes;
 import mud.interfaces.Stackable;
 import mud.objects.Item;
-import mud.objects.ItemTypes;
 
 public class BottleCap extends Item implements Stackable<BottleCap> {
 	private BottleCap bc;
@@ -21,15 +20,14 @@ public class BottleCap extends Item implements Stackable<BottleCap> {
 		
 		// Item class members
 		this.type = TypeFlag.ITEM;
+		
 		this.item_type = FOEItemTypes.BOTTLE_CAP;
-		this.equip_type = ItemTypes.NONE;
 	}
 	
 	protected BottleCap(final BottleCap template) {
 		super(template);
 		
 		this.item_type = FOEItemTypes.BOTTLE_CAP;
-		this.equip_type = ItemTypes.NONE;
 	}
 	
 	public int size() {

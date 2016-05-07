@@ -8,4 +8,4 @@ cure moderate wounds#You cast cure moderate wounds on &target.#instant#heal+20#n
 arcane lock#You cast arcane lock on &target#permanent#arcane_lock#none#item,thing
 eagles_splendor#You cast Eagle's Splendor#instant#cha+4#none#self,friend
 doom#You cast Doom#instant#cha-4#none#self
-resurrection#You cast Resurrection#timer#revive#friend,enemy
+resurrection#You cast Resurrection#timer#revive#none#friend,enemy

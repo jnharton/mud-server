@@ -18,11 +18,11 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
+import mud.game.PClass;
 import mud.misc.Effect;
 import mud.utils.Utils;
 
@@ -34,159 +34,64 @@ import mud.utils.Utils;
  */
 public class Spell
 {
-	//public enum RangeType {NORMAL, PER_LEVEL, PERSONAL, TOUCH, AREA };
-	public enum RangeType {
-		STD("Standard", 0, -1, -1),         // ?
-		PERSONAL("Personal", 0, 0, -1),     // yourself only, no increment, no caster level
-		TOUCH("Touch", 0, 0, 0),            // requires touch (0ft.), no increment, no caster level
-		CLOSE("Close", 25, 5, 2),           // close range (25ft.), increment of 5ft./2 caster levels
-		MEDIUM("Medium", 100, 10, 1),       // medium range (100ft.), increment of 10ft./caster level
-		LONG("Long", 400, 40, 1),           // long range (400ft.), increment of 40ft./caster level
-		UNLIMITED("Unlimited", -1, -1, -1); // no limit on range, no increment, not affected by caster level
-		
-		public String typeName;
-		public int range, rangeIncrement, casterLevels;
-		
-		RangeType(String typename, int range, int rInc, int casterlevels) {
-			this.typeName = typename;
-			this.range = range;
-			this.rangeIncrement = rInc;
-			this.casterLevels = casterlevels;
-		}
-	}
-	
-	public enum RangeClass { CONICAL, LINEAR, PLANAR, SPHERICAL }
-	
 	protected String name;
 	
 	protected SpellType sType;
 	protected School school;
-	protected List<SpellClass> sc;
 	
 	protected int spellLevel;
+	
+	protected List<PClass> sc = new LinkedList<PClass>();
+	
 	protected int castTime; // time taken to cast the spell
 	protected int duration; // duration of the spell
-	protected int manaCost; 
+	protected int manaCost;
 	
-	protected int range;    // range of the spell in feet (spherical, radius length?)
-	protected RangeType rangeT;
-	protected RangeClass rangeC;
+	protected RangeData range;
 	
 	protected String castMsg;
 	
-	protected List<Effect> effects;          // list of spell effects
-	protected Map<String, Reagent> reagents; // map of spell requirements (reagent, quantity)
+	protected List<Effect> effects;   // list of spell effects
+	protected List<Reagent> reagents; // list of spell requirements
 	
 	public int target = 0;
 	
 	public Spell() {
-		this.name = "NoName";
+		this("NoName", SpellType.ARCANE, School.OTHER, 0, "You cast &name at &target.", new ArrayList<Effect>(), new ArrayList<Reagent>());
 		
-		this.sType = SpellType.ARCANE;
-		this.school = School.OTHER;
-		this.sc = new LinkedList<SpellClass>();
-		
-		this.spellLevel = 0;
 		this.castTime = 1;
 		this.manaCost = 5;
 		this.duration = 5;
-		
-		this.rangeT = RangeType.STD;
-		this.rangeC = RangeClass.LINEAR;
-		this.range = 3;
-		
-		this.castMsg = "You cast " + this.name + " at &target.";
-		
-		this.effects = new ArrayList<Effect>();
-		this.reagents = new HashMap<String, Reagent>();
 	}
-
-	public Spell(String tName, School tSchool, String tCastMsg, ArrayList<Effect> tEffects)
-	{
-        this(tName, tSchool, tCastMsg, tEffects, new HashMap<String, Reagent>());
+	
+	public Spell(String tName, SpellType tType, School tSchool, int tLevel, String tCastMsg) {
 	}
-
-	public Spell(String tName, School tSchool, String tCastMsg, ArrayList<Effect> tEffects, HashMap<String, Reagent> tReagents)
-	{
-        this(tName, tSchool, tCastMsg, SpellType.ARCANE, tEffects, tReagents);
+	
+	public Spell(String tName, SpellType tType, School tSchool, int tLevel, String tCastMsg, List<Effect> tEffects) {	
 	}
-
-	public Spell(String tName, School tSchool, String tCastMsg, SpellType sType, ArrayList<Effect> tEffects, HashMap<String, Reagent> tReagents)
-	{
-        this(tName, tSchool, sType, SpellClass.NONE, tCastMsg, tEffects, tReagents);
-	}
-
-    public Spell(String tName, School tSchool, SpellType sType, SpellClass tSpellClass, String tCastMsg, ArrayList<Effect> tEffects, HashMap<String, Reagent> tReagents)
-    {
-        this(tName, tSchool, sType, tSpellClass, 1, tCastMsg, tEffects, tReagents);
-    }
-
-	public Spell(String tName, School tSchool, SpellType sType, SpellClass tSpellClass, int tLevel, String tCastMsg, ArrayList<Effect> tEffects, HashMap<String, Reagent> tReagents)
-	{
-		this();
+	
+	public Spell(String tName, SpellType tType, School tSchool, int tLevel, String tCastMsg, List<Effect> tEffects, List<Reagent> tReagents) {
 		this.name = tName;
-		//this.school = getSchool(tSchool);
 		this.school = tSchool;
-		this.sType = sType;
+		this.sType = tType;
 		this.spellLevel = tLevel;
-		this.sc = new ArrayList<SpellClass>();
-		if( tSpellClass != SpellClass.NONE) { this.sc.add(tSpellClass); };
+		
+		this.range = new RangeData(RangeType.STD, RangeClass.LINEAR);
+		
 		this.castMsg = tCastMsg;
+		
 		this.effects = tEffects;
 		this.reagents = tReagents;
-		
-		this.rangeT = RangeType.PERSONAL;
-		this.rangeC = RangeClass.CONICAL;
 	}
 	
-	public void setLevel(int tLevel) {
-		this.spellLevel = tLevel;
-	}
-	
-	/**
-	 * compare this to the player's level to figure out whether they can use it
-	 */
-	public int getLevel() {
-		return this.spellLevel;
-	}
-	
-	public String getCastMessage() {
-		return this.castMsg;
-	}
-	
-	public void setCastMessage(String newCastMsg) {
-		this.castMsg = newCastMsg;
-	}
-	
-	public List<Effect> getEffects() {
-		return this.effects;
-	}
-	
-	public void setManaCost(int manaCost) {
-		this.manaCost = manaCost;
+	public void setName(String spellName) {
+		this.name = spellName;
 	}
 
-	public int getManaCost() {
-		return this.manaCost;
+	public String getName() {
+		return this.name;
 	}
 	
-	public void setSpellClass(SpellClass newSpellClass) {
-		if( !this.sc.contains(newSpellClass) ) {
-			this.sc.add(newSpellClass);
-		}
-	}
-
-	/**
-	 * compare this to the player's class to figure out whether they can use it
-	 */
-	public List<SpellClass> getSpellClasses() {
-		return this.sc;
-	}
-	
-	public SpellClass getSpellClass(int index) {
-		return this.sc.get(index);
-	}
-
 	public School getSchool() {
 		return this.school;
 	}
@@ -223,24 +128,55 @@ public class Spell
 		else { this.school = School.OTHER; }
 	}
 	
-	public void setName(String spellName) {
-		this.name = spellName;
+	public void setLevel(int tLevel) {
+		this.spellLevel = tLevel;
+	}
+	
+	/**
+	 * compare this to the player's level to figure out whether they can use it
+	 */
+	public int getLevel() {
+		return this.spellLevel;
+	}
+	
+	public String getCastMessage() {
+		return this.castMsg;
+	}
+	
+	public void setCastMessage(String newCastMsg) {
+		this.castMsg = newCastMsg;
+	}
+	
+	public void setManaCost(int manaCost) {
+		this.manaCost = manaCost;
 	}
 
-	public String getName() {
-		return this.name;
+	public int getManaCost() {
+		return this.manaCost;
 	}
 	
-	public int getRange(int casterLevel) {
-		if( rangeT.casterLevels == 0 || rangeT.casterLevels != -1 ) {
-			return rangeT.range;
-		}
-		else {
-			return rangeT.range + (casterLevel * rangeT.rangeIncrement);
+	public void setSpellClass(PClass newSpellClass) {
+		if( !this.sc.contains(newSpellClass) ) {
+			this.sc.add(newSpellClass);
 		}
 	}
 	
-	public Map<String, Reagent> getReagents() {
+	/**
+	 * compare this to the player's class to figure out whether they can use it
+	 */
+	public List<PClass> getSpellClasses() {
+		return Collections.unmodifiableList(this.sc);
+	}
+	
+	public RangeData getRangeData() {
+		return this.range;
+	}
+	
+	public List<Effect> getEffects() {
+		return this.effects;
+	}
+	
+	public List<Reagent> getReagents() {
 		return this.reagents;
 	}
 	

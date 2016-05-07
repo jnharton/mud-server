@@ -1,20 +1,17 @@
 package mud.objects.npcs;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.EnumSet;
 
 import mud.ObjectFlag;
-import mud.MUDServer;
 import mud.game.Ability;
 import mud.interfaces.*;
 import mud.misc.Coins;
-import mud.misc.Currency;
-import mud.net.Client;
 import mud.objects.Item;
 import mud.objects.NPC;
-import mud.objects.Player;
-import mud.objects.items.Armor;
 import mud.rulesets.d20.Abilities;
 import mud.rulesets.d20.Classes;
 import mud.rulesets.d20.Races;
@@ -30,15 +27,12 @@ import mud.rulesets.d20.Races;
  */
 
 public class Innkeeper extends NPC implements Vendor {
+	private ArrayList<Item> stock;
 
-	private MUDServer parent;
-	public ArrayList<Item> stock;
-
-	public Innkeeper(final MUDServer mudServer, final int tempDBRef, final String tempName, final EnumSet<ObjectFlag> tempFlags, 
-                    final String tempDesc, final String tempTitle, final String tempPStatus, final int tempLoc, final Coins tempMoney) {
+	public Innkeeper(final int tempDBRef, final String tempName, final EnumSet<ObjectFlag> tempFlags, final String tempDesc,
+			final String tempTitle, final String tempPStatus, final int tempLoc, final Coins tempMoney) {
 		super(tempDBRef, tempName, tempFlags, tempDesc, tempLoc, tempMoney);
-
-		this.parent = mudServer;
+		
 		this.stock = new ArrayList<Item>();
 
 		this.access = 0;
@@ -56,8 +50,8 @@ public class Innkeeper extends NPC implements Vendor {
 		this.pclass = Classes.COMMONER;
 	}
 
-	public ArrayList<Item> list() {
-		return this.stock;
+	public List<Item> getStock() {
+		return Collections.unmodifiableList(this.stock);
 	}
 
 	public Item buy(final String name, final Coins payment) {
@@ -99,24 +93,5 @@ public class Innkeeper extends NPC implements Vendor {
 		}
 
 		return null;
-	}
-
-	@Override
-	public void interact(Player player) {
-		final Client client = player.getClient();
-		
-		parent.send(this.getName(), client);
-		parent.send("-----< Stock >--------------------", client);
-		for (Item item : this.stock) {
-			if (item instanceof Armor) {
-				final Armor a = (Armor) item;
-				//parent.send(parent.colors("+" + a.getMod() + " " + a.getName() + " " + a.getDesc() + " (" + a.getWeight() + ") Cost: " + a.getCost(), "yellow"), client);
-				parent.send(parent.colors(a.toString() + " " + a.getDesc() + " (" + a.getWeight() + ") Cost: " + a.getValue(), "yellow"), client);
-			}
-			else {
-				parent.send("?", client);
-			}
-		}
-		parent.send("----------------------------------", client);
 	}
 }
