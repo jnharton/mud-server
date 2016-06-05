@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import mud.Command;
+import mud.MUDObject;
 import mud.game.Faction;
 import mud.interfaces.GameModule;
 import mud.interfaces.Ruleset;
@@ -17,6 +18,8 @@ import mud.objects.ItemType;
 import mud.objects.ItemTypes;
 import mud.objects.Player;
 import mud.objects.Thing;
+import mud.objects.ThingType;
+import mud.objects.ThingTypes;
 import mud.rulesets.d20.D20;
 
 public class DND35 implements GameModule {
@@ -89,46 +92,66 @@ public class DND35 implements GameModule {
 	public Ruleset getRuleset() {
 		return D20.getInstance();
 	}
-
+	
 	@Override
-	public Hashtable<String, ItemType> getItemTypes() {
-		// TODO Auto-generated method stub
-		return null;
+	public ItemType getItemType(final Integer typeId) {
+		return ItemTypes.getType(typeId);
 	}
-
+	
+	public ItemType getItemType(final String typeName) {
+		return ItemTypes.getType(typeName);
+	}
+	
+	@Override
+	public SlotType getSlotType(final Integer typeId) {
+		return SlotTypes.getType(typeId);
+	}
+	
+	@Override
+	public SlotType getSlotType(final String typeName) {
+		return SlotTypes.getType(typeName);
+	}
+	
+	@Override
+	public ThingType getThingType(final Integer typeId) {
+		return ThingTypes.getType(typeId);
+	}
+	
+	@Override
+	public ThingType getThingType(final String typeName) {
+		return ThingTypes.getType(typeName);
+	}
+	
 	@Override
 	public Map<String, Item> getItemPrototypes() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public Map<String, Thing> getThingPrototypes() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public Item loadItem(String itemData) {
-		// TODO Auto-generated method stub
+	public Item loadItem(final String itemData) {
 		return null;
 	}
 
 	@Override
-	public Hashtable<String, SlotType> getSlotTypes() {
-		// TODO Auto-generated method stub
+	public Thing loadThing(final String itemData) {
 		return null;
 	}
 
 	@Override
-	public ItemType getItemType(Integer typeId) {
-		// TODO Auto-generated method stub
-		return null;
+	public void run() {
 	}
 
 	@Override
-	public SlotType getSlotType(Integer typeId) {
-		// TODO change this? we are currently just pulling the default slottypes
-		return SlotTypes.getType(typeId);
+	public void op(String input, Player player) {
+	}
+
+	@Override
+	public boolean use(Player p, MUDObject m) {
+		return false;
 	}
 }

@@ -28,6 +28,7 @@ public class Armor extends Item {
 	
 	protected int mod = 0;                    // modifier - +0, +2, +3, +4, ... and so on
 	
+	// TODO what kind of armor is it? armortype being null is a problem
 	public Armor(final String name, final String desc) {
 		super(-1, name, desc);
 		
@@ -79,9 +80,9 @@ public class Armor extends Item {
 	 * @param tempLoc
 	 * @param tempDBREF
 	 */
-	public Armor(String wName, String wDesc, int wLoc, int wDBREF, int aMod, ArmorType armor)
+	public Armor(int wDBREF, String wName, EnumSet<ObjectFlag> wFlags, String wDesc, int wLoc, ArmorType armor)
 	{
-		super(wDBREF, wName, EnumSet.noneOf(ObjectFlag.class), wDesc, wLoc);
+		super(wDBREF, wName, wFlags, wDesc, wLoc);
 		
 		this.item_type = ItemTypes.ARMOR;
 		
@@ -139,15 +140,11 @@ public class Armor extends Item {
 	
 	@Override
 	public String toString() {
-		if (this.mod > 0) {
-			return "+" + this.mod + " " + this.getName();
-		}
-		else if (this.mod < 0) {
-			return this.mod + " " + this.getName();
-		}
-		else {
-			return this.getName();
-		}
+		int modifier = 0;
+		
+		if (this.mod > 0)      return "+" + this.mod + " " + this.getName();
+		else if (this.mod < 0) return this.mod + " " + this.getName();
+		else                   return this.getName();
 	}
 	
 	@Override

@@ -1,6 +1,6 @@
 package mud.game;
 
-import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -8,37 +8,24 @@ public class Faction {
 	public static int HOSTILE = -100;
 	public static int NEUTRAL = 0;
 	public static int FRIENDLY = 100;
-	//public static int
 	
 	private String name;
 	private Map<Faction, Integer> reputation; // what this faction thinks of other factions
 	
-	public Faction(String factionName) {
+	public Faction(final String factionName) {
+		this(factionName, new LinkedList<Faction>());
+	}
+	
+	public Faction(final String factionName, final List<Faction> factions) {
 		this.name = factionName;
-	}
-	
-	public Faction(String factionName, Faction...factions) {
-		this(factionName, Arrays.asList(factions));
-	}
-	
-	public Faction(String factionName, List<Faction> factions) {
-		this(factionName);
 		
 		for(final Faction f : factions) {
-			this.setReputation(f, 0);
+			this.setReputation(f, NEUTRAL);
 		}
 	}
 	
 	public String getName() {
 		return this.name;
-	}
-	
-	public void addReputation(final Faction faction, final Integer value) {
-		setReputation(faction, getReputation(faction) + value);
-	}
-	
-	public void subtractReputation(final Faction faction, final Integer value) {
-		setReputation(faction, getReputation(faction) - value);
 	}
 	
 	public void modifyReputation(final Faction faction, final Integer value) {
@@ -51,5 +38,10 @@ public class Faction {
 	
 	public Integer getReputation(final Faction faction) {
 		return reputation.get(faction);
+	}
+	
+	@Override
+	public String toString() {
+		return getName();
 	}
 }

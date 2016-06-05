@@ -43,22 +43,22 @@ public class NPC extends Player implements InteractiveI
 
 	private boolean givesQuests = false;
 
-	private ArrayList<Quest> questList = new ArrayList<Quest>();
+	private transient List<Quest> questList = new ArrayList<Quest>();
 
-	private CNode conversation = null;
+	private transient CNode conversation = null;
 
 	//private Direction lastDir = Direction.NONE;
 
 	// TODO make the below work (may need to modify Player)
-	public NPC(String name) {
+	public NPC(final String name) {
 		super(-1);
-
-		this.type = TypeFlag.NPC;
 
 		this.name = name;
 		this.desc = "A generic npc.";
 		this.flags = EnumSet.noneOf(ObjectFlag.class);
 		this.status = "NPC";
+		
+		this.type = TypeFlag.NPC;
 
 		this.race = Races.NONE;
 		this.pclass = Classes.NONE;
@@ -96,6 +96,7 @@ public class NPC extends Player implements InteractiveI
 			final int tempLoc, final Coins tempMoney)
 	{
 		super(tempDBRef, tempName, tempFlags, tempDesc, tempLoc, null, null, null, new Integer[] {10, 10, 10, 10, 10, 10}, tempMoney);
+		
 		this.type = TypeFlag.NPC;
 	}
 
@@ -115,6 +116,7 @@ public class NPC extends Player implements InteractiveI
 			final int tempLoc, final String tempTitle, final String tempPStatus, final Integer[] tempStats, final Coins tempMoney)
 	{
 		super(tempDBRef, tempName, tempFlags, tempDesc, tempLoc, tempTitle, "", tempPStatus, tempStats, tempMoney);
+		
 		this.type = TypeFlag.NPC;
 	}
 	
@@ -127,15 +129,15 @@ public class NPC extends Player implements InteractiveI
 
 	// TODO perhaps these should just return the message object?
 	public Message greet(Player player) {
-		return new Message(this, greeting, player);
+		return new Message(this, player, greeting);
 	}
 
 	public Message say(String message) {
-		return new Message(this, message);
+		return new Message(this, null, message);
 	}
 
 	public Message tell(Player player, String message) {
-		return new Message(this, message, player);
+		return new Message(this, player, message);
 	}
 
 	// pose/do/act

@@ -1,11 +1,5 @@
 package mud.weather;
 
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.ListIterator;
-
-import mud.misc.Seasons;
-
 /*
  * Copyright (c) 2013 Jeremy N. Harton
  * 
@@ -27,27 +21,13 @@ import mud.misc.Seasons;
  *
  */
 public class Season {
-	public String name;
+	private String name;
 	public int beginMonth;
 	public int endMonth;
-	public WeatherPattern weatherPattern;
+	private WeatherPattern weatherPattern;
 	
-	public Season(String name, int beginMonth, int endMonth) {
-		this.name = name;
-		this.beginMonth = beginMonth;
-		this.endMonth = endMonth;
-		this.weatherPattern = null;
-	}
-	
-	public Season(String sName, WeatherState...sWeatherStates) {
+	public Season(final String sName, final int beginMonth, final int endMonth, final WeatherState...sWeatherStates) {
 		this.name = sName;
-		this.beginMonth = -1;
-		this.endMonth = -1;
-		this.weatherPattern = new WeatherPattern(sWeatherStates);
-	}
-	
-	public Season(String name, int beginMonth, int endMonth, WeatherState...sWeatherStates) {
-		this.name = name;
 		this.beginMonth = beginMonth;
 		this.endMonth = endMonth;
 		this.weatherPattern = new WeatherPattern(sWeatherStates);
@@ -55,6 +35,10 @@ public class Season {
 	
 	public String getName() {
 		return this.name;
+	}
+	
+	public WeatherPattern getPattern() {
+		return this.weatherPattern;
 	}
 
 	public String toString() {

@@ -20,10 +20,6 @@ public class Door extends Exit implements Lockable<Item> {
 	
 	private Item key = null;
 	
-	/*public Door() {
-		this.eType = ExitType.DOOR;
-	}*/
-	
 	public Door(int tempDBRef, String tempName, final EnumSet<ObjectFlag> flagsNotUsed, String tempDesc, int tempLoc, int tempDestination) {
 		super(tempDBRef, tempName, flagsNotUsed, tempDesc, tempLoc, tempDestination);
 		

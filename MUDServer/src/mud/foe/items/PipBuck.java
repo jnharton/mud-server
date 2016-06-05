@@ -1,6 +1,5 @@
 package mud.foe.items;
 
-import java.util.EnumSet;
 import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
@@ -8,7 +7,7 @@ import java.util.Map;
 
 import mud.Command;
 import mud.Constants;
-import mud.ObjectFlag;
+import mud.MUDObject;
 
 import mud.foe.FOEItemTypes;
 import mud.foe.FOESlotTypes;
@@ -22,6 +21,7 @@ import mud.misc.Slot;
 import mud.net.Client;
 
 import mud.objects.Item;
+import mud.objects.ItemTypes;
 import mud.objects.Player;
 import mud.objects.Room;
 
@@ -43,331 +43,392 @@ public class PipBuck extends Item implements Device, ExtraCommands {
 	private int max_power = 6;
 	private int current_power = 6;
 
-	private static Map<String, Command> commands = new Hashtable<String, Command>() {
-		{
-			put("enable",
-					new Command("enable a module") {
-				public void execute(final String arg, final Client client) {
-					final Player player = getPlayer(client);      // get player
-					final PipBuck p = PipBuck.getPipBuck(player); // get pipbuck
+	private static final Map<String, Command> commands = new Hashtable<String, Command>();
+	
+	{
+		commands.put("enable", new Command("enable a module") {
+			public void execute(final String arg, final Client client) {
+				final Player player = getPlayer(client);      // get player
+				final PipBuck p = PipBuck.getPipBuck(player); // get pipbuck
 
-					if( p != null ) {
-						if( arg.equalsIgnoreCase("efs") ) {
-							p.efs_enabled = true;
-							send("Eyes-Forward Sparkle ENABLED", client);
-							return;
-						}
-
-						// get the intended module
-						final Module module = p.getModule(arg);
-
-						// enable the module
-						if( module != null ) {
-							if( module.getPowerReq() <= p.current_power) {
-								send("Enabling Module: " + module.getName(), client);
-
-								p.enableModule( module );
-
-								if( module instanceof ExtraCommands ) {
-									ExtraCommands ec = (ExtraCommands) module;
-
-									for(Map.Entry<String, Command> cmdE : ec.getCommands().entrySet()) {
-										final String text = cmdE.getKey();
-										final Command cmd = cmdE.getValue();
-										
-										initCmd(cmd);
-										
-										player.commandMap.put( cmdE.getKey(), cmdE.getValue() );
-										
-										debug("Added " + cmdE.getKey() + " to player's command map from " + p.getName() + " module: " + module.getName());
-									}
-								}
-							}
-							else send("PipBuck: Insufficent power to enable ", client);
-						}
+				if( p != null ) {
+					if( arg.equalsIgnoreCase("efs") ) {
+						p.efs_enabled = true;
+						send("Eyes-Forward Sparkle ENABLED", client);
+						return;
 					}
-				}
-				public int getAccessLevel() { return Constants.USER; }
-			});
-			put("disable",
-					new Command("disable a module") {
-				public void execute(final String arg, final Client client) {
-					final Player player = getPlayer(client);      // get player
-					final PipBuck p = PipBuck.getPipBuck(player); // get pipbuck
 
-					if( p != null ) {
-						if( arg.equalsIgnoreCase("efs") ) {
-							p.efs_enabled = false;
-							send("Eyes-Forward Sparkle DISABLED", client);
-							return;
-						}
+					// get the intended module
+					final Module module = p.getModule(arg);
 
-						// get the intended module
-						final Module module = p.getModule(arg);
+					// enable the module
+					if( module != null ) {
+						if( module.getPowerReq() <= p.current_power) {
+							send("Enabling Module: " + module.getModuleName(), client);
 
-						// disable the module
-						if( module != null ) {
+							p.enableModule( module );
+
 							if( module instanceof ExtraCommands ) {
 								ExtraCommands ec = (ExtraCommands) module;
 
-								for(Map.Entry<String, Command> cmd : ec.getCommands().entrySet()) {
-									//p.commands.remove( cmd.getKey() );
-									player.commandMap.remove( cmd.getKey() );
-									debug("Removed " + cmd.getKey() + " from " + p.getName() + " module: " + module.getName() + " from player's command map.");
+								for(Map.Entry<String, Command> cmdE : ec.getCommands().entrySet()) {
+									final String text = cmdE.getKey();
+									final Command cmd = cmdE.getValue();
+
+									initCmd(cmd);
+
+									player.addCommand( cmdE.getKey(), cmdE.getValue() );
+									
+									final String moduleName = module.getModuleName();
+
+									debug("Added " + cmdE.getKey() + " to player's command map from " + p.getName() + " module: " + moduleName);
 								}
 							}
-
-							send("Disabling Module: " + module.getName(), client);
-
-							p.disableModule( module );
 						}
+						else send("PipBuck: Insufficent power to enable ", client);
 					}
 				}
-				public int getAccessLevel() { return Constants.USER; }
-			});
-			put("register",
-					new Command("register a pipbuck tag") {
-				public void execute(final String arg, final Client client) {
-					final Player player = getPlayer(client);      // get player
-					final PipBuck p = PipBuck.getPipBuck(player); // get pipbuck
-					
-					// register <tag name>=<tag id>
-					if( p != null ) {
-						final String[] args = arg.split("=");
+			}
+			public int getAccessLevel() { return Constants.USER; }
+		});
+
+		commands.put("disable", new Command("disable a module") {
+			public void execute(final String arg, final Client client) {
+				final Player player = getPlayer(client);      // get player
+				final PipBuck p = PipBuck.getPipBuck(player); // get pipbuck
+
+				if( p != null ) {
+					if( arg.equalsIgnoreCase("efs") ) {
+						p.efs_enabled = false;
+						send("Eyes-Forward Sparkle DISABLED", client);
+						return;
+					}
+
+					// get the intended module
+					final Module module = p.getModule(arg);
+
+					// disable the module
+					if( module != null ) {
+						final String moduleName = module.getModuleName();
 						
-						if( args.length == 2 ) {
-							final String tagName = args[0];
-							final Integer tagId = Utils.toInt(args[1], -1);
-							
-							if( tagId != -1 ) {
-								p.setTag(tagName, tagId);
+						if( module instanceof ExtraCommands ) {
+							ExtraCommands ec = (ExtraCommands) module;
+
+							for(Map.Entry<String, Command> cmd : ec.getCommands().entrySet()) {
+								//p.commands.remove( cmd.getKey() );
+								player.removeCommand( cmd.getKey() );
+								
+								debug("Removed " + cmd.getKey() + " from " + p.getName() + " module: " + moduleName + " from player's command map.");
 							}
 						}
+
+						send("Disabling Module: " + moduleName, client);
+
+						p.disableModule( module );
 					}
 				}
-				
-				public int getAccessLevel() { return Constants.USER; }
-				});
-			put("slot",
-					new Command("attach a module to your device") {
-				public void execute(final String arg, final Client client) {
-					final Player player = getPlayer(client);      // get player
-					final PipBuck p = PipBuck.getPipBuck(player); // get pipbuck
+			}
+		});
+		
+		commands.put("charge", new Command("charge a module") {
+			@Override
+			public void execute(final String arg, final Client client) {
+				final Player player = getPlayer(client);      // get player
+				final PipBuck p = PipBuck.getPipBuck(player); // get pipbuck
 
-					if( p != null ) {
-						// get modules list
-						final List<Module> modules = p.getModules();
+				if( p != null ) {
+					// get the intended module
+					final Module module = p.getModule(arg);
 
-						Module module = null;
-						Item item = null;
+					// enable the module
+					if( module != null ) {
+						final String moduleName = module.getModuleName();
 
-						for(final Item item2 : player.getInventory()) {
-							if( item2 != null ) {
-								if(item2 instanceof Module) {
-									debug("Found a Module - \'" + item2.getName() + "\'");
+						if( module.isEnabled() ) {
+							if( module.requiresCharging() ) {
+								if( !module.isCharged() ) {
+									if( !module.isCharging() ) {
+										this.scheduleAtFixedRate(module.charge(), 1000, 1); // kludge
 
-									item = item2;
-									module = (Module) item;
-
-									if( !modules.contains(module) && module.getName().toLowerCase().equals(arg.toLowerCase()) ) {
-										break;
+										send("charging your " + moduleName.toLowerCase() + "...", client);
 									}
+									else send("your " + moduleName.toLowerCase() + " is charging.", client);
 								}
-								else debug("Not a Module - \'" + item2.getName() + "\'");
+								else {
+									send("your " + moduleName.toLowerCase() + " is fully charged.", client);
+								}
 							}
 						}
-
-						player.getInventory().remove( item );
-
-						// slot module
-						if( module != null ) {
-							p.addModule( module );
-							send("You slot the " + module.getName() + " into your Pipbuck.", client);
+					}
+					else {
+						for(final Module mod : modules) {
+							if( mod.requiresCharging() ) {
+								send(mod.getModuleName().toLowerCase() + ": " + mod.getCharge(), client);
+							}
 						}
-						else send("You don't have such a module.", client);
 					}
 				}
-				public int getAccessLevel() { return Constants.USER; }
-			});
-			put("tags",
-					new Command("list your registed pipbuck tags") {
-				public void execute(final String arg, final Client client) {
-					final Player player = getPlayer(client);      // get player
-					final PipBuck p = PipBuck.getPipBuck(player); // get pipbuck
+			}
+		});
 
-					if( p != null ) {
-						send("--- Tags", client);
+		commands.put("register", new Command("register a pipbuck tag") {
+			public void execute(final String arg, final Client client) {
+				final Player player = getPlayer(client);      // get player
+				final PipBuck p = PipBuck.getPipBuck(player); // get pipbuck
+
+				// register <tag name>=<tag id>
+				if( p != null ) {
+					final String[] args = arg.split("=");
+
+					if( args.length == 2 ) {
+						final String tagName = args[0];
+						final Integer tagId = Utils.toInt(args[1], -1);
+
+						if( tagId != -1 ) {
+							p.setTag(tagName, tagId);
+						}
+					}
+				}
+			}
+		});
+
+		commands.put("slot", new Command("attach a module to your device") {
+			public void execute(final String arg, final Client client) {
+				final Player player = getPlayer(client);      // get player
+				final PipBuck p = PipBuck.getPipBuck(player); // get pipbuck
+
+				if( p != null ) {
+					// get modules list
+					final List<Module> modules = p.getModules();
+
+					Module module = null;
+					Item item = null;
+
+					for(final Item item2 : player.getInventory()) {
+						if( item2 != null ) {
+							if(item2 instanceof Module) {
+								debug("Found a Module - \'" + item2.getName() + "\'");
+
+								item = item2;
+								module = (Module) item;
+								
+								final String moduleName = module.getModuleName();
+								
+								if( !modules.contains(module) && moduleName.equalsIgnoreCase(arg) ) {
+									break;
+								}
+							}
+							else debug("Not a Module - \'" + item2.getName() + "\'");
+						}
+					}
+
+					player.getInventory().remove( item );
+
+					// slot module
+					if( module != null ) {
+						final String moduleName = module.getModuleName();
 						
-						for(final Tag tag : p.tags) {
-							send("" + tag, client);
-						}
+						p.addModule( module );
+						
+						send("You slot the " + moduleName + " into your Pipbuck.", client);
+					}
+					else send("You don't have such a module.", client);
+				}
+			}
+		});
+
+		commands.put("tags", new Command("list your registed pipbuck tags") {
+			public void execute(final String arg, final Client client) {
+				final Player player = getPlayer(client);      // get player
+				final PipBuck p = PipBuck.getPipBuck(player); // get pipbuck
+
+				if( p != null ) {
+					send("--- Tags", client);
+
+					for(final Tag tag : p.tags) {
+						send("" + tag, client);
 					}
 				}
-				
-				public int getAccessLevel() { return Constants.USER; }
-				});
-			put("unslot",
-					new Command("detach a module from your device") {
-				public void execute(final String arg, final Client client) {
-					final Player player = getPlayer(client);      // get player
-					final PipBuck p = PipBuck.getPipBuck(player); // get pipbuck
+			}
 
-					if( p != null ) {
-						// NOTE: we know that modules are Items, so this is reasonably safe...
-						final Module module = p.getModule(arg);
-						final Item item = (Item) module;
+		});
+		commands.put("unslot", new Command("detach a module from your device") {
+			public void execute(final String arg, final Client client) {
+				final Player player = getPlayer(client);      // get player
+				final PipBuck p = PipBuck.getPipBuck(player); // get pipbuck
 
-						// unslot module
-						if( module != null ) {
-							p.removeModule( module );
-							send("You unslot the " + module.getName() + " from your Pipbuck.", client);
-							player.getInventory().add( item );
-						}
-						else send("You don't have such a module.", client);
+				if( p != null ) {
+					// NOTE: we know that modules are Items, so this is reasonably safe...
+					final Module module = p.getModule(arg);
+					final Item item = (Item) module;
+
+					// unslot module
+					if( module != null ) {
+						final String moduleName = module.getModuleName();
+						
+						p.removeModule( module );
+						
+						send("You unslot the " + moduleName + " from your Pipbuck.", client);
+						
+						player.getInventory().add( item );
 					}
+					else send("You don't have such a module.", client);
 				}
-				public int getAccessLevel() { return Constants.USER; }
-			});
-			put("modules",
-					new Command("list the modules attached to your device") {
-				public void execute(final String arg, final Client client) {
-					final Player player = getPlayer(client);      // get player
-					final PipBuck p = PipBuck.getPipBuck(player); // get pipbuck
+			}
+		});
 
-					if( p != null ) {
-						final List<Module> modules = p.getModules();
+		commands.put("modules", new Command("list the modules attached to your device") {
+			public void execute(final String arg, final Client client) {
+				final Player player = getPlayer(client);      // get player
+				final PipBuck p = PipBuck.getPipBuck(player); // get pipbuck
 
-						if( modules.size() > 0 ) {
-							send("Modules", client);
-							for(Module module : modules) { send(module.getName(), client); }
+				if( p != null ) {
+					final List<Module> modules = p.getModules();
+
+					if( modules.size() > 0 ) {
+						send("Modules", client);
+						
+						for(Module module : modules) {
+							send(module.getModuleName(), client);
 						}
-						else send("No Modules", client);
 					}
+					else send("No Modules", client);
 				}
-				public int getAccessLevel() { return Constants.USER; }
-			});
-			put("vp",
-					new Command("view pipbuck") {
-				public void execute(final String arg, final Client client) {
-					final Player player = getPlayer(client);      // get player
-					final PipBuck p = PipBuck.getPipBuck(player); // get pipbuck
+			}
+		});
 
-					if( p != null ) {
-						if( arg.equals("") ) {
-							// get the current amount of ambient radiation (rads/sec)
-							int rads = 0;
+		commands.put("vp",
+				new Command("view pipbuck") {
+			public void execute(final String arg, final Client client) {
+				final Player player = getPlayer(client);      // get player
+				final PipBuck p = PipBuck.getPipBuck(player); // get pipbuck
 
-							final Object value = getRoom( player.getLocation() ).getProperty("_game/rads");
+				if( p != null ) {
+					if( arg.equals("") ) {
+						// get the current amount of ambient radiation (rads/sec)
+						int rads = 0;
+						
+						final Room room = getRoom( player.getLocation() );
+						
+						if( room.hasProperty("_game/rads") ) {
+							rads = Integer.parseInt( room.getProperty("_game/rads") );
+						}
+						
+						// TODO really need a nice utility function for this (did it elsewhere in main class I think)
+						final Time game_time = getGameTime();
 
-							if( value != null) rads = Integer.parseInt((String) value);
+						int hours = game_time.hour;
+						int minutes = game_time.minute;
+						
+						String time = (hours < 9 ? " " : "") + hours + ":" + (minutes < 9 ? "0" : "") + minutes;
+						
+						// TODO consider using String.format for time here
 
-							final StringBuilder sb = new StringBuilder();
+						send("Looking at your Pipbuck, you note that: ", client);
 
-							// TODO really need a nice utility function for this (did it elsewhere in main class I think)
-							final Time game_time = getGameTime();
+						send(Utils.padRight("", '-', 40), client);
 
-							int hours = game_time.hour;
-							int minutes = game_time.minute;
+						send("the time is " + time, client);
+						send("current radiation exposure is: " + rads + " rads/sec.", client);
+						
+						final StringBuilder sb = new StringBuilder();
 
-							if( hours < 9 ) sb.append(" " + hours);
-							else            sb.append(hours);
-
-							sb.append(":");
-
-							if( minutes < 9 ) sb.append("0" + minutes);
-							else            sb.append(minutes);
+						for(final Module module : p.getModules()) {
+							final String moduleName = module.getModuleName();
 							
-							// TODO consider using String.format for time here
-
-							send("Looking at your Pipbuck, you note that: ", client);
-
-							send(Utils.padRight("", '-', 40), client);
-
-							send("the time is " + sb.toString(), client);
-							send("current radiation exposure is: " + rads + " rads/sec.", client);
-
-							sb.delete(0, sb.length());
-
-							for(final Module module : p.getModules()) {
-								if( module.isEnabled() ) sb.append( colors(module.getName(), "green") + ", " );
-								else                     sb.append( colors(module.getName(), "yellow") + ", " );
-							}
-
-							if( sb.length() > 2 ) sb.delete(sb.length() - 2, sb.length());
-
-							send("Currently slotted modules: " + sb.toString(), client);
-
-							final int curr_p = p.getPower();
-							final int max_p = p.getMaxPower();
-
-							sb.delete(0, sb.length());
-
-							sb.append( Utils.padRight("",  '|', curr_p) );
-							sb.append( Utils.padRight("", ' ', max_p - curr_p) );
-
-							send("Remaining Power: [" + colors(sb.toString(), "green") + "]", client);
-
-							sb.delete(0, sb.length());
-
-							send(Utils.padRight("", '-', 40), client);
-						}
-						else if( arg.equalsIgnoreCase("items") ) {
-							send(Utils.padRight("", '-', 40), client);
+							String cnString;
 							
-							for(final Item item : player.getInventory()) {
-								send(item.getName(), client);
-							}
+							if( module.isEnabled() ) cnString = colors(moduleName, "green");
+							else                     cnString = colors(moduleName, "yellow");
 							
-							send(Utils.padRight("", '-', 40), client);
+							sb.append(cnString).append(", ");
 						}
+
+						if( sb.length() > 2 ) sb.delete(sb.length() - 2, sb.length());
+
+						send("Currently slotted modules: ", client);
+						send(sb.toString(), client);
+
+						final int curr_p = p.getPower();
+						final int max_p = p.getMaxPower();
+
+						sb.delete(0, sb.length());
+
+						sb.append( Utils.padRight("",  '|', curr_p) );
+						sb.append( Utils.padRight("", ' ', max_p - curr_p) );
+						
+						String power_s = sb.toString();
+						
+						//send("Remaining Power: [" + colors(sb.toString(), "green") + "]" + " ", client);
+
+						sb.delete(0, sb.length());
+						
+						final Module module = p.getModule("StealthBuck");
+						
+						String stealth_s = (module != null && player.hasEffect("stealth")) ? " STEALTH" : "";
+						
+						send("Remaining Power: [" + colors(power_s, "green") + "]" + stealth_s , client);
+
+						send(Utils.padRight("", '-', 40), client);
+					}
+					else if( arg.equalsIgnoreCase("items") ) {
+						send(Utils.padRight("", '-', 40), client);
+
+						for(final Item item : player.getInventory()) {
+							if( item.getItemType() == ItemTypes.ARMOR ) {
+								send(colors(item.getName(), "red"), client);
+							}
+							else if( item.getItemType() == ItemTypes.BOOK ) {
+								send(colors(item.getName(), "cyan"), client);
+							}
+							else if( item.getItemType() == ItemTypes.WEAPON ) {
+								send(colors(item.getName(), "purple2"), client);
+							}
+							else {
+								send(colors(item.getName(), "yellow"), client);
+							}
+						}
+
+						send(Utils.padRight("", '-', 40), client);
 					}
 				}
+			}
+		});
 
-				public int getAccessLevel() { return Constants.USER; }
-			});
-			// scan/efs
-			put("efs",
-					new Command("eyes-forward sparkle") {
-				public void execute(final String arg, final Client client) {
-					final Player player = getPlayer(client);      // get player
-					final PipBuck p = PipBuck.getPipBuck(player); // get pipbuck
+		// scan/efs
+		commands.put("efs", new Command("eyes-forward sparkle") {
+			public void execute(final String arg, final Client client) {
+				final Player player = getPlayer(client);      // get player
+				final PipBuck p = PipBuck.getPipBuck(player); // get pipbuck
 
-					if( p != null ) {
-						if( p.efs_enabled ) {
-							// the idea here is to look for living things and/or pipbuck tags and mark them as:
-							// hostile, neutral, friendly (red, yellow, green)
+				if( p != null ) {
+					if( p.efs_enabled ) {
+						// the idea here is to look for living things and/or pipbuck tags and mark them as:
+						// hostile, neutral, friendly (red, yellow, green)
+						final Room room = getRoom( player.getLocation() );
 
-							final Room room = getRoom( player.getLocation() );
+						// get a list of all living creatures in range
+						final List<MUDObject> list = new LinkedList<MUDObject>();
 
-							// get a list of all living creatures in range
-							final List list = new LinkedList();
-
-							// for each creature decide if they are a threat
-							for(final Object obj : list) {
-							}
-
-							// it'd be nice to use tags to see if we know/know of any of the identified creatures
-
-							// scan for other pipbucks
-
-							// check against known ids (tags are set/acquired and associated with device ids)
-							//for(final Tag tag : p.tags) {}
+						// for each creature decide if they are a threat
+						for(final MUDObject obj : list) {
 						}
+
+						// it'd be nice to use tags to see if we know/know of any of the identified creatures
+						// scan for other pipbucks
+						// check against known ids (tags are set/acquired and associated with device ids)
 					}
 				}
+			}
+		});
+	}
 
-				public int getAccessLevel() { return Constants.USER; }
-
-			});
-		}
-	};
-
-	public PipBuck( String name ) {
+	public PipBuck(final String name ) {
 		this(-1, name);
 	}
 
-	public PipBuck( int dbref, String name ) {
-		super(dbref, "PipBuck", EnumSet.noneOf(ObjectFlag.class), "A Stable-Tec PipBuck", -1);
+	public PipBuck(final int dbref, final String name) {
+		super(dbref, "PipBuck", "A Stable-Tec PipBuck");
 
 		this.item_type = FOEItemTypes.PIPBUCK;
 		this.slot_type = FOESlotTypes.LFHOOF;
@@ -379,11 +440,13 @@ public class PipBuck extends Item implements Device, ExtraCommands {
 		this.modules = new LinkedList<Module>();
 	}
 
-	protected PipBuck(PipBuck template) {
+	protected PipBuck(final PipBuck template) {
 		super( template );
-
-		this.name = template.name;
-		this.fs = template.fs; // need to give FileSystem a clone method
+		
+		this.item_type = FOEItemTypes.PIPBUCK;
+		this.slot_type = FOESlotTypes.LFHOOF;
+		
+		this.fs = template.fs; // TODO need to give FileSystem a clone method
 		this.modules = new LinkedList<Module>();
 	}
 
@@ -420,8 +483,8 @@ public class PipBuck extends Item implements Device, ExtraCommands {
 	}
 
 	public Module getModule(final String moduleName) {
-		for(Module module : modules) {
-			if(moduleName.toLowerCase().equals( module.getName().toLowerCase() )) {
+		for(final Module module : modules) {
+			if( moduleName.equalsIgnoreCase( module.getModuleName()) ) {
 				return module;
 			}
 		}
@@ -435,20 +498,17 @@ public class PipBuck extends Item implements Device, ExtraCommands {
 	}
 
 	private void enableModule(final Module module) {
-		current_power -= module.getPowerReq();
+		this.current_power -= module.getPowerReq();
 		module.enable();
 	}
 
 	private void disableModule(final Module module) {
 		module.disable();
-		current_power += module.getPowerReq();
+		this.current_power += module.getPowerReq();
 	}
-
-	@Override
+	
 	public Map<String, Command> getCommands() {
-		//final Map<String, Command> temp = new Hashtable<String, Command>();
-		//temp.putAll( commands );
-		return commands;
+		return PipBuck.commands;
 	}
 
 	public int getPower() {
@@ -490,13 +550,13 @@ public class PipBuck extends Item implements Device, ExtraCommands {
 	public String toString() {
 		return name + "(" + type.toString() + ")";
 	}
-
+	
 	@Override
-	public PipBuck clone() {
+	public PipBuck getCopy() {
 		return new PipBuck(this);
 	}
 
-	private static final PipBuck getPipBuck(final Player player) {
+	static final PipBuck getPipBuck(final Player player) {
 		PipBuck p = null;
 
 		final Slot slot = player.getSlots().get("special");

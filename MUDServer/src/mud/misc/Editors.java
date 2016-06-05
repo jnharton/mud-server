@@ -12,7 +12,6 @@ package mud.misc;
 
 public enum Editors {
 	AREA("Area Editor"),
-	DESC("Desc Editor"),
 	CHARGEN("Character Generation"),
 	CREATURE("Creature Editor"),
 	HELP("Help Editor"),

@@ -31,8 +31,8 @@ public class Palette {
 		return this.name;
 	}
 	
-	public String getColor(final String name) {
-		return this.colors.get(name);
+	public int getType() {
+		return this.type;
 	}
 	
 	public Map<String, String> getColors() {
@@ -49,6 +49,10 @@ public class Palette {
 		else {
 			this.colors.put(name, "" + number);
 		}
+	}
+	
+	public String getColor(final String name) {
+		return this.colors.get(name);
 	}
 	
 	public void removeColor(final String name) {

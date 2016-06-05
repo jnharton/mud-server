@@ -1,7 +1,9 @@
 package mud.utils;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.EnumSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 
@@ -15,6 +17,7 @@ import mud.misc.Effect;
 import mud.misc.Slot;
 import mud.misc.Zone;
 import mud.objects.Item;
+import mud.objects.ItemType;
 import mud.objects.ItemTypes;
 import mud.objects.Player;
 import mud.objects.Room;
@@ -104,28 +107,26 @@ public final class MudUtils {
 
 	public static int calculateDamage(final Weapon weapon, final boolean critical) {
 		int damage = 0;
-		
+
 		if( weapon == null ) {
 			// TODO this really should return the character's ability to cause damage by themselves
 			if( critical ) damage = 2;
 			else           damage = 1;
 		}
 		else {
-			final WeaponType wtype = weapon.getWeaponType();
 
-			if(wtype != null ) {
-				final String damageRoll = wtype.getDamage();
+			//final String damageRoll = wtype.getDamage();
 
-				if (critical) {
-					damage = Utils.roll(damageRoll) * wtype.getCritical();
-				}
-				else {
-					damage = Utils.roll(damageRoll);
-				}
+			if (critical) {
+				//damage = Utils.roll(damageRoll) * wtype.getCritical();
+				damage = weapon.getDamage() * weapon.getCritical();
 			}
-			else damage = weapon.damage;
+			else {
+				//damage = Utils.roll(damageRoll);
+				damage = weapon.getDamage();
+			}
 		}
-		
+
 		return damage;
 	}
 
@@ -143,15 +144,16 @@ public final class MudUtils {
 
 	public static boolean canHit(MUDObject Target) {
 		int roll = Utils.roll(1, 20);
-
+		
 		if (roll == 1) { // Natural 1 (guaranteed miss)
 			return false;
 		}
 		else if (roll == 20) { // Natural 20 (guaranteed hit)
 			return true;
 		}
-		else { // compare to AC of target
-			return roll > 5;
+		else { // compare to AC of target?
+			return (roll > 1);
+			//return roll > 5;
 		}
 	}
 
@@ -219,10 +221,10 @@ public final class MudUtils {
 	 * @return
 	 */
 	public static boolean isAllowed(final ObjectFlag of, final TypeFlag tf) {
-		if( of.getAllowedType() == tf ) {
-			return true;
-		}
-		else return false;
+		final TypeFlag flag = of.getAllowedType();
+		
+		if( flag == tf || flag == TypeFlag.OBJECT ) return true;
+		else                                        return false;
 	}
 
 	// utility function
@@ -244,9 +246,9 @@ public final class MudUtils {
 		List<String> out = null;
 
 		if(bb != null) {
-			out = new ArrayList<String>();
+			out = new ArrayList<String>(bb.getNumMessages() + 2);
 
-			out.add(bb.getName());
+			out.add( bb.getName() );
 
 			out.add("+------------------------------------------------------------------------------+");
 
@@ -298,5 +300,146 @@ public final class MudUtils {
 		}
 
 		return check >= accessLevel;
+	}
+
+	public static String getIdleString(int idle_time) {
+		String idle_string = "";
+
+		if ( idle_time > 0 ) {
+			if ( idle_time > 60 ) idle_string = (idle_time / 60) + "m" + (idle_time % 60) + "s";
+			else                  idle_string = idle_time + "s";
+		}
+		else idle_string = "----";
+
+		return idle_string;
+	}
+	
+	/**
+	 * Find the Item with the specified name in the list of Items provided, if
+	 * it's there.
+	 * @param itemName
+	 * @param items
+	 * 
+	 * @return
+	 */
+	public static Item findItem(final String itemName, final List<Item> items) {
+		/** Extracted from MUDServer **/
+		final String arg = itemName;
+
+		if (items.size() == 0) return null;
+
+		for (final Item item1 : items) {
+			// if there is a name or dbref match from the argument in the inventory
+			// if the item name exactly equals the arguments or the name
+			// contains the argument (both case-sensitive), or
+			// if the dbref is correct
+
+			final String name = item1.getName();
+			
+			final List<String> components = Arrays.asList(item1.getName().toLowerCase().split(" "));
+
+			String name_lc = name.toLowerCase();
+			String arg_lc = arg.toLowerCase();
+			
+			/*
+			debug("Argument:              " + arg);
+			debug("Name:                  " + name);
+			debug("Argument (Lower Case): " + arg_lc);
+			debug("Name (Lower Case):     " + name_lc);
+			debug("Components:            " + components);
+			*/
+			
+			System.out.println("Argument:              " + arg);
+			System.out.println("Name:                  " + name);
+			System.out.println("Argument (Lower Case): " + arg_lc);
+			System.out.println("Name (Lower Case):     " + name_lc);
+			System.out.println("Components:            " + components);
+
+			/*
+			 * 1) is the name the same as ARG (ignoring case -- setting both
+			 * name and arg to lowercase) 2) does the name start with ARG
+			 * (ignoring case -- setting both name and arg to lowercase) 3) does
+			 * the name end with ARG (ignoring case -- setting both name and arg
+			 * to lowercase) 4) does the name contain ARG (ignoring case --
+			 * setting both name and arg to lowercase) 5) is any component of
+			 * the name the same as the arg (continues non-whitespace separated
+			 * segments)
+			 */
+
+			boolean sameName = name.equalsIgnoreCase(arg);
+			boolean startsWith = name_lc.startsWith(arg_lc);
+			boolean endsWith = name_lc.endsWith(arg_lc);
+			boolean nameContains = name_lc.contains(arg_lc);
+			boolean compsContain = components.contains(arg_lc);
+
+			boolean test = false;
+
+			for (String s : components) {
+				for (String s1 : Arrays.asList(arg.toLowerCase().split(" "))) {
+					if (s.contains(s1)) test = true;
+					break;
+				}
+			}
+
+			// for string in A, is A.S a substring of string name N.S
+			if (sameName || startsWith || endsWith || nameContains || compsContain || test) {
+				//debug(itemName + " true");
+				System.out.println(itemName + " true");
+
+				return item1;
+			}
+		}
+
+		return null;
+	}
+	
+	/**
+	 * Find the Item with the specified dbref in the list of Items provided, if
+	 * it's there.
+	 * @param itemDBRef
+	 * @param items
+	 * 
+	 * @return
+	 */
+	public static Item findItem(final Integer itemDBRef, final List<Item> items) {
+		if (items.size() == 0)
+			return null;
+
+		for (final Item item1 : items) {
+			final String itemName = item1.getName();
+
+			if (item1.getDBRef() == itemDBRef) {
+				//debug(itemName + " true");
+				System.out.println(itemName + " true");
+
+				return item1;
+			}
+		}
+
+		return null;
+	}
+	
+	public static List<MUDObject> filter(final List<MUDObject> objects, final TypeFlag tf) {
+		final List<MUDObject> filtered = new LinkedList<MUDObject>();
+
+		for(final MUDObject m : objects) {
+			if( m.isType(tf) ) {
+				filtered.add(m);
+			}
+		}
+
+		return filtered;
+	}
+
+	public static List<Item> filter(final List<Item> objects, final ItemType iType) {
+		final List<Item> filtered = new LinkedList<Item>();
+
+		for(final Item item : objects) {
+			if( item.getItemType() == iType ) {
+				filtered.add(item);
+			}
+		}
+
+		return filtered;
 	}
 }

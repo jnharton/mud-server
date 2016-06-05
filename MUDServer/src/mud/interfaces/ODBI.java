@@ -25,9 +25,10 @@ import mud.objects.Thing;
  */
 public interface ODBI {
 	// MUDObject
-	public MUDObject get(final int n);
+	public MUDObject getById(final int n);
 	public MUDObject getByName(final String name);
-
+	
+	// TODO this seems like it should be removed...
 	public List<MUDObject> getByRoom(final Room room);
 	public List<MUDObject> getObjects();
 

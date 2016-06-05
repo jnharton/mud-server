@@ -13,16 +13,16 @@ public final class FOEItemTypes {
 
 	private FOEItemTypes() {}
 
-	private static ItemType[] types = {
+	private static final ItemType[] types = {
 		BOTTLE_CAP, DISRUPTOR, MEMORY_ORB, PIPBUCK, STEALTH_BUCK
 	};
 
-	public static ItemType getType(final Integer typeId) {
+	public static final ItemType getType(final Integer typeId) {
 		return types[typeId - 16];
 	}
 
-	public static ItemType getType(final String typeName) {
-		switch(typeName.toUpperCase()) {
+	public static final ItemType getType(final String typeName) {
+		switch(typeName.toUpperCase().replace(' ', '_')) {
 		case "BOTTLE_CAP":   return BOTTLE_CAP;
 		case "DISRUPTOR":    return DISRUPTOR;
 		case "MEMORY_ORB":   return MEMORY_ORB;
@@ -32,7 +32,7 @@ public final class FOEItemTypes {
 		}
 	}
 	
-	public static ItemType[] getItemTypes() {
-		return types;
+	public static final ItemType[] getItemTypes() {
+		return FOEItemTypes.types;
 	}
 }

@@ -1,15 +1,10 @@
 package mud.foe.items;
 
-import java.util.EnumSet;
-
-import mud.ObjectFlag;
-import mud.TypeFlag;
 import mud.foe.FOEItemTypes;
 import mud.foe.FOESlotTypes;
 import mud.foe.misc.Memory;
+
 import mud.objects.Item;
-import mud.objects.ItemType;
-import mud.objects.ItemTypes;
 
 public class MemoryOrb extends Item {
 	private Memory memory;
@@ -19,28 +14,45 @@ public class MemoryOrb extends Item {
 	}
 	
 	public MemoryOrb(int dbref) {
-		super(dbref, "Memory Orb", EnumSet.noneOf(ObjectFlag.class), "A memory orb", -1);
-		
-		// Item class members
-		this.type = TypeFlag.ITEM;
+		this(dbref, null);
+	}
+	
+	public MemoryOrb(final Integer dbref, final Memory memory) {
+		super(dbref, "Memory Orb", "A memory orb");
+
+		this.item_type = FOEItemTypes.MEMORY_ORB;
+		this.slot_type = FOESlotTypes.NONE;
+
+		this.durability = 20;
+
+		this.memory = memory;
+
+		this.setAuctionable(false);
+	}
+	
+	protected MemoryOrb(final MemoryOrb template) {
+		super(-1, template.name, template.desc);
 		
 		this.item_type = FOEItemTypes.MEMORY_ORB;
 		this.slot_type = FOESlotTypes.NONE;
 		
 		this.durability = 20;
 		
-		// Memory class members
-		this.memory = null;
+		this.memory = template.memory; //should this be a deep copy?
 		
-		// Make other adjustments
 		this.setAuctionable(false);
+	}
+	
+	public Memory getMemory() {
+		return this.memory;
 	}
 	
 	public void setMemory(Memory memory) {
 		this.memory = memory;
 	}
 	
-	public Memory getMemory() {
-		return this.memory;
+	@Override
+	public MemoryOrb getCopy() {
+		return new MemoryOrb(this);
 	}
 }

@@ -1,4 +1,4 @@
-package mud;
+package mud.interfaces;
 
 import mud.net.Client;
 

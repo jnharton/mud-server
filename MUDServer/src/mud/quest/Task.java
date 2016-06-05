@@ -2,7 +2,7 @@ package mud.quest;
 
 import mud.MUDObject;
 import mud.TypeFlag;
-import mud.misc.Colors;
+import mud.colors.Colors;
 import mud.objects.Creature;
 import mud.objects.Room;
 import mud.utils.Data;

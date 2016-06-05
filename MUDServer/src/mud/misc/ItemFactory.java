@@ -1,4 +1,4 @@
-package mud.utils;
+package mud.misc;
 
 import mud.objects.Item;
 import mud.objects.ItemType;
@@ -16,10 +16,8 @@ public class ItemFactory {
 		
 		switch(type.getId()) {
 		case ARMOR:
-			//item = new Armor();
 			break;
 		case WEAPON:
-			item = new Weapon();
 			break;
 		default:
 			// throw some exception

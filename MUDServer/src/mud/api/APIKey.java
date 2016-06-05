@@ -30,7 +30,7 @@ public class APIKey {
 	 * 
 	 * @param keyString The string to be used as an API key
 	 */
-	public APIKey(String keyString) {
+	public APIKey(final String keyString) {
 		this.key = keyString;
 	}
 	
@@ -58,20 +58,8 @@ public class APIKey {
 		return isValid;
 	}
 	
-	@Override
-	public boolean equals(Object obj) {
-		if( obj instanceof APIKey ) {
-			APIKey key = (APIKey) obj;
-			return equals(key);
-		}
-		else { return false; }
-	}
-	
-	public boolean equals(APIKey apikey) {
-		if( this.key.equals( apikey.toString() ) ) {
-			return true;
-		}
-		else { return false; }
+	public boolean equals(final APIKey apikey) {
+		return this.key.equals( apikey.toString() );
 	}
 	
 	@Override

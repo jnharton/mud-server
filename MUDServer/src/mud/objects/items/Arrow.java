@@ -6,44 +6,41 @@ import mud.objects.Item;
 import mud.objects.ItemTypes;
 import mud.utils.Utils;
 import mud.ObjectFlag;
-import mud.TypeFlag;
 
 import java.util.EnumSet;
 
-public class Arrow extends Item implements Projectile<Arrow>, Stackable<Arrow> {
+public class Arrow extends Item implements Projectile, Stackable<Arrow> {
 	private Arrow arrow = null;
 	
 	public Arrow() {
-		super(-1);
-		this.type = TypeFlag.ITEM;
-		this.name = "Arrow";
-		this.desc = "";
-		this.location = -1;
-		this.flags = EnumSet.noneOf(ObjectFlag.class);
+		super(-1, "Arrow", "");
+		
 		this.item_type = ItemTypes.ARROW;
 		
 		this.arrow = null;
 	}
 
-	public Arrow(int dbref, String name, String desc, int location) {
-		super(dbref, name, EnumSet.noneOf(ObjectFlag.class), desc, location);
-		this.type = TypeFlag.ITEM;
+	public Arrow(final String name, final String desc) {
+		super(-1, name, desc);
+		
 		this.item_type = ItemTypes.ARROW;
 		
 		this.arrow = null;
 	}
 	
-	protected Arrow(Arrow template) {
+	protected Arrow(final Arrow template) {
 		super(template);
 		
-		//this.type = TypeFlag.ITEM;
-		this.name = template.name;
-		this.desc = template.desc;
 		this.location = template.location;
 		this.flags = EnumSet.noneOf(ObjectFlag.class);
+		
 		this.item_type = ItemTypes.ARROW;
 		
 		this.arrow = null;
+	}
+	
+	public Arrow(final int dbref, final String name, final EnumSet<ObjectFlag> flags, final String description, final int location) {
+		super(dbref, name, EnumSet.noneOf(ObjectFlag.class), description, location);
 	}
 	
 	@Override

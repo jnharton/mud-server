@@ -3,7 +3,9 @@ package mud.foe.misc;
 import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
+// TODO actual storage part needs rework
 public class FileSystem {
 	private static final int MAX_DIRS = 5;
 	private static final int MAX_FILES = MAX_DIRS * 20; // 20 files per directory
@@ -19,6 +21,7 @@ public class FileSystem {
 	// /<user>/<file>       file in user dir
 	// /<user>/<dir>/<file> user sub-directory
 	//
+	// "/admin/notes/this one.txt", [ string, string, string, string, string ]
 	
 	private int error;
 	
@@ -50,13 +53,20 @@ public class FileSystem {
 	}
 
 	public class Directory extends File {
-		public Hashtable<String, File> files;
+		private Hashtable<String, File> files;
 
 		public Directory(final String name) {
 			super(name, null);
 
 			this.isDir = true;
 			this.files = new Hashtable<String, File>();
+		}
+		
+		@Override
+		public String[] getContents() {
+			final Set<String> filenames = files.keySet();
+			
+			return filenames.toArray( new String[filenames.size()] );
 		}
 	}
 
@@ -65,7 +75,7 @@ public class FileSystem {
 		this.error = 0;
 	}
 
-	public Directory getDirectory(String directory) {
+	public Directory getDirectory(final String directory) {
 		final File file = this.files.get(directory);
 
 		if( file != null ) {
@@ -77,7 +87,7 @@ public class FileSystem {
 		return null;
 	}
 
-	public File getFile(final String dirName, String fileName) {
+	public File getFile(final String dirName, final String fileName) {
 		final File file = this.files.get(dirName);
 
 		if( file != null ) {
@@ -91,7 +101,7 @@ public class FileSystem {
 		return null;
 	}
 
-	public String getDirectoryNames(String directory) {
+	public String getDirectoryNames(final String directory) {
 		final StringBuilder sb = new StringBuilder();
 
 		if( directory.equals("/") ) {
@@ -168,7 +178,7 @@ public class FileSystem {
 		return fileExists;
 	}
 
-	public void copyFile(String directory, String name, String directory1) {
+	public void copyFile(final String directory, final String name, final String directory1) {
 		String[] fileData;
 		
 		if( hasDir(directory) && hasFile(directory, name) ) {

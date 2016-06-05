@@ -24,19 +24,28 @@ package mud.weather;
  */
 public class Weather
 {
-	public Season season;
-	public WeatherState ws;
+	private Season season;
+	private WeatherState ws;
 
 	public Weather(final Season initialSeason, final WeatherState initialState) {
 		this.season = initialSeason;
 		this.ws = initialState;
 	}
-
-	public void setState(WeatherState nextState) {
+	
+	public Season getSeason() {
+		return this.season;
+	}
+	
+	public WeatherState getState() {
+		return this.ws;
+	}
+	
+	public void setState(final WeatherState nextState) {
 		this.ws = nextState;
 	}
 	
 	public void nextState() {
-		setState(this.season.weatherPattern.getNextState( this.ws ));
+		final WeatherPattern wp = this.season.getPattern(); 
+		setState( wp.getNextState(this.ws) );
 	}
 }

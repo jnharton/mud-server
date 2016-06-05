@@ -6,18 +6,18 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Stack;
 
-import mud.utils.Pair;
 import mud.utils.Tuple;
 import mud.utils.Utils;
 
 /**
  * A Finite State Machine (FSM) implemented in Java
+ * 
+ * http://gamedevelopment.tutsplus.com/tutorials/finite-state-machines-theory-and-implementation--gamedev-11867
+ * 
  * @author Jeremy
  *
  */
-public class FSM<E> {
-	private E object;
-	
+public class FSM {
 	private Stack<String> stateStack;
 	
 	private String previous;
@@ -57,17 +57,6 @@ public class FSM<E> {
 		
 		this.states.addAll( Utils.mkList(states) );
 	}
-	
-	public FSM(final E object) {
-		this();
-		this.object = object;
-	}
-	
-	public FSM(final E object, final String...states) {
-		this(states);
-		this.object = object;
-	}
-	
 	
 	public static void main(String[] args) {
 		final FSM sm = new FSM();

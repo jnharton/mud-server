@@ -2,7 +2,6 @@ package mud.commands;
 
 import mud.Command;
 import mud.Constants;
-import mud.MUDServer;
 import mud.objects.Player;
 import mud.utils.EditorData;
 import mud.utils.Mail;

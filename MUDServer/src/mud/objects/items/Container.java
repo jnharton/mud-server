@@ -70,9 +70,9 @@ public class Container extends Item implements Storage<Item> {
 		this.displayWidth = template.displayWidth;
 	}
 
-	public Container(final int tempDBREF, final String tempName, final EnumSet<ObjectFlag> tempFlags, final String tempDesc, final int tempLoc, final int size)
+	public Container(final int dbref, final String name, final EnumSet<ObjectFlag> flags, final String description, final int location, final int size)
 	{
-		super(tempDBREF, tempName, tempFlags, tempDesc, tempLoc);
+		super(dbref, name, flags, description, location);
 		
 		this.item_type = ItemTypes.CONTAINER;
 		

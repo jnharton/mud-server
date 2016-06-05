@@ -1,7 +1,9 @@
 package mud.weather;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.ListIterator;
 
 /*
@@ -15,10 +17,14 @@ import java.util.ListIterator;
  */
 
 public class WeatherPattern {
-	public LinkedList<WeatherState> weather_states;
+	private List<WeatherState> weather_states;
 	
-	public WeatherPattern(WeatherState...sWeatherStates) {
+	public WeatherPattern(final WeatherState...sWeatherStates) {
 		this.weather_states = new LinkedList<WeatherState>(Arrays.asList(sWeatherStates));
+	}
+	
+	public List<WeatherState> getStates() {
+		return Collections.unmodifiableList( weather_states );
 	}
 	
 	public WeatherState getNextState(final WeatherState cs) {
@@ -27,19 +33,16 @@ public class WeatherPattern {
 		boolean transitionDown = Math.random() <= cs.getTransDownProb();
 
         WeatherState newState;
+        
 		if (transitionDown && li.hasNext()) {
-            //System.out.println("Transition Down");
             newState = li.next();
-            //System.out.println("Is current equal to next? " + cs.equals(newState));
             newState.upDown = -1;
         }
 		else if (!transitionDown && li.hasPrevious()) {
-            //System.out.println("Transition Up");
             newState = li.previous();
             newState.upDown = 1;
         }
         else {
-            //System.out.println("No Transition");
             newState = cs;
             newState.upDown = 0;
         }

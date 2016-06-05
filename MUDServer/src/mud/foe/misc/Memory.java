@@ -1,13 +1,5 @@
 package mud.foe.misc;
 
-/*import java.util.Collections;
-import java.util.Hashtable;
-import java.util.List;
-import java.util.Map;
-
-import mud.Command;
-import mud.interfaces.ExtraCommands;*/
-
 /**
  * An object that delineates data about memories for Memory Orbs,
  * which are an Item that exists in Fallout Equestria.
@@ -29,7 +21,7 @@ public class Memory {
 		this.segments = new MemorySegment[segments];
 	}
 	
-	public Memory(MemorySegment...segments){
+	public Memory(final MemorySegment...segments){
 		this.segments = segments;
 	}
 	

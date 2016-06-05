@@ -35,19 +35,11 @@ public class Race {
 		this.canFly = false;
 	}*/
 	
-	public Race(Ruleset rs, String name, int id, boolean restricted) {
-		this(rs, name, id, null, restricted);
+	public Race(final Ruleset rs, final String name, final int id, final boolean canFly, final boolean restricted) {
+		this(rs, name, id, canFly, restricted, null);
 	}
 	
-	public Race(Ruleset rs, String name, int id, boolean restricted, boolean canFly) {
-		this(rs, name, id, null, restricted, canFly);
-	}
-
-	public Race(Ruleset rs, String name, int id, Integer[] statAdj, boolean restricted) {
-		this(rs, name, id, statAdj, restricted, false);
-	}
-	
-	public Race(Ruleset rs, String name, int id, Integer[] statAdj, boolean restricted, boolean canFly) {
+	public Race(final Ruleset rs, final String name, final int id, final boolean canFly, final boolean restricted, final Integer[] statAdj) {
 		this.rules = rs;
 		this.name = name;
 		this.id = id;
@@ -87,6 +79,10 @@ public class Race {
 		}
 		
 		return this.statAdj;
+	}
+	
+	public void setStatAdjust(final Integer[] newAdjust) {
+		this.statAdj = newAdjust;
 	}
 	
 	public boolean isPlayable() {

@@ -11,11 +11,15 @@ public class EditList {
     public EditList(final String n) {
     	this.name = n;
     	this.lines = new LinkedList<String>();
+    	
+    	this.currentLine = 0;
     }
 
     public EditList(final String n, List<String> init) {
     	this.name = n;
         this.lines = new LinkedList<String>(init);
+        
+        this.currentLine = this.lines.size();
     }
     
     public String getName() {
@@ -48,8 +52,8 @@ public class EditList {
 
     public void addLine(final String line) {
     	if( atEnd() ) {
-    		this.currentLine = this.lines.size();
     		this.lines.add(line);
+    		this.currentLine = this.lines.size();
     	}
     	else {
     		this.lines.add(this.currentLine, line);

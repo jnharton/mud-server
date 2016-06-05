@@ -42,17 +42,16 @@ public class Wand extends Item implements MagicItem {
 	 * Use this only for testing purposes and loading objects into the
 	 * server database, for anything else, use one of the other two constructors
 	 * that have parameters.
-	 *
-	 * 
-	 * @param tempName
-	 * @param tempDesc
-	 * @param tempLoc
-	 * @param tempDBREF
+	 * @param dbref
+	 * @param name
+	 * @param description
+	 * @param flags TODO
+	 * @param location
 	 * @param tCharges
 	 * @param spell
 	 */
-	public Wand(String tempName, String tempDesc, int tempLoc, int tempDBREF, ItemType itemType, int tCharges, Spell spell) {
-		super(tempDBREF, tempName, EnumSet.noneOf(ObjectFlag.class), tempDesc, tempLoc);
+	public Wand(int dbref, String name, String description, EnumSet<ObjectFlag> flags, int location, ItemType itemType, int tCharges, Spell spell) {
+		super(dbref, name, EnumSet.noneOf(ObjectFlag.class), description, location);
 		
 		this.item_type = ItemTypes.WAND;
 		
@@ -76,12 +75,9 @@ public class Wand extends Item implements MagicItem {
 
 		//this.name = "Wand of " + this.spell.getName();
 	}
-
-	@Override
-	public String getName() {
-		return this.name;
-	}
 	
+	// TODO this kind of data should be accessible somehow
+	/*
 	@Override
 	public String getDesc() {
 		final String chargeState;
@@ -101,6 +97,7 @@ public class Wand extends Item implements MagicItem {
 		
 		return this.desc + "\nThis wand is " + chargeState;
 	}
+	*/
 	
 	public ArrayList<String> look() {
 		return null;

@@ -1,4 +1,4 @@
-package mud.misc;
+package mud.combat;
 
 import mud.events.SayEvent;
 import mud.events.SayEventListener;

@@ -1,11 +1,16 @@
 package mud.modules;
 
+import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
 import mud.Command;
+import mud.MUDObject;
+import mud.ObjectFlag;
+import mud.TypeFlag;
 import mud.foe.*;
 import mud.foe.items.*;
 import mud.game.Faction;
@@ -15,7 +20,6 @@ import mud.interfaces.GameModule;
 import mud.misc.Currency;
 import mud.misc.Slot;
 import mud.misc.SlotType;
-import mud.misc.SlotTypes;
 import mud.misc.TriggerType;
 import mud.net.Client;
 import mud.objects.Item;
@@ -23,9 +27,12 @@ import mud.objects.ItemType;
 import mud.objects.ItemTypes;
 import mud.objects.Player;
 import mud.objects.Thing;
+import mud.objects.ThingType;
 import mud.objects.items.Drink;
 import mud.objects.items.Weapon;
+import mud.objects.items.Weapon.DamageType;
 import mud.rulesets.foe.FOESpecial;
+import mud.rulesets.foe.Races;
 import mud.rulesets.special.SpecialRuleset;
 import mud.utils.Utils;
 
@@ -44,31 +51,12 @@ public final class FalloutEquestria implements GameModule, ExtraCommands {
 
 	private static List<Faction> factions;
 	
-	private static Hashtable<String, ItemType> itemTypes;
-	private static Hashtable<String, SlotType> slotTypes;
+	private Map<Player, mud.foe.Terminal> terminals = new HashMap<Player, mud.foe.Terminal>(1, 0.75f);
 	
+	public static Faction DASHITES;
+	
+	public static final Currency EQUESTRIAN_BIT = new Currency("Bit", "eb", null, 1.0);
 	public static final Currency BOTTLE_CAPS = new Currency("bottle cap", "bc", null, 1.0);
-
-	// static block initializing the above stuff
-	{
-		// Factions
-		// TODO I'd like to make this data loaded from a file and not a static block
-		factions = new LinkedList<Faction>();
-
-		factions.add( new Faction("Dashites") );
-		factions.add( new Faction("Grand Pegasus Enclave") );
-		factions.add( new Faction("Raiders") );
-		factions.add( new Faction("Steel Rangers") );
-		factions.add( new Faction("Talons") );
-		factions.add( new Faction("Wastelanders") );
-		factions.add( new Faction("Stable Dwellers") );
-
-		// Item Types
-		itemTypes = new Hashtable<String, ItemType>();
-		
-		// Slot Types
-		slotTypes = new Hashtable<String, SlotType>();
-	}
 	
 	public FalloutEquestria() {
 		//init();
@@ -96,10 +84,20 @@ public final class FalloutEquestria implements GameModule, ExtraCommands {
 
 	@Override
 	public void init() {
-		prototypes  = new Hashtable<String, Item>();
-		prototypes1 = new Hashtable<String, Thing>();
+		/* factions */
+		factions = new LinkedList<Faction>() {{
+			add( new Faction("Dashites") );
+			add( new Faction("Grand Pegasus Enclave") );
+			add( new Faction("Raiders") );
+			add( new Faction("Steel Rangers") );
+			add( new Faction("Steel Rangers") );
+			add( new Faction("Talons") );
+			add( new Faction("Wastelanders") );
+			add( new Faction("Stable Dwellers") );
+		}};
 		
 		/* Item Prototypes */
+		prototypes  = new Hashtable<String, Item>();
 		
 		// prototype - pipbuck
 		
@@ -123,7 +121,6 @@ public final class FalloutEquestria implements GameModule, ExtraCommands {
 		prototypes.put("mud.foe.memory_orb", MemoryOrb);
 
 		// prototype - Sparkle Cola soda
-		//Item SparkleCola = new Item(-1);
 		Drink SparkleCola = new Drink(-1); // item - drinkable
 
 		SparkleCola.setName("Sparkle Cola");
@@ -135,11 +132,28 @@ public final class FalloutEquestria implements GameModule, ExtraCommands {
 		SparkleCola.setScriptOnTrigger(TriggerType.onUse,
 				"{do:{give:{&player},{create_item:mud.foe.bottlecap_sc}},{tell:You toss the bottle#c keeping just the bottlecap.,{&player}}}"
 				);
+		
+		SparkleCola.setProperty("stackable", true);
 
 		System.out.println("SparkleCola(onUse Script): " + SparkleCola.getScript(TriggerType.onUse).getText());
 
 		prototypes.put("mud.foe.sparkle_cola", SparkleCola);
-
+		
+		// prototype - Sunrise Sarsaparilla soda
+		Drink SunriseSarsaparilla = new Drink(-1);
+		
+		SunriseSarsaparilla.setName("Sunrise Sarsaparilla");
+		SunriseSarsaparilla.setDesc("");
+		SunriseSarsaparilla.setLocation(-1);
+		
+		SunriseSarsaparilla.setScriptOnTrigger(TriggerType.onUse,
+				"{do:{give:{&player},{create_item:mud.foe.bottlecap_ss}},{tell:You toss the bottle#c keeping just the bottlecap.,{&player}}}"
+				);
+		
+		SunriseSarsaparilla.setProperty("stackable", true);
+		
+		prototypes.put("mud.foe.sunrise_sarsaparilla", SunriseSarsaparilla);
+		
 		// prototype - bottle cap
 		BottleCap BottleCap = new BottleCap();
 
@@ -150,53 +164,70 @@ public final class FalloutEquestria implements GameModule, ExtraCommands {
 		
 		BottleCap.setProperty("type", "sc"); // Sparkle Cola bottle cap
 		BottleCap.setProperty("value", 1);
+		BottleCap.setProperty("stackable", true);
 
 		prototypes.put("mud.foe.bottlecap_sc", BottleCap);
+		
+		// prototype - bottle cap
+		BottleCap BottleCap1 = new BottleCap();
+
+		BottleCap1.setName("Bottle Cap");
+		BottleCap1.setDesc("A slightly bent metal bottle cap. Once a common waste product of the drinking habits of the Equestrian nation, "
+				+ "now a valuable currency in the Equestrian Wasteland");
+		BottleCap1.setLocation(-1);
+		
+		BottleCap1.setProperty("type", "ss"); // Sparkle Cola bottle cap
+		BottleCap1.setProperty("value", 1);
+		BottleCap1.setProperty("stackable", true);
+
+		prototypes.put("mud.foe.bottlecap_ss", BottleCap);
 		
 		/* Weapons */
 		
 		// prototype - pistol
 		final Weapon pgun = new Weapon("10mm Pistol", "A basic pistol, developed for the security forces of what used to be Equestria.");
+		
+		pgun.setSlotType(FOESlotTypes.HOOVES);
+		
+		pgun.setWeight(2.0);
+		
+		pgun.setDamageType(DamageType.PIERCING);		
+		pgun.setDamage(5);
 
 		prototypes.put("mud.foe.weapons.pistol", pgun);
 		
 		// prototype - laser rifle
 		final Weapon laser_rifle = new Weapon("Laser Rifle", "An energy weapon modeled after a basic rifle.");
 		
-		laser_rifle.setWeight(0.0);
-		
-		// TODO need a better slottype management, since another species could hold it
 		laser_rifle.setSlotType(FOESlotTypes.HOOVES);
 		
-		laser_rifle.damage = 5;
-
-		laser_rifle.setProperty("damage",  10);
-		laser_rifle.setProperty("ammo_type", "energy");
+		laser_rifle.setWeight(8.0);
+		
+		laser_rifle.setDamageType(DamageType.ENERGY);
+		laser_rifle.setDamage(10);
 		
 		prototypes.put("mud.foe.laser_rifle", laser_rifle);
 		
 		// prototype - wing blades
 		final Weapon wing_blades = new Weapon("Wing Blades", "Sharp, curved metal blades designed to be strapped onto a pegasus' wings.");
 		
-		wing_blades.setWeight(0.0);
-		
 		wing_blades.setSlotType(FOESlotTypes.WINGS);
+		
+		wing_blades.setWeight(6.0);
+		
+		wing_blades.setDamageType(DamageType.SLASHING);
+		wing_blades.setDamage(5);
 		
 		prototypes.put("mud.foe.wing_blades", wing_blades);
 
 		/* Thing Prototypes */
+		prototypes1 = new Hashtable<String, Thing>();
 
 		// prototype - Spark Generator
-		Thing spark_generator = new Thing("Spark Generator", "This advanced piece of magitech produces near limitless electric power via magic");
+		Thing SparkGenerator = new Thing("Spark Generator", "This advanced piece of magitech produces near limitless electric power via magic");
 
-		Thing SparkGenerator = new Thing(-1);
-
-		SparkGenerator.setName("Spark Generator");
-		SparkGenerator.setDesc("This advanced piece of magitech produces near limitless electric power via magic");
-		SparkGenerator.setLocation(-1);
-
-		spark_generator.setProperty("thingtype", "spark_generator");
-		spark_generator.setProperty("power", 10);
+		SparkGenerator.setProperty("thingtype", "spark_generator");
+		SparkGenerator.setProperty("power", 10);
 
 		prototypes1.put("mud.foe.spark_generator", SparkGenerator);
 
@@ -207,15 +238,6 @@ public final class FalloutEquestria implements GameModule, ExtraCommands {
 				mud.foe.Terminal.Power.POWER_ON, null, null);
 
 		prototypes1.put("mud.foe.terminal", terminal);
-
-		// TODO do I want name indexing or id indexing?
-		for(final ItemType it : FOEItemTypes.getItemTypes()) {
-			itemTypes.put( it.getName(), it ); 
-		}
-		
-		for(final SlotType st : FOESlotTypes.getSlotTypes()) {
-			slotTypes.put( st.getName(), st );
-		}
 	}
 
 	/**
@@ -229,51 +251,48 @@ public final class FalloutEquestria implements GameModule, ExtraCommands {
 	 * 
 	 * @author Jeremy
 	 */
-	public void PCInit(Player player) {
-		// check to see if Player has had this init done before and for what ruleset
+	public void PCInit(final Player player) {
+		// check to see if the player has been initialized
+		if( !player.isInitialized() ) {
+			final SpecialRuleset rules = FOESpecial.getInstance();
 
-		// if it's never been done, do it here
-		final SpecialRuleset rules = FOESpecial.getInstance();
+			Race EARTH = new Race(rules, "Earth", 0, false, false);
+			Race PEGASUS = new Race(rules, "Pegasus", 1, true, false);
+			Race UNICORN = new Race(rules, "Unicorn", 2, false, false);
 
-		//Race EARTH = new Race(rules, "Earth", 0, false);
-		Race PEGASUS = new Race(rules, "Pegasus", 1, false);
-		Race UNICORN = new Race(rules, "Unicorn", 2, false);
-		
-		//Race GRIFFIN;
-		//Race ZEBRA;
-		
-		// goggles, glasses? (FOESlotTypes.HEAD, ItemTypes.NONE)
-		
-		player.addSlot("helmet",        new Slot(FOESlotTypes.HEAD, ItemTypes.ARMOR));
-		player.addSlot("clothes_head",  new Slot(FOESlotTypes.HEAD, ItemTypes.CLOTHING));
-		player.addSlot("eyes",          new Slot(FOESlotTypes.EYES, ItemTypes.NONE));
+			//Race GRIFFIN;
+			//Race ZEBRA;
+			
+			// initialize slots
+			player.addSlot("helmet",        new Slot(FOESlotTypes.HEAD, ItemTypes.ARMOR));
+			player.addSlot("clothes_head",  new Slot(FOESlotTypes.HEAD, ItemTypes.CLOTHING));
+			player.addSlot("eyes",          new Slot(FOESlotTypes.EYES, ItemTypes.NONE)); // eyewear? headwear?
 
-		if( player.getRace().equals( UNICORN ) ) {
-			player.addSlot("horn",      new Slot(FOESlotTypes.HORN, ItemTypes.NONE));
-		}
+			if( player.getRace().equals( UNICORN ) ) {
+				player.addSlot("horn",      new Slot(FOESlotTypes.HORN, ItemTypes.NONE));
+			}
 
-		player.addSlot("clothes_body",  new Slot(FOESlotTypes.BODY, ItemTypes.CLOTHING));
-		player.addSlot("barding",       new Slot(FOESlotTypes.BODY, ItemTypes.CLOTHING));
+			player.addSlot("clothes_body",  new Slot(FOESlotTypes.BODY, ItemTypes.CLOTHING));
+			player.addSlot("barding",       new Slot(FOESlotTypes.BODY, ItemTypes.CLOTHING));
 
-		player.addSlot("battle saddle", new Slot(FOESlotTypes.BACK, ItemTypes.CLOTHING));
-		player.addSlot("saddlebags",    new Slot(FOESlotTypes.BACK, ItemTypes.CLOTHING));
+			player.addSlot("battle saddle", new Slot(FOESlotTypes.BACK, ItemTypes.CLOTHING));
+			player.addSlot("saddlebags",    new Slot(FOESlotTypes.BACK, ItemTypes.CLOTHING));
 
-		if( player.getRace().equals( PEGASUS ) ) {
-			player.addSlot("wings",     new Slot(FOESlotTypes.WINGS, ItemTypes.WEAPON));
-		}
-		
-		player.addSlot("anklets",       new Slot(FOESlotTypes.HOOVES, ItemTypes.ARMOR));
-		player.addSlot("boots",         new Slot(FOESlotTypes.HOOVES, ItemTypes.ARMOR));
-		player.addSlot("armor",         new Slot(FOESlotTypes.HOOVES, ItemTypes.ARMOR));
-		player.addSlot("hooves",        new Slot(FOESlotTypes.HOOVES, ItemTypes.WEAPON));
-		player.addSlot("weapon2",       new Slot(FOESlotTypes.HOOVES, ItemTypes.WEAPON));
-		
-		player.addSlot("special",       new Slot(FOESlotTypes.LFHOOF, FOEItemTypes.PIPBUCK));
-		player.addSlot("special2",      new Slot(FOESlotTypes.RFHOOF, FOEItemTypes.PIPBUCK));
-		
-		// initialize faction reputation
-		for(final Faction faction : getFactions()) {
-			player.setReputation(faction, 0);
+			if( player.getRace().equals( PEGASUS ) ) {
+				player.addSlot("wings",     new Slot(FOESlotTypes.WINGS, ItemTypes.WEAPON));
+			}
+
+			player.addSlot("anklets",       new Slot(FOESlotTypes.HOOVES, ItemTypes.ARMOR));
+			player.addSlot("boots",         new Slot(FOESlotTypes.HOOVES, ItemTypes.ARMOR));
+			player.addSlot("armor",         new Slot(FOESlotTypes.HOOVES, ItemTypes.ARMOR));
+			player.addSlot("hooves",        new Slot(FOESlotTypes.HOOVES, ItemTypes.WEAPON));
+			player.addSlot("weapon2",       new Slot(FOESlotTypes.HOOVES, ItemTypes.WEAPON));
+
+			player.addSlot("special",       new Slot(FOESlotTypes.LFHOOF, FOEItemTypes.PIPBUCK));
+			player.addSlot("special2",      new Slot(FOESlotTypes.RFHOOF, FOEItemTypes.PIPBUCK));
+
+			// initialize faction reputation
+			for(final Faction faction : getFactions()) player.setReputation(faction, 0);
 		}
 	}
 
@@ -293,21 +312,11 @@ public final class FalloutEquestria implements GameModule, ExtraCommands {
 
 	@Override
 	public Map<String, Command> getCommands() {
-		return this.commands;
+		return FalloutEquestria.commands;
 	}
-
-	// Use Methods
-	public String use_terminal(final Terminal term, final Player player) {
-		return "";
-	}
-
+	
 	public Terminal createTerminal() {
 		return null;
-	}
-
-	@Override
-	public Hashtable<String, ItemType> getItemTypes() {
-		return itemTypes;
 	}
 	
 	@Override
@@ -315,13 +324,28 @@ public final class FalloutEquestria implements GameModule, ExtraCommands {
 		return FOEItemTypes.getType(typeId);
 	}
 	
-	public Hashtable<String, SlotType> getSlotTypes() {
-		return slotTypes;
+	public ItemType getItemType(final String typeName) {
+		return FOEItemTypes.getType(typeName);
 	}
 	
 	@Override
 	public SlotType getSlotType(final Integer typeId) {
 		return FOESlotTypes.getType(typeId);
+	}
+	
+	@Override
+	public SlotType getSlotType(final String typeName) {
+		return FOESlotTypes.getType(typeName);
+	}
+	
+	@Override
+	public ThingType getThingType(final Integer typeId) {
+		return FOEThingTypes.getType(typeId);
+	}
+	
+	@Override
+	public ThingType getThingType(final String typeName) {
+		return FOEThingTypes.getType(typeName);
 	}
 	
 	public Item loadItem(final String itemData) {
@@ -390,10 +414,6 @@ public final class FalloutEquestria implements GameModule, ExtraCommands {
 			
 			return stealthbuck;
 		}
-		// Terminal is a Thing
-		/*else if( it == FOEItemTypes.TERMINAL ) {
-			return new Terminal( oName, oDesc );
-		}*/
 		else {
 			// TODO resolve issue of loading item types not listed in here
 			// (3-20-2015)
@@ -406,4 +426,151 @@ public final class FalloutEquestria implements GameModule, ExtraCommands {
 			return item;
 		}
 	}
+	
+	@Override
+	public Thing loadThing(final String itemData) {
+		String[] attr = itemData.split("#");
+		
+		System.out.println("");
+		System.out.println("debug(itemData): " + itemData);
+		System.out.println("");
+		
+		Integer oDBRef = Integer.parseInt(attr[0]);
+		String oName = attr[1];
+		Character oTypeFlag = attr[2].charAt(0);
+		String oFlags = attr[2].substring(1, attr[2].length());
+		String oDesc = attr[3];
+		Integer oLocation = Integer.parseInt(attr[4]);
+		
+		EnumSet<ObjectFlag> flags = ObjectFlag.getFlagsFromString(oFlags);
+		
+		// -----
+		
+		int thingType = Utils.toInt(attr[5], 0); // find a type, else
+		
+		final ThingType tt = FOEThingTypes.getType(thingType);
+		
+		if( tt == FOEThingTypes.TERMINAL ) {
+			// TODO need to handle dbref setting properly
+			Terminal term = new Terminal(oName, "A Stable-Tec terminal, old pre-war technology whose durability is plain to see.");
+			
+			term.setDBRef(oDBRef);
+			term.setLocation(oLocation);
+			
+			term.setProperty("/visuals/screen", "passively glowing green text indicates that it awaits input");
+			
+			term.init();
+			term.powerOn();
+			
+			//return new Terminal( oName, oDesc );
+			return term;
+		}
+		else {
+			return new Thing(oDBRef, oName, flags, oDesc, oLocation);
+		}
+	}
+	
+	public static Race getRace(final int id) {
+		return Races.getRace(id);
+	}
+	
+	public static Race getRace(final String name) {
+		return Races.getRace(name);
+	}
+	
+	public void run() {
+		for(final Player player : terminals.keySet()) {
+			final Terminal term = terminals.get( player );
+			final Client client = player.getClient();
+			
+			term.exec();
+			
+			String line = term.read();
+			//String line;
+			
+			/*while((line = term.read()) != null) {
+				client.write( line );
+			}*/
+			
+			while(line != null) {
+				System.out.println("Line NOT NULL!");
+				
+				client.write( line );
+				
+				line = term.read();
+			}
+
+			if( term.isPaused() ) {
+				player.setStatus("IC");
+				
+				terminals.remove(player);
+				
+				//send("Stopped using terminal.", player.getClient());
+				player.getClient().writeln("Stopped using terminal.");
+			}
+		}
+	}
+	
+	public void op(final String input, final Player player) {
+		if ( player.getStatus().equals("TERM") ) {
+			//debug("op_terminal: " + input);
+			
+			op_terminal(input, player);
+		}
+	}
+	
+	void op_terminal(final String input, final Player player) {
+		//debug("Using Terminal");
+		System.out.println("Write to Terminal");
+		
+		mud.foe.Terminal term = terminals.get( player );
+		
+		term.write( input );
+
+		/*if (term.getLoginState() == mud.foe.Terminal.Login.LOGGED_OUT) {
+			term.handle_login(input, client);
+		}
+		else if (term.getLoginState() == mud.foe.Terminal.Login.LOGGED_IN) {
+			int code = term.processInput(input);
+
+			if (code == 0) {
+				player.setStatus("IC");
+				notify(player, "You quit using the terminal.");
+			}
+		}*/
+	}
+	
+	public boolean use(final Player player, final MUDObject mobj) {
+		if( mobj.isType(TypeFlag.THING) ) {
+			final Thing thing = (Thing) mobj;
+			
+			if( thing.thing_type == FOEThingTypes.TERMINAL ) {
+				final Terminal term = (Terminal) thing;
+				
+				if ( term.checkStatus(mud.foe.Terminal.Power.POWER_ON, mud.foe.Terminal.Use.USABLE) ) {
+					
+				}
+				
+				if (term.getPowerState() == Terminal.Power.POWER_ON) {
+					//debug(player.getName() + " USING TERMINAL");
+					System.out.println(player.getName() + " USING TERMINAL");
+					
+					terminals.put(player, term);
+
+					player.setStatus("TERM"); // tell the game proper to redirect my input to terminal i/o
+					
+					term.setPaused(false);
+				}
+				else {
+					//send("The terminal is powered off, perhaps you could 'turn terminal on'?", client);
+					player.getClient().writeln("The terminal is powered off, perhaps you could 'turn terminal on'?");
+				}
+				
+				return true;
+			}
+		}
+		
+		return false;
+	}
+	
 }

@@ -6,7 +6,6 @@ import mud.ObjectFlag;
 import mud.TypeFlag;
 import mud.game.Race;
 import mud.interfaces.Mobile;
-import mud.objects.CreatureType;
 import mud.objects.creatures.Size;
 import mud.rulesets.d20.Races;
 import mud.utils.Point;
@@ -35,9 +34,7 @@ import java.util.EnumSet;
  * @author Jeremy
  */
 public class Creature extends MUDObject implements Mobile {
-
-	// type flag = C
-	protected CreatureType ctype;
+	enum State { HOSTILE, NEUTRAL, FRIENDLY };
 	
 	protected String race;
 	protected Size size;
@@ -55,12 +52,11 @@ public class Creature extends MUDObject implements Mobile {
 	public boolean isHostile = false;
 	
 	public Creature() {
-		super(-1);
-		this.type = TypeFlag.CREATURE;
+		this("creature", "some non-descript creature");
 	}
 	
 	public Creature(final String name, final String desc) {
-		super(-1, name, EnumSet.noneOf(ObjectFlag.class), desc, Constants.VOID);
+		super(-1, name, desc);
 		
 		this.type = TypeFlag.CREATURE;
 	}
@@ -68,17 +64,17 @@ public class Creature extends MUDObject implements Mobile {
 	/**
 	 * Copy Constructor
 	 */
-	public Creature(final Creature template) {
+	protected Creature(final Creature template) {
 		super(-1);
-		
-		this.type = TypeFlag.CREATURE;
-		
-		this.race = template.race;
 		
 		this.name = template.name;
 		this.flags = template.flags;
 		this.desc = template.desc;
 		this.location = template.location;
+		
+		this.type = TypeFlag.CREATURE;
+		
+		this.race = template.race;
 		
 		this.ridable = template.ridable;
 		
@@ -88,28 +84,16 @@ public class Creature extends MUDObject implements Mobile {
 	/**
 	 * Object Loading Constructor
 	 * 
-	 * @param tempDBRef
-	 * @param tempName
-	 * @param tempFlags
-	 * @param tempDesc
-	 * @param tempLoc
+	 * @param dbref
+	 * @param name
+	 * @param flags
+	 * @param description
+	 * @param location
 	 */
-	public Creature(final int tempDBRef, final String tempName, final EnumSet<ObjectFlag> tempFlags, final String tempDesc, final int tempLoc) {
-		super(tempDBRef);
-		this.type = TypeFlag.CREATURE;
+	public Creature(final int dbref, final String name, final EnumSet<ObjectFlag> flags, final String description, final int location) {
+		super(dbref, name, flags, description, location);
 		
-		this.name = tempName;
-		this.flags = tempFlags; 
-		this.desc = tempDesc;
-		this.location = tempLoc;
-	}
-	
-	public void setCreatureType(CreatureType c) {
-		this.ctype = c;
-	}
-	
-	public CreatureType getCreatureType() {
-		return this.ctype;
+		this.type = TypeFlag.CREATURE;
 	}
 	
 	public void setRace(Race race) {
@@ -157,6 +141,10 @@ public class Creature extends MUDObject implements Mobile {
 		this.pos.changeX(cX);
 		this.pos.changeY(cY);
 		this.pos.changeZ(cZ);
+	}
+	
+	public Creature getCopy() {
+		return new Creature(this);
 	}
 	
 	/**

@@ -47,13 +47,13 @@ public class Clothing extends Item {
 	 * server database, for anything else, use one of the other constructors
 	 * that has parameters.
 	 * 
-	 * @param tempDBREF
-	 * @param tempName
-	 * @param tempDesc
-	 * @param tempLoc
+	 * @param dbref
+	 * @param name
+	 * @param description
+	 * @param location
 	 */
-	public Clothing(int tempDBREF, String tempName, String tempDesc, int tempLoc) {
-		super(tempDBREF, tempName, EnumSet.noneOf(ObjectFlag.class), tempDesc, tempLoc);
+	public Clothing(int dbref, String name, EnumSet<ObjectFlag> flags, String description, int location) {
+		super(dbref, name, EnumSet.noneOf(ObjectFlag.class), description, location);
 		
 		this.type = TypeFlag.ITEM;
 		
@@ -62,11 +62,6 @@ public class Clothing extends Item {
 		this.equippable = true;
 		
 		this.weight = 0.0;                 // the weight of the clothing
-	}
-	
-	@Override
-	public String getName() {
-		return this.name;
 	}
 	
 	@Override

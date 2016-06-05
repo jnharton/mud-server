@@ -276,11 +276,6 @@ public class Spell
 	}
 
     @Override
-	public String toString() {
-		return this.name;
-	}
-
-    @Override
 	public boolean equals(Object obj) {
 		return obj instanceof Spell && ((Spell) obj).name.equals(name);
 	}

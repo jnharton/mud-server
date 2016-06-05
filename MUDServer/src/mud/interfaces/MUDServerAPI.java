@@ -1,4 +1,4 @@
-package mud.api;
+package mud.interfaces;
 
 /*
  * Copyright (c) 2013 Jeremy N. Harton
@@ -15,5 +15,10 @@ import java.util.List;
 import mud.objects.Player;
 
 public interface MUDServerAPI {
+	/**
+	 * Retrieve list of online/logged-in players only
+	 * 
+	 * @return
+	 */
 	public List<Player> getPlayers();
 }

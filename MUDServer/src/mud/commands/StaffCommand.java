@@ -2,7 +2,6 @@ package mud.commands;
 
 import mud.Command;
 import mud.Constants;
-import mud.MUDServer;
 import mud.net.Client;
 import mud.objects.Player;
 import mud.utils.Utils;
@@ -17,16 +16,22 @@ public class StaffCommand extends Command {
 		send("Staff", client);
 		send("----------------------------------------", client);
 		
+		String accessLevel = "";
+
 		for(final Player p : getPlayers()) {
 			final String playerName = Utils.padRight( Utils.truncate(p.getName(), 16), 16);
-
+			
+			boolean staff = true;
+			
 			switch(p.getAccess()) {
-			case Constants.SUPERUSER: send(playerName + "[SUPERUSER]", client); break;
-			case Constants.WIZARD:    send(playerName + "[WIZARD]", client); break;
-			case Constants.ADMIN:     send(playerName + "[ADMIN]", client); break;
-			case Constants.BUILD:     send(playerName + "[BUILD]", client); break;
-			default: break;
+			case Constants.SUPERUSER: accessLevel = "SUPERUSER"; break;
+			case Constants.WIZARD:    accessLevel = "WIZARD";    break;
+			case Constants.ADMIN:     accessLevel = "ADMIN";     break;
+			case Constants.BUILD:     accessLevel = "BUILD";     break;
+			default:                  staff = false;             break;
 			}
+
+			if( staff ) send(playerName + "[" + accessLevel + "]", client);
 		}
 	}
 

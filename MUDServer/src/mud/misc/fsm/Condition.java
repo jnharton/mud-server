@@ -29,23 +29,12 @@ final class Condition {
 		boolean result = false;
 		
 		switch(comparison) {
-		case GT:
-			if( value1 > value2 ) result = true;
-			break;
-		case LT:
-			if( value1 < value2 ) result = true;
-			break;
-		case EQ:
-			if( value1 == value2) result = true;
-			break;
-		case GE:
-			if( value1 >= value2 ) result = true;
-			break;
-		case LE:
-			if( value1 <= value2 ) result = true;
-			break;
-		default:
-			break;
+		case GT: if( value1 > value2 )  result = true; break;
+		case LT: if( value1 < value2 )  result = true; break;
+		case EQ: if( value1 == value2 ) result = true; break;
+		case GE: if( value1 >= value2 ) result = true; break;
+		case LE: if( value1 <= value2 ) result = true; break;
+		default: break;
 		}
 		
 		return result;

@@ -29,15 +29,22 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Random;
+import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.security.spec.KeySpec;
 
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
+
+import mud.Constants;
+import mud.colors.Palette;
+import mud.misc.Counter;
 
 /**
  * A class containing utilities useful across all the whole codebase
@@ -47,6 +54,37 @@ import javax.crypto.spec.PBEKeySpec;
  *
  */
 public final class Utils {
+	public static final Palette ANSI = new Palette("ansi", Constants.ANSI);
+	public static final Palette XTERM256 = new Palette("xterm256", Constants.XTERM);
+	
+	{
+		ANSI.addColor("black", 30);
+		ANSI.addColor("red", 31);
+		ANSI.addColor("green",  32);
+		ANSI.addColor("yellow", 33);
+		ANSI.addColor("blue", 34);
+		ANSI.addColor("magenta", 35);
+		ANSI.addColor("cyan", 36);
+		ANSI.addColor("white", 37);
+	}
+	
+	{
+		XTERM256.addColor("red", 9);
+		XTERM256.addColor("green", 10);
+		XTERM256.addColor("yellow", 11);
+		XTERM256.addColor("blue", 12);
+		XTERM256.addColor("magenta", 13);
+		XTERM256.addColor("cyan", 14);
+		XTERM256.addColor("white", 15);
+		XTERM256.addColor("purple", 55);
+		XTERM256.addColor("purple2", 92);
+		XTERM256.addColor("orange", 208);
+		XTERM256.addColor("other", 82);
+		XTERM256.addColor("pink", 161);
+		XTERM256.addColor("pink2", 163);
+		XTERM256.addColor("pink3", 212);
+	}
+	
 	/*
 	 * Hashing was written/implemented/? by joshgit
 	 */
@@ -136,6 +174,8 @@ public final class Utils {
 			output.close();
 		}
 		catch (FileNotFoundException fnfe) {
+			System.out.println("Error: file not found. (FileNotFoundException)");
+			System.out.println("--- Stack Trace ---");
 			fnfe.printStackTrace();
 		}
 	}
@@ -149,21 +189,28 @@ public final class Utils {
 	 * @return
 	 */
 	public static String[] loadStrings(final String filename) {
+		final File file;
+		final BufferedReader br;
+		
+		final List<String> output;
+		
+		String[] result = null;
+		
 		try {
-			final File file = new File(filename);
-			final BufferedReader br = new BufferedReader(new FileReader(file));
+			file = new File(filename);
+			br = new BufferedReader( new FileReader(file) );
 			
-			final ArrayList<String> output = new ArrayList<String>();
+			output = new ArrayList<String>();
 
 			String line;
 
-			while ((line = br.readLine()) != null) output.add(line);
+			while ((line = br.readLine()) != null) {
+				output.add(line);
+			}
 
 			br.close();
-
-			//output.trimToSize();
-
-			return output.toArray(new String[0]);
+			
+			result = output.toArray(new String[0]);
 		}
 		catch(final FileNotFoundException fnfe) {
 			System.out.println("Error: file not found. (FileNotFoundException)");
@@ -171,90 +218,13 @@ public final class Utils {
 			fnfe.printStackTrace();
 		}
 		catch(final IOException ioe) {
+			System.out.println("Error: problem reading file. (IOException)");
+			System.out.println("--- Stack Trace ---");
 			ioe.printStackTrace();
 		}
 
-		return null;
+		return result;
 	}
-	
-	public static List<String> loadStrings(final File file) {
-		if( file != null ) {
-			if( file.exists() && file.isFile() && file.canRead() ) {
-				try {
-					final BufferedReader br = new BufferedReader(new FileReader(file));
-					
-					final ArrayList<String> output = new ArrayList<String>();
-
-					String line;
-
-					while ((line = br.readLine()) != null) output.add(line);
-
-					br.close();
-
-					//output.trimToSize();
-
-					return output;
-				}
-				catch(IOException ioe) {
-					ioe.printStackTrace();
-				}
-			}
-		}
-		
-		return null;
-	}
-
-	// old
-	/**
-	 * Load Strings
-	 * 
-	 * Load strings from a file into a string array.
-	 * 
-	 * @param filename
-	 * @return
-	 */
-	/*public static String[] loadStrings(String filename) {
-		File file;
-		FileReader fReader;
-
-		try {
-			file = new File(filename); // open the specified file
-
-			if(!(file instanceof File)) {
-				throw new FileNotFoundException("Invalid File!");
-			}
-			else {
-				Scanner input;
-				ArrayList<String> output;
-
-				if(file.isFile() && file.canRead()) {
-					fReader = new FileReader(file);   // pass the file to the file reader
-
-					input = new Scanner( fReader );   // pass the file reader to the scanner
-					output = new ArrayList<String>(); // create the output arraylist
-
-					while(input.hasNextLine()) {
-						output.add(input.nextLine());
-					}
-
-					input.close();                    // close the scanner, and implicity the filereader and file
-
-					return (String[]) output.toArray( new String[ output.size() ] ); // return the new thing as an array
-				}
-			}
-		}
-		catch(FileNotFoundException fnfe) {
-			System.out.println( fnfe.getMessage() );
-			System.out.println("--- Stack Trace ---");
-			fnfe.printStackTrace();
-		}
-		catch(NullPointerException npe) {
-			System.out.println("--- Stack Trace ---");
-			npe.printStackTrace();
-		}
-
-		return new String[0]; // return an non-empty,non-full zero size String[]
-	}*/
 	
 	/**
 	 * Load the specified file into an array of bytes. If an exception is caught,
@@ -1038,6 +1008,78 @@ public final class Utils {
 		double max = r.maxMemory() / 1000000; // MB
 
 		return "Memory: " + in_use + " MB / " + max + " MB";
+	}
+	
+	public static Date getDate() {
+		// TODO should I get the timezone and local as separate variables first? should they use the default?
+		
+		//final Calendar calendar = Calendar.getInstance(tz, lc);
+		final Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("America/New_York"), new Locale("ENGLISH", "US"));
+		
+		int month = calendar.get(Calendar.MONTH);
+		int day = calendar.get(Calendar.DATE);
+		int year = calendar.get(Calendar.YEAR);
+				
+		return new Date(month, day, year);
+	}
+	
+	public static int countTokens(final String in) {
+		final Counter c = new Counter(0);
+		
+		final String[] test = in.split(" ");
+		
+		for(final String s : test) {
+			if( s.startsWith("%") ) {
+				c.increment();
+			}
+		}
+		
+		return c.getValue();
+	}
+	
+	/**
+	 * Takes an input string and generates a new one where each letter is
+	 * prefixed by the ansi code for the colors of the rainbows in order from
+	 * Red to Violet (ROYGBIV). The colors are repeated until we've run out of
+	 * the input string. The whole thing is then capped off with the white color
+	 * code as a sort of reset.
+	 * 
+	 * NOTE: since normal ansi colors don't cover the whole rainbow, a few have
+	 * been omitted
+	 */
+	public static String rainbow(final String input, final Palette palette) {
+		// red, orange, yellow, green, blue, indigo, violet
+		String[] rainbow = null;
+		String result = "";
+
+		if ( palette.getType() == Constants.ANSI ) {
+			rainbow = new String[] { "red", "yellow", "green", "blue" };
+		}
+		else if ( palette.getType() == Constants.XTERM) {
+			rainbow = new String[] { "red", "orange", "yellow", "green", "blue", "purple" };
+		}
+
+		if( rainbow != null ) {
+			final StringBuffer sb = new StringBuffer();
+
+			int index = 0;
+
+			for (final char c : input.toCharArray()) {
+				sb.append( palette.getColor(rainbow[index]) );
+				sb.append(c);
+				
+				index = (index + 1) % rainbow.length;
+			}
+
+			sb.append( palette.getColor("white") );
+
+			result = sb.toString();
+		}
+		else {
+			result = input;
+		}
+
+		return result;
 	}
 	
 	/*public static boolean getBoolean(final int value) {

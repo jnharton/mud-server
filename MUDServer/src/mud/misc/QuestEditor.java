@@ -1,12 +1,14 @@
-package mud.utils;
+package mud.misc;
 
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 
-import mud.misc.Editors;
 import mud.objects.Player;
 import mud.quest.Quest;
+import mud.utils.Editor;
+import mud.utils.EditorData;
+import mud.utils.Utils;
 
 public class QuestEditor implements Editor {
 	private Player player;

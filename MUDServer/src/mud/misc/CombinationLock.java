@@ -21,7 +21,6 @@ public class CombinationLock extends Lock {
 	
 	public CombinationLock(final int c1, final int c2, final int c3, int maxPos) {
 		this(new Combination(c1, c2, c3), maxPos);
-		this.combination = new Combination(c1, c2, c3);
 	}
 	
 	public CombinationLock(final Combination combo, int maxPos) {

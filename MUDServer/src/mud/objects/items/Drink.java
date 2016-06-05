@@ -5,6 +5,8 @@ import mud.interfaces.Stackable;
 import mud.objects.Item;
 
 public class Drink extends Item implements Drinkable, Stackable<Drink> {
+	private int sips = 1;
+	
 	private Drink drink = null;
 
 	public Drink(int tempDBREF) {
@@ -17,6 +19,18 @@ public class Drink extends Item implements Drinkable, Stackable<Drink> {
 		super(tempDBREF, name, description);
 		
 		this.drinkable = true;
+	}
+	
+	public void sip() {
+		this.sips--;
+	}
+	
+	public void tossdown() {
+		this.sips = 0;
+	}
+	
+	public boolean isEmpty() {
+		return this.sips == 0;
 	}
 
 	@Override
@@ -83,5 +97,9 @@ public class Drink extends Item implements Drinkable, Stackable<Drink> {
 		else {
 			return 1;
 		}
+	}
+	
+	public String toString() {
+		return ( stackSize() > 0 ) ? getName() + " (" + stackSize() + ")" : getName();
 	}
 }

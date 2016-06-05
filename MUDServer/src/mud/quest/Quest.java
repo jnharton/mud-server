@@ -3,7 +3,7 @@ package mud.quest;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import mud.misc.Colors;
+import mud.colors.Colors;
 import mud.misc.Zone;
 import mud.objects.Item;
 import mud.objects.Player;

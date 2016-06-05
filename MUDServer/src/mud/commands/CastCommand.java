@@ -6,7 +6,6 @@ import java.util.List;
 import mud.Command;
 import mud.Constants;
 import mud.MUDObject;
-import mud.MUDServer;
 import mud.magic.RangeData;
 import mud.magic.Reagent;
 import mud.magic.Spell;
@@ -133,7 +132,10 @@ public class CastCommand extends Command {
 					// if our target is a player set timers for us and tell them, otherwise don't bother
 					if(target instanceof Player) {
 						debug("Target is Player.");
-						addMessage(new Message(player, player.getName() + " cast " + spell.getName() + " on you." , (Player) target));
+						
+						Message msg = new Message(player, (Player) target, player.getName() + " cast " + spell.getName() + " on you.");
+						
+						addMessage(msg);
 					}
 				}
 			}

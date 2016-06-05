@@ -32,12 +32,13 @@ import mud.objects.Player;
  */
 public class BulletinBoard {
 	private String name;        // the name of the board
-	public String shortname;    // a shorter name for the board?
+	private String shortname;   // a shorter name for the board?
 	private String filename;    // the filename we'll save this board's messages to
 	private Integer lastId = 0; // the id of the last message written to this board
 	
 	private ArrayList<BBEntry> entries;
 	
+	// TODO does this make sense?
 	private Player owner;
 
 	public BulletinBoard(final String name) {
@@ -58,6 +59,14 @@ public class BulletinBoard {
 	
 	public void setName(final String newName) {
 		this.name = newName;
+	}
+	
+	public String getShortName() {
+		return this.shortname;
+	}
+	
+	public void setShortName(final String newShortName) {
+		this.shortname = newShortName;
 	}
 	
 	public String getFilename() {

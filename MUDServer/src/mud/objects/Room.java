@@ -5,9 +5,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import mud.ObjectFlag;
 import mud.MUDObject;
@@ -47,44 +47,42 @@ public class Room extends MUDObject implements EventSource, Instance
 	//public static final String NIGHT = "NIGHT";
 	
 	// NOTE: for room, location and "parent" are the same
-
-	private RoomType roomType = RoomType.NONE;                // the type of room (I = Inside, O = Outside, P = Protected, N = None)
-	private Terrain terrain = Terrain.NONE;                   // terrain type of the room (affects movement speed?)
+	private RoomType roomType = RoomType.NONE;              // the type of room (I = Inside, O = Outside, P = Protected, N = None)
+	private Terrain terrain = Terrain.NONE;                 // terrain type of the room (affects movement speed?)
 	
-	private int x = 10, y = 10; // size of the room ( 10x10 default )
-	private int z = 10;         // height of room ( 10 default )
+	// x, y - size of the room ( 10x10 default )
+	// z - height of room ( 10 default )
+	private int x = 10, y = 10;
+	private int z = 10;
 	
-	private Zone zone = null;                                 // the zone this room belongs to
+	private transient Zone zone = null;                     // the zone this room belongs to
 	
-	private ArrayList<Exit> exits = new ArrayList<Exit>();    // the exits leading away from the room
-	private String exitNames;                                 // formatted string containing the usable exit names
+	private transient List<Exit> exits;                     // the exits leading away from the room
+	private transient String exitNames;                     // formatted string containing the usable exit names
+	
+	private transient List<Thing> things;                   // the objects the room contains (things)
+	private transient List<Item> items;                     // the objects the room contains (items)
 
-	private ArrayList<Thing> things = new ArrayList<Thing>(); // the objects the room contains (things)
-	private ArrayList<Item> items = new ArrayList<Item>();    // the objects the room contains (items)
-
-	public String music;                                      // the ambient background music for this room (filename, probably a wav file)
-	//public String timeOfDay = DAY;                            // replace this with an enum with one type per each or a hashmap string, boolean?
+	public String music;                                    // the ambient background music for this room (filename, probably a wav file)
+	//public String timeOfDay = DAY;                        // replace this with an enum with one type per each or a hashmap string, boolean?
 	// DAY or NIGHT
 	
-	private Weather weather;                                  // the weather in this room
+	private Weather weather;                                // the weather in this room
 	
-	// Transient?
-	private Integer instance_id = -1;                         // instance_id
+	private Integer instance_id = -1;                       // instance_id (transient?)
 	
-	public char[] tiles;
+	public transient char[] tiles;
 	
-	private ArrayList<Player> listeners;                                            // Player(s) in the Room listening to what is being said
-	private List<SayEventListener> _listeners = new ArrayList<SayEventListener>();  // Other things listening to say events? 
+	private transient List<Player> listeners;               // Player(s) in the Room listening to what is being said
+	private transient List<SayEventListener> _listeners;    // Other things listening to say events? 
 
-	private HashMap<TriggerType, List<Trigger>> triggers = new HashMap<TriggerType, List<Trigger>>();
+	private transient Map<TriggerType, List<Trigger>> triggers; //
 	
-	// initialize trigger lists and some basic triggers
-	{
-		triggers.put(TriggerType.onEnter, new LinkedList<Trigger>());
-		triggers.put(TriggerType.onLeave, new LinkedList<Trigger>());
-		//setTrigger(TriggerType.onEnter, new Trigger("{tell:TRIGGER: enter,{&player}}"));
-		//setTrigger(TriggerType.onLeave, new Trigger("{tell:TRIGGER: leave,{&player}}"));
-	}
+	// initialize trigger lists
+	/*{
+		this.triggers.put(TriggerType.onEnter, new LinkedList<Trigger>());
+		this.triggers.put(TriggerType.onLeave, new LinkedList<Trigger>());
+	}*/
 	
 	private Exit[] dirMap = new Exit[9]; // dirMap[Direction.NORTH]
 	
@@ -96,17 +94,27 @@ public class Room extends MUDObject implements EventSource, Instance
 	public Room() {
 		super(-1);
 		
-		this.type = TypeFlag.ROOM;
-		
 		this.name = "room";
 		this.desc = "You see nothing.";
 		this.flags = EnumSet.of(ObjectFlag.SILENT);
-		this.location = 0; // Set the location
+		this.location = 0;
+		
+		this.type = TypeFlag.ROOM;
+		
+		this.exits = new ArrayList<Exit>();
 		
 		this.tiles = new char[x * y];
 		Arrays.fill(tiles, 'X');
 		
+		this.items = new ArrayList<Item>();
+		this.things = new ArrayList<Thing>();
+		
 		this.listeners = new ArrayList<Player>();
+		this._listeners = new ArrayList<SayEventListener>();
+		
+		this.triggers = new HashMap<TriggerType, List<Trigger>>();
+		this.triggers.put(TriggerType.onEnter, new LinkedList<Trigger>());
+		this.triggers.put(TriggerType.onLeave, new LinkedList<Trigger>());
 	}
 	
 	/**
@@ -114,22 +122,31 @@ public class Room extends MUDObject implements EventSource, Instance
 	 * 
 	 * @param toCopy
 	 */
-	public Room(Room toCopy)
+	public Room(final Room toCopy)
 	{
 		super(toCopy.getDBRef());
 		
 		this.name = toCopy.getName();         // Set the name
 		this.desc = toCopy.getDesc();         // Set the description to the default
+		this.flags = toCopy.getFlags();       // Set the flags
+		this.location = toCopy.getLocation(); // Set the location
 		
 		this.type = TypeFlag.ROOM;
 		
-		this.flags = toCopy.getFlags();       // Set the flags
-		this.location = toCopy.getLocation(); // Set the location
+		this.exits = new ArrayList<Exit>();
 		
 		this.tiles = new char[x * y];
 		Arrays.fill(tiles, 'X');
 		
+		this.items = new ArrayList<Item>();
+		this.things = new ArrayList<Thing>();
+		
 		this.listeners = new ArrayList<Player>();
+		this._listeners = new ArrayList<SayEventListener>();
+		
+		this.triggers = new HashMap<TriggerType, List<Trigger>>();
+		this.triggers.put(TriggerType.onEnter, new LinkedList<Trigger>());
+		this.triggers.put(TriggerType.onLeave, new LinkedList<Trigger>());
 	}
 	
 	/**
@@ -144,20 +161,28 @@ public class Room extends MUDObject implements EventSource, Instance
 	public Room(int tempDBREF, String tempName, final EnumSet<ObjectFlag> tempFlags, String tempDesc, int tempLocation)
 	{
 		super(tempDBREF);
-		//this.dbref = tempDBREF;                                    // Set the dbref (database reference)
 		
-		this.name = tempName;                                        // Set the name
-		this.desc = tempDesc;                                        // Set the description
+		this.name = tempName;         // Set the name
+		this.desc = tempDesc;         // Set the description
+		this.flags = tempFlags;       // Set room flags
+		this.location = tempLocation; // Set the location
 		
 		this.type = TypeFlag.ROOM;
 		
-		this.flags = tempFlags;                                      // Set room flags
-		this.location = tempLocation;                                // Set the location
+		this.exits = new ArrayList<Exit>();
 		
 		this.tiles = new char[x * y];
 		Arrays.fill(tiles, 'X');
 		
+		this.items = new ArrayList<Item>();
+		this.things = new ArrayList<Thing>();
+		
 		this.listeners = new ArrayList<Player>();
+		this._listeners = new ArrayList<SayEventListener>();
+		
+		this.triggers = new HashMap<TriggerType, List<Trigger>>();
+		this.triggers.put(TriggerType.onEnter, new LinkedList<Trigger>());
+		this.triggers.put(TriggerType.onLeave, new LinkedList<Trigger>());
 	}
 
 	/**
@@ -195,13 +220,13 @@ public class Room extends MUDObject implements EventSource, Instance
 	public RoomType getRoomType() {
 		return this.roomType;
 	}
-
-	public void setWeather(Weather weather) {
-		this.weather = weather;
-	}
-
+	
 	public Weather getWeather() {
 		return this.weather;
+	}
+	
+	public void setWeather(Weather weather) {
+		this.weather = weather;
 	}
 	
 	public Exit getExit(final Direction dir) {
@@ -297,7 +322,7 @@ public class Room extends MUDObject implements EventSource, Instance
 		this.z = zSize;
 	}
 
-	public ArrayList<Player> getListeners() {
+	public List<Player> getListeners() {
 		return this.listeners;
 	}
 

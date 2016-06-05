@@ -95,6 +95,8 @@ public class Log {
 		int hour = cal.get(Calendar.HOUR);
 		int minute = cal.get(Calendar.MINUTE);
 		
+		getTimeString('-');
+		
 		final String date = (month + 1) + "-" + day + "-" + year;
 		final String time = hour + "-" + minute;
 		
@@ -171,7 +173,7 @@ public class Log {
 		if ( this.isOpen ) {
 			if ( !this.isFull ) {
 				final String timeString = getTimeString();
-				final String logString = timeString + " " + message;
+				final String logString = "[" + timeString + "] " + message;
 
 				logString.trim();
 
@@ -244,13 +246,17 @@ public class Log {
 		}
 	}
 	
+	private String getTimeString() {
+		return getTimeString(':');
+	}
+	
 	/**
 	 * Get a Calendar instance for the purposes of checking the time, so that log entries
 	 * can be timestamped. This gets the current time and generates a string.
 	 * 
 	 * @return
 	 */
-	private String getTimeString() {
+	private String getTimeString(final char sep) {
 		final TimeZone tz = TimeZone.getTimeZone("America/New_York");
 		final Locale lc =new Locale("ENGLISH", "US");
 		
@@ -271,6 +277,6 @@ public class Log {
 		if (s < 10) second = "0" + s;
 		else        second = "" + s;
 		
-		return "[" + hour + ":" + minute + ":" + second + "]";
+		return hour + sep + minute + sep + second ;
 	}
 }

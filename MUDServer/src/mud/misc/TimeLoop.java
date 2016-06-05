@@ -5,6 +5,7 @@ import mud.utils.Date;
 import mud.utils.Message;
 import mud.utils.Time;
 import mud.utils.Utils;
+import mud.utils.Message.MessageType;
 
 /*
  * Copyright (c) 2012 Jeremy N. Harton
@@ -128,35 +129,35 @@ public class TimeLoop implements Runnable
 
 		// TODO deal with redundancy, set time of day sends a regular server messages, but then we send a debug version..
 		if (this.hour == 0) {
-			setTimeOfDay(TimeOfDay.MIDNIGHT, new Message("It is now midnight.", 0));
+			setTimeOfDay(TimeOfDay.MIDNIGHT, new Message("It is now midnight.", MessageType.BROADCAST));
 			server.debug("It is now midnight.");
 		}
 		else if (this.hour == 5) {
-			setTimeOfDay(TimeOfDay.BEFORE_DAWN, new Message("It is now just before dawn.", 0));
+			setTimeOfDay(TimeOfDay.BEFORE_DAWN, new Message("It is now just before dawn.", MessageType.BROADCAST));
 			server.debug("It is now just before dawn.");
 		}
 		else if (this.hour == 6) {
-			setTimeOfDay(TimeOfDay.DAWN, new Message("It is now dawn.", 0));
+			setTimeOfDay(TimeOfDay.DAWN, new Message("It is now dawn.", MessageType.BROADCAST));
 			server.debug("It is now dawn.");
 		}
 		else if (this.hour == 7) {
-			setTimeOfDay(TimeOfDay.MORNING, new Message("It is now morning.", 0));
+			setTimeOfDay(TimeOfDay.MORNING, new Message("It is now morning.", MessageType.BROADCAST));
 			server.debug("It is now morning.");
 		}
 		else if (this.hour == 12) {
-			setTimeOfDay(TimeOfDay.MIDDAY, new Message("It is now midday.", 0));
+			setTimeOfDay(TimeOfDay.MIDDAY, new Message("It is now midday.", MessageType.BROADCAST));
 			server.debug("It is now midday.");
 		}
 		else if (this.hour == 13) {
-			setTimeOfDay(TimeOfDay.AFTERNOON, new Message("It is now afternoon.", 0));
+			setTimeOfDay(TimeOfDay.AFTERNOON, new Message("It is now afternoon.", MessageType.BROADCAST));
 			server.debug("It is now afternoon.");
 		}
 		else if (this.hour == 18) {
-			setTimeOfDay(TimeOfDay.DUSK, new Message("It is now dusk.", 0));
+			setTimeOfDay(TimeOfDay.DUSK, new Message("It is now dusk.", MessageType.BROADCAST));
 			server.debug("It is now dusk.");
 		}
 		else if (this.hour == 19) {
-			setTimeOfDay(TimeOfDay.NIGHT, new Message("It is now night.", 0));
+			setTimeOfDay(TimeOfDay.NIGHT, new Message("It is now night.", MessageType.BROADCAST));
 			server.debug("It is now night.");
 		}
 

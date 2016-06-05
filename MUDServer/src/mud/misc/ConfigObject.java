@@ -1,4 +1,4 @@
-package mud.utils;
+package mud.misc;
 
 /**
  * A class representing storage of configuration data

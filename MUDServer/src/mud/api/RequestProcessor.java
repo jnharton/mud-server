@@ -13,6 +13,7 @@ package mud.api;
 import java.util.List;
 import java.util.LinkedList;
 
+import mud.interfaces.MUDServerAPI;
 import mud.objects.Player;
 
 public class RequestProcessor implements Runnable {
@@ -64,7 +65,7 @@ public class RequestProcessor implements Runnable {
 			if(request.getParam().equals("who")) {
 				final List<String> responseData = new LinkedList<String>();
 				
-				for( Player p : msa.getPlayers()) {
+				for(final Player p : msa.getPlayers()) {
 					responseData.add("P(" + p.getName() + "," + p.getPClass().getAbrv() + "," + p.getLevel() + ")"); 
 				}
 				

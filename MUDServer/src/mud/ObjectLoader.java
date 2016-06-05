@@ -18,6 +18,8 @@ import mud.interfaces.GameModule;
 import mud.magic.Spell;
 import mud.misc.Coins;
 import mud.misc.Effect;
+import mud.misc.InvalidItemTypeException;
+import mud.misc.InvalidThingTypeException;
 import mud.misc.SlotType;
 import mud.misc.SlotTypes;
 import mud.misc.Zone;
@@ -76,6 +78,7 @@ public class ObjectLoader {
 				logger.debug("");
 
 				objectDB.add(no);
+				
 				continue;
 			}
 
@@ -125,17 +128,17 @@ public class ObjectLoader {
 					objectDB.add(cre);
 					objectDB.addCreature(cre);
 				}
-				
 				else if (oTypeFlag == 'P') {
+					// Player
 					Player player = loadPlayer(oInfo);
-
-					// log.debug("log.debug (db entry): " + player.toDB(), 2);
+					
+					logger.debug("log.debug (db entry): " + player.toDB(), 2);
 
 					objectDB.add(player);
 					objectDB.addPlayer(player);
 				}
-				
 				else if (oFlags.equals("IKV")) {
+					// NPC - Innkeeper
 					Innkeeper ik = new Innkeeper(oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), oDesc, "Merchant",
 							"VEN", oLocation, Coins.fromArray(new int[] { 1000, 1000, 1000, 1000 }));
 
@@ -149,12 +152,14 @@ public class ObjectLoader {
 				// Exit(String tempName, String tempFlags, String tempDesc, int
 				// tempLoc, int tempDBREF, int tempDestination)
 				else if (oTypeFlag == 'E') {
+					// Exit
 					//String oDest = attr[5];
 					int eType = Integer.parseInt(attr[6]);
 
 					ExitType et = ExitType.values()[eType];
 
 					if (et == ExitType.STD) {
+						// Standard
 						int oDest = Integer.parseInt(attr[5]);
 						
 						// [A]bsolutely [E]verything/[Leave];ae/leave
@@ -180,6 +185,7 @@ public class ObjectLoader {
 						objectDB.addExit(exit);
 					}
 					else if (et == ExitType.DOOR) {
+						// Door
 						int oDest = Integer.parseInt(attr[5]);
 						
 						int lockState = Utils.toInt(attr[7], 0); //valid lock states are: 0, 1
@@ -235,15 +241,15 @@ public class ObjectLoader {
 						objectDB.addExit(door);
 					}
 					else if (et == ExitType.PORTAL) {
+						// Portal
 						Portal portal;
 
 						int pType = Utils.toInt(attr[7], -1);
 						PortalType oPortalType = PortalType.values()[pType];
 
 						// here we assume a typed but unkeyed portal
-						// public Portal(PortalType pType, int pOrigin, int[]
-						// pDestinations)
-						if (oPortalType == PortalType.STD) { // Standard Portal
+						if (oPortalType == PortalType.STD) {
+							// Standard
 							int oDestination = Integer.parseInt(attr[5]);
 
 							portal = new Portal(PortalType.STD, oLocation, oDestination);
@@ -253,16 +259,16 @@ public class ObjectLoader {
 
 							portal.name = attr[1]; // name
 							portal.setPosition(0, 0); // set x and y coordinate of position
-
-							logger.debug("log.debug (db entry): " + portal.toDB(), 2);
-
+							
 							portal.setKey("test");
+							
+							logger.debug("log.debug (db entry): " + portal.toDB(), 2);
 							
 							objectDB.add(portal);
 							objectDB.addExit(portal);
 						}
-						else if (oPortalType == PortalType.RANDOM) { // Random
-							// Portal
+						else if (oPortalType == PortalType.RANDOM) {
+							// Random
 							int[] oDestinations = Utils.stringsToInts(attr[5].split(","));
 
 							portal = new Portal(PortalType.RANDOM, oLocation, oDestinations);
@@ -288,10 +294,8 @@ public class ObjectLoader {
 						logger.debug("log.debug (error): Problem with object #" + oDBRef, 2);
 					}
 				}
-				
-				// NPC(int tempDBRef, String tempName, String tempDesc, int
-				// tempLoc, String tempTitle)
 				else if (oTypeFlag == 'N') {
+					// NPC
 					if (oFlags.contains("M")) {
 						Merchant merchant = new Merchant(oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), "A merchant.",
 								"Merchant", "VEN", oLocation, Coins.fromArray(new int[] { 1000, 1000, 1000, 1000 }));
@@ -318,17 +322,13 @@ public class ObjectLoader {
 						objectDB.addNPC(npc);
 					}
 				}
-				
-				// Room(String tempName, String tempFlags, String tempDesc, int
-				// tempParent, int tempDBREF)
 				else if (oTypeFlag == 'R') {
+					// Room
 					String roomType = attr[5];
 					int[] dimensions = Utils.stringsToInts(attr[6].split(","));
 					int zoneId = Utils.toInt(attr[8], -1);
 
 					final Room room = new Room(oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), oDesc, oLocation);
-
-					logger.debug("log.debug (db entry): " + room.toDB(), 2);
 
 					room.setRoomType(RoomType.fromLetter(roomType.charAt(0)));
 
@@ -337,11 +337,9 @@ public class ObjectLoader {
 
 					// set zone
 					if (zoneId != -1) {
-						System.out.println("Zone ID: " + zoneId);
+						logger.debug("Zone ID: " + zoneId);
 
 						final Zone zone = parent.getZone(zoneId);
-
-						System.out.println("Zone is NULL: " + (zone == null));
 						
 						if( zone != null ) {
 							room.setZone(zone);
@@ -350,46 +348,48 @@ public class ObjectLoader {
 							//room.setZone(parent.getZone(zoneId));
 							//parent.getZone(zoneId).addRoom(room);
 						}
+						
+						logger.debug((zone == null) ? "Zone is NULL." : "Zone in NOT NULL.");
 					}
 
 					if (room.getRoomType().equals(RoomType.OUTSIDE)) {
 						room.getProperties().put("sky", "The sky is clear and flecked with stars.");
 					}
+					
+					logger.debug("log.debug (db entry): " + room.toDB(), 2);
 
 					objectDB.add(room);
 					objectDB.addRoom(room);
 				}
-				
-				// Thing(String tempName, String tempFlags, String tempDesc, int
-				// tempLoc, int tempDBREF)
-				// Thing(s)
 				else if (oTypeFlag == 'T') {
-					int tType = Utils.toInt(attr[5], 0); // find a type, else
-					// TYPE 0 (NONE)
-					ThingType tt = ThingType.values()[tType];
-
-					final Thing thing;
-
-					if (tt == ThingType.CONTAINER) {
-						thing = new Box(oDBRef, oName, oDesc, oLocation);
-					} else {
-						thing = new Thing(oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), oDesc, oLocation);
+					// Thing
+					try {
+						final Thing thing = loadThing(oInfo);
+						
+						logger.debug("log.debug (db entry): " + thing.toDB(), 2);
+						
+						objectDB.add(thing);
+						objectDB.addThing(thing);
 					}
-
-					logger.debug("log.debug (db entry): " + thing.toDB(), 2);
-
-					objectDB.add(thing);
-					objectDB.addThing(thing);
+					catch (final InvalidThingTypeException itte) {
+						itte.printStackTrace();
+						logger.debug("log.debug (error): " + itte.getMessage());
+					}
 				}
-				
-				// Item(s)
 				else if (oTypeFlag == 'I') {
-					final Item item = loadItem(oInfo);
-
-					objectDB.add(item);
-					objectDB.addItem(item);
-
-					logger.debug("log.debug (db entry): " + item.toDB(), 2);
+					// Item
+					try {
+						final Item item = loadItem(oInfo);
+						
+						logger.debug("log.debug (db entry): " + item.toDB(), 2);
+						
+						objectDB.add(item);
+						objectDB.addItem(item);
+					}
+					catch(final InvalidItemTypeException iite) {
+						iite.printStackTrace();
+						logger.debug("log.debug (error): " + iite.getMessage());
+					}
 				}
 				else if (oTypeFlag == 'Z') { // Zone
 					// not sure about this bit, for some reason I made 'Z' a
@@ -414,10 +414,10 @@ public class ObjectLoader {
 				
 				else if ( oName.equals("null") ) {
 					NullObject Null = new NullObject(oDBRef);
-
-					objectDB.add(Null);
-
+					
 					logger.debug("log.debug (db entry): " + Null.toDB() + " [Found NULLObject]", 2);
+					
+					objectDB.add(Null);
 				}
 			}
 			catch (ConcurrentModificationException cme)   { cme.printStackTrace();    }
@@ -462,14 +462,13 @@ public class ObjectLoader {
 		// 9 - player race number (enum ordinal)
 		// 10 - player class number (enum ordinal)
 		// 11 - player status
-		// 12 - player state (ALIVE/DEAD/INCAPACITATED/etc)
 
 		Integer oDBRef = Utils.toInt(attr[0], -1);
 		String oName = attr[1];
 		char oTypeFlag = attr[2].charAt(0);
 		String oFlags = attr[2].substring(1, attr[2].length());
 		String oDesc = attr[3];
-		Integer oLocation = Utils.toInt(attr[4], Constants.WELCOME_ROOM);
+		Integer oLocation = Utils.toInt(attr[4], Constants.VOID);
 
 		/*
 		 * debug("Database Reference Number: " + oDBRef); debug("Name: " +
@@ -503,14 +502,6 @@ public class ObjectLoader {
 
 		/* Set Status */
 		player.setStatus(attr[11]);
-
-		/* Set Player State */
-		int state = Utils.toInt(attr[12], -1);
-		player.setState(Player.State.values()[state]);
-
-		/**/
-		// player_status = Utils.toInt(attr[13], -1);
-		// player.setPStatus(Player.Status.values()[player_status]);
 		
 		// mark ownership
 		player.setOwner( player );
@@ -571,12 +562,15 @@ public class ObjectLoader {
 		npc.setAccess(Constants.USER);
 
 		// Set NPC Race
+		//raceNum = Utils.toInt(attr[9], alt);
+		
+		// TODO resolve issue
 		try {
 			raceNum = Integer.parseInt(attr[9]);
 			//npc.setRace(Races.getRace(raceNum));
 			npc.setRace(parent.getRace(raceNum));
 		}
-		catch (NumberFormatException nfe) {
+		catch (final NumberFormatException nfe) {
 			nfe.printStackTrace();
 			npc.setRace(Races.NONE);
 		}
@@ -586,7 +580,7 @@ public class ObjectLoader {
 			classNum = Integer.parseInt(attr[10]);
 			npc.setPClass(Classes.getClass(classNum));
 		}
-		catch (NumberFormatException nfe) {
+		catch (final NumberFormatException nfe) {
 			nfe.printStackTrace();
 			npc.setPClass(Classes.NONE);
 		}
@@ -599,7 +593,7 @@ public class ObjectLoader {
 		return npc;
 	}
 
-	final private Item loadItem(final String itemData) {
+	final private Item loadItem(final String itemData) throws InvalidItemTypeException {
 		String[] attr = itemData.split("#");
 		
 		System.out.println("");
@@ -608,53 +602,45 @@ public class ObjectLoader {
 		
 		Integer oDBRef = Integer.parseInt(attr[0]);
 		String oName = attr[1];
-		char oTypeFlag = attr[2].charAt(0);
+		Character oTypeFlag = attr[2].charAt(0);
 		String oFlags = attr[2].substring(1, attr[2].length());
 		String oDesc = attr[3];
 		Integer oLocation = Integer.parseInt(attr[4]);
 		
+		EnumSet<ObjectFlag> flags = ObjectFlag.getFlagsFromString(oFlags);
+		
 		int itemType  = Utils.toInt(attr[5], 0); // get the type of item it should be
 		int slotType  = Utils.toInt(attr[6], 0);
 		
-		// TODO fix getting an item type in the loader to use module/etc item types as well
-		//ItemType it = ItemTypes.getType(itemType);
-		
 		final ItemType it = getItemType(itemType);
 		final SlotType st = getSlotType(slotType);
-
-		/*ItemType itemType = ItemTypes.getType(typeId);
-
-		// if it's not a default item type, try the game module's set of item types
-		if( itemType == null ) {
-			for(final ItemType it : parent.getGameModule().getItemTypes().values()) {
-				if( it.getId() == typeId ) {
-					itemType = it;
-					break;
-				}
-			}
-		}
-
-		return itemType;*/
 		
 		System.out.println("ItemType ID: " + itemType);
 		System.out.println("SlotType ID: " + slotType);
 		
-		if( it.getId() >= 16 || it == null ) {
-			final Item item = parent.getGameModule().loadItem(itemData);
-			
-			System.out.println("Item DBRef: " + item.getDBRef());
+		if( it != null ) {
+			System.out.println("ItemType: " + it.getName());
 			System.out.println("");
-			
-			return item;
 		}
+		else throw new InvalidItemTypeException("No such ItemType (" + itemType + ")");
 		
 		if( st != null ) {
 			System.out.println("SlotType: " + st.getName());
 			System.out.println("");
 		}
+		
+		// module level itemtype handling...
+		if( it.getId() >= 16 ) {
+			final Item item = parent.getGameModule().loadItem(itemData);
+
+			System.out.println("Item DBRef: " + item.getDBRef());
+			System.out.println("");
+
+			return item;
+		}
 
 		if (it == ItemTypes.CLOTHING) { // Clothing
-			final Clothing clothing = new Clothing(oDBRef, oName, oDesc, oLocation);
+			final Clothing clothing = new Clothing(oDBRef, oName, flags, oDesc, oLocation);
 			
 			clothing.setSlotType(st);
 
@@ -666,17 +652,17 @@ public class ObjectLoader {
 
 			Spell spell = parent.getSpell(spellName);
 
-			final Wand wand = new Wand(oName, oDesc, oLocation, oDBRef, ItemTypes.getType(itemType), charges, spell);
+			final Wand wand = new Wand(oDBRef, oName, oDesc, flags, oLocation, ItemTypes.getType(itemType), charges, spell);
 			
 			wand.setSlotType(st);
 			
 			return wand;
 		}
 		else if (it == ItemTypes.WEAPON) { // Weapon Merchant
-			int weaponType = Integer.parseInt(attr[7]);
+			//int weaponType = Integer.parseInt(attr[7]);
 			int mod = Integer.parseInt(attr[8]);
 
-			final Weapon weapon = new Weapon(oDBRef, oName, oDesc, oLocation, WeaponTypes.getWeaponType(weaponType));
+			final Weapon weapon = new Weapon(oDBRef, oName, flags, oDesc, oLocation);
 			
 			weapon.setSlotType(st);
 			
@@ -688,14 +674,15 @@ public class ObjectLoader {
 			int armorType = Integer.parseInt(attr[7]);
 			int mod = Integer.parseInt(attr[8]);
 
-			final Armor armor = new Armor(oName, oDesc, (int) oLocation, (int) oDBRef, mod, ArmorType.values()[armorType]);
+			final Armor armor = new Armor(oDBRef, oName, flags, oDesc, oLocation, ArmorType.values()[armorType]);
 			
 			armor.setSlotType(st);
+			armor.setMod(mod);
 			
 			return armor;
 		}
 		else if (it == ItemTypes.ARROW) { // Arrow
-			final Arrow arrow = new Arrow(oDBRef, oName, oDesc, oLocation);
+			final Arrow arrow = new Arrow(oDBRef, oName, flags, oDesc, oLocation);
 			
 			return arrow;
 		}
@@ -703,8 +690,9 @@ public class ObjectLoader {
 			String author = attr[7];
 			String title = attr[8];
 			int pages = Integer.parseInt(attr[9]);
-
-			final Book book = new Book(oName, oDesc, oLocation, oDBRef);
+			
+			// TODO improve persistence issues
+			final Book book = new Book(oDBRef, oName, flags, oDesc, oLocation);
 
 			book.setAuthor(author);
 			book.setTitle(title);
@@ -715,7 +703,7 @@ public class ObjectLoader {
 		else if (it == ItemTypes.CONTAINER) { // Container
 			int size = Utils.toInt(attr[7], Container.DEFAULT_SIZE);
 			
-			final Container container = new Container(oDBRef, oName, EnumSet.noneOf(ObjectFlag.class), oDesc, oLocation, size);
+			final Container container = new Container(oDBRef, oName, flags, oDesc, oLocation, size);
 			
 			return container;
 		}
@@ -723,15 +711,19 @@ public class ObjectLoader {
 			int stack_size = Integer.parseInt(attr[7]);
 			String sn = attr[8];
 			
+			// TODO loading and storing spell and effect info?
+			
 			/*
 			 * whatever I do here needs to recreate the entirety of
 			 * a stack of potions correctly
 			 */
 			
-			final Potion potion = new Potion(oDBRef, oName, EnumSet.noneOf(ObjectFlag.class), oDesc, oLocation, sn);
+			// TODO this is wonky and doesn't handle one dbref/item...
+			
+			final Potion potion = new Potion(oDBRef, oName, flags, oDesc, oLocation);
 
 			for (int i = 1; i < stack_size; i++) {
-				Potion potion1 = new Potion(oDBRef, oName, EnumSet.noneOf(ObjectFlag.class), oDesc, oLocation, sn);
+				Potion potion1 = new Potion(oDBRef, oName, flags, oDesc, oLocation);
 
 				potion.stack(potion1);
 			}
@@ -739,10 +731,10 @@ public class ObjectLoader {
 			return potion;
 		}
 		else if (it == ItemTypes.SHIELD) { // Armor Merchant
-			int shieldType = Integer.parseInt(attr[7]);
-			int mod = Integer.parseInt(attr[8]);
+			int shieldType = Utils.toInt(attr[7], 0); //Integer.parseInt(attr[7]);
+			int mod = Utils.toInt(attr[8], 0); //Integer.parseInt(attr[8]);
 
-			Shield shield = new Shield(oName, oDesc, oLocation, oDBRef, mod, it, ShieldType.values()[shieldType]);
+			Shield shield = new Shield(oDBRef, oName, flags, oDesc, oLocation, it, ShieldType.values()[shieldType], mod);
 			
 			return shield;
 		}
@@ -750,7 +742,7 @@ public class ObjectLoader {
 			//Item ring = new Item(oDBRef, oName, null, oDesc, oLocation);
 			//final Item ring = new Item(oDBRef, oName, EnumSet.noneOf(ObjectFlag.class), oDesc, oLocation);
 			
-			final Jewelry ring = new Jewelry(oDBRef, oName, EnumSet.noneOf(ObjectFlag.class), oDesc, oLocation);
+			final Jewelry ring = new Jewelry(oDBRef, oName, flags, oDesc, oLocation);
 			
 			//int effect = Integer.parseInt(attr[]);
 			
@@ -762,13 +754,58 @@ public class ObjectLoader {
 			
 			return ring;
 		}
+		else throw new InvalidItemTypeException("No such ItemType (" + itemType + ")");
+	}
+	
+	private final Thing loadThing(final String itemData) throws InvalidThingTypeException {
+		String[] attr = itemData.split("#");
+		
+		System.out.println("");
+		System.out.println("debug(itemData): " + itemData);
+		System.out.println("");
+		
+		Integer oDBRef = Integer.parseInt(attr[0]);
+		String oName = attr[1];
+		Character oTypeFlag = attr[2].charAt(0);
+		String oFlags = attr[2].substring(1, attr[2].length());
+		String oDesc = attr[3];
+		Integer oLocation = Integer.parseInt(attr[4]);
+		
+		EnumSet<ObjectFlag> flags = ObjectFlag.getFlagsFromString(oFlags);
+		
+		// -----
+		
+		int thingType = Utils.toInt(attr[5], 0); // find a type, else
+		
+		final ThingType tt = getThingType(thingType);
+		
+		System.out.println("ThingType ID: " + thingType);
+		
+		if( tt != null ) {
+			System.out.println("ItemType: " + tt.getName());
+			System.out.println("");
+		}
+		else throw new InvalidThingTypeException("No such ThingType ( " + thingType + ")");
+
+		// module level thingtype handling...
+		if( tt.getId() >= 16 ) {
+			final Thing thing = parent.getGameModule().loadThing(itemData);
+			
+			System.out.println("Thing DBRef: " + thing.getDBRef());
+			System.out.println("");
+			
+			return thing;
+		}
+
+		else if (tt == ThingTypes.CONTAINER) {
+			final Box box = new Box(oDBRef, oName, flags, oDesc, oLocation);
+			
+			return box;
+		}
 		else {
-			// TODO resolve issue of loading item types not listed in here (3-20-2015)
-			//Item item = new Item(oDBRef, oName, null, oDesc, oLocation);
+			final Thing thing = new Thing(oDBRef, oName, flags, oDesc, oLocation);
 			
-			final Item item = new Item(oDBRef, oName, EnumSet.noneOf(ObjectFlag.class), oDesc, oLocation);
-			
-			return item;
+			return thing;
 		}
 	}
 	
@@ -796,7 +833,7 @@ public class ObjectLoader {
 
 		file = new File(bookFile);
 
-		strings = Utils.loadStrings(file);
+		strings = Arrays.asList( Utils.loadStrings(bookFile) );
 
 		for(final String s : strings) {
 			if( s.equals("") ) {
@@ -855,22 +892,39 @@ public class ObjectLoader {
 	private ItemType getItemType(final int typeId) {
 		final GameModule module = parent.getGameModule();
 		
-		if( module != null && typeId >= 16 ) {
-			return module.getItemType(typeId);
+		ItemType it = null;
+		
+		if( module != null ) {
+			if( typeId >= 16 ) it = module.getItemType(typeId);
+			else               it = ItemTypes.getType(typeId);
 		}
-		else {
-			return ItemTypes.getType(typeId);
-		}
+		else it = ItemTypes.getType(typeId);
+		
+		return it;
 	}
-	
+
 	private SlotType getSlotType(final int typeId) {
 		final GameModule module = parent.getGameModule();
 		
-		if( module != null) {
-			return module.getSlotType(typeId);
+		SlotType st = null;
+		
+		if( module != null) st = module.getSlotType(typeId);
+		else                st = SlotTypes.getType(typeId);
+		
+		return st;
+	}
+
+	private ThingType getThingType(final int typeId) {
+		final GameModule module = parent.getGameModule();
+		
+		ThingType tt = null;
+		
+		if( module != null ) {
+			if( typeId >= 16 ) tt = module.getThingType(typeId);
+			else               tt = ThingTypes.getType(typeId);
 		}
-		else {
-			return SlotTypes.getType(typeId);
-		}
+		else tt = ThingTypes.getType(typeId);
+		
+		return tt;
 	}
 }

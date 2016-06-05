@@ -1,15 +1,12 @@
 package mud.misc;
 
+import java.util.BitSet;
+
 public class ClientData {
-	public String state = "";
-	public String name = "";
-	public String pass = "";
-	public String temp = "";
+	final BitSet protocol_status = new BitSet(8);
+	
+	private boolean telnet = true;
 	
 	public ClientData() {		
-	}
-	
-	public ClientData(final String state) {
-		this.state = state;
 	}
 }

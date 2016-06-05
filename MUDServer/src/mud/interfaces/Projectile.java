@@ -28,8 +28,6 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  * 'throwing' somehow.
  * 
  * @author Jeremy
- *
- * @param <T>
  */
-public interface Projectile<T> {
+public interface Projectile {
 }

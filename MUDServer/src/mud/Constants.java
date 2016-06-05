@@ -29,7 +29,6 @@ public final class Constants {
 	public static final int ADMIN = 2;     // account administration?
 	public static final int WIZARD = 3;    // Most permissions
 	public static final int SUPERUSER = 4; // Pff, such arrogant idiots we are! (anyway, max permissions)
-	//public static final int GOD = 4;    // Pff, such arrogant idiots we are! (anyway, max permissions)
 	
 	// Flags
 	public static final EnumSet<ObjectFlag> default_room_flags = EnumSet.of(ObjectFlag.DARK,ObjectFlag.SILENT); // RDS, where R is a TypeFlag
@@ -45,7 +44,6 @@ public final class Constants {
 	};
 	
 	// Named Rooms
-	public static final int WELCOME_ROOM = 8; // welcome room
 	public static final int VOID = -1;        // an invalid room dbref (so it doesn't technically exist anywhere)
 	
 	// Channel Names/IDs? (move to another constants class - ChanID?)
@@ -53,9 +51,11 @@ public final class Constants {
 	public static final String STAFF_CHANNEL = "staff";
 	
 	// Account Login State
-	public static final int USERNAME = 0;
-	public static final int PASSWORD = 1;
-	public static final int AUTHENTICATE = 2;
+	public static final String USERNAME = "USERNAME";
+	public static final String PASSWORD = "PASSWORD";
+	public static final String AUTHENTICATE = "AUTHENTICATE";
+	public static final String REGISTER = "REGISTER";
+	public static final String LOGIN = "LOGIN";
 	
 	// Color Options
 	public static final int DISABLED = 0;

@@ -1,6 +1,6 @@
 package mud.objects.items;
 
-import mud.objects.items.WeaponType.DamageType;
+import mud.objects.items.Weapon.DamageType;
 
 public final class WeaponTypes {
 	// int id, String name, DamageType dType, String damage, int critMin, int critMax, int critical, double weight 

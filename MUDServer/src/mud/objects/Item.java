@@ -76,13 +76,14 @@ public class Item extends MUDObject {
 		this.type = TypeFlag.ITEM;
 	}
 	
-	public Item(int tempDBREF, final String name, final String description) {
-		this(tempDBREF);
+	public Item(final String name, final String description) {
+		this(-1, name, description);
+	}
+	
+	protected Item(int tempDBREF, final String name, final String description) {
+		super(tempDBREF, name, description);
 		
-		this.name = name;
-		this.flags = EnumSet.noneOf(ObjectFlag.class);
-		this.desc = description;
-		this.location = -1; // ? 
+		this.type = TypeFlag.ITEM;
 	}
 	
 	/**
@@ -93,7 +94,7 @@ public class Item extends MUDObject {
 	 * @param template
 	 */
 	protected Item(final Item template) {
-		super( template );
+		super(template);
 		
 		this.type = TypeFlag.ITEM;
 		
@@ -124,15 +125,15 @@ public class Item extends MUDObject {
 	 * TypeFlag and passes the rest of the argument's to the superclass's object loading
 	 * constructor
 	 * 
-	 * @param tempDBREF
-	 * @param tempName
-	 * @param tempFlags
-	 * @param tempDesc
-	 * @param tempLoc
+	 * @param dbref
+	 * @param name
+	 * @param flags
+	 * @param description
+	 * @param location
 	 */
-	public Item(final int tempDBREF, final String tempName, final EnumSet<ObjectFlag> tempFlags, final String tempDesc, final int tempLoc)
+	public Item(final int dbref, final String name, final EnumSet<ObjectFlag> flags, final String description, final int location)
 	{
-		super(tempDBREF, tempName, tempFlags, tempDesc, tempLoc);
+		super(dbref, name, flags, description, location);
 		
 		this.type = TypeFlag.ITEM;
 	}
@@ -145,7 +146,7 @@ public class Item extends MUDObject {
 		return this.item_type;
 	}
 	
-	public void setSlotType(SlotType newType) {
+	public void setSlotType(final SlotType newType) {
 		this.slot_type = newType;
 	}
 	
@@ -275,7 +276,7 @@ public class Item extends MUDObject {
 		
 		output[0] = this.getDBRef() + "";        // database reference number
 		output[1] = this.getName();              // name
-		output[2] = type + getFlagsAsString();   // flags;
+		output[2] = type + getFlagsAsString();   // flags
 		output[3] = this.getDesc();              // description
 		output[4] = this.getLocation() + "";     // location
 		

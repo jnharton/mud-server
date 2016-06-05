@@ -1,6 +1,5 @@
 package mud;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.TimerTask;
@@ -19,6 +18,7 @@ import mud.objects.Player;
 import mud.objects.Room;
 import mud.utils.EffectTimer;
 import mud.utils.Message;
+import mud.utils.MudUtils;
 import mud.utils.SpellTimer;
 import mud.utils.Time;
 
@@ -75,7 +75,9 @@ public abstract class Command {
 	 * 
 	 * @return int representing access level
 	 */
-	public abstract int getAccessLevel();
+	public int getAccessLevel() {
+		return Constants.USER;
+	}
 	
 	/**
 	 * method that passes the thing to be sent for debugging to
@@ -154,7 +156,7 @@ public abstract class Command {
 	}
 	
 	protected final MUDObject getObject(Integer dbref) {
-		return this.db.get(dbref);
+		return this.db.getById(dbref);
 	}
 	
 	/**
@@ -228,7 +230,7 @@ public abstract class Command {
 		return this.db.getItem(DBRef);
 	}
 	
-	protected final ArrayList<Player> getPlayers() {
+	protected final List<Player> getPlayers() {
 		return parent.getPlayers();
 	}
 	
@@ -264,15 +266,15 @@ public abstract class Command {
 		return parent.getAliases();
 	}
 	
-	protected Item findItem(final List<Item> items, final Integer itemDBRef) {
-		return parent.findItem(items, itemDBRef);
+	protected final Item findItem(final List<Item> items, final Integer itemDBRef) {
+		return MudUtils.findItem(itemDBRef, items);
 	}
 	
-	protected Item findItem(final List<Item> items, final String itemName) {
-		return parent.findItem(items, itemName);
+	protected final Item findItem(final List<Item> items, final String itemName) {
+		return MudUtils.findItem(itemName, items);
 	}
 	
-	protected Time getGameTime() {
+	protected final Time getGameTime() {
 		final TimeLoop game_time = parent.game_time;
 		
 		return new Time(game_time.getHours(), game_time.getMinutes(), game_time.getSeconds());
@@ -284,15 +286,15 @@ public abstract class Command {
 	 * 
 	 * @param cmd
 	 */
-	protected void initCmd(final Command cmd) {
+	protected final void initCmd(final Command cmd) {
 		cmd.init(parent);
 	}
 	
-	protected void addHostile(final Creature hostile) {
+	protected final void addHostile(final Creature hostile) {
 		parent.hostiles.add( hostile );
 	}
 	
-	protected void removeHostile(final Creature hostile) {
+	protected final void removeHostile(final Creature hostile) {
 		parent.hostiles.remove( hostile );
 	}
 }

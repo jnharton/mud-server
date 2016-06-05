@@ -20,6 +20,8 @@ package mud.misc;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 import mud.objects.Item;
 import mud.objects.Player;
@@ -53,20 +55,26 @@ import mud.utils.Point;
  *
  */
 
+// TODO I'm thinking house should be a subclass of building
 public class House
 {
 	// where dropped stuff goes
-	public final int FLOOR   = 1;
-	public final int STORAGE = 2;
-	public final int TRASH   = 3;
+	private final int FLOOR   = 1;
+	private final int STORAGE = 2;
+	private final int TRASH   = 3;
+	
+	// house sizes
+	public final int SMALL = 1;
+	public final int MEDIUM = 2;
+	public final int LARGE = 3;
 
-	final public ArrayList<Room> rooms = new ArrayList<Room>();
+	final public List<Room> rooms = new ArrayList<Room>();
 
-	final public LinkedList<Thing> things = new LinkedList<Thing>();
-	final public LinkedList<Item> items = new LinkedList<Item>();
+	final public List<Thing> things = new LinkedList<Thing>();
+	final public List<Item> items = new LinkedList<Item>();
 
-	final public HashMap<Thing, Point> thingPos = new HashMap<Thing, Point>();
-	final public HashMap<Item,  Point> itemPos  = new HashMap<Item,  Point>();
+	final public Map<Thing, Point> thingPos = new HashMap<Thing, Point>();
+	final public Map<Item,  Point> itemPos  = new HashMap<Item,  Point>();
 
 	private Player owner;
 
@@ -83,31 +91,9 @@ public class House
 	 * system can auto tidy the house if desired
 	 * 
 	 * # I really, really need a way for rooms to know what Zone, House, etc they belong to,
-	 * that can be fit in the database wihout too much trouble
+	 * that can be fit in the database without too much trouble
 	 */
-
-	private enum HouseSize {
-		SMALL(1),
-		MEDIUM(2),
-		LARGE(3),
-		CUSTOM(-1);
-
-		final public int size;
-
-		private HouseSize(int tSize) {
-			this.size = tSize;
-		}
-	};
-
-	public House(final HouseSize size) {
-		this(null, size);
-	}
-
-	public House(final Player owner, final HouseSize hSize) {
-		this.owner = owner;
-		this.max_rooms = hSize.size;
-	}
-
+	
 	public House(final Player owner, final int maxRooms) {
 		this.owner = owner;
 		this.max_rooms = maxRooms;
@@ -120,13 +106,16 @@ public class House
 	public int getSize() {
 		return rooms.size();
 	}
-
+	
+	// TODO return list?
 	public String[] getInfo() {
 		final String[] info = new String[] {
 				"House",
-				"Owner: " + this.owner.getName(),
-				"Size:  " + getSize(),
-				"Rooms: " + this.rooms.size() + " / " + this.max_rooms
+				" Owner: " + this.owner.getName(),
+				"  Size: " + getSize(),
+				" Rooms: " + this.rooms.size() + " / " + this.max_rooms,
+				" Items: " + this.items.size(),
+				"Things: " + this.things.size()
 		};
 
 		return info;
@@ -145,36 +134,46 @@ public class House
 
 	public void removeRoom(final Room room) {
 		// remove items
+		for(final Item item : room.getItems()) {
+			item.setLocation(-1);
+		}
+		room.removeItems( room.getItems() );
+		
 		// remove things
+		for(final Thing thing : room.getThings()) {
+			thing.setLocation(-1);
+		}
+		room.removeThings( room.getThings() );
+		
 		// remove the room
 		rooms.remove( room );
 	}
 
 	public void addItem(final Item item) {
-		items.add(item);
-		placeItem(item, new Point(0,0));
+		this.items.add(item);
+		this.itemPos.put(item, new Point(0,0));
 	}
 
 	public void placeItem(final Item item, final Point point) {
-		itemPos.put(item, point);
+		this.itemPos.put(item, point);
 	}
 
 	public void removeItem(final Item item) {
-		items.remove(item);
-		itemPos.remove(item);
+		this.items.remove(item);
+		this.itemPos.remove(item);
 	}
 
 	public void addThing(final Thing thing) {
-		things.add(thing);
-		placeThing(thing, new Point(0,0));
+		this.things.add(thing);
+		this.thingPos.put(thing, new Point(0,0));
 	}
 
 	public void placeThing(final Thing thing, final Point point) {
-		thingPos.put(thing, point);
+		this.thingPos.put(thing, point);
 	}
 
 	public void removeThing(final Thing thing) {
-		things.remove(thing);
-		thingPos.remove(thing);
+		this.things.remove(thing);
+		this.thingPos.remove(thing);
 	}
 }

@@ -1,7 +1,5 @@
 package mud.utils;
 
-import java.util.List;
-
 /*
 Copyright (c) 2012 Jeremy N. Harton
 
@@ -52,10 +50,6 @@ public class BBEntry {
 		return this.author;
 	}
 	
-	public void setAuthor(String newAuthor) {
-		this.author = newAuthor;
-	}
-	
 	public String getSubject() {
 		return this.subject;
 	}
@@ -64,19 +58,13 @@ public class BBEntry {
 		return this.message;
 	}
 
-	public String toDB() {
-		//return this.id + "#" + this.author + "#" + this.subject + "#" + this.message;
-		return Utils.join(Utils.mkList("" + this.id, this.author, this.subject, this.message), "#");
-	}
-
 	public String toView() {
-		/*return "| " + Utils.padLeft(this.id + "", 3) + " | " + Utils.padRight(this.author, 8) + " | "
-				+ Utils.padRight(this.subject, 8) + " | " + Utils.padRight(this.message, 20) + " |";*/
-		return Utils.padLeft(this.id + "", 3) + ") " + Utils.padRight(this.subject, 20) + "("
-				+ this.author + ")";
+		// left(id, 3) | right(author, 8) | right(subject, 8) | right(message, 20) |
+		return Utils.padLeft(this.id + "", 3) + ") " + Utils.padRight(this.subject, 20) + "(" + this.author + ")";
 	}
 
 	public String toString() {
-		return this.id + " " + this.author + " " + this.message;
+		// <id>#<author>#<subject>#<message>
+		return Utils.join(Utils.mkList("" + this.id, this.author, this.subject, this.message), "#");
 	}
 }

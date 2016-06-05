@@ -47,6 +47,8 @@ public class RaceAdapter extends TypeAdapter<Race> {
 				case "name":
 					name = reader.nextString();
 					break;
+				case "subrace":
+					break;
 				case "id":
 					id = reader.nextInt();
 					break;
@@ -76,7 +78,7 @@ public class RaceAdapter extends TypeAdapter<Race> {
 				default: break;
 				}
 			}
-			catch(IllegalStateException ise) {
+			catch(final IllegalStateException ise) {
 				System.out.println("Problem Token: " + key);
 				break;
 			}
@@ -87,13 +89,13 @@ public class RaceAdapter extends TypeAdapter<Race> {
 		
 		switch(rules) {
 		case "foe.FOESpecial":
-			newRace = new Race(FOESpecial.getInstance(), name, id, statAdj, restricted, canFly);
+			newRace = new Race(FOESpecial.getInstance(), name, id, canFly, restricted, statAdj);
 			break;
 		case "d20.D20":
-			newRace = new Race(D20.getInstance(), name, id, statAdj, restricted, canFly);
+			newRace = new Race(D20.getInstance(), name, id, canFly, restricted, statAdj);
 			break;
 		default:
-			newRace = new Race(null, name, id, statAdj, restricted, canFly);
+			newRace = new Race(null, name, id, canFly, restricted, statAdj);
 			break;
 		}
 		
@@ -101,7 +103,7 @@ public class RaceAdapter extends TypeAdapter<Race> {
 	}
 
 	@Override
-	public void write(JsonWriter writer, Race race) throws IOException {
+	public void write(final JsonWriter writer, final Race race) throws IOException {
 		writer.beginObject();
 		
 		writer.name("rules");
@@ -119,15 +121,15 @@ public class RaceAdapter extends TypeAdapter<Race> {
 		
 		writer.beginArray();
 		
-		for(Integer i : race.getStatAdjust()) writer.value(i);
+		for(final Integer i : race.getStatAdjust()) writer.value(i);
 		
 		writer.endArray();
 		
-		writer.name("restricted");
-		writer.value(race.isRestricted());
-		
 		writer.name("canFly");
 		writer.value(race.canFly());
+		
+		writer.name("restricted");
+		writer.value(race.isRestricted());
 		
 		writer.endObject();
 	}

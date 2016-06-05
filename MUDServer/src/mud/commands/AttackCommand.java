@@ -5,7 +5,7 @@ import java.util.List;
 import mud.Command;
 import mud.Constants;
 import mud.MUDObject;
-import mud.misc.CombatManager;
+import mud.combat.CombatManager;
 import mud.misc.PlayerMode;
 import mud.net.Client;
 import mud.objects.Creature;
@@ -13,8 +13,6 @@ import mud.objects.Item;
 import mud.objects.Player;
 import mud.objects.Thing;
 import mud.objects.items.Weapon;
-import mud.objects.items.WeaponType;
-import mud.objects.items.WeaponTypes;
 import mud.utils.MudUtils;
 import mud.utils.Utils;
 
@@ -73,16 +71,6 @@ public class AttackCommand extends Command {
 
 					// get weapon
 					Weapon weapon = MudUtils.getWeapon(player);
-					
-					WeaponType wt = null;
-
-					if(weapon != null) {
-						// get our weapon type
-						//wt = weapon.getWeaponType();
-						
-						// TODO resolve this somewhere
-						wt = WeaponTypes.LONG_SWORD;
-					}
 
 					// check range
 					boolean inRange = true;
@@ -90,7 +78,7 @@ public class AttackCommand extends Command {
 					if (inRange) { // are they in range of our weapon?
 						debug(playerName + ": In range");
 
-						boolean hit = MudUtils.canHit(player.getTarget());
+						boolean hit = MudUtils.canHit( player.getTarget() );
 
 						if (hit) { // did we hit?
 							debug(playerName + ": Can hit");
@@ -102,11 +90,11 @@ public class AttackCommand extends Command {
 							// figure out damage (should have way to tell if weapon can hit critically)
 							int criticalCheckRoll = Utils.roll(1, 20);
 							
-							boolean criticalHit = (criticalCheckRoll >= wt.getCritMin() && criticalCheckRoll <= wt.getCritMax()) ? true : false;
+							boolean criticalHit = Utils.range(criticalCheckRoll, weapon.getCritMin(), weapon.getCritMax());
 
 							int damage = MudUtils.calculateDamage(weapon, criticalHit);
 							
-							debug(playerName + " hits " + player.getTarget() + " for " + damage + " damage");
+							debug(playerName + ": hits " + player.getTarget() + " for " + damage + " damage");
 							
 							// tell us what 
 							if( damage <= 1 ) {
@@ -179,8 +167,11 @@ public class AttackCommand extends Command {
 								item.modifyWear( damage - resistance ); 
 							}
 							else if(target instanceof Thing) {
-								// ?
-								//((Thing) target);
+								final Thing thing = (Thing) target;
+								
+								if( thing.durability - damage < 0 ) {
+									// destroy thing
+								}
 							}
 							else {
 								// ?
@@ -193,11 +184,11 @@ public class AttackCommand extends Command {
 					}
 					else { // else
 						// trying to provided different messages for different weapons
-						switch(wt.getName().toUpperCase()) {
+						/*switch(wt.getName().toUpperCase()) {
 						case "LONGSWORD": send("Really? You aren't even close enough to hit!", client);         break;
 						case "BOW":       send("Well, that was a waste of effort -AND- a good arrow!", client); break;
 						default:          break;
-						}
+						}*/
 						
 						send("Your attack was ineffectual, since you couldn't reach your target.", client);
 					}

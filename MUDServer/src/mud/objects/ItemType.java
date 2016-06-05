@@ -10,7 +10,7 @@ package mud.objects;
  * changes are made to the one referred to.
  */
 
-public class ItemType {
+public final class ItemType {
 	private String name;
 	private Integer id;
 	

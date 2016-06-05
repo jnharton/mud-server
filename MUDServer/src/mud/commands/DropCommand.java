@@ -1,10 +1,9 @@
 package mud.commands;
 
-import java.util.ArrayList;
+import java.util.List;
 
 import mud.Command;
 import mud.Constants;
-import mud.MUDServer;
 import mud.ObjectFlag;
 import mud.net.Client;
 import mud.utils.Point;
@@ -39,7 +38,7 @@ public class DropCommand extends Command {
 		
 		Item item;
 		
-		ArrayList<Item> inventory = player.getInventory();
+		List<Item> inventory = player.getInventory();
 
 		// get the integer value, if there is one, as the argument
         final int dbref = Utils.toInt(arg, -1);

@@ -1,9 +1,5 @@
 package mud.foe.items;
 
-import java.util.EnumSet;
-
-import mud.ObjectFlag;
-import mud.TypeFlag;
 import mud.foe.FOEItemTypes;
 import mud.interfaces.Stackable;
 import mud.objects.Item;
@@ -16,10 +12,7 @@ public class BottleCap extends Item implements Stackable<BottleCap> {
 	}
 	
 	public BottleCap(int dbref) {
-		super(dbref, "Bottle Cap", EnumSet.noneOf(ObjectFlag.class), "A bottle cap.", -1);
-		
-		// Item class members
-		this.type = TypeFlag.ITEM;
+		super(dbref, "Bottle Cap", "A bottle cap.");
 		
 		this.item_type = FOEItemTypes.BOTTLE_CAP;
 	}
@@ -28,10 +21,6 @@ public class BottleCap extends Item implements Stackable<BottleCap> {
 		super(template);
 		
 		this.item_type = FOEItemTypes.BOTTLE_CAP;
-	}
-	
-	public int size() {
-		return stackSize();
 	}
 
 	public int stackSize() {
@@ -86,12 +75,12 @@ public class BottleCap extends Item implements Stackable<BottleCap> {
 	}
 	
 	@Override
-	public BottleCap clone() {
+	public BottleCap getCopy() {
 		return new BottleCap(this);
 	}
 	
 	@Override
 	public String toString() {
-		return this.name + " (" + stackSize() + ")";
+		return ( stackSize() > 0 ) ? getName() + " (" + stackSize() + ")" : getName();
 	}
 }

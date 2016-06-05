@@ -20,6 +20,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Vector;
 
+import mud.interfaces.MUDServerAPI;
 import mud.net.Client;
 
 public class APIServer implements Runnable {
@@ -95,7 +96,7 @@ public class APIServer implements Runnable {
 		System.exit(0);
 	}
 	
-	public boolean validate(APIKey tKey) {
+	public boolean validate(final APIKey tKey) {
 		return tKey.isValid() && apiKeys.contains(tKey); // neither of these currently returns true when expected
 	}
 	

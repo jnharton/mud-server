@@ -66,12 +66,13 @@ public class Exit extends MUDObject
 	public Exit(String name, int location, int destination) {
 		super(-1);                                     // Set the dbref (database reference)
 		
-		this.type = TypeFlag.EXIT;                     // Set the type
-		
 		this.name = name;                              // Set the name
 		this.desc = "You see nothing.";                // Set the description to the default
 		this.flags = EnumSet.noneOf(ObjectFlag.class); // Set flags
 		this.location = location;                      // Set the location
+		
+		this.type = TypeFlag.EXIT;                     // Set the type
+		
 		this.destination = destination;                // Set the destination
 		
 		// set messages to clear
@@ -87,12 +88,13 @@ public class Exit extends MUDObject
 	{
 		super(tempDBRef);                   // Set the dbref (database reference)
 		
-		this.type = TypeFlag.EXIT;          // Set the type
-		
 		this.name = tempName;               // Set the name
 		this.desc = tempDesc;               // Set the description to the default
 		this.flags = flagsNotUsed;          // Set flags
 		this.location = tempLoc;            // Set the location
+		
+		this.type = TypeFlag.EXIT;          // Set the type
+		
 		this.destination = tempDestination; // Set the destination
 		
 		// set messages to clear

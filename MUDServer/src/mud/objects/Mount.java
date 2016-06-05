@@ -16,21 +16,16 @@ public class Mount extends Creature implements Ridable {
 	public enum MountType { WARHORSE, WARPONY, HORSE, PONY, DESTRIER };
 	public enum Speed { SLOW, MEDIUM, FAST };
 	
-	private String name;
 	private MountType mtype;
 	private int speed;
 	//private Speed speedClass; // slow, medium, fast
 	
 	public Mount(String name) {
-		this.type = TypeFlag.OBJECT;
-		this.name = name;
+		super(name, "");
+		
 		this.mtype = MountType.HORSE;
 		this.speed = 8;
 		//this.speedClass = Speed.FAST;
-	}
-	
-	public String getName() {
-		return this.name;
 	}
 	
 	/*public MountType getType() {

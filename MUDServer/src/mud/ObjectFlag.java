@@ -26,14 +26,14 @@ public enum ObjectFlag
     GUEST("GUEST",              4, TypeFlag.PLAYER),
     HOUSE("HOUSE",              5, TypeFlag.ROOM),
     MERCHANT("MERCHANT",        6, TypeFlag.NPC),
-    NO_TELEPORT("NO_TELEPORT",  7), // prevent teleporting to the location (for rooms) or moving the object (for everything else)
+    NO_TELEPORT("NO_TELEPORT",  7, TypeFlag.OBJECT), // prevent teleporting to the location (for rooms) or moving the object (for everything else)
     NO_ENTER("NO_ENTER",        8, TypeFlag.ROOM),
     NO_LEAVE("NO_LEAVE",        9, TypeFlag.ROOM),
-    QUIET("QUIET",             10), 
+    QUIET("QUIET",             10, TypeFlag.OBJECT), 
     SHOP("SHOP",               11, TypeFlag.ROOM),
-    SILENT("SILENT",           12),
+    SILENT("SILENT",           12, TypeFlag.OBJECT),
     VENDOR("VENDOR",           13, TypeFlag.NPC),
-	VIRTUAL("VIRTUAL",         14);
+	VIRTUAL("VIRTUAL",         14, TypeFlag.OBJECT);
 	
 	// 13 flags    
 	// 0 1 2 3 5 7 = 0, 1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16, 17, 18
@@ -44,13 +44,7 @@ public enum ObjectFlag
     private Integer index; //
     private TypeFlag type; // type of object this flag can be set on
     
-    ObjectFlag(String flagName, Integer index) {
-    	this.name = flagName;
-    	this.index = index;
-    	this.type = null;
-    }
-    
-    ObjectFlag(String flagName, Integer index, TypeFlag type) {
+    private ObjectFlag(final String flagName, final Integer index, final TypeFlag type) {
     	this.name = flagName;
     	this.index = index;
     	this.type = type;
@@ -93,6 +87,7 @@ public enum ObjectFlag
 
     static public EnumSet<ObjectFlag> getFlagsFromString(final String str) {
         final EnumSet<ObjectFlag> flags = EnumSet.noneOf(ObjectFlag.class);
+        
         for (final Character ch : str.toCharArray()) {
             if (Character.isLetter(ch)) {
                 flags.add(ObjectFlag.fromLetter(ch));

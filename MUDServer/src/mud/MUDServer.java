@@ -24,13 +24,14 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
@@ -41,21 +42,26 @@ import java.util.Map.Entry;
 
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.regex.Pattern;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 import java.util.regex.Matcher;
 
 // MUD Libraries
-import mud.api.*;
 import mud.auction.*;
 import mud.chat.*;
+import mud.colors.Colors;
 import mud.colors.Palette;
 import mud.commands.*;
-import mud.foe.Terminal;
 import mud.game.*;
 import mud.interfaces.*;
 import mud.interfaces.Readable;
 import mud.magic.*;
 import mud.misc.*;
 import mud.misc.Currency;
+import mud.misc.json.RaceAdapter;
+import mud.misc.json.SpellAdapter;
 import mud.modules.FalloutEquestria;
 import mud.net.*;
 import mud.objects.*;
@@ -68,6 +74,7 @@ import mud.quest.*;
 import mud.rulesets.d20.*;
 import mud.utils.*;
 import mud.utils.Date;
+import mud.utils.Message.MessageType;
 import mud.weather.*;
 
 /**
@@ -131,28 +138,27 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	 */
 
 	/* NOTE: "Theme" related */
-	public String name;
-	public String mud_name;
-	public String motd_file;
-	public String world;
+	private String mud_name;
+	private String motd_file;
+	private String world;
 
 	// program information
 	private final static String program = "JavaMUD"; // the server program name
 	private final static String version = "0.9.2";   // the server version number
 
 	// server information
-	private String computer = "Stardust"; // the name of the server computer
-	private String serverName = "Server"; // the name of the server (obtained from theme definition)
+	private String computer = "Stardust";   // the name of the server computer
+	private String serverName = "Server";   // the name of the server (obtained from theme definition)
 
 	// server configuration settings
-	private int port = 4000;            // the port on which to listen for client connections
+	private int port = 4000;                // the port on which to listen for client connections
 	
-	private int max_levels = 20;        // maximum player level
-	private int max_players = 25;       // maximum number of players (adustable, but exceeding 100/1000 may cause other code to break down catastrophically)
-	private int max_list_length = 1000; // maximum list length in lines
+	private int max_levels = 20;            // maximum player level
+	private int max_players = 25;           // maximum number of players (adjustable, but upper limit untested)
+	private int max_list_length = 1000;     // maximum list length in lines
 	
 	// TODO resolve this kludge
-	private String motd = "motd.txt";   // Message of The Day file
+	private String motd = "motd.txt";       // Message of The Day file
 
 	// server state settings
 	private int multiplay = 1;              // (0=only one character per account is allowed, 1=infinite connects allowed)
@@ -170,7 +176,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	
 	// server state
 	private boolean running = true;
-	private GameMode mode = GameMode.NORMAL; // (0=normal: player connect, 1=wizard: wizard connect only, 2=maintenance: maintenance mode)
+	private GameMode mode = GameMode.NORMAL; // see mud.utils.GameMode
 	private int guests = 0;                  // the number of guests currently connected
 
 	// Protocols
@@ -295,6 +301,8 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		XTERM256.addColor("pink2", 163);
 		XTERM256.addColor("pink3", 212);
 	}
+	
+	private Map<String, Thread> threads = new Hashtable<String, Thread>();
 
 	private final Map<String, Pair<String>> displayColors = new HashMap<String, Pair<String>>(8, 0.75f); // HashMap specifying particular colors for parts of text (dynamic)
 
@@ -304,31 +312,11 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	private final Map<Integer, String> years = new HashMap<Integer, String>(50, 0.75f);            // HashMap that holds year names for game themes that supply them (static)
 	private final Map<String, Command> commandMap = new HashMap<String, Command>(20, 0.75f); // HashMap that holds an instance of each command currently (dynamic)
 	private final Map<Zone, Integer> zones = new LinkedHashMap<Zone, Integer>(1, 0.75f);   // HashMap that tracks currently "loaded" zones (dynamic)
+	
 	private final Map<Client, Player> sclients = new HashMap<Client, Player>();
 	
 	private final PlayerControlMap playerControlMap = new PlayerControlMap();                // HashMap that stores control data for Players controlling NPCs (dynamic)
-
-	// NOTE: this isn't used anywhere at the moment
-	private Map<String, ConfigObject> configuration = new Hashtable<String, ConfigObject>();
-	{
-		configuration.put("firstRun",         new ConfigObject("firstRun",          false));
-		configuration.put("testing_enabled",  new ConfigObject("testing_enabled",   false));
-		configuration.put("weather",          new ConfigObject("weather",           false));
-		configuration.put("use_accounts",     new ConfigObject("use_accounts",      false));
-		configuration.put("use_cnames",       new ConfigObject("use_cnames",        true));
-		configuration.put("int_login",        new ConfigObject("int_login",         true));
-		configuration.put("magic",            new ConfigObject("magic",             true));
-		configuration.put("notify_immediate", new ConfigObject("notify_immediate",  true));
-		configuration.put("input_hold",       new ConfigObject("input_hold",        true));
-		configuration.put("queued_commands",  new ConfigObject("queued_commands",   true));
-		configuration.put("soft_commands",    new ConfigObject("soft_commands",     true));
-
-		/*
-		 * for(final ConfigObject cfgObj : configuration) {
-		 * debug(cfgObj.getName() + ": " + cfgObj.getBoolean()); }
-		 */
-	}
-
+	
 	private HashMap<Player, Session> sessionMap = new HashMap<Player, Session>(1, 0.75f); // player to session mapping
 
 	// Databases/Data
@@ -388,7 +376,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	private byte[] byteBuffer = new byte[1024]; // a byte buffer to deal with telnet (characters are sent to the server as they are typed, so need to buffer input until a particular key is pressed
 	private byte linefeed = 10;                 // line-feed character
 
-	public Hashtable<Client, ArrayList<Character>> inputBuffers = new Hashtable<Client, ArrayList<Character>>( max_players);
+	private Map<Client, ArrayList<Character>> inputBuffers = new Hashtable<Client, ArrayList<Character>>( max_players);
 	// end telnet
 
 	private ProgramInterpreter pgm; // "Script" Interpreter
@@ -446,15 +434,13 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	 */
 
 	// TODO config settings for client/server echoing?
-	boolean echo_enabled = true; // does the server do echoing
+	boolean echo_enabled = false; // does the server do echoing
 
 	// state data for various client/server interactions
 	private Map<Client, String> clientState = new Hashtable<Client, String>();
 	
-	private Map<Client, loginData> pLoginData = new Hashtable<Client, loginData>();
-	private Map<Client, ClientData> clientData = new Hashtable<Client, ClientData>();
-
-	private Hashtable<String, Method> inputHandlers = new Hashtable<String, Method>();
+	private Map<Client, LoginData> loginData = new Hashtable<Client, LoginData>();    // holding values for login
+	private Map<Client, ClientData> clientData = new Hashtable<Client, ClientData>(); // used for?
 	
 	// holds instances of interactive terminal to game that is outside of the game world itself
 	private ConsoleMonitor cmon;
@@ -471,9 +457,6 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	// List<Feat> feats = (ArrayList<Feat>) Utils.mkList(Feat.ap_light,
 	// Feat.ap_medium, Feat.ap_heavy);
 
-	// mud.foe.Terminal term = null;
-	private Map<Player, mud.foe.Terminal> terminals = new HashMap<Player, mud.foe.Terminal>(1, 0.75f);
-
 	// TODO there is no reason to track more than one trade per player at a time (11-18-2015)
 	// map of trades in progress (between players), basically for each player
 	// there is a table that maps another player
@@ -481,10 +464,6 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	private Map<Player, Trade> trades = new Hashtable<Player, Trade>();
 	
 	private Map<Player, Party> partyInvites = new HashMap<Player, Party>(); // party invitations
-
-	// methods called for a particular type of MUDObject when we try to 'use' it
-	// (see cmd_use(...))
-	Map<Class, Method> useMethods = new Hashtable<Class, Method>();
 
 	List<Race> races = new ArrayList<Race>();
 	
@@ -529,7 +508,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			"balance", "bash", "bid", "boards", "buy",
 			"calendar", "cast", "chargen", "climb",
 			"cls", "colors", "commands", "condition",
-			"dedit", "describe", "drink", "drop",
+			"describe", "drink", "drop",
 			"effects", "equip", "exchange", "exits", "exp",
 			"feats",
 			"go", "get", "greet",
@@ -600,7 +579,9 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	Currency caps = new Currency("Bottle Caps", "caps", null, 1.0);
 	
 	Map<Player, Tuple<NPC, CNode>> conversations = new Hashtable<Player, Tuple<NPC, CNode>>();
-
+	
+	public int WELCOME_ROOM = 0; // welcome room
+	
 	public MUDServer() {
 	}
 
@@ -747,7 +728,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			setup();
 			run(); // run main loop
 		}
-		catch (Exception e) {
+		catch (final Exception e) {
 			debug("Exception in MUDServer.init()");
 			System.out.println("--- Stack Trace ---");
 			e.printStackTrace();
@@ -756,6 +737,8 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	}
 
 	private void setup() {
+		Thread thread = null;
+		
 		// snag this machine's real IP address
 		try {
 			// Get the address and hostname, so you can report it
@@ -765,7 +748,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			System.out.println(this.computer); // print computer name
 			System.out.println("");
 		}
-		catch (UnknownHostException e) {
+		catch (final UnknownHostException e) {
 			System.out.println("--- Stack Trace ---");
 			e.printStackTrace();
 		}
@@ -1067,7 +1050,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 		// help file loading
 		debug("Loading Help Files... ");
-
+		
 		for (final String helpFileName : generateHelpFileIndex()) {
 			//debug(helpFileName);
 			
@@ -1153,15 +1136,14 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		 * features. In fact that bit just above doesn't need any changing.
 		 * Although I might need to explicity handle aliases better.
 		 */
-		addCommand("@teleport", new TeleportCommand()); //
 		addCommand("@access",   new AccessCommand());   //
-		
 		addCommand("attack",    new AttackCommand());   //
 		addCommand("cast",      new CastCommand());     //
 		addCommand("greet",     new GreetCommand());    //
 		addCommand("mail",      new MailCommand());     //
 		addCommand("say",       new SayCommand());      //
 		addCommand("staff",     new StaffCommand());    //
+		addCommand("@teleport", new TeleportCommand()); //
 		
 		// TODO not sure the best way to store/access aliases for Command objects
 		addAlias("attack", "kill");
@@ -1194,8 +1176,11 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		final Time startTime = new Time(game_hour, game_minute, 0);
 
 		game_time = new TimeLoop(this, DAYS, startDate, startTime);
-
-		new Thread(game_time, "time").start();
+		
+		thread = new Thread(game_time, "time");
+		thread.start();
+		
+		this.threads.put(thread.getName(), thread);
 		
 		debug("Time (Thread) Started!");
 
@@ -1206,8 +1191,11 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		if (queued_commands) {
 			cmdQueue = new ConcurrentLinkedQueue<CMD>();
 			cmdExec = new CommandExec(this, cmdQueue);
-
-			new Thread(cmdExec, "command_exec").start();
+			
+			thread = new Thread(cmdExec, "command_exec");
+			thread.start();
+			
+			this.threads.put(thread.getName(), thread);
 			
 			debug("Command Execution (Thread) Started!");
 		}
@@ -1228,7 +1216,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		
 		debug("");
 
-		if (use_accounts) {
+		if ( use_accounts ) {
 			debug("Loading Accounts...");
 
 			loadAccounts(ACCOUNT_DIR); // load Player Accounts
@@ -1243,13 +1231,14 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		}
 
 		// Initialize Program Interpreter
-		pgm = new ProgramInterpreter(this, true);
+		this.pgm = new ProgramInterpreter(this, true);
 
 		// Coins.debug();
 		
 		// scripted commands
 		addCommand("@dbref",
 				new ScriptedCommand("get object dbref", pgm, new Script("{dbref:{&arg}}")));
+		addCommand("@list", new ScriptedCommand("", pgm, new Script("{list:{&arg},{&this}}")));
 
 		debug("");
 
@@ -1282,9 +1271,17 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 		// almost everything that needs to be loaded should be done before here
 		debug("Creating server on port " + port);
-
+		
+		// TODO it'd be good to caught server launch failures in here, maybe?
 		this.s = new Server(this, port);
-
+		
+		thread = new Thread(this.s, "server");
+		thread.start();
+		
+		this.threads.put(thread.getName(), thread);
+		
+		debug("Server (Thread) Started!");
+		
 		debug("");
 
 		debug("Server> Setup Done.");
@@ -1293,21 +1290,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 		debug(Utils.checkMem());
 
-		// TODO is this system necessary?
-		/*
-		 * try { registerInputHandler("interactive_login",
-		 * MUDServer.class.getMethod("int_login_handler", Client.class)); }
-		 * catch (NoSuchMethodException e1) {
-		 * System.out.println("--- Stack Trace ---"); e1.printStackTrace(); }
-		 * catch (SecurityException e1) {
-		 * System.out.println("--- Stack Trace ---"); e1.printStackTrace(); }
-		 */
-
 		debug("");
-
-		// TODO perhaps I should just make the mapping be to a boolean and not a
-		// configobject?\
-		debug("firstRun: " + configuration.get("firstRun").getBoolean());
 		
 		// Initialize Console Monitor?
 		if( console_enabled ) {
@@ -1332,7 +1315,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 				System.out.println("Insufficient Access Permissions");
 			}
 		}
-		catch (Exception e) {
+		catch (final Exception e) {
 			debug("processCMD(): ? (exception)");
 			System.out.println("--- Stack Trace ---");
 			e.printStackTrace();
@@ -1350,9 +1333,6 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		// TODO fix this right here (5-10-2015), prevents my other stuff from
 		// working
 		if (cs != null) {
-			// TODO printing this out all the time is crazy...
-			// debug("cs: \'" + cs + "\'");
-
 			if (cs.equals("BUSY")) {
 				return;
 			}
@@ -1368,25 +1348,25 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 					echo(temp, client);
 
 					// get client data
-					final ClientData cd = getClientData(client);
+					final LoginData ld = getLoginData(client);
 
-					if (cd != null) {
-						if (cd.state.equals("NAME")) {
-							cd.name = temp;
-							cd.state = "PASS";
+					if (ld != null) {
+						if (ld.state.equals("NAME")) {
+							ld.username = temp;
+							ld.state = "PASS";
 						}
-						else if (cd.state.equals("PASS")) {
-							cd.pass = temp;
-							cd.state = "LOGIN";
+						else if (ld.state.equals("PASS")) {
+							ld.password = temp;
+							ld.state = "LOGIN";
 						}
 
 						// TODO need to be careful about printing out password in plain text
-						System.out.println("NAME:  " + cd.name);
-						System.out.println("PASS:  " + Utils.padRight("", '*', cd.pass.length()));
-						System.out.println("STATE: " + cd.state);
+						System.out.println("NAME:  " + ld.username);
+						System.out.println("PASS:  " + Utils.padRight("", '*', ld.password.length()));
+						System.out.println("STATE: " + ld.state);
 
 						// enter next stage
-						interactive_login(client);
+						handle_interactive_login(client);
 					}
 					else {
 						System.out.println("CLIENT DATA is NULL.");
@@ -1396,18 +1376,16 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		}
 
 		final String whatClientSaid = client.getInput();
-
-		// If the client is not null and has something to say
+		
 		try {
-			// TODO idling should be managed on a timer/tick
-			// handle idling?
+			// TODO should idling be managed on a timer/tick?
 			final Player player = getPlayer(client);
 
 			if (player != null) {
 				handle_idle_player(player, whatClientSaid);
 			}
-
-			// if (whatClientSaid == null || "".equals(whatClientSaid)) {
+			
+			// If the client is not null and has something to say
 			if (whatClientSaid != null) {
 				System.out.println("what client said: \'" + whatClientSaid + "\'");
 				
@@ -1416,8 +1394,19 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 				}
 				
 				if( console_enabled ) {
+					
+					/*public boolean usingConsole(final Client client) {
+						boolean usingConsole = false;
+						
+						if( console_enabled ) {
+							usingConsole = cmon.hasConsole(client);
+						}
+						
+						return usingConsole;
+					}*/
+					
 					// check to see if we are a console user
-					if( usingConsole(client) ) {
+					if( cmon.hasConsole(client) ) {
 						debug("CONSOLE");
 
 						final Console console = cmon.getConsole(client);
@@ -1429,11 +1418,16 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 					}
 				}
 				
-				if (queued_commands) {
+				if ( queued_commands ) {
 					debug("Putting comand in command queue.");
-					cmdQueue.add(new CMD(whatClientSaid.trim(), null, client));
+					
+					CMD cmd = new CMD(whatClientSaid.trim(), null, client);
+					
+					cmdQueue.add(cmd);
 				}
 				else {
+					debug("Evaluating command.");
+					
 					try {
 						cmd(whatClientSaid.trim(), client);
 					}
@@ -1446,10 +1440,8 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 				}
 			}
 
-			// flush players -- making sure that
-			// non-existent/disconnected/broken players don't bog down the
-			// system
-			flush();
+			// flush players -- clean up broken connections;
+			//flush(); // not sure what the point of this is...
 
 			Thread.sleep(200); // wait 2/10 of a second
 		}
@@ -1527,7 +1519,8 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 				try {
 					Thread.sleep(500);
 				}
-				catch(InterruptedException ie) {
+				catch(final InterruptedException ie) {
+					System.out.println("--- Stack Trace ---");
 					ie.printStackTrace();
 				}
 				
@@ -1535,23 +1528,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 					runHelper(client);
 				}
 				
-				// TODO remove this stuff as it's module/game specific and needs to be pulled out and isolated
-				for(final Player player : terminals.keySet()) {
-					final mud.foe.Terminal term = terminals.get( player );
-					
-					term.exec();
-					
-					String line = "";
-
-					while((line = term.read()) != null) {
-						player.getClient().write( line );
-					}
-
-					if( term.paused ) {
-						player.setStatus("IC");
-						send("Stopped using terminal.", player.getClient());
-					}
-				}
+				module.run();
 
 				/* Notification Messages */
 
@@ -1622,7 +1599,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	}
 	
 	private String buildChatMessage(String channelName, Pair<String> colorData, Message msg, Boolean color, Boolean tagged) {
-		StringBuilder sb = new StringBuilder();
+		final StringBuilder sb = new StringBuilder();
 		
 		final String chanColor = colorData.one;
 		final String textColor = colorData.two;
@@ -1649,14 +1626,10 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	private void create_data() {
 		// generate blank motd
 		String[] motdData = new String[] {
-				"*** Welcome to:",
-				"",
-				"<insert mud name or initial graphic here>",
-				"",
-				"<other info>",
-				"",
-				"<connection details>",
-				"",
+				"*** Welcome to:", "",
+				"<insert mud name or initial graphic here>", "",
+				"<other info>", "",
+				"<connection details>", "",
 				"To connect to your character use 'connect <playername> <password>'",
 		"To create a character use 'create <playername> <password>'" };
 
@@ -1735,6 +1708,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		room.setDBRef(0);
 
 		final Player admin = new Player(1, "admin", Utils.hash("password"), 0);
+		
 		admin.setDesc("admin character");
 		admin.setAccess(Constants.SUPERUSER);
 		admin.setRace(Races.NONE);
@@ -1771,32 +1745,32 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 		// create some weather states
 		WeatherState ws1 = new WeatherState("Clear Skies", 1, false, false, false, false);
-		ws1.description = "The sky is clear{DAY? and blue}{NIGHT? and flecked with stars.  Moonlight faintly illuminates your surroundings}.";
+		ws1.setDescription("The sky is clear{DAY? and blue}{NIGHT? and flecked with stars. Moonlight faintly illuminates your surroundings}.");
 		ws1.transUpText = "Your surroundings brighten a little as the {DAY?sun}{NIGHT?moon} peeks through thinning clouds.";
 
 		WeatherState ws2 = new WeatherState("Cloudy", 0.5, false, false, true, false);
-		ws2.description = "The air is dry for now, but clouds cover the sky.  It might rain soon.";
+		ws2.setDescription("The air is dry for now, but clouds cover the sky.  It might rain soon.");
 		ws2.transDownText = "It's getting cloudy.";
 		ws2.transUpText = "The rain seems to have stopped for now.";
 
 		WeatherState ws3 = new WeatherState("Rain", 0.25, true, false, true, false);
-		ws3.description = "Above the pouring rain hangs a gray and solemn sky.";
+		ws3.setDescription("Above the pouring rain hangs a gray and solemn sky.");
 		ws3.transDownText = "Rain begins to spot your surroundings.";
 		ws3.transUpText = "The flashes of lightning taper off as the thunder goes quiet, the sound fading till all that can be heard it the pouring rain.";
 
 		WeatherState ws4 = new WeatherState("Thunderstorm", 0, true, true, true, true);
-		ws4.description = "Thunder and lightning light up the sky, punctuating the sound of heavy rain.";
+		ws4.setDescription("Thunder and lightning light up the sky, punctuating the sound of heavy rain.");
 		ws4.transDownText = "You hear a the boom of thunder and catch a glimpse of a sudden flash in the distance.";
 
 		WeatherState ws5 = new WeatherState("Winter Storm", 0, false, false, false, true);
-		ws5.description = "Blinded by a tempest of snow swirling above, you assume the sky looms black.";
+		ws5.setDescription("Blinded by a tempest of snow swirling above, you assume the sky looms black.");
 		ws5.transDownText = "Occasional gusts become a river of frigid air, the snow a blinding swirl of gray.";
 
 		// create a seasonal weather profile, and hand it the states we created
-		Season spring = new Season("Spring", ws1, ws2, ws3);
-		Season summer = new Season("Summer", ws1, ws2, ws3, ws4);
-		Season fall = new Season("Fall", ws1, ws2, ws3);
-		Season winter = new Season("Winter", ws2, ws3, ws5);
+		Season spring = new Season("Spring", -1, -1, ws1, ws2, ws3);
+		Season summer = new Season("Summer", -1, -1, ws1, ws2, ws3, ws4);
+		Season fall = new Season("Fall", -1, -1, ws1, ws2, ws3);
+		Season winter = new Season("Winter", -1, -1, ws2, ws3, ws5);
 
 		// create a weather object, handing it our current season and a starting
 		// weather state
@@ -1816,8 +1790,8 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		/**
 		 * World/Game/Setting Test Cases
 		 * 
-		 * Fallout Equestria (foe.txt) [Fallout] Forgotten Realms (db.txt)
-		 * [Dungeons and Dragons 3E?]
+		 * Fallout Equestria (foe.txt) [Fallout]
+		 * Forgotten Realms  (db.txt)  [Dungeons and Dragons 3E?]
 		 * 
 		 * NOTE: It is strongly advised to use a database name other than the
 		 * ones noted above to avoid triggering the following special setup
@@ -1828,30 +1802,19 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		/* FOE Items Testing -- NOT DB Safe */
 		if (DB_FILE.endsWith("foe.txt")) { // Fallout Equestria testing database (this code uses stuff from a package not included on github)
 			module.init();
+			
+			// TODO need to prototype all these things or something and then just make an instance in the test database
 
 			// rules = mud.foe.FOESpecial.getInstance();
-
-			try {
-				Class<FalloutEquestria> c1 =  mud.modules.FalloutEquestria.class;
-				Class<Terminal> c2 = mud.foe.Terminal.class;
-
-				//registerUseMethod(c2, c1.getMethod("use_terminal", c2, Client.class));
-			}
-			/*catch(NoSuchMethodException e) {
-				debug("No such method " + e.getMessage() + " in ");
-				e.printStackTrace();
-			}*/
-			catch (SecurityException e) {
-				e.printStackTrace();
-			}
 
 			System.out.println("Abilities: " + Arrays.asList(rules.getAbilities()));
 
 			// pull in prototypes
-			prototypes.putAll(module.getItemPrototypes());
-			prototypes1.putAll(module.getThingPrototypes());
-
-
+			prototypes.putAll( module.getItemPrototypes() );
+			prototypes1.putAll( module.getThingPrototypes() );
+			
+			// TODO greetings really should be persisted with npcs
+			
 			/* Set NPC Greetings (bit of a hack, really) */
 			getNPC("Life Bloom").setGreeting("Welcome to Tenpony tower.");
 			getNPC("Ditzy Doo").setGreeting("Ditzy Doo smiles at you, which is oddly nice and also looks gross.");
@@ -1872,21 +1835,8 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			initCreatedThing(box);
 			box.setLocation(atrium2.getDBRef());
 			atrium2.addThing(box);
-
-			// Item wsg = new Item(-1);
-			// wsg.setName("The Wasteland Survival Guide");
-			// wsg.setItemType(ItemType.NONE);
-			// wsg.setDesc("A modestly thick, black book with a white equine skull on the cover.");
-
-			// wsg.setAuctionable(false);
-
-			// initCreatedItem(wsg);
-
-			// wsg.setLocation(atrium2.getDBRef());
-			// atrium2.addItem(wsg);
-
-			// PipBuck (foe version of PipBoy from Bethesda's Fallout video
-			// games)
+			
+			// PipBuck (foe version of PipBoy from Bethesda's Fallout video games)
 			// Item pb = createItem("mud.foe.pipbuck", false);
 
 			// initCreatedItem(pb);
@@ -1947,8 +1897,11 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			// TODO resolve issue with scripting system that makes it not work
 			// when you want to execute
 			// three functions in succession
-			vending_machine.setScriptOnTrigger( TriggerType.onUse,
-					"{if:{ge:{prop:money,{&this}},1},{if:{ge:{prop:inventory/sparkle_cola,{&this}},1},{do:{tell:{colors:green,Enough Money!},{&player}},{set:money,{&this},{sub:{prop:money,{&this}},1}},{set:inventory/sparkle_cola,{&this},{sub:{prop:inventory/sparkle_cola,{&this}},1}},{tell:PCHING! A bottle of sparkle cola!,{&player}},{give:{&player},{create_item:mud.foe.sparkle_cola}}},{tell:Sold Out!,{&player}}},{tell:{colors:red,Insufficient Funds!},{&player}}}");
+			/*vending_machine.setScriptOnTrigger( TriggerType.onUse,
+					"{if:{ge:{prop:money,{&this}},1},{if:{ge:{prop:inventory/sparkle_cola,{&this}},1},{do:{tell:{colors:green,Enough Money!},{&player}},{store:money,{&this},{sub:{prop:money,{&this}},1}},{store:inventory/sparkle_cola,{&this},{sub:{prop:inventory/sparkle_cola,{&this}},1}},{tell:PCHING! A bottle of sparkle cola!,{&player}},{give:{&player},{create_item:mud.foe.sparkle_cola}}},{tell:Sold Out!,{&player}}},{tell:{colors:red,Insufficient Funds!},{&player}}}");
+			*/
+			vending_machine.setScriptOnTrigger(TriggerType.onUse, ""
+					+ "{do:{set:money,{prop:money,{&this}}},{set:stock,{prop:inventory/sparkle_cola,{&this}}},{if:{ge:{&money},1},{if:{ge:{&stock},1},{do:{tell:{colors:green,Enough Money!},{&player}},{set:money,{sub:{&money},1}},{store:money,{&this},{&money}},{set:stock,{sub:{&stock},1}},{store:inventory/sparkle_cola,{&this},{&stock}},{tell:PCHING! A bottle of sparkle cola!,{&player}},{give:{&player},{create_item:mud.foe.sparkle_cola}}},{tell:Sold Out!,{&player}}},{tell:{colors:red,Insufficient Funds!},{&player}}}}");
 
 			System.out.println("# of Sparkle Cola(s) left: " + vending_machine.getProperty("inventory/sparkle_cola", Integer.class));
 			System.out.println("# of Sparkle Cola Rad(s) left: " + vending_machine.getProperty("inventory/sparkle_cola_rad", Integer.class));
@@ -1959,31 +1912,32 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			// createItem("Notebook", ItemTypes.NONE,
 			// "A blank paper notebook, a remnant of pre-war Equestria.");
 
-			Item notebook = new Item(-1);
+			Book notebook = new Book();
 			notebook.setName("Notebook");
 			notebook.setDesc("A blank paper notebook, a remnant of pre-war Equestria.");
 
 			initCreatedItem(notebook);
+			
 			notebook.setLocation(atrium2.getDBRef());
 			atrium2.addItem(notebook);
+			
+			Book wsg = new Book("Wasteland Survival Guide", "Ditzy Doo", 250);
+			wsg.setName("The Wasteland Survival Guide");
+			wsg.setDesc("A modestly thick, black book with a white equine skull on the cover.");
+			
+			wsg.setAuctionable(false);
 
-			final Book book = new Book("Wasteland Survival Guide", "Ditzy Doo", 250);
-
-			book.setDesc("A modestly thick, black book with a white equine skull on the cover.");
-
-			book.setAuctionable(false);
-
-			book.addPage(
+			wsg.addPage(
 					Utils.mkList(
 							"Chapter 1: Basics of Pony Biology",
 							"",
 							"The things that everypony should know:",
 							"- water, I need it, you need it, the raiders need it. Absolutely Essential.",
 							"- food, same as with water, easier to find though. see chapter 3"));
-			book.addPage(
+			wsg.addPage(
 					Utils.mkList("Chapter 2: Dangers of the Wasteland",
 							"You want dangers, we've got them all, right here for you."));
-			book.addPage(
+			wsg.addPage(
 					Utils.mkList(
 							"Raiders",
 							"",
@@ -1991,7 +1945,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 							"end your life to get it. And that's just if you're lucky. Be an unlucky pony and you'll end up enslaved.",
 							"Thing is, that wouldn't be so terrible, maybe, except that they'll put an explosive collar on you.",
 							"Move two steps out of line and *BOOM* no more head. Yeah, loss of your head is fatal."));
-			book.addPage(
+			wsg.addPage(
 					Utils.mkList(
 							"Yao Guai",
 							"",
@@ -1999,11 +1953,9 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 							"until your favorite friend, magical radiation, did a stellar job of",
 							"creating an A-1 menace."));
 
-			initCreatedItem(book);
-			book.setLocation(atrium2.getDBRef());
-			atrium2.addItem(book);
-			
-			//final Book book1 = loadBook("wasteland_guide");
+			initCreatedItem(wsg);
+			wsg.setLocation(atrium2.getDBRef());
+			atrium2.addItem(wsg);
 
 			Thing pipbuck_machine = new Thing(
 					"Pipbuck Machine",
@@ -2022,6 +1974,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 					"{if:{gt:{prop:contents/pipbuck,{&this}},0},{do:{give:{&player},{create_item:mud.foe.pipbuck}},{tell:You cautiously stick your hoof into the hole.,{&player}}},{tell:Insufficient Pipbucks Available!,{&player}}}");
 
 			initCreatedThing(pipbuck_machine);
+			
 			pipbuck_machine.setLocation(it.getDBRef());
 			it.addThing(pipbuck_machine);
 
@@ -2036,13 +1989,16 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 			mud.foe.Terminal terminal = new mud.foe.Terminal(
 					"Terminal",
-					"A Stable-Tec terminal, old pre-war technology whose durability is plain to see. On the screen, passively glowing green text indicates that it awaits input."
+					"A Stable-Tec terminal, old pre-war technology whose durability is plain to see."
 					);
+			
+			terminal.setProperty("/visuals/screen", "passively glowing green text indicates that it awaits input");
 
 			terminal.init();
-			terminal.powerOn();
+			System.out.println( terminal.powerOn() );
 
 			initCreatedThing(terminal);
+			
 			terminal.setLocation(atrium2.getDBRef());
 			atrium2.addThing(terminal);
 
@@ -2165,20 +2121,22 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			 * 
 			 * Jewelry circlet = new Jewelry(ItemTypes.NONE, "Copper Circlet",
 			 * "", new Effect("none")); circlet.setItemType(ItemTypes.RING);
-			 * 
-			 * // Item properties testing -- Not DB Safe Item item =
-			 * createItem("Copper Ore",
-			 * "A chunk of copper ore. Veins of copper swirl through the baser rock surrounding them."
-			 * , 8);
-			 * 
-			 * item.setProperty("material", "copper");
-			 * item.setProperty("purity", "0.90");
-			 * 
-			 * initCreatedItem(item);
-			 * 
-			 * getRoom(8).addItem(item);
 			 */
 
+			// Item properties testing -- Not DB Safe Item item =
+			Item ore = createItem(
+					"Copper Ore",
+					"A chunk of copper ore. Veins of copper swirl through the baser rock surrounding them.",
+					WELCOME_ROOM
+					);
+
+			ore.setProperty("material", "copper");
+			ore.setProperty("purity", "0.90");
+			
+			initCreatedItem(ore);
+			
+			getRoom( ore.getLocation() ).addItem(ore);
+			
 			Weapon w = new Weapon(WeaponTypes.BOW);
 
 			w.setSlotType(SlotTypes.HANDS);
@@ -2215,14 +2173,15 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			basement.addExit(up);
 
 			Creature c = new Creature("Mangy Rat", "A large, scruffy gray rat with red beady eyes and pointy teeth.");
+			
 			c.setMaxHP(5);
 			c.setLocation(basement_dbref);
 			c.setRace(Races.NONE);
 
-			Creature c1 = new Creature(c);
-			Creature c2 = new Creature(c);
-			Creature c3 = new Creature(c);
-			Creature c4 = new Creature(c);
+			Creature c1 = c.getCopy();
+			Creature c2 = c.getCopy();
+			Creature c3 = c.getCopy();
+			Creature c4 = c.getCopy();
 
 			for (final Creature cre : Utils.mkList(c, c1, c2, c3, c4)) {
 				objectDB.addAsNew(cre);
@@ -2250,9 +2209,9 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 					new KillTask("Kill 5 rats", room, objectiveData)
 					);
 			
-			Item item = new Item(-1, "Bread", "A tasty looking loaf of yellow bread.");
+			Item bread = new Item("Bread", "A tasty looking loaf of yellow bread.");
 			
-			quest.setReward( new Reward(Coins.gold(5), item) );
+			quest.setReward( new Reward(Coins.gold(5), bread) );
 
 			if (quest.getTasks().get(0).getObjective() == null) {
 				debug("ERROR! Objective Data is NULL?");
@@ -2451,7 +2410,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		// if logged-in
 		else if (logged_in) {
 			final Player player = getPlayer(client);
-			final Room room = getRoom(player);
+			final Room room = getRoom( player.getLocation() );
 
 			// if the user is editing something, pass their input to the editor
 			if (player.getStatus().equals(Constants.ST_EDIT)) {
@@ -2461,7 +2420,6 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 				case AREA:     break;
 				case CHARGEN:  op_chargen(input, client);      break;
 				case CREATURE: op_creatureedit(input, client); break;
-				case DESC:     op_dedit(input, client);        break;
 				case HELP:     op_helpedit(input, client);     break;
 				case INTCAST:  op_cast(input, client);         break;
 				case ITEM:     op_itemedit(input, client);     break;
@@ -2486,7 +2444,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 					
 					player.setStatus("IC");
 
-					look( getRoom(player), player.getClient() );
+					look( getRoom( player.getLocation() ), player.getClient() );
 				}
 				else {
 					// TODO make sure we know what npc the player is talking to
@@ -2501,9 +2459,9 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			else if (player.getStatus().equals("VIEW")) { // viewing help files
 				op_pager(input, client);
 			}
-			else if (player.getStatus().equals("TERM")) {
-				debug("op_terminal: " + input);
-				op_terminal(input, client);
+			else if ( !( player.getStatus().equals("IC") || player.getStatus().equals("OOC") ) && module != null ) {
+				System.out.println("Module Processing input");
+				module.op(input, player);
 			}
 			// else pass their input to command parsing
 			else {
@@ -2554,7 +2512,6 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 					superuserCmd = true; // begin by assuming we have a superuser command
 
 					if( cmdIs(cmd, "@access") ) {
-						// cmd_access(arg, client);
 						getCommand("@access").execute(arg, client);
 					}
 					else if( cmdIs(cmd, "@alias") ) {
@@ -2562,6 +2519,9 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 					}
 					else if( cmdIs(cmd, "@broadcast") ) {
 						write("Game> " + player.getName() + " says, " + arg);
+					}
+					else if( cmdIs(cmd, "@jsonify") ) {
+						cmd_jsonify(arg, client);
 					}
 					else if( cmdIs(cmd, "@load") ) {
 						send("Game> Command Not Implemented!", client);
@@ -2720,7 +2680,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 					else if ( cmdIs(cmd, "@lsedit") ) {
 						cmd_lsedit(arg, client); // run the list editor
 					}
-					else if ( cmdIs(cmd, "nameref") ) {
+					else if ( cmdIs(cmd, "@nameref") ) {
 						cmd_nameref(arg, client);
 					}
 					else if ( cmdIs(cmd, "@ofail") ) {
@@ -2833,9 +2793,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 					else if ( cmdIs(cmd, "@makehouse") ) {
 						final House h = new House(getPlayer(client), 5);
 
-						for (String s : h.getInfo()) {
-							send(s, client);
-						}
+						for (final String s : h.getInfo()) send(s, client);
 					}
 					else if ( cmdIs(cmd, "@name") ) {
 						cmd_name(arg, client);
@@ -2849,22 +2807,18 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 						cmd_npcs("", client);
 					}
 					else if ( cmdIs(cmd, "@lex") ) {
-						// we'll just create a new and temporary instance (debugging enabled)
-						ProgramInterpreter newInterp = new ProgramInterpreter(this, true);
-
-						// invoke the program interpreter and pass it the argument
-
-						send(newInterp.lex(arg), client);
-
-						newInterp = null;
+						final List<String> result = ProgramInterpreter.lex(arg); 
+						
+						send(result, client);
 					}
 					else if ( cmdIs(cmd, "@pgm") ) {
 						// we'll just create a new and temporary instance (debugging enabled)
 						ProgramInterpreter newInterp = new ProgramInterpreter(this, true);
-
-						// invoke the program interpreter and pass it the
-						// argument
-						send("-Result: " + newInterp.interpret(arg, player, null), client);
+						
+						Script script = new Script(arg);
+						
+						// invoke the program interpreter and pass it the argument
+						send("-Result: " + newInterp.interpret(script, player, null), client);
 
 						newInterp = null;
 					}
@@ -2969,235 +2923,123 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 				// TODO convert player command checks to use CmdIs(...)
 
 				if (player.getAccess() >= Constants.USER) {
-					// TODO should this be before or after the other commands
-					if (soft_commands) { // "soft" commands enabled?
-						Command command = null;
-
-						// general case for non-explicitly checked mapped commands
-						if (commandMap.containsKey(cmd)) {
-							debug("Look in CommandMap");
-							command = getCommand(cmd);
-						}
-						else if (player.commandMap.containsKey(cmd)) {
-							debug("Look in Player CommandMap");
-							command = player.commandMap.get(cmd);
-						}
-
-						if (command != null) {
-							if( client == null) {
-								debug("Client is NULL! WTF?!");
-							}
-							
-							// if player has appropriate permissions, ...
-							if (checkAccess(player, command.getAccessLevel())) {
-								command.execute(arg, client);
-							}
-							else send("You may not use that command. (Insufficient Access Level!)", client);
-
-							return; // return early because we found the command
-						}
-					}
-
-					if ( cmdIs(cmd, "ask") )            cmd_ask(arg, client);
+					if ( cmdIs(cmd, "ask") )             cmd_ask(arg, client);
 					// attack (a soft command)
-					if ( cmdIs(cmd, "aliases") )        cmd_aliases(arg, client);
-					else if ( cmdIs(cmd, "auction") )   cmd_auction(arg, client);
-					else if ( cmdIs(cmd, "auctions") )  cmd_auctions(arg, client);
-					else if ( cmdIs(cmd, "balance") )   cmd_balance(arg, client);
-					else if ( cmdIs(cmd, "bash") )      cmd_bash(arg, client);
-					else if ( cmdIs(cmd, "bid") )       cmd_bid(arg, client);
-					else if ( cmdIs(cmd, "boards") )    cmd_boards(arg, client);
-					else if ( cmdIs(cmd, "buy") )       cmd_buy(arg, client);
-					else if ( cmdIs(cmd, "calendar") )  cmd_calendar("", client);
+					if ( cmdIs(cmd, "aliases") )         cmd_aliases(arg, client);
+					else if ( cmdIs(cmd, "auction") )    cmd_auction(arg, client);
+					else if ( cmdIs(cmd, "auctions") )   cmd_auctions(arg, client);
+					else if ( cmdIs(cmd, "balance") )    cmd_balance(arg, client);
+					else if ( cmdIs(cmd, "bash") )       cmd_bash(arg, client);
+					else if ( cmdIs(cmd, "bid") )        cmd_bid(arg, client);
+					else if ( cmdIs(cmd, "boards") )     cmd_boards(arg, client);
+					else if ( cmdIs(cmd, "buy") )        cmd_buy(arg, client);
+					else if ( cmdIs(cmd, "calendar") )   cmd_calendar(arg, client);
 					// cast (a soft command)
-					else if ( cmdIs(cmd, "chargen") )   cmd_chargen(arg, client);
-					else if ( cmdIs(cmd, "chat") )      cmd_chat(arg, client);
-					else if ( cmdIs(cmd, "climb") )     cmd_climb(arg, client);
-					else if ( cmdIs(cmd, "cls") )       cmd_cls(arg, client);
-					else if ( cmdIs(cmd, "colors") )    cmd_colors(arg, client);
-					else if ( cmdIs(cmd, "commands") )  cmd_commands(arg, client);
-					else if ( cmdIs(cmd, "condition") ) cmd_condition(arg, client);
-					else if ( cmdIs(cmd, "dedit") )     send("dedit: Command not Implemented!", client);
-					else if ( cmdIs(cmd, "deposit") )   cmd_deposit(arg, client);
-					else if ( cmdIs(cmd, "drink") )     cmd_drink(arg, client);
-					
-					else if ( cmdIs(cmd, "drop") )      cmd_drop(arg, client); 
-					
-					else if ( cmdIs(cmd, "effects") )   cmd_effects(arg, client);
-					else if ( cmdIs(cmd, "equip") )     cmd_equip(arg, client);
-					else if ( cmdIs(cmd, "exchange") )  cmd_exchange(arg, client);
-					
-					else if ( cmdIs(cmd, "exp") )       cmd_exp(arg, client); // TODO CMD 5
-					
-					else if ( cmdIs(cmd, "exits") )     cmd_exits(arg, client);
-					else if ( cmdIs(cmd, "feats") )     cmd_feats(arg, client);
-					
-					else if ( cmdIs(cmd, "fly") )       cmd_fly(arg, client); // TODO CMD 6
-					
-					else if ( cmdIs(cmd, "get") )       cmd_get(arg, client);
-					else if ( cmdIs(cmd, "go") )        cmd_go(arg, client);
+					else if ( cmdIs(cmd, "chargen") )    cmd_chargen(arg, client);
+					else if ( cmdIs(cmd, "chat") )       cmd_chat(arg, client);
+					else if ( cmdIs(cmd, "climb") )      cmd_climb(arg, client);
+					else if ( cmdIs(cmd, "cls") )        cmd_cls(arg, client);
+					else if ( cmdIs(cmd, "colors") )     cmd_colors(arg, client);
+					else if ( cmdIs(cmd, "commands") )   cmd_commands(arg, client);
+					else if ( cmdIs(cmd, "condition") )  cmd_condition(arg, client);
+					else if ( cmdIs(cmd, "deposit") )    cmd_deposit(arg, client);
+					else if ( cmdIs(cmd, "drink") )      cmd_drink(arg, client);
+					else if ( cmdIs(cmd, "drop") )       cmd_drop(arg, client); 
+					else if ( cmdIs(cmd, "effects") )    cmd_effects(arg, client);
+					else if ( cmdIs(cmd, "equip") )      cmd_equip(arg, client);
+					else if ( cmdIs(cmd, "exchange") )   cmd_exchange(arg, client);
+					else if ( cmdIs(cmd, "exp") )        cmd_exp(arg, client); // TODO CMD 5
+					else if ( cmdIs(cmd, "exits") )      cmd_exits(arg, client);
+					else if ( cmdIs(cmd, "feats") )      cmd_feats(arg, client);
+					else if ( cmdIs(cmd, "fly") )        cmd_fly(arg, client); // TODO CMD 6
+					else if ( cmdIs(cmd, "get") )        cmd_get(arg, client);
+					else if ( cmdIs(cmd, "go") )         cmd_go(arg, client);
 					// greet (a soft command)
-					else if ( cmdIs(cmd, "help") )      cmd_help(arg, client);
-					else if ( cmdIs(cmd, "home") )      cmd_home(arg, client);
-					else if ( cmdIs(cmd, "housing") )   cmd_housing(arg, client);
-					else if ( cmdIs(cmd, "inspect") )   cmd_inspect(arg, client);
-					else if ( cmdIs(cmd, "interact") )  cmd_interact(arg, client);
-					else if ( cmdIs(cmd, "inventory") ) cmd_inventory(arg, client);
-					
-					else if ( cmdIs(cmd, "land") )      cmd_land(arg, client); // TODO CMD
-					
-					else if ( cmdIs(cmd, "levelup") )   cmd_levelup(arg, client); // TODO CMD 8 fix this kludge
-					
-					else if ( cmdIs(cmd, "list") )      cmd_list(arg, client);
-					else if ( cmdIs(cmd, "lock") )      cmd_lock(arg, client);
-					else if ( cmdIs(cmd, "logout") )    cmd_logout(arg, client);
-					else if ( cmdIs(cmd, "look") )      cmd_look(arg, client);
-					else if ( cmdIs(cmd, "lookat") )    cmd_lookat(arg, client);
+					else if ( cmdIs(cmd, "help") )       cmd_help(arg, client);
+					else if ( cmdIs(cmd, "home") )       cmd_home(arg, client);
+					else if ( cmdIs(cmd, "housing") )    cmd_housing(arg, client);
+					else if ( cmdIs(cmd, "inspect") )    cmd_inspect(arg, client);
+					else if ( cmdIs(cmd, "interact") )   cmd_interact(arg, client);
+					else if ( cmdIs(cmd, "inventory") )  cmd_inventory(arg, client);
+					else if ( cmdIs(cmd, "land") )       cmd_land(arg, client);    // TODO CMD
+					else if ( cmdIs(cmd, "levelup") )    cmd_levelup(arg, client); // TODO CMD 8 fix this kludge
+					else if ( cmdIs(cmd, "list") )       cmd_list(arg, client);
+					else if ( cmdIs(cmd, "lock") )       cmd_lock(arg, client);
+					else if ( cmdIs(cmd, "logout") )     cmd_logout(arg, client);
+					else if ( cmdIs(cmd, "look") )       cmd_look(arg, client);
+					else if ( cmdIs(cmd, "lookat") )     cmd_lookat(arg, client);
 					// mail (a soft command)
-					else if ( cmdIs(cmd, "map") )       cmd_map(arg, client);
+					else if ( cmdIs(cmd, "map") )        cmd_map(arg, client);
+					else if ( cmdIs(cmd, "money") )      cmd_money(arg, client);
 					
-					else if ( cmdIs(cmd, "money") )     send("You have " + player.getMoney() + ".", client); // TODO CMD 10
-					else if ( cmdIs(cmd, "motd") )      send(messageOfTheDay(), client); // TODO CMD 11
+					else if ( cmdIs(cmd, "motd") )       send(messageOfTheDay(), client); // TODO CMD 11
 					
-					else if ( cmdIs(cmd, "move") )      cmd_move(arg, client);
+					else if ( cmdIs(cmd, "move") )       cmd_move(arg, client);
+					else if ( cmdIs(cmd, "ooc") )        player.setStatus("OOC"); // TODO CMD 12 fix this kludge
+					else if ( cmdIs(cmd, "ic") )         player.setStatus("IC");  // TODO CMD 13 fix this kludge
 					
-					else if ( cmdIs(cmd, "ooc") )       player.setStatus("OOC"); // TODO CMD 12 fix this kludge
-					else if ( cmdIs(cmd, "ic") )        player.setStatus("IC");  // TODO CMD 13 fix this kludge
+					else if ( cmdIs(cmd, "open") )       cmd_open2(arg, client);
+					else if ( cmdIs(cmd, "page") )       cmd_page(arg, client);
+					else if ( cmdIs(cmd, "party") )      cmd_party(arg, client);
+					else if ( cmdIs(cmd, "passwd") )     cmd_passwd(arg, client);
+					else if ( cmdIs(cmd, "pconfig") )    cmd_pconfig(arg, client);
+					else if ( cmdIs(cmd, "pinfo") )      cmd_pinfo(arg, client);
+					else if ( cmdIs(cmd, "push") )       cmd_push(arg, client);
+					else if ( cmdIs(cmd, "put") )        cmd_put(arg, client);
 					
-					else if ( cmdIs(cmd, "open") ) {
-						List<MUDObject> objects = objectDB.getByRoom(room);
-
-						MUDObject object = null;
-
-						for (MUDObject obj : objects) {
-							if (obj.getName().equals(arg)) {
-								object = obj;
+					else if ( cmdIs(cmd, "prompt") )     prompt(client);
+					
+					else if ( cmdIs(cmd, "quests") )     cmd_quests(arg, client);
+					else if ( cmdIs(cmd, "quit") )       cmd_quit(arg, client);
+					else if ( cmdIs(cmd, "read") )       cmd_read(arg, client);
+					else if ( cmdIs(cmd, "roll") )       cmd_roll(arg, client); // TODO CMD 14
+					else if ( cmdIs(cmd, "run") ) {
+						(new Command("") {
+							@Override
+							public void execute(final String arg, final Client client) {
+								final Player player = getPlayer(client);
+								player.setSpeed(Constants.RUN);
+								send("You get ready to run.", client);
 							}
-						}
-
-						if (object != null) {
-							if ( object.isType(TypeFlag.EXIT) ) {
-								Exit exit = (Exit) object;
-
-								if (exit.getExitType() == ExitType.DOOR) {
-									Door door = (Door) exit;
-
-									if (door.isLocked()) {
-										if (door.unlock()) { // key check
-											send("You unlock the door and open it.", client);
-										}
-										else {
-											send("That door is locked!", client);
-										}
-									}
-									else {
-										send("You find the door to be unlocked and open it.", client);
-									}
-								}
-							}
-							else if (object instanceof Lockable<?>) {
-								Lockable<Item> l;
-
-								if (object instanceof Item) {
-									l = (Lockable<Item>) object;
-								}
-								else if (object instanceof Thing) {
-									l = (Lockable<Item>) object;
-								}
-							}
-						}
+						}).execute(arg, client);
 					}
-					else if ( cmdIs(cmd, "page") )    cmd_page(arg, client);
-					else if ( cmdIs(cmd, "party") )   cmd_party(arg, client);
-					else if ( cmdIs(cmd, "passwd") )  cmd_passwd(arg, client);
-					else if ( cmdIs(cmd, "pconfig") ) cmd_pconfig(arg, client);
-					else if ( cmdIs(cmd, "pinfo") )   cmd_pinfo(arg, client);
-					else if ( cmdIs(cmd, "push") )    cmd_push(arg, client);
-					else if ( cmdIs(cmd, "put") )     cmd_put(arg, client);
-					else if ( cmdIs(cmd, "prompt") )  prompt(client);
-					else if ( cmdIs(cmd, "quests") )  cmd_quests(arg, client);
-					else if ( cmdIs(cmd, "quit") )    cmd_quit(arg, client);
-					else if ( cmdIs(cmd, "read") )    cmd_read(arg, client);
-					
-					else if ( cmdIs(cmd, "roll") )    cmd_roll(arg, client); // TODO CMD 14
-					else if ( cmdIs(cmd, "run") ) { // TODO CMD 15
-						player.setSpeed(Constants.RUN);
-						send("You get ready to run.", client);
-					}
-					
-					else if ( cmdIs(cmd, "score") )   cmd_score(arg, client);
-					else if ( cmdIs(cmd, "sell") )    cmd_sell(arg, client);
-					else if ( cmdIs(cmd, "sheathe") ) cmd_sheathe(arg, client);
-					
-					else if ( cmdIs(cmd, "skillcheck") ) { // TODO CMD 17
-						final String args[] = arg.split(" ");
-						
-						// TODO: fix code to deal with players who are
-						// invalid/not setup and have no skills to check
-						// TODO: add a means to indicate which skills to test
-						// TODO: move to another command category?
-						Player player1 = null;
-						
-						String skillName = "";
-						String dice = "";
-						Integer DC = 0;
-						
-						Skill sk;
-						Integer value = 0;
-						Integer mod = 0;
-						
-						if (args.length == 3) {
-							skillName = args[0];
-							dice = args[1];
-							DC = Integer.parseInt(args[2]);
-							
-							player1 = player;
-						}
-						else if (args.length == 4) {
-							final String playerName = args[0];
-							
-							skillName = args[1];
-							dice = args[2];
-							DC = Integer.parseInt(args[3]);
-							
-							player1 = getPlayer(playerName);
-						}
-						
-						sk = rules.getSkill(skillName);
-						
-						value = player.getSkill(sk);
-						mod = player.getSkillMod(sk);
-						
-						send(skill_check(player1, sk, dice, DC) ? "true" : "false", client);
-					}
-					
-					else if ( cmdIs(cmd, "spellinfo") ) cmd_spellinfo(arg, client);
-					else if ( cmdIs(cmd, "spells") )    cmd_spells(arg, client);
+					else if ( cmdIs(cmd, "score") )      cmd_score(arg, client);
+					else if ( cmdIs(cmd, "sell") )       cmd_sell(arg, client);
+					else if ( cmdIs(cmd, "sheathe") )    cmd_sheathe(arg, client);
+					else if ( cmdIs(cmd, "skillcheck") ) cmd_skillcheck(arg, client);
+					else if ( cmdIs(cmd, "spellinfo") )  cmd_spellinfo(arg, client);
+					else if ( cmdIs(cmd, "spells") )     cmd_spells(arg, client);
 					// staff (a soft command)
-					else if ( cmdIs(cmd, "stats") )    cmd_stats(arg, client);
-					else if ( cmdIs(cmd, "status") )   cmd_status(arg, client);
-					else if ( cmdIs(cmd, "talk") )     cmd_talk(arg, client);
-					else if ( cmdIs(cmd, "take") )     cmd_take(arg, client);
-					else if ( cmdIs(cmd, "target") )   cmd_target(arg, client);
-					else if ( cmdIs(cmd, "tell") )     cmd_tell(arg, client);
-					else if ( cmdIs(cmd, "time") )     cmd_time(arg, client);
-					else if ( cmdIs(cmd, "trade") )    cmd_trade(arg, client);
-					else if ( cmdIs(cmd, "travel") )   cmd_travel(arg, client);
-					else if ( cmdIs(cmd, "unequip") )  cmd_unequip(arg, client);
-					else if ( cmdIs(cmd, "unlock") )   cmd_unlock(arg, client);
-					else if ( cmdIs(cmd, "use") )      cmd_use(arg, client);
-					else if ( cmdIs(cmd, "value") )    cmd_value(arg, client);
-					else if ( cmdIs(cmd, "version") )  cmd_version(arg, client);					
-					else if ( cmdIs(cmd, "vitals") )   cmd_vitals(arg, client);
-					else if ( cmdIs(cmd, "where") )    cmd_where(arg, client);
-					else if ( cmdIs(cmd, "who") )      cmd_who(arg, client);
-					else if ( cmdIs(cmd, "withdraw") ) cmd_withdraw(arg, client);
-					
-					else if ( cmdIs(cmd, "walk") ) { // TODO CMD 20
-						if (player.getSpeed() > Constants.WALK) {
-							player.setSpeed(Constants.WALK);
-							send("You slow down to a walking speed.", client);
-						}
+					else if ( cmdIs(cmd, "stats") )      cmd_stats(arg, client);
+					else if ( cmdIs(cmd, "status") )     cmd_status(arg, client);
+					else if ( cmdIs(cmd, "talk") )       cmd_talk(arg, client);
+					else if ( cmdIs(cmd, "take") )       cmd_take(arg, client);
+					else if ( cmdIs(cmd, "target") )     cmd_target(arg, client);
+					else if ( cmdIs(cmd, "tell") )       cmd_tell(arg, client);
+					else if ( cmdIs(cmd, "time") )       cmd_time(arg, client);
+					else if ( cmdIs(cmd, "trade") )      cmd_trade(arg, client);
+					else if ( cmdIs(cmd, "travel") )     cmd_travel(arg, client);
+					else if ( cmdIs(cmd, "unequip") )    cmd_unequip(arg, client);
+					else if ( cmdIs(cmd, "unlock") )     cmd_unlock(arg, client);
+					else if ( cmdIs(cmd, "use") )        cmd_use(arg, client);
+					else if ( cmdIs(cmd, "value") )      cmd_value(arg, client);
+					else if ( cmdIs(cmd, "version") )    cmd_version(arg, client);					
+					else if ( cmdIs(cmd, "vitals") )     cmd_vitals(arg, client);
+					else if ( cmdIs(cmd, "where") )      cmd_where(arg, client);
+					else if ( cmdIs(cmd, "who") )        cmd_who(arg, client);
+					else if ( cmdIs(cmd, "withdraw") )   cmd_withdraw(arg, client);
+					else if ( cmdIs(cmd, "walk") ) {
+						(new Command("") {
+							@Override
+							public void execute(final String arg, final Client client) {
+								final Player player = getPlayer(client);
+								
+								if (player.getSpeed() > Constants.WALK) {
+									player.setSpeed(Constants.WALK);
+									send("You slow down to a walking speed.", client);
+								}
+							}
+						}).execute(arg, client);
 					}
 					else if ( cmdIs(cmd, "write") ) { // TODO CMD 21
 						// check for something to write in/on (writable things
@@ -3205,31 +3047,41 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 						// check for writing tool and ink
 						// get stuff and "write" it down
 					}
-					
 					else {
+						// TODO exits first, then soft commands...
 						debug("Exit? " + cmd);
+						
+						boolean nothing = false;
 
-						// exit handling
-						if (cmd.matches("[a-zA-Z_-]+")) // no nums
-						{
-							// This will print to the console.
-							debug("Found a match in '" + cmd + "'");
-
+						if ( cmd.matches("[a-zA-Z_-]+") ) {
+							// exit handling
 							// has the user given an action/exit that is linked
-							// to something for which no similarly named command
-							// exists,
-							// if so, execute link or move user in the
-							// direction/to the room specified by the
-							// action/exit
+							// to something for which no similarly named command exists,
+							// if so, execute link or move user in the direction/to
+							// the room specified by the action/exit
+
 							// handle the command as an exit
-							if (!exitHandler(cmd, client)) {
-								send("Huh? That is not a known command.", client);
-								debug("Command> Unknown Command");
+							if ( exitHandler(cmd, client) ) {}
+							// general case for non-explicitly checked mapped commands
+							else if (soft_commands) { // "soft" commands enabled?
+								debug("Look in CommandMap");
+								final Command command = (player.hasCommand(cmd) ? player.getCommand(cmd) : getCommand(cmd));
+
+								if (command != null) {
+									if ( checkAccess(player, command.getAccessLevel()) ) {
+										command.execute(arg, client);
+									}
+									else send("You may not use that command. (Insufficient Access Level!)", client);
+								}
 							}
+							else nothing = true;
 						}
 						else {
 							debug("No match found in '" + cmd + "'");
-
+							nothing = true;
+						}
+						
+						if( nothing ) {
 							send("Huh? That is not a known command.", client);
 							debug("Command> Unknown Command");
 						}
@@ -3279,7 +3131,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 						player.setAccess(Integer.parseInt(args[1]));
 						send(player.getName() + "'s access level set to " + player.getAccess(), client);
 					}
-					catch (NumberFormatException nfe) {
+					catch (final NumberFormatException nfe) {
 						// TODO is this "debug" message adequate? should I tell
 						// the player or write to the debug log?
 						send("Invalid access level!", client);
@@ -3328,14 +3180,16 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 				for (final Account acct : acctMgr.getAccounts()) {
 					final String username = Utils.padRight(acct.getUsername(), 8);
 					final String id = Utils.padRight(String.valueOf(acct.getId()), 6);
-
-					final Player player = acct.getPlayer();
+					
 					final String name;
-
+					
+					final Player player = acct.getPlayer();
+					
+					// 29 vs 40?
 					if (player != null) name = Utils.padRight(player.getName(), 29);
 					else                name = Utils.padRight("- No Player -", 29);
-
-					final String state = Utils.padRight(acct.isOnline(), 6);
+					
+					final String state = Utils.padRight((acct.isOnline() ? "Yes" : "No"), 6);
 					final String creationDate = Utils.padRight(acct.getCreated().toString(), 10);
 					
 					output.add(username + " " + id + " " + name + " " + state + " " + creationDate);
@@ -3804,7 +3658,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	 */
 	private void cmd_backup(final String arg, final Client client) {
 		backup(arg);
-		send("Game> Finished backing up.", client);
+		send("Finished backing up.", client);
 	}
 
 	/**
@@ -3819,7 +3673,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	 */
 	private void cmd_balance(final String arg, final Client client) {
 		final Player player = getPlayer(client);
-		final Room room = getRoom(player);
+		final Room room = getRoom( player.getLocation() );
 		
 		String str = null;
 		
@@ -3827,6 +3681,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			str = room.getProperty("_game/isBank", String.class);
 		}
 		catch(final ClassCastException cce) {
+			System.out.println("--- Stack Trace ---");
 			cce.printStackTrace();
 			str = "false";
 		}
@@ -3858,30 +3713,38 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	private void cmd_ban(final String arg, final Client client) {
 		final String[] args = arg.split(" ");
 
-		/*
-		 * String[] args;
-		 * 
-		 * if( arg.indexOf(' ') != -1 ) args = arg.split(" ");
-		 */
-
 		if (arg.equals("#list")) {
 			// List Banned IPs
 			send("Banned IP Addresses", client);
-			for (String s : banlist) send(s, client);
+			
+			for (final String s : banlist) send(s, client);
 
 			// List Banned Players
 			send("Banned Players", client);
-			// for(Player player : objectDB.players.values())
-			// send(player.getName());
+			
+			for(final Player player : objectDB.getPlayers()) {
+				if( player.getPStatus() == Player.Status.BANNED ) {
+					send(player.getName(), client);
+				}
+			}
 		}
 
 		if (args.length > 1) {
 			if (args[0].equals("#ip")) {
-				// TODO test ip address for format errors, need to check IPv4
-				// and IPv6
-
+				final String ip_addr = args[1];
+				
 				// add IP address to banlist
-				banlist.add(args[1]);
+				
+				// TODO test ip address for format errors
+				// ^ need to check IPv4 and IPv6
+				boolean valid_address = false;
+				
+				// IPv4
+				if( ip_addr.matches("^[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}$") ) {
+					valid_address = true;
+				}
+				
+				if( valid_address ) banlist.add(args[1]);
 			}
 		}
 
@@ -3904,6 +3767,9 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 					if (acct != null) {
 						acct.setStatus(Account.Status.SUSPENDED);
+					}
+					else {
+						
 					}
 
 					// mark the player somehow
@@ -3973,139 +3839,129 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	 */
 	private void cmd_bb(final String arg, final Client client) {
 		final Player player = getPlayer(client);
-		
+
 		// TODO fix null pointer generation which crashes this if an incorrect argument occurs
-		
+
 		// exit if there are no arguments at all
-		if ("".equals(arg)) {
-			System.out.println("invalid syntax. see 'help @bb'");
-			return;
+		if ( "".equals(arg) ) {
+			send("invalid syntax. see 'help @bb'", client);
 		}
+		else {
+			// break up argument string into individual pieces
+			final String[] args = arg.split(" ");
 
-		// break up argument string into individual pieces
-		final String[] args = arg.split(" ");
-		
-		debug("# of args: " + args.length);
-		
-		// initialize this to the main system board
-		BulletinBoard board = null; //boards.get("board");
-		Integer messageNum = -1;
+			debug("# of args: " + args.length);
 
-		// TODO change this to get the appropriate bulletin board
+			// initialize this to the main system board
+			BulletinBoard board = null; //boards.get("board");
+			Integer messageNum = -1;
 
-		// important components of argument data
-		String command = "";
-		String param = "";
-		
-		// @bb <command> <params>
-		// args[0]: <command>
-		// args[1...?]: <params>
-		
-		if (args.length >= 2) {
-			command = args[0];
-			param = args[1];
-			
-			int test = param.indexOf('.');
-			
-			if ( test != -1 ) {
-				board = getBoard( param.substring(0, test) );
-				messageNum = Utils.toInt(param.substring(test + 1, param.length()), -1);
-				
-				System.out.println("    board: " + board.getName());
-				System.out.println("message #: " + messageNum);
-			}
-			else {
-				board = getBoard(param);
-				
-				final List<String> temp = (List<String>) Arrays.asList(args);
-				
-				param = Utils.join(temp.subList(2, temp.size()), " ");
-			}
-		}
+			// TODO change this to get the appropriate bulletin board
 
-		debug("command: " + command);
-		debug("  param: " + param);
-		
-		/*if (board == null) {
-			send("No such board.", client);
-			debug("No such board.");
-			return;
-		}*/
-		
-		if (command.equals("+scan") | command.equals("+s")) {
-			// @bb +scan board_name
-			debug("bb:scan");
+			// important components of argument data
+			String command = "";
+			String param = "";
 
-			final List<String> out = new LinkedList<String>();
+			// @bb <command> <params>
+			// args[0]: <command>
+			// args[1...?]: <params>
 
-			for (final String s : MudUtils.scan(board)) {
-				out.add(s);
-			}
+			if (args.length >= 2) {
+				command = args[0];
+				param = args[1];
 
-			send(out, client);
-		}
-		else if (command.equals("+delete") | command.equals("+del")) {
-			// @bb +delete board_name.message_num
-			debug("bb:delete");
-			
-			if (messageNum > -1) {
-				if (messageNum < board.getNumMessages()) { // check for valid message number
-					final List<BBEntry> entries = board.getEntries();
+				int test = param.indexOf('.');
 
-					final BBEntry entry = entries.get(messageNum);
+				if ( test != -1 ) {
+					board = getBoard( param.substring(0, test) );
+					messageNum = Utils.toInt(param.substring(test + 1, param.length()), -1);
 
-					// TODO equating players and their names might be bad...
-					if (entry.getAuthor().equals(player.getName())) {
-						debug("Removing Message...");
-						board.removeEntry(messageNum);
-						debug("Renumbering entries...");
-						board.renumber(messageNum);
-						debug("Done.");
-					}
-					else send("BB: You may only delete your own posts.", client);
-				}
-				else send("No such message", client);
-			}
-			else send(gameError("@bb", ErrorCodes.INVALID_SYNTAX), client); // invalid message num
-		}
-		else if (command.equals("+read") | command.equals("+r")) {
-			// @bb +read board_name.message_num
-			debug("bb:read");
-
-			// should this be handled elsewhere (index/bounds issue)
-			if (board.getNumMessages() <= 0 || messageNum >= board.getNumMessages()) {
-				System.out.println("No Such Message.");
-			}
-
-			else {
-				final BBEntry entry = board.getEntry(messageNum);
-
-				if (entry != null) {
-					// TODO convert to send lists or?
-					client.writeln("ID: " + entry.getId());
-					client.writeln("Author: " + entry.getAuthor());
-					client.writeln("Subject: " + entry.getSubject());
-					client.writeln("");
-					client.writeln(entry.getMessage());
+					System.out.println("    board: " + board.getName());
+					System.out.println("message #: " + messageNum);
 				}
 				else {
-					send("No such entry!", client);
+					board = getBoard(param);
+
+					final List<String> temp = (List<String>) Arrays.asList(args);
+
+					param = Utils.join(temp.subList(2, temp.size()), " ");
 				}
 			}
-		}
-		else if (command.equals("+write") | command.equals("+w")) {
-			// @bb +write board_name subject=message
-			String[] entry = param.split("=");
 
-			if (entry.length == 2) {
-				final String author = player.getName();
-				final String subject = entry[0];
-				final String message = entry[1];
+			debug("command: " + command);
+			debug("  param: " + param);
+			
+			if (command.equals("+scan") | command.equals("+s")) {
+				// @bb +scan board_name
+				debug("bb:scan");
 
-				board.write(author, subject, message);
+				final List<String> out = new LinkedList<String>();
+
+				for (final String s : MudUtils.scan(board)) {
+					out.add(s);
+				}
+
+				send(out, client);
 			}
-			else {
-				send(gameError("@bb", ErrorCodes.INVALID_SYNTAX), client);
+			else if (command.equals("+delete") | command.equals("+d")) {
+				// @bb +delete board_name.message_num
+				debug("bb:delete");
+
+				if (messageNum > -1) {
+					if (messageNum < board.getNumMessages()) { // check for valid message number
+						final List<BBEntry> entries = board.getEntries();
+
+						final BBEntry entry = entries.get(messageNum);
+
+						// TODO equating players and their names might be bad...
+						if ( entry.getAuthor().equals( player.getName() ) ) {
+							debug("Removing Message...");
+							board.removeEntry(messageNum);
+							debug("Renumbering entries...");
+							board.renumber(messageNum);
+							debug("Done.");
+						}
+						else send("BB: You may only delete your own posts.", client);
+					}
+					else send("No such message", client);
+				}
+				else send(gameError("@bb", ErrorCodes.INVALID_SYNTAX), client); // invalid message num
+			}
+			else if (command.equals("+read") | command.equals("+r")) {
+				// @bb +read board_name.message_num
+				debug("bb:read");
+
+				// should this be handled elsewhere (index/bounds issue)
+				if (board.getNumMessages() <= 0 || messageNum >= board.getNumMessages()) {
+					System.out.println("No Such Message.");
+				}
+
+				else {
+					final BBEntry entry = board.getEntry(messageNum);
+
+					if (entry != null) {
+						// TODO convert to send lists or?
+						client.writeln("ID: " + entry.getId());
+						client.writeln("Author: " + entry.getAuthor());
+						client.writeln("Subject: " + entry.getSubject());
+						client.writeln("");
+						client.writeln(entry.getMessage());
+					}
+					else send("No such entry!", client);
+				}
+			}
+			else if (command.equals("+write") | command.equals("+w")) {
+				// @bb +write board_name subject=message
+				String[] entry = param.split("=");
+
+				if (entry.length == 2) {
+					final String author = player.getName();
+					final String subject = entry[0];
+					final String message = entry[1];
+
+					board.write(author, subject, message);
+				}
+				else send(gameError("@bb", ErrorCodes.INVALID_SYNTAX), client);
 			}
 		}
 	}
@@ -4168,7 +4024,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			 */
 
 			if( auction != null ) {
-				Coins coins =  Coins.copper(money);
+				Coins coins = Coins.copper(money);
 
 				Bid bid = new Bid(player, coins);
 
@@ -4281,24 +4137,29 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	private void cmd_buy(final String arg, final Client client) {
 		final Player player = getPlayer(client);
 
-		if (player.getStatus().equals(Constants.ST_INTERACT)) { // interact mode
+		if ( player.getStatus().equals(Constants.ST_INTERACT) ) { // interact mode
 			NPC npc = (NPC) player.getTarget();
+			
+			// TODO null check?
+			
 			send(npc.getName(), client); // tell us his/her name
 
 			debug("Target is NPC.");
 
-			if (npc.hasFlag(ObjectFlag.VENDOR)) { // if the npc is a vendor
+			if ( npc.hasFlag(ObjectFlag.VENDOR) ) { // if the npc is a vendor
 				debug("Target is Vendor");
 				
 				Vendor v = null;
 				
-				try {
+				v = (Vendor) npc; // Cast npc as a vendor into a vendor reference	
+				
+				/*try {
 					v = (Vendor) npc; // Cast npc as a vendor into a vendor reference	
 				}
 				catch(final Exception e) {
 					System.out.println("--- Stack Trace ---");
 					e.printStackTrace();
-				}
+				}*/
 				
 				if ( v == null ) return;
 
@@ -4330,18 +4191,12 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 						
 						addMessage( npc.say("There you go.") ); // npc response 
 					}
-					else {
-						send("I'm sorry, you can't afford that.", client);
-					}
+					else send("I'm sorry, you can't afford that.", client);
 				}
-				else {
-					send("I'm sorry, we don't sell that.", client);
-				}
+				else send("I'm sorry, we don't sell that.", client);
 			}
 		}
-		else {
-			debug("Target is not npc.");
-		}
+		else debug("Target is not npc.");
 	}
 
 	/**
@@ -4357,38 +4212,25 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		
 		final String month_name = MONTH_NAMES[month - 1];
 
+		String start;
+		String end;
+		
 		client.write(month_name);
 		client.write('\n');
-
-		String start;
-
+		
 		// the month starts on the first day
 		for (int i = 1; i <= daysOfMonth; ++i) {
-
-			if (i < 10) {
-				start = "|  ";
-			}
-			else {
-				start = "| ";
-			}
+			if (i < 10) start = "|  ";
+			else        start = "| ";
 
 			debug("" + i + ": " + (i % 7));
 
-			if (i % 7 > 0) { // it's not the end of the week
-				if (i == day) client.write(start + colors(i + "", "green") + " ");
-				else          client.write(start + i + " ");
-			}
-			else { // it is the end of the week
-				if (i != daysOfMonth) { // if it's not the last day of the month
-					if (i == day) client.write(start + colors(i + "", "green") + " |\n");
-					else          client.write(start + i + " |\n");
-				}
-				else { // if it is
-					if (i == day) client.write(start + colors(i + "", "green") + " |");
-					else          client.write(start + i + " |");
-				}
-			}
-
+			if (i % 7 > 0)             end = " ";
+			else if (i != daysOfMonth) end = " |\n";
+			else                       end = " |";
+			
+			if(i == day) client.write(start + colors(i + "", "green") + end);
+			else         client.write(start + i + end);
 		}
 
 		client.write('\n');
@@ -4514,7 +4356,11 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 				// if our target is a player tell them otherwise don't bother
 				if ( target.isType(TypeFlag.PLAYER) ) {
-					addMessage(new Message(player, player.getName() + " cast " + spell.getName() + " on you.", (Player) target));
+					debug("Target is Player.");
+					
+					Message msg = new Message(player, (Player) target, player.getName() + " cast " + spell.getName() + " on you.");
+					
+					addMessage(msg);
 				}
 				
 				player.setLastSpell(spell);
@@ -4736,11 +4582,11 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 					color = Constants.ANSI; // enables ansi and disables xterm
 					client.write("\033[;1m"); // tell client to use bright version of ANSI Colors
 					// send("> Using BRIGHT ANSI colors <", client); // indicate the use of bright ansi colors to the client
-					send(rainbow("ANSI") + " colors turned on.", client);
+					send(Utils.rainbow("ANSI", ANSI) + " colors turned on.", client);
 				}
 				else if (args[1].equalsIgnoreCase("xterm")) {
 					color = Constants.XTERM; // enables xterm and disables ansi
-					send(rainbow("XTERM256") + " colors turned on.", client);
+					send(Utils.rainbow("XTERM256", XTERM256) + " colors turned on.", client);
 				}
 			}
 			else if (args[0].equals("linelimit")) {
@@ -4765,8 +4611,8 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		}
 		else if (args.length == 1) {
 			if (args[0].equals("colors")) {
-				if (color == Constants.ANSI)       send("Using " + rainbow("ANSI") + " colors.", client);
-				else if (color == Constants.XTERM) send("Using " + rainbow("XTERM256") + " colors.", client);
+				if (color == Constants.ANSI)       send("Using " + Utils.rainbow("ANSI", ANSI) + " colors.", client);
+				else if (color == Constants.XTERM) send("Using " + Utils.rainbow("XTERM256", XTERM256) + " colors.", client);
 				else                               send("Colors are disabled.", client);
 			}
 			else if (args[0].equals("msp")) {
@@ -4823,7 +4669,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		final Player player = getPlayer(client);
 
 		// identify the thing to be climbed, if it's possible
-		Thing thing = getThing(arg, getRoom(player)); // ex. box, ladder, building
+		Thing thing = getThing(arg, getRoom( player.getLocation() )); // ex. box, ladder, building
 
 		if (thing == null) {
 			send("Climb what?", client);
@@ -4902,19 +4748,9 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		// if the arguments are invalid somehow, tell the user what the correct options are
 		if (args.length < 1 || args.length > 2 || args[0].equals("")) {
 			send("Enter a valid character creation or connection string",                                 client);
-			send("such as 'create <character name> <password>' or 'connect <character name> <password>'", client);
-			send("To connect as a guest simply type 'connect guest'",                                     client);
-			send("NOTE: Using an valid account name and password will trigger the account options menu",  client);
-			
-			/*final List<String> msg = Utils.mkList(
-					"Enter a valid character creation or connection string",
-					"such as 'create <character name> <password>' or 'connect <character name> <password>'",
-					"To connect as a guest simply type 'connect guest'",
-					"NOTE: Using an valid account name and password will trigger the account options menu"
-					);
-			
-			send(msg, client);*/
-
+			//send("such as 'create <character name> <password>' or 'connect <character name> <password>'", client);
+			//send("To connect as a guest simply type 'connect guest'",                                     client);
+			//send("NOTE: Using an valid account name and password will trigger the account options menu",  client);
 			return;
 		}
 
@@ -4924,15 +4760,17 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		debug("Username?: " + user);
 		debug("Password?: " + Utils.padRight("", '*', pass.length()));
 		debug("");
-
+		
+		Player player = null;
+		
 		// Guest Players
-		if (user.toLowerCase().equals("account")) {
+		if ( user.equalsIgnoreCase("account") ) {
 			setClientState(client, "account_login");
 			handle_account_login(user, client);
 		}
-		else if (user.toLowerCase().equals("guest")) {
+		else if ( user.equalsIgnoreCase("guest") ) {
 			if (guest_users == 1) {
-				final Player player = getNextGuest();
+				player = getNextGuest();
 
 				if (player == null) {
 					// if we don't have sufficient existing guest players, make a new one
@@ -4943,9 +4781,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 				guests++;
 			}
-			else {
-				send("Sorry. Guest users have been disabled.", client);
-			}
+			else send("Sorry. Guest users have been disabled.", client);
 		}
 		else {
 			/*
@@ -4977,31 +4813,15 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 				// client);
 
 				if (a != null) {
-					if (a.getStatus() != Account.Status.ACTIVE) {
-						switch (a.getStatus()) {
-						case FROZEN:
-							send("That account has been frozen", client);
-							break;
-						case INACTIVE:
-							send("That account is inactive.", client);
-							break;
-						case LOCKED:
-							send("That account is locked.", client);
-							break;
-						case SUSPENDED:
-							send("That account has been suspended.", client);
-							break;
-						case ARCHIVED:
-							send("That account has been archived.", client);
-							break;
-						default:
-							break;
-						}
-					}
-					else {
-						caTable.put(client, a);
+					if (a.getStatus() == Account.Status.ACTIVE) {
+						this.caTable.put(client, a);
 						account_menu(a, client);
 						setClientState(client, "account_menu");
+					}
+					else {
+						final String message = Account.msgmap.get( a.getStatus() );
+						
+						if( message != null ) send(message, client);
 					}
 
 					return;
@@ -5025,8 +4845,12 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 				send("Player is banned.", client);
 				return;
 			}
+			
+			final String password = p.getPass();
+			final String password_hash = Utils.hash(pass);
 
-			if (!p.getPass().equals(Utils.hash(pass))) {
+			//if ( !p.getPass().equals()) {
+			if( !password.equals(password_hash) ) {
 				debug("PASS: Fail");
 				send("That player does not exist or the password is incorrect!", client);
 				return;
@@ -5037,19 +4861,18 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			// TODO how do I handle what amounts to a second login after some kind of pseudo-disconnect 
 			
 			// remove player in case of relogin (this is the not ideal handling)
-			for (final Player player : players) {
-				if (player.getDBRef() == p.getDBRef() && player.getName().equals(p.getName())) {
-					/*
-					 * won't work because client object vanishes when the player
-					 * loses connection
-					 */
-					init_disconn(player.getClient(), false);
+			final int playerDBRef = p.getDBRef();
+			final String playerName = p.getName();
+			
+			for (final Player player1 : this.players) {
+				if ( player1.getDBRef() == playerDBRef && player1.getName().equals(playerName) ) {
+					/* won't work because client object vanishes when the player loses connection */
+					init_disconn(player1.getClient(), false);
 					break;
 				}
 			}
-
+			
 			// connect to the game
-
 			if (mode == GameMode.NORMAL) {
 				init_conn(p, client, false); // Open Mode
 			}
@@ -5057,9 +4880,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 				if (p.getFlags().contains("W") || p.getAccess() == Constants.WIZARD) {
 					init_conn(p, client, false); // Wizard-Only Mode
 				}
-				else {
-					send("Sorry, only Wizards are allowed to login at this time.", client);
-				}
+				else send("Sorry, only Wizards are allowed to login at this time.", client);
 			}
 			else if (mode == GameMode.MAINTENANCE) {
 				send("Sorry, the mud is currently in maintenance mode.", client);
@@ -5205,7 +5026,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			pass = arg.substring(arg.indexOf(" "), arg.length()); // new user password
 			pass = Utils.trim(pass);                              // new user password (trimmed)
 		}
-		catch (ArrayIndexOutOfBoundsException aioobe) {
+		catch (final ArrayIndexOutOfBoundsException aioobe) {
 			System.out.println("--- Stack Trace ---");
 			aioobe.printStackTrace();
 			return;
@@ -5275,7 +5096,8 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	 * @param client
 	 */
 	private void cmd_check(final String arg, final Client client) {
-		final Room room = getRoom(getPlayer(client));
+		final Player player = getPlayer(client);
+		final Room room = getRoom( player.getLocation() );
 
 		debug( room.getExits().toString() );
 
@@ -5312,8 +5134,9 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		final int access = player.getAccess();
 
 		final List<Set<String>> commandMaps = new LinkedList<Set<String>>();
-		commandMaps.add(commandMap.keySet());
-		commandMaps.add(player.commandMap.keySet());
+		
+		commandMaps.add( commandMap.keySet() );
+		commandMaps.add( player.getCommands().keySet() );
 
 		int c = 0;
 
@@ -5526,7 +5349,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 				final String objectName = args2[1].replace('_', ' ');
 				final String className = args2[2];
 				
-				MUDObject obj = objectDB.get( Utils.toInt(objectName, -1) );
+				MUDObject obj = objectDB.getById( Utils.toInt(objectName, -1) );
 
 				if (obj != null && className != null) {
 					Class cl = null;
@@ -5736,6 +5559,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	 */
 	private void cmd_dig(final String arg, final Client client) {
 		final Player player = getPlayer(client);
+		final Room room = getRoom( player.getLocation() );
 
 		if (arg.indexOf("=") != -1) {
 			final String[] args = arg.split("=");
@@ -5746,14 +5570,18 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			System.out.println("Room Name:   " + name);
 			System.out.println("Room Parent: " + parent);
 
-			final Room room = createRoom(name, parent);
+			final Room room1 = createRoom(name, parent);
 
 			// add rooms to database (main)
-			objectDB.addAsNew(room);
-			objectDB.addRoom(room);
+			objectDB.addAsNew(room1);
+			objectDB.addRoom(room1);
+			
+			final String roomName = room1.getName();
+			final Integer roomDBRef = room1.getDBRef();
+			final Integer rLocation = room1.getLocation();
 
 			// tell us about it (getLocation() vs getParent()?)
-			send("Room '" + room.getName() + "' created as #" + room.getDBRef() + ". Parent set to " + room.getLocation() + ".", client);
+			send("Room '" + roomName + "' created as #" + roomDBRef + ". Parent set to " + rLocation + ".", client);
 		}
 		else {
 			final List<String> directions = Utils.mkList("north", "northeast",
@@ -5762,32 +5590,32 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 			if (directions.contains(arg.toLowerCase())) {
 				final String rName = "new room";
-				final int rParent = getRoom(player).getDBRef();
+				final int rParent = room.getDBRef();
 
 				System.out.println("Room Name:   " + rName);
 				System.out.println("Room Parent: " + rParent);
 
-				final Room room = createRoom(rName, rParent);
+				final Room room1 = createRoom(rName, rParent);
 
 				// add rooms to database (main)
 				objectDB.addAsNew(room);
 				objectDB.addRoom(room);
 
-				final String roomName = room.getName();
-				final Integer roomDBRef = room.getDBRef();
-				final Integer rLocation = room.getLocation();
+				final String roomName = room1.getName();
+				final Integer roomDBRef = room1.getDBRef();
+				final Integer rLocation = room1.getLocation();
 
 				// tell us about it (getLocation() vs getParent()?)
 				send("Room '" + roomName + "' created as #" + roomDBRef + ". Parent set to " + rLocation + ".", client);
 
 				// create the directional exit
-				final Exit exit = new Exit(arg.toLowerCase(), getRoom(player).getDBRef(), room.getDBRef());
+				final Exit exit = new Exit(arg.toLowerCase(), room.getDBRef(), room1.getDBRef());
 
 				objectDB.addAsNew(exit);
 				objectDB.addExit(exit);
 
 				// add the exit to the source room
-				getRoom(player).addExit(exit);
+				room.addExit(exit);
 
 				// tell us that we succeeded in creating the exit
 				final String exitName = exit.getName();
@@ -5807,7 +5635,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	
 	private void cmd_deposit(final String arg, final Client client) {
 		final Player player = getPlayer(client);
-		final Room room = getRoom(player);
+		final Room room = getRoom( player.getLocation() );
 		
 		String str = null;
 		
@@ -5815,6 +5643,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			str = room.getProperty("_game/isBank", String.class);
 		}
 		catch(final ClassCastException cce) {
+			System.out.println("--- Stack Trace ---");
 			cce.printStackTrace();
 			str = "false";
 		}
@@ -5855,14 +5684,14 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	 * @param client
 	 */
 	private void cmd_describe(final String arg, final Client client) {
+		final Player player = getPlayer(client);
+		final Room room = getRoom( player.getLocation() );
+		
+		// @desc <object name/object dbref/here/me>=<description>
 		final String[] args = arg.split("=");
 
 		final String ref = args[0];
 		final String description = args[1];
-
-		// get player, room objects to work with
-		final Player player = getPlayer(client);
-		final Room room = getRoom(player);
 
 		MUDObject m = null;
 
@@ -5872,30 +5701,36 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			send(gameError("@describe", ErrorCodes.INVALID_SYNTAX), client); // Invalid Syntax Error
 		}
 		else {
-			if (ref.toLowerCase().equals("here") || room.getName().equals(ref) || room.getDBRef() == Integer.parseInt(ref)) {
+			int dbref = Utils.toInt(ref, -1);
+			
+			if (ref.equalsIgnoreCase("here") || room.getDBRef() == dbref) {
 				m = room;
 			}
-			else if (player.getName().equals(ref) || player.getDBRef() == Integer.parseInt(ref)) {
+			else if (ref.equalsIgnoreCase("me") || player.getDBRef() == dbref) {
 				m = player;
+			}
+			else {
+				// try to get the specified object
+				m = getObject(dbref);
 			}
 		}
 
 		// attempt to change description
 		if (m != null) {
-			// check to see if the object is okay to edit (no one else is
-			// editing it)
+			// check to see if the object is okay to edit (no one else is editing it)
 			if (m.Edit_Ok) {
 				m.setDesc(description);
+				
 				send("Description Changed.", client);
-				send("You changed the description of " + room.getName() + " to " + room.getDesc(), client);
+				
+				if( m != player ) {
+					send("You changed the description of " + m.getName() + " to:", client);
+					showDesc(m.getDesc(), client);
+				}
 			}
-			else {
-				send("Game> Object - Error: object not editable (!Edit_Ok)", client);
-			}
+			else send("Game> Object - Error: object not editable (!Edit_Ok)", client);
 		}
-		else {
-			send("No such object!", client);
-		}
+		else send("No such object!", client);
 	}
 
 	/**
@@ -6022,7 +5857,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	private void cmd_drop(final String arg, final Client client) {
 		// get player, room objects to work with
 		final Player player = getPlayer(client);
-		final Room room = getRoom(player);
+		final Room room = getRoom( player.getLocation() );
 
 		// split the arguments into a string array by space characters
 		final String[] args = arg.split(" ");
@@ -6073,8 +5908,8 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			final int dbref = Utils.toInt(arg, -1);
 
 			// look for specified item in the player's inventory
-			if (dbref != -1)  item = findItem(player.getInventory(), dbref);
-			if (item == null) item = findItem(player.getInventory(), arg);
+			if (dbref != -1)  item = MudUtils.findItem(dbref, player.getInventory());
+			if (item == null) item = MudUtils.findItem(arg, player.getInventory());
 
 			if (item != null) {
 				final String itemName = item.getName();
@@ -6235,8 +6070,8 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			Item item = null;
 
 			// look for specified item in the player's inventory
-			if (dbref != -1)  item = findItem(player.getInventory(), dbref);
-			if (item == null) item = findItem(player.getInventory(), arg);
+			if (dbref != -1)  item = MudUtils.findItem(dbref, player.getInventory());
+			if (item == null) item = MudUtils.findItem(arg, player.getInventory());
 
 			if (item != null) {
 				if (item.isEquippable()) {
@@ -6265,7 +6100,6 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 							slot.insert(item);                  // put item in the slot
 							player.getInventory().remove(item); // remove it from the inventory
-							//item.setEquipped(true);              // set equipped "flag" to true (equipped)
 
 							if (item instanceof ExtraCommands) {
 								debug("Item has extra commands.");
@@ -6312,7 +6146,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	 */
 	private void cmd_examine(final String arg, final Client client) {
 		if ( arg.equals("") || arg.equals("here") ) {
-			Room room = getRoom( getPlayer( client ) );
+			Room room = getRoom( getPlayer( client ).getLocation() );
 			examine(room, client);
 		}
 		else if (arg.equals("me")) {
@@ -6327,15 +6161,16 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 					MUDObject mobj = getObject(dbref);
 
 					if (mobj != null) {
-						examine(mobj, client);
+						switch(mobj.getType()) {
+						case EXIT:   examine((Exit) mobj, client);   break;
+						case PLAYER: examine((Player) mobj, client); break;
+						case ROOM:   examine((Room) mobj, client);   break;
+						default:     examine(mobj, client);          break;
+						}
 					}
-					else {
-						send("That doesn't exist.", client);
-					}
+					else send("That doesn't exist.", client);
 				}
-				else {
-					send("That doesn't exist.", client);
-				}
+				else send("That doesn't exist.", client);
 			}
 			else {
 				// get by string/name
@@ -6348,7 +6183,12 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 						return;
 					}*/
 					
-					examine(mobj, client);
+					switch(mobj.getType()) {
+					case EXIT:   examine((Exit) mobj, client);   break;
+					case PLAYER: examine((Player) mobj, client); break;
+					case ROOM:   examine((Room) mobj, client);   break;
+					default:     examine(mobj, client);          break;
+					}
 				}
 				else {
 					send("That doesn't exist.", client);
@@ -6402,14 +6242,14 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 					amt = Integer.parseInt(args.get(0));
 					currency = args.get(mid - 1);
 				}
-				catch (NumberFormatException nfe) {
+				catch (final NumberFormatException nfe) {
 					debug("Exception(EXCHANGE): " + nfe.getMessage());
 					amt = 1;
 
 					try {
 						currency = args.get(0);
 					}
-					catch (Exception e) {
+					catch (final Exception e) {
 						// TODO is this debug message adequate?
 						debug("Exception(EXCHANGE): " + nfe.getMessage());
 						currency = "copper"; // default, and lowest currency
@@ -6420,7 +6260,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 					amt1 = Integer.parseInt(args.get(mid + 1)); // see if it's a number
 					currency1 = args.get(mid + 2);
 				}
-				catch (NumberFormatException nfe) {
+				catch (final NumberFormatException nfe) {
 					// TODO is this debug message adequate?
 					debug("Exception(EXCHANGE): " + nfe.getMessage());
 					amt1 = 1;
@@ -6428,7 +6268,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 					try {
 						currency1 = args.get(mid + 1); // if not
 					}
-					catch (Exception e) {
+					catch (final Exception e) {
 						// TODO is this debug message adequate?
 						debug("Exception(EXCHANGE): " + e.getMessage());
 						currency1 = "copper";
@@ -6455,7 +6295,10 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	 * @param client
 	 */
 	private void cmd_exits(final String arg, final Client client) {
-		final String exitNames = getRoom(getPlayer(client)).getVisibleExitNames();
+		final Player player = getPlayer(client);
+		final Room room = getRoom( player.getLocation() );
+		
+		final String exitNames = room.getVisibleExitNames();
 
 		if (exitNames != null && !exitNames.equals("")) {
 			send(colors("Exits: " + exitNames, getDisplayColor("exit")), client);
@@ -6468,9 +6311,9 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	private void cmd_exp(final String arg, final Client client) {
 		final Player player = getPlayer(client);
 		
-		Integer level = player.getLevel();
-		Integer XP = player.getXP();
-		Integer xpToLevel = player.getXPToLevel();
+		final Integer level = player.getLevel();
+		final Integer XP = player.getXP();
+		final Integer xpToLevel = player.getXPToLevel();
 		
 		send(level + " [ " + XP + " / " + xpToLevel + " ] " + (level + 1), client);
 	}
@@ -6513,47 +6356,25 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		final String[] args = arg.split("=");
 
 		final Player player = getPlayer(client);
-		final Room room = getRoom(player);
+		final Room room = getRoom( player.getLocation() );
 
 		final ObjectFlag flag;
 
 		if (args.length > 1) {
 			MUDObject m = null;
+			
+			if ( args[0].equals("me") )        m = player;
+			else if ( args[0].equals("here") ) m = room;
+			else {
+				int dbref = Utils.toInt(args[0], -1);
 
+				if (dbref != -1) m = getObject(dbref);
+				else             m = getObject(args[0]);
+			}
+			
 			// only the first flag indicated matters if the ! symbol is present
 			if (args[1].contains("!")) {
 				flag = ObjectFlag.fromLetter(args[1].charAt(1));
-
-				if (args[0].equals("me")) {
-					m = player;
-					// player.removeFlag( flag );
-					// send("Removed " + flag.toString() + " flag from " +
-					// player.getName(), client);
-				}
-				else if (args[0].equals("here")) {
-					m = room;
-					// room.removeFlag( flag );
-					// send("Removed " + flag.toString() + " flag from " +
-					// room.getName(), client);
-				}
-				else {
-					// MUDObject m = null;
-
-					int dbref = Utils.toInt(args[0], -1);
-
-					if (dbref != -1) {
-						m = getObject(dbref);
-					}
-					else {
-						m = getObject(args[0]);
-					}
-
-					/*
-					 * if(m != null) { m.removeFlag( flag ); send("Removed " +
-					 * flag.toString() + " flag from " + m.getName(), client); }
-					 * else send("No such object.", client);
-					 */
-				}
 
 				if (m != null) {
 					m.removeFlag(flag);
@@ -6563,47 +6384,31 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			}
 			else {
 				send("Adding Flag(s)", client);
+				
+				for(final Character c : args[1].toCharArray()) {
+					ObjectFlag of = ObjectFlag.fromLetter(c);
+					
+					if (m != null) {
+						if( !MudUtils.isAllowed(of, m.getType()) ) {
+							send("You may not set " + of.name() + " on a " + m.getType().getName(), client);
+							continue;
+						}
 
-				/*
-				 * if( isAllowed( flag, m.getType() ) ) { } else
-				 * send("You may not set " + flag.name() + " on a " +
-				 * m.getTypeName(), client);
-				 */
+						m.setFlag(of);
 
-				if (args[0].equals("me")) {
-					// TODO double check whether I need these debug messages and
-					// if they're in the right spot
-					// debug("New FlagString: " + args[1] +
-					// player.getFlagsAsString());
-					// debug("New FlagString(reversed): " + Utils.reverseString(
-					// args[1] + player.getFlagsAsString() ) );
+						send(m.getName() + " flagged as " + of, client);
 
-					player.setFlags(ObjectFlag.getFlagsFromString(args[1] + player.getFlagsAsString()));
-
-					send(player.getName() + " flagged " + ObjectFlag.fromLetter(args[1].charAt(0)), client);
-				}
-				else if (args[0].equals("here")) {
-					room.setFlags(ObjectFlag.getFlagsFromString(room.getFlagsAsString() + args[1]));
-
-					send(room.getName() + " flagged " + ObjectFlag.fromLetter(args[1].charAt(0)), client);
-				}
-				else {
-					MUDObject m1 = null;
-
-					int dbref = Utils.toInt(args[0], -1);
-
-					if (dbref != -1) {
-						m1 = getObject(dbref);
-					}
-					else {
-						m1 = getObject(args[0]);
-					}
-
-					if (m1 != null) {
-						m1.setFlag(ObjectFlag.fromLetter(args[1].charAt(0)));
+						send("Removed " + of.toString() + " flag from " + m.getName(), client);
 					}
 					else send("No such object.", client);
 				}
+				
+				/*if (m != null) {
+					m.setFlags( ObjectFlag.getFlagsFromString(args[1] + player.getFlagsAsString()) );
+
+					send(m.getName() + " flagged " + ObjectFlag.fromLetter(args[1].charAt(0)), client);
+				}
+				else send("No such object.", client);*/
 			}
 		}
 	}
@@ -6671,7 +6476,10 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 				 * matches.add(m.getName() + " (#" + m.getDBRef() + ")"); } } }
 				 * }
 				 */
-				if (param.equals("n")) {
+				if ( param.equals("i") ) {
+					
+				}
+				else if (param.equals("n")) {
 					System.out.println("Find NPCs");
 					send("Find NPCs - using \'" + searchString + "\'");
 
@@ -6687,6 +6495,29 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 							}
 						}
 					}
+				}
+				else if ( param.equals("p") ) {
+					if (searchString == null) {
+						for (final Player pc : objectDB.getPlayers()) {
+							matches.add(pc.getName() + " (#" + pc.getDBRef() + ")");
+						}
+					}
+					else {
+						for (final Player pc : objectDB.getPlayers()) {
+							if (pc.getName().toLowerCase().startsWith(searchString)) {
+								matches.add(pc.getName() + " (#" + pc.getDBRef() + ")");
+							}
+						}
+					}
+					
+				}
+				else if ( param.equals("px") ) {
+					// player, exclusive
+					System.out.println("Find Player");
+					
+					Player player = objectDB.getPlayer(searchString);
+					
+					matches.add(player.getName() + " (#" + player.getDBRef() + ")");
 				}
 				else if (param.equals("r")) {
 					System.out.println("Find Rooms");
@@ -6779,7 +6610,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 							try {
 								c = Integer.parseInt(temp[1]);
 							}
-							catch (NumberFormatException nfe) {
+							catch (final NumberFormatException nfe) {
 								debug("cmd_give(): money value (number format exception)");
 								System.out.println("--- Stack Trace ---");
 								nfe.printStackTrace();
@@ -6826,7 +6657,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	 */
 	private void cmd_go(final String arg, final Client client) {
 		final Player player = getPlayer(client);
-		final Room room = getRoom(player);
+		final Room room = getRoom( player.getLocation() );
 
 		String[] args = arg.split(" ");
 
@@ -6865,7 +6696,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 					move(player, new Point(x, y));
 				}
 			}
-			catch (NumberFormatException nfe) {
+			catch (final NumberFormatException nfe) {
 				// TODO is this debug message adequate?
 				send("Invalid Point!");
 				System.out.println("--- Stack Trace ---");
@@ -6882,7 +6713,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 					move(player, new Point(x, y, z));
 				}
 			}
-			catch (NumberFormatException nfe) {
+			catch (final NumberFormatException nfe) {
 				// TODO is this debug message adequate?
 				send("Invalid Point!");
 				System.out.println("--- Stack Trace ---");
@@ -6903,13 +6734,13 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	 */
 	private void cmd_get(final String arg, final Client client) {
 		Player player = getPlayer(client);
-		Room room = getRoom(player);
+		Room room = getRoom( player.getLocation() );
 
 		// process syntax/arguments
 
 		// i.e. take <item> from <container>
 		// perhaps get <item> from <container> would be better
-		// currently (5-2015) is: get from <container> <item>
+		// currently (5-2015) is: get (from) <container> <item>
 
 		// if there is no argument
 		if (arg.equals("")) {
@@ -6960,7 +6791,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 				things.addAll( room.getThings() );
 
 				for (final Thing thing : things) {	
-					if( thing.thing_type == ThingType.CONTAINER ) {
+					if( thing.thing_type == ThingTypes.CONTAINER ) {
 						s = (Box) thing;
 
 						success = get(player, s, itemName);
@@ -7106,16 +6937,18 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 				// tell us when the file was last modified/updated?
 			}
 		}
-		else if (commandMap.containsKey(arg)) {
-			Command c = commandMap.get(arg);
-			send(arg + " - " + c.getDescription(), client);
-		}
-		else if (player.commandMap.containsKey(arg)) {
-			Command c = player.commandMap.get(arg);
-			send(arg + " - " + c.getDescription(), client);
-		}
 		else {
-			client.write("No such help file!\r\n");
+			Command c = null;
+
+			if ( commandMap.containsKey(arg) ) c = commandMap.get(arg);
+			else if ( player.hasCommand(arg) ) c = player.getCommand(arg);
+			
+			if( c != null ) {
+				send(arg + " - " + c.getDescription(), client);
+			}
+			else {
+				client.write("No such help file!\r\n");
+			}
 		}
 	}
 
@@ -7127,8 +6960,8 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		Item item = null;
 
 		// determine whether you have the item/thing? in question
-		if (DBREF != -1)  item = findItem(player.getInventory(), DBREF);
-		else              item = findItem(player.getInventory(), arg);
+		if (DBREF != -1)  item = MudUtils.findItem(DBREF, player.getInventory());
+		else              item = MudUtils.findItem(arg, player.getInventory());
 
 		if (item != null) {
 			// can you hold it?
@@ -7183,8 +7016,10 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			// probably ought to somehow prevent editing of the header
 			// load the help file with an offset so I can avoid borking
 			// the two header data lines ?
-
-			player.loadEditList(arg, Utils.loadList(HELP_DIR + arg + ".help"));
+			final List<String> lines = Utils.loadList(HELP_DIR + arg + ".help");
+			
+			player.setEditList( new EditList(arg, lines) );
+			
 			list = player.getEditList();
 
 			// if loading fails, create it
@@ -7298,7 +7133,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 		for (Item item : items) {
 			if (item.getName().equals(arg)) {
-				final LinkedHashMap<String, Object> visual_props = item.getVisualProperties();
+				final Map<String, String> visual_props = item.getVisualProperties();
 
 				send("Inspecting the " + item.getName() + " you see:", client);
 
@@ -7372,7 +7207,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	 */
 	private void cmd_inventory(final String arg, final Client client) {
 		final Player player = getPlayer(client);
-		final Room room = getRoom(player);
+		final Room room = getRoom( player.getLocation() );
 
 		if (player != null) // if the player exists
 		{
@@ -7493,8 +7328,47 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 			//send("Weight: " + weight + "/" + player.getCapacity() + " lbs.", client);
 			send(String.format("Weight: %f / %d lbs.", weight, player.getCapacity()), client);
-			send("You have " + player.getMoney().toString() + ".", client);
 		}
+	}
+	
+	private void cmd_jsonify(final String arg, final Client client) {
+		final Player player = getPlayer(client);
+		final Room room = getRoom( player.getLocation() );
+		
+		if( testing_enabled ) {
+			GsonBuilder builder = new GsonBuilder(); // Or use new GsonBuilder().create();
+
+			builder.registerTypeAdapter(Spell.class, new SpellAdapter());
+			builder.registerTypeAdapter(Race.class, new RaceAdapter());
+			builder.setPrettyPrinting();
+
+			Gson gson = builder.create();
+
+			String[] args = arg.split(" ");
+
+			if( args.length == 2 ) {
+				if( args[0].startsWith("#") ) {
+					String param = args[0].substring(1);
+
+					if( param.equals("s") ) {
+						final Spell spell = getSpell(args[1]);
+						
+						send(gson.toJson(spell), client);
+					}
+				}
+			}
+			else {
+				if( arg.equals("me") )        send(gson.toJson(player), client);
+				else if( arg.equals("here") ) send(gson.toJson(room), client);
+				else {
+					final MUDObject obj = getObject(arg);
+					if( obj != null ) {
+						send(gson.toJson(obj), client);
+					}
+				}
+			}
+		}
+		else send("Testing: DISABLED", client);
 	}
 
 	// TODO write code for cmd_creatureedit(...)
@@ -7626,7 +7500,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 				exist = true;
 			}
-			catch (NumberFormatException nfe) {
+			catch (final NumberFormatException nfe) {
 				// no item with that dbref, cannot edit (abort)
 
 				System.out.println("--- Stack Trace ---");
@@ -7641,7 +7515,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 				send("Game> Item Editor - Unexpected error caused abort (number format exception)", client);
 			}
-			catch (NullPointerException npe) {
+			catch (final NullPointerException npe) {
 				// null item, cannot edit (abort)
 
 				System.out.println("--- Stack Trace ---");
@@ -7700,7 +7574,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	private void cmd_jump(final String arg, final Client client) {
 		final Player player = getPlayer(client);
 		
-		Room room = null;
+		Room room = null; // the room to jump to
 
 		if( arg.indexOf('*') != -1 ) {
 			int zoneId = Utils.toInt(arg.substring(1), -1);
@@ -7735,7 +7609,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 		// if we found the room, send the player there
 		if (room != null) {
-			getRoom(player).removeListener(player); // remove listener
+			getRoom( player.getLocation() ).removeListener(player); // remove listener
 
 			send("Jumping to " + room.getName() + "... ", client);
 
@@ -7743,21 +7617,18 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			player.setPosition(0, 0);
 
 			send("Done.", client);
-
-			room = getRoom(player);
+			
 			look(room, client);
 
-			getRoom(player).addListener(player); // add listener
+			getRoom( player.getLocation() ).addListener(player); // add listener
 		}
-		else {
-			send("Jump failed.", client);
-		}
+		else send("Jump failed.", client);
 	}
 
 	private void cmd_levelup(final String arg, final Client client) {
 		final Player player = getPlayer(client);
 
-		if (hasValidRace(player) && hasValidClass(player)) {
+		if ( hasValidRace(player) && hasValidClass(player) ) {
 			if (player.isLevelUp()) {
 				player.changeLevelBy(1);
 				send("You leveled up to level " + player.getLevel() + "!", client);
@@ -7773,41 +7644,36 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 	private void cmd_link(final String arg, final Client client) {
 		final Player player = getPlayer(client);
-		final Room room = getRoom(player);
+		final Room room = getRoom( player.getLocation() );
 
 		final String[] args = arg.trim().split("=");
 
-		if( args.length != 2 ) {
-			send("Error: incorrect number of arguments", client);
-			return;
-		}
+		if( args.length == 2 ) {
+			// TODO cmd_link -- to consider
+			// is a string or int is better to search by?
+			// must the exit be in the same room as we are?
+			final Exit exit = getExit(args[0]);
 
-		// really we should consider whether a string or int is better to search by and if the exit must be in
-		// the same room as we are
-		final Exit exit = getExit(args[0]);
-		
-		// we'll use an integer destination for now
-		final int newDestination = Utils.toInt(args[1], -1);
-		
-		final Room newDest = getRoom(newDestination);
+			if( exit != null ) {
+				final int newDestination = Utils.toInt(args[1], -1); // integers for now
+				
+				final Room newDest = getRoom(newDestination);
+				
+				if( exit.getDestination() == -1 ) {
+					if( newDest != null ) {
+						final String ndName = newDest.getName();
+						final int ndDBRef = newDest.getDBRef();
 
-		if( exit != null ) {
-			if( exit.getDestination() == -1 ) {
-				if( newDest != null ) {
-					final String ndName = newDest.getName();
-					final int ndDBRef = newDest.getDBRef();
-					
-					exit.setDestination(newDestination);
-					send("Linked " + exit.getName() + " to " + ndName + " (#" + ndDBRef + ")", client);
+						exit.setDestination(newDestination);
+						
+						send("Linked " + exit.getName() + " to " + ndName + " (#" + ndDBRef + ")", client);
+					}
+					else send("Error: Invalid Destination!", client);
 				}
-				else {
-					send("Error: Invalid Destination!", client);
-				}
-			}
-			else{
-				send("Error: That exit is already linked to somewhere.", client);
+				else send("Error: That exit is already linked to somewhere.", client);
 			}
 		}
+		else send("Error: incorrect number of arguments", client);
 	}
 
 	/**
@@ -7926,7 +7792,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		debug("Command: lock");
 
 		final Player player = getPlayer(client);
-		final Room room = getRoom(player);
+		final Room room = getRoom( player.getLocation() );
 
 		debug("Player: " + player.getName());
 		debug("Room:   " + room.getName());
@@ -7956,6 +7822,8 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		}
 		
 		if ( exit != null ) {
+			final String exitName = exit.getName();
+			
 			if( exit instanceof Lockable ) {
 				final Lockable<Item> l = (Lockable<Item>) exit;
 
@@ -7966,17 +7834,19 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 						if( hasKey ) {
 							l.lock();
 							
-							send("You lock " + exit.getName() + " with " + l.getKey().getName() + ".", client);
+							final String keyName = l.getKey().getName();
+							
+							send("You lock " + exitName + " with " + colors(keyName, getDisplayColor("item")) + ".", client);
 						}
 					}
 					else {
 						l.lock();
-						send("You lock " + exit.getName() + ".", client);
+						send("You lock " + exitName + ".", client);
 					}
 				}
 				else send("That's already locked.", client);
 			}
-			else send(exit.getName() + "not lockable.", client);
+			else send(exitName + " not lockable.", client);
 			
 			//send("It's a good thing no one saw you trying to lock a " + exit.getExitType().toString() + " with no lock.", client);
 		}
@@ -8008,30 +7878,35 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	 * @param client
 	 */
 	private void cmd_look(final String arg, final Client client) {
+		final Player player = getPlayer(client);
+		final Room room = getRoom( player.getLocation() );
+		
 		debug("Look Command");
 
-		// get player, room objects to work with
-		final Player player = getPlayer(client);
-		final Room room = getRoom(player);
-
 		final String[] args = arg.split(" ");
+		
 		for (final String s : args) {
 			debug(s);
 		}
 
 		// if no argument or empty argument, show the room
 		if (arg.equals("")) {
+			player.setTarget(room);
+			
 			look(room, client);
+			
 			return;
 		}
 		else {
 			debug("Argument (String): " + arg);
 
 			if (arg.toLowerCase().equals("here")) {
+				player.setTarget(room);
 				look(room, client);
 				return;
 			}
 			else if (arg.toLowerCase().equals("me")) {
+				player.setTarget(player);
 				look(player, client);
 				return;
 			}
@@ -8094,6 +7969,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 					// for string in A, is A.S a substring of string name N.S
 					if (sameName || startsWith || endsWith || nameContains || compsContain || test) {
+						player.setTarget(m);
 						look(m, client);
 						return;
 					}
@@ -8117,6 +7993,8 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 				if (m != null) {
 					debug("MUDObject : " + m.getDBRef() + " " + m.getName());
+					
+					player.setTarget(m);
 
 					if (m instanceof Player)    look((Player) m, client);
 					else if (m instanceof Room) look((Room) m, client);
@@ -8138,19 +8016,25 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	 * @param client
 	 */
 	private void cmd_lookat(final String arg, final Client client) {
-		final Room room = getRoom(getPlayer(client));
+		final Player player = getPlayer(client);
+		final Room room = getRoom( player.getLocation() );
 
-		if (!arg.equals("")) {
-
-			// get properties (I think we should have /visuals "folder" for
-			// visual properties
+		if ( !arg.equals("") ) {
+			final MUDObject obj = player.getTarget();
+			
+			String s;
+			
+			// get properties (I think we should have /visuals "folder" for visual properties
 			// i.e. 'ceiling', 'floor', 'wall(s)'
-			Object o = room.getProperty("/visuals/" + arg);
+			if( obj != null ) {
+				s = obj.getProperty("/visuals/" + arg);
+			}
+			else {
+				s = room.getProperty("/visuals/" + arg);
+			}
 
-			if (o != null && o instanceof String) {
-				final String result = (String) o;
-
-				send("You look at the " + arg + ": " + result, client);
+			if (s != null ) {
+				send("You look at the " + arg + ": " + s, client);
 			}
 			else {
 				send("You look around, but don't see that.", client);
@@ -8173,21 +8057,19 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		final Player player = getPlayer(client);
 
 		player.setStatus(Constants.ST_EDIT); // flag us as being in EDIT mode
-		player.setEditor(Editors.LIST); // set the editor we want to use
-
-		if (!player.hasEditor(arg)) {// if the list doesn't exist, clear out the variables for a new one
-			player.startEditing(arg);
-		}
-		else { // if the list does exist, load it into the list data variables
-			player.loadEditList(arg);
-		}
-
-		send("List Editor v0.0b\n", client);
+		player.setEditor(Editors.LIST);      // set the editor we want to use
+		
+		if (!player.hasEditor(arg)) player.startEditing(arg);
+		else                        player.loadEditList(arg);
 
 		final EditList list = player.getEditList();
-		String header = "< List: " + list.getName() + " Line: " + list.getCurrentLine() + " Lines: " + list.getNumLines() + " >";
-
-		send(header, client);
+		
+		final String listName = list.getName();
+		final Integer currLine = list.getLineNum();
+		final Integer lines = list.getNumLines();
+		
+		send("List Editor v0.0b\n", client);
+		send("< List: " + listName + " Line: " + currLine + " Lines: " + lines + " >", client);
 	}
 
 	/**
@@ -8202,7 +8084,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	 */
 	private void cmd_listprops(final String arg, final Client client) {
 		Player player = getPlayer(client);
-		Room room = getRoom(player);
+		Room room = getRoom( player.getLocation() );
 
 		debug("ARG: " + arg);
 
@@ -8224,7 +8106,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			else             object = getObject(args[0]); // get object by name
 		}
 
-		LinkedHashMap<String, Object> props = null;
+		Map<String, String> props = null;
 
 		if (object != null) {
 			props = object.getProperties();
@@ -8235,19 +8117,19 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 				System.out.println("ARG0: \'" + args[0] + "\'");
 				System.out.println("ARG1: \'" + args[1] + "\'");
 
-				for (final Object k : props.keySet()) {
-					if (((String) k).startsWith(args[1])) {
-						send((String) k + " " + props.get(k), client);
+				for (final String key : props.keySet()) {
+					if (key.startsWith(args[1])) {
+						send(key + " " + props.get(key), client);
 					}
 				}
 			}
 			else {
-				for (final Object k : props.keySet()) {
-					send((String) k + " " + props.get(k), client);
+				for (final String key : props.keySet()) {
+					send(key + " " + props.get(key), client);
 				}
 			}
 
-			// System.out.println("KEY: \'" + (String) k + "\'");
+			// System.out.println("KEY: \'" + key + "\'");
 		}
 	}
 
@@ -8327,7 +8209,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 				throw new FileNotFoundException("Invalid File!");
 			}
 		}
-		catch (FileNotFoundException fnfe) {
+		catch (final FileNotFoundException fnfe) {
 			System.out.println("--- Stack Trace ---");
 			fnfe.printStackTrace();
 		}
@@ -8345,50 +8227,66 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			for (int i = 0; i < str.length(); i++) {
 				switch (str.charAt(i)) {
 				case '#':
-					client.write("" + Colors.WHITE); // set foreground white
+					//client.write("" + Colors.WHITE); // set foreground white
 					// client.write("\33[37m");
-					client.write(' '); // draw symbol
+					//client.write(' '); // draw symbol
+					client.write( colors(" ", "white") );
 					break;
 				case '*':
-					client.write("\33[47m"); // set background white
-					client.write(' '); // draw symbol
-					client.write("\33[40m"); // reset background (black)
+					//client.write("\33[47m"); // set background white
+					//client.write(' '); // draw symbol
+					//client.write("\33[40m"); // reset background (black)
+					client.write( colors("o", "white") );
 					break;
 				case 'B': // Bank
-					client.write("\33[32m"); // set foreground green
-					client.write('B'); // draw symbol
+					//client.write("\33[32m"); // set foreground green
+					//client.write('B'); // draw symbol
+					client.write( colors("B", "green") );
 					break;
 				case 'H': // House
-					client.write("\33[31m"); // set foreground red
-					client.write('H'); // draw symbol
+					//client.write("\33[31m"); // set foreground red
+					//client.write('H'); // draw symbol
+					client.write( colors("H", "red") );
 					break;
 				case 'I': // Inn
-					client.write("\33[35m"); // set foreground green
-					client.write('I'); // draw symbol
+					//client.write("\33[35m"); // set foreground green
+					//client.write('I'); // draw symbol
+					client.write( colors(" ", "green") );
 					break;
 				case 'S': // Shop
 					// set foreground yellow
-					client.write("" + Colors.YELLOW);
+					//client.write("" + Colors.YELLOW);
 					// client.write("\33[33m");
-					client.write('S');
+					//client.write('S');
+					client.write( colors("S", "yellow") );
 					break;
 				case '$': // Shop
 					// set foreground yellow
-					client.write("" + Colors.YELLOW);
+					//client.write("" + Colors.YELLOW);
 					// client.write("\33[33m");
-					client.write('$');
+					//client.write('$');
+					client.write( colors("$", "yellow") );
 					break;
 				default:
 					break;
 				}
 
 				// reset foreground (set to white)
-				client.write("" + Colors.WHITE);
+				//client.write("" + Colors.WHITE);
+				client.write( colors("", "white") );
+				
 			}
 
 			// reset background (black)
-			client.write("\33[40m\n");
+			//client.write("\33[40m\n");
+			client.write( colors("", "black") + "\n");
 		}
+	}
+	
+	private void cmd_money(final String arg, final Client client) {
+		final Player player = getPlayer(client);
+		
+		send("You have " + player.getMoney().toString() + ".", client);
 	}
 
 	/**
@@ -8402,7 +8300,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	 * @param client
 	 */
 	private void cmd_move(final String arg, final Client client) {
-		Player player = getPlayer(client);
+		final Player player = getPlayer(client);
 
 		final String direction = arg.toLowerCase();
 
@@ -8431,7 +8329,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			return;
 		}
 
-		look(getRoom(player), client);
+		look(getRoom( player.getLocation() ), client);
 
 		send(player.getName() + " Location: " + player.getLocation() + "\n", client);
 	}
@@ -8456,29 +8354,29 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 				final String oldName = m.getName();
 				final String newName = args[1];
 
-				// check to make sure it's okay to edit this
+				// check to make sure it's okay to edit this (make sure no one is editing it)
 				if (m.Edit_Ok) {
 					// we're not allowed to change player names at the moment
 					// NOTE: Player overrides setname, so this is just a
 					// protection against changing names in the database
-					if (!(m instanceof Player)) {
-						m.setName(newName);
-
+					boolean nameChanged = m.setName(newName);
+					
+					if( nameChanged ) {
 						objectDB.updateName(m, oldName); // revise the lookup tables
-
+						
 						send("Game> Changed name of " + oldName + "(#" + m.getDBRef() + ") to " + m.getName(), client);
 					}
 					else {
-						send("Game> Cannot change name of players.", client);
+						send("Game> Cannot change the name of (#" + m.getDBRef() + ")", client);
+						
+						if( m.isType(TypeFlag.PLAYER) ) {
+							send("Game> Changing Player names is not allows", client);
+						}
 					}
 				}
-				else {
-					send("Game> Object - Error: object not editable (!Edit_Ok)", client);
-				}
+				else send("Game> Object - Error: object not editable (!Edit_Ok)", client);
 			}
-			else {
-				send("No such object!", client);
-			}
+			else send("No such object!", client);
 		}
 	}
 
@@ -8535,7 +8433,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 						send("nameRef allocated.", client);
 						send(args[0].substring(0, args[0].length()) + " allocated to " + args[1], client);
 					}
-					catch (NumberFormatException nfe) {
+					catch (final NumberFormatException nfe) {
 						System.out.println("--- Stack Trace ---");
 						nfe.printStackTrace();
 					}
@@ -8568,7 +8466,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 						send("nameRef allocated.", client);
 						send(args[0].substring(0, args[0].length()) + " allocated to " + args[1], client);
 					}
-					catch (NumberFormatException nfe) {
+					catch (final NumberFormatException nfe) {
 						System.out.println("--- Stack Trace ---");
 						nfe.printStackTrace();
 					}
@@ -8578,9 +8476,13 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	}
 
 	private void cmd_npcs(final String arg, final Client client) {
+		final List<String> output = new LinkedList<String>();
+		
 		// TODO should I use room names for location information?
-		send("Race         Name             Loc   Ctrld Controller", client);
-		send("------------ ---------------- ----- ----- ----------------", client);
+		//send("Race         Name             Loc   Ctrld Controller", client);
+		//send("------------ ---------------- ----- ----- ----------------", client);
+		output.add("Race         Name             Loc   Ctrld Controller");
+		output.add("------------ ---------------- ----- ----- ----------------");
 
 		for (final NPC npc : objectDB.getNPCs()) {
 			final String race = Utils.padRight(npc.getRace().getName(), ' ', 12);
@@ -8597,9 +8499,12 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 				controller = Utils.padRight(cPlayer.getName(), ' ', 16);
 			}
 			else controlled = "No";
-
-			send(race + " " + name + " " + location + " " + Utils.padRight(controlled, ' ', 5) + " " + controller, client);
+			
+			//send(race + " " + name + " " + location + " " + Utils.padRight(controlled, ' ', 5) + " " + controller, client);
+			output.add(race + " " + name + " " + location + " " + Utils.padRight(controlled, ' ', 5) + " " + controller);
 		}
+		
+		send(output, client);
 
 		// Pegasus Ditzy Doo 34 Yes Stormy
 	}
@@ -8646,7 +8551,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 		try {
 			// get the source room
-			room = getRoom(getPlayer(client));
+			room = getRoom( getPlayer(client).getLocation() );
 
 			source = room.getDBRef();
 
@@ -8664,14 +8569,14 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 				return;
 			}
 		}
-		catch (NumberFormatException nfe) {
+		catch (final NumberFormatException nfe) {
 			// TODO is this debug message adequate?
 			send("@open : destination dbref invalid (number format)\nExit creation failed", client);
 			// System.out.println("--- Stack Trace ---");
 			// nfe.printStackTrace();
 			return;
 		}
-		catch (NullPointerException npe) {
+		catch (final NullPointerException npe) {
 			// TODO is this debug message adequate?
 			send("@open : source Room invalid (null pointer)\nExit creation failed", client);
 			System.out.println("--- Stack Trace ---");
@@ -8696,6 +8601,53 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		// tell us that we succeeded in creating the exit
 		send("You open an exit called " + exit.getName() + "(#" + exit.getDBRef() + ")" + " from #" + exit.getLocation() + " to #" + exit.getDestination() + ".", client);
 	}
+	
+	private void cmd_open2(final String arg, final Client client) {
+		final Player player = getPlayer(client);
+		final Room room = getRoom( player.getLocation() );
+		
+		final List<MUDObject> objects = objectDB.getByRoom(room);
+
+		MUDObject object = null;
+
+		for (final MUDObject obj : objects) {
+			if ( obj.getName().equals(arg) ) {
+				object = obj;
+			}
+		}
+
+		if (object != null) {
+			if ( object.isType(TypeFlag.EXIT) ) {
+				Exit exit = (Exit) object;
+
+				if (exit.getExitType() == ExitType.DOOR) {
+					Door door = (Door) exit;
+
+					if (door.isLocked()) {
+						if (door.unlock()) { // key check
+							send("You unlock the door and open it.", client);
+						}
+						else {
+							send("That door is locked!", client);
+						}
+					}
+					else {
+						send("You find the door to be unlocked and open it.", client);
+					}
+				}
+			}
+			else if (object instanceof Lockable<?>) {
+				Lockable<Item> l;
+
+				if (object instanceof Item) {
+					l = (Lockable<Item>) object;
+				}
+				else if (object instanceof Thing) {
+					l = (Lockable<Item>) object;
+				}
+			}
+		}
+	}
 
 	/**
 	 * Command: door
@@ -8713,7 +8665,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		final String name = args[0];
 		int source = 0, destination = 0;
 
-		Room room = getRoom(getPlayer(client));
+		Room room = getRoom( getPlayer(client).getLocation() );
 
 		try {
 			if (args.length == 3) { // long form - name=source=destination
@@ -8738,7 +8690,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 				return;
 			}
 		}
-		catch (NumberFormatException nfe) {
+		catch (final NumberFormatException nfe) {
 			// TODO is this debug message adequate?
 			send("open : source or destination dbref invalid, exit creation failed", client);
 			return;
@@ -8834,12 +8786,13 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 		if (in.length > 1) {
 			final String[] recipients = in[0].split(",");
-			String ms = "";
+			
+			String msg = "";
 
 			if (in.length == 2) {
-				ms = in[1];
+				msg = in[1];
 
-				send("You page, " + "\"" + Utils.trim(ms) + "\" to " + in[0] + ".", client);
+				send("You page, " + "\"" + Utils.trim(msg) + "\" to " + in[0] + ".", client);
 
 				for (final String recipName : recipients) {
 					final Player targetPlayer = getPlayer(recipName);
@@ -8848,7 +8801,11 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 					if (recipClient != null) {
 						// TODO decide if I need to do things this way
 						// mesage with a player sender, text to send, and the player to send it to
-						s.sendMessage(new Message(getPlayer(client), Utils.trim(ms), targetPlayer), recipClient);
+						
+						Message message = new Message(getPlayer(client), targetPlayer, msg); 
+						
+						addMessage(message);
+						//sendMessage(message, recipClient);
 					}
 				}
 			}
@@ -8883,7 +8840,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 				
 				for (final Player player1 : party.getPlayers()) {
 					String extra = "";
-					String color = "";
+					String color = getDisplayColor("player");
 
 					if ( party.isLeader(player1) ) extra = "L";
 
@@ -8898,7 +8855,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 					default:            color = "white";  break;
 					}
 					
-					output.add(colors(player1.getName(), color) + " " + extra);
+					output.add(colors(player1.getName(), color) + " " + colors(extra, "green"));
 				}
 				
 				send(output, client);
@@ -8924,7 +8881,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			if ( arg1.equals("create") ) {
 				// create a new party with you as the leader (if you're not in a party)
 				if (party != null) send("You are already in a party.", client);
-				else               parties.add( createParty(player) );
+				else               this.parties.add( createParty(player) );
 			}
 			else if ( arg1.equals("delete") ) {
 				// deletes the party if you have one and are the leader
@@ -8933,11 +8890,11 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 						party.removePlayer(player1);
 					}
 					
-					chan.destroyChannel( party.getChannel().getName() );
+					this.chan.destroyChannel( party.getChannel().getName() );
 					
 					party.setChannel(null);
 					
-					parties.remove(party);
+					this.parties.remove(party);
 				}
 				else send("Only the party leader may delete the party.", client);
 			}
@@ -8960,7 +8917,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 								// is that player logged in
 								if ( sclients.containsValue(player1) ) {
 									// send invite (overwrites previous invites)
-									partyInvites.put(player1, getPartyContainingPlayer(player));
+									this.partyInvites.put(player1, getPartyContainingPlayer(player));
 
 									notify(player1, player.getName() + " has invited you to their party!");
 								}
@@ -8983,7 +8940,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 					if (party1 != null) {
 						party1.addPlayer(player);
 						
-						partyInvites.remove(player);
+						this.partyInvites.remove(player);
 
 						send("You joined " + party1.getLeader().getName() + "'s party.", client);
 
@@ -9284,7 +9241,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	 */
 	private void cmd_put(final String arg, final Client client) {
 		Player player = getPlayer(client);
-		Room room = getRoom(player);
+		Room room = getRoom( player.getLocation() );
 
 		List<MUDObject> foundObjects = findVisibleObjects(room);
 
@@ -9534,7 +9491,9 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 							// no way here for the player to deny a share...
 							player1.addQuest( quest.getCopy() );
 							
-							addMessage(new Message(player, player.getName() + " shared " + quest.getName() + " with you.", player1));
+							final String msg = player.getName() + " shared " + quest.getName() + " with you.";
+							
+							addMessage( new Message(player, player1, msg) );
 						}
 					}
 				}
@@ -9711,7 +9670,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			try {
 				object = getObject(dbref);
 			}
-			catch (NullPointerException npe) {
+			catch (final NullPointerException npe) {
 				System.out.println("--- Stack Trace ---");
 				npe.printStackTrace();
 			}
@@ -9782,24 +9741,18 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		// get the specified item
 		final List<Item> items = new LinkedList<Item>();
 
-		items.addAll( objectDB.getItemsByLoc(getPlayer(client).getLocation()) ); // in room
-		items.addAll( player.getInventory() );                                   // carried by player
-
-		Item item = null;
-
-		for (final Item i : items) {
-			debug("Item Name: " + i.getName());
-			debug("Item Type: " + i.getItemType().toString());
-
-			if (i.getName().equals(arg)) {
-				item = i;
-				break;
-			}
-		}
-
+		items.addAll( objectDB.getItemsByLoc( player.getLocation() ) ); // in room
+		items.addAll( player.getInventory() );                          // carried by player
+		
+		//objectDB.getThingsForRoom( getRoom( player.getLocation() ) );
+		
+		final Item item = MudUtils.findItem(arg, items);
+		
 		// use findItem! (11-9-2015)
-
 		if (item != null) {
+			debug("Item Name: " + item.getName());
+			debug("Item Type: " + item.getItemType().toString());
+			
 			// check to see if it's a book (or readable?)
 			if ( item.getItemType() == ItemTypes.BOOK ) {
 				final Book book = (Book) item;
@@ -9816,13 +9769,13 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 				showDesc(((Readable) item).read(), client);
 			}
 			else if( item.getProperty("_game/readable", Boolean.class) ) {
-				final String text = item.getProperty("_game/text", String.class);
+				final String text = item.getProperty("_game/text");
 
 				showDesc(text, client);
 			}
 		}
 		else {
-			send("No such book.", client);
+			send("No such item.", client);
 		}
 	}
 
@@ -9836,9 +9789,8 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	 * @param client
 	 */
 	private void cmd_register(final String arg, final Client client) {
-		setClientData(client, new ClientData("NAME"));
-
 		setClientState(client, "register");
+		setLoginData(client, new LoginData(Constants.USERNAME));
 
 		op_registration(client);
 
@@ -9888,7 +9840,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 			send("" + Utils.roll(number, sides), client);
 		}
-		catch (NumberFormatException nfe) {
+		catch (final NumberFormatException nfe) {
 			debug("cmd(): 'roll' (number format exception)");
 			System.out.println("--- Stack Trace ---");
 			nfe.printStackTrace();
@@ -10010,8 +9962,8 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 				// get the object
 				if (target.toLowerCase().equals("me"))        mobj = player;
-				else if (target.toLowerCase().equals("here")) mobj = getRoom(player);
-				else                                          mobj = objectDB.getByName(target);
+				else if (target.toLowerCase().equals("here")) mobj = getRoom( player.getLocation() );
+				else                                          mobj = getObject(target);
 
 				debug(mobj.getName());
 
@@ -10154,7 +10106,8 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 					send("Game> Greater than maximum level used, no changes made.",
 							client);
 				}
-			} catch (NumberFormatException nfe) {
+			}
+			catch (final NumberFormatException nfe) {
 				debug("cmd_setlevel(): not a valid level since it isn't a number (number format exception)");
 				System.out.println("--- Stack Trace ---");
 				nfe.printStackTrace();
@@ -10250,7 +10203,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 				player.updateCurrentState();
 			}
-			catch (NumberFormatException nfe) {
+			catch (final NumberFormatException nfe) {
 				debug("cmd(): '@sethp' (number format exception)");
 				System.out.println("--- Stack Trace ---");
 				nfe.printStackTrace();
@@ -10309,33 +10262,33 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	// TODO make this work
 	private void cmd_setweather(final String arg, final Client client) {
 		final Player player = getPlayer(client);
-		Zone zone = getRoom(player.getLocation()).getZone();
-
-		List<WeatherState> wsl = season.weatherPattern.weather_states;
+		final Room room = getRoom( player.getLocation() );
+		final Zone zone = getZone( room );
+		
+		final Season s = this.season;
+		
+		List<WeatherState> wsl = s.getPattern().getStates();
+		
 		WeatherState w = null;
 
-		for (WeatherState ws : wsl) {
-			if (ws.name.equals(arg)) {
+		for (final WeatherState ws : wsl) {
+			if ( ws.getName().equals(arg) ) {
 				w = ws;
 				break;
 			}
 		}
 
-		if (w == null)
-			return;
-
-		// if the zone exists, change the weather of all the rooms in that zone
-		// to
-		// be the specified weather
-		if (zone != null) {
-		} else { // otherwise, change all the weather
-			Room room;
-
-			for (int id = 0; id < objectDB.peekNextId(); id++) {
-				if ((room = objectDB.getRoomById(id)) != null) {
-					room.getWeather().ws = w;
-				}
-			}
+		if (w == null) return;
+		
+		List<Room> rooms = null;
+		
+		// if the zone exists,
+		// change each room in the zone to the specified weather..
+		if (zone != null) rooms = zone.getRooms();
+		else              rooms = objectDB.getRooms();
+		
+		for(final Room room1 : rooms) {
+			room1.getWeather().setState(w);
 		}
 	}
 
@@ -10382,7 +10335,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 					final Vendor v = (Vendor) npc;
 					
 					// get the object to sell
-					final Item item = findItem(player.getInventory(), arg);
+					final Item item = MudUtils.findItem(arg, player.getInventory());
 					
 					final Coins payment = v.sell(item);
 
@@ -10419,6 +10372,50 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			// retrieve last session for player
 			// Session s = loadSessionData( player );
 		}
+	}
+	
+	private void cmd_skillcheck(final String arg, final Client client) {
+		final Player player = getPlayer(client);
+		
+		final String args[] = arg.split(" ");
+
+		// TODO: fix code to deal with players who are
+		// invalid/not setup and have no skills to check
+		// TODO: add a means to indicate which skills to test
+		// TODO: move to another command category?
+		Player player1 = null;
+
+		String skillName = "";
+		String dice = "";
+		Integer DC = 0;
+
+		Skill sk;
+		Integer value = 0;
+		Integer mod = 0;
+
+		if (args.length == 3) {
+			skillName = args[0];
+			dice = args[1];
+			DC = Integer.parseInt(args[2]);
+
+			player1 = player;
+		}
+		else if (args.length == 4) {
+			final String playerName = args[0];
+
+			skillName = args[1];
+			dice = args[2];
+			DC = Integer.parseInt(args[3]);
+
+			player1 = getPlayer(playerName);
+		}
+
+		sk = rules.getSkill(skillName);
+
+		value = player.getSkill(sk);
+		mod = player.getSkillMod(sk);
+
+		send(skill_check(player1, sk, dice, DC) ? "true" : "false", client);
 	}
 
 	private void cmd_skilledit(final String arg, final Client client) {
@@ -10470,29 +10467,31 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	}
 
 	private void cmd_spells(final String arg, final Client client) {
-		Player player = getPlayer(client);
-		client.write("Spell List\n");
-		client.write("-----------------------------------------------------------------\n");
+		final Player player = getPlayer(client);
+		
+		send("Spell List", client);
+		send("-----------------------------------------------------------------", client);
+		
 		if (arg.equals("#all") && checkAccess(player, Constants.WIZARD)) {
-			// list all the spells, by level?
 			for (final Spell spell : this.spells2.values()) {
-				client.write(spell.getSchool().toString() + " "
-						+ spell.toString() + "\n");
-			}
-		} else {
-			// list your spells, by level?
-			for (int l = 0; l < player.getLevel(); l++) {
-				List<Spell> spells = player.getSpellBook().getSpells(l);
-				client.write("Level " + l + "\n");
-				client.write("--------\n");
-				for (Spell spell : spells) {
-					client.write(spell.getName() + "\n");
-				}
-
+				client.write(spell.getSchool() + " " + spell.getName() + "\n");
 			}
 		}
-		client.write("-----------------------------------------------------------------\n");
-		System.out.println(spells2.entrySet());
+		else {
+			// list your spells, by level?
+			final SpellBook sb = player.getSpellBook();
+			
+			for (int level = 0; level < player.getLevel(); level++) {
+				final List<Spell> spells = sb.getSpells(level);
+				
+				send("Level " + level, client);
+				send("--------", client);
+				
+				for (final Spell spell : spells) send(spell.getName(), client);
+			}
+		}
+		
+		send("-----------------------------------------------------------------", client);
 	}
 
 	// COMMAND OBJECT (5-31-2015)
@@ -10644,12 +10643,12 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			try {
 				cre = (Creature) c.getConstructor().newInstance();
 			}
-			catch (InstantiationException e)    { e.printStackTrace(); }
-			catch (IllegalAccessException e)    { e.printStackTrace(); }
-			catch (IllegalArgumentException e)  { e.printStackTrace(); }
-			catch (InvocationTargetException e) { e.printStackTrace(); }
-			catch (NoSuchMethodException e)     { e.printStackTrace(); }
-			catch (SecurityException e)         { e.printStackTrace(); }
+			catch (final InstantiationException e)    { e.printStackTrace(); }
+			catch (final IllegalAccessException e)    { e.printStackTrace(); }
+			catch (final IllegalArgumentException e)  { e.printStackTrace(); }
+			catch (final InvocationTargetException e) { e.printStackTrace(); }
+			catch (final NoSuchMethodException e)     { e.printStackTrace(); }
+			catch (final SecurityException e)         { e.printStackTrace(); }
 
 			if( cre != null ) {
 				// cre.setName(arg);
@@ -10768,7 +10767,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			
 			for(final CNode cn : cnvs.getOptions()) {
 				//send( colors("" + n + ")" + cn.getText(), "green"), client );
-				convOpts.add( "" + n + " )" + colors(cn.getText(), "green") );
+				convOpts.add(n + " ) " + colors(cn.getText(), "green") );
 				n++;
 			}
 			
@@ -10784,7 +10783,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	// Function to take objects in a room
 	private void cmd_take(final String arg, final Client client) {
 		final Player player = getPlayer(client);
-		final Room room = getRoom(player);
+		final Room room = getRoom( player.getLocation() );
 
 		final String[] args = arg.split(" ");
 
@@ -10803,7 +10802,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			String itemName = args[1];
 			String container = args[3];
 
-			final Item item = findItem(room.getItems(), itemName); // this probably won't work...
+			final Item item = MudUtils.findItem(itemName, room.getItems()); // this probably won't work...
 		}
 		else if (arg.equalsIgnoreCase("all")) {
 			// TODO problem if getItems() returns an unmodifiable list?
@@ -10818,19 +10817,11 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			// - an item is usable if, given restrictions, you meet all
 			// the requirements (class, race, level, skill)
 
-			final List<Item> items = room.getItems();
-
-			player.getInventory().addAll(items);
-
-			String itemName = "";
+			final List<Item> items = new ArrayList<Item>( room.getItems() );
 
 			for (final Item item : items) {
-				itemName = item.getName();
-				item.setLocation(player.getDBRef());
-				send("You picked " + colors(itemName, "yellow") + " up off the floor.", client);
+				take(player, room, item);
 			}
-
-			room.removeItems( items );
 		}
 		else {
 			// assuming one argument
@@ -10840,8 +10831,8 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			final int dbref = Utils.toInt(arg, -1);
 
 			// look for specified item in the player's current room
-			if (dbref != -1)  item = findItem(room.getItems(), dbref);
-			if (item == null) item = findItem(room.getItems(), arg);
+			if (dbref != -1)  item = MudUtils.findItem(dbref, room.getItems());
+			if (item == null) item = MudUtils.findItem(arg, room.getItems());
 
 			if (item != null) {
 				take(player, room, item);
@@ -10850,9 +10841,9 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 				Thing thing = getThing(arg, room);
 
 				if (thing != null) {
-					String msg = "";
+					final String msg = thing.getProperty("_game/msgs/take-fail");
 
-					if ((msg = (String) thing.getProperty("_game/msgs/take-fail")) != null) {
+					if ( msg != null ) {
 						send(msg, client);
 					}
 
@@ -10867,27 +10858,34 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 	private void cmd_target(final String arg, final Client client) {
 		final Player player = getPlayer(client);
-		final Room room = getRoom(player);
-
-		MUDObject target = getObject(arg, room);
-
-		// if we currently have a target, tell us what it is
-		if (player.getTarget() != null) {
-			debug( player.getTarget().getName() );
-			debug(arg);
-		}
-		else if (target != null) {
-			debug("Getting target..." + target.getName());
-
-			player.setTarget(target);
-
-			// tell us what we are targetting now
-			debug( player.getTarget().getName() );
-			debug(arg);
-			send("Target set to: " + player.getTarget().getName(), client);
+		final Room room = getRoom( player.getLocation() );
+		
+		MUDObject target = player.getTarget();
+		
+		if( arg.equals("") ) {
+			if( target != null ) {
+				send("target: " + colors(target.getName(), getDisplayColor(target.type)), client);
+			}
+			else {
+				send("target: none", client);
+			}
 		}
 		else {
-			send("You don't see that.", client);
+			target = getObject(arg, room);
+
+			if (target != null) {
+				debug("Getting target..." + target.getName());
+
+				player.setTarget(target);
+
+				// tell us what we are targetting now
+				debug( player.getTarget().getName() );
+				debug(arg);
+				send("Target set to: " + player.getTarget().getName(), client);
+			}
+			else {
+				send("You don't see that.", client);
+			}
 		}
 	}
 
@@ -10911,12 +10909,12 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			if (player.getStatus().equals("OOC")) {
 				if (arg.indexOf(" ") != -1) {
 					final String pName = arg.substring(0, arg.indexOf(" "));
-					final String message = arg.substring(arg.indexOf(" "),
-							arg.length());
+					final String message = arg.substring(arg.indexOf(" "), arg.length());
 
 					final Player player1 = getPlayer(pName);
 
-					final Message msg = new Message(player, message, player1);
+					final Message msg = new Message(player, player1, message);
+					
 					addMessage(msg);
 				}
 				else send("invalid player", client);
@@ -10960,7 +10958,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 				if ( param.equals("add") || param.equals("a") ) {
 					final Trade trade = trades.get(player);
 
-					final Item item = findItem(player.getInventory(), arg2);
+					final Item item = MudUtils.findItem(arg2, player.getInventory());
 
 					if( item != null ) {
 						trade.addItem(player, item);
@@ -10973,10 +10971,10 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 					// NOTE: we're assuming trade items are removed from inventory, which they aren't...
 					if( player == trade.p1 ) {
-						item = findItem(trade.p1_items, arg2);
+						item = MudUtils.findItem(arg2, trade.p1_items);
 					}
 					else if( player == trade.p2 ) {
-						item = findItem(trade.p2_items, arg2);
+						item = MudUtils.findItem(arg2, trade.p2_items);
 					}
 
 					if( item != null ) {
@@ -11140,8 +11138,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			if( slot != null ) {
 				final Item item = slot.remove();
 				
-				//item.setEquipped(false); // set equipped "flag" to false (unequipped)
-				player.unequip( item );          // mask for adding it to the inventory
+				player.getInventory().add( item );    
 
 				send(item.getName() + " un-equipped (" + item.getItemType() + ")", client);
 			}
@@ -11153,7 +11150,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		debug("Command: unlock");
 
 		final Player player = getPlayer(client);
-		final Room room = getRoom(player);
+		final Room room = getRoom( player.getLocation() );
 
 		debug("Player: " + player.getName());
 		debug("Room:   " + room.getName());
@@ -11225,26 +11222,23 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	 */
 	private void cmd_unlink(final String arg, final Client client) {
 		final Player player = getPlayer(client);
-		final Room room = getRoom(player);
+		final Room room = getRoom( player.getLocation() );
 
 		// really we should consider whether a string or int is better to search by and if the exit must be in
 		// the same room as we are
 		final Exit exit = getExit(arg);
 
-		final int oldDestination = exit.getDestination();
-
-		final Room oldDest = getRoom(oldDestination);
-
-		final String odName = oldDest.getName();
-		final int odDBRef = oldDest.getDBRef();
-
 		if( exit != null ) {
+			final int oldDestination = exit.getDestination();
+
+			final Room oldDest = getRoom(oldDestination);
+			final String odName = oldDest.getName();
+			final int odDBRef = oldDest.getDBRef();
+
 			exit.setDestination(-1);
 			send("Unlinked " + exit.getName() + " from " + odName + " (#" + odDBRef + ")", client); 
 		}
-		else{
-			send("Error: That exit is not linked to anywhere.");
-		}
+		else send("Error: No such exit.", client);
 	}
 
 	/**
@@ -11258,7 +11252,8 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		final Room room = getRoom(player.getLocation());
 
 		MUDObject m = getObject(arg);
-
+		
+		// assume that no argument implies something I am wearing..
 		if ( arg.equals("") ) {
 			debug("Game> Arguments?");
 
@@ -11295,56 +11290,9 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		}
 		else {
 			debug("Game> Arguments Received.");
-
-			// FOE Only
-			if (m instanceof mud.foe.Terminal) {
-				mud.foe.Terminal term = (mud.foe.Terminal) m;
-
-				if (term.getPowerState() == mud.foe.Terminal.Power.POWER_ON) {
-					debug(player.getName() + " USING TERMINAL");
-
-					terminals.put(player, term);
-
-					term.paused = false;// unpause the terminal, power on => running should be true
-
-					player.setStatus("TERM"); // tell the game proper to redirect my input to terminal i/o
-				}
-				else {
-					send("The terminal is powered off, perhaps you could 'turn terminal on'?", client);
-				}
-
-				return;
-			}
-			else {
-				boolean hasUseMethod = false;
-				
-				try {
-					hasUseMethod = useMethods.containsKey(m.getClass());
-				}
-				catch(NullPointerException npe) {
-					hasUseMethod = false;
-				}
-				
-				if (hasUseMethod) {
-					try {
-						useMethods.get( m.getClass() ).invoke("", m, player);
-					}
-					catch (IllegalAccessException e) {
-						System.out.println("--- Stack Trace ---");
-						e.printStackTrace();
-					}
-					catch (IllegalArgumentException e) {
-						System.out.println("--- Stack Trace ---");
-						e.printStackTrace();
-					}
-					catch (InvocationTargetException e) {
-						System.out.println("--- Stack Trace ---");
-						e.printStackTrace();
-					}
-				}
-				else {
-					debug("Error (USE): No use method for that class.");
-				}
+			
+			if( module != null) {
+				if( module.use( player, m ) ) return;
 			}
 
 			// Inventory [Item(s)]
@@ -11368,9 +11316,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 						use_wand((Wand) item, client);
 					}
 				}
-				catch (NullPointerException npe) {
-					// TODO should the below (not stack trace) be a debug call?
-					System.out.println("Arguments: \'" + arg + "\'");
+				catch (final NullPointerException npe) {
 					System.out.println("--- Stack Trace ---");
 					npe.printStackTrace();
 				}
@@ -11395,7 +11341,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 					
 					if (!result.equals("")) send(result, client);
 				}
-				catch (NullPointerException npe) {
+				catch (final NullPointerException npe) {
 					//TODO should the below (not stack trace) be a debug call?
 					System.out.println("Arguments: \'" + arg + "\'");
 					System.out.println("--- Stack Trace ---");
@@ -11561,7 +11507,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	private void cmd_value(final String arg, final Client client) {
 		final Player player = getPlayer(client);
 
-		final Item item = findItem(player.getInventory(), arg);
+		final Item item = MudUtils.findItem(arg, player.getInventory());
 
 		send(item.getName() + " " + item.getValue(), client);
 	}
@@ -11619,7 +11565,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 					}
 				}
 
-				String idle = player.getIdleString();
+				String idle = MudUtils.getIdleString( player.getIdleTime() );
 
 				Player current = getPlayer(client);
 
@@ -11646,7 +11592,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 				n++;
 			}
-			catch (NullPointerException npe) {
+			catch (final NullPointerException npe) {
 				debug("cmd_where(): one of the pieces of player information is null... (null pointer exception)");
 				System.out.println("--- Stack Trace ---");
 				npe.printStackTrace();
@@ -11735,7 +11681,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 					// count players
 					n++;
 				}
-				catch (NullPointerException npe) {
+				catch (final NullPointerException npe) {
 					debug("cmd_who(): some piece of player information is null (null pointer exception)");
 					System.out.println("--- Stack Trace ---");
 					npe.printStackTrace();
@@ -11748,7 +11694,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	
 	private void cmd_withdraw(final String arg, final Client client) {
 		final Player player = getPlayer(client);
-		final Room room = getRoom(player);
+		final Room room = getRoom( player.getLocation() );
 		
 		String str = null;
 		
@@ -12054,8 +12000,10 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 				if (doEval) {
 					doEval = false;
 					work.append(ch);
+					
+					final Script script = new Script( work.toString() );
 
-					result.append( pgmi.interpret(work.toString(), null, null) );
+					result.append( pgmi.interpret(script, null, null) );
 				}
 				break;
 			default:
@@ -12187,8 +12135,8 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	 * @return
 	 */
 	public boolean exitHandler(final String cmd, final Client client) {
-		final Player player = getPlayer(client); // get current player
-		final Room room = getRoom(player);       // get current room
+		final Player player = getPlayer(client);           // get current player
+		final Room room = getRoom( player.getLocation() ); // get current room
 
 		debug("Entering exit handler (String)...");
 
@@ -12242,8 +12190,8 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	 * NOTE: this is used for directional exits (6/4/2015)
 	 */
 	public boolean exitHandler(final Exit exit, final Client client) {
-		final Player player = getPlayer(client); // get current player
-		final Room room = getRoom(player);       // get current room
+		final Player player = getPlayer(client);           // get current player
+		final Room room = getRoom( player.getLocation() ); // get current room
 
 		debug("Entering exit handler (Exit)...");
 
@@ -12281,8 +12229,8 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			// send the success message
 			if (!exit.getMessage("succMsg").equals("")) {
 				// TODO check where these messages end up getting sent to
-				addMessage( new Message(exit.getMessage("succMsg"), player) );
-				addMessage( new Message("You leave the room.", player) );
+				addMessage( new Message(null, player, exit.getMessage("succMsg")) );
+				addMessage( new Message(null, player, "You leave the room.") );
 			}
 
 			// execute leave triggers
@@ -12324,7 +12272,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			}
 
 			// get new room object
-			final Room room1 = getRoom(player);
+			final Room room1 = getRoom( player.getLocation() );
 
 			// add listener to room
 			room1.addListener(player);
@@ -12358,20 +12306,15 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 					// ASIDE: some clients only support one sound, so an effect
 					// sound should be handled as the sound, and then in the ambient background
-
+					
+					final String wsName = room1.getWeather().getState().getName();
+					
 					// get weather, then play related sound
-					switch (room1.getWeather().ws.name) {
-					case "Rain":
-						playMusic("rain.wav", client);
-						break;
-					case "Cloudy":
-						playMusic("rain.wav", client);
-						break;
-					case "Clear Skies":
-						playMusic("rain.wav", client);
-						break;
-					default:
-						break;
+					switch (wsName) {
+					case "Rain":        playMusic("rain.wav", client); break;
+					case "Cloudy":      playMusic("rain.wav", client); break;
+					case "Clear Skies": playMusic("rain.wav", client); break;
+					default:            break;
 					}
 				}
 			}
@@ -12413,10 +12356,10 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			String sarg = "";
 
 			if (input.indexOf(" ") != -1) { // Arguments
-				scmd = input.substring(input.indexOf(".") + 1,
-						input.indexOf(" "));
+				scmd = input.substring(input.indexOf(".") + 1, input.indexOf(" "));
 				sarg = input.substring(input.indexOf(" ") + 1, input.length());
-			} else { // No Arguments
+			}
+			else { // No Arguments
 				scmd = input.substring(input.indexOf(".") + 1, input.length());
 			}
 
@@ -12429,17 +12372,23 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 				 */
 				if (sarg.equals("")) {
 					send("Please specify the spell you'd like to cast.", client);
-				} else {
+				}
+				else {
 					getPlayer(client).getSpellQueue().push(spells2.get(sarg));
 				}
-			} else if (scmd.equals("queue")) {
+			}
+			else if (scmd.equals("queue")) {
 				send("Queue", client);
+				
 				send("---------------------", client);
+				
 				for (Spell spell : getPlayer(client).getSpellQueue()) {
 					send(spell.getName(), client);
 				}
+				
 				send("---------------------", client);
-			} else if (scmd.equals("spells")) {
+			}
+			else if (scmd.equals("spells")) {
 				SpellBook sb = getPlayer(client).getSpellBook();
 				send("Spellbook", client);
 
@@ -12449,13 +12398,16 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 						if (spells != null) {
 							send("-----------------", client);
+							
 							send("Level: " + level, client);
-							for (Spell spell : spells) {
+							
+							for (final Spell spell : spells) {
 								send(" " + spell.getName(), client); // space
 								// for
 								// indenting
 								// purposes
 							}
+							
 							send("-----------------", client);
 						}
 					}
@@ -12466,14 +12418,16 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 				// send(" fireball", client);
 				// send(" invisibility", client);
 				// send("-----------------", client);
-			} else if (scmd.equals("finalize")) {
+			}
+			else if (scmd.equals("finalize")) {
 				/*
 				 * finalize and init spell casting, slot into current
 				 * "round"/present time or next available "round"/time
 				 * automatically
 				 */
 				send("Interactive Spell Mode> Finalizing...", client);
-			} else if (scmd.equals("cancel")) {
+			}
+			else if (scmd.equals("cancel")) {
 				// tell us
 				send("Interactive Spell Mode Canceled.", client);
 
@@ -12485,9 +12439,10 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 				// reset status
 				getPlayer(client).setStatus("OOC");
-			} else if (scmd.equals("quit")) {
-			} else if (scmd.equals("target")) {
-			} else {
+			}
+			else if (scmd.equals("quit")) {}
+			else if (scmd.equals("target")) {}
+			else {
 				send("Interactive Spell Mode> No such command.", client);
 			}
 		}
@@ -12871,7 +12826,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 				t = 0;
 				debug("T is now " + t);
 			}
-			catch (NumberFormatException npe) {
+			catch (final NumberFormatException npe) {
 				debug("op_chargen(): invalid step number (number format exception)");
 				System.out.println("--- Stack Trace ---");
 				npe.printStackTrace();
@@ -12880,16 +12835,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 		return new cgData(t, step, answer, edit);
 	}
-
-	/**
-	 * Description Editor command parser
-	 * 
-	 * @param tempString
-	 * @param client
-	 */
-	public void op_dedit(final String tempString, final Client client) {
-	}
-
+	
 	/**
 	 * Help File Editor command parser
 	 * 
@@ -12981,8 +12927,31 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 				player.setStatus("OOC");
 			}
 			else if (hcmd.equals("replace") || hcmd.equals("repl")) {
-				// .repl start_line end_line=/old text/new text
-				// .repl line=new text
+				// .replace start_line:end_line=line\line\...
+				// .replace 5 7 this;is;a
+				// .replace line=new text
+				if( harg.matches("^(\\d+)( )(\\d+)( )((\\w+)([;]))*(\\w+)$") ) {
+					String[] args = harg.split(" ");
+					
+					int start = Utils.toInt(args[0], -1);
+					int end = Utils.toInt(args[1], -1);
+					
+					String[] data = args[2].split(";");
+					
+					// TODO doesn't test that the lines fall within the list...
+					if( start != -1 && end != -1 && end > start ) {
+						int n = 0;
+						
+						for(int l = start; start < end; l++) {
+							if( n < data.length ) {
+								list.setLine(l, data[n]);
+								n++;
+							}
+							else break;
+						}
+					}
+				}
+				else send("replace: invalid arguments", client);
 			}
 			else if (hcmd.equals("save") || hcmd.equals("s")) {
 				if (list != null) {
@@ -13109,6 +13078,36 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 				player.setEditor(Editors.NONE);
 				player.setStatus("OOC");
+			}
+			else if (lcmd.equals("replace") || lcmd.equals("repl")) {
+				// .replace start_line end_line line;line;line
+				String re1 = "(\\d+)( )(\\d+)( )";
+				String re2 = "((( )?(\\w+)( )?)*([;]))*";
+				String re3 = "(( )?(\\w+)( )?)*";
+				
+				//if( larg.matches("^(\\d+)( )(\\d+)( )((( )?(\\w+)( )?)*([;]))*(( )?(\\w+)( )?)*$") ) {
+				if( larg.matches("^"+re1+re2+re3+"$") ) {
+					String[] args = larg.split(" ");
+					
+					int start = Utils.toInt(args[0], -1);
+					int end = Utils.toInt(args[1], -1);
+					
+					String[] data = args[2].split(";");
+					
+					// TODO doesn't test that the lines fall within the list...
+					if( start != -1 && end != -1 && end >= start ) {
+						int n = 0;
+						
+						for(int l = start; start <= end; l++) {
+							if( n < data.length ) {
+								list.setLine(l, data[n]);
+								n++;
+							}
+							else break;
+						}
+					}
+				}
+				else send("replace: invalid arguments", client);
 			}
 			else if (lcmd.equals("save") || lcmd.equals("s"))
 			{
@@ -13249,22 +13248,22 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			// room.getZone().addRoom(room);
 
 			send("Creature saved.", client);
-		} else if (ccmd.equals("setflag")) {
-			final EnumSet<ObjectFlag> flags = (EnumSet<ObjectFlag>) data
-					.getObject("flags");
+		}
+		else if (ccmd.equals("setflag")) {
+			final EnumSet<ObjectFlag> flags = (EnumSet<ObjectFlag>) data.getObject("flags");
 
 			if (carg.startsWith("!")) {
 				flags.remove(ObjectFlag.fromLetter(carg.charAt(1)));
-				send(ObjectFlag.fromLetter(carg.charAt(1)).name()
-						+ " flag removed.", client);
-			} else {
+				send(ObjectFlag.fromLetter(carg.charAt(1)).name() + " flag removed.", client);
+			}
+			else {
 				try {
-					final ObjectFlag flag = ObjectFlag.fromLetter(carg
-							.charAt(0));
+					final ObjectFlag flag = ObjectFlag.fromLetter(carg.charAt(0));
 
 					flags.add(flag);
 					send(flag.name() + " flag set.", client);
-				} catch (IllegalArgumentException iae) {
+				}
+				catch (final IllegalArgumentException iae) {
 					// TODO is this debug message adequate?
 					send("No such flag.", client);
 					System.out.println("--- Stack Trace ---");
@@ -13274,10 +13273,12 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 			data.setObject("flags", flags);
 			send("Ok.", client);
-		} else if (ccmd.equals("setlocation")) {
+		}
+		else if (ccmd.equals("setlocation")) {
 			data.setObject("location", Utils.toInt(carg, -1));
 			send("Ok.", client);
-		} else if (ccmd.equals("setrace")) {
+		}
+		else if (ccmd.equals("setrace")) {
 			data.setObject("race", getRace(carg));
 			send("Ok.", client);
 		}
@@ -13405,7 +13406,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 			final MUDObject m;
 
-			if (dbref != -1) m = objectDB.get(dbref);
+			if (dbref != -1) m = objectDB.getById(dbref);
 			else             m = objectDB.getByName(rarg);
 
 			if (m != null) {
@@ -13514,7 +13515,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 						send("Invalid Dimension.", client);
 					}
 				}
-				catch (NumberFormatException nfe) {
+				catch (final NumberFormatException nfe) {
 					debug("op_roomedit(): the specified dimension size is invalid (number format exception)");
 					System.out.println("--- Stack Trace ---");
 					nfe.printStackTrace();
@@ -14581,7 +14582,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			client.write("< lines " + top + "-" + bottom + ", " + rem
 					+ " lines remaining | 'up'/'down' | 'done' to finish >\r\n");
 		}
-		catch (NullPointerException npe) {
+		catch (final NullPointerException npe) {
 			System.out.println("Pager sub-system: NullPointerException caught");
 
 			System.out.println("Reporting error:");
@@ -14599,69 +14600,51 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	}
 
 	private void op_registration(final Client client) {
-		final ClientData cd = getClientData(client);
-
-		System.out.println("STATE: " + cd.state);
-
-		if (cd.state.equals("NAME"))         client.write("Name?     ");
-		if (cd.state.equals("PASS"))         client.write("Password? ");
-		if (cd.state.equals("REGISTER"))     client.write("Finalize? ");
-	}
-	
-	// TODO decide if I could remove this and where to put it
-	void op_terminal(final String input, final Client client) {
-		final Player player = getPlayer(client);
-
-		debug("Using Terminal");
+		final LoginData ld = getLoginData(client);
 		
-		mud.foe.Terminal term = terminals.get( player );
+		final String state = ld.state;
 		
-		term.write( input );
+		System.out.println("STATE: " + state);
 
-		/*if (term.getLoginState() == mud.foe.Terminal.Login.LOGGED_OUT) {
-			term.handle_login(input, client);
-		}
-		else if (term.getLoginState() == mud.foe.Terminal.Login.LOGGED_IN) {
-			int code = term.processInput(input);
-
-			if (code == 0) {
-				player.setStatus("IC");
-				notify(player, "You quit using the terminal.");
-			}
-		}*/
+		if ( state.equals(Constants.USERNAME)) client.write("Name?     ");
+		if ( state.equals(Constants.PASSWORD)) client.write("Password? ");
+		if ( state.equals(Constants.REGISTER)) client.write("Finalize? ");
 	}
 
 	private void handle_registration(final String input, final Client client) {
-		final ClientData cd = getClientData(client);
+		final LoginData ld = getLoginData(client);
 		
-		debug("state: " + cd.state);
+		debug("state: " + ld.state);
 		debug("input: " + input);
 		
-		if (cd.state.equals("NAME")) {
-			cd.name = input;
-			cd.state = "PASS";
+		if ( ld.state.equals(Constants.USERNAME) ) {
+			ld.username = input;
+			ld.state = Constants.PASSWORD;
+			
 			op_registration(client);
 		}
-		else if (cd.state.equals("PASS")) {
-			cd.pass = input;
-			cd.state = "REGISTER";
+		else if ( ld.state.equals(Constants.PASSWORD) ) {
+			ld.password = input;
+			ld.state = Constants.REGISTER;
+			
 			op_registration(client);
 		}
 
-		else if (cd.state.equals("REGISTER")) {
+		else if ( ld.state.equals(Constants.REGISTER) ) {
 			if( Utils.mkList("y", "Y", "yes", "Yes", "YES").contains(input) ) {
-				final String username = cd.name;
-				final String password = cd.pass;
+				final String username = ld.username;
+				final String password = ld.password;
 
 				acctMgr.addAccount(username, password, 3);
 
 				final Account account = acctMgr.getAccount(username, password);
 
 				caTable.put(client, account);
-
+				
+				// TODO this seems a tad insecure
 				send("Account Registered!", client);
-				send("Username: \'" + account.getUsername() + "\'", client);
-				send("Password: \'" + account.getPassword() + "\'", client);
+				send("Username: \'" + username + "\'", client);
+				send("Password: \'" + password + "\'", client);
 
 				send("You may now login using your account credentials as you would those for an ordinary player.", client);
 			}
@@ -14671,16 +14654,16 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			
 			// exit registration regardless
 			setClientState(client, "");
-			setClientData(client, null);
+			setLoginData(client, null);
 		}
 	}
-
+	
 	private void handle_account_login(final String arg, final Client client) {
 		System.out.println("handle_account_login");
 
 		final Player player = getPlayer(client);
 
-		final loginData data = pLoginData.get(client);
+		final LoginData data = loginData.get(client);
 
 		// state indicator: is the server responding to our input or spitting
 		// data about what to input next
@@ -14689,30 +14672,30 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 		if (data != null) {
 			// TODO figure out if this test is necessary and why
-			if (data != pLoginData.get(client)) {
+			if (data != loginData.get(client)) {
 				send("Object in map is not the same as the stored retrieved result???", client);
 			}
-
-			int state = data.state;
+			
+			final String state = data.state;
 
 			System.out.println("state: " + state);
 			System.out.println("username: " + data.username);
 			System.out.println("password: " + data.password);
 
-			if (state == Constants.USERNAME) {
+			if ( state.equals(Constants.USERNAME) ) {
 				data.username = arg;
 				data.state = Constants.PASSWORD;
 
 				send("Password? ", client);
 			} 
-			else if (state == Constants.PASSWORD) {
+			else if ( state.equals(Constants.PASSWORD) ) {
 				data.password = arg;
 				data.state = Constants.AUTHENTICATE;
 
 				handle_account_login("", client);
 			}
-			else if (state == Constants.AUTHENTICATE) {
-				pLoginData.remove(client);
+			else if ( state.equals(Constants.AUTHENTICATE) ) {
+				loginData.remove(client);
 
 				// TODO create the account handler
 				final Account account1 = acctMgr.getAccount(data.username, data.password);
@@ -14743,7 +14726,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		}
 		else {
 			if (arg.equals("account")) {
-				pLoginData.put(client, new loginData(Constants.USERNAME));
+				loginData.put(client, new LoginData("USERNAME"));
 
 				send("Username? ", client);
 			}
@@ -14759,59 +14742,37 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		final Account account = caTable.get(client);
 
 		if (account != null) {
-			int c = Utils.toInt(input, -1);
-
-			if (c != -1) {
-				handleLogin(account, c, client);
-
-				setClientState(client, ""); // clear client state
-			}
-			/*
-			 * // try to find a character by name Player player1 = null;
-			 * 
-			 * for(final Player p : account.getCharacters()) { if(
-			 * p.getName().equalsIgnoreCase(input) ) { player1 = p; break; } }
-			 * 
-			 * if( player1 != null ) { if (mode == GameMode.NORMAL) {
-			 * init_conn(player1, client, false); // Open Mode } else if (mode
-			 * == GameMode.WIZARD) { if ( player1.getAccess() ==
-			 * Constants.WIZARD ) { init_conn(player1, client, false); //
-			 * Wizard-Only Mode } else {
-			 * send("Sorry, only Wizards are allowed to login at this time.",
-			 * client); } } else if (mode == GameMode.MAINTENANCE) {
-			 * send("Sorry, the mud is currently in maintenance mode.", client);
-			 * } else { send(
-			 * "Sorry, you cannot connect to the mud at this time. Please try again later."
-			 * , client); } } else {
-			 */
-
-			// send("No such player!", client);
-
 			char ch = input.charAt(0);
 
 			// valid: NEW, LINK, UNLINK, REORDER, DELETE (12-4-2015)
 			switch (ch) {
 			case 'N': // New Character
 				setClientState(client, "account_menu_new");
+				send("Account Action -> New Character (Not Implemented)", client);
+				setClientState(client, "account_menu");
 				break;
 			case 'L': // Link Character
 				setClientState(client, "account_menu_link");
-				//send("Account Action -> Link Character (Not Implemented)", client);
+				send("Account Action -> Link Character (Not Implemented)", client);
+				setClientState(client, "account_menu");
 				break;
 			case 'U': // Unlink Characters
 				setClientState(client, "account_menu_unlink");
-				//send("Account Action -> Unlink Character (Not Implemented)", client);
+				send("Account Action -> Unlink Character (Not Implemented)", client);
+				setClientState(client, "account_menu");
 				break;
 			case 'R': // Reorder Characters
 				setClientState(client, "account_menu_reorder");
-				//send("Account Action -> Reorder Characters (Not Implemented)", client);
+				send("Account Action -> Reorder Characters (Not Implemented)", client);
+				setClientState(client, "account_menu");
 				break;
 			case 'E': // Enter Description
 				send("Account Action -> Enter Description (Not Implemented)", client);
 				break;
 			case 'D': // Delete Character
 				setClientState(client, "account_menu_del");
-				//send("Account Action -> Delete Character (Not Implemented)", client);
+				send("Account Action -> Delete Character (Not Implemented)", client);
+				setClientState(client, "account_menu");
 				break;
 			case 'C': // Change Password
 				send("Account Action -> Change Password (Not Implemented)", client);
@@ -14821,7 +14782,14 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 				setClientState(client, ""); // clear client state
 				init_disconn(client, false); // disconnect client
 				break;
-			default: // Don't do anything, return to menu
+			default: // Login the specified character
+				int c = Utils.toInt(input, -1);
+
+				if (c != -1) {
+					if( handle_login(account, c, client) ) {
+						setClientState(client, ""); // clear client state
+					}
+				}
 				break;
 			}
 		}
@@ -14837,30 +14805,53 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	 * @param c       index/number to specify a character
 	 * @param client  the client which is connected
 	 */
-	private void handleLogin(final Account account, final Integer c, final Client client) {
+	private boolean handle_login(final Account account, final Integer c, final Client client) {
 		debug("LOGIN HANDLER");
-
-		final Player player = account.getCharacters().get(c);
+		
+		boolean success = false;
+		boolean can_login = false;
+		
+		String message = "";
+		
+		final List<Player> characters = account.getCharacters();
+		
+		Player player;
+		
+		try {
+			player = characters.get(c);
+		}
+		catch(final IndexOutOfBoundsException ioobe) {
+			System.out.println("--- Stack Trace ---");
+			ioobe.printStackTrace();
+			
+			player = null;
+		}
 
 		if (player != null) {
 			if (account.getPlayer() != player) {
+				// Open Mode
 				if (mode == GameMode.NORMAL) {
-					init_conn(player, client, false); // Open Mode
+					can_login = true;
 				}
+				// Wizard-Only Mode
 				else if (mode == GameMode.WIZARD) {
-					if (player.getAccess() == Constants.WIZARD) {
-						init_conn(player, client, false); // Wizard-Only Mode
-					}
-					else {
-						send("Sorry, only Wizards are allowed to login at this time.", client);
-					}
+					boolean isWizard = (player.getAccess() == Constants.WIZARD); 
+					
+					if ( isWizard ) can_login = true;
+					else            message = "Sorry, only Wizards are allowed to login at this time.";
 				}
 				else if (mode == GameMode.MAINTENANCE) {
-					send("Sorry, the mud is currently in maintenance mode.", client);
+					message = "Sorry, the mud is currently in maintenance mode.";
 				}
 				else {
-					send("Sorry, you cannot connect to the mud at this time. Please try again later.", client);
+					message = "Sorry, you cannot connect to the mud at this time. Please try again later.";
 				}
+				
+				if( can_login ) {
+					init_conn(player, client, false);
+					success = true;
+				}
+				else send(message, client);
 			}
 			else {
 				send("That player is already in use!", client);
@@ -14868,6 +14859,50 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		}
 		else {
 			send("No such player!", client);
+		}
+		
+		return success;
+	}
+
+	public void handle_account_action(final Account account, final String action, final Data data, final Client client) {
+		if( account != null && data != null ) {
+			if( action.equals("change_password") ) {
+				final String password = (String) data.getObject("newPass");
+				
+				account.setPassword(password);
+				
+				send("Account Password Changed!", client);
+			}
+			else {
+				// are we going to store a string for the player name or something else
+				final Player player = (Player) data.getObject("player");
+				
+				if( player != null ) {
+					switch(action) {
+					case "new_character":
+						new_character(account, null);
+						break;
+					case "link_character":
+						link_character(account, null);
+						break;
+					case "unlink_character":
+						unlink_character(account, null);
+						break;
+					case "reorder_characters":
+						break;
+					case "enter_description":
+						break;
+					case "delete_character":
+						delete_character(account, null);
+						break;
+					default:
+						break;
+					}
+				}
+				else {
+					send("No such player.", client);
+				}
+			}
 		}
 	}
 
@@ -15012,7 +15047,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	 * @return
 	 */
 	public MUDObject getObject(final Integer dbref) {
-		return objectDB.get(dbref);
+		return objectDB.getById(dbref);
 	}
 
 	/**
@@ -15258,10 +15293,6 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	 * return null; }
 	 */
 
-	public Room getRoom(final Player player) {
-		return objectDB.getRoomById(player.getLocation());
-	}
-
 	/**
 	 * Get a room by it's name.
 	 * 
@@ -15317,7 +15348,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	/* Data Saving Functions */
 
 	public void saveAccounts() {
-		for (final Account a : acctMgr.getAccounts()) {
+		/*for (final Account a : acctMgr.getAccounts()) {
 			String[] temp = new String[11];
 
 			temp[0] = "" + a.getCreated();
@@ -15342,8 +15373,9 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 			for (final Player p : a.getCharacters()) {
 				sb.append(p.getName());
-				if (index < a.getCharacters().size())
-					sb.append(", ");
+				
+				if (index < a.getCharacters().size()) sb.append(", ");
+				
 				index++;
 			}
 
@@ -15354,15 +15386,23 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			}
 
 			System.out.println("");
-		}
+		}*/
 
-		/*
-		 * try { for (final Account a : acctMgr.getAccounts()) {
-		 * ObjectOutputStream oos = new ObjectOutputStream(new
-		 * FileOutputStream(ACCOUNT_DIR + a.getUsername() + ".acct"));
-		 * oos.writeObject(a); oos.close(); } } catch (Exception e) {
-		 * e.printStackTrace(); }
-		 */
+		FileOutputStream fos;
+		ObjectOutputStream oos;
+
+		for (final Account acct : acctMgr.getAccounts()) {
+			try {
+				fos = new FileOutputStream(ACCOUNT_DIR + acct.getUsername() + ".acct");
+				oos = new ObjectOutputStream(fos);
+
+				oos.writeObject(acct);
+
+				oos.close();
+			}
+			catch (final FileNotFoundException fnfe) { fnfe.printStackTrace(); }
+			catch (final Exception e)                { e.printStackTrace(); }
+		}
 	}
 
 	/**
@@ -15448,7 +15488,8 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 		try {
 			file = new File(BOARD_DIR + board.getFilename());
-		} catch (NullPointerException npe) {
+		}
+		catch (final NullPointerException npe) {
 			// TODO do I really need to catch an exception here?
 			System.out.println("--- Stack Trace ---");
 			npe.printStackTrace();
@@ -15654,7 +15695,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 				final NPC npc = (NPC) player;
 				
 				if (npc instanceof Merchant) {
-					((Merchant) npc).stock.add(item);
+					((Merchant) npc).addToStock(item);
 					
 					debug("Merchant (" + npc.getName() + ")");
 				}
@@ -15993,15 +16034,15 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			if (npc instanceof Merchant) {
 				Merchant m = (Merchant) npc;
 
-				if (m.stock.size() == 0) { // no merchandise
+				if (m.getStock().size() == 0) { // no merchandise
 					if (m.getMerchantType().equals("armor")) {
-						m.stock = createItems(new Armor(0, ArmorType.CHAIN_MAIL), 10);
+						m.setStock( createItems(new Armor(0, ArmorType.CHAIN_MAIL), 10) );
 					}
 					else if (m.getMerchantType().equals("weapon")) {
-						m.stock = createItems(new Weapon(WeaponTypes.LONG_SWORD), 10);
+						m.setStock( createItems(new Weapon(WeaponTypes.LONG_SWORD), 10) );
 					}
 
-					for (final Item item : m.stock) {
+					for (final Item item : m.getStock()) {
 						int l = item.getLocation();
 						item.setLocation(m.getDBRef());
 
@@ -16059,30 +16100,34 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	 * @return
 	 */
 	public void cProps(final Player player) {
-		LinkedHashMap<String, Object> props;
-
 		// create string array to store results of evaluated props
 		String[] results = new String[0];
 
-		// get user properties array
-		props = player.getProperties();
-
+		// get user properties map
+		final Map<String, String> props = player.getProperties();
+		
 		boolean connectProps = false;
 
 		// get connection properties from user properties array
-		for (String key : props.keySet()) {
-
+		for (final String key : props.keySet()) {
 			if (key.startsWith("_connect")) {
-				String prop = (String) props.get(key);
+				final String property = props.get(key);
 
-				if (prop != null) {
-					connectProps = true;
+				if (property != null) {
+					if( !connectProps ) connectProps = true;
+					
+					int initial = property.indexOf("/");
+					String test = property.substring(initial, property.indexOf("/", initial));
+					System.out.println(test);
 
-					System.out.println(prop);
+					System.out.println(property);
 
 					debug("Connect Property Found!");
-
-					send(pgm.interpret(prop, player, null), player.getClient());
+					
+					final Script script = new Script(property);
+					final String result = pgm.interpret(script, player, null);
+					
+					send(result, player.getClient());
 				}
 			}
 		}
@@ -16106,28 +16151,37 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		// create string array to store results of evaluated props
 		String[] results = new String[0];
 
-		// get user properties array
-		final LinkedHashMap<String, Object> props = player.getProperties();
+		// get user properties map
+		final Map<String, String> props = player.getProperties();
+		
+		boolean disconnectProps = false;
 
 		// get disconnection properties from user properties array
 		for (final String key : props.keySet()) {
-			if (key.contains("_disconnect")) {
-				String prop = (String) props.get(key);
+			if (key.startsWith("_disconnect")) {
+				final String prop = props.get(key);
 
 				if (prop != null) {
+					if (!disconnectProps) disconnectProps = true;
+					
 					int initial = prop.indexOf("/");
-
-					String test = prop.substring(initial,
-							prop.indexOf("/", initial));
-
+					String test = prop.substring(initial, prop.indexOf("/", initial));
 					System.out.println(test);
 
-					if (test.equals("_disconnect")) {
-						System.out.println("Disconnect Property Found!");
-						send(pgm.interpret(prop, player, null), player.getClient());
-					}
+					System.out.println(prop);
+
+					debug("Disconnect Property Found!");
+
+					final Script script = new Script(prop);
+					final String result = pgm.interpret(script, player, null);
+
+					send(result, player.getClient());
 				}
 			}
+		}
+		
+		if (!disconnectProps) {
+			debug(player.getName() + ": No connection properties/scripts.");
 		}
 	}
 
@@ -16140,12 +16194,9 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	 * takes a player and performs loading operations for them, as well as
 	 * logging connections.
 	 * 
-	 * @param player
-	 *            the player to initialize/load into the game
-	 * @param client
-	 *            the connecting client
-	 * @param newCharacter
-	 *            is this a new character
+	 * @param player the player to initialize/load into the game
+	 * @param client the connecting client
+	 * @param newCharacter is this a new character
 	 */
 	public void init_conn(final Player player, final Client client, final boolean newCharacter) {
 		if (player == null) {
@@ -16188,7 +16239,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			// send a welcome mail to them
 
 			final int id = player.getMailBox().numMessages() + 1;
-			final String msg = "Welcome to "+ getName();
+			final String msg = "Welcome to " + getName();
 			final String dateString = getDate().toString();
 
 			final Mail mail = new Mail(id, "System", player.getName(),"Welcome", msg, dateString, Mail.UNREAD);
@@ -16277,9 +16328,9 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		messageQueues.put(player, new LinkedList<String>());
 
 		/* create timer lists for the player */
-		effectTimers.put(player, new LinkedList<EffectTimer>());
-		spellTimers.put(player, new LinkedList<SpellTimer>());
-		auctionTimers.put(player, new LinkedList<AuctionTimer>());
+		this.effectTimers.put(player, new LinkedList<EffectTimer>());
+		this.spellTimers.put(player, new LinkedList<SpellTimer>());
+		this.auctionTimers.put(player, new LinkedList<AuctionTimer>());
 
 		player.setStatus("IC");
 		
@@ -16295,12 +16346,9 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		cProps(player); // really should check permissions..
 
 		/* look at the current room */
-		final Room current = getRoom(player); // determine the room they are in
-		look(current, client);                // show the room
-		current.addListener(player);          // add them to the listeners group for the room
-
-		// test
-		System.out.print(player.toJSON());
+		final Room current = getRoom( player.getLocation() ); // determine the room they are in
+		current.addListener(player);                          // add them to the listeners group for the room
+		look(current, client);                                // show the room
 	}
 
 	/**
@@ -16329,7 +16377,12 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		cmd_control("#break", client);
 
 		// remove listener
-		getRoom(player).removeListener(player);
+		getRoom( player.getLocation() ).removeListener(player);
+		
+		// remove from chat channels
+		for(final ChatChannel ch : chan.getChatChannels()) {
+			if( ch.isListener(player) ) ch.removeListener(player);
+		}
 		
 		// TODO less kludgy route to removing player from channel listens?
 		// remove player from joined channels
@@ -16343,25 +16396,6 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 				}
 			}
 		}*/
-		
-		/*
-		// remove from chat channels
-		try {
-			chan.remove(player, OOC_CHANNEL);
-		}
-		catch(final NoSuchChannelException nsce) {
-			debug("INIT_DISCONN: No such chat channel.");
-		}
-
-		// TODO decide how to handle channels where I want people auto-added
-		// add player to the STAFF ChatChannel (testing), if they are staff
-		try {
-			chan.add(player, STAFF_CHANNEL);
-		}
-		catch(final NoSuchChannelException nsce) {
-			debug("INIT_DISCONN: No such chat channel.");
-		}
-		*/
 
 		/*
 		 * unequip gear
@@ -16374,13 +16408,11 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		 */
 
 		// Unequipping gear
-		final ArrayList<Item> inventory = player.getInventory();
+		final List<Item> inventory = player.getInventory();
 
 		for (final Slot slot : player.getSlots().values()) {
 			if (slot.isFull()) {
-				if (slot.getItem() != null) {
-					inventory.add(slot.remove());
-				}
+				if (slot.getItem() != null) inventory.add(slot.remove());
 			}
 		}
 
@@ -16601,9 +16633,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			send("Using Interactive Login", someClient);
 			send("");
 
-			setClientData(someClient, new ClientData("NAME"));
-
-			interactive_login(someClient);
+			start_interactive_login(someClient);
 		}
 	}
 
@@ -16637,20 +16667,10 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	// reload system help
 	// public void sys_help_reload() throws NullPointerException
 	public void help_reload() {
-		// load helpfiles (basically a duplication of the normal helpfile loading)
-		try {
-			for (final String helpFileName : generateHelpFileIndex()) {
-				String helpLines[] = Utils.loadStrings(HELP_DIR + helpFileName);
-				this.helpTable.put(helpLines[0], helpLines);
-			}
-			// System.out.println("Finished");
-		}
-		catch (NullPointerException npe) {
-			// TODO is this debug message adequate?
-			// TODO should this error message be a debug call?
-			System.out.println("NullPointerException in helpfile loading.");
-			System.out.println("--- Stack Trace ---");
-			npe.printStackTrace();
+		for (final String helpFileName : generateHelpFileIndex()) {
+			String helpLines[] = Utils.loadStrings(HELP_DIR + helpFileName);
+			
+			this.helpTable.put(helpLines[0], helpLines);
 		}
 	}
 
@@ -16707,66 +16727,75 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	 * @param filename
 	 */
 	public void backup(final String filename) {
-		// tell us that the database is being backed up (supply custom message?)
+		// TODO should this be debug or the main log?
 
 		// Accounts
-		log("Game> Backing up Accounts...");
+		log("Backing up Accounts...");
 		
-		saveAccounts();
+		//saveAccounts();
 		
 		log("Done.");
 
 		// Database
-		log("Game> Backing up Database...");
-		System.out.println("Game> Backing up Database...");
+		log("Backing up Database...");
 
 		// NOTE: real file modification occurs here
-		if ("".equals(filename)) {
-			saveDB();
-		}
-		else {
-			System.out.println("Using specified filename - \'" + filename + "\'");
+		boolean using_filename = ( "".equals(filename) );
+		
+		if( using_filename ) {
+			log("Using specified filename - \'" + filename + "\'");
+			//System.out.println("Using specified filename - \'" + filename + "\'");
 			saveDB(filename);
 		}
-
-		log("Done.");
-		System.out.println("Done.");
-
-		// Spells
-		log("Game> Backing up Spells...");
-		System.out.println("Game> Backing up Spells...");
-
-		// saveSpells();
-
-		log("Done.");
-		System.out.println("Done.");
-
-		// Help Files
-
-		/*
-		 * log("Game> Backing up Help Files...");
-		 * 
-		 * saveHelpFiles();
-		 * 
-		 * log("Done.");
-		 */
-
-		// Topic Files
-
-		/*
-		 * log("Game> Backing up Topic Files...");
-		 * 
-		 * saveTopicFiles();
-		 * 
-		 * log("Done.");
-		 */
-
-		// tell us that backing up is done (supply custom message?)
+		else saveDB();
+		
 		log("Database Backup - Done.");
+		
+		// TODO work on this part, maybe write some type adapters?
+		
+		/// JSON
+		/*GsonBuilder builder = new GsonBuilder(); // Or use new GsonBuilder().create();
 
-		System.out.println("Database Backup - Done.");
+		builder.setPrettyPrinting();
+
+		Gson gson = builder.create();
+
+		for(final MUDObject object : objectDB.getObjects()) {
+			System.out.println(object.getDBRef() + " : " + object.getName());
+			
+			final String fileName = DATA_DIR + "json\\" + object.getDBRef() + ".json";;
+			
+			Utils.saveStrings(fileName, new String[] { gson.toJson(object) });
+		}*/
+		
+		log("Done.");
+		
+		/* Spells */
+		
+		//log("Backing up Spells...");
+		
+		//saveSpells();
+
+		//log("Done.");
+		
+		/* Help Files */
+		
+		//log("Backing up Help Files...");
+		
+		//saveHelpFiles();
+		
+		//log("Done.");
+		
+		/* Topic Files */
+		
+		//log("Backing up Topic Files...");
+		
+		//saveTopicFiles();
+		
+		//log("Done.");
 	}
-
+	
+	// TODO figure out what I'm trying to accomplish here
 	// non-existent player "flush" function
 	public void flush() {
 		for (final Player player : players) {
@@ -16790,18 +16819,20 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			}
 		};
 		
-		timer.schedule(task, secs * 1000);
+		this.timer.schedule(task, secs * 1000);
 	}
 	
 	private void restart() {
-		s = new Server(this, port);              // initialize the server object
+		this.s = new Server(this, port);         // initialize the server object
+		
+		new Thread(this.s, "server").start();    // start it in a thread
 		
 		System.out.println("Server Startup!\n"); // tell us the server has started
 		
 		help_reload();                           // reload the help files
 		sys_reload();                            // load the database from disk
 		
-		running = true;
+		this.running = true;
 
 	}
 	
@@ -16812,7 +16843,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			}
 		};
 		
-		timer.schedule(task, secs * 1000);
+		this.timer.schedule(task, secs * 1000);
 	}
 
 	private void shutdown() {
@@ -16832,6 +16863,11 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		// indicate that the MUD server is no longer running, should cause the main loop to exit
 		running = false;
 		
+		if ( true ) {
+			//threads.get("command_exec").st
+			//cmdExec.
+		}
+		
 		System.out.println("Done");
 
 		// stop the server (the network server, the part handling sockets)
@@ -16844,7 +16880,8 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		// run the backup (run before closing logs so any backup problems get logged)
 		System.out.print("Running backup... ");
 		
-		backup("");
+		// TODO review backup
+		//backup("");
 		
 		System.out.println("Done");
 
@@ -17031,11 +17068,11 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	}
 	
 	public void log(final String string) {
-		log(string, log);
+		log(string, this.log);
 	}
 	
 	public void log(final String string, final Log log) {
-		if ( logging ) log.writeln(string);
+		if ( this.logging ) this.log.writeln(string);
 	}
 	
 	public void logAction(final String playerName, final Integer playerLoc, final String action) {
@@ -17273,7 +17310,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	}
 
 	protected boolean hasLineOfSight(Room room, Point origin, Point goal) {
-		final Point temp = origin.getCopy();
+		final Point temp = new Point( origin );
 
 		/*
 		 * int x_pos = origin.getX(); // get origin X coord int y_pos =
@@ -17292,14 +17329,9 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 					return false;
 				}
 			}
-
-			// increment x
-			// x_pos++;
-			temp.changeX(1);
-
-			// increment y
-			// y_pos++;
-			temp.changeY(1);
+			
+			temp.changeX(1); // increment x
+			temp.changeY(1); // increment y
 		}
 
 		return true;
@@ -17314,10 +17346,6 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	/**
 	 * Display the account menu for a specific account to the client specified
 	 * 
-	 * NOTE: This is ahead of the implementation, there isn't yet an account
-	 * system, but this code was written in preparation of the possible
-	 * implementation of such a feature.
-	 * 
 	 * NOTE1: The design/layout for this is borrowed from the login process on
 	 * TorilMUD. (torilmud.com)
 	 * 
@@ -17329,14 +17357,19 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			// not the place for the below, since it relates to before player connection
 			// in fact, init_conn will need modification if it expects to handle accounts instead of players
 			final String divider = "-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-";
-
-			send(colors(divider, "green"), client);
-
-			// TODO this message should not be hardcoded to a specific one
-			send(colors(Utils.center("Welcome to Fallout Equestria", 80), "pink2"), client);
-
-			send(colors(divider, "green"), client);
-
+			
+			final List<String> output = new LinkedList<String>();
+			
+			//send(colors(divider, "green"), client);
+			output.add( colors(divider, "green") );
+			
+			// TODO this message and it's color should not be hardcoded to a specific one
+			//send(colors(Utils.center("Welcome to Fallout Equestria", 80), "pink2"), client);
+			output.add( colors(Utils.center("Welcome to Fallout Equestria", 80), "pink2") );
+			
+			//send(colors(divider, "green"), client);
+			output.add( colors(divider, "green") );
+			
 			final List<Player> characters = account.getCharacters();
 
 			int n = 0;
@@ -17350,38 +17383,58 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 				final Faction faction = player.getFaction();
 				
 				if (active_character) {
-					client.write("" + Colors.YELLOW);
+					//client.write("" + Colors.YELLOW);
 					
-					send(n + ") " + player.getName(), client);
-					send(Utils.padLeft("", ' ', 22) + player.getRace().getName() + " [" + ((faction != null) ? faction.getName() :  "No Faction") + "]", client);
-					send(Utils.padLeft("", ' ', 22) + "Class " + player.getPClass().getName() + ", Level " + player.getLevel(), client);
+					//send(n + ") " + player.getName(), client);
+					//send(Utils.padLeft("", ' ', 22) + player.getRace().getName() + " [" + ((faction != null) ? faction.getName() :  "No Faction") + "]", client);
+					//send(Utils.padLeft("", ' ', 22) + "Class " + player.getPClass().getName() + ", Level " + player.getLevel(), client);
+					
+					output.add("" + Colors.YELLOW + n + ") " + player.getName() );
+					output.add( Utils.padLeft("", ' ', 22) + player.getRace().getName() + " [" + ((faction != null) ? faction.getName() :  "No Faction") + "]" );
+					output.add( Utils.padLeft("", ' ', 22) + "Class " + player.getPClass().getName() + ", Level " + player.getLevel() + "" + Colors.WHITE );
 
-					client.write("" + Colors.WHITE);
+					//client.write("" + Colors.WHITE);
 
 					active_character = false;
 				}
 				else {
-					send(n + ") " + player.getName(), client);
-					send(Utils.padLeft("", ' ', 22) + player.getRace().getName() + " [" + ((faction != null) ? faction.getName() :  "No Faction") + "]", client);
-					send(Utils.padLeft("", ' ', 22) + "Class " + player.getPClass().getName() + ", Level " + player.getLevel(), client);
+					//send(n + ") " + player.getName(), client);
+					//send(Utils.padLeft("", ' ', 22) + player.getRace().getName() + " [" + ((faction != null) ? faction.getName() :  "No Faction") + "]", client);
+					//send(Utils.padLeft("", ' ', 22) + "Class " + player.getPClass().getName() + ", Level " + player.getLevel(), client);
+					
+					output.add( n + ") " + player.getName() );
+					output.add( Utils.padLeft("", ' ', 22) + player.getRace().getName() + " [" + ((faction != null) ? faction.getName() :  "No Faction") + "]" );
+					output.add( Utils.padLeft("", ' ', 22) + "Class " + player.getPClass().getName() + ", Level " + player.getLevel() );
 				}
 
 				n++;
 			}
 
-			send("", client);
-			send("Slots Remaining: " + (account.getCharLimit() - account.getCharacters().size()), client);
+			//send("", client);
+			//send("Slots Remaining: " + (account.getCharLimit() - account.getCharacters().size()), client);
+			
+			output.add("");
+			output.add( "Slots Remaining: " + (account.getCharLimit() - account.getCharacters().size()) );
 
-			send(colors(divider, "green"), client);
+			//send(colors(divider, "green"), client);
+			output.add( colors(divider, "green") );
 
-			send("Type the # or name of a character above to login or choose an action below.", client);
-
-			send(colors(divider, "green"), client);
-
-			send("(N)ew character     | (L)ink character   | (U)nlink character | (R)eorder", client);
-			send("(E)nter description | (D)elete character | (C)hange password  | (Q)uit", client);
-
-			send(colors(divider, "green"), client);
+			//send("Type the # or name of a character above to login or choose an action below.", client);
+			output.add("Type the # or name of a character above to login or choose an action below.");
+			
+			//send(colors(divider, "green"), client);
+			output.add( colors(divider, "green") );
+			
+			//send("(N)ew character     | (L)ink character   | (U)nlink character | (R)eorder", client);
+			//send("(E)nter description | (D)elete character | (C)hange password  | (Q)uit", client);
+			
+			output.add("(N)ew character     | (L)ink character   | (U)nlink character | (R)eorder");
+			output.add("(E)nter description | (D)elete character | (C)hange password  | (Q)uit");
+			
+			//send(colors(divider, "green"), client);
+			output.add( colors(divider, "green") );
+			
+			send(output, client);
 		}
 		else {
 			send("Invalid Account!", client);
@@ -17391,43 +17444,48 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	/**
 	 * allows adding to the message queue from external packages, classes
 	 * 
+	 * NOTE: may handle concurrency poorly
 	 * @param newMessage
 	 */
 	public void addMessage(final Message msg) {
 		// if this client's player is the intended recipient
+		final MessageType type = msg.getType();
+		
 		final Player sender = msg.getSender();
 		final Player recip = msg.getRecipient();
-		final Integer loc = msg.getLocation();
+		final String message = msg.getMessage();
+		final Integer location = msg.getLocation();
 
 		Room room;
 
-		debug(msg.getType().name(), 4);
+		debug(type.name(), 4);
 
-		switch (msg.getType()) {
+		switch (type) {
 		case BROADCAST:
-			for (Player player : players) {
-				if (getRoom(player).getRoomType() == RoomType.OUTSIDE && player.getEditor() == Editors.NONE) {
-					send(msg.getMessage(), player.getClient());
+			for (final Player player : players) {
+				room = getRoom( player.getLocation() );
+				
+				if (room.getRoomType() == RoomType.OUTSIDE && player.getEditor() == Editors.NONE) {
+					send(message, player.getClient());
 				}
 			}
 
 			msg.markSent();
 			break;
 		case BROADCAST_LOCAL:
-			room = getRoom(msg.getLocation());
-
-			if (room != null) { // just in case the location somehow isn't a room
-
-				// send a message to all of the room's listeners (i.e. those who
-				// are online and in the same room)
-				for (Player player : room.getListeners()) {
+			room = getRoom(location);
+			
+			// just in case the location somehow isn't a room
+			if (room != null) {
+				// send a message to all of the room's listeners
+				for (final Player player : room.getListeners()) {
 					if (true) { // placeholder test condition for awareness of surroundings
-						final String message = msg.getMessage();
-
-						if (!message.contains(player.getName()) && !message.contains(player.getCName())) {
+						boolean name = ( message.contains( player.getName() ) );
+						boolean cname = ( message.contains( player.getCName() ) );
+						
+						if ( !name && !cname ) {
 							send(message, player.getClient());
 						}
-						// send( msg.getMessage(), player.getClient() );
 					}
 				}
 			}
@@ -17438,23 +17496,16 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			room = getRoom(msg.getLocation());
 
 			if (room != null) {
-				room.fireEvent(msg.getMessage());
-
-				/*
-				 * for (final Player bystander : players) { if
-				 * (bystander.getLocation() == msg.getLocation()) {
-				 * send(msg.getSender().getName() + " says, \"" +
-				 * msg.getMessage() + "\".", bystander.getClient());
-				 * msg.markSent(); } }
-				 */
+				room.fireEvent(message);
 
 				for (final Player bystander : room.getListeners()) {
-					if (msg.getSender() != bystander && !(bystander instanceof NPC)) {
-						send(msg.getSender().getName() + " says, \"" + msg.getMessage() + "\".", bystander.getClient());
-						msg.markSent();
+					if (sender != bystander && !(bystander instanceof NPC)) {
+						send(sender.getName() + " says, \"" + message + "\".", bystander.getClient());
 					}
 				}
 			}
+			
+			msg.markSent();
 
 			break;
 		case NORMAL:
@@ -17462,33 +17513,37 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			String color = null;
 
 			// TODO kludging here for color name
-			if (msg.getSender() instanceof NPC) {
+			if (sender instanceof NPC) {
 				color = getDisplayColor("npc");
 			}
 
 			if (color != null) {
-				send(colors(msg.getSender().getName(), color) + " tells you, \"" + msg.getMessage() + ".\"", recip.getClient());
+				send(colors(sender.getName(), color) + " tells you, \"" + message + ".\"", recip.getClient());
 			}
 			else {
-				send(msg.getSender() + " tells you, \"" + msg.getMessage() + ".\"", recip.getClient());
+				send(sender.getName() + " tells you, \"" + message + ".\"", recip.getClient());
 			}
 
 			msg.markSent();
-
-			debug("addMessage, sent message");
 			break;
 		case SYSTEM:
-			send(msg.getMessage(), msg.getRecipient().getClient());
+			//send(msg.getMessage(), msg.getRecipient().getClient());
+			send(message, recip.getClient());
+			
+			msg.markSent();
 			break;
 		default:
 			debug("Message Type Unknown");
+			
 			if (sender != null) debug("Sender: " + msg.getSender().getName());
 			if (recip != null)  debug("Recipient: " + msg.getRecipient().getName());
+			
 			debug("Message: " + msg);
+			
 			break;
 		}
 
-		if (msg.sent()) debug("sent message", 4);
+		if ( msg.wasSent() ) debug("addMessage, sent message", 4);
 	}
 
 	/**
@@ -17502,10 +17557,6 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			addMessage(m);
 		}
 	}
-
-	/*
-	 * public void write(String data, Client client) { client.write(data); }
-	 */
 
 	/**
 	 * Examine (MUDObject)
@@ -17522,19 +17573,9 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			
 			final String typeName = m.type.getName();
 			
-			// send("Type: " + ObjectFlag.firstInit(m.getFlags()) + " Flags: " + ObjectFlag.toInitString(m.getFlags()), client);
 			send("Type: " + typeName + " Flags: " + ObjectFlag.toInitString(m.getFlags()), client);
 
-			if (m instanceof Exit) {
-				send("Exit Type: " + ((Exit) m).getExitType().getName(), client);
-
-				if (((Exit) m).getExitType() == ExitType.DOOR) {
-					send("Locked: " + ((Door) m).isLocked(), client);
-				}
-
-				if (m instanceof Portal) send("Portal Type: " + ((Portal) m).getPortalType(), client);
-			}
-			else if (m instanceof Item) {
+			if (m instanceof Item) {
 				Item item = (Item) m;
 
 				send("Item  Type: " + item.getItemType().toString(), client);
@@ -17563,35 +17604,10 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			else {
 				send("Location: null", client);
 			}
-
-			if (m instanceof Exit) {
-				if (((Exit) m).getExitType() == ExitType.PORTAL) {
-					switch (((Portal) m).getPortalType()) {
-					case RANDOM:
-						send("Destinations: Uncertain", client);
-						break;
-					case STD:
-						send("Destination: " + getRoom(((Portal) m).getDestination()).getName(), client);
-						break;
-					default:
-						break;
-					}
-				}
-				else {
-					final MUDObject m2 = getObject(((Exit) m).getDestination());
-
-					if (m2 != null) {
-						send("Destination: " + colors(m2.getName(), getDisplayColor(m2.type)) + " (#" + m2.getDBRef() + ")", client);
-					}
-					else {
-						send("Destination: null", client);
-					}
-				}
-			}
-
+			
 			// send("Coordinates:", client);
 
-			Point position = m.getPosition();
+			final Point position = m.getPosition();
 
 			/*
 			 * send("X: " + position.getX(), client); send("Y: " + position.getY(), client); send("Z: " + position.getZ(), client);
@@ -17602,13 +17618,9 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			if (m instanceof Container) {
 				send("Contains: ", client);
 
-				for (Item item : ((Container) m).getContents()) {
+				for (final Item item : ((Container) m).getContents()) {
 					send(item.getName(), client);
 				}
-			}
-
-			if (m instanceof Portal) {
-				Portal portal = (Portal) m;
 			}
 		}
 		else {
@@ -17621,6 +17633,80 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		}
 	}
 	
+	public void examine(final Exit exit, final Client client) {
+		send(colors(exit.getName() + "(#" + exit.getDBRef() + ")", getDisplayColor(exit.type)), client);
+
+		final String typeName = exit.type.getName();
+
+		send("Type: " + typeName + " Flags: " + ObjectFlag.toInitString(exit.getFlags()), client);
+		
+		send("Exit Type: " + exit.getExitType().getName(), client);
+
+		if (exit.getExitType() == ExitType.DOOR) {
+			send("Locked: " + ((Door) exit).isLocked(), client);
+		}
+
+		if (exit instanceof Portal) {
+			send("Portal Type: " + ((Portal) exit).getPortalType(), client);
+		}
+		
+		final Player owner = exit.getOwner();
+		
+		String own_s;
+		
+		if (owner != null) {
+			own_s = colors(owner.getName(), getDisplayColor("player")) + " (#" + owner.getDBRef() + ")";
+		}
+		else own_s = "null";
+		
+		send("Owner: " + own_s, client);
+		
+		send("Description: " + exit.getDesc(), client);
+		
+		final Room room = getRoom( exit.getLocation() );
+		
+		String loc_s;
+		
+		if (room != null) {
+			loc_s = colors(room.getName(), getDisplayColor(room.type)) + "(#" + room.getDBRef() + ")";
+		}
+		else loc_s = "null";
+		
+		send("Location: " + loc_s, client);
+		
+		if (exit.getExitType() == ExitType.PORTAL) {
+			final Portal portal = (Portal) exit;
+			
+			switch (portal.getPortalType()) {
+			case RANDOM: send("Destinations: Uncertain", client); break;
+			case STD:    send("Destination: " + getRoom(portal.getDestination()).getName(), client); break;
+			default:     break;
+			}
+		}
+		else {
+			final Room room1 = getRoom( exit.getDestination() );
+			
+			String dest_s;
+			
+			if (room1 != null) {
+				dest_s = colors(room1.getName(), getDisplayColor(room1.type)) + " (#" + room1.getDBRef() + ")";
+			}
+			else dest_s = "null";
+			
+			send("Destination: " + dest_s, client);
+		}
+
+		// send("Coordinates:", client);
+
+		final Point position = exit.getPosition();
+
+		/*
+		 * send("X: " + position.getX(), client); send("Y: " + position.getY(), client); send("Z: " + position.getZ(), client);
+		 */
+
+		send("Coordinates: ( " + position.getX() + ", " + position.getY() + ", " + position.getZ() + " )", client);
+	}
+
 	/**
 	 * Examine
 	 * 
@@ -17634,31 +17720,34 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		
 		final String typeName = player.type.getName();
 		
-		// send("Type: " + ObjectFlag.firstInit(m.getFlags()) + " Flags: " + ObjectFlag.toInitString(m.getFlags()), client);
 		send("Type: " + typeName + " Flags: " + ObjectFlag.toInitString(player.getFlags()), client);
 
 		send("Race: " + player.getRace().getName(), client);
 		send("Class: " + player.getPClass().getName(), client);
 		
 		final MUDObject owner = player.getOwner();
-
+		
+		String own_s;
+		
 		if (owner != null) {
-			send("Owner: " + colors(owner.getName(), getDisplayColor("player")) + " (#" + owner.getDBRef() + ")", client);
+			own_s = colors(owner.getName(), getDisplayColor("player")) + " (#" + owner.getDBRef() + ")";
 		}
-		else {
-			send("Owner: null", client);
-		}
+		else own_s = "null";
+		
+		send("Owner: " + own_s, client);
 
 		send("Description: " + player.getDesc(), client);
 
 		final MUDObject m1 = getObject(player.getLocation());
-
+		
+		String loc_s;
+		
 		if (m1 != null) {
-			send("Location: " + colors(m1.getName(), getDisplayColor(m1.type)) + "(#" + m1.getDBRef() + ")", client);
+			loc_s = colors(m1.getName(), getDisplayColor(m1.type)) + "(#" + m1.getDBRef() + ")";
 		}
-		else {
-			send("Location: null", client);
-		}
+		else loc_s = "null";
+		
+		send("Location: " + loc_s, client);
 
 		// send("Coordinates:", client);
 
@@ -17811,18 +17900,6 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 				send(colors(item.getName(), getDisplayColor("item")), client);
 			}
 		}
-
-		if (mobj instanceof Thing) {
-			Thing thing = (Thing) mobj;
-
-			if( thing.contents != null ) {
-				send("Contents:", client);
-
-				for (final Item item : thing.contents) {
-					send(colors(item.getName(), getDisplayColor("item")), client);
-				}
-			}
-		}
 	}
 	
 	public List<String> look(final MUDObject mobj, final Player player) {
@@ -17874,18 +17951,6 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 				output.add( colors(item.getName(), getDisplayColor("item")) );
 			}
 		}
-
-		if (mobj instanceof Thing) {
-			final Thing thing = (Thing) mobj;
-
-			if( thing.contents != null ) {
-				output.add("Contents: ");
-
-				for (final Item item : thing.contents) {
-					output.add( colors(item.getName(), getDisplayColor("item")) );
-				}
-			}
-		}
 		
 		return output;
 	}
@@ -17902,7 +17967,6 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		final Player player = getPlayer(client);
 
 		if( player != null && room != null ) {
-
 			int line_limit = player.getLineLimit(); /* Make the description conform to a column limit */
 
 			// TODO make this get it's header data from somewhere else to make it customizable
@@ -17911,10 +17975,10 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			}
 			else {
 				if (!room.getFlags().contains(ObjectFlag.SILENT)) {
-					send(colors(room.getName() + " (#" + room.getDBRef() + ")", (String) getDisplayColor("room")), client);
+					send(colors(room.getName() + " (#" + room.getDBRef() + ")",  getDisplayColor("room")), client);
 				}
 				else {
-					send(colors(room.getName(), (String) getDisplayColor("room")), client);
+					send(colors(room.getName(), getDisplayColor("room")), client);
 				}
 
 				send(Utils.padRight("", '-', line_limit), client);
@@ -17959,9 +18023,11 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 				if (weather != null) {
 					// to color or /not/ to color.., should I be using showDesc
 					// send("*** " + "<weather>: " + parse(room.getWeather().ws.description, room.timeOfDay), client);
-
-					send("*** " + colors(weather.ws.name, "purple") + ": " + weather.ws.description, client);
-
+					
+					final String wsName = weather.getState().getName();
+					final String wsDesc = weather.getState().getDescription();
+					
+					send("*** " + colors(wsName, "purple") + ": " + wsDesc, client);
 					send("", client);
 				}
 
@@ -18336,23 +18402,30 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		 */
 
 		try {
+			final String effectName = effect.getName();
+			
 			// remove effect if ! is prefixed to it
-			if (effect.getName().contains("!")) {
+			if ( effectName.startsWith("!") ) {
+				
 				// covers dispel case for now -- will need serious work later
-				if (effect.getName().equals("!any")) {
+				if ( effectName.equals("!any") ) {
 					// different dispels? -- rules?
 					player.clearEffects();
 					send("All Effects removed!", client);
 				}
-
-				String effectName = effect.getName().substring(effect.getName().indexOf("!") + 1, effect.getName().length());
-
-				player.removeEffect(effectName);
-
-				send(effectName + " effect removed!", client);
+				else {
+					
+					int n = effectName.indexOf("!");
+					
+					String temp = effectName.substring(n + 1, effectName.length());
+					
+					removeEffect(player, temp);
+					
+					//send(temp + " effect removed!", client);
+				}
 			}
 			else {
-				if (effect.getName().startsWith("heal")) {
+				if ( effectName.startsWith("heal")) {
 					Integer amount;
 					String temp = effect.getName().substring(effect.getName().indexOf("+") + 1, effect.getName().length());
 
@@ -18391,13 +18464,18 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 						nfe.printStackTrace();
 					}
 				}
-				else if (effect.getName().startsWith("dam")) {
+				else if ( effectName.startsWith("dam") ) {
 					Integer damage;
-					String work = effect.getName().substring(effect.getName().indexOf("-") + 1, effect.getName().length());
+					
+					int n = effectName.indexOf("-");
+					
+					String work = effectName.substring(n + 1, effectName.length());
 
 					try {
 						damage = Integer.parseInt(work);
+						
 						debug("Amount of Damage: " + damage);
+						
 						debug("Hitpoints: " + player.getHP());
 						debug("Hitpoints (total): " + player.getTotalHP());
 
@@ -18414,32 +18492,26 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 					}
 				}
 				else {
-					// detect whether this is a positive or negative afffect
-					int firstPlus = effect.getName().indexOf("+");
-					int firstMinus = effect.getName().indexOf("-");
-					int plusMinus = (firstPlus > 0 && firstPlus <= 3) ? 1 : (firstMinus > 0 && firstMinus <= 3) ? -1 : 0;
+					// TODO should I be doing this somewhere else? stat bonuses ought to be ongoing effects, right?
+					String test = "";
+					
+					// detect whether this is a positive or negative effect
+					int plus = effectName.indexOf('+');
+					int minus = effectName.indexOf('-');
+					
+					Integer boost = 0;
+					
+					if( plus != -1 ) {
+						test = effectName.substring(0, plus);
+						boost = Utils.toInt(effectName.substring(plus + 1), 0);
+					}
 
-					if (plusMinus != 0) {
-						final String effectName = effect.getName();
-						final String test = effectName.substring(0, 3);
+					else if( minus != -1 ) {
+						test = effectName.substring(0, minus);
+						boost = Utils.toInt(effectName.substring(minus + 1), 0);
+					}
 
-						Integer boost;
-						String temp = "";
-
-						if (plusMinus == 1)       temp = effectName.substring( effectName.indexOf('+'), effectName.length()); // positive (plusMinus == 1)
-						else if (plusMinus == -1) temp = effectName.substring(effectName.indexOf('-'), effectName.length()); // negative (plusMinus == -1)
-
-						try {
-							boost = Integer.parseInt(temp);
-						}
-						catch (NumberFormatException nfe) {
-							// TODO is this debug message adequate?
-							debug(nfe.getMessage()); // send a debug message
-							boost = 0;
-							System.out.println("--- Stack Trace ---");
-							nfe.printStackTrace();
-						}
-
+					if (boost != 0) {
 						/** TODO: resolve this for results with differing stats **/
 						switch (test) {
 						case "str":
@@ -18478,14 +18550,14 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 					}
 					// add effects
 					else {
-						String effectName = effect.getName();
-
-						if (player.hasEffect(effectName)) {
-							player.removeEffect(effectName);
+						// cancel out the effect if they already had it
+						// TODO should effect objects carry a stack/nostack detail?
+						if ( player.hasEffect(effectName) ) {
+							removeEffect(player, effectName);
 						}
-
-						// player.addEffect( effectName );
+						
 						player.addEffect(effect);
+						
 						send(effectName + " Effect applied to " + player.getName(), client);
 						debug("Game> " + "added " + effectName + " to " + player.getName() + ".");
 					}
@@ -18502,6 +18574,19 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			e.printStackTrace();
 			return false;
 		}
+	}
+	
+	public void removeEffect(final Player player, final String effectName) {
+		player.removeEffect( new Effect(effectName) );
+		
+	}
+	// remove, from player, effect
+	public void removeEffect(final Player player, final Effect effect) {
+		final String effectName = effect.getName();
+		
+		player.removeEffect(effect);
+		
+		send(effectName + " effect removed.", player.getClient());
 	}
 
 	/**
@@ -18647,8 +18732,10 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			debug("" + room.getDBRef(), 4);
 			
 			String msg = null;
-
-			switch (room.getWeather().ws.name) {
+			
+			final String wsName = room.getWeather().getState().getName();
+			
+			switch (wsName) {
 			case "Clear Skies":
 				msg = "The sun shines down brightly from the cloudless blue sky.";
 				break;
@@ -18664,7 +18751,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 			if (msg != null) {
 				// broadcast(msg, r);
-				addMessage(new Message(msg, room));
+				addMessage( new Message(msg, room) );
 			}
 		}
 		// end old WeatherLoop code
@@ -18697,7 +18784,8 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 					if (position.getX() != destination.getX() || position.getY() != destination.getY() || position.getZ() != destination.getZ()) {
 						if (isPlayer) {
-							addMessage(new Message("Current Location: " + position.getX() + ", " + position.getY(), player));
+							final String pos = position.getX() + ", " + position.getY();
+							addMessage( new Message(null, player, "Current Location: " + pos) );
 						}
 
 						// move diagonally to reach the destination
@@ -18726,8 +18814,11 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 						if (isPlayer) {
 							// tell us about our new location
-							addMessage(new Message("New Location:         "+ position.getX() + ", " + position.getY(), player));
-							addMessage(new Message("Destination Location: " + destination.getX() + ", " + destination.getY(), player));
+							String loc = position.getX() + ", " + position.getY();
+							String dest = destination.getX() + ", " + destination.getY();
+							
+							addMessage( new Message(null, player, "New Location:         " + loc) );
+							addMessage( new Message(null, player, "Destination Location: " + dest) );
 						}
 
 						// tell us if we reached the destination this time
@@ -18753,7 +18844,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 							moving.remove(mobile);
 
 							if (isPlayer) {
-								addMessage(new Message( "You have reached your destination", player));
+								addMessage( new Message(null, player, "You have reached your destination") );
 							}
 						}
 					}
@@ -18772,16 +18863,17 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			if (roomType == RoomType.OUTSIDE) {
 				// simple view:
 				// cold/hot, dry/wet, happy/sad? (character mood) as a spectrum
-
 				// depending on the weather
-				switch (room.getWeather().ws.name.toLowerCase()) {
+				final String wsName = room.getWeather().getState().getName().toLowerCase();
+				
+				switch (wsName) {
 				case "clear skies":
 					break;
 				case "cloudy":
 					break;
 				case "rain":
 					// test if character is protected from rain or wearing
-					// rainproof clothing
+					// rain proof clothing
 					boolean rainproof = false;
 					boolean rainprotected = true;
 					int rainprotection = 1;
@@ -18824,9 +18916,9 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	 */
 	private void cmd_push(final String arg, final Client client) {
 		final Player player = getPlayer(client);
-		// Room room = getRoom(thing.getDBRef());
+		final Room room = getRoom( player.getLocation() );
 
-		final Thing thing = getThing(arg, getRoom(player));
+		final Thing thing = getThing(arg, room);
 
 		boolean canMove = false;
 
@@ -18968,13 +19060,8 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	 * gives you a reference to the player list from which you cannot remove or
 	 * add players, or clear the list
 	 */
-	public ArrayList<Player> getPlayers() {
-		// return (ArrayList<Player>)
-		// Collections.unmodifiableList(this.players);
-		// TODO resolve this, I'd like to be able to prevent anyone using this
-		// to muck with the players in the game
-
-		return this.players;
+	public List<Player> getPlayers() {
+		return Collections.unmodifiableList(this.players);
 	}
 
 	/**
@@ -19097,25 +19184,16 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 	/* Creation Functions */
 
-	/**
-	 * Create and return a new room object with the specified name and parent
-	 * room and a unique database reference number.
-	 * 
-	 * @param roomName   the name for the new room
-	 * @param roomParent the room that is the "parent" of this one
-	 * @return           the new room object
-	 */
-	private Room createRoom(String roomName, int roomParent) {
-		return createRoom(roomName, "You see nothing.", roomParent);
-	}
+	public Creature createCreature() {
+		final Creature cre = new Creature();
 
-	private Room createRoom(String roomName, String roomDescription, int roomParent) {
-		// flags are defined statically here, because I'd need to take in more
-		// variables and in no
-		// case should this create anything other than a standard room which has
-		// 'RS' for flags
+		cre.setFlags(EnumSet.noneOf(ObjectFlag.class));
+		cre.setLocation(Constants.VOID);
 
-		return new Room(-1, roomName, EnumSet.of(ObjectFlag.SILENT), roomDescription, roomParent);
+		objectDB.addAsNew(cre);
+		objectDB.addCreature(cre);
+
+		return cre;
 	}
 
 	/**
@@ -19148,11 +19226,11 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 		return item;
 	}
-	
+
 	public Item createItem(final String prototype) {
 		return createItem(prototype, true);
 	}
-	
+
 	public Item createItem(final String prototype, final boolean init) {
 		final Item template = prototypes.get(prototype);
 
@@ -19252,32 +19330,6 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		return items;
 	}
 
-	// TODO check and see what the location is set to by default in MUDObject,
-	// subclass constructors
-
-	private void initCreatedItem(final Item item) {
-		objectDB.addAsNew(item);
-		objectDB.addItem(item);
-	}
-
-	private void initCreatedThing(final Thing thing) {
-		objectDB.addAsNew(thing);
-		objectDB.addThing(thing);
-	}
-
-	private void initCreatedNPC(final NPC npc) {
-		objectDB.addAsNew(npc);
-		objectDB.addNPC(npc);
-
-		// TODO consider whether this is a kludge or not
-		int location = npc.getLocation();
-		Room room = getRoom(location);
-
-		if (location != -1 && room != null) {
-			room.addListener(npc);
-		}
-	}
-	
 	// TODO need to deal with the ambiguity of stat values...
 	public NPC createNPC(final String name, final Room location) {
 		return createNPC(name, null, new Integer[] { 0, 0, 0, 0, 0, 0 }, location);
@@ -19303,44 +19355,49 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 		initCreatedNPC(npc);
 
+		final Room room = getRoom( npc.getLocation() );
+		if (room != null) room.addListener(npc);
+
 		return npc;
 	}
 
-	/*
-	 * private Item createItem() { final Item item = new Item();
+	/**
+	 * Create and return a new room object with the specified name and parent
+	 * room and a unique database reference number.
 	 * 
-	 * item.setFlags(EnumSet.noneOf(ObjectFlag.class));
-	 * item.setLocation(Constants.VOID);
-	 * 
-	 * item.setItemType(ItemType.NONE);
-	 * 
-	 * objectDB.addAsNew(item); objectDB.addItem(item);
-	 * 
-	 * ((Room) objectDB.get(item.getLocation())).addItem(item);
-	 * 
-	 * return item; }
+	 * @param roomName   the name for the new room
+	 * @param roomParent the room that is the "parent" of this one
+	 * @return           the new room object
 	 */
+	private Room createRoom(String roomName, int roomParent) {
+		return createRoom(roomName, "You see nothing.", roomParent);
+	}
 
-	/*
-	 * public Creature createCreature(String race, String name, String desc) {
-	 * Creature creature = new Creature(getNextDB(), race, name, desc);
-	 * creatures.add(creature); return creature; }
-	 */
+	private Room createRoom(String roomName, String roomDescription, int roomParent) {
+		// flags are defined statically here, because I'd need to take in more
+		// variables and in no
+		// case should this create anything other than a standard room which has
+		// 'RS' for flags
 
-	public Creature createCreature() {
-		final Creature cre = new Creature();
+		return new Room(-1, roomName, EnumSet.of(ObjectFlag.SILENT), roomDescription, roomParent);
+	}
 
-		cre.setFlags(EnumSet.noneOf(ObjectFlag.class));
-		cre.setLocation(Constants.WELCOME_ROOM);
+	// TODO check and see what the location is set to by default in MUDObject,
+	// subclass constructors
 
-		cre.setCreatureType(CreatureType.NONE);
+	private void initCreatedItem(final Item item) {
+		this.objectDB.addAsNew(item);
+		this.objectDB.addItem(item);
+	}
 
-		objectDB.addAsNew(cre);
-		objectDB.addCreature(cre);
+	private void initCreatedThing(final Thing thing) {
+		this.objectDB.addAsNew(thing);
+		this.objectDB.addThing(thing);
+	}
 
-		// ((Room) objectDB.get(item.getLocation())).addItem(item);
-
-		return cre;
+	private void initCreatedNPC(final NPC npc) {
+		this.objectDB.addAsNew(npc);
+		this.objectDB.addNPC(npc);
 	}
 
 	/**
@@ -19351,11 +19408,9 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	 * 
 	 * criteria?: flags are... flags does not contain...
 	 * 
-	 * @param exits
-	 *            the lists of exits to filter
-	 * @param filters
-	 *            the filters to apply
-	 * @return the filtered list of exits
+	 * @param exits   the lists of exits to filter
+	 * @param filters the filters to apply
+	 * @return        the filtered list of exits
 	 */
 	/*
 	 * public ArrayList<Exit> filter(ArrayList<Exit> exits, Filter...filters) {
@@ -19389,19 +19444,17 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		if (!weather) return; // fast exit if weather is disabled
 
 		for (final Room room : objectDB.getWeatherRooms()) {
-
 			room.getWeather().nextState();
 
-			final WeatherState ws = room.getWeather().ws;
-
-			if (ws.upDown != 1 && ws.upDown != -1) {
-				return;
-			}
+			final WeatherState ws = room.getWeather().getState();
+			
+			// if no change occurred
+			if (ws.upDown != 1 && ws.upDown != -1) return;
 
 			String changeText = ws.upDown == 1 ? ws.transUpText : ws.transDownText;
 
 			if (changeText != null) {
-				addMessage(new Message(changeText, room));
+				addMessage( new Message(changeText, room) );
 				debug(changeText);
 			}
 		}
@@ -19448,26 +19501,44 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	}
 
 	public String[] generateHelpFileIndex() {
-		// Directory path here
-		String path = HELP_DIR;
+		final String path = HELP_DIR;
 
-		List<String> fileList = new ArrayList<String>();
+		final List<String> fileList = new LinkedList<String>();
+
+		String[] hfIndex;
 
 		System.out.println("Help File Index");
 		System.out.println("----------------------------------------");
 
-		for (File file : Arrays.asList(new File(path).listFiles())) {
-			if (file.isFile()) {
-				String filename = file.getName();
+		try {
+			final File dir = new File(path); // could throw NullPointerException, but shouldn't
 
-				if (filename.endsWith(".help") || filename.endsWith(".HELP")) {
-					// System.out.println( filename );
-					fileList.add(filename);
+			// TODO possibly replace checks below with a FilenameFilter ?
+			if( dir.isDirectory() ) {
+				for (final File file : Arrays.asList( dir.listFiles() )) {
+					if ( file.isFile() ) {
+						final String fileName = file.getName();
+
+						if ( fileName.endsWith(".help") || fileName.endsWith(".HELP") ) {
+							System.out.println( fileName );
+							fileList.add(fileName);
+						}
+					}
 				}
+
+				hfIndex = Utils.listToStringArray(fileList);
 			}
+			else hfIndex = new String[0];
+		}
+		catch(final NullPointerException npe) {
+			System.out.println("Error: invalid help dir. (NullPointerException).");
+			System.out.println("--- Stack Trace ---");
+			npe.printStackTrace();
+
+			hfIndex = new String[0];
 		}
 
-		return Utils.listToStringArray(fileList);
+		return hfIndex;
 	}
 
 	public String[] generateTopicFileIndex() {
@@ -19695,7 +19766,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	 */
 	private void use_portal(final Portal portal, final Client client) {
 		final Player player = getPlayer(client);
-		final Room room = getRoom(player);
+		final Room room = getRoom( player.getLocation() );
 		
 		final int portalOrigin = portal.getOrigin();
 		final int portalDest = portal.getDestination();
@@ -19767,7 +19838,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 				// getCommand("cast").execute(wand.spell.name, client);
 				cmd("cast " + wand.spell.getName(), client);
 			}
-			catch (Exception e) {
+			catch (final Exception e) {
 				// TODO what exception are we expecting to catch here?
 				System.out.println("--- Stack Trace ---");
 				e.printStackTrace();
@@ -19931,51 +20002,6 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	 * arg.split("="); createCreature(args[0], args[1], args[2]); }
 	 */
 
-	/**
-	 * Takes an input string and generates a new one where each letter is
-	 * prefixed by the ansi code for the colors of the rainbows in order from
-	 * Red to Violet (ROYGBIV). The colors are repeated until we've run out of
-	 * the input string. The whole thing is then capped off with the white color
-	 * code as a sort of reset.
-	 * 
-	 * NOTE: since normal ansi colors don't cover the whole rainbow, a few have
-	 * been omitted
-	 */
-	public String rainbow(final String input) {
-		// red, orange, yellow, green, blue, indigo, violet
-		String[] rainbow = null;
-		String result = "";
-
-		if (color == Constants.ANSI) {
-			rainbow = new String[] { "red", "yellow", "green", "blue" };
-		}
-		else if (color == Constants.XTERM) {
-			rainbow = new String[] { "red", "orange", "yellow", "green", "blue", "purple" };
-		}
-
-		if( rainbow != null ) {
-			final StringBuffer sb = new StringBuffer();
-
-			int index = 0;
-
-			for (final char c : input.toCharArray()) {
-				sb.append(colorCode(rainbow[index]));
-				sb.append(c);
-				
-				index = (index + 1) % rainbow.length;
-			}
-
-			sb.append(colorCode("white"));
-
-			result = sb.toString();
-		}
-		else {
-			result = input;
-		}
-
-		return result;
-	}
-
 	public void displayContainer(Container c, Client client) {
 		String top = MudUtils.getTop(c), side = MudUtils.getSide(), bottom = MudUtils.getBottom(c);
 		
@@ -20021,7 +20047,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			handleMovement();
 			handleWeatherEffects();
 		}
-		catch (ConcurrentModificationException cme) {
+		catch (final ConcurrentModificationException cme) {
 			// TODO is this debug message adequate?
 			debug(cme.getMessage());
 			System.out.println("--- Stack Trace ---");
@@ -20273,9 +20299,11 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 				if( !name_set ) {
 					final String nameLine = line.substring(1).trim();
 					
-					if( nameLine.indexOf('.') != -1 ) {
-						bb.setName( nameLine.substring(0, nameLine.indexOf('.')) );
-						bb.shortname = nameLine.substring( nameLine.indexOf('.') + 1, nameLine.length());
+					final int dot = nameLine.indexOf('.');
+					
+					if( dot != -1 ) {
+						bb.setName( nameLine.substring(0, dot) );
+						bb.setShortName( nameLine.substring(dot + 1, nameLine.length()) );
 					}
 					else {
 						bb.setName(nameLine);
@@ -20381,7 +20409,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 		System.out.println("MSG: " + msg);
 
-		for (String line : lines) {
+		for (final String line : lines) {
 			System.out.println("Line: " + line);
 
 			switch (part) {
@@ -20414,13 +20442,19 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			}
 
 			if (part == END) {
-				boolean validSender = !sender.equals("");
+				/*boolean validSender = !sender.equals("");
 				boolean validRecipient = !recipient.equals("");
 				boolean validSubject = !subject.equals("");
 				boolean validMessage = !message.equals("");
-
-				//if (!sender.equals("") && !recipient.equals("") && !subject.equals("") && !message.equals("") && flag != ' ' && mark == '~') {
-				if (validSender  && validRecipient && validSubject && validMessage && flag != ' ' && mark == '~') {
+				boolean validFlag = flag != ' ' && Utils.mkList("A", "R", "U").contains("" + flag);*/
+				
+				boolean validSdr = !sender.equals("");
+				boolean validRpt = !recipient.equals("");
+				boolean validSub = !subject.equals("");
+				boolean validMsg = !message.equals("");
+				boolean validFlag = flag != ' ' && Utils.mkList("A", "R", "U").contains("" + flag);
+				
+				if (validSdr && validRpt && validSub && validMsg && validFlag && mark == '~') {
 					// create mail object
 					Mail mail = new Mail(msg, sender, recipient, subject, message, getDate().toString(), flag);
 
@@ -20471,7 +20505,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			pw.flush();
 			pw.close();
 		}
-		catch (FileNotFoundException fnfe) {
+		catch (final FileNotFoundException fnfe) {
 			System.out.println("--- Stack Trace ---");
 			fnfe.printStackTrace();
 		}
@@ -20542,18 +20576,17 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	 */
 	public void checkTimers(Player player) {
 		List<EffectTimer> etl = getEffectTimers(player);
-
 		List<EffectTimer> eff_timers = new LinkedList<EffectTimer>();
 
-		for (EffectTimer etimer : etl) {
+		for (final EffectTimer etimer : etl) {
 			if (etimer.getTimeRemaining() <= 0 && !etimer.getEffect().isPermanent()) {
 				eff_timers.add(etimer);
 			}
 		}
 
-		for (EffectTimer etimer : eff_timers) {
-			player.removeEffect(etimer.getEffect().getName());
-			send(etimer.getEffect().getName() + " effect removed.", player.getClient());
+		for (final EffectTimer etimer : eff_timers) {
+			removeEffect(player, etimer.getEffect());
+			
 			etl.remove(etimer);
 		}
 
@@ -20567,14 +20600,13 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		// TODO can I genericize this list to TimerTask?
 		
 		// Effect Timers (when they expire, effects are removed)
-		List<EffectTimer> expired_timers = new LinkedList<EffectTimer>();
+		final List<EffectTimer> expired_timers = new LinkedList<EffectTimer>();
 
 		// each player has their own list of effect timers
-		for (final Entry<Player, List<EffectTimer>> entry : effectTimers.entrySet()) {
-			final Player player = entry.getKey();
-			final List<EffectTimer> etl = entry.getValue(); // player's list of effect timers
+		for(final Player player : effectTimers.keySet()) {
+			final List<EffectTimer> etl = effectTimers.get(player);
 
-			// add the timers that are expired
+			// add the timers that are expired to the expired list
 			for (final EffectTimer etimer : etl) {
 				if (etimer.getTimeRemaining() <= 0) {
 					expired_timers.add(etimer);
@@ -20584,22 +20616,25 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			// remove each timer in eff from the player's list of effect timers
 			for (final EffectTimer etimer : expired_timers) {
 				String effectName = etimer.getEffect().getName();
-				
-				player.removeEffect(effectName);
+
+				//player.removeEffect(effectName);
+				removeEffect(player, effectName);
 
 				send(etimer.getEffect().getName() + " effect removed.", player.getClient());
-				
+
 				etl.remove(etimer);
 			}
 
 			expired_timers.clear();
 		}
-
+		
+		// TODO auction timers -- see below
+		// perhaps a global spin through and decrement task of an internal count on Auctions would
+		// be more practical?
 		List<AuctionTimer> auc_timers = new LinkedList<AuctionTimer>();
-
-		for (final Entry<Player, List<AuctionTimer>> entry : auctionTimers.entrySet()) {
-			final Player player = entry.getKey();
-			final List<AuctionTimer> atl = entry.getValue();
+		
+		for(final Player player : auctionTimers.keySet()) {
+			final List<AuctionTimer> atl = auctionTimers.get(player);
 
 			for (final AuctionTimer atimer : atl) {
 				if (atimer.getTimeRemaining() <= 0) {
@@ -20610,7 +20645,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			for (final AuctionTimer atimer : auc_timers) {
 				// remove completed auction? marked it ended?
 				send("Your auction of " + atimer.getAuction().getItem().getName() + " ended!", player.getClient());
-				
+
 				atl.remove(atimer);
 			}
 
@@ -20774,9 +20809,11 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	 * Gets you limited ("read-only") access to the database, by way of an ODBI
 	 * interface reference.
 	 * 
+	 * TODO public?
+	 * 
 	 * @return
 	 */
-	protected ODBI getDBInterface() {
+	public ODBI getDBInterface() {
 		return this.objectDB;
 	}
 
@@ -20799,31 +20836,31 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 			module = (GameModule) c.getConstructor().newInstance();
 		}
-		catch (ClassNotFoundException cnfe) {
+		catch (final ClassNotFoundException cnfe) {
 			System.out.println("--- Stack Trace ---");
 			cnfe.printStackTrace();
 		}
-		catch (InstantiationException ie) {
+		catch (final InstantiationException ie) {
 			System.out.println("--- Stack Trace ---");
 			ie.printStackTrace();
 		}
-		catch (IllegalAccessException iae) {
+		catch (final IllegalAccessException iae) {
 			System.out.println("--- Stack Trace ---");
 			iae.printStackTrace();
 		}
-		catch (IllegalArgumentException iae2) {
+		catch (final IllegalArgumentException iae2) {
 			System.out.println("--- Stack Trace ---");
 			iae2.printStackTrace();
 		}
-		catch (InvocationTargetException ite) {
+		catch (final InvocationTargetException ite) {
 			System.out.println("--- Stack Trace ---");
 			ite.printStackTrace();
 		}
-		catch (NoSuchMethodException nsme) {
+		catch (final NoSuchMethodException nsme) {
 			System.out.println("--- Stack Trace ---");
 			nsme.printStackTrace();
 		}
-		catch (SecurityException se) {
+		catch (final SecurityException se) {
 			System.out.println("--- Stack Trace ---");
 			se.printStackTrace();
 		}
@@ -20840,10 +20877,13 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	public void handleDeath(final Player player) {
 		if (player.getState() == Player.State.DEAD) { // Player/NPC Death
 			Thing corpse = new Thing("Corpse");
+			
+			// does corpse need to be a container
+			//corpse.contents = new ArrayList<Item>();
 
-			corpse.contents = new ArrayList<Item>();
-
-			corpse.contents.addAll( player.getInventory() );
+			//corpse.contents.addAll( player.getInventory() );
+			getRoom( player.getLocation() ).addItems( player.getInventory() );
+			
 			player.getInventory().clear();
 
 			objectDB.addAsNew(corpse);
@@ -21149,6 +21189,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		if (pcl != null && pcl != Classes.NONE && !pcl.isNPC()) {
 			valid = true;
 		}
+		
 		return valid;
 	}
 
@@ -21257,7 +21298,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	 * @param item
 	 * @return
 	 */
-	boolean canUse(Player player, Item item) {
+	boolean canUse(final Player player, final Item item) {
 		return false;
 	}
 
@@ -21273,7 +21314,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	 * @param featName
 	 * @return
 	 */
-	public boolean hasFeat(Player player, String featName) {
+	public boolean hasFeat(final Player player, final String featName) {
 		return false;
 	}
 	
@@ -21284,35 +21325,17 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	 * sequences for the color specified and white (to reset back to default).
 	 * 
 	 * @param arg
-	 * @param cc
+	 * @param colorName
 	 * @return
 	 */
-	public String colors(final String arg, final String cc) {
-		String result = "";
-
-		if (color == Constants.ANSI) {
-			result = ANSI.getColor(cc) + arg + ANSI.getColor("white");
-		}
-		else if (color == Constants.XTERM) {
-			result = XTERM256.getColor(cc) + arg + XTERM256.getColor("white");
-		}
-		else {
-			result = arg;
-		}
-
-		return result;
+	public String colors(final String arg, final String colorName) {
+		return colorCode(colorName) + arg + colorCode(colorName);
 	}
 
-	public String colorCode(final String cc) {
-		if (color == Constants.ANSI) {
-			return ANSI.getColor(cc);
-		}
-		else if (color == Constants.XTERM) {
-			return XTERM256.getColor(cc);
-		}
-		else {
-			return "";
-		}
+	public String colorCode(final String colorName) {
+		if (color == Constants.ANSI)       return ANSI.getColor(colorName);
+		else if (color == Constants.XTERM) return XTERM256.getColor(colorName);
+		else                               return "";
 	}
 
 	/**
@@ -21348,10 +21371,6 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		else this.displayColors.put(displayType, new Pair<String>(ANSIColor, XTERMColor));
 	}
 	
-	private String getDisplayColor(final MUDObject m) {
-		return getDisplayColor(m.getType());
-	}
-	
 	private String getDisplayColor(final TypeFlag type) {
 		// TODO name() or toString()
 		return getDisplayColor( MudUtils.getTypeName(type).toLowerCase() );
@@ -21382,14 +21401,17 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	 * @return
 	 */
 	protected Zone getZone(final Integer zoneId) {
-		for (final Zone zone : zones.keySet()) {
+		Zone z = null;
+		
+		for (final Zone zone : this.zones.keySet()) {
 			if (zone.getId() == zoneId) {
 				debug("Zone ID: " + zone.getId());
-				return zone;
+				z = zone;
+				break;
 			}
 		}
 
-		return null;
+		return z;
 	}
 	
 	/**
@@ -21399,14 +21421,17 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	 * @return
 	 */
 	private Zone getZone(final String zoneName) {
-		for (final Zone zone : zones.keySet()) {
-			if (zone.getName().toLowerCase().equals(zoneName.toLowerCase())) {
+		Zone z = null;
+		
+		for (final Zone zone : this.zones.keySet()) {
+			if ( zone.getName().equalsIgnoreCase(zoneName) ) {
 				debug("Zone ID: " + zone.getId());
-				return zone;
+				z = zone;
+				break;
 			}
 		}
 
-		return null;
+		return z;
 	}
 	
 	/**
@@ -21421,8 +21446,8 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		if (obj != null) {
 			Room room = null;
 
-			if (obj.isType(TypeFlag.ROOM)) room = (Room) obj;
-			else                           room = getRoom(obj.getLocation());
+			if ( obj.isType(TypeFlag.ROOM) ) room = (Room) obj;
+			else                             room = getRoom(obj.getLocation());
 
 			if (room != null) {
 				zone = room.getZone();
@@ -21433,7 +21458,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		return zone;
 	}
 
-	private void sendMail(Player sender, Player recipient, String subject, String message) {
+	private void sendMail(final Player sender, final Player recipient, final String subject, final String message) {
 		if( recipient != null ) {
 			final MailBox mb = recipient.getMailBox();
 
@@ -21686,6 +21711,15 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	public ClientData getClientData(final Client client) {
 		return clientData.get(client);
 	}
+	
+	public LoginData getLoginData(final Client client) {
+		return this.loginData.get(client);
+	}
+	
+	public void setLoginData(final Client client, final LoginData newData) {
+		if (!(newData == null)) loginData.put(client, newData);
+		else                    loginData.remove(client);
+	}
 
 	/**
 	 * Move the specified Mobile to the Point specified
@@ -21778,34 +21812,15 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			else                  messageQueues.get(player).push(message);
 		}
 	}
-	
-	/**
-	 * Register a method to invoke whenever we use some particular object of type/class
-	 * cl
-	 * 
-	 * @param cl
-	 * @param useMethod
-	 * @return
-	 */
-	private boolean registerUseMethod(final Class cl, final Method useMethod) {
-		boolean success = false;
-
-		if ( !useMethods.containsKey(cl) ) {
-			useMethods.put(cl, useMethod);
-			success = true;
-		}
-
-		return success;
-	}
 
 	// TODO riding related
-	private void mount(final Ridable r, final Player p) {
+	/*private void mount(final Ridable r, final Player p) {
 		p.mount = r;
 	}
 	
 	private void unmount(final Ridable r, final Player p) {
 		p.mount = null;
-	}
+	}*/
 	
 	// intended for the use of Console instances
 	final public List<Client> getClients() {
@@ -21827,6 +21842,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		String path = WORLD_DIR + world + "\\";
 		
 		debug("races: " + path + "races.json");
+		debug("");
 
 		try {
 			String[] temp = Utils.loadStrings(path + "races.json");
@@ -21836,19 +21852,20 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 			races.addAll(Arrays.asList(racesArr));
 		}
-		catch (Exception e) {
+		catch (final Exception e) {
 			// TODO what exception are we catching?
 			System.out.println("--- Stack Trace ---");
 			e.printStackTrace();
 		}
 
-		for (Race r : races) {
+		for (final Race r : races) {
 			debug("* Race");
 			debug("Name: " + r.getName());
 			debug("Id: " + r.getId());
 			debug("Stat Adjust: " + Arrays.asList(r.getStatAdjust()));
 			debug("Restricted?: " + r.isRestricted());
 			debug("Can Fly?: " + r.canFly());
+			debug("");
 		}
 
 		System.out.println("Races: " + races);
@@ -21869,26 +21886,29 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	}
 
 	public Race getRace(String raceName) {
+		Race race = null;
+		
 		for (final Race r : races) {
-			if (raceName.equalsIgnoreCase(r.getName())) {
-				return r;
-			}
-		}
-
-		return null;
-	}
-
-	public Race getRace(int num) {
-		Race r = null;
-
-		for (final Race race : races) {
-			if (race.getId() == num) {
-				r = race;
+			if( r.getName().equalsIgnoreCase(raceName) ) {
+				race = r;
 				break;
 			}
 		}
 
-		return r;
+		return race;
+	}
+
+	public Race getRace(int raceId) {
+		Race race = null;
+
+		for (final Race r : races) {
+			if (r.getId() == raceId) {
+				race = r;
+				break;
+			}
+		}
+
+		return race;
 	}
 
 	/**
@@ -21906,16 +21926,26 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			if (aliases.containsKey(command)) {
 				return commandMap.get(aliases.get(command));
 			}
-			else return null;
+			else {
+				final Command empty = new Command("") {
+					@Override
+					public void execute(String arg, Client client) {
+						send(command + ": No such COMMAND", client);
+					}};
+					
+				empty.init(this);
+				
+				return empty;
+			}
 		}
 	}
 
-	private Command getPlayerCommand(final String command, final Player player) {
+	private Command getCommand(final String command, final Player player) {
 		Command cmd = null;
 
 		if (player != null) {
-			if (player.commandMap.containsKey(command)) {
-				cmd = player.commandMap.get(command);
+			if ( player.hasCommand(command) ) {
+				cmd = player.getCommand(command);
 			}
 		}
 
@@ -21938,34 +21968,39 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			// if( aClass)
 			System.out.println("aClass.getName() = " + aClass.getName());
 		}
-		catch (ClassNotFoundException cfe) {
+		catch (final ClassNotFoundException cfe) {
 			System.out.println("--- Stack Trace ---");
 			cfe.printStackTrace();
 		}
 	}
 
-	private void interactive_login(final Client client) {
+	private void start_interactive_login(final Client client) {
 		// TODO shouldn't need to set this each time, or maybe I need to split some stuff out
 		setClientState(client, "interactive_login");
-
-		final ClientData cd = getClientData(client);
-
-		if (cd.state.equals("NAME")) {
+		setLoginData(client, new LoginData(Constants.USERNAME)); // ???
+	}
+	
+	private void handle_interactive_login(final Client client) {
+		final LoginData ld = getLoginData(client);
+		
+		if ( ld.state.equals(Constants.USERNAME) ) {
 			requestInput("Name?     ", client);
 		}
-		if (cd.state.equals("PASS")) {
-			if( cd.name.equalsIgnoreCase("new") ) {
+		else if ( ld.state.equals(Constants.PASSWORD) ) {
+			if( ld.username.equalsIgnoreCase("new") ) {
 				send("Invalid Name!", client);
-				cd.state.equals("NAME");
-				interactive_login(client);
+				
+				ld.state = Constants.USERNAME;
+				
+				handle_interactive_login(client);
 			}
 			else {
 				requestInput("Password? ", client);
 			}
 		}
-		if (cd.state.equals("LOGIN")) {
+		else if ( ld.state.equals(Constants.LOGIN) ) {
 			// try connecting
-			cmd_connect(cd.name + " " + cd.pass, client);
+			cmd_connect(ld.username + " " + ld.password, client);
 
 			// TODO: FIX NEEDED, clearing client state here breaks account logins
 			// TODO figure out what to do, it seems silly to try a login and then test if it worked
@@ -21991,11 +22026,12 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			}
 			
 			if( !conn_success ) {
-				cd.state = "NAME";
-				interactive_login(client);
+				ld.state = "NAME";
+				handle_interactive_login(client);
 			}
 			else {
-				setClientState(client, ""); // we successfull logged in, clear state
+				setClientState(client, ""); // we successfully logged in, clear state
+				setLoginData(client, null); // clear login data
 			}
 		}
 	}
@@ -22061,7 +22097,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 				int old_loc = item.getLocation();
 
-				final String stackable = (String) item.getProperty("stackable");
+				final String stackable = item.getProperty("stackable");
 				
 				boolean stacks = ((stackable != null) ? ((stackable.equals("true")) ? true : false) : false);
 				
@@ -22073,6 +22109,8 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 					List<Item> item_stacks = getStackableItems(itemName, player);
 
 					boolean foundItemStack = false;
+					
+					debug("found stack: " + foundItemStack);
 
 					for (final Item item1 : item_stacks) {
 						Stackable<Item> item_stack = (Stackable<Item>) item1;
@@ -22096,6 +22134,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 						player.getInventory().add(item);
 						item.setLocation(player.getDBRef()); // "move" item
+						
 						debug("" + player.getInventory().contains(item));
 					}
 				}
@@ -22198,7 +22237,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			try {
 				br = new BufferedReader(new FileReader(configFile));
 			}
-			catch (FileNotFoundException fnfe) {
+			catch (final FileNotFoundException fnfe) {
 				// TODO is this debug message adequate?
 				System.out.println("Config File does not exist.");
 				System.out.println("--- Stack Trace ---");
@@ -22246,7 +22285,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 				br.close();
 			}
-			catch (IOException ioe) {
+			catch (final IOException ioe) {
 				System.out.println("--- Stack Trace ---");
 				ioe.printStackTrace();
 			}
@@ -22259,8 +22298,10 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 
 	private void new_character(final Account account, final Client client) {
 		// NOTE: depends on getInput(...) -- 12/4/2015
-		if (getClientState(client).equals("account_menu_newchar")) {
-			final ClientData cd = getClientData(client);
+		
+		// TODO below is not used at the moment
+		if ( getClientState(client).equals("account_menu_newchar") ) {
+			//final ClientData cd = getClientData(client);
 		}
 
 		// TODO make sure this tells you about the character limit and ensure
@@ -22338,113 +22379,21 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	}
 	
 	// selected character, confirm?, password match?
-	private void delete_character(final Account account, final Client client) {
+	private void delete_character(final Account account, final Player player) {
 	}
 	
-	private void link_character(final Account account, final Client client) {
-	}
-	
-	private void unlink_character(final Account account, final Client client) {	
-	}
-
-	public void registerInputHandler(final String clientState, Method handler) {
-		this.inputHandlers.put(clientState, handler);
-	}
-	
-	/**
-	 * Find the Item with the specified dbref in the list of Items provided, if
-	 * it's there.
-	 * 
-	 * @param items
-	 * @param itemDBRef
-	 * @return
-	 */
-	protected Item findItem(final List<Item> items, final Integer itemDBRef) {
-		if (items.size() == 0)
-			return null;
-
-		for (final Item item1 : items) {
-			final String itemName = item1.getName();
-
-			if (item1.getDBRef() == itemDBRef) {
-				debug(itemName + " true");
-
-				return item1;
-			}
+	private void link_character(final Account account, final Player player) {
+		if( account != null ) {
+			account.linkCharacter(player);
 		}
-
-		return null;
 	}
 	
-	/**
-	 * Find the Item with the specified name in the list of Items provided, if
-	 * it's there.
-	 * 
-	 * @param items
-	 * @param itemName
-	 * @return
-	 */
-	protected Item findItem(final List<Item> items, final String itemName) {
-		final String arg = itemName;
-
-		if (items.size() == 0) return null;
-
-		for (final Item item1 : items) {
-			// if there is a name or dbref match from the argument in the
-			// inventory
-			// if the item name exactly equals the arguments or the name
-			// contains the argument (both case-sensitive), or if the dbref is
-			// correct
-
-			final String name = item1.getName();
-			final List<String> components = Arrays.asList(item1.getName().toLowerCase().split(" "));
-
-			String name_lc = name.toLowerCase();
-			String arg_lc = arg.toLowerCase();
-
-			debug("Argument:              " + arg);
-			debug("Name:                  " + name);
-			debug("Argument (Lower Case): " + arg_lc);
-			debug("Name (Lower Case):     " + name_lc);
-			debug("Components:            " + components);
-
-			/*
-			 * 1) is the name the same as ARG (ignoring case -- setting both
-			 * name and arg to lowercase) 2) does the name start with ARG
-			 * (ignoring case -- setting both name and arg to lowercase) 3) does
-			 * the name end with ARG (ignoring case -- setting both name and arg
-			 * to lowercase) 4) does the name contain ARG (ignoring case --
-			 * setting both name and arg to lowercase) 5) is any component of
-			 * the name the same as the arg (continues non-whitespace separated
-			 * segments)
-			 */
-
-			boolean sameName = name.equalsIgnoreCase(arg);
-			boolean startsWith = name_lc.startsWith(arg_lc);
-			boolean endsWith = name_lc.endsWith(arg_lc);
-			boolean nameContains = name_lc.contains(arg_lc);
-			boolean compsContain = components.contains(arg_lc);
-
-			boolean test = false;
-
-			for (String s : components) {
-				for (String s1 : Arrays.asList(arg.toLowerCase().split(" "))) {
-					if (s.contains(s1)) test = true;
-					break;
-				}
-			}
-
-			// for string in A, is A.S a substring of string name N.S
-			if (sameName || startsWith || endsWith || nameContains || compsContain || test) {
-				debug(itemName + " true");
-
-				return item1;
-			}
+	private void unlink_character(final Account account, final Player player) {
+		if( account != null ) {
+			account.unlinkCharacter(player);
 		}
-
-		return null;
 	}
-
+	
 	// TODO finish implementation, would like to use search stuff from above and
 	// would like to take criteria, like say whether the item is a container
 	// NOTE this is needed still and is used to get a list of items with matching names
@@ -22758,7 +22707,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		boolean aliasExists = false;
 		boolean aliasMatch = false;
 
-		final String alias = aliases.get(input);
+		final String alias = this.aliases.get(input);
 
 		if (alias != null) {
 			aliasExists = true;
@@ -22819,11 +22768,11 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		final String gName = "Guest" + this.guests;
 		final String gDesc = "A guest player.";
 		
-		final EnumSet<ObjectFlag> gFlags = EnumSet.of(ObjectFlag.DARK, ObjectFlag.GUEST);
+		final EnumSet<ObjectFlag> gFlags = EnumSet.of(ObjectFlag.GUEST);
 		
 		final String gPass = Utils.hash("password");
 		
-		return new Player(-1, gName, gFlags, gDesc, Constants.WELCOME_ROOM, "", gPass, "OOC", new Integer[] { 0, 0, 0, 0, 0, 0 }, Coins.copper(0));
+		return new Player(-1, gName, gFlags, gDesc, WELCOME_ROOM, "", gPass, "OOC", new Integer[] { 0, 0, 0, 0, 0, 0 }, Coins.copper(0));
 	}
 	
 	Class<?> getClass(final String className) {
@@ -22832,7 +22781,8 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		try {
 			c = Class.forName(className);
 		}
-		catch (ClassNotFoundException e) {
+		catch (final ClassNotFoundException e) {
+			System.out.println("--- Stack Trace ---");
 			e.printStackTrace();
 		}
 
@@ -22851,17 +22801,6 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		}
 		
 		return idle_players;
-	}
-	
-	// Console stuff
-	public boolean usingConsole(final Client client) {
-		boolean usingConsole = false;
-		
-		if( console_enabled ) {
-			usingConsole = cmon.hasConsole(client);
-		}
-		
-		return usingConsole;
 	}
 	
 	// Network Server Call Wrappers
@@ -22905,10 +22844,6 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 				send(colors(npc.getName(), getDisplayColor("npc")) + ": " + node.getResponse(), client);
 				send("", client);
 				
-				if( node.starts ) {
-					
-				}
-				
 				// do some kind of check on the selected option (-1 is an invalid option?)
 				if( node.ends ) {
 					continue_conversation = false;
@@ -22924,7 +22859,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 					
 					for(final CNode cn : node.getOptions()) {
 						//send("" + i + ") " + cn.getText());
-						convOpts.add( colors("" + i + ") " + cn.getText(), "green") );
+						convOpts.add( i + " ) " + colors(cn.getText(), "green") );
 						i++;
 					}
 					
@@ -22954,7 +22889,6 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		final List<Tuple<CNode, NTuple<Integer>>> links = new LinkedList<>();
 
 		String[] lineData;
-		String[] temp;
 
 		Integer id;
 		String text;
@@ -22971,10 +22905,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			text = lineData[1];
 			response = lineData[2];
 			ends = lineData[3].equals("false") ? false : true;
-
-			temp = lineData[4].split(",");
-			
-			options = Utils.stringsToIntegers(temp);
+			options = Utils.stringsToIntegers( lineData[4].split(",") );
 			
 			final CNode cn = new CNode(id, text, response);
 			
@@ -23001,9 +22932,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 					final CNode node1 = link.one;
 					
 					// if that node is one of the options then connect it
-					if( node1.getId() == nodeId) {
-						node.addOption(node1);
-					}
+					if( node1.getId() == nodeId) node.addOption(node1);
 				}
 				
 			}
@@ -23013,10 +22942,11 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	}
 	
 	/* Boards */
-	
 	private void addBoard(final BulletinBoard bb) {
-		if( bb.shortname != null && !bb.shortname.equals("") ) this.boards.put(bb.shortname, bb);
-		else                                                   this.boards.put(bb.getName(), bb);
+		final String shortname = bb.getShortName();
+		
+		if( shortname != null && !shortname.equals("") ) this.boards.put(shortname, bb);
+		else                                             this.boards.put(bb.getName(), bb);
 	}
 	
 	// TODO is returning a particular board actually a good solution?
@@ -23085,15 +23015,14 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 			for(final Reagent r : spell.getReagents()) {
 				final String reagentName = r.getName();
 
-				final Item item = findItem(player.getInventory(), reagentName);
+				final Item item = MudUtils.findItem(reagentName, player.getInventory());
 
 				if( item != null ) {
 					if(item instanceof Stackable<?>) {
-						if( !( ((Stackable<?>) item).stackSize() > 0 ) ) {
-							result = false;
-						}
+						Stackable s = (Stackable<?>) item;
+						
+						if( s.stackSize() < 1 ) result = false;
 					}
-					else result = false;
 				}
 				else result = false;
 
@@ -23107,7 +23036,7 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 	// match("give 5 gold joe", "give %d %s %s")
 	// match("give %d %s %s", "give", "5", "gold", "joe")
 	private boolean match(final String pattern, final String...input) {
-		if( countTokens(pattern) == input.length ) {
+		if( Utils.countTokens(pattern) == input.length ) {
 			if( input[0].equals("") ) {
 				
 			}
@@ -23116,17 +23045,10 @@ public class MUDServer implements MUDServerI, LoggerI, MUDServerAPI {
 		return false;
 	}
 	
-	private int countTokens(final String in) {
-		final Counter c = new Counter(0);
-		
-		final String[] test = in.split(" ");
-		
-		for(final String s : test) {
-			if( s.startsWith("%") ) {
-				c.increment();
-			}
-		}
-		
-		return c.getValue();
-	}
+	public void sendMessage(final Message msg, final Client client) {
+    	final String sender = msg.getSender().getName();
+    	final String message = msg.getMessage();
+    	
+    	client.writeln(sender + " says, \"" + message + "\" to you. (tell)");
+    }
 }

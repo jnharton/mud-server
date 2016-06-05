@@ -10,22 +10,25 @@ package mud.objects;
  * changes are made to the one referred to.
  */
 
-public enum ThingType {
-	NONE("None"),   // 0
-	CONTAINER("Container"); // 1
-	
+public final class ThingType {	
 	private String name;
+	private Integer id;
 	
-	private ThingType(String name) {
+	public ThingType(final String name, final Integer id) {
 		this.name = name;
+		this.id = id;
 	}
 	
-	public static ThingType getType(String typeName) {
-		if (typeName.toUpperCase().equals("CONTAINER")) { return CONTAINER; }
-		else { return NONE; }
+	public String getName() {
+		return this.name;
 	}
 	
+	public Integer getId() {
+		return this.id;
+	}
+	
+	@Override
 	public String toString() {
 		return this.name.toUpperCase();
-	}	
+	}
 }

@@ -1,13 +1,8 @@
 package mud.utils;
 
-import java.util.LinkedList;
 import java.util.List;
 
-import mud.MUDServer;
-import mud.ObjectFlag;
-import mud.misc.Zone;
 import mud.net.Client;
-import mud.objects.Player;
 
 public class Console {
 	private ConsoleMonitor cm;

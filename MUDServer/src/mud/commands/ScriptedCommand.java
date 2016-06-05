@@ -42,9 +42,7 @@ public class ScriptedCommand extends Command {
 		synchronized(this.pgmi) {
 			this.pgmi.addVar("arg", arg);
 			
-			//final String newScript = this.script.getText().replace("{&arg}", arg);
-			//final String result = this.pgmi.interpret(script, getPlayer(client), null);
-			result = this.pgmi.interpret(script, getPlayer(client), null);
+			result = this.pgmi.interpret(script, getPlayer(client), getPlayer(client));
 			
 			this.pgmi.delVar("arg");
 		}

@@ -1,5 +1,6 @@
 package mud.objects.things;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -14,57 +15,49 @@ import mud.interfaces.Storage;
 import mud.misc.Lock;
 import mud.objects.Item;
 import mud.objects.Thing;
-import mud.objects.ThingType;
+import mud.objects.ThingTypes;
 import mud.utils.Utils;
 
 public class Box extends Thing implements Closeable, Lockable<Item>, Storage<Item> {
+	private boolean isOpen = false;
 	
 	private Lock lock = null;
-	
 	private Item key = null;
 	private boolean isLocked = false;
-	private boolean isOpen = false;
+	
 	private boolean full = false;
 	private boolean empty = true;
 	private int size = 10;
 	
-	private Map<String, Integer> contentMap = new HashMap<String, Integer>();
+	private List<Item> contents;
+	private Map<String, Integer> contentMap;
 	
 	public Box() {
-		this("Chest", "A chest");
+		this("Box", "A box.");
 		this.flags = EnumSet.noneOf(ObjectFlag.class);
 	}
 	
-	public Box(String name, String desc) {
-		super(-1, name, EnumSet.noneOf(ObjectFlag.class), desc, 8);
-		this.type = TypeFlag.ITEM;
-		thing_type = ThingType.CONTAINER;
-	}
-	
-	public Box(boolean isLocked) {
-		this();
-		this.isLocked = isLocked;
-	}
-	
-	public Box(Item key, boolean isLocked) {
-		this();
-		this.key = key;
-		this.isLocked = isLocked;
+	public Box(final String name, final String desc) {
+		super(name, desc);
+		
+		this.thing_type = ThingTypes.CONTAINER;
+		
+		this.contents = new ArrayList<Item>();
+		this.contentMap = new HashMap<String, Integer>();
 	}
 	
 	/**
 	 * Object Loading Constructor
 	 * @param dbref
 	 */
-	public Box(int dbref, String name, String desc, int location) {
-		super(dbref, name, EnumSet.noneOf(ObjectFlag.class), desc, location);
-		this.type = TypeFlag.ITEM;
-		thing_type = ThingType.CONTAINER;
+	public Box(final int tempDBRef, final String tempName, final EnumSet<ObjectFlag> tempFlags, final String tempDesc, final int tempLoc) {
+		super(tempDBRef, tempName, tempFlags, tempDesc, tempLoc);
+		
+		this.thing_type = ThingTypes.CONTAINER;
+		
+		this.contents = new ArrayList<Item>();
+		this.contentMap = new HashMap<String, Integer>();
 	}
-	
-	// object loading constructor?
-	/*public Box(int tempDBRef, String tempName, String tempFlags, String tempDesc, int tempLoc) {
-	}*/
 	
 	@Override
 	public void setKey(Item key) {
@@ -87,7 +80,7 @@ public class Box extends Thing implements Closeable, Lockable<Item>, Storage<Ite
 	}
 
 	@Override
-	public boolean lock(Item key) {
+	public boolean lock(final Item key) {
 		if( this.key == null ) return lock();
 		else {
 			if( this.key == key ) {
@@ -110,7 +103,7 @@ public class Box extends Thing implements Closeable, Lockable<Item>, Storage<Ite
 	}
 	
 	@Override
-	public boolean unlock(Item key) {
+	public boolean unlock(final Item key) {
 		if( this.key == null ) return lock();
 		else {
 			if( this.key == key ) {
@@ -135,8 +128,9 @@ public class Box extends Thing implements Closeable, Lockable<Item>, Storage<Ite
 	public List<Item> getContents() {
 		return Collections.unmodifiableList(this.contents);
 	}
-
-	public boolean insert(Item item) {
+	
+	@Override
+	public boolean insert(final Item item) {
 		boolean success = false;
 
 		if( !isFull() ) {
@@ -156,7 +150,7 @@ public class Box extends Thing implements Closeable, Lockable<Item>, Storage<Ite
 
 	public Item retrieve(int index) {
 		if( !empty ) {
-			Item item = contents.remove(index);
+			final Item item = this.contents.remove(index);
 			
 			if( item != null ) {
 				this.contentMap.remove( item.getName() );
@@ -168,10 +162,11 @@ public class Box extends Thing implements Closeable, Lockable<Item>, Storage<Ite
 		
 		return null;
 	}
-
-	public Item retrieve(String tName) {
-		if( contentMap.containsKey(tName) ) {
-			return this.retrieve( contentMap.get(tName) );
+	
+	@Override
+	public Item retrieve(final String tName) {
+		if( this.contentMap.containsKey(tName) ) {
+			return this.retrieve( this.contentMap.get(tName) );
 		}
 		
 		return null;
@@ -180,28 +175,33 @@ public class Box extends Thing implements Closeable, Lockable<Item>, Storage<Ite
 	public boolean isEmpty() {
 		return this.empty;
 	}
-
+	
+	@Override
 	public boolean isFull() {
 		return this.full;
 	}
 	
 	@Override
 	public void open() {
-		// TODO Auto-generated method stub
+		if( !this.isLocked ) {
+			this.isOpen = true;
+		}
 	}
 
 	@Override
 	public void close() {
-		// TODO Auto-generated method stub
+		this.isOpen = false;
 	}
 	
+	@Override
 	public boolean isOpen() {
 		return this.isOpen;
 	}
 	
 	@Override
 	public boolean requiresKey() {
-		return false;
+		if( this.key != null ) return true;
+		else                   return false;
 	}
 	
 	/**
@@ -213,16 +213,11 @@ public class Box extends Thing implements Closeable, Lockable<Item>, Storage<Ite
 	 * since it can be determined after loading the contents
 	 */
 	public String toDB() {
-		String[] output = new String[8];
-		output[0] = this.getDBRef() + "";              // database reference number
-		output[1] = this.getName();                    // name
-		output[2] = TypeFlag.asLetter(this.type) + ""; // flags
-		output[2] = output[2] + getFlagsAsString();
-		output[3] = this.getDesc();                    // description
-		output[4] = this.getLocation() + "";           // location
-		output[5] = this.thing_type.ordinal() + "";    // thing type
-		output[6] = "*";                               // key
-		output[7] = "*";                               // locked?
-		return Utils.join(output, "#");
+		String[] output = new String[2];
+		
+		output[0] = ((this.key != null) ? this.key.getDBRef() : -1) + ""; // key
+		output[1] = ((this.isLocked ) ? 1 : 0) + "";                      // locked?
+		
+		return super.toDB() + "#" + Utils.join(output, "#");
 	}
 }

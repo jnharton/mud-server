@@ -9,26 +9,24 @@ public class CNode {
 	private Integer id;
 	private String text;
 	private String response;
-	//private Condition cond;
 	private List<CNode> options;
 	
 	private Script script;
 	
-	public boolean starts = false;
 	public boolean ends = false;
 	
 	// player says, npc responds
-	public CNode(final Integer id, final String nText, final String response) {
-		this(id, nText, response, new ArrayList<CNode>());
+	public CNode(final Integer id, final String text, final String response) {
+		this(id, text, response, new ArrayList<CNode>());
 	}
 	
-	public CNode(final Integer id, final String nText, final String response, List<CNode> options) {
-		this(id, nText, response, options, null);
+	public CNode(final Integer id, final String text, final String response, List<CNode> options) {
+		this(id, text, response, options, null);
 	}
 	
-	public CNode(final Integer id, final String nText, final String response, List<CNode> options, Script script) {
+	public CNode(final Integer id, final String text, final String response, List<CNode> options, Script script) {
 		this.id = id;
-		this.text = nText;
+		this.text = text;
 		this.response = response;
 		this.options = options;
 		

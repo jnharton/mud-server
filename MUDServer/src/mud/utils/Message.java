@@ -16,8 +16,6 @@ MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVE
 CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
-
-import mud.net.Client;
 import mud.objects.Player;
 import mud.objects.Room;
 
@@ -35,60 +33,33 @@ import mud.objects.Room;
  */
 public class Message
 {
+	public static enum MessageType {
+		BROADCAST, BROADCAST_PLAYER, BROADCAST_LOCAL, SYSTEM, NORMAL, NONE
+	};
+	
+	private MessageType type;        //
+	
 	private Player sender;           // player who sent the message
 	private Player recipient;        // player the message was sent to.
 	private String message;          // String to store the body or content of the message.
+	
 	private Integer location;        //
 	
-	private MessageType type;        //
 	private Boolean wasSent = false; // has this message been sent
-	
-	/*
-	 * BROADCAST
-	 * BROADCAST_PLAYER
-	 * BROADCAST_LOCAL
-	 * SYSTEM
-	 * NORMAL
-	 * NONE
-	 */
-	public enum MessageType { BROADCAST, BROADCAST_PLAYER, BROADCAST_LOCAL, SYSTEM, NORMAL, NONE };
 
 	/**
 	 * Basic message unit, useful only for holding a message;
 	 * 
 	 * @param tempMessage
 	 */
-	public Message(String tempMessage) {
-		this.message = Utils.trim(tempMessage);
-		
-		this.type = MessageType.NONE;
+	public Message(final String tempMessage) {
+		this(null, null, tempMessage);
 	}
 	
-	/**
-	 * this is a kludge.
-	 * 
-	 * @param tempMessage
-	 * @param type
-	 */
-	public Message(String tempMessage, int type) {
-		this.message = tempMessage;
+	public Message(final String tempMessage, final MessageType tType) {
+		this(null, null, tempMessage);
 		
-		this.type = MessageType.values()[type];
-	}
-	
-	/**
-	 * "Normal" message, which has both a sender and a recipient in
-	 * addition to the message.
-	 * 
-	 * @param tempMessage
-	 * @param tempRecipient
-	 */
-	public Message(final Player tempSender, final String tempMessage, final Player tempRecipient) {
-		this.sender = tempSender;
-		this.message = Utils.trim(tempMessage);
-		this.recipient = tempRecipient;
-		
-		this.type = MessageType.NORMAL;
+		this.type = tType;
 	}
 	
 	/**
@@ -99,37 +70,29 @@ public class Message
 	 * @param tRoom
 	 */
 	public Message(final String tempMessage, final Room tLocation) {
-		this.message = Utils.trim(tempMessage);
-		this.location = tLocation.getDBRef();
-		
-		this.type = MessageType.BROADCAST_LOCAL;
+		this(null, null, tempMessage, tLocation);
 	}
 	
-	/**
-	 * Direct Message (Say)
-	 * 
-	 * @param tempSender
-	 * @param tempMessage
-	 */
-	public Message(final Player tempSender, final String tempMessage) {
-		this.sender = tempSender;
-		this.message = tempMessage;
-		this.location = tempSender.getLocation();
-		
-		this.type = MessageType.BROADCAST_PLAYER;
+	public Message(final Player tSender, final Player tRecipient, final String tMessage) {
+		this(tSender, tRecipient, tMessage, null);
 	}
 	
-	/**
-	 * System Message -- for a particular player
-	 * 
-	 * @param tempMessage
-	 * @param tempRecipient
-	 */
-	public Message(final String tempMessage, final Player tempRecipient) {
-		this.recipient = tempRecipient;
-		this.message = Utils.trim(tempMessage);
+	public Message(final Player tSender, final Player tRecipient, final String tMessage, final Room tLocation) {
+		this.sender = tSender;
+		this.recipient = tRecipient;
+		this.message = Utils.trim(tMessage);
 		
-		this.type = MessageType.SYSTEM;
+		this.location = (tLocation != null) ? tLocation.getDBRef() : -1;
+		
+		boolean noSend = (this.sender == null);
+		boolean noRecip = (this.recipient == null);
+		boolean Location = (this.location != -1);
+		
+		if( noSend && noRecip && Location) this.type = MessageType.BROADCAST_LOCAL;  //
+		else if( noSend && noRecip )       this.type = MessageType.NONE;
+		else if( noSend )                  this.type = MessageType.SYSTEM;           // System Message
+		else if( noRecip )                 this.type = MessageType.BROADCAST_PLAYER; // Direct Message
+		else                               this.type = MessageType.NORMAL;
 	}
 	
 	public MessageType getType() {
@@ -140,35 +103,19 @@ public class Message
 		return this.sender;
 	}
 	
-	public void setSender(final Player newSender) {
-		this.sender = newSender;
-	}
-	
 	public Player getRecipient() {
 		return this.recipient;
-	}
-	
-	public void setRecipient(final Player newRecipient) {
-		this.recipient = newRecipient;
 	}
 	
 	public String getMessage() {
 		return this.message;
 	}
 	
-	public void setMessage(final String newMessage) {
-		this.message = newMessage;
-	}
-	
 	public Integer getLocation() {
 		return this.location;
 	}
 	
-	public void setLocation(final Integer newLocation) {
-		this.location = newLocation;
-	}
-	
-	public boolean sent() {
+	public boolean wasSent() {
 		return this.wasSent;
 	}
 	

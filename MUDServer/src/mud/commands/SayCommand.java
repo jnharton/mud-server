@@ -13,7 +13,7 @@ public class SayCommand extends Command {
 	@Override
 	public void execute(String arg, Client client) {
 		send("You say, \"" + arg + "\"", client);
-		Message msg = new Message(getPlayer(client), arg);
+		Message msg = new Message(getPlayer(client), null, arg);
 		addMessage(msg);
 	}
 

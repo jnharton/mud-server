@@ -12,7 +12,6 @@ package mud.net;
 
 import java.io.*;
 import java.net.*;
-//import java.util.BitSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -29,12 +28,8 @@ public class Client implements Runnable {
 	private final OutputStream output;
 
 	private boolean running = false;
-	
-	private boolean telnet = true;
 	private boolean tn_neg_seq = false; // indicates if the bytes currently being received are part of a negotiation sequence
 	private boolean debug = false;      // start out with debug disabled
-
-	//final BitSet protocol_status = new BitSet(8); // NOT USED
 
 	// temporary storage
 	private final StringBuffer sb = new StringBuffer(80);
@@ -54,7 +49,8 @@ public class Client implements Runnable {
 
 	public Client(final Socket socket) throws IOException, SocketException {
 		this.socket = socket;
-
+		
+		// is this actually necessary?
 		this.socket.setOOBInline(true);
 
 		this.input = socket.getInputStream();
@@ -141,9 +137,7 @@ public class Client implements Runnable {
 							else                    received_line = true;
 						}
 						else if (ch == '\010') { // backspace
-							if( !(sb.length() == 0) ) {
-								sb.deleteCharAt( sb.length() - 1 );
-							}
+							if( sb.length() != 0 ) sb.deleteCharAt( sb.length() - 1 );
 						}
 						else { // any other character
 							debug("Read: " + ch + "(" + readValue + ")");
@@ -158,12 +152,8 @@ public class Client implements Runnable {
 						if( received_line ) {
 							final String line = sb.toString().trim();
 
-							if( !response_expected ) {
-								this.queuedLines.add( line );
-							}
-							else {
-								this.response = line;
-							}
+							if( !response_expected ) this.queuedLines.add(line);
+							else                     this.response = line;
 
 							sb.delete(0, sb.length());
 
@@ -172,36 +162,69 @@ public class Client implements Runnable {
 					}
 
 					// ---------------------------------------------------------------------------------
-
+					
 					/*
-
+					
 					// can't use BufferedReader here - we need access to the buffer for telnet commands, 
 					// which won't be followed by a newline
 					final byte buf[] = new byte[BUF_SIZE];
+					
 					int numRead = 0;
+					int numParsed = 0;
 
 					while (running) {
 						final int lastNumRead = input.read(buf, numRead, BUF_SIZE - numRead);
+						
 						numRead += lastNumRead;
-
-						// if we read more than one character total and we found a carriage-return ('\r)
-						// or a newline (\n) character, turn the input into a string and dump it into
-						// queued lines
-						if (numRead > 1 && (buf[numRead - 1] == '\r' || buf[numRead - 1] == '\n')) {
-							final String input = new String(buf, 0, numRead); // convert read characters into string
-
-							numRead = 0; // clear count of read characters
-
-							// handles possibility of multiple lines in input (mud client, probably)
-							for (final String line : input.split("(\r\n|\n|\r)")) {
-								if (line != null && !"".equals(line)) {
-									queuedLines.add(line);
+						
+						for(int n = numParsed; n < numRead - 1; n++) {
+							// test for telnet bytes?
+							if( 1 == 0 ) {
+								// if it's a telnet byte append it to the current telnet messagee
+							}
+							else {
+								// if we read more than one character total and we found a carriage-return ('\r)
+								// or a newline (\n) character, turn the input into a string and dump it into
+								// queued lines
+								
+								if( buf[n] == '\r' || buf[n] == '\n' ) {
+									final String input = sb.toString();
+									
+									queuedLines.add( sb.toString() );
+									
+									sb.delete(0, sb.length());
 								}
+								else {
+									sb.append((char) buf[n]);
+								}
+								
+								numParsed++;
+							}
+						}
+						
+						if( numParsed == BUF_SIZE ) {
+							numParsed = 0;
+							
+							if( BUF_SIZE - numRead == 0 ) {
+								numRead = 0;   // TODO be careful with this one
 							}
 						}
 					}
+					
+					*/
+					
+					/*if (numRead > 1 && (buf[numRead - 1] == '\r' || buf[numRead - 1] == '\n')) {
+						final String input = new String(buf, 0, numRead); // convert read characters into string
 
-					 */
+						numRead = 0; // clear count of read characters
+
+						// handles possibility of multiple lines in input (mud client, probably)
+						for (final String line : input.split("(\r\n|\n|\r)")) {
+							if (line != null && !"".equals(line)) {
+								queuedLines.add(line);
+							}
+						}
+					}*/
 				}
 			}
 		}
@@ -252,7 +275,7 @@ public class Client implements Runnable {
 	}
 
 	public String getInput() {
-		return queuedLines.poll();
+		return this.queuedLines.poll();
 	}
 
 	public void write(final char ch) {
@@ -302,10 +325,6 @@ public class Client implements Runnable {
 
 	public void setDebug(boolean state) {
 		this.debug = state;
-	}
-
-	public boolean usingTelnet() {
-		return this.telnet;
 	}
 
 	public void setResponseExpected(boolean re) {

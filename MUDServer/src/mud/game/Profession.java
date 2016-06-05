@@ -52,4 +52,9 @@ public class Profession {
 		
 		return false;
 	}
+	
+	@Override
+	public String toString() {
+		return getName();
+	}
 }

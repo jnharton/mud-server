@@ -44,10 +44,10 @@ public class Shield extends Item
 	 * @param tempLoc
 	 * @param tempDBREF
 	 */
-	public Shield(String sName, String sDesc, int sLoc, int sDBREF, int sMod, ItemType item, ShieldType shield) {
-		super(sDBREF, sName, EnumSet.noneOf(ObjectFlag.class), sDesc, sLoc);
-		this.type = TypeFlag.ITEM;
-		this.item_type = item;
+	public Shield(int sDBREF, String sName, EnumSet<ObjectFlag> sFlags, String sDesc, int sLoc, ItemType item, ShieldType shield, int sMod) {
+		super(sDBREF, sName, sFlags, sDesc, sLoc);
+		
+		this.item_type = ItemTypes.SHIELD;
 		
 		this.equippable = true;
 		
@@ -63,6 +63,14 @@ public class Shield extends Item
 
 	public int getShieldBonus() {
 		return this.shield_type.getShieldBonus();
+	}
+	
+	public ShieldType getShieldType() {
+		return this.shield_type;
+	}
+	
+	public void setShieldType(final ShieldType newType) {
+		this.shield_type = newType;
 	}
 	
 	@Override
@@ -95,10 +103,17 @@ public class Shield extends Item
 
 	@Override
 	public String getName() {
-		if( this.mod > 0 ) { return "+" + this.mod + " " + this.shield_type.getName() + " Wooden Shield"; }
-		else { return this.shield_type.getName() + " Wooden Shield"; }
+		if( this.shield_type != null ) {
+			if( this.mod > 0 ) {
+				return "+" + this.mod + " " + this.shield_type.getName() + " Wooden Shield";
+			}
+			else {
+				return this.shield_type.getName() + " Wooden Shield";
+			}
+		}
+		else return this.name;
 	}
-	
+
 	@Override
 	public Shield getCopy() {
 		return new Shield(this);

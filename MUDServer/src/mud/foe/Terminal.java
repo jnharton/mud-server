@@ -1,6 +1,5 @@
 package mud.foe;
 
-import java.io.BufferedReader;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.EnumSet;
@@ -11,22 +10,20 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Scanner;
 
-import mud.Command;
+import mud.Constants;
 import mud.ObjectFlag;
-import mud.foe.items.PipBuck;
 import mud.foe.misc.Device;
 import mud.foe.misc.FileSystem;
 import mud.foe.misc.FileSystem.File;
+import mud.foe.misc.IODevice;
 import mud.foe.misc.Port;
 import mud.foe.misc.User;
 import mud.foe.misc.Module;
-import mud.interfaces.ExtraCommands;
-import mud.net.Client;
 import mud.objects.Thing;
 import mud.utils.Pair;
 import mud.utils.Time;
 import mud.utils.Utils;
-import mud.utils.loginData;
+import mud.utils.LoginData;
 
 /**
  * 
@@ -39,7 +36,7 @@ import mud.utils.loginData;
  * Fallout is a Copyrighted/Trademarked name belonging to Bethesda Softworks,
  * a.k.a 'Bethesda'
  */
-public class Terminal extends Thing implements Device, ExtraCommands {
+public class Terminal extends Thing implements IODevice {
 	// power state:  NO_POWER, POWER, POWER_OFF
 	// login state:  LOGGED_IN, LOGGED_OUT, GET_USER, GET_PASS
 	// usable state: USABLE, LOCKOUT, BROKEN
@@ -63,30 +60,26 @@ public class Terminal extends Thing implements Device, ExtraCommands {
 	 */
 
 	//enum Screens { HACK, LOGIN, PROMPT };
-
-	private String name = ""; // ?
+	
+	private int id = 0; // device ids
 
 	private Power power_state = Power.POWER_OFF;
 	private Login login_state = Login.LOGGED_OUT;
 	private Use usable_state = Use.USABLE;
 
 	// Hardware
-	private LinkedList<Port> ports;          // all ports
-	private Hashtable<Device, Port> devices; // no null values
-
-	public int id = 0; // device ids
+	private List<Port> ports;          // all ports
+	private Map<Device, Port> devices; // no null values
 
 	// Firmware/Software?
 	private FileSystem fs;
-	private Hashtable<String, User> users;             // no null values
+	private Map<String, User> users;   // no null values
 	
-	private Time localTime;
+	//private Time localTime;
 	
 	// I/O
 	private Queue<String> input;
 	private Queue<String> output;
-
-	private BufferedReader reader;
 
 	// Screen
 	private Queue<String> screen_buffer;
@@ -97,18 +90,21 @@ public class Terminal extends Thing implements Device, ExtraCommands {
 	private String current_dir = "/";
 
 	// meta-state for controlling execution/thread
-	private boolean running = false;
-	public boolean paused = false;
+	private boolean running;
+	private boolean paused;
+	
 	private boolean startup = true;
-
+	
+	private boolean initialized = false;
+	
 	// misc?
-	private loginData ldat;
+	private LoginData ldat;
 	
 	private String input_state = "";
 	private Pair<String> action = null;
-	private String data = "";
+	//private String data = "";
 	
-	private static String PASSWORD = "CMC-ARE-AWESOME";
+	private static String OVERRIDE = "CMC-ARE-AWESOME"; // hard coded back door...
 
 	/*
 	 * Relevant to their use in a game, running should mean that the terminal
@@ -116,17 +112,20 @@ public class Terminal extends Thing implements Device, ExtraCommands {
 	 * presently in use but is only relevant if running is TRUE.
 	 */
 	public Terminal(final String tName) {
-		super(tName);
-		this.ldat = new loginData(0);
+		super(tName, "");
 	}
 
 	public Terminal(final String tName, final String tDesc) {
-		this(tName);
-		this.desc = tDesc;
+		// TODO would like initial power state to be on, but this conflicts with powerOn()...
+		this(tName, tDesc, Power.POWER_OFF, Login.LOGGED_OUT, Use.USABLE);
 	}
 
 	public Terminal(final String tName, final String tDesc, final Power tPState, final Login tLState, final Use tUState) {
-		this(tName, tDesc);
+		super(tName, tDesc);
+		
+		this.thing_type = FOEThingTypes.TERMINAL;
+		
+		this.ldat = new LoginData(Constants.USERNAME);
 
 		if(tPState != null) this.power_state = tPState;
 		else                this.power_state = Power.POWER_OFF;
@@ -138,121 +137,56 @@ public class Terminal extends Thing implements Device, ExtraCommands {
 		else                this.usable_state = Use.USABLE;
 	}
 
-	public Terminal(int tempDBRef, String tempName, EnumSet<ObjectFlag> tempFlags, String tempDesc, int tempLoc) {
-		super(tempDBRef, tempName, tempFlags, tempDesc, tempLoc);
+	public Terminal(final int dbref, final String name, final EnumSet<ObjectFlag> flags, final String description, final int location) {
+		super(dbref, name, flags, description, location);
 	}
 
 	static public void main(String[] args) {
-		/*Terminal term = new Terminal("Terminal", "", Terminal.Power.POWER_ON);
-
+		final Terminal term = new mud.foe.Terminal("Terminal", "A Stable-Tec terminal, old pre-war technology whose durability is plain to see. On the screen, passively glowing green text indicates that it awaits input.");
+		
 		term.init();
-		term.setup();
+		term.powerOn();
 
 		Scanner s = new Scanner(System.in);
+		
+		//
+		
+		while( !term.isPaused() ) {
+			term.exec();
 
-		if( term.power_state == Terminal.Power.POWER_ON ) {
-			term.writeToScreen( Utils.center( "STABLE-TEC INDUSTRIES UNIFIED OPERATING SYSTEM", 80 ) );
-			term.writeToScreen( Utils.center( "COPYRIGHT 1015-1020 STABLE-TEC INDUSTRIES", 80 ) );
+			String line = term.read();
 
-			while( term.power_state == Terminal.Power.POWER_ON ) {
+			while(line != null) {
+				System.out.print( line );
+				
+				line = term.read();
+			}
 
-				while( !term.screen_buffer.isEmpty() ) {
-					System.out.println( term.screen_buffer.poll() );
-				}
-
-				switch( term.login_state ) {
-				case LOGGED_OUT:
-					System.out.print("User?> ");
-					String user = s.nextLine();
-					System.out.print("Password?> ");
-					String pass = s.nextLine();
-					term.login(user, pass);
-					break;
-				case LOGGED_IN:
-					System.out.print("TERM> ");
-					term.processInput( s.nextLine() );
-					break;
-				case LOCKOUT:
-					break;
-				default:
-					term.power_state = Terminal.Power.POWER_OFF;
-					break;
-				}
+			if( term.isPaused() ) {
+				System.out.println("Stopped using terminal.");
+			}
+			
+			if( s.hasNextLine() ) {
+				term.write( s.nextLine() );
 			}
 		}
+		
+		//
 
 		s.close();
-
-		/*term.power_state = Power.POWER_ON;
-
-		new Thread(term).start();*/
 	}
+	
+	// removed setPowerState(...), the only problem I might encounter is the notion
+	// of supplying power to a formerly unpowered terminal
 
-	public void init() {
-		// initialize port list and device map
-		ports = new LinkedList<Port>();
-		devices = new Hashtable<Device, Port>();
-
-		fs = new FileSystem();
-		users = new Hashtable<String, User>();
-
-		screen_buffer = new LinkedList<String>();
-		
-		// initialize input and output 
-		input = new LinkedList<String>();
-		output = new LinkedList<String>();
-		
-		// start running, not paused
-		running = true;
-		paused = false;
-		
-		// add users
-		addUser("admin", PASSWORD);
-		
-		users.get("admin").setPerm(4);
+	public Power getPowerState() {
+		return this.power_state;
 	}
+	
+	// remove setLoginState(...) as nothing external should need to change this
 
-	public void exec() {
-		if( this.running ) {
-			if( !this.paused ) {
-				if( this.input != null && this.output != null ) {
-					int code = -1;
-					String s = "";
-
-					synchronized(input) {
-						s = input.poll();
-
-						if( s != null ) {
-							code = processInput(s); // process input
-						}
-					}
-
-					synchronized(output) {
-						if( !this.screen_buffer.isEmpty() ) {
-							s = this.screen_buffer.poll();
-
-							while( s != null ) {
-								output.add(s);
-
-								s = this.screen_buffer.poll();
-							}
-						}
-					}
-
-					if( code == 0 ) {
-						this.paused = true;
-					}
-				}
-			}
-		}
-	}
-
-	public String getDeviceName() {
-		return "Stable-Tec Terminal";
-	}
-
-	public DeviceType getDeviceType() {
-		return DeviceType.TERMINAL;
+	public Login getLoginState() {
+		return this.login_state;
 	}
 
 	/* connect <device> to <port> */
@@ -279,7 +213,7 @@ public class Terminal extends Thing implements Device, ExtraCommands {
 
 	private Port getPort(final DeviceType deviceType) {
 		for(final Port port : ports) {
-			if( port.type == deviceType ) {
+			if( port.getPortType() == deviceType ) {
 				if( !devices.containsValue(port) ) return port;
 			}
 		}
@@ -309,13 +243,147 @@ public class Terminal extends Thing implements Device, ExtraCommands {
 
 	}
 
-	public List<String> getScreen() {
+	/*public List<String> getScreen() {
 		return Arrays.asList( (String[]) screen_buffer.toArray() );
+	}*/
+	
+	public void setPaused(boolean value) {
+		this.paused = value;
+	}
+	
+	public boolean isPaused() {
+		return this.paused;
+	}
+	
+	public void init() {
+		if( !this.initialized ) {
+			// initialize port list and device map
+			this.ports = new LinkedList<Port>();
+			this.devices = new Hashtable<Device, Port>();
+
+			this.fs = new FileSystem();
+			this.users = new Hashtable<String, User>();
+
+			// initialize input and output 
+			this.input = new LinkedList<String>();
+			this.output = new LinkedList<String>();
+			
+			//
+			this.screen_buffer = new LinkedList<String>();
+
+			// add users
+			addUser("admin", OVERRIDE);
+
+			this.users.get("admin").setPerm(4);
+
+			this.initialized = true;
+			
+			// TODO running/paused should dependent on power state and use state...
+			// start running, not paused
+			this.running = true;
+			this.paused = true;
+			
+			System.out.println("Terminal Initialized!");
+		}
 	}
 
+	public void exec() {
+		System.out.println("Terminal.exec");
+		
+		if( this.running && !this.paused ) {
+			// if both input and output streams aren't null
+			if( this.input != null && this.output != null ) {
+				int code = -1;
+				String s = "";
+
+				synchronized(input) {
+					// read a line of input
+					s = input.poll();
+					
+					// if it's valid, process input and get result
+					if( s != null ) {
+						writeToScreen(s + "\n");
+						
+						code = processInput(s);
+					}
+				}
+
+				synchronized(output) {
+					if( !this.screen_buffer.isEmpty() ) {
+						// get a line of output
+						s = this.screen_buffer.poll();
+
+						// if it's valid, output it and grab the next line
+						while( s != null ) {
+							output.add(s);
+
+							s = this.screen_buffer.poll();
+						}
+					}
+				}
+
+				if( code == 0 ) this.paused = true; // this.running = false;
+			}
+		}
+	}
+	
+	public String powerOn() {
+		// TODO need to rework the logic below and maybe move the screen writes somewhere else
+		String report = "no power";
+
+		if( !(this.power_state == Power.NO_POWER) ) {
+			if( this.power_state == Power.POWER_OFF ) {
+				if( this.usable_state == Use.USABLE ) {
+					this.power_state = Power.POWER_ON;
+					
+					System.out.println("Terminal On and Usable!");
+
+					//set initial screen data
+					writeToScreen( Utils.center( "STABLE-TEC INDUSTRIES UNIFIED OPERATING SYSTEM", 80 ) );
+					writeToScreen( Utils.center( "COPYRIGHT 1015-1020 STABLE-TEC INDUSTRIES", 80 ) );
+					writeToScreen( "" );
+
+					if( login_state == Login.LOGGED_OUT ) {
+						writeToScreen( "User?> " );
+						login_state = Login.GET_USER;
+					}
+
+					report = "usable";
+				}
+				else report = "unusable";
+			}
+			else report = "power on";
+		}
+
+		return report;
+	}
+
+	public String powerOff() {
+		String report = "no power";
+
+		if( !(this.power_state == Power.NO_POWER) ) {
+			if( this.power_state == Power.POWER_ON ) {
+				if( this.usable_state == Use.USABLE ) {
+					this.login_state = Login.LOGGED_OUT;
+
+					writeToScreen("Powering Down...");
+
+					this.power_state = Power.POWER_OFF;
+
+					report = "usable";
+				}
+
+				report = "unusable";
+			}
+			else report = "power off";	
+		}
+
+		return report;
+	}
+	
 	/* Terminal Interaction Stuff */
 
-	public int processInput(final String input) {
+	private int processInput(final String input) {
 		/*
 		 * -- commands
 		 * cd     change current directory
@@ -599,21 +667,6 @@ public class Terminal extends Thing implements Device, ExtraCommands {
 		}
 	}
 
-	private boolean login(final String user, final String pass) {
-		if( this.users.containsKey(user) ) {
-			if( this.users.get(user).getPassword().equals( pass ) ) {
-				this.login_state = Login.LOGGED_IN;
-
-				this.current_user = user;
-				this.current_dir = "/" + user;
-
-				return true;
-			}
-		}
-
-		return false;
-	}
-
 	/**
 	 * getTime
 	 * 
@@ -661,29 +714,26 @@ public class Terminal extends Thing implements Device, ExtraCommands {
 	 * @param password
 	 */
 	private boolean addUser(final String username, final String password) {
+		return addUser(username, password, 0);
+	}
+	
+	private boolean addUser(final String username, final String password, final Integer permission) {
 		boolean success = false;
 		
 		// if such a user does not exist already
 		if( !this.users.containsKey(username) ) {
-			final User user = new User(username, password, 0);
+			final User user = new User(username, password, permission);
 			
 			// put the username and password in the users table
 			this.users.put(username, user);
 			
-			// intialize user space
+			// initialize user space
 			initUser(username);
 			
 			success = true;
 		}
 		
 		return success;
-	}
-
-	private void initUser(final String username) {
-		if( this.users.containsKey(username) ) {
-			this.fs.newDir(username);
-			fs.newFile(username, "user_guide", new String[]{ "Using your new Stable-Tec terminal" });
-		}
 	}
 
 	private boolean deleteUser(final String username, final String password) {
@@ -699,56 +749,30 @@ public class Terminal extends Thing implements Device, ExtraCommands {
 		
 		return success;
 	}
-
-	public void handle_login(final String input, final Client client) {
-		switch( login_state ) {
-		case LOGGED_OUT:
-			switch(ldat.state) {
-			case 0:
-				client.writeln("User?> ");
-				ldat.state = 1;
-				break;
-			case 1:
-				ldat.username = input;
-				ldat.state = 2;
-			case 2:
-				client.writeln("Password?> ");
-				ldat.state = 3;
-				break;
-			case 3:
-				ldat.password = input;
-				login(ldat.username, ldat.password);
-				break;
-			default:
-				break;
-			}
-
-			/*
-			client.writeln("User?> ");
-			//output.print("User?> ");
-			String user = s.nextLine();
-			//output.print("Password?> ");
-			client.writeln("Password?> ");
-			String pass = s.nextLine();
-			login(user, pass);
-			 */
-
-			break;
-		case LOGGED_IN:
-			client.writeln("TERM>");
-			//System.out.print("TERM> ");
-			//processInput( s.nextLine() );
-			processInput( input );
-			break;
-		case LOCKOUT:
-			break;
-		default:
-			power_state = Terminal.Power.POWER_OFF;
-			break;
+	
+	private void initUser(final String username) {
+		if( this.users.containsKey(username) ) {
+			this.fs.newDir(username);
+			fs.newFile(username, "user_guide", new String[]{ "Using your new Stable-Tec terminal" });
 		}
 	}
+	
+	private boolean login(final String user, final String pass) {
+		if( this.users.containsKey(user) ) {
+			if( this.users.get(user).getPassword().equals( pass ) ) {
+				this.login_state = Login.LOGGED_IN;
 
-	public String getPrompt() {
+				this.current_user = user;
+				this.current_dir = "/" + user;
+
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	private String getPrompt() {
 		String prompt = "";
 
 		// if the terminal is ON and USABLE
@@ -767,31 +791,43 @@ public class Terminal extends Thing implements Device, ExtraCommands {
 
 		return prompt;
 	}
+	
+	// add to the above 'turn off', 'reset'
+	// turn off: power off the terminal
+	// reset: reset the terminal
 
-	public void setLoginState(Login newLoginState) {
-		this.login_state = newLoginState;
-	}
-
-	public Login getLoginState() {
-		return this.login_state;
-	}
-
-	public void setPowerState(Power newPowerState) {
-		this.power_state = newPowerState;
-	}
-
-	public Power getPowerState() {
-		return this.power_state;
+	public boolean checkStatus(final Power state1, final Use state2) {
+		return this.power_state == state1 && this.usable_state == state2;
 	}
 	
+	/* Interfaces - Implemented Methods */
+	
+	@Override
+	public String getDeviceName() {
+		return "Stable-Tec Terminal";
+	}
+	
+	@Override
+	public DeviceType getDeviceType() {
+		return DeviceType.TERMINAL;
+	}
+	
+	@Override
+	public List<Module> getModules() {
+		return null;
+	}
+	
+	@Override
 	/**
-	 * Write a line to the terminal input;
+	 * Write a line to the terminal input.
+	 * 
 	 * @param string
 	 */
 	public void write(final String string) {
 		this.input.add(string);
 	}
 	
+	@Override
 	/**
 	 * Read a line of terminal output.
 	 * 
@@ -800,78 +836,9 @@ public class Terminal extends Thing implements Device, ExtraCommands {
 	public String read() {
 		return output.poll();
 	}
-
-	@Override
-	public List<Module> getModules() {
-		return null;
-	}
-
-	@Override
-	public Map<String, Command> getCommands() {
-		return null;
-	}
-	// add to the above 'turn off', 'reset'
-	// turn off: power off the terminal
-	// reset: reset the terminal
-
+	
 	@Override
 	public String toString() {
 		return getName();
-	}
-
-	private boolean checkStatus(Power state1, Use state2) {
-		return this.power_state == state1 && this.usable_state == state2;
-	}
-
-	public String powerOn() {
-		String report = "no power";
-
-		if( !(this.power_state == Power.NO_POWER) ) {
-			if( this.power_state == Power.POWER_OFF ) {
-				if( this.usable_state == Use.USABLE ) {
-					this.power_state = Power.POWER_ON;
-
-					//set initial screen data
-					writeToScreen( Utils.center( "STABLE-TEC INDUSTRIES UNIFIED OPERATING SYSTEM", 80 ) );
-					writeToScreen( Utils.center( "COPYRIGHT 1015-1020 STABLE-TEC INDUSTRIES", 80 ) );
-					writeToScreen( "" );
-
-					if( login_state == Login.LOGGED_OUT ) {
-						writeToScreen( "User?> " );
-						login_state = Login.GET_USER;
-					}
-
-					report = "usable";
-				}
-
-				report = "unusable";
-			}
-			else report = "power on";
-		}
-
-		return report;
-	}
-
-	public String powerOff() {
-		String report = "no power";
-
-		if( !(this.power_state == Power.NO_POWER) ) {
-			if( this.power_state == Power.POWER_ON ) {
-				if( this.usable_state == Use.USABLE ) {
-					this.login_state = Login.LOGGED_OUT;
-
-					writeToScreen("Powering Down...");
-
-					this.power_state = Power.POWER_OFF;
-
-					report = "usable";
-				}
-
-				report = "unusable";
-			}
-			else report = "power off";	
-		}
-
-		return report;
 	}
 }

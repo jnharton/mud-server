@@ -6,7 +6,7 @@ public enum ShieldType {
 	BUCKLER( Type.LIGHT,  "Buckler", new int[] { 0, 0, 5,  0}, 1, 5),  // 0
 	LIGHT(   Type.LIGHT,  "Light",   new int[] { 0, 0, 10, 0}, 3, 10), // 1
 	MEDIUM(  Type.MEDIUM, "Medium",  new int[] { 0, 0, 20, 0}, 5, 20), // 2
-	Heavy(   Type.HEAVY,  "Heavy",   new int[] { 0, 0, 40, 0}, 7, 30), // 3
+	HEAVY(   Type.HEAVY,  "Heavy",   new int[] { 0, 0, 40, 0}, 7, 30), // 3
 	TOWER(   Type.TOWER,  "Tower",   new int[] { 0, 0, 80, 0}, 9, 40); // 4
 	
 	public static enum Type { LIGHT, MEDIUM, HEAVY, TOWER };

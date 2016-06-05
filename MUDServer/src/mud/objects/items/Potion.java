@@ -1,6 +1,7 @@
 package mud.objects.items;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.EnumSet;
 
@@ -29,61 +30,48 @@ public class Potion extends Item implements Drinkable, MagicItem, Stackable<Poti
 	 * that it is a potion of 'polymorph to cat' for instance.
 	 */
 	
-	public Potion p = null; // nested copy of itself, for implementing stacks
+	public Potion p;         // nested copy of itself, for implementing stacks
 	
 	private Spell spell;    // a spell the potion will cast on you
 	private Effect effect;  // an effect the potion will give you
 
 	public Potion() {
-		super(-1, "Potion", EnumSet.noneOf(ObjectFlag.class), "An empty glass potion bottle.", 8);
+		super(-1, "Potion", "An empty glass potion bottle.");
 		
 		this.item_type = ItemTypes.POTION;
 		
 		this.drinkable = true;
+		
+		this.p = null;
 		
 		this.spell = null;
 		this.effect = null;
-		this.weight = 0.5;
-		
-		this.effects = new ArrayList<Effect>();
 	}
-
-	/*public Potion(String name, String desc, int location, int dbref) {
-		super(dbref, name, "I", desc, location);
-		this.item_type = ItemType.POTION;
-		this.drinkable = 1;
-		
-		this.effects = new ArrayList<Effect>();
-	}*/
 	
-	public Potion(Effect effect) {
-		super(-1, "Potion", EnumSet.noneOf(ObjectFlag.class), "A potion of " + effect.getName(), 8);
+	public Potion(final Effect effect) {
+		super(-1, "Potion", "A potion of " + effect.getName());
 		
 		this.item_type = ItemTypes.POTION;
 		
 		this.drinkable = true;
 		
-		this.effect = effect;
-		this.weight = 0.5;
+		this.p = null;
 		
-		this.effects = new ArrayList<Effect>();
-		this.effects.add(effect);
+		this.spell = null;
+		this.effect = effect;
 	}
 
-	public Potion(Spell spell) {
-		super(-1, "Potion", EnumSet.noneOf(ObjectFlag.class), "A potion of " + spell.getName(), 8);
+	public Potion(final Spell spell) {
+		super(-1, "Potion", "A potion of " + spell.getName());
+		
 		this.item_type = ItemTypes.POTION;
 		
 		this.drinkable = true;
+		
+		this.p = null;
 		
 		this.spell = spell;
-		this.weight = 0.5;
-		
-		this.effects = new ArrayList<Effect>();
-		
-		/*for (Effect e : this.spell.getEffects()) {
-			this.effects.add(e);
-		}*/
+		this.effect = null;
 	}
 	
 	/**
@@ -94,33 +82,39 @@ public class Potion extends Item implements Drinkable, MagicItem, Stackable<Poti
 	 * that have parameters.
 	 *
 	 * 
-	 * @param tempName
-	 * @param tempDesc
-	 * @param tempLoc
+	 * @param name
+	 * @param description
+	 * @param location
 	 * @param tempDBREF
 	 * @param stack_size
 	 * @param spellName
 	 */
-	public Potion(int tempDBRef, String tempName, final EnumSet<ObjectFlag> tempFlags, String tempDesc, int tempLoc, String s) {
-		super(tempDBRef, tempName, tempFlags, tempDesc, tempLoc);
-		
+	public Potion(int dbref, String name, final EnumSet<ObjectFlag> flags, String description, int location) {
+		super(dbref, name, flags, description, location);
+
 		this.item_type = ItemTypes.POTION;
 		
 		this.drinkable = true;
-		
-		/*String spellName = s;
-		this.spell = parent.getSpell(spellName);*/
 
-		String effectName = s;
-		this.effect = new Effect(effectName);
-		
-		this.effects = new ArrayList<Effect>();
-		this.effects.add(this.effect);
+		this.p = null;
+
+		this.spell = null;
+		this.effect = null;
 	}
 	
 	@Override
 	public Double getWeight() {
 		return 0.5;
+	}
+	
+	@Override
+	public void setWeight(Double newWeight) {
+		// do nothing
+	}
+	
+	@Override
+	public List<Effect> getEffects() {
+		return Collections.unmodifiableList(new ArrayList<Effect>());
 	}
 	
 	public int size() {
@@ -175,15 +169,9 @@ public class Potion extends Item implements Drinkable, MagicItem, Stackable<Poti
 			return null;
 		}
 	}
-
-	@Override
-	public String getName() {
-		return this.name;
-	}
 	
 	@Override
 	public Spell getSpell() {
-		// TODO Auto-generated method stub
 		return this.spell;
 	}
 
@@ -207,7 +195,9 @@ public class Potion extends Item implements Drinkable, MagicItem, Stackable<Poti
 			if (this.spell != null) output[1] = this.spell.getName(); // spell	
 			else                    output[1] = "null";
 		}
-		else { output[1] = this.effect.getName(); } // effect
+		else {
+			output[1] = this.effect.getName();
+		}
 		
 		return super.toDB() + "#" + Utils.join(output, "#");
 	}

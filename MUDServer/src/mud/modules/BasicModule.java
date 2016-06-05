@@ -4,6 +4,7 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 
+import mud.MUDObject;
 import mud.game.Faction;
 import mud.interfaces.GameModule;
 import mud.interfaces.Ruleset;
@@ -12,6 +13,7 @@ import mud.objects.Item;
 import mud.objects.ItemType;
 import mud.objects.Player;
 import mud.objects.Thing;
+import mud.objects.ThingType;
 
 public class BasicModule implements GameModule {
 	private final String name;
@@ -65,46 +67,66 @@ public class BasicModule implements GameModule {
 		// TODO Auto-generated method stub
 		return null;
 	}
-
+	
 	@Override
-	public Hashtable<String, ItemType> getItemTypes() {
-		// TODO Auto-generated method stub
+	public ItemType getItemType(final Integer typeId) {
 		return null;
 	}
-
+	
+	public ItemType getItemType(final String typeName) {
+		return null;
+	}
+	
+	@Override
+	public SlotType getSlotType(final Integer typeId) {
+		return null;
+	}
+	
+	@Override
+	public SlotType getSlotType(final String typeName) {
+		return null;
+	}
+	
+	@Override
+	public ThingType getThingType(final Integer typeId) {
+		return null;
+	}
+	
+	@Override
+	public ThingType getThingType(final String typeName) {
+		return null;
+	}
+	
 	@Override
 	public Map<String, Item> getItemPrototypes() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public Map<String, Thing> getThingPrototypes() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public Item loadItem(String itemData) {
-		// TODO Auto-generated method stub
+	public Item loadItem(final String itemData) {
 		return null;
 	}
 
 	@Override
-	public Hashtable<String, SlotType> getSlotTypes() {
-		// TODO Auto-generated method stub
+	public Thing loadThing(final String itemData) {
 		return null;
 	}
 
 	@Override
-	public ItemType getItemType(Integer typeId) {
-		// TODO Auto-generated method stub
-		return null;
+	public void run() {
 	}
 
 	@Override
-	public SlotType getSlotType(Integer typeId) {
-		// TODO Auto-generated method stub
-		return null;
+	public void op(String input, Player player) {
+	}
+
+	@Override
+	public boolean use(Player p, MUDObject m) {
+		return false;
 	}
 }

@@ -20,6 +20,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import mud.objects.Player;
@@ -38,8 +39,8 @@ public class ChatChannel {
 	private String chan_color; // channel title color
 	private String text_color; // the color of the channel text
 	
-	private ArrayList<Player> listeners;           // players who are listening to the channel
-	private LinkedBlockingQueue<Message> messages; // messages 'written' to the channel
+	private List<Player> listeners;           // players who are listening to the channel
+	private Queue<Message> messages; // messages 'written' to the channel
 	
 	public ChatChannel(final String name) {
 		this(name, "white", "white");
@@ -200,7 +201,7 @@ public class ChatChannel {
 	}
 	
 	public void write(final Player player, final String message) {
-		this.messages.add( new Message(player, message) );
+		this.messages.add( new Message(player, null, message) );
 	}
 	
 	public Message getNextMessage() {

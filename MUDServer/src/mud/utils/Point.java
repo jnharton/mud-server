@@ -15,18 +15,18 @@ public class Point {
 	
 	private Type type;
 	
-	private Integer x = 0;
-	private Integer y = 0;
-	private Integer z = 0;
+	private int x = 0;
+	private int y = 0;
+	private int z = 0;
 
-	public Point(int x, int y) {
+	public Point(final int x, final int y) {
 		this.type = Type.PT_2D;
 		
 		this.x = x;
 		this.y = y;
 	}
 
-	public Point(int x, int y, int z) {
+	public Point(final int x, final int y, final int z) {
 		this(x, y);
 		
 		this.type = Type.PT_3D;
@@ -34,7 +34,7 @@ public class Point {
 		this.z = z;
 	}
 	
-	protected Point(final Point toCopy) {
+	public Point(final Point toCopy) {
 		switch(toCopy.type) {
 		case PT_2D:
 			this.type = Type.PT_2D;
@@ -55,28 +55,34 @@ public class Point {
 	}
 	
 	//
-	public int getX() { return x; }
+	public int getX() {
+		return x;
+	}
 
-	public void setX(int newX) { this.x = newX; }
-
-	public void incX() { this.x++; }
+	public void setX(final int newX) {
+		this.x = newX;
+	}
 	
-	public void changeX(int dx) { this.x += dx; }
+	public void changeX(int dx) {
+		this.x += dx;
+	}
 	
-	//
-	public int getY() { return y; }
+	public int getY() {
+		return y;
+	}
 
-	public void setY(int newY) { this.y = newY; }
-
-	public void incY() { this.y++; }
+	public void setY(int newY) {
+		this.y = newY;
+	}
 	
-	public void changeY(int dy) { this.y += dy; }
+	public void changeY(int dy) {
+		this.y += dy;
+	}
 	
 	//
 	public int getZ() {
 		if( this.type == Type.PT_2D ) return -1;
-		
-		return z;
+		else                          return z;
 	}
 	
 	/**
@@ -94,43 +100,45 @@ public class Point {
 	}
 	
 	public void changeZ( int dz ) {
-		if( this.type == Type.PT_2D ) this.type = Type.PT_3D;
+		if( this.type == Type.PT_2D ) {
+			this.type = Type.PT_3D;
+			this.z = 0;
+		}
+		
 		this.z += dz;
 	}
-
-	public void incZ() {
-		if( this.type == Type.PT_2D ) this.type = Type.PT_3D;
-		this.z++;
-	}
-
+	
 	public boolean equals(Object object)
 	{
+		boolean equivalent = false;
+
 		// if the two objects are equal in reference, they are equal
-		if (this == object) { return true; }
-		
-		// if the object is a Point, it must have the same coordinates to be equal
-		// for points with different types:
-		// if either point is 2D, then we only compare the X and Y coordinates
-		// if both are 3D then we compare the X,Y, and Z coordinates
-		else if (object instanceof Point) {
-			Point point = (Point) object;
-			
-			if( this.type == Type.PT_2D || point.type == Type.PT_2D  ) {
-				if( ( getX() == point.getX() ) && ( getY() == point.getY() ) ) {
-					return true;
-				}
-				else { return false; }
-			}
-			else if( this.type == Type.PT_3D && point.type == Type.PT_3D ) {
-				if( ( getX() == point.getX() ) && ( getY() == point.getY() ) && (getZ() == point.getZ() ) ) {
-					return true;  
-				}
-				else { return false; }
-			}
-			else { return false; }
+		if (this == object) {
+			equivalent = true;
 		}
-		// if the object isn't a Point, then it can't be equal to it
-		else { return false; }
+		else {
+			// if the object is a Point, it must have the same coordinates to be equal
+			// for points with different types:
+			// if either point is 2D, then we only compare the X and Y coordinates
+			// if both are 3D then we compare the X,Y, and Z coordinates
+			if (object instanceof Point) {
+				final Point point = (Point) object;
+				
+				boolean sameX = ( this.getX() == point.getX() );
+				boolean sameY = ( this.getY() == point.getY() );
+				
+				if( this.isType(Type.PT_2D) && point.isType(Type.PT_2D) ) {
+					if( sameX && sameY ) equivalent = true;
+				}
+				else if( this.isType(Type.PT_3D) && point.isType(Type.PT_3D) ) {
+					boolean sameZ = ( this.getZ() == point.getZ() );
+					
+					if( sameX && sameY && sameZ ) equivalent = true;
+				}
+			}
+		}
+
+		return equivalent;
 	}
 	
 	public boolean isType(Type ptType) {
@@ -155,9 +163,5 @@ public class Point {
 		case PT_3D: return "(" + x + "," + y + "," + z + ")";
 		default:    return "";
 		}
-	}
-	
-	public Point getCopy() {
-		return new Point(this);
 	}
 }

@@ -31,11 +31,11 @@ public class Merchant extends NPC implements Vendor {
 	/**
 	 * 
 	 */
-	public ArrayList<Item> stock = new ArrayList<Item>();
-	public Hashtable<String, Integer> stockTable = new Hashtable<String, Integer>();
+	private ArrayList<Item> stock = new ArrayList<Item>();
+	private Hashtable<String, Integer> stockTable = new Hashtable<String, Integer>();
 	// sword, 15
 	
-	public String type = "";
+	private String merchantType = "";
 
 	public Merchant(final int tempDBRef, final String tempName, final EnumSet<ObjectFlag> tempFlags, final String tempDesc,
 			final String tempTitle, final String tempPStatus, final int tempLoc, final Coins tempMoney) {
@@ -61,6 +61,14 @@ public class Merchant extends NPC implements Vendor {
 	@Override
 	public List<Item> getStock() {
 		return Collections.unmodifiableList(this.stock);
+	}
+	
+	public void setStock(final List<Item> stock) {
+		this.stock = new ArrayList<Item>(stock);
+	}
+	
+	public void addToStock(final Item item) {
+		this.stock.add(item);
 	}
 
 	public Item buy(final String name, final Coins payment) {
@@ -109,10 +117,10 @@ public class Merchant extends NPC implements Vendor {
 	
 	// hacked in functionality for setting what sort of merchant this is
 	public void setMerchantType(final String type) {
-		this.type = type;
+		this.merchantType = type;
 	}
 	
 	public String getMerchantType() {
-		return this.type;
+		return this.merchantType;
 	}
 }

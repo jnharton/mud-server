@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.LinkedHashMap;
@@ -38,17 +39,12 @@ import mud.objects.items.Armor;
 import mud.objects.items.Shield;
 import mud.objects.items.Weapon;
 import mud.quest.Quest;
-import mud.rulesets.d20.Abilities;
-import mud.rulesets.d20.Alignments;
-import mud.rulesets.d20.Classes;
-import mud.rulesets.d20.Races;
-import mud.rulesets.d20.Skills;
+import mud.rulesets.d20.*;
 import mud.utils.EditList;
 import mud.utils.Landmark;
 import mud.utils.MailBox;
 import mud.utils.Pager;
 import mud.utils.Point;
-import mud.utils.Tuple;
 import mud.utils.Utils;
 import mud.utils.EditorData;
 
@@ -72,7 +68,10 @@ import mud.utils.EditorData;
  *
  */
 public class Player extends MUDObject implements Mobile
-{	
+{
+	public static enum Status { ACTIVE, BANNED };            // Player Status - Active, Banned
+	public static enum State { ALIVE, INCAPACITATED, DEAD }; // Player State - ALIVE, INCAPACITATED, DEAD
+	
 	public static Ruleset ruleset;
 	
 	private static final EnumSet<ObjectFlag> _FLAGS = EnumSet.noneOf(ObjectFlag.class);
@@ -82,106 +81,105 @@ public class Player extends MUDObject implements Mobile
 	private static final Integer[] _STATS = { 0, 0, 0, 0, 0, 0 };
 
 	// levels: 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
-	private static int[] levelXP = { 0, 1000, 3000, 6000, 10000, 15000, 21000, 28000, 36000, 45000, 55000, 66000 };
+	//private static int[] levelXP = { 0, 1000, 3000, 6000, 10000, 15000, 21000, 28000, 36000, 45000, 55000, 66000 };
 	// level[n] = level[n-1] + (n * 1000)
 	// n=0: ? + (0 * 1000) = 0
 	// n=1: 1000 = 0 + ( 1 * 1000) = 1000
 	// n=2; 3000 = 1000 + (2 * 1000) = 3000
 	// n=3: 6000 = 3000 + (3 * 1000) = 6000
 	// n=4: 10000 = 6000 + (4 * 1000) = 10000
-
-	/* Player State Alive - alive, INCAPACITATED - incapacitated (hp < 0 && hp > -10), DEAD (hp < -10) */
-	public static enum State { ALIVE, INCAPACITATED, DEAD };
-
-	/* Player Status - Active, Banned */
-	public static enum Status { ACTIVE, BANNED };
-
+	
 	/**
 	 * private variable are those that are intended only for the player class
 	 * protected variable are those that are intended to be inherited by sub-classes
 	 */
 
 	// SuperGame Stuff
-	private int id;                                // unique player id (for the account system) **UNUSED
-	private String pass;                           // The player's password in it's hashed state (timed lockout w/ password verification)
-	private PlayerMode mode = PlayerMode.NORMAL;   // Play Mode (default: normal)
-	protected String status;                       // The player's status (MU)
-	protected String title;                        // The player's title (for where, MU)
-	private Status pstatus = Status.ACTIVE;        // whether or not the player has been banned
+	private int id;                                     // unique player id (for the account system) **UNUSED
+	private String pass;                                // The player's password in it's hashed state (timed lockout w/ password verification?)
+	private PlayerMode mode = PlayerMode.NORMAL;        // Play Mode (default: normal)
+	protected String status;                            // The player's status (MU)
+	protected String title;                             // The player's title (for where, MU)
 	
-	private transient String cName = "";           // name that show up for players who have initiated greeting, etc
-	private transient boolean idle_state = false;  // Whether or not the player is currently ide (default: false) **UNUSED
-	private transient int idle = 0;                // the amount of time that the player has been idle (MU)
+	private Status pstatus = Status.ACTIVE;             // whether or not the player has been banned
+	
+	private transient String cName = "";                // name that show up for players who have initiated greeting, etc
+	private transient boolean idle_state = false;       // Whether or not the player is currently ide (default: false) **UNUSED
+	private transient int idle = 0;                     // the amount of time that the player has been idle (MU)
 	private transient String prev_status = "";
 
-	private transient MailBox mailbox = new MailBox(); // player mailbox
+	private transient MailBox mailbox = new MailBox();  // player mailbox
 
-	protected int access = 0;                      // the player's access level (permissions) - 0=player,1=admin (default: 0)
-
-	private boolean isNew;                         // is the player new? (e.g. hasn't done chargen)
-
-	private transient boolean controller = false;  // place to indicate if we are controlling an npc (by default, we are not)
+	protected int access = 0;                           // the player's access level (permissions) - 0=player,1=admin (default: 0)
 	
-	private HashMap<String, EditList> editMap = new HashMap<String, EditList>(); // array of lists belonging to this player
-	
-	// TODO move this to account data? does that mean I can't keep it for non-account players OR?
-	// preferences (ACCOUNT DATA?)
-	private int lineLimit = 80;                    // how wide the client's screen is in columns (shouldn't be in Player class)
-	public int invDispWidth = 60;                  // display width for the complex version of inventory display
-	//private Character invType = 'C';             // S = simple, C = Complex (candidate for being a config option, not a single variable)
+	private boolean initialized = false;                //
+	private boolean isNew = true;                       // is the player new? (e.g. hasn't done chargen)
 
-	private final Map<String, Boolean> config = new LinkedHashMap<String, Boolean>(); // player preferences for player configurable options
+	private transient boolean controller = false;       // place to indicate if we are controlling an npc (by default, we are not)
+	
+	// TODO move preference to ACCOUNT DATA?
+	// ^ does that mean I can't keep it for non-account players OR?
+	
+	// preferences
+	private int lineLimit = 80;      // how wide the client's screen is in columns (shouldn't be in Player class)
+	public int invDispWidth = 60;    // display width for the complex version of inventory display
+	//private Character invType = 'C'; // display type (S = simple, C = Complex) [config option?]
+	
+	// h - hitpoints, H - max hitpoints, mv - moves, MV - total moves,m - mana, M - total mana
+	private String custom_prompt = "< %h/%H  %mv/%MV %m/%M >"; // borrowed from DIKU -> ROM, etc?
 
 	// utility
-	private HashMap<String, Integer> nameRef;      // store name references to dbref numbers (i.e. $this->49)
+	private final Map<String, Boolean> config;          // player preferences for player configurable options
+	private final Map<String, Integer> nameRef;         // store name references to dbref numbers (i.e. $this->49)
 
+	protected transient MUDObject target;               // Target
+	
 	// Game Stuff (most set 'protected' so that an npc can basically have player characteristics
-	protected MUDObject target;                    // Target -- player/npc that will be used for generic interaction
-	protected Race race;                           // Race
-	protected String gender;                       // Gender
-	protected PClass pclass;                       // Class
-	protected Alignments alignment;                // Alignment
-	//protected Handed handed = Handed.RIGHT;        // which hand is dominant (irr. but enum encompasses that and weapons hand req.)
+	protected Race race;                                // Race
+	protected String gender;                            // Gender
+	protected int age;                                  // Age
+	protected PClass pclass;                            // Class
+	protected Alignments alignment;                     // Alignment
 	
-	protected int hp;                              // Hit Points
-	protected int temphp;                          // Temporary Hit Points
-	protected int totalhp;                         // Total Hit Points
-	protected int mana;                            // Mana
-	protected int totalmana;                       // Total Mana
-	protected int speed;                           // Movement Speed (largely pointless without a coordinate system)
+	protected int hp;                                   // Hit Points
+	protected int totalhp;                              // Total Hit Points
+	protected transient State state;                    // character's "state of health" (ALIVE, INCAPACITATED, DEAD)
 	
-	protected int capacity;                        // Carrying Capacity (pounds/lbs)
+	protected int mana;                                 // Mana
+	protected int totalmana;                            // Total Mana
 	
-	protected int level;                           // Level
-	protected int xp;                              // Experience
+	protected int speed;                                // Movement Speed
 	
-	protected Coins money;                         // Money (D&D, MUD)
-	public Hashtable<Currency, Integer> money2; //
-
-	private Profession prof1 = null;               // Active Profession (One) **UNUSED
-	private Profession prof2 = null;               // Active Profession (Two) **UNUSED
+	protected int capacity;                             // Carrying Capacity (pounds/lbs)
 	
-	private Hashtable<String, Profession> professions = null; // holds all your trained professions **UNUSED
-
-	protected SpellBook spells = null;                       // spells [null if not a spellcaster]
+	protected int level;                                // Level
+	protected int xp;                                   // Experience
 	
-	protected transient LinkedList<Spell> spellQueue = null; // spell queue [null if not a spellcaster]
-	protected transient Spell lastSpell = null;              // last spell cast [null if not a spellcaster]
+	protected Map<Ability, Integer> stats;              // Player Statistics (D&D, MUD)
+	protected Map<Skill, Integer> skills;               // Player Skills (D&D, MUD)
 	
-	// TODO transient, since I can recalculate
-	private transient State state = State.ALIVE;             // character's "state of health" (ALIVE, INCAPACITATED, DEAD)
-
-	protected LinkedHashMap<Ability, Integer> stats;                // Player Statistics (D&D, MUD)
-	protected LinkedHashMap<Skill, Integer> skills;                 // Player Skills (D&D, MUD)
-
-	protected ArrayList<Item> inventory = new ArrayList<Item>(100); // Player Inventory (D&D, MUD, MU)
-	protected LinkedHashMap<String, Slot> slots;                    // the player's equipped gear
-
-	private ArrayList<Quest> quests;                                // the player's quests
-	private Quest active_quest = null;                              // the quest the player is currently focusing on
-
-	protected Faction faction;
+	protected Coins money;                              // Money (D&D, MUD)
+	public transient Map<Currency, Integer> money2;     //
+	
+	protected transient List<Item> inventory;           // Player Inventory (D&D, MUD, MU)
+	protected transient Map<String, Slot> slots;        // the player's equipped gear
+	
+	/* Professions */
+	private Profession prof1 = null;                    // Active Profession (One) **UNUSED
+	private Profession prof2 = null;                    // Active Profession (Two) **UNUSED
+	
+	private Map<String, Profession> professions = null; // holds all your trained professions **UNUSED (use hashtable)
+	
+	private transient ArrayList<Quest> quests;          // the player's quests
+	private transient Quest active_quest = null;        // the quest the player is currently focusing on
+	
 	protected Map<Faction, Integer> reputation;
+	protected Faction faction;
+	
+	protected SpellBook spells = null;                  // spells [null if not a spellcaster]
+	
+	protected transient Deque<Spell> spellQueue = null; // spell queue [null if not a spellcaster]
+	protected transient Spell lastSpell = null;         // last spell cast [null if not a spellcaster]
 
 	// movement
 	protected boolean moving = false;
@@ -189,7 +187,6 @@ public class Player extends MUDObject implements Mobile
 	protected Point destination;
 
 	// leveling up
-	private boolean levelup = false; // is this player ready to "level up" (true=yes,false=no)
 	private int featPts;             // points available for selecting new feats (unused)
 	private int skillPts;            // points available for increasing skills (unused)
 
@@ -203,75 +200,63 @@ public class Player extends MUDObject implements Mobile
 	// Craft Wand  (4) Craft Wondrous Item        (5) Forge Ring (6) Scribe Scroll(7)
 	public BitSet item_creation_feats = new BitSet(8);
 
-	// TODO transient because I should be able to recalculate
-	// temporary states
-	private transient int[] statMod =  new int[7];  // temporary modifications to stats (i.e. stat drains, etc)
-	private transient int[] skillMod = new int[44]; // temporary modifications to skills
+	// TODO transient because I should be able to recalculate temporary states
+	private transient int[] statMod;  // temporary modifications to stats (i.e. stat drains, etc)
+	private transient int[] skillMod; // temporary modifications to skills
 	
 	// TODO do I need some kind of theme specific component to keep data in?
 	private int negativeLevels = 0;
 
-	// borrowed from DIKU -> ROM, etc?
-	// h - hitpoints, H - max hitpoints
-	// mv - moves, MV - total moves
-	// m - mana, M - total mana
-	private String custom_prompt = "< %h/%H  %mv/%MV %m/%M >"; // ACCOUNT DATA?
-
 	private transient Pager pager = null;             // a pager (ex. 'less' for linux)
 	private transient Client client;                  //
-	public transient Map<String, Command> commandMap; //
+	
+	private transient Map<String, Command> commandMap; // additional commands avail. to user
 
 	// Knowledge (protected so NPCs can have this stuff too)
-	protected ArrayList<String> names;                         // names of other players
-	protected Hashtable<String, Boolean> discovered_locations; // places you've been to
+	protected List<String> names;                        // names of other players
+	protected Map<String, Boolean> discovered_locations; // places you've been to
 	protected Map<String, Landmark> landmarks;
 	
-	// TODO is this really a good place to keep mount stuff?
-	public Ridable mount = null;
+	private transient Weapon primary = null;
+	private transient Weapon secondary = null;
 	
-	private Weapon primary = null;
-	private Weapon secondary = null;
+	public Ridable mount = null; // TODO is this really a good place to keep mount stuff?
 	
 	/* End */
 	
-	// Editors, General
-	private Editors editor;
-	
-	// TODO love to rip this out and put it in an list editor class
-	/* Editor Data */ 
+	/* Editing */
+	private transient Editors editor;
+	 
+	private transient EditList currentEdit;  // List Editor
+	private transient EditorData edd = null; // Miscellaneous Editor
 
-	// List Editor
-	private EditList currentEdit;
-	
-	//Miscellaneous Editor
-	private EditorData edd = null;
-	
+	private transient Map<String, EditList> editMap; // array of lists belonging to this player
+
 	public EditList getEditList() {
-		return currentEdit;
+		return this.currentEdit;
 	}
 
-	public void startEditing(final String name) {
-		currentEdit = new EditList(name);
+	public void setEditList(final EditList newList) {
+		this.currentEdit = newList;
 	}
 
 	/* get an existing list to edit */
 	public void loadEditList(final String name) {
-		currentEdit = editMap.get(name);
+		this.currentEdit = this.editMap.get(name);
 	}
 
-	/* load a list to edit from some other source (files?) */
-	public void loadEditList(final String name, final List<String> lines) {
-		currentEdit = new EditList(name, lines);
+	public void startEditing(final String name) {
+		this.currentEdit = new EditList(name);
 	}
 
 	/* save the current list */
 	public void saveCurrentEdit() {
-		editMap.put(currentEdit.getName(), currentEdit);
+		this.editMap.put(currentEdit.getName(), currentEdit);
 	}
 
 	/* stop editing -- clears the current list in a final manner */
 	public void abortEditing() {
-		currentEdit = null;
+		this.currentEdit = null;
 	}
 	
 	/**
@@ -283,6 +268,9 @@ public class Player extends MUDObject implements Mobile
 	 */
 	protected Player(final Integer tempDBREF) {
 		super(tempDBREF);
+		
+		this.nameRef = new HashMap<String, Integer>(10, 0.75f); 
+		this.config = new LinkedHashMap<String, Boolean>();
 	}
 	
 	/**
@@ -296,79 +284,57 @@ public class Player extends MUDObject implements Mobile
 	public Player(final Integer tempDBREF, final String tempName, final String tempPass, final int startingRoom) {
 		super(tempDBREF);
 		
-		this.type = TypeFlag.PLAYER;
-
-		this.isNew = true;
-		
 		this.name = tempName;
+		this.desc = _DESC;
+		this.flags = _FLAGS;
+		this.location = startingRoom;
+		
+		this.type = TypeFlag.PLAYER;
+		
+		this.target = null;
+		
 		this.race = Races.NONE;
 		this.gender = "None";
 		this.pclass = Classes.NONE;
 		this.alignment = Alignments.NONE;
-
-		this.desc = _DESC;
+		
+		this.status = _STATUS;
 		this.title = "Newbie";
 		
 		this.pass = tempPass;
 
 		this.hp = 10;
 		this.totalhp = 10;
+		this.state = State.ALIVE;
+		
 		this.mana = 0;
 		this.totalmana = 0;
+		
 		this.speed = 1;
 		this.capacity = 100;
+		
 		this.level = 0;
 		this.xp = 0;
-		this.money = _MONEY;
-		this.location = startingRoom;
-		this.target = null;
-
+		
 		this.pass = tempPass;
-		this.flags = _FLAGS;
-		this.status = _STATUS;
+		
+		this.target = null;
 
 		// instantiate slots
 		this.slots = new LinkedHashMap<String, Slot>();
 		
 		// instantiate stats
-		stats = new LinkedHashMap<Ability, Integer>();
-
-		// initialize stats
-		/*
-		this.stats.put(Abilities.STRENGTH, _STATS[0]);     // Strength
-		this.stats.put(Abilities.DEXTERITY, _STATS[1]);    // Dexterity
-		this.stats.put(Abilities.CONSTITUTION, _STATS[2]); // Constitution
-		this.stats.put(Abilities.INTELLIGENCE, _STATS[3]); // Intelligence
-		this.stats.put(Abilities.WISDOM, _STATS[4]);       // Wisdom
-		this.stats.put(Abilities.CHARISMA, _STATS[5]);     // Charisma
-		*/
-
-		/*for(Ability ability : ruleset.getAbilities()) {
+		this.stats = new LinkedHashMap<Ability, Integer>();
+		
+		for(final Ability ability : ruleset.getAbilities()) {
 			this.stats.put(ability, 0);
-		}*/
+		}
 
 		// instantiate skills
-		skills = new LinkedHashMap<Skill, Integer>();
-
-		// these should be all -1, since no class is specified initially
-		/*this.skills.put(Skills.APPRAISE, -1);            this.skills.put(Skills.BALANCE, -1);            this.skills.put(Skills.BLUFF, -1);
-		this.skills.put(Skills.CLIMB, -1);               this.skills.put(Skills.CONCENTRATION, -1);      this.skills.put(Skills.CRAFT, -1);
-		this.skills.put(Skills.DECIPHER_SCRIPT, -1);     this.skills.put(Skills.DIPLOMACY, -1);          this.skills.put(Skills.DISGUISE, -1);
-		this.skills.put(Skills.ESCAPE_ARTIST, -1);       this.skills.put(Skills.GATHER_INFORMATION, -1); this.skills.put(Skills.HANDLE_ANIMAL, -1);
-		this.skills.put(Skills.HEAL, -1);                this.skills.put(Skills.HIDE, -1);               this.skills.put(Skills.INTIMIDATE, -1);
-		this.skills.put(Skills.JUMP, -1);
-
-		this.skills.put(Skills.KNOWLEDGE, -1);           this.skills.put(Skills.KNOWLEDGE_ARCANA, -1);   this.skills.put(Skills.KNOWLEDGE_DUNGEONEERING, -1); 
-		this.skills.put(Skills.KNOWLEDGE_GEOGRAPHY, -1); this.skills.put(Skills.KNOWLEDGE_HISTORY, -1);  this.skills.put(Skills.KNOWLEDGE_LOCAL, -1);         
-		this.skills.put(Skills.KNOWLEDGE_NATURE, -1);    this.skills.put(Skills.KNOWLEDGE_NOBILITY, -1); this.skills.put(Skills.KNOWLEDGE_PLANAR, -1);        
-		this.skills.put(Skills.KNOWLEDGE_RELIGION, -1);
-
-		this.skills.put(Skills.LISTEN, -1);              this.skills.put(Skills.MOVE_SILENTLY, -1);      this.skills.put(Skills.NAVIGATION, -1);
-		this.skills.put(Skills.PERFORM, -1);             this.skills.put(Skills.PROFESSION, -1);         this.skills.put(Skills.RIDE, -1);
-		this.skills.put(Skills.SEARCH, -1);              this.skills.put(Skills.SENSE_MOTIVE, -1);       this.skills.put(Skills.SLEIGHT_OF_HAND, -1);
-		this.skills.put(Skills.SPEAK_LANGUAGE, -1);      this.skills.put(Skills.SPELLCRAFT, -1);         this.skills.put(Skills.SPOT, -1);
-		this.skills.put(Skills.SURVIVAL, -1);            this.skills.put(Skills.SWIM, -1);               this.skills.put(Skills.TRACKING, -1);
-		this.skills.put(Skills.TUMBLE, -1);              this.skills.put(Skills.USE_MAGIC_DEVICE, -1);   this.skills.put(Skills.USE_ROPE, -1);*/
+		this.skills = new LinkedHashMap<Skill, Integer>();
+		
+		this.money = _MONEY;
+		this.inventory = new ArrayList<Item>(50);
 
 		// instantiate quest list
 		this.quests = new ArrayList<Quest>();
@@ -380,34 +346,25 @@ public class Player extends MUDObject implements Mobile
 
 		// initialize list editor variables
 		this.editor = Editors.NONE;
-
-		addConfigOption("global-nameref-table", false); // use the global name reference table instead of a local one (default: false)
-		addConfigOption("pinfo-brief",          true);  // make your player info output brief/complete (default: true)
-		addConfigOption("prompt_enabled",       false); // enable/disable the prompt (default: false)
-		addConfigOption("msp_enabled",          false); // enable/disable MUD Sound Protocol, a.k.a. MSP (default: false)
-		addConfigOption("complex-inventory",    false); // use/don't use complex inventory display (default: false)
-		addConfigOption("pager_enabled",        false); // enabled/disable the help pager view (default: false)
-		addConfigOption("show-weather",         true);  // show weather information in room descriptions (default: true)
-		addConfigOption("tagged-chat",          false); // "tag" the beginning chat lines with CHAT for the purpose of triggers, etc (default: false)
-		addConfigOption("compact-editor",       true);  // compact the output of editor's 'show' commands (default: true)
-		addConfigOption("hud_enabled",          false); // is the "heads-up display" that accompanies the room description enabled (default: false)
-		addConfigOption("notify_newmail",       false); // notify the player on receipt of new mail? (default: false)
-		addConfigOption("silly_messages",       false); // enable sillier/more humorous error messages where used (default: false)
-
-		// instantiate name reference table
-		this.nameRef = new HashMap<String, Integer>(10, 0.75f); // start out assuming 10 name references
-
+		
+		this.config = new LinkedHashMap<String, Boolean>();
+		
+		initConfig();
+		
+		this.statMod = new int[ruleset.getAbilities().length];
+		this.skillMod = new int[ruleset.getSkills().length];
+		
 		// initialize modification counters to 0
 		Arrays.fill(statMod, 0);
 		Arrays.fill(skillMod, 0);
 		
 		this.reputation = new LinkedHashMap<Faction, Integer>();
 		
-		this.commandMap = new HashMap<String, Command>();
+		this.nameRef = new HashMap<String, Integer>();    // instantiate name reference table
+		this.commandMap = new HashMap<String, Command>(); // instantiate command map
 		
-		// TODO consider this. I shouldn't mark newly created players as no new since they haven't generated their character yet..
-		// mark player as new
-		//isNew = true;
+		this.editor = Editors.NONE;
+		this.editMap = new HashMap<String, EditList>();
 	}
 
 	/**
@@ -430,88 +387,63 @@ public class Player extends MUDObject implements Mobile
 		// use the MUDObject constructor to handle some of the construction?
 		//super(tempDBREF, tempName, tempFlags, tempDesc, tempLoc);
 		super(tempDBREF);
-		type = TypeFlag.PLAYER;
+		
+		this.name = tempName;
+		this.desc = tempDesc;
+		this.flags = tempFlags;
+		this.location = tempLoc;
+		
+		this.type = TypeFlag.PLAYER;
+		
+		this.target = null;
 		
 		this.race = Races.NONE;
 		this.gender = "None";
 		this.pclass = Classes.NONE;
 		this.alignment = Alignments.NONE;
 		
-		this.hp = 10;
-		this.totalhp = 10;
-		this.mana = 40;
-		this.totalmana = 40;
-		this.speed = 1;
-		this.capacity = 200;
-		this.level = 0;
-		this.xp = 0;
-		this.money = tempMoney; // use default money criteria from server config or stored player money in future
-		
-		this.name = tempName;
-		this.pass = tempPass;
-		this.flags = tempFlags;
-		this.desc = tempDesc;
 		this.status = tempPStatus;
 		this.title = tempTitle;
-		this.location = tempLoc;
+		
+		// ---
+		
+		this.hp = 10;
+		this.totalhp = 10;
+		this.state = State.ALIVE;
+		
+		this.mana = 40;
+		this.totalmana = 40;
+		
+		this.speed = 1;
+		this.capacity = 100;
+		
+		this.level = 0;
+		this.xp = 0;
+		
+		this.pass = tempPass;
 		
 		this.target = null;
 
 		// instantiate slots
 		this.slots = new LinkedHashMap<String, Slot>();
-		
-		// instantiate stats
-		//stats = new LinkedHashMap<Ability, Integer>(6, 0.75f);
 
-		stats = new LinkedHashMap<Ability, Integer>(ruleset.getAbilities().length, 0.75f);
-
-		// initialize stats
-		/*this.stats.put(Abilities.STRENGTH, tempStats[0]);     // Strength
-		this.stats.put(Abilities.DEXTERITY, tempStats[1]);    // Dexterity
-		this.stats.put(Abilities.CONSTITUTION, tempStats[2]); // Constitution
-		this.stats.put(Abilities.INTELLIGENCE, tempStats[3]); // Intelligence
-		this.stats.put(Abilities.WISDOM, tempStats[4]);       // Wisdom
-		this.stats.put(Abilities.CHARISMA, tempStats[5]);     // Charisma*/
+		this.stats = new LinkedHashMap<Ability, Integer>(ruleset.getAbilities().length, 0.75f);
 
 		int index = 0;
 
-		for(Ability ability : ruleset.getAbilities()) {
-			if( tempStats.length > index ) {
-				this.stats.put(ability, tempStats[index]);
-			}
-			else {
-				this.stats.put(ability, 0);
-			}
-
-			System.out.println(ability.getName() + ": " + this.stats.get(ability));
-
+		for(final Ability ability : ruleset.getAbilities()) {
+			if( tempStats.length > index ) this.stats.put(ability, tempStats[index]);
+			else                           this.stats.put(ability, 0);
+			
 			index++;
 		}
 
 		// instantiate skills
-		skills = new LinkedHashMap<Skill, Integer>(36, 0.75f);
-
-		// initialize skills
-		// these should be all -1, since no class is specified initially
-		/*this.skills.put(Skills.APPRAISE, -1);            this.skills.put(Skills.BALANCE, -1);            this.skills.put(Skills.BLUFF, -1);
-		this.skills.put(Skills.CLIMB, -1);               this.skills.put(Skills.CONCENTRATION, -1);      this.skills.put(Skills.CRAFT, -1);
-		this.skills.put(Skills.DECIPHER_SCRIPT, -1);     this.skills.put(Skills.DIPLOMACY, -1);          this.skills.put(Skills.DISGUISE, -1);
-		this.skills.put(Skills.ESCAPE_ARTIST, -1);       this.skills.put(Skills.GATHER_INFORMATION, -1); this.skills.put(Skills.HANDLE_ANIMAL, -1);
-		this.skills.put(Skills.HEAL, -1);                this.skills.put(Skills.HIDE, -1);               this.skills.put(Skills.INTIMIDATE, -1);
-		this.skills.put(Skills.JUMP, -1);
-
-		this.skills.put(Skills.KNOWLEDGE, -1);           this.skills.put(Skills.KNOWLEDGE_ARCANA, -1);   this.skills.put(Skills.KNOWLEDGE_DUNGEONEERING, -1); 
-		this.skills.put(Skills.KNOWLEDGE_GEOGRAPHY, -1); this.skills.put(Skills.KNOWLEDGE_HISTORY, -1);  this.skills.put(Skills.KNOWLEDGE_LOCAL, -1);         
-		this.skills.put(Skills.KNOWLEDGE_NATURE, -1);    this.skills.put(Skills.KNOWLEDGE_NOBILITY, -1); this.skills.put(Skills.KNOWLEDGE_PLANAR, -1);        
-		this.skills.put(Skills.KNOWLEDGE_RELIGION, -1);
-
-		this.skills.put(Skills.LISTEN, -1);              this.skills.put(Skills.MOVE_SILENTLY, -1);      this.skills.put(Skills.NAVIGATION, -1);
-		this.skills.put(Skills.PERFORM, -1);             this.skills.put(Skills.PROFESSION, -1);         this.skills.put(Skills.RIDE, -1);
-		this.skills.put(Skills.SEARCH, -1);              this.skills.put(Skills.SENSE_MOTIVE, -1);       this.skills.put(Skills.SLEIGHT_OF_HAND, -1);
-		this.skills.put(Skills.SPEAK_LANGUAGE, -1);      this.skills.put(Skills.SPELLCRAFT, -1);         this.skills.put(Skills.SPOT, -1);
-		this.skills.put(Skills.SURVIVAL, -1);            this.skills.put(Skills.SWIM, -1);               this.skills.put(Skills.TRACKING, -1);
-		this.skills.put(Skills.TUMBLE, -1);              this.skills.put(Skills.USE_MAGIC_DEVICE, -1);   this.skills.put(Skills.USE_ROPE, -1);*/
-
+		this.skills = new LinkedHashMap<Skill, Integer>(36, 0.75f);
+		
+		this.money = tempMoney;
+		this.inventory = new ArrayList<Item>(50);
+		
 		// instantiate quest list
 		this.quests = new ArrayList<Quest>();
 
@@ -522,7 +454,32 @@ public class Player extends MUDObject implements Mobile
 
 		// initialize list editor variables
 		this.editor = Editors.NONE;
+		
+		this.config = new LinkedHashMap<String, Boolean>();
+		
+		initConfig();
+		
+		this.statMod = new int[ruleset.getAbilities().length];
+		this.skillMod = new int[ruleset.getSkills().length];
+		
+		// initialize modification counters to 0
+		Arrays.fill(statMod, 0);
+		Arrays.fill(skillMod, 0);
+		
+		this.reputation = new LinkedHashMap<Faction, Integer>();
+		// faction?
+		
+		this.nameRef = new HashMap<String, Integer>();    // instantiate name reference table
+		this.commandMap = new HashMap<String, Command>(); // instantiate command map
+		
+		this.editor = Editors.NONE;
+		this.editMap = new HashMap<String, EditList>();
+		
+		// mark player as not new
+		this.isNew = false;
+	}
 
+	private void initConfig() {
 		addConfigOption("global-nameref-table", false); // use the global name reference table instead of a local one (default: false)
 		addConfigOption("pinfo-brief", true);           // make your player info output brief/complete (default: true)
 		addConfigOption("prompt_enabled", false);       // enable/disable the prompt (default: false)
@@ -535,20 +492,6 @@ public class Player extends MUDObject implements Mobile
 		addConfigOption("hud_enabled", false);          // is the "heads-up display" that accompanies the room description enabled (default: false)
 		addConfigOption("notify_newmail", false);       // notify the player on receipt of new mail? (default: false)
 		addConfigOption("silly_messages", false);       // enable sillier/more humorous error messages where used (default: false)
-
-		// instantiate name reference table
-		this.nameRef = new HashMap<String, Integer>(10, 0.75f); // start out assuming 10 name references
-
-		// initialize modification counters to 0
-		Arrays.fill(statMod, 0);
-		Arrays.fill(skillMod, 0);
-		
-		this.reputation = new LinkedHashMap<Faction, Integer>();
-		
-		this.commandMap = new HashMap<String, Command>();
-		
-		// mark player as not new
-		isNew = false;
 	}
 
 	public void setClient(final Client c) {
@@ -697,21 +640,8 @@ public class Player extends MUDObject implements Mobile
 	// doesn't seem like something that really belongs in here, may belong in some kind
 	// of session, client data
 	
-	// get the player's idle time
-	public String getIdleString() {
-		if ( this.idle > 0 ) {
-			if (this.idle > 60) {
-				int m = this.idle / 60;
-				int s = this.idle % 60;
-				return m + "m" + s + "s";
-			}
-			else {
-				return this.idle + "s";
-			}
-		}
-		else {
-			return "----";
-		}
+	public boolean isIdle() {
+		return this.idle_state;
 	}
 	
 	public void setIdle(final boolean idle) {
@@ -725,17 +655,13 @@ public class Player extends MUDObject implements Mobile
 			setStatus(this.prev_status);
 		}
 	}
-
-	public boolean isIdle() {
-		return this.idle_state;
+	
+	public int getIdleTime() {
+		return this.idle;
 	}
 	
 	public void setIdleTime(int s) {
 		this.idle = s;
-	}
-	
-	public int getIdleTime() {
-		return this.idle;
 	}
 
 	// get the player's status
@@ -757,12 +683,7 @@ public class Player extends MUDObject implements Mobile
 	}
 
 	public MUDObject getTarget() {
-		if (this.target instanceof NPC) {
-			return (NPC) this.target;
-		}
-		else {
-			return this.target;
-		}
+		return this.target;
 	}
 
 	public void setTarget(final MUDObject m) {
@@ -838,11 +759,7 @@ public class Player extends MUDObject implements Mobile
 	}
 
 	/**
-	 * It may not be the best idea, but we'll do level checks here,
-	 * that way when your total xp exceeds the total xp you need for
-	 * the next level you'll be 'flagged' as ready to 'levelup';
-	 * 
-	 * NOTE: It would be good to inform the player when that happens, but that shouldn't be done here
+	 * Modify Player experience value
 	 * 
 	 * @param xp
 	 */
@@ -859,52 +776,34 @@ public class Player extends MUDObject implements Mobile
 	 */
 	public int getXPToLevel() {
 		return getXPToLevel(level+1);
-		//return Player.levelXP[level];
 	}
-
-	/* level[n] = level[n-1] + (n * 1000) */
+	
 	private int getXPToLevel(final int level) {
-		if( level == 0 ) return 0;
+		/* level[n] = level[n-1] + (n * 1000) */
+		if( level <= 0 ) return 0;
 		else {
 			return getXPToLevel(level - 1) + ( level * 1000 );
 		}
 	}
 
 	public int getHP() {
-		return this.hp + this.temphp;
+		return this.hp;
 	}
 
 	public void setHP(final int hp) {
 		// you can only set HP up to the total hp
-		if( (this.hp + hp) < this.totalhp ) {
+		if( Utils.range(this.hp + hp, 0, getTotalHP()) ) {
 			this.hp += hp;
-		}
-		/*if( this.temphp > 0 ) {
-			if( hp < 0 ) { // damage
-				if( this.temphp >= hp ) {
-					this.temphp += hp;
-				}
-				else {
-					this.temphp = 0;
-					this.hp += this.temphp - hp;
-				}
-			}
-			else {
-				this.hp += hp;
-			}
 		}
 		else {
-			this.hp += hp;
-		}*/
-		this.hp += hp;
+			if( hp > 0 ) this.hp = getTotalHP();
+			else         this.hp = 0;
+		}
 	}
-
+	
+	// TODO use formula to calculate this from stats, etc
 	public int getTotalHP() {
 		return this.totalhp;
-	}
-
-	public void setTotalHP(final int hp) {
-		this.totalhp = hp;
 	}
 
 	public int getMana() {
@@ -912,17 +811,21 @@ public class Player extends MUDObject implements Mobile
 	}
 
 	public void setMana(final int mana) {
-		this.mana += mana;
+		// you can only set MANA up to total mana
+		if( Utils.range(this.mana + mana, 0, getTotalMana()) ) {
+			this.mana += mana;
+		}
+		else {
+			if( mana > 0 ) this.mana = getTotalMana();
+			else           this.mana = 0;
+		}
 	}
-
+	
+	// TODO use formula to calculate this from stats, etc
 	public int getTotalMana() {
 		return this.totalmana;
 	}
-
-	public void setTotalMana(final int mana) {
-		this.totalmana = mana;
-	}
-
+	
 	public int getAbility(final Ability ability) {
 		return this.stats.get(ability) + statMod[ability.getId()];
 	}
@@ -961,7 +864,7 @@ public class Player extends MUDObject implements Mobile
 		this.skillMod[skill.getId()] = skillMod;
 	}
 
-	public ArrayList<Item> getInventory() {
+	public List<Item> getInventory() {
 		return this.inventory;
 	}
 
@@ -1017,32 +920,7 @@ public class Player extends MUDObject implements Mobile
 		return Collections.unmodifiableMap( this.stats );
 	}
 	
-	/**
-	 * Get the quest with the specified id, if the player has it.
-	 * 
-	 * @param id
-	 * @return
-	 */
-	public Quest getQuest(final int id) {
-		Quest quest = null;
-		
-		for(final Quest q : this.quests) {
-			if( q.getId() == id ) {
-				quest = q;
-				break;
-			}
-		}
-
-		return quest;
-	}
-
-	/**
-	 * 
-	 * @return
-	 */
-	public List<Quest> getQuests() {
-		return Collections.unmodifiableList(this.quests);
-	}
+	/* Quests */
 	
 	public void addQuest(final Quest newQuest) {
 		this.quests.add(newQuest);
@@ -1069,6 +947,33 @@ public class Player extends MUDObject implements Mobile
 		
 		return success;
 	}
+	
+	/**
+	 * Get the quest with the specified id, if the player has it.
+	 * 
+	 * @param id
+	 * @return
+	 */
+	public Quest getQuest(final int id) {
+		Quest quest = null;
+		
+		for(final Quest q : this.quests) {
+			if( q.getId() == id ) {
+				quest = q;
+				break;
+			}
+		}
+
+		return quest;
+	}
+
+	/**
+	 * 
+	 * @return
+	 */
+	public List<Quest> getQuests() {
+		return Collections.unmodifiableList(this.quests);
+	}
 
 	public int getCapacity() {
 		return this.capacity;
@@ -1085,49 +990,12 @@ public class Player extends MUDObject implements Mobile
 	public MailBox getMailBox() {
 		return this.mailbox;
 	}
-	
-	// TODO does this sort of thing even belong in here?
-	public Tuple<Boolean, String> equip(final Item item) {
-		if( item.isEquippable() ) {
-		}
-		
-		return new Tuple<Boolean, String>(false, "");
-	}
-	
-	public void equip(final Item item, final Slot slot) {
-		slot.insert(item);
-	}
-
-	public void equip(final Item item, final String location) {
-		if ( this.slots.containsKey(location) ) {
-			this.slots.get(location).insert(item);
-		}
-	}
-
-	public void unequip(final Item item, final Slot slot) {
-		if (slot.isFull()) {
-			if (slot.getItem() == item) {
-				slot.remove();
-			}
-		}
-	}
-
-	public void unequip(final Item item, final String location) {
-		if ( this.slots.containsKey(location) ) {
-			this.slots.get(location);
-			this.inventory.add(item);
-		}
-	}
-
-	public void unequip(final Item item) {
-		this.inventory.add(item);
-	}
 
 	public boolean hasItem(final Item item) {
 		return this.inventory.contains(item);
 	}
 
-	public ArrayList<String> getNames() {
+	public List<String> getNames() {
 		return this.names;
 	}
 
@@ -1222,11 +1090,7 @@ public class Player extends MUDObject implements Mobile
 		this.pos.changeZ(cZ);
 	}
 
-	public boolean hasEditor(final String name) {
-		return editMap.containsKey(name);
-	}
-
-	public LinkedList<Spell> getSpellQueue() {
+	public Deque<Spell> getSpellQueue() {
 		return this.spellQueue;
 	}
 
@@ -1246,7 +1110,7 @@ public class Player extends MUDObject implements Mobile
 		return this.state;
 	}
 
-	public void setState(final State newState) {
+	private void setState(final State newState) {
 		this.state = newState;
 	}
 
@@ -1327,25 +1191,32 @@ public class Player extends MUDObject implements Mobile
 	}
 
 	public int getArmorClass() {
-		Integer armorClass = 0;
+		Integer armorClass = 10;
 		
-		// TODO need a more universal strategy here...
-		Item armor = slots.get("armor").getItem();
-		//Item shield = slots.get("weapon1").getItem();
-		Item shield = null;
-
-		if( armor != null && armor instanceof Armor ) {
-			if( shield != null && shield instanceof Shield ) {
-				armorClass = 10 + ((Armor) armor).getArmorBonus() + ((Shield) shield).getShieldBonus();
-			}
-			else {
-				armorClass = 10 + ((Armor) armor).getArmorBonus();
-			}
+		Slot armor_slot = slots.get("armor");
+		Slot shield_slot =  slots.get("weapon1");
+		
+		Item item_a = null;
+		Item item_s = null;
+		
+		if( armor_slot != null )  item_a = armor_slot.getItem();
+		if( shield_slot != null ) item_s = shield_slot.getItem();
+		
+		Shield shield = null;
+		Armor armor = null;
+		
+		if( item_s != null && item_s instanceof Shield ) shield = (Shield) item_s;
+		if( item_a != null && item_a instanceof Armor )  armor = (Armor) item_a;
+		
+		if( armor != null ) {
+			armorClass += armor.getArmorBonus();
+			
+			if( shield != null ) armorClass += shield.getShieldBonus();
 		}
-		else if( shield != null && shield instanceof Shield ) {
-			armorClass = 10 + ((Shield) shield).getShieldBonus();
+		else if( shield != null ) {
+			armorClass += shield.getShieldBonus();
 		}
-
+		
 		return armorClass + getAbilityMod(Abilities.STRENGTH);
 	}
 
@@ -1371,6 +1242,10 @@ public class Player extends MUDObject implements Mobile
 	
 	public Faction getFaction() {
 		return this.faction;
+	}
+	
+	public void setFaction(final Faction newFaction) {
+		this.faction = newFaction;
 	}
 
 	public void modifyReputation(final Faction faction, final Integer value) {
@@ -1457,10 +1332,8 @@ public class Player extends MUDObject implements Mobile
 	 * @return
 	 */
 	public Spell getLastSpell() {
-		if( this.isCaster() ) {
-			return this.lastSpell;
-		}
-		else { return null; }
+		if( this.isCaster() ) return this.lastSpell;
+		else                  return null;
 	}
 	
 	public Quest getActiveQuest() {
@@ -1474,9 +1347,13 @@ public class Player extends MUDObject implements Mobile
 	public Map<String, Landmark> getLandmarks() {
 		return this.landmarks;
 	}
+	
+	public boolean isInitialized() {
+		return this.initialized;
+	}
 
 	public boolean isNew() {
-		return isNew;
+		return this.isNew;
 	}
 	
 	// set weapons...
@@ -1489,23 +1366,35 @@ public class Player extends MUDObject implements Mobile
 		if( primary ) this.primary = weapon;
 		else          this.secondary = weapon;
 	}
-
-	/*public void wear(Wearable<Item> w) {
-		List<Slot> sList = new LinkedList<Slot>();
-
-		for(String s : this.slots.keySet()) {
-			if( w.getType().toLowerCase().equals( s ) ) {
-				sList.add( this.slots.get(s) );
-			}
-		}
-
-		for(Slot slot : sList) {
-			//if( slot.isEmpty() ) slot.insert( w );
-		}
-	}*/
+	
+	/* Commands */
+	
+	public void addCommand(final String cmdName, final Command cmd) {
+		this.commandMap.put(cmdName, cmd);
+	}
+	
+	public void removeCommand(final String cmdName) {
+		this.commandMap.remove(cmdName);
+	}
+	
+	public boolean hasCommand(final String cmdName) {
+		return this.commandMap.containsKey(cmdName) && this.commandMap.get(cmdName) != null;
+	}
+	
+	public Command getCommand(final String cmdName) {
+		return this.commandMap.get(cmdName);
+	}
+	
+	public Map<String, Command> getCommands() {
+		return Collections.unmodifiableMap( this.commandMap );
+	}
 
 	// Editors
-
+	
+	public boolean hasEditor(final String name) {
+		return editMap.containsKey(name);
+	}
+	
 	/**
 	 * 
 	 * 
@@ -1527,17 +1416,14 @@ public class Player extends MUDObject implements Mobile
 	public void setEditorData(final EditorData newEdD) {
 		this.edd = newEdD;
 	}
-	
-	public void addCommand(final String text, final Command cmd) {
-		this.commandMap.put(text, cmd);
-	}
 
 	/**
 	 * Translate the persistent aspects of the player into the string
 	 * format used by the database
 	 */
 	public String toDB() {
-		String[] output = new String[14];
+		final String[] output = new String[14];
+		
 		output[0] = getDBRef() + "";                      // database reference number
 		output[1] = getName();                            // name
 		output[2] = TypeFlag.asLetter(this.type) + "";    // flags
@@ -1547,29 +1433,25 @@ public class Player extends MUDObject implements Mobile
 		output[5] = getPass();                            // password
 
 		final StringBuilder sb = new StringBuilder();
+		
 		int abilities = ruleset.getAbilities().length;
 		int count = 1;
 
-		for(Ability ability : ruleset.getAbilities()) {
+		for(final Ability ability : ruleset.getAbilities()) {
 			sb.append( this.stats.get(ability) );
+			
 			if( count < abilities) sb.append(",");
+			
 			count++;
 		}
 
 		output[6] = sb.toString();                        // stats
-		/*output[6] = stats.get(Abilities.STRENGTH) +       // stats
-				"," + stats.get(Abilities.DEXTERITY) +
-				"," + stats.get(Abilities.CONSTITUTION) +
-				"," + stats.get(Abilities.INTELLIGENCE) +
-				"," + stats.get(Abilities.WISDOM) +
-				"," + stats.get(Abilities.CHARISMA);*/
 		output[7] = getMoney().toString(false);           // money
 		output[8] = access + "";                          // permissions level
 		output[9] = race.getId() + "";                    // race
 		output[10] = pclass.getId() + "";                 // class
 		output[11] = status;                              // status
-		output[12] = state.ordinal() + "";                // ALIVE/INCAPACITATED/DEAD
-		output[13] = pstatus.ordinal() + "";              // ACTIVE/BANNED
+		
 		return Utils.join(output, "#");
 	}
 

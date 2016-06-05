@@ -49,15 +49,15 @@ public class Jewelry extends Item implements MagicItem {
 	/**
 	 * Object Loading Constructor
 	 * 
-	 * @param tempDBREF
-	 * @param tempName
-	 * @param tempFlags
-	 * @param tempDesc
-	 * @param tempLoc
+	 * @param dbref
+	 * @param name
+	 * @param flags
+	 * @param description
+	 * @param location
 	 */
-	public Jewelry(final int tempDBREF, final String tempName, final EnumSet<ObjectFlag> tempFlags, final String tempDesc, final int tempLoc)
+	public Jewelry(final int dbref, final String name, final EnumSet<ObjectFlag> flags, final String description, final int location)
 	{
-		super(tempDBREF, tempName, tempFlags, tempDesc, tempLoc);
+		super(dbref, name, flags, description, location);
 		
 		// TODO we'll just make ring the only kind of jewelry for now
 		this.item_type = ItemTypes.RING;

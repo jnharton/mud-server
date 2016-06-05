@@ -28,7 +28,7 @@ import mud.objects.Player;
  *
  */
 public class CMD {
-	Status status;
+	private Status status;
 	private String cmdString;
 	private Player player;
 	private Client client;
@@ -61,6 +61,14 @@ public class CMD {
 	public CMD(final String string, final Player player, final Client client, final int permission) {
 		this(string, player, client);
 		this.perm = permission;
+	}
+	
+	public Status getStatus() {
+		return this.status;
+	}
+	
+	public void setStatus(final Status newStatus) {
+		this.status = newStatus;
 	}
 
 	public String getCmdString() {

@@ -26,31 +26,27 @@ public class Book extends Item implements Editable {
 		this("", "", 0);
 	}
 	
-	public Book(String bookTitle) {
-		this(bookTitle, "", 0);
+	public Book(final String bTitle) {
+		this(bTitle, "", 0);
 	}
 
-	public Book(String bookTitle, String bookAuthor) {
-		this(bookTitle, bookAuthor, 0);
+	public Book(final String bTitle, final String bAuthor) {
+		this(bTitle, bAuthor, 0);
 	}
 
-	public Book(String bookTitle, String bookAuthor, int pages) {
-		super(-1);
-		
-		this.flags = EnumSet.noneOf(ObjectFlag.class);
-		
-		this.type = TypeFlag.ITEM;
+	public Book(final String bTitle, final String bAuthor, final int pages) {
+		super(-1, "book", "a book");
 		
 		this.item_type = ItemTypes.BOOK;
 		
-		this.title = bookTitle;
-		this.author = bookAuthor;
+		this.title = bTitle;
+		this.author = bAuthor;
 		
 		this.pages = new ArrayList<List<String>>(pages);
 	}
 	
 	// TODO make sure this properly duplicates the template, which it doesn't atm
-	protected Book( Book template ) {
+	protected Book(final Book template) {
 		this(template.title, template.author, template.pages.size());
 		
 		this.pages.addAll( template.pages );
@@ -64,15 +60,15 @@ public class Book extends Item implements Editable {
 	 * that has parameters.
 	 *
 	 * 
-	 * @param tempName
-	 * @param tempDesc
-	 * @param tempLoc
-	 * @param tempDBREF
+	 * @param name
+	 * @param description
+	 * @param location
+	 * @param dbref
 	 * @param tCharges
 	 * @param spellName
 	 */
-	public Book(String tempName, String tempDesc, int tempLoc, int tempDBREF) {
-		super(tempDBREF, tempName, EnumSet.noneOf(ObjectFlag.class), tempDesc, tempLoc);
+	public Book(final int dbref, final String name, final EnumSet<ObjectFlag> flags, final String description, final int location) {
+		super(dbref, name, EnumSet.noneOf(ObjectFlag.class), description, location);
 		
 		this.item_type = ItemTypes.BOOK;
 		this.slot_type = SlotTypes.NONE;
@@ -80,10 +76,10 @@ public class Book extends Item implements Editable {
 		this.pages = new ArrayList<List<String>>(0);
 	}
 	
-	@Override
+	/*@Override
 	public String getName() {
 		return getTitle();
-	}
+	}*/
 	
 	public String getTitle() {
 		return this.title;
@@ -117,8 +113,12 @@ public class Book extends Item implements Editable {
 
 	@Override
 	public void write(final String text) {
-		//if( text.equals("+newpage") )
-		getPage(currentPage).add(text);
+		if( text.equals("+newpage") ) {
+			addPage( Utils.mkList("") );
+		}
+		else {
+			getPage(currentPage).add(text);
+		}
 	}
 	
 	public List<String> getPage(int pageNum) {

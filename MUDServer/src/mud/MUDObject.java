@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 
 import mud.misc.Effect;
 import mud.objects.Player;
@@ -51,11 +52,9 @@ public abstract class MUDObject {
 	/* object data - related to game (persistent) */
 	protected double weight = 0;        // the weight in whatever units are used of the equippable object
 	
-	protected Point pos;                 // object's position on a cartesian plane (3D Point)
-	
-	protected LinkedHashMap<String, Object> properties;
-
-	protected List<Effect> effects;      // Effects set on the object
+	protected final Point pos;                      // object's position on a cartesian plane (3D Point)
+	protected final Map<String, String> properties; //
+	protected final List<Effect> effects;           // Effects set on the object
 
 	/* object state - transient? */
 	public boolean Edit_Ok = true;  // is this object allowed to be edited
@@ -70,8 +69,8 @@ public abstract class MUDObject {
 	{
 		this.dbref = tempDBRef;
 		
-		this.name = "";
-		this.desc = "";
+		this.name = "object";
+		this.desc = "some kind of object";
 		this.flags = EnumSet.noneOf(ObjectFlag.class);
 		this.location = -1;
 		
@@ -80,34 +79,24 @@ public abstract class MUDObject {
 		this.owner = null;
 		
 		this.pos = new Point(0, 0, 0);
-		this.properties = new LinkedHashMap<String, Object>(MUDObject.NUM_PROPS, MUDObject.LOAD_FACT);
+		this.properties = new LinkedHashMap<String, String>(MUDObject.NUM_PROPS, MUDObject.LOAD_FACT);
 		this.effects = new ArrayList<Effect>();
 	}
 	
-	/**
-	 * object loading constructor?
-	 * 
-	 * @param tempDBRef
-	 * @param tempName
-	 * @param tempFlags
-	 * @param tempDesc
-	 * @param tempLoc
-	 */
-	protected MUDObject(final Integer tempDBRef, final String tempName, final EnumSet<ObjectFlag> tempFlags, final String tempDesc, final int tempLoc) {
+	protected MUDObject(final Integer tempDBRef, final String name, final String description) {
 		this.dbref = tempDBRef;
 		
-		this.name = tempName;
-		this.desc = tempDesc;
+		this.name = name;
+		this.desc = description;
+		this.flags = EnumSet.noneOf(ObjectFlag.class);
+		this.location = -1;
 		
 		this.type = TypeFlag.OBJECT;
-		
-		this.flags = tempFlags;
-		this.location = tempLoc;
 		
 		this.owner = null;
 		
 		this.pos = new Point(0, 0, 0);
-		this.properties = new LinkedHashMap<String, Object>(MUDObject.NUM_PROPS, MUDObject.LOAD_FACT);
+		this.properties = new LinkedHashMap<String, String>(MUDObject.NUM_PROPS, MUDObject.LOAD_FACT);
 		this.effects = new ArrayList<Effect>();
 	}
 	
@@ -121,11 +110,10 @@ public abstract class MUDObject {
 	protected MUDObject(final MUDObject template) {
 		this.dbref = -1;
 		
+		this.type = TypeFlag.OBJECT;
+		
 		this.name = template.name;
 		this.desc = template.desc;
-		
-		this.type = TypeFlag.OBJECT;
-				
 		this.flags = template.flags;
 		this.location = -1;
 		
@@ -133,7 +121,33 @@ public abstract class MUDObject {
 		
 		// TODO restore/duplicate template properties?
 		this.pos = new Point(0, 0, 0);
-		this.properties = new LinkedHashMap<String, Object>(MUDObject.NUM_PROPS, MUDObject.LOAD_FACT);
+		this.properties = new LinkedHashMap<String, String>(MUDObject.NUM_PROPS, MUDObject.LOAD_FACT);
+		this.effects = new ArrayList<Effect>();
+	}
+	
+	/**
+	 * object loading constructor?
+	 * 
+	 * @param dbref
+	 * @param name
+	 * @param flags
+	 * @param description
+	 * @param location
+	 */
+	protected MUDObject(final int dbref, final String name, final EnumSet<ObjectFlag> flags, final String description, final int location) {
+		this.dbref = dbref;
+		
+		this.name = name;
+		this.desc = description;
+		this.flags = flags;
+		this.location = location;
+		
+		this.type = TypeFlag.OBJECT;
+		
+		this.owner = null;
+		
+		this.pos = new Point(0, 0, 0);
+		this.properties = new LinkedHashMap<String, String>(MUDObject.NUM_PROPS, MUDObject.LOAD_FACT);
 		this.effects = new ArrayList<Effect>();
 	}
 
@@ -186,7 +200,7 @@ public abstract class MUDObject {
 	 * 
 	 * @return the description of the MUDObject (String)
 	 */
-	public String getDesc()
+	public final String getDesc()
 	{
 		return this.desc;
 	}
@@ -320,7 +334,7 @@ public abstract class MUDObject {
 	 * @param key property name
 	 * @return property value
 	 */
-	public final Object getProperty(final String key) {
+	public final String getProperty(final String key) {
 		return this.properties.get(key);
 	}
 	
@@ -336,18 +350,24 @@ public abstract class MUDObject {
 	 */
 	public final <T> T getProperty(final String key, Class<T> c) throws ClassCastException {
 		// TODO this is an ugly, ugly kludge...
-		if( c.getSimpleName().equals("Boolean") ) {
-			final Object obj = this.properties.get(key);
-			
-			if( obj instanceof String ) {
-				final String s = (String) obj;
+		final String s = this.properties.get(key);
+
+		if( c.getSimpleName().equals("Boolean") ) {	
+			if( s.equals(":true") ) return (T) c.cast(true);
+			else                    return (T) c.cast(false);
+		}
+		else if( c.getSimpleName().equals("Integer") ) {
+			try {
+				int integer = Integer.parseInt(s);
 				
-				if( s.equals(":true") ) return (T) c.cast(true);
-				else                    return (T) c.cast(false);
+				return (T) c.cast(integer);
+			}
+			catch(final NumberFormatException nfe) {
+				return null;
 			}
 		}
 		
-		return (T) c.cast(this.properties.get(key));
+		return null;
 	}
 	
 	/**
@@ -358,8 +378,24 @@ public abstract class MUDObject {
 	 * @param key   property name
 	 * @param value property value
 	 */
-	public final void setProperty(final String key, final Object value) {
+	public final void setProperty(final String key, final String value) {
 		this.properties.put(key,  value);
+	}
+	
+	public final <T> void setProperty(final String key, final T value) {
+		final Class c = value.getClass();
+		
+		if( c.getSimpleName().equals("Boolean") ) {
+			final Boolean b = (Boolean) value;
+			
+			if( b ) this.properties.put(key, ":true");
+			else    this.properties.put(key, ":false");
+		}
+		else if( c.getSimpleName().equals("Integer") ) {
+			final Integer i = (Integer) value;
+			
+			this.properties.put(key, "" + i.intValue());
+		}
 	}
 
 	/**
@@ -368,13 +404,13 @@ public abstract class MUDObject {
 	 * 
 	 * @return
 	 */
-	public final LinkedHashMap<String, Object> getProperties() {
+	public final Map<String, String> getProperties() {
 		return this.properties;
 	}
 	
-	public final LinkedHashMap<String, Object> getProperties(final String propdir) {
+	public final Map<String, String> getProperties(final String propdir) {
 		if( propdir.endsWith("/") ) {
-			final LinkedHashMap<String, Object> props = new LinkedHashMap<String, Object>();
+			final Map<String, String> props = new LinkedHashMap<String, String>();
 			
 			for(final String key : properties.keySet()) {
 				if( key.startsWith(propdir) ) {
@@ -388,7 +424,7 @@ public abstract class MUDObject {
 		return null;
 	}
 
-	public final LinkedHashMap<String, Object> getVisualProperties() {
+	public final Map<String, String> getVisualProperties() {
 		return getProperties("visual/");
 	}
 	
@@ -407,7 +443,7 @@ public abstract class MUDObject {
 	 * 
 	 * @return
 	 */
-	public final List<Effect> getEffects() {
+	public List<Effect> getEffects() {
 		return this.effects;
 	}
 
@@ -599,6 +635,6 @@ public abstract class MUDObject {
 	
 	@Override
 	public String toString() {
-		return this.name;
+		return getName();
 	}
 }

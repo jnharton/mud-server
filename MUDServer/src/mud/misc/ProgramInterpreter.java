@@ -1,17 +1,20 @@
 package mud.misc;
 
+import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import mud.MUDObject;
 import mud.MUDServer;
-import mud.net.Client;
+import mud.interfaces.ODBI;
 import mud.objects.Item;
 import mud.objects.Player;
-import mud.utils.Log;
 import mud.utils.Message;
 import mud.utils.Point;
+import mud.utils.Tuple;
 import mud.utils.Utils;
 
 /*
@@ -29,110 +32,79 @@ import mud.utils.Utils;
  * @author Jeremy
  *
  */
-public class ProgramInterpreter {
+public final class ProgramInterpreter {
 	private static final String TRUE = ":true";
 	private static final String FALSE = ":false";
-	
 	private static final String ERROR = ":error";
+	private static final String NONE = ":none";
 	
+	private static enum Perms { READ, WRITE };
+	
+	// TODO I would like to pry out holding a parent reference..
 	private final MUDServer parent;
-	private Log log;
-	
-	//
-	private Hashtable<String, String> vars; // TODO HashMap or go back to using a Hashtable
-	
+	private final ODBI database;
+
 	// configuration
-	private boolean use_vars;
-	private boolean debug_enabled;
-	
+	private final boolean debug_enabled;
+	private final EnumSet<Perms> permissions;
+
+	private final Hashtable<String, String> vars;
+
 	public ProgramInterpreter(final MUDServer parent) {
 		this(parent, false);
 	}
 	
 	public ProgramInterpreter(final MUDServer parent, final boolean enable_debug) {
-		this.parent = parent;
-		this.vars = new Hashtable<String, String>();
-		this.use_vars = true;
+		this(parent, enable_debug, EnumSet.of(Perms.READ));
 		
-		this.debug_enabled = enable_debug;
+	}
+	public ProgramInterpreter(final MUDServer parent, final boolean enable_debug, final EnumSet<Perms> perms) {
+		this.parent = parent;
+		this.database = parent.getDBInterface();
+
+		//this.debug_enabled = enable_debug;
+		this.debug_enabled = true;
+		
+		this.permissions = EnumSet.copyOf(perms);
+		
+		this.vars = new Hashtable<String, String>();
+	}
+
+	/**
+	 * Add a variable to the interpreter's vars.
+	 * 
+	 * @param name  String variable name
+	 * @param value String variable value
+	 */
+	public void addVar(final String name, final String value) {
+		this.vars.put(name, value);
 	}
 	
+	public boolean hasVar(final String name) {
+		return this.vars.containsKey(name) && this.vars.get(name) != null;
+	}
+
 	/**
-	 * lex
+	 * Set an -existing- variable in the interpreter's vars
+	 * to a new value.
 	 * 
-	 * break the input into tokens
-	 * 
-	 * NOTE: not currently used
-	 * 
-	 * @param input
+	 * @param name     String variable name
+	 * @param newValue String variable value
 	 * @return
 	 */
-	public List<String> lex(final String input) {
-		List<String> tokens = new LinkedList<String>();
-		
-		StringBuilder sb = new StringBuilder();
-		
-		for(final char ch : input.toCharArray()) {
-			switch(ch) {
-			case '{':
-				if(sb.length() > 0) {
-					tokens.add(sb.toString());
-					sb.delete(0, sb.length());
-				}
-				tokens.add("" + ch);
-				break;
-			case '}':
-				if(sb.length() > 0) {
-					tokens.add(sb.toString());
-					sb.delete(0, sb.length());
-				}
-				tokens.add("" + ch);
-				break;
-			case '(':
-				if(sb.length() > 0) {
-					tokens.add(sb.toString());
-					sb.delete(0, sb.length());
-				}
-				tokens.add("" + ch);
-				break;
-			case ')':
-				if(sb.length() > 0) {
-					tokens.add(sb.toString());
-					sb.delete(0, sb.length());
-				}
-				tokens.add("" + ch);
-				break;
-			case ':':
-				if(sb.length() > 0) {
-					tokens.add(sb.toString());
-					sb.delete(0, sb.length());
-				}
-				tokens.add("" + ch);
-				break;
-			case ',':
-				if(sb.length() > 0) {
-					tokens.add(sb.toString());
-					sb.delete(0, sb.length());
-				}
-				tokens.add("" + ch);
-				break;
-			default:
-				sb.append(ch);
-				break;
-			}
-		}
-
-		if( debug_enabled ) {
-			for( final String token : tokens) {
-				System.out.println(token);
-			}
-			
-			//System.out.println("Tokens: " + tokens);
-		}
-
-		return tokens;
+	public void setVar(final String name, final String newValue) {
+		this.vars.replace(name, newValue);
 	}
-	
+
+	/**
+	 * Remove a variable from the interpreter's vars.
+	 * 
+	 * @param name String variable name
+	 */
+	public void delVar(final String name) {
+		this.vars.remove(name);
+	}
+
 	public String interpret(final Script script, final Player player, final MUDObject object) {
 		return interpret( script.getText(), player, object );
 	}
@@ -143,46 +115,47 @@ public class ProgramInterpreter {
 	 * @param script
 	 * @return
 	 */
-	public String interpret(final String script, final Player player, final MUDObject object) {	
+	private String interpret(final String script, final Player player, final MUDObject object) {	
 		//System.out.println("PGM: <" + script + ">");
 		//System.out.println("pArg: " + script);
+		String result = "";
 
 		if ( isValidScript( script ) ) {
 			if( debug_enabled ) System.out.println("Interpret: " + script);
-			
+
 			// no script function equals no script
 			if( script.indexOf(":") != -1 ) {
 				// TODO fix this, we are assuming it's all one nested script...
 				String work = script.substring(1, script.length() - 1); // strip off the outermost squiggly braces ( {} )
 
 				if( debug_enabled ) System.out.println("work: " + work);
-				
+
 				final String[] temp = work.split(":", 2);
 
 				String functionName = temp[0]; // FUNCTION NAME
 
 				if( debug_enabled ) System.out.println("Function: " + functionName); // tell us the script function used
-				
+
 				List<String> params = null;    // FUNCTION PARAMETERS 
-				
+
 				// find the parameters if there are any
 				if( temp.length > 1 ) {
 					params = Utils.mkList(temp[1].split(",")); // split the arguments on commas ( , )
-					
+
 					if( debug_enabled ) System.out.println("Fixing Params");
-					
-					fixParams( params ); // sort of fixes the params
-					
+
+					ProgramInterpreter.fixParams( params ); // sort of fixes the params
+
 					//if( debug_enabled ) System.out.println("Params: " + params);
-					
+
 					if( debug_enabled ) {
 						System.out.println("Params:");
-						
+
 						for(final String param : params) {
 							System.out.println(param);
 						}
 					}
-					
+
 					// evaluate parameters
 					int index = 0;
 
@@ -193,7 +166,7 @@ public class ProgramInterpreter {
 							if( isValidScript( param ) ) {
 								params.set(index, interpret(param, player, object));
 							}
-							
+
 							index++;
 						}
 					}
@@ -202,27 +175,44 @@ public class ProgramInterpreter {
 						System.out.println("EVALUATE");
 						System.out.println("Evaluate: <" + functionName + "> with " + params);
 					}
-					
-					String result = evaluate(functionName, params.toArray(new String[params.size()]), player, object);
+
+					result = evaluate(functionName, params.toArray(new String[params.size()]), player, object);
 
 					if( debug_enabled ) System.out.println("Result: " + result);
-
-					return result;
 				}
-				else { return "Incomplete function statement, no parameters!"; }
+				else result = "Incomplete function statement, no parameters!";
 			}
 			else {
-				return evaluate(script, new String[0], player, object);
+				if( debug_enabled ) {
+					System.out.println("EVALUATE");
+					System.out.println("Evaluate: <" + script.substring(1, script.length() - 1) + "> ");
+				}
+				
+				result = evaluate(script, new String[0], player, object);
+				
+				if( debug_enabled ) System.out.println("Result: " + result);
 			}
 		}
 		else {
-			return "Invalid Script!" + "\n'" + script + "\'";
+			int p_dbref = (( player != null ) ? player.getDBRef() : 1);
+			int o_dbref = (( object != null ) ? object.getDBRef() : 1);
+			
+			result = "Invalid Script! (" + p_dbref + "," + o_dbref + ")";
 		}
+		
+		return result;
 	}
 
 	private String evaluate(final String functionName, final String[] params, final Player player, final MUDObject object) {
-		if( debug_enabled ) System.out.println("# Params: " + params.length);
-		
+		if( debug_enabled ) {
+			System.out.println("# Params: " + params.length);
+			System.out.println("");
+			
+			System.out.println("Params:");
+			
+			for(final String param : params) System.out.println(param);
+		}
+
 		if( params.length > 0 ) {
 			/*
 			 * TODO: resolve this kludge and figure out a way to ensure that each
@@ -236,52 +226,43 @@ public class ProgramInterpreter {
 
 				for(final String param : params) {
 					if( debug_enabled ) System.out.println("(DO) INTERPRET: " + param);
-					
+
 					temp = interpret(param, player, object);
-					
+
 					if( debug_enabled ) System.out.println("(DO) Result: " + temp);
 				}
 
 				return "";
 			}
-			
+
 			// Functions that take 1 parameter
 			if( params.length == 1 ) {
 				if( debug_enabled ) System.out.println("Parameter (1): " + params[0]);
 
 				if(functionName.equals("create_item")) {
 					// {create_item:identifier}
-					
 					final Item item = parent.createItem(params[0], true);
 
-					if( item != null ) {
-						return "" + item.getDBRef();
-					}
-					else {
-						return "-1";
-					}
+					if( item != null ) return "" + item.getDBRef();
+					else               return "" + -1;
 				}
 				else if (functionName.equals("dbref")) {
 					// {dbref:object}
-					
-					MUDObject mobj = parent.getObject(params[0]);
-					
-					if( mobj != null ) {
-						return "" + mobj.getDBRef();
-					}
-					else return "" + -1;
-					//return "" + parent.getObject(params[0]).getDBRef();
+					final MUDObject mobj = database.getByName(params[0]);
+
+					if( mobj != null ) return "" + mobj.getDBRef();
+					else               return "" + -1;
 				}
 				else if (functionName.equals("rainbow")) {
 					if( debug_enabled ) System.out.println(params[0]);
-					
-					return parent.rainbow(params[0]);
+
+					return Utils.rainbow(params[0], Utils.ANSI);
 				}
 				else { return "PGM: No such function!"; }
 				//else { return "Incomplete function statement, no parameters!"; }
 				//else { return "PGM: Error!"; }
 			}
-			
+
 			// Functions that take 2 parameters
 			else if( params.length == 2 ) {
 				if( debug_enabled ) {
@@ -296,14 +277,14 @@ public class ProgramInterpreter {
 
 				// cover some stuff for certain parts here
 				if( Utils.mkList("add", "sub", "mul", "and", "eq", "lt", "le", "gt", "ge").contains(functionName) ) {
-					if( params[0].startsWith("{") && params[0].endsWith(")") ) {
+					if( params[0].startsWith("{") && params[0].endsWith("}") ) {
 						params[0] = interpret(params[0], player, object);
 					}
 
-					if( params[1].startsWith("{") && params[1].endsWith(")") ) {
+					if( params[1].startsWith("{") && params[1].endsWith("}") ) {
 						params[1] = interpret(params[1], player, object);
 					}
-					
+
 					// try to pre-evaluate parameters here for functions which are basically math (trigger for comparing string equivalent)
 					if( !functionName.equals("and") ) {
 						try {
@@ -312,7 +293,7 @@ public class ProgramInterpreter {
 						}
 						catch(NumberFormatException nfe) {
 							if( debug_enabled ) System.out.println("-- Stack Trace --");
-							
+
 							nfe.printStackTrace();
 
 							failNumParse = true;
@@ -325,11 +306,13 @@ public class ProgramInterpreter {
 
 				if( functionName.equals("colors") ) {
 					// {colors:color, string}
-					
+
 					if (params.length >= 2) {
 						// TODO consider how debug messages will be transmitted
-						parent.debug("Color: " + params[0]);
-						parent.debug("Text: " + params[1]);
+						if( debug_enabled)  {
+							System.out.println("Color: " + params[0]);
+							System.out.println("Text: " + params[1]);
+						}
 
 						return parent.colorCode(params[0]) + params[1] + parent.colorCode("white");
 					}
@@ -337,7 +320,6 @@ public class ProgramInterpreter {
 				}
 				else if( functionName.equals("cmp") ) {
 					// {cmp:string1, string2}
-					
 					if( params[0].equals(params[1]) ) {
 						return TRUE;
 					}
@@ -347,21 +329,18 @@ public class ProgramInterpreter {
 				}
 				else if( functionName.equals("add") ) {
 					// {add:first, second}
-					
 					if( failNumParse ) return "-1";
 
 					return "" + (first + second);
 				}
 				else if( functionName.equals("sub") ) {
 					// {sub:first, second}
-					
 					if( failNumParse ) return "-1";
 
 					return "" + (first - second);
 				}
 				else if( functionName.equals("and") ) {
 					// {and:a, b}
-					
 					if( params[0].equals(TRUE) && params[1].equals(TRUE) ) {
 						return TRUE;
 					}
@@ -371,7 +350,6 @@ public class ProgramInterpreter {
 				}
 				else if( functionName.equals("eq") ) {
 					// {eq:first, second}
-					
 					if( params[0].equals(params[1]) ) {
 						return TRUE;
 					}
@@ -384,7 +362,6 @@ public class ProgramInterpreter {
 				}
 				else if( functionName.equals("lt") ) {
 					// {lt:first, second}
-					
 					if( failNumParse )   return FALSE;
 
 					if (first < second)  return TRUE;
@@ -392,7 +369,6 @@ public class ProgramInterpreter {
 				}
 				else if( functionName.equals("le") ) {
 					// {le:first, second}
-					
 					if( failNumParse )   return FALSE;
 
 					if (first <= second) return TRUE;
@@ -400,7 +376,6 @@ public class ProgramInterpreter {
 				}
 				else if( functionName.equals("gt") ) {
 					// {gt:first, second}
-					
 					if( failNumParse )   return FALSE;
 
 					if (first > second)  return TRUE;
@@ -408,7 +383,6 @@ public class ProgramInterpreter {
 				}
 				else if( functionName.equals("ge") ) {
 					// {ge:first, second}
-					
 					if( failNumParse )   return FALSE;
 
 					if (first >= second) return TRUE;
@@ -417,9 +391,8 @@ public class ProgramInterpreter {
 				//else { return "Incomplete function statement, no parameters!"; }
 				else if( functionName.equals("give") ) {
 					// {give:player, item}
-					
 					final Player p = parent.getPlayer(Utils.toInt(params[0], -1));
-					final Item i = parent.getItem(Utils.toInt(params[1], -1));
+					final Item i = database.getItem(Utils.toInt(params[1], -1));
 
 					if( p != null && i != null ) {
 						i.setLocation(p.getDBRef());
@@ -428,39 +401,63 @@ public class ProgramInterpreter {
 
 					return "";
 				}
+				else if( functionName.equals("list") ) {
+					// {list:listname, object}
+					final String property = params[0];
+					final int dbref = Utils.toInt(params[1], -1);
+					
+					return list(property, dbref);
+				}
 				else if( functionName.equals("mul") ) {
 					// {mul:factor1, factor2}
-					
+
 					if( failNumParse ) return "-1";
 
 					return "" + (first * second);
 				}
 				else if( functionName.equals("prop") ) {
 					// {prop:name, object}
-					
 					final String property = params[0];
 					final int dbref = Utils.toInt(params[1], -1);
-
-					final MUDObject object1 = parent.getObject(dbref);
+					
+					return prop(property, dbref);
+					/*final MUDObject object1 = database.getById(dbref);
 
 					if( object1 != null ) {
 						if( debug_enabled ) System.out.println("Object1: " + object1.getName());
-						
+
 						return "" +  object1.getProperty(property);
 					}
-					else return "";
+					else return "";*/
+					
 					//else { return "Incomplete function statement, no parameters!"; }
+				}
+				else if( functionName.equals("propdir") ) {
+					// {prop:name, object}
+					final String property = params[0];
+					final int dbref = Utils.toInt(params[1], -1);
+					
+					return propdir(property, dbref);
+				}
+				else if( functionName.equals("set") ) {
+					final String var = params[0];
+					final String val = params[1];
+					
+					if( hasVar(var) ) setVar(var, val);
+					else              addVar(var, val);
+					
+					return val;
 				}
 				else if( functionName.equals("tell") ) {
 					// {tell:message, player}
-					
+
 					// TODO resolve this kludge, since I may need to parse for hidden formatting data
 					final String message = params[0].replace("#c", ",");
 					final Player p = parent.getPlayer(Utils.toInt(params[1], -1));
-					
+
 					if( message != null && p != null ) {
 						// TODO figure out if there's a problem with this method of transmitting info
-						parent.addMessage( new Message(message, p) );
+						parent.addMessage( new Message(null, p, message) );
 						//return message;
 					}
 
@@ -468,13 +465,15 @@ public class ProgramInterpreter {
 				}
 				else if( functionName.equals("equip") ) {
 					// {equip:player, item}
-					
+
+					// TODO items to equip should come out of the character's inventory
 					final Player p = parent.getPlayer(Utils.toInt(params[0], -1));
-					final Item i = parent.getItem(Utils.toInt(params[1], -1));
+					final Item i = database.getItem(Utils.toInt(params[1], -1));
 
 					if( p != null && i != null ) {
 						// equip the specified item
-						p.equip(i, "none");
+						// TODO implement programmatic equip
+
 						// change location?
 						p.getInventory().remove(i);
 					}
@@ -483,7 +482,7 @@ public class ProgramInterpreter {
 				}
 				else if( functionName.equals("or") ) {
 					// {or:<condition1>,<condition2>}
-					
+
 					if( params[0].equals(TRUE) || params[1].equals(TRUE) ) {
 						return TRUE;
 					}
@@ -491,33 +490,33 @@ public class ProgramInterpreter {
 						return FALSE;
 					}
 				}
-				else if( functionName.equals("write") ) {
+				/*else if( functionName.equals("write") ) {
 					// {write:message, player}
-					
+
 					final String message = params[0];
 					final Player p = parent.getPlayer(Utils.toInt(params[1], -1));
 
 					if( message != null && p != null ) {
 						player.getClient().write( message );
 					}
-					
+
 					return "";
 				}
 				else if( functionName.equals("writeln") ) {
 					// {writeln:message, player}
-					
+
 					final String message = params[0];
 					final Player p = parent.getPlayer(Utils.toInt(params[1], -1));
 
 					if( message != null && p != null ) {
 						player.getClient().writeln( message );
 					}
-					
+
 					return "";
-				}
+				}*/
 				else { return "PGM: No such function! ( " + functionName + " )"; }
 			}
-			
+
 			// Functions that take 3 parameters
 			else if( params.length == 3 ) {
 				if( debug_enabled ) {
@@ -528,7 +527,7 @@ public class ProgramInterpreter {
 
 				if( functionName.equals("if") ) {
 					// {if: test condition, true: do this, false: do this}
-					
+
 					final String result = interpret(params[0], player, object);
 
 					if( debug_enabled ) System.out.println("result: " + result);
@@ -541,21 +540,21 @@ public class ProgramInterpreter {
 						return interpret(params[2], player, object);
 					}
 				}
-				else if( functionName.equals("set") ) {
-					// {set: propname, object, value }
-					
+				else if( functionName.equals("store") ) {
+					// {store: propname, object, value }
+
 					final String property = params[0];
 					final int dbref = Utils.toInt(params[1], -1);
 
-					final MUDObject object1 = parent.getObject(dbref);
+					final MUDObject object1 = database.getById(dbref);
 
 					final String value = params[2];
 
 					if( object1 != null ) {
 						if( debug_enabled ) System.out.println("Object: " + object1.getName());
-						
+
 						object1.setProperty(property, value);
-						
+
 						return "" +  object1.getProperty(property);
 					}
 					else return "";
@@ -563,31 +562,21 @@ public class ProgramInterpreter {
 				else if( functionName.equals("with") ) {
 					String result = "";
 					
-					if( use_vars ) {
-						final String varName = params[0];
-						final String varValue = params[1];
-						
-						vars.put(varName, varValue);
-						
-						result = interpret(params[2], player, object);
-						
-						vars.remove(varName);
-					}
-					else {
-						result = interpret(params[2], player, object);
-					}
-					
+					final String varName = params[0];
+					final String varValue = params[1];
+
+					addVar(varName, varValue);
+
+					result = interpret(params[2], player, object);
+
+					delVar(varName);
+
 					return result;
 				}
-				/*else if( functionName.equals("call" ) ) {
-					if( debug_enabled ) System.out.println("got to CALL");
-					
-					return call( params[0], params[1], params[2] );
-				}*/
 
 				return "";
 			}
-			
+
 			// functions that take some arbitrary number of parameters
 			else {
 				if( functionName.equals("distance") ) {
@@ -617,7 +606,7 @@ public class ProgramInterpreter {
 						temp = interpret(param, player, object);
 
 						if( debug_enabled ) System.out.println("(DO) Result: " + temp);
-						
+
 						if( temp.equals(ERROR) ) {
 							return ""; // return early if we encounter an error
 						}
@@ -628,7 +617,6 @@ public class ProgramInterpreter {
 				else { return "PGM: No such function!"; }
 			}
 		}
-		
 		else {
 			switch(functionName) {
 			case "{&arg}":
@@ -648,73 +636,110 @@ public class ProgramInterpreter {
 			case "{colors}":
 				return "Incomplete function statement, no inputs!";
 			default:
-				if( use_vars ) {
-					//String temp = functionName.replace("{", "").replace("}", "").replace("&", "");
-					String varName = functionName.substring(1, functionName.length() - 1).replace("&", "");
-					
-					String value = vars.get(varName);
+				String temp = functionName.substring(1, functionName.length() - 1);
+				
+				//if( functionName.startsWith("&") ) {
+				if( temp.startsWith("&") ) {
+					final String varName = temp.substring(1);
+					final String value = this.vars.get(varName);
 
 					if( value != null ) {
 						return value;
 					}
-					else return "";					
+					else return "";
 				}
 				else return functionName;
 			}
 		}
 	}
-
-	// TODO fix this, this is low quality function checking
-	private static boolean isFunction(final String s) {
-		boolean isFunction = false;
+	
+	/* Functions */
+	private String list(final String listName, final Integer objDBREF) {
+		// {list:listname}
+		// {list:listname,obj} 
+		// propname#/?
+		final MUDObject object = database.getById(objDBREF);
 		
-		if( s.startsWith("{") && s.endsWith("}") && Utils.countNumOfChar(s, ':') == 1 ) {
-			if( Utils.countNumOfChar(s, '{') == Utils.countNumOfChar(s, '}') ) {
-				isFunction = true;
+		if( object != null ) {
+			if( listName.endsWith("#/") && propdir(listName, objDBREF).equals(TRUE) ) {
+				final Map<String, String> props = object.getProperties(listName);
+				
+				final String[] strings = new String[props.size()];
+
+				for(final String name : props.keySet()) {
+					String temp = name.substring( name.indexOf('/') + 1 );
+					
+					int n = Utils.toInt(temp, -1);
+					
+					if( n != -1 ) {
+						strings[n - 1] = props.get(name);
+					}
+				}
+				
+				final StringBuilder sb = new StringBuilder();
+				
+				for(final String s : strings) {
+					sb.append(s).append('\n');
+				}
+				
+				return sb.toString();
 			}
 		}
 		
-		return isFunction;
+		return "";
 	}
-
-	/**
-	 * isValidScript
-	 * 
-	 * Checks to see if the provided script is terminated by curly
-	 * brackets and if all curly brackets have a matching end to their
-	 * start.
-	 * 
-	 * @param script
-	 * @return
-	 */
-	public boolean isValidScript(final String script) {
-		if (script.startsWith("{") && script.endsWith("}")) {
-			final int numLeftBrace = Utils.countNumOfChar(script, '{');
-			final int numRightBrace = Utils.countNumOfChar(script, '}');
-
-			if( numLeftBrace != 0 && numRightBrace != 0 && numLeftBrace == numRightBrace ) {
-				return true;
+	
+	//{list:listname,obj}
+	private void lexec(final String listName, final Integer objDBREF) {
+		final MUDObject object = database.getById(objDBREF);
+		
+		if( object != null ) {
+			if( propdir(listName, objDBREF).equals(TRUE) ) {
 			}
 		}
-
-		return false;
 	}
+	
+	// {prop:name, object}
+	// throws PermissionException
+	private String prop(final String propName, final Integer objDBREF) {
+		final MUDObject object1 = database.getById(objDBREF);
 
-	public void exec(final Script script) {
-		exec(script, null);
+		if( object1 != null ) {
+			if( debug_enabled ) System.out.println("Object1: " + object1.getName());
+
+			return "" +  object1.getProperty(propName);
+		}
+		else return "";
 	}
-
-	public void exec(final Script script, final Client client) {
-		interpret( script, parent.getPlayer(client), null );
+	
+	private String propdir(final String propName, final Integer objDBREF) {
+		String retval;
+		
+		final MUDObject object = database.getById(objDBREF);
+		
+		if( object != null ) {
+			Map<String, String> propdir = object.getProperties(propName);
+			
+			if( propdir != null && propdir.size() > 0) retval = TRUE;
+			else                                       retval = FALSE;
+			
+		}
+		else retval = FALSE;
+		
+		return retval;
 	}
-
+	
+	private static void fixParams(final List<String> params) {
+		ProgramInterpreter.fixParams(params, false);
+	}
+	
 	/**
 	 * Fix incorrect breaks in parameters due to splitting on commas
 	 * 
 	 * TODO should this be private, public or ?
 	 * @param params
 	 */
-	private void fixParams(final List<String> params) {
+	private static void fixParams(final List<String> params, boolean debug) {
 		boolean done = false; // are we done fixing any incorrect breaks
 
 		int leftCurlyCount = 0;
@@ -723,12 +748,7 @@ public class ProgramInterpreter {
 		int index = 0;    // index of the param we started fixing at
 		int offset = 0;
 		String temp = "";
-		
-		// TODO fix kludge to hide debug info inside fixParams..
-		boolean old_debug = debug_enabled;
-		
-		debug_enabled = (old_debug) ? false : old_debug;
-		
+
 		// while we haven't run out of parameters to process
 		while( index < params.size() - 1 ) {
 			int count = 0; // counter that is is used to place a number next to params as we print them out
@@ -738,21 +758,21 @@ public class ProgramInterpreter {
 			offset = 0;
 
 			// List Parameters
-			if( debug_enabled ) {
+			if( debug ) {
 				System.out.println("---");
 				System.out.println("Params: ");
 			}
 
 			for(final String s : params) {
-				if( debug_enabled ) System.out.println(count + " " + s);
-				
+				if( debug ) System.out.println(count + " " + s);
+
 				count++;
 			}
 
 			// grab the parameter at the current index
 			temp = params.get(index);
 
-			if( debug_enabled ) {
+			if( debug ) {
 				System.out.println("---");
 				System.out.println("Temp: " + temp);
 			}
@@ -761,7 +781,7 @@ public class ProgramInterpreter {
 				leftCurlyCount = Utils.countNumOfChar(temp, '{');
 				rightCurlyCount = Utils.countNumOfChar(temp, '}');
 
-				if( debug_enabled ) {
+				if( debug ) {
 					System.out.println("lcc: " + leftCurlyCount);
 					System.out.println("rcc: " + rightCurlyCount);
 					System.out.println("offset: " + offset);
@@ -771,16 +791,16 @@ public class ProgramInterpreter {
 				if( leftCurlyCount != rightCurlyCount ) {
 					offset++;                                       // increase offset
 					temp = temp + "," + params.get(index + offset); // pull in the next param in initial list
-					
-					if( debug_enabled ) System.out.println("TEMP: " + temp);
+
+					if( debug ) System.out.println("TEMP: " + temp);
 				}
 				else {
 					done = true;
-					if( debug_enabled ) System.out.println("Result: " + temp);
+					if( debug ) System.out.println("Result: " + temp);
 				}
 			}
 
-			if( debug_enabled ) {
+			if( debug ) {
 				System.out.println("---");
 				System.out.println("INDEX: " + index);
 			}
@@ -800,8 +820,6 @@ public class ProgramInterpreter {
 				index++;
 			}
 		}
-		
-		debug_enabled = (old_debug) ? true : false;
 
 		/*for(int i = 0; i < params.size(); i++) {
 			//leftCurlyCount = Utils.count(params.get(i), '{');
@@ -822,60 +840,96 @@ public class ProgramInterpreter {
 			//}
 		}*/
 	}
-	
-	/**
-	 * Add a variable to the interpreter's vars.
-	 * 
-	 * @param name  String variable name
-	 * @param value String variable value
-	 */
-	public void addVar(final String name, final String value) {
-		this.vars.put(name, value);
-	}
-	
-	/**
-	 * Set an -existing- variable in the interpreter's vars
-	 * to a new value.
-	 * 
-	 * @param name     String variable name
-	 * @param newValue String variable value
-	 * @return
-	 */
-	public boolean setVar(final String name, final String newValue) {
-		return (this.vars.replace(name, newValue) != null);
-	}
-	
-	/**
-	 * Remove a variable from the interpreter's vars.
-	 * 
-	 * @param name String variable name
-	 */
-	public void delVar(final String name) {
-		this.vars.remove(name);
-	}
 
-	// TODO: what exactly is this supposed to do?
-	/*private String call(final String functionName, final String...params) {
-		return interpret("{" + functionName + ":" + params[0] + "," + params[1] + "}", null, null);
-		
-		switch(functionName) {
-		case "colors":
-			if( debug_enabled ) {
-				System.out.println("CALL");
-				System.out.println(functionName);
-				System.out.println(params[0]);
-				System.out.println(params[1]);
+	// TODO fix this, this is low quality function checking
+	private static boolean isFunction(final String s) {
+		boolean isFunction = false;
+
+		if( s.startsWith("{") && s.endsWith("}") && Utils.countNumOfChar(s, ':') == 1 ) {
+			if( Utils.countNumOfChar(s, '{') == Utils.countNumOfChar(s, '}') ) {
+				isFunction = true;
 			}
-
-			String result = parent.colors( params[0], params[1] );
-
-			if( debug_enabled ) System.out.println(result);
-
-			return result;
-		default:
-			break;
 		}
 
-		return "";
-	}*/
+		return isFunction;
+	}
+
+	/**
+	 * isValidScript
+	 * 
+	 * Checks to see if the provided script is terminated by curly
+	 * brackets and if all curly brackets have a matching end to their
+	 * start.
+	 * 
+	 * @param script
+	 * @return
+	 */
+	private static boolean isValidScript(final String script) {
+		if (script.startsWith("{") && script.endsWith("}")) {
+			final int numLeftBrace = Utils.countNumOfChar(script, '{');
+			final int numRightBrace = Utils.countNumOfChar(script, '}');
+
+			if( numLeftBrace != 0 && numRightBrace != 0 && numLeftBrace == numRightBrace ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * lex
+	 * 
+	 * break the input into tokens
+	 * 
+	 * NOTE: not currently used
+	 * 
+	 * @param input
+	 * @return
+	 */
+	public static List<String> lex(final String input) {
+		List<String> tokens = new LinkedList<String>();
+
+		StringBuilder sb = new StringBuilder();
+
+		boolean token_found = false;
+
+		for(final char ch : input.toCharArray()) {
+			switch(ch) {
+			case '{': token_found = true; break;
+			case '}': token_found = true; break;
+			case '(': token_found = true; break;
+			case ')': token_found = true; break;
+			case ':': token_found = true; break;
+			case ',': token_found = true; break;
+			default:  break;
+			}
+
+			if( token_found ) {
+				if(sb.length() > 0) {
+					tokens.add(sb.toString());
+					sb.delete(0, sb.length());
+				}
+
+				tokens.add("" + ch);
+
+				token_found = false;
+			}
+			else sb.append(ch);
+		}
+
+		/*if( debug_enabled ) {
+				for( final String token : tokens) {
+					System.out.println(token);
+				}
+
+				//System.out.println("Tokens: " + tokens);
+			}*/
+
+		for( final String token : tokens) {
+			System.out.println(token);
+		}
+
+		return tokens;
+	}
 }

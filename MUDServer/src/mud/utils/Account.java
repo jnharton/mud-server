@@ -13,16 +13,14 @@ package mud.utils;
 import java.io.Serializable;
 
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Collections;
+import java.util.Hashtable;
 import java.util.List;
-import java.util.Locale;
-import java.util.TimeZone;
+import java.util.Map;
 
 import mud.net.Client;
 import mud.objects.Player;
 
-//public class MUDAccount
 public class Account implements Serializable {
 	/**
 	 * 
@@ -66,31 +64,41 @@ public class Account implements Serializable {
 	 */
 
 	// static constants
-	public static enum Status { ACTIVE, INACTIVE, SUSPENDED, FROZEN, LOCKED, ARCHIVED };
+	public static enum Status { ACTIVE, INACTIVE, DISABLED, SUSPENDED, FROZEN, ARCHIVED };
+	
+	public static final Map<Status, String> msgmap = new Hashtable<Status, String>();
+	
+	{
+		msgmap.put(Status.INACTIVE,  "That account is inactive.");
+		msgmap.put(Status.DISABLED,  "That account is disabled.");
+		msgmap.put(Status.SUSPENDED, "That account has been suspended.");
+		msgmap.put(Status.FROZEN,    "That account has been frozen");
+		msgmap.put(Status.ARCHIVED,  "That account has been archived.");
+	}
+	
 	/*
 	 * Active    - normal state
 	 * Inactive  - haven't been played recently, flagged as inactive
+	 * Disabled  - locked out/protected, can't login, possibly to deal with hacked accounts
 	 * Suspended - temporarily banned or suspended for the time being for behavioral infractions
 	 * Frozen    - permanently banned and not yet purged (PURGE)
-	 * Locked    - locked out and cannot be logged into (for instance, in the case of a hacked account)
-	 * Archived  - archived after 3-6 months of being inactive (inactive timer reset whenever a successful login occurs)
+	 * Archived  - archived (for inactivity, 3-6 months?)
 	 */
 	
-	/* passive properties (might be modified, but not frequently) */
-	private final Date created; // creation date
-	private Date modified;      // modification date (when any of these passive properties were last modified)
-	private Date archived;      // archival date (null, unless account was archived; if unarchived, then when it was last archived)
+	/* passive properties (generally don't change) */
+	private final Date created;    // creation date
+	private Date modified;         // modification date (when any of these properties were last modified)
+	private Date archived;         // archival date (null, unless account is archived)
 	
-	private final int id;    // id
-	private Status status;   // status
-	private String username; // username
-	private String password; // password
+	private Status status;         // status
+	
+	private final int id;          // id
+	private final String username; // username
+	private String password;       // password
 	
 	private int charLimit = 3;     // character limit
 	
-	private boolean disabled = false;
-	
-	private String lastIPAddress;
+	private String lastIPAddress; //
 
 	/* active properties (current state) */
 	private transient ArrayList<Player> characters; // all the characters that exist for an account
@@ -104,26 +112,18 @@ public class Account implements Serializable {
 	 * 
 	 * @param aId
 	 */
-	public Account(int aId) {
+	public Account(final int aId, final String aUsername, final String aPassword, final int aCharLimit) {
 		this.id = aId;
 		this.status = Status.ACTIVE;
 		
-		final Date newDate = Account.getDate();
+		final Date newDate = Utils.getDate();
 
 		this.created = new Date(newDate);
 		this.modified = new Date(newDate);
 		this.archived = null;
-	}
-
-	/**
-	 * 
-	 * @param aId
-	 */
-	public Account(int aId, String aUsername, String aPassword, int aCharLimit) {
-		this(aId);
 
 		this.username = aUsername;
-		this.password = aPassword;
+		this.password = Utils.hash(aPassword);
 		
 		this.charLimit = aCharLimit;
 		this.characters = new ArrayList<Player>(aCharLimit);
@@ -207,16 +207,7 @@ public class Account implements Serializable {
 	private void setArchived(final Date archiveDate) {
 		this.archived = archiveDate;
 	}
-
-	/**
-	 * get the account id
-	 * 
-	 * @return int
-	 */
-	public int getId() {
-		return this.id;
-	}
-
+	
 	/**
 	 * Get account status
 	 * 
@@ -234,7 +225,16 @@ public class Account implements Serializable {
 	public void setStatus(final Status newStatus) {
 		this.status = newStatus;
 		
-		setModified( Account.getDate() );
+		setModified( Utils.getDate() );
+	}
+	
+	/**
+	 * get the account id
+	 * 
+	 * @return int
+	 */
+	public int getId() {
+		return this.id;
 	}
 	
 	/**
@@ -263,7 +263,7 @@ public class Account implements Serializable {
 	public void setPassword(final String newPassword) {
 		this.password = newPassword;
 		
-		setModified( Account.getDate() );
+		setModified( Utils.getDate() );
 	}
 	
 	public Integer getCharLimit() {
@@ -273,29 +273,17 @@ public class Account implements Serializable {
 	public void setCharLimit(final Integer newCharLimit) {
 		this.charLimit = newCharLimit;
 		
-		setModified( Account.getDate() );
-	}
-	
-	public void disable() {
-		this.disabled = true;
-	}
-	
-	public void enable() {
-		this.disabled = false;
-	}
-	
-	public boolean isDisabled() {
-		return this.disabled;
+		setModified( Utils.getDate() );
 	}
 	
 	public String getLastIPAddress() {
 		return this.lastIPAddress;
 	}
 	
-	/*public void setLastIPAddress(final String ipAddress) {
+	public void setLastIPAddress(final String ipAddress) {
 		this.lastIPAddress = ipAddress;
-	}*/
-
+	}
+	
 	/**
 	 * Link an existing character to this account
 	 * 
@@ -304,12 +292,12 @@ public class Account implements Serializable {
 	public boolean linkCharacter(final Player newCharacter) {
 		boolean success = false;
 		
-		if( this.characters.size() < charLimit ) {
+		if( this.characters.size() < this.charLimit ) {
 			//this.playerIds.add(newCharacter.getDBRef());
 			success = this.characters.add(newCharacter);
 			
 			if( success ) {
-				setModified( Account.getDate() );
+				setModified( Utils.getDate() );
 			}
 		}
 
@@ -329,7 +317,7 @@ public class Account implements Serializable {
 			success = this.characters.remove(currCharacter);
 			
 			if( success ) {
-				setModified( Account.getDate() );
+				setModified( Utils.getDate() );
 			}
 		}
 
@@ -354,7 +342,9 @@ public class Account implements Serializable {
 	 * @param tClient
 	 */
 	public void setClient(final Client newClient) {
-		if( newClient == null ) this.lastIPAddress = this.client.getInput();
+		if( this.client != null && newClient == null ) {
+			this.lastIPAddress = this.client.getInput();
+		}
 		
 		this.client = newClient;
 	}
@@ -378,45 +368,8 @@ public class Account implements Serializable {
 	public void setOnline(boolean online) {
 		this.online = online;
 	}
-
-	/*public boolean isOnline() {
-		return online;
-	}*/
-
-	public String isOnline() {
-		if( online ) {
-			return "Yes";
-		}
-		else {
-			return "No";
-		}
-	}
 	
-	public String display() {
-		String username = Utils.padRight(getUsername(), 8);
-		String id = Utils.padRight(String.valueOf(getId()), 6);
-		
-		String name;
-		
-		if (player != null) name = Utils.padRight(player.getName(), 40);
-		else                name = Utils.padRight("- No Player -", 40);
-		
-		String state = Utils.padRight(isOnline(), 6);
-		String creationDate = Utils.padRight(created.toString(), 10);
-
-		return username + " " + id + " " + name + " " + state + " " + creationDate;
-	}
-	
-	private static Date getDate() {
-		// TODO should I get the timezone and local as separate variables first? should they use the default?
-		
-		//final Calendar calendar = Calendar.getInstance(tz, lc);
-		final Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("America/New_York"), new Locale("ENGLISH", "US"));
-		
-		int month = calendar.get(Calendar.MONTH);
-		int day = calendar.get(Calendar.DATE);
-		int year = calendar.get(Calendar.YEAR);
-				
-		return new Date(month, day, year);
+	public boolean isOnline() {
+		return this.online;
 	}
 }

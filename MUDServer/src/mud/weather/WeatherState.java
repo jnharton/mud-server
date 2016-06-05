@@ -14,8 +14,8 @@ package mud.weather;
  */
 public class WeatherState
 {
-	public String name;                      // name/type of weather state
-	public String description;               // description of the weather state
+	private String name;                     // name/type of weather state
+	private String description;              // description of the weather state
 	public String transDownText;             // the text describing the weather shift if it transitioned down to this
 	public String transUpText;               // the text describing the weather shift if it transitions up to this
 	
@@ -44,11 +44,16 @@ public class WeatherState
 		return this.name;
 	}
 	
-	public double getTransDownProb() {
-		return this.TransitionDownProbability;
+	public String getDescription() {
+		return this.description;
 	}
 	
-	public void toJSON() {
+	public void setDescription(final String newDescription) {
+		this.description = newDescription;
+	}
+	
+	public double getTransDownProb() {
+		return this.TransitionDownProbability;
 	}
 	
 	public String toString() {

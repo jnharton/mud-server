@@ -7,7 +7,7 @@ import java.util.List;
  * note: all interface methods are by default abstract
  */
 public interface Device {
-	enum DeviceType { PIPBUCK, PWR_ARMOR, PRINTER, TERMINAL };
+	public enum DeviceType { PIPBUCK, POWER_ARMOR, PRINTER, TERMINAL };
 
 	public String getDeviceName();
 	public DeviceType getDeviceType();

@@ -4,9 +4,9 @@ import java.util.List;
 
 import mud.Command;
 import mud.Constants;
-import mud.MUDServer;
 import mud.net.Client;
 import mud.objects.Player;
+import mud.utils.MudUtils;
 import mud.utils.Utils;
 
 /*
@@ -50,7 +50,7 @@ public class WhereCommand extends Command {
 				String locString;
 				if (player.hasEffect("invisibility")) { locString = "INVISIBLE"; }
 				else { locString = room + " (#" + player.getLocation() + ")"; }
-				String idle = player.getIdleString();
+				String idle = MudUtils.getIdleString( player.getIdleTime() );
 				
 				
 				// example output:

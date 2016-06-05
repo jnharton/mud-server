@@ -40,68 +40,47 @@ public class Thing extends MUDObject {
 	 * 
 	 */
 	
-	public ThingType thing_type = ThingType.NONE;
+	public ThingType thing_type = ThingTypes.NONE;
 	
-	public Hashtable<String, String> attributes; 
+	public Hashtable<String, String> attributes;
 	
-	public ArrayList<Item> contents = null;
+	public int durability = 20;
 	
 	// triggers
 	public Trigger onUse;
 	
 	public Thing(int tempDBREF) {
 		super(tempDBREF);
+		
 		this.type = TypeFlag.THING;
+		
 		this.attributes = new Hashtable<String, String>();
 	}
 	
-	public Thing(String name) {
-		super(-1);
-		this.type = TypeFlag.THING;
-		this.flags = EnumSet.noneOf(ObjectFlag.class);
-		this.name = name;
-		this.location = -1;
-		attributes = new Hashtable<String, String>();
-	}
-	
-	public Thing(String name, String desc) {
-		this(name);
-		this.type = TypeFlag.THING;
-		this.desc = desc;
-	}
-	
-	/*public Thing(boolean isContainer) {
-		this.type = TypeFlag.THING;
-		if( isContainer ) {
-			this.contents = new ArrayList<Item>();
-		}
+	public Thing(final String name) {
+		super(-1, name, "");
 		
-		attributes = new Hashtable<String, String>();
-	}*/
-
-	// usual constructor
-	public Thing(final int tempDBRef, final String tempName, final EnumSet<ObjectFlag> tempFlags, final String tempDesc, final int tempLoc)
+		this.type = TypeFlag.THING;
+		
+		this.attributes = new Hashtable<String, String>();
+	}
+	
+	//public Thing(int tempDBREF, final String name, final String desc) {
+	public Thing(final String name, final String desc) {
+		super(-1, name, desc);
+		
+		this.type = TypeFlag.THING;
+		
+		this.attributes = new Hashtable<String, String>();
+	}
+	
+	public Thing(final int dbref, final String name, final EnumSet<ObjectFlag> flags, final String description, final int location)
 	{
-		super(tempDBRef, tempName, tempFlags, tempDesc, tempLoc);
+		super(dbref, name, flags, description, location);
+		
 		this.type = TypeFlag.THING;
-		/*
-		// Set the name
-		this.name = tempName;
-		// Set the description to the default
-		this.desc = tempDesc;
-		// Set the flags
-		this.flags = tempFlags;
-		// Set the locks
-		this.locks = "";
-		// Set the dbref (database reference)
-		this.dbref = tempDBRef;
-		// Set the location
-		this.location = tempLoc;
-		*/
 		
 		this.attributes = new Hashtable<String, String>();
-		
-		this.contents = new ArrayList<Item>();
 	}
 	
 	public void setScriptOnTrigger(TriggerType type, String script) {
@@ -131,13 +110,13 @@ public class Thing extends MUDObject {
 	public String toDB() {
 		String[] output = new String[6];
 		
-		output[0] = this.getDBRef() + "";                // database reference number
-		output[1] = this.getName();                      // name
-		output[2] = TypeFlag.asLetter(this.type) + "";   // flags
-		output[2] = output[2] + getFlagsAsString();
-		output[3] = this.getDesc();                      // description
-		output[4] = this.getLocation() + "";             // location (a.k.a parent)
-		output[5] = this.thing_type.ordinal() + "";      // thing type
+		output[0] = this.getDBRef() + "";           // database reference number
+		output[1] = this.getName();                 // name
+		output[2] = type + getFlagsAsString();      // flags
+		output[3] = this.getDesc();                 // description
+		output[4] = this.getLocation() + "";        // location
+		
+		output[5] = this.thing_type.getId() + "";   // thing type
 		
 		return Utils.join(output, "#"); 
 	}
