@@ -94,7 +94,7 @@ public final class FOESpecial implements SpecialRuleset {
 
 	@Override
 	public PClass[] getClasses() {
-		return null;
+		return new PClass[0];
 	}
 	
 	@Override

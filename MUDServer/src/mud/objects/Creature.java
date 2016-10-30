@@ -1,6 +1,5 @@
 package mud.objects;
 
-import mud.Constants;
 import mud.MUDObject;
 import mud.ObjectFlag;
 import mud.TypeFlag;
@@ -162,6 +161,7 @@ public class Creature extends MUDObject implements Mobile {
 	 */
 	public String toDB() {
 		String[] output = new String[10];                // used to be 8
+		
 		output[0] = this.getDBRef() + "";                // creature database reference number
 		output[1] = this.getName();                      // creature name
 		output[2] = TypeFlag.asLetter(this.type) + "";   // flags
@@ -172,17 +172,7 @@ public class Creature extends MUDObject implements Mobile {
 		output[6] = "*";                                 //
 		output[7] = "*";                                 //
 		output[8] = "*";                                 //
+		
 		return Utils.join(output, "#");
-	}
-	
-	public String toJSON() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public Creature fromJSON() {
-		// TODO Auto-generated method stub
-		return null;
 	}
 }

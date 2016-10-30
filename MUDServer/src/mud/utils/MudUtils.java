@@ -317,6 +317,7 @@ public final class MudUtils {
 	/**
 	 * Find the Item with the specified name in the list of Items provided, if
 	 * it's there.
+	 * 
 	 * @param itemName
 	 * @param items
 	 * 
@@ -325,9 +326,10 @@ public final class MudUtils {
 	public static Item findItem(final String itemName, final List<Item> items) {
 		/** Extracted from MUDServer **/
 		final String arg = itemName;
-
-		if (items.size() == 0) return null;
-
+		final String arg_lc = arg.toLowerCase();
+		
+		Item item = null;
+		
 		for (final Item item1 : items) {
 			// if there is a name or dbref match from the argument in the inventory
 			// if the item name exactly equals the arguments or the name
@@ -335,19 +337,9 @@ public final class MudUtils {
 			// if the dbref is correct
 
 			final String name = item1.getName();
+			final String name_lc = name.toLowerCase();
 			
-			final List<String> components = Arrays.asList(item1.getName().toLowerCase().split(" "));
-
-			String name_lc = name.toLowerCase();
-			String arg_lc = arg.toLowerCase();
-			
-			/*
-			debug("Argument:              " + arg);
-			debug("Name:                  " + name);
-			debug("Argument (Lower Case): " + arg_lc);
-			debug("Name (Lower Case):     " + name_lc);
-			debug("Components:            " + components);
-			*/
+			final List<String> components = Arrays.asList(name_lc.split(" "));
 			
 			System.out.println("Argument:              " + arg);
 			System.out.println("Name:                  " + name);
@@ -356,17 +348,14 @@ public final class MudUtils {
 			System.out.println("Components:            " + components);
 
 			/*
-			 * 1) is the name the same as ARG (ignoring case -- setting both
-			 * name and arg to lowercase) 2) does the name start with ARG
-			 * (ignoring case -- setting both name and arg to lowercase) 3) does
-			 * the name end with ARG (ignoring case -- setting both name and arg
-			 * to lowercase) 4) does the name contain ARG (ignoring case --
-			 * setting both name and arg to lowercase) 5) is any component of
-			 * the name the same as the arg (continues non-whitespace separated
-			 * segments)
+			 * 1) is the name the same as ARG (ignoring case -- setting both name and arg to lowercase)
+			 * 2) does the name start with ARG (ignoring case -- setting both name and arg to lowercase)
+			 * 3) does the name end with ARG (ignoring case -- setting both name and arg to lowercase)
+			 * 4) does the name contain ARG (ignoring case -- setting both name and arg to lowercase)
+			 * 5) is any component of the name the same as the arg (continues non-whitespace separated segments)
 			 */
 
-			boolean sameName = name.equalsIgnoreCase(arg);
+			boolean sameName = name.equalsIgnoreCase(arg) || name_lc.equals(arg_lc);
 			boolean startsWith = name_lc.startsWith(arg_lc);
 			boolean endsWith = name_lc.endsWith(arg_lc);
 			boolean nameContains = name_lc.contains(arg_lc);
@@ -374,23 +363,24 @@ public final class MudUtils {
 
 			boolean test = false;
 
-			for (String s : components) {
-				for (String s1 : Arrays.asList(arg.toLowerCase().split(" "))) {
+			for (final String s : components) {
+				for (final String s1 : Arrays.asList(arg.toLowerCase().split(" "))) {
 					if (s.contains(s1)) test = true;
 					break;
 				}
 			}
-
+			
 			// for string in A, is A.S a substring of string name N.S
-			if (sameName || startsWith || endsWith || nameContains || compsContain || test) {
-				//debug(itemName + " true");
+			if ( sameName || startsWith || endsWith || nameContains || compsContain || test ) {
 				System.out.println(itemName + " true");
 
-				return item1;
+				item = item1;
+				
+				break;
 			}
 		}
 
-		return null;
+		return item;
 	}
 	
 	/**
@@ -402,21 +392,21 @@ public final class MudUtils {
 	 * @return
 	 */
 	public static Item findItem(final Integer itemDBRef, final List<Item> items) {
-		if (items.size() == 0)
-			return null;
+		Item item = null;
 
 		for (final Item item1 : items) {
 			final String itemName = item1.getName();
 
-			if (item1.getDBRef() == itemDBRef) {
-				//debug(itemName + " true");
+			if ( item1.getDBRef() == itemDBRef ) {
 				System.out.println(itemName + " true");
 
-				return item1;
+				item = item1;
+				
+				break;
 			}
 		}
 
-		return null;
+		return item;
 	}
 	
 	public static List<MUDObject> filter(final List<MUDObject> objects, final TypeFlag tf) {

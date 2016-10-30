@@ -13,8 +13,8 @@ import java.util.Scanner;
 import mud.Constants;
 import mud.ObjectFlag;
 import mud.foe.misc.Device;
+import mud.foe.misc.File;
 import mud.foe.misc.FileSystem;
-import mud.foe.misc.FileSystem.File;
 import mud.foe.misc.IODevice;
 import mud.foe.misc.Port;
 import mud.foe.misc.User;
@@ -262,6 +262,27 @@ public class Terminal extends Thing implements IODevice {
 			this.devices = new Hashtable<Device, Port>();
 
 			this.fs = new FileSystem();
+			
+			this.fs.newDir("/bin");
+			this.fs.newDir("/boot");
+			this.fs.newDir("/dev");
+			this.fs.newDir("/lib");
+			this.fs.newDir("/mnt");
+			this.fs.newDir("/opt");
+			this.fs.newDir("/users");
+			this.fs.newDir("/root");
+			this.fs.newDir("/sbin");
+			this.fs.newDir("/system");
+			this.fs.newDir("/tmp");
+			
+			// TODO fix kludge, write code inserts a / in between dir and filename which borks a file called '/'
+			String[] data = new String[] {
+					"/bin", "/boot", "/dev", "/lib", "/mnt",
+					"/opt", "/users", "/root", "/sbin", "/system",
+					"/tmp" };
+			
+			this.fs.write("/", data, 'a');
+			
 			this.users = new Hashtable<String, User>();
 
 			// initialize input and output 
@@ -454,16 +475,25 @@ public class Terminal extends Thing implements IODevice {
 				}
 			}
 			else if( cmd.equalsIgnoreCase("cd") ) {
-				if( current_dir.equals("/") ) {
-					if( !arg.equals("") && !arg.startsWith("../") ) {
-						if( fs.hasDir(arg) ) current_dir = current_dir + arg;
-						else                 writeToScreen( "Invalid Directory." );
-					}
-				}
-				else if( arg.equals("..") ) current_dir = "/";
-				else if( arg.equals(".") )  current_dir = "/" + current_user + "/";
+				String new_dir = "";
 
-				writeToScreen( "Changed directory to " + current_dir );
+				if( arg.equals("~") )          new_dir = "/users/" + current_user + "/";
+				else if( arg.equals("..") ) {
+					int n = current_dir.lastIndexOf('/');
+
+					// path: /users/stormy/stuff
+					// cd ..
+
+					if( n!= -1 ) new_dir = current_dir.substring(0, n);
+				}
+				else if( arg.startsWith("/") ) new_dir = arg;
+				else                           new_dir = current_dir + "/" + arg;
+
+				if( fs.hasDir(new_dir) ) {
+					current_dir = new_dir;
+					writeToScreen( "Changed directory to " + current_dir );
+				}
+				else writeToScreen( "Invalid Directory." );
 			}
 			else if ( cmd.equalsIgnoreCase("new") ) {
 				// commence edit session?
@@ -506,9 +536,11 @@ public class Terminal extends Thing implements IODevice {
 					for(String dirName : dirs) {
 						writeToScreen( "D " + dirName);
 					}*/
-						for(final String fileName : fs.files.keySet()) {
-							final File file = fs.files.get(fileName);
-
+						final File dir = this.fs.getDirectory(current_dir);
+						
+						for(final String fileName : dir.getContents()) {
+							final File file = this.fs.getFile(current_dir, fileName);
+							
 							if( file.isDir ) writeToScreen( "D " + fileName + "\n" );
 							else             writeToScreen( "F " + fileName + "\n" );
 						}
@@ -520,10 +552,19 @@ public class Terminal extends Thing implements IODevice {
 				clearScreen();
 			}
 			else if( cmd.equalsIgnoreCase("mkdir") ) {
-				boolean newDirCreated = fs.newDir(arg);
+				/*boolean newDirCreated = fs.newDir(arg);
 
 				if( newDirCreated ) {
 					writeToScreen( "Created new directory: " + arg );
+				}*/
+				
+				int error = fs.newDir(current_dir + "/" + arg);
+
+				if( error == 0 ) {
+					writeToScreen( "Created new directory: " + arg );
+				}
+				else {
+					writeToScreen( "Error!" );
 				}
 			}
 			else if( cmd.equalsIgnoreCase("logout") ) {
@@ -554,9 +595,9 @@ public class Terminal extends Thing implements IODevice {
 				if( fs.hasFile(current_dir, arg) ) {
 					writeToScreen("Displaying File...");
 
-					final FileSystem.File file = fs.getFile(current_dir, arg);
+					final File file = fs.getFile(current_dir, arg);
 
-					for(String str : file.getContents()) {
+					for(final String str : file.getContents()) {
 						writeToScreen( str );
 					}
 				}
@@ -580,10 +621,24 @@ public class Terminal extends Thing implements IODevice {
 						return code;
 					}
 				}
+				else if( cmd.equalsIgnoreCase("perms") ) {
+					User user = users.get(arg);
+					
+					if( user != null ) {
+						writeToScreen(user.getName() + " has permissions " + user.getPerm());
+					}
+					else {
+						writeToScreen("No such user!");
+					}
+					
+					return code;
+				}
 				else if( cmd.equalsIgnoreCase("users") ) {
 					for(final User user : users.values()) {
 						writeToScreen(user.getName() + "\n");
 					}
+					
+					return code;
 				}
 			}
 
@@ -752,8 +807,13 @@ public class Terminal extends Thing implements IODevice {
 	
 	private void initUser(final String username) {
 		if( this.users.containsKey(username) ) {
-			this.fs.newDir(username);
-			fs.newFile(username, "user_guide", new String[]{ "Using your new Stable-Tec terminal" });
+			this.fs.newDir("/users/" + username);
+			this.fs.write("/users", new String[] { username }, 'a');
+			
+			String path = "/users/" + username;
+			
+			this.fs.newFile(path + "/" + "user_guide", new String[]{ "Using your new Stable-Tec terminal" });
+			this.fs.write(path, new String[] { "user_guide" }, 'a');
 		}
 	}
 	
@@ -763,7 +823,7 @@ public class Terminal extends Thing implements IODevice {
 				this.login_state = Login.LOGGED_IN;
 
 				this.current_user = user;
-				this.current_dir = "/" + user;
+				this.current_dir = "/users/" + user;
 
 				return true;
 			}

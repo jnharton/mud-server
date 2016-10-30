@@ -5,9 +5,9 @@ Syntax: @config <option> <value>
 
 Type    Option    values
 ------- --------- -----------
-STRING  colors    on, off
-STRING  color     ansi, xterm
+STRING  color     on, off
+STRING  colors    ansi, xterm
 INTEGER linelimit 0-?
 STRING  msp       on, off
 
-Last Updated: May 5th, 2016
+Last Updated: September 8th, 2016

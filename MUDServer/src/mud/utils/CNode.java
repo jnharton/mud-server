@@ -11,20 +11,24 @@ public class CNode {
 	private String response;
 	private List<CNode> options;
 	
-	private Script script;
-	
 	public boolean ends = false;
+	
+	private Script script;
 	
 	// player says, npc responds
 	public CNode(final Integer id, final String text, final String response) {
 		this(id, text, response, new ArrayList<CNode>());
 	}
 	
-	public CNode(final Integer id, final String text, final String response, List<CNode> options) {
-		this(id, text, response, options, null);
+	public CNode(final Integer id, final String text, final String response, final List<CNode> options) {
+		this(id, text, response, options, false);
 	}
 	
-	public CNode(final Integer id, final String text, final String response, List<CNode> options, Script script) {
+	public CNode(final Integer id, final String text, final String response, final List<CNode> options, final boolean ends) {
+		this(id, text, response, options, ends, null);
+	}
+	
+	public CNode(final Integer id, final String text, final String response, final List<CNode> options, final boolean ends, Script script) {
 		this.id = id;
 		this.text = text;
 		this.response = response;
@@ -32,7 +36,11 @@ public class CNode {
 		
 		this.script = script;
 		
-		this.ends = false;
+		this.ends = ends;
+	}
+	
+	public CNode(final CNode template) {
+		
 	}
 	
 	public Integer getId() {
@@ -51,6 +59,10 @@ public class CNode {
 		return this.options;
 	}
 	
+	public Script getScript() {
+		return this.script;
+	}
+	
 	public void addOption(final CNode option) {
 		this.options.add(option);
 	}
@@ -61,15 +73,11 @@ public class CNode {
 		}
 	}
 	
-	public void removeOption(final CNode option) {
+	/*public void removeOption(final CNode option) {
 		this.options.remove(option);
 	}
 	
 	public void removeOption(int index) {
 		this.options.remove(index);
-	}
-	
-	public Script getScript() {
-		return this.script;
-	}
+	}*/
 }

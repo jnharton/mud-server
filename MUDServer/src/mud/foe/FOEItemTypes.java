@@ -1,4 +1,3 @@
-
 package mud.foe;
 
 import mud.objects.ItemType;

@@ -10,8 +10,12 @@ package mud.net;
  * changes are made to the one referred to.
  */
 
-import java.io.*;
-import java.net.*;
+import java.io.InputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.net.Socket;
+import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -73,7 +77,7 @@ public class Client implements Runnable {
 			while( running ) {
 				readValue = 0;
 				bytes = 0;
-
+				
 				while( input.available() > 0 ) {
 					// read in a value
 					readValue = input.read();
@@ -226,6 +230,9 @@ public class Client implements Runnable {
 						}
 					}*/
 				}
+				
+				try { Thread.sleep(10); }
+				catch (InterruptedException e) { e.printStackTrace(); }
 			}
 		}
 		catch (final SocketException se) {

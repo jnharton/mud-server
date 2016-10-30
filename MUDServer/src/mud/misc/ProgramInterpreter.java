@@ -73,7 +73,6 @@ public final class ProgramInterpreter {
 	/**
 	 * Add a variable to the interpreter's vars.
 	 * 
-	 * @param name  String variable name
 	 * @param value String variable value
 	 */
 	public void addVar(final String name, final String value) {
@@ -255,8 +254,8 @@ public final class ProgramInterpreter {
 				}
 				else if (functionName.equals("rainbow")) {
 					if( debug_enabled ) System.out.println(params[0]);
-
-					return Utils.rainbow(params[0], Utils.ANSI);
+					
+					return Utils.rainbow(params[0], parent.getColors());
 				}
 				else { return "PGM: No such function!"; }
 				//else { return "Incomplete function statement, no parameters!"; }

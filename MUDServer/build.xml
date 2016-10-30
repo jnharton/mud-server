@@ -34,6 +34,7 @@
         <zip destfile="${dist}/mudserver_${TODAY}.zip" basedir="${build}">
         </zip>
     </target>
+	
     <target name="test">
     	<copy file="README" tofile="${build}/mycopy.txt"/>
     </target>

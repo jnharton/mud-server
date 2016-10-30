@@ -6,11 +6,11 @@ import mud.utils.Data;
 public class RetrieveTask extends Task {
 	public boolean hasItem = false;
 	
-	public RetrieveTask(String tDescription, Room location, Data objectiveData) {
-		super(tDescription, TaskType.RETRIEVE, location);
+	public RetrieveTask(final String tDescription, final Room location, final Data objectiveData) {
+		super(TaskType.RETRIEVE, tDescription, location);
 	}
 
-	private RetrieveTask(RetrieveTask rt) {
+	private RetrieveTask(final RetrieveTask rt) {
 		super(rt);
 		
 		rt.hasItem = false;
@@ -28,9 +28,8 @@ public class RetrieveTask extends Task {
 		}
 		else { this.isComplete = false; }
 	}
-
-	@Override
-	protected Task clone() {
+	
+	protected Task getCopy() {
 		return new RetrieveTask(this);
 	}
 }

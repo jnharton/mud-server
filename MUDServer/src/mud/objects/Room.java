@@ -52,8 +52,7 @@ public class Room extends MUDObject implements EventSource, Instance
 	
 	// x, y - size of the room ( 10x10 default )
 	// z - height of room ( 10 default )
-	private int x = 10, y = 10;
-	private int z = 10;
+	private int x = 10, y = 10, z = 10;
 	
 	private transient Zone zone = null;                     // the zone this room belongs to
 	
@@ -113,6 +112,7 @@ public class Room extends MUDObject implements EventSource, Instance
 		this._listeners = new ArrayList<SayEventListener>();
 		
 		this.triggers = new HashMap<TriggerType, List<Trigger>>();
+		
 		this.triggers.put(TriggerType.onEnter, new LinkedList<Trigger>());
 		this.triggers.put(TriggerType.onLeave, new LinkedList<Trigger>());
 	}
@@ -145,6 +145,7 @@ public class Room extends MUDObject implements EventSource, Instance
 		this._listeners = new ArrayList<SayEventListener>();
 		
 		this.triggers = new HashMap<TriggerType, List<Trigger>>();
+		
 		this.triggers.put(TriggerType.onEnter, new LinkedList<Trigger>());
 		this.triggers.put(TriggerType.onLeave, new LinkedList<Trigger>());
 	}
@@ -491,7 +492,8 @@ public class Room extends MUDObject implements EventSource, Instance
 
 		return Utils.join(output, "#");
 	}
-
+	
+	// TODO remove?
 	public String toJSON() {
 		final StringBuilder sb = new StringBuilder();
 
@@ -527,13 +529,7 @@ public class Room extends MUDObject implements EventSource, Instance
 
 		return sb.toString();
 	}
-
-	@Override
-	public Room fromJSON() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
+	
 	public String toString() {
 		return getName() + " (#" + getDBRef() + ")";
 	}

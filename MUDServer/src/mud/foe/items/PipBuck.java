@@ -423,19 +423,18 @@ public class PipBuck extends Item implements Device, ExtraCommands {
 		});
 	}
 
-	public PipBuck(final String name ) {
+	public PipBuck(final String name) {
 		this(-1, name);
 	}
 
 	public PipBuck(final int dbref, final String name) {
-		super(dbref, "PipBuck", "A Stable-Tec PipBuck");
+		super(dbref, name, "A Stable-Tec PipBuck");
 
 		this.item_type = FOEItemTypes.PIPBUCK;
 		this.slot_type = FOESlotTypes.LFHOOF;
 
 		this.equippable = true;
 
-		this.name = name;
 		this.fs = new FileSystem();
 		this.modules = new LinkedList<Module>();
 	}
@@ -447,6 +446,7 @@ public class PipBuck extends Item implements Device, ExtraCommands {
 		this.slot_type = FOESlotTypes.LFHOOF;
 		
 		this.fs = template.fs; // TODO need to give FileSystem a clone method
+		this.fs = new FileSystem();
 		this.modules = new LinkedList<Module>();
 	}
 

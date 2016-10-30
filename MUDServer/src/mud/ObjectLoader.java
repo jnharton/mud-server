@@ -1,7 +1,11 @@
 package mud;
 
 import java.io.File;
-import java.util.*;
+import java.util.Arrays;
+import java.util.ConcurrentModificationException;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.LinkedList;
 
 import mud.objects.*;
 import mud.objects.exits.Door;
@@ -50,6 +54,7 @@ import mud.misc.Effect.DurationType;
  */
 
 public class ObjectLoader {
+	// TODO get rid of parent reference if possible
 	private final MUDServer parent;
 	private final ObjectDB objectDB;
 	
@@ -58,15 +63,16 @@ public class ObjectLoader {
 		this.objectDB = objectDB;
 	}
 	
-	public void loadObjects(final List<String> in, final LoggerI logger) {
+	// TODO fix this so I actually us the logger
+	public void loadObjects(final List<String> in, final Logger logger) {
 		for (final String oInfo : in) {
 			Integer oDBRef = 0, oLocation = 0;
 			String oName = "", oFlags = "", oDesc = "";
 			char oTypeFlag;
 
 			if (oInfo.charAt(0) == '&') { // means to ignore that line
-				logger.debug("`loadObjects` ignoring line: " + oInfo);
-				logger.debug("");
+				debug("`loadObjects` ignoring line: " + oInfo);
+				debug("");
 				
 				// grab the dbref number and remove the prefixing & character
 				oDBRef = Integer.parseInt(oInfo.split("#")[0].replace('&', ' ').trim());
@@ -74,8 +80,8 @@ public class ObjectLoader {
 				NullObject no = new NullObject(oDBRef);
 				no.lock(); // lock the NullObject
 				
-				logger.debug("NULLObject (" + oDBRef + ") Locked?: " + no.isLocked()); // print out the lock state
-				logger.debug("");
+				debug("NULLObject (" + oDBRef + ") Locked?: " + no.isLocked()); // print out the lock state
+				debug("");
 
 				objectDB.add(no);
 				
@@ -92,12 +98,12 @@ public class ObjectLoader {
 				oDesc = attr[3];
 				oLocation = Integer.parseInt(attr[4]);
 
-				logger.debug("DBRef: " + oDBRef);
-				logger.debug("Name: " + oName);
-				logger.debug("Flags: " + oFlags);
-				logger.debug("Description: " + oDesc);
-				logger.debug("Location: " + oLocation);
-				logger.debug("");
+				debug("DBRef: " + oDBRef);
+				debug("Name: " + oName);
+				debug("Flags: " + oFlags);
+				debug("Description: " + oDesc);
+				debug("Location: " + oLocation);
+				debug("");
 
 				if (oTypeFlag == 'C') {
 					/*
@@ -132,7 +138,7 @@ public class ObjectLoader {
 					// Player
 					Player player = loadPlayer(oInfo);
 					
-					logger.debug("log.debug (db entry): " + player.toDB(), 2);
+					debug("log.debug (db entry): " + player.toDB(), 2);
 
 					objectDB.add(player);
 					objectDB.addPlayer(player);
@@ -142,8 +148,8 @@ public class ObjectLoader {
 					Innkeeper ik = new Innkeeper(oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), oDesc, "Merchant",
 							"VEN", oLocation, Coins.fromArray(new int[] { 1000, 1000, 1000, 1000 }));
 
-					logger.debug("log.debug (db entry): " + ik.toDB(), 2);
-					logger.debug("Innkeeper", 2);
+					debug("log.debug (db entry): " + ik.toDB(), 2);
+					debug("Innkeeper", 2);
 
 					objectDB.add(ik);
 					objectDB.addNPC(ik);
@@ -179,7 +185,7 @@ public class ObjectLoader {
 						
 						if( !oAlias.equals("") ) exit.addAlias(oAlias);
 
-						logger.debug("log.debug (db entry): " + exit.toDB(), 2);
+						debug("log.debug (db entry): " + exit.toDB(), 2);
 
 						objectDB.add(exit);
 						objectDB.addExit(exit);
@@ -229,13 +235,13 @@ public class ObjectLoader {
 						
 						door.init();
 						
-						logger.debug( "exit (origin): " + door.getName(oLocation) );
-						logger.debug( "exit (dest): " + door.getName(oDest) );
+						debug( "exit (origin): " + door.getName(oLocation) );
+						debug( "exit (dest): " + door.getName(oDest) );
 						
-						logger.debug( door.side1.toString() );
-						logger.debug( door.side2.toString() );
+						debug( door.side1.toString() );
+						debug( door.side2.toString() );
 						
-						logger.debug("log.debug (db entry): " + door.toDB(), 2);
+						debug("log.debug (db entry): " + door.toDB(), 2);
 
 						objectDB.add(door);
 						objectDB.addExit(door);
@@ -262,7 +268,7 @@ public class ObjectLoader {
 							
 							portal.setKey("test");
 							
-							logger.debug("log.debug (db entry): " + portal.toDB(), 2);
+							debug("log.debug (db entry): " + portal.toDB(), 2);
 							
 							objectDB.add(portal);
 							objectDB.addExit(portal);
@@ -281,17 +287,17 @@ public class ObjectLoader {
 
 							portal.setKey("test");
 
-							logger.debug("log.debug (db entry): " + portal.toDB(), 2);
+							debug("log.debug (db entry): " + portal.toDB(), 2);
 							
 							objectDB.add(portal);
 							objectDB.addExit(portal);
 						}
 						else {
-							logger.debug("log.debug (error): Problem with object #" + oDBRef + " - invalid PortalType", 2);
+							debug("log.debug (error): Problem with object #" + oDBRef + " - invalid PortalType", 2);
 						}
 					}
 					else {
-						logger.debug("log.debug (error): Problem with object #" + oDBRef, 2);
+						debug("log.debug (error): Problem with object #" + oDBRef, 2);
 					}
 				}
 				else if (oTypeFlag == 'N') {
@@ -300,8 +306,8 @@ public class ObjectLoader {
 						Merchant merchant = new Merchant(oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), "A merchant.",
 								"Merchant", "VEN", oLocation, Coins.fromArray(new int[] { 1000, 1000, 1000, 1000 }));
 
-						logger.debug("log.debug (db entry): " + merchant.toDB(), 2);
-						logger.debug("Merchant", 2);
+						debug("log.debug (db entry): " + merchant.toDB(), 2);
+						debug("Merchant", 2);
 
 						objectDB.add(merchant);
 						objectDB.addNPC(merchant);
@@ -316,7 +322,7 @@ public class ObjectLoader {
 						// npc.addQuest(new Quest("Test", "Test", new
 						// Task("Test")));
 
-						logger.debug("log.debug (db entry): " + npc.toDB(), 2);
+						debug("log.debug (db entry): " + npc.toDB(), 2);
 
 						objectDB.add(npc);
 						objectDB.addNPC(npc);
@@ -337,7 +343,7 @@ public class ObjectLoader {
 
 					// set zone
 					if (zoneId != -1) {
-						logger.debug("Zone ID: " + zoneId);
+						debug("Zone ID: " + zoneId);
 
 						final Zone zone = parent.getZone(zoneId);
 						
@@ -349,14 +355,14 @@ public class ObjectLoader {
 							//parent.getZone(zoneId).addRoom(room);
 						}
 						
-						logger.debug((zone == null) ? "Zone is NULL." : "Zone in NOT NULL.");
+						debug((zone == null) ? "Zone is NULL." : "Zone in NOT NULL.");
 					}
 
 					if (room.getRoomType().equals(RoomType.OUTSIDE)) {
 						room.getProperties().put("sky", "The sky is clear and flecked with stars.");
 					}
 					
-					logger.debug("log.debug (db entry): " + room.toDB(), 2);
+					debug("log.debug (db entry): " + room.toDB(), 2);
 
 					objectDB.add(room);
 					objectDB.addRoom(room);
@@ -366,14 +372,14 @@ public class ObjectLoader {
 					try {
 						final Thing thing = loadThing(oInfo);
 						
-						logger.debug("log.debug (db entry): " + thing.toDB(), 2);
+						debug("log.debug (db entry): " + thing.toDB(), 2);
 						
 						objectDB.add(thing);
 						objectDB.addThing(thing);
 					}
 					catch (final InvalidThingTypeException itte) {
 						itte.printStackTrace();
-						logger.debug("log.debug (error): " + itte.getMessage());
+						debug("log.debug (error): " + itte.getMessage());
 					}
 				}
 				else if (oTypeFlag == 'I') {
@@ -381,14 +387,14 @@ public class ObjectLoader {
 					try {
 						final Item item = loadItem(oInfo);
 						
-						logger.debug("log.debug (db entry): " + item.toDB(), 2);
+						debug("log.debug (db entry): " + item.toDB(), 2);
 						
 						objectDB.add(item);
 						objectDB.addItem(item);
 					}
 					catch(final InvalidItemTypeException iite) {
 						iite.printStackTrace();
-						logger.debug("log.debug (error): " + iite.getMessage());
+						debug("log.debug (error): " + iite.getMessage());
 					}
 				}
 				else if (oTypeFlag == 'Z') { // Zone
@@ -415,7 +421,7 @@ public class ObjectLoader {
 				else if ( oName.equals("null") ) {
 					NullObject Null = new NullObject(oDBRef);
 					
-					logger.debug("log.debug (db entry): " + Null.toDB() + " [Found NULLObject]", 2);
+					debug("log.debug (db entry): " + Null.toDB() + " [Found NULLObject]", 2);
 					
 					objectDB.add(Null);
 				}
@@ -754,7 +760,11 @@ public class ObjectLoader {
 			
 			return ring;
 		}
+		else if (it == ItemTypes.NONE) {
+			return new Item(oDBRef, oName, flags, oDesc, oLocation);
+		}
 		else throw new InvalidItemTypeException("No such ItemType (" + itemType + ")");
+		// ^ throwing an exception seems cool, but isn't helpful unless I have a check for every item type
 	}
 	
 	private final Thing loadThing(final String itemData) throws InvalidThingTypeException {
@@ -926,5 +936,28 @@ public class ObjectLoader {
 		else tt = ThingTypes.getType(typeId);
 		
 		return tt;
+	}
+	
+	public void debug(final String data) {
+		debug(data, 1);
+	}
+	
+	/**
+	 * A wrapper function for System.out.println that can be "disabled" by
+	 * setting an integer. Used to turn "on"/"off" printing debug messages to
+	 * the console.
+	 * 
+	 * Each debug level includes the levels below it
+	 * 
+	 * e.g. debug level 3 includes levels 3, 2, 1 debug level 2 includes levels
+	 * 2, 1 debug level 1 includes levels 1
+	 * 
+	 * Uses an Object parameter and a call to toString so that I can pass
+	 * objects to it
+	 * 
+	 * @param data
+	 */
+	public void debug(final String data, final int tDebugLevel) {
+		parent.debug(data, tDebugLevel);
 	}
 }

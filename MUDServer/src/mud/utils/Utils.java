@@ -54,37 +54,6 @@ import mud.misc.Counter;
  *
  */
 public final class Utils {
-	public static final Palette ANSI = new Palette("ansi", Constants.ANSI);
-	public static final Palette XTERM256 = new Palette("xterm256", Constants.XTERM);
-	
-	{
-		ANSI.addColor("black", 30);
-		ANSI.addColor("red", 31);
-		ANSI.addColor("green",  32);
-		ANSI.addColor("yellow", 33);
-		ANSI.addColor("blue", 34);
-		ANSI.addColor("magenta", 35);
-		ANSI.addColor("cyan", 36);
-		ANSI.addColor("white", 37);
-	}
-	
-	{
-		XTERM256.addColor("red", 9);
-		XTERM256.addColor("green", 10);
-		XTERM256.addColor("yellow", 11);
-		XTERM256.addColor("blue", 12);
-		XTERM256.addColor("magenta", 13);
-		XTERM256.addColor("cyan", 14);
-		XTERM256.addColor("white", 15);
-		XTERM256.addColor("purple", 55);
-		XTERM256.addColor("purple2", 92);
-		XTERM256.addColor("orange", 208);
-		XTERM256.addColor("other", 82);
-		XTERM256.addColor("pink", 161);
-		XTERM256.addColor("pink2", 163);
-		XTERM256.addColor("pink3", 212);
-	}
-	
 	/*
 	 * Hashing was written/implemented/? by joshgit
 	 */
@@ -1003,11 +972,14 @@ public final class Utils {
 	
 	public static String checkMem() {
 		Runtime r = Runtime.getRuntime();
+		
+		double in_use = r.totalMemory();
+		double max = r.maxMemory();
+		
+		double in_use_mb = in_use / 1048576, in_use_kb = in_use / 1024; // MB, KB 
+		double max_mb = max / 1048576, max_kb = max / 1024;             // MB, KB
 
-		double in_use = r.totalMemory() / 1000000; // MB
-		double max = r.maxMemory() / 1000000; // MB
-
-		return "Memory: " + in_use + " MB / " + max + " MB";
+		return "Memory: " + in_use_mb + " MB (" + in_use_kb + " KB) / " + max_mb + " MB (" + max_kb + " KB)";
 	}
 	
 	public static Date getDate() {
@@ -1065,6 +1037,10 @@ public final class Utils {
 			int index = 0;
 
 			for (final char c : input.toCharArray()) {
+				System.out.println("Index: " + index);
+				System.out.println("Color: " + rainbow[index]);
+				System.out.println("Code:  " + palette.getColor(rainbow[index]));
+				
 				sb.append( palette.getColor(rainbow[index]) );
 				sb.append(c);
 				

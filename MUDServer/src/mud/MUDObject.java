@@ -619,19 +619,6 @@ public abstract class MUDObject {
 	 * @return
 	 */
 	public abstract String toDB();
-
-	/**
-	 * Convert the object to a JSON based representation
-	 * for storage in some kind of database system
-	 * 
-	 * NOTE: Every subclass of MUDObject should implement
-	 * this for itself. 
-	 * 
-	 * @return
-	 */
-	public abstract String toJSON();
-
-	public abstract MUDObject fromJSON();
 	
 	@Override
 	public String toString() {

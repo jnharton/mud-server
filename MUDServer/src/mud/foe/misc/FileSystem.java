@@ -1,18 +1,20 @@
 package mud.foe.misc;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+import mud.utils.Utils;
+
 // TODO actual storage part needs rework
 public class FileSystem {
-	private static final int MAX_DIRS = 5;
-	private static final int MAX_FILES = MAX_DIRS * 20; // 20 files per directory
-
-	// directory name -> (file name -> file)
-	//private Hashtable<String, Hashtable<String, String[]>> directories;
-	public Hashtable<String, File> files;
+	private static final int MAX_FILES = 100;
+	
+	private ArrayList<File> files;
+	private Hashtable<String, Integer> fileTable;
 	
 	// File System structure
 	// /                    root directory
@@ -23,37 +25,23 @@ public class FileSystem {
 	//
 	// "/admin/notes/this one.txt", [ string, string, string, string, string ]
 	
-	private int error;
+	private int firstUnused;
 	
 	// ERRORS
-	// max files reached
-	// max dirs reached
+	// -1 max files reached
 	// copy failed
 	// create file failed
 	// delete file failed
 	// no such file
+	public static final int ERR_MAX_FILES_REACHED = -1;
+	public static final int ERR_FILE_DOES_NOT_EXIST = -2;
+	public static final int ERR_NONEMPTY_DIR = -3;
 	
-	public class File {
-		public boolean isDir = false;
-
-		private String name;
-		private String[] contents = null;
-
-		public File(String name, String[] contents) {
-			this.contents = contents;
-		}
-
-		public String getName() {
-			return this.name;
-		}
-
-		public String[] getContents() {
-			return this.contents;
-		}
-	}
-
-	public class Directory extends File {
+	// directories are files containing a list of filenames
+	/*public class Directory extends File {
 		private Hashtable<String, File> files;
+		
+		//private List<String> 
 
 		public Directory(final String name) {
 			super(name, null);
@@ -68,70 +56,26 @@ public class FileSystem {
 			
 			return filenames.toArray( new String[filenames.size()] );
 		}
-	}
+	}*/
 
 	public FileSystem() {
-		this.files = new Hashtable<String, File>();
-		this.error = 0;
+		this.files = new ArrayList<File>();
+		this.fileTable = new Hashtable<String, Integer>();
+		
+		this.firstUnused = 0;
+		
+		// TODO resolve - this is a kludge because the IO assumes a top level directory
+		this.newDir("/");
 	}
-
-	public Directory getDirectory(final String directory) {
-		final File file = this.files.get(directory);
-
-		if( file != null ) {
-			if( file.isDir ) {
-				return (Directory) file;
-			}
-		}
-
-		return null;
+	
+	public int newFile(final String fileName) {
+		return newFile(fileName, false, new String[0]);
 	}
-
-	public File getFile(final String dirName, final String fileName) {
-		final File file = this.files.get(dirName);
-
-		if( file != null ) {
-			if( file.isDir ) {
-				final Directory dir = (Directory) file;
-				
-				return dir.files.get(fileName);
-			}
-		}
-
-		return null;
+	
+	public int newFile(final String fileName, final String[] contents) {
+		return newFile(fileName, false, contents);
 	}
-
-	public String getDirectoryNames(final String directory) {
-		final StringBuilder sb = new StringBuilder();
-
-		if( directory.equals("/") ) {
-			for(String str : this.files.keySet()) {
-				if( files.get(str).isDir ) {
-					sb.append(str + " ");
-				}
-			}
-		}
-		/*else {
-			for(String str : this.files.keySet()) {
-				sb.append(str + " ");
-			}
-		}*/
-
-		return sb.toString();
-	}
-
-	public boolean newDir(final String directory) {
-		boolean directory_created = false;
-
-		if( countDirs() < MAX_DIRS ) {
-			this.files.put(directory, new Directory(directory));
-
-			directory_created = true;
-		}
-
-		return directory_created;
-	}
-
+	
 	/**
 	 * 
 	 * @param directory
@@ -139,86 +83,211 @@ public class FileSystem {
 	 * @param data
 	 * @return true if we successfully created the file
 	 */
-	public boolean newFile(final String directory, final String name, final String[] data) {
-		boolean file_created = false;
-
-		if( !hasDir(directory) ) {
-			newDir(directory);
-		}
-
-		final Directory dir = getDirectory(directory);
-
-		if( dir != null ) {
-			///final Hashtable<String, File> fileTable = dir.files;
+	/*public boolean newFile(final String directory, final String name, final String[] data) {
+	 * 
+	 */
+	
+	private int newFile(final String fileName, final boolean isDir, final String[] contents) {
+		int error = 0;
+		
+		if( files.size() < MAX_FILES ) {
+			final File f = new File(fileName, isDir, contents);
 			
-			if( countFiles() < MAX_FILES ) {
-				if( !hasFile(directory, name) ) {
-					files.put( name, new File(name, data));
-					file_created = true;
+			int fileNode = 0;
+			
+			if( firstUnused != -1 ) {
+				fileNode = firstUnused;
+				
+				firstUnused = -1;
+				
+				for(int n = fileNode + 1; n < files.size(); n++) {
+					if( files.get(n) == null ) {
+						firstUnused = n;
+						break;
+					}
+				}
+			}
+			else {
+				fileNode = files.size();
+			}
+			
+			if( fileNode < files.size() ) files.set(fileNode, f);
+			else                          files.add(f);
+			
+			fileTable.put(fileName, fileNode);
+		}
+		else {
+			error = ERR_MAX_FILES_REACHED;
+		}
+		
+		return error;
+	}
+	
+	public int newDir(final String fileName) {
+		return newFile(fileName, true, new String[0] );
+	}
+	
+	public int newDir(final String fileName, final String[] filenames) {
+		return newFile(fileName, true, filenames);
+	}
+	
+	public int deleteFile(final String directory, final String name) {
+		final String path = directory + "/" + name; 
+		
+		int error = 0;
+		
+		final Integer fileNode = fileTable.containsKey(path) ? fileTable.get(path) : -1;
+
+		if( fileNode != null && fileNode != -1 && Utils.range(fileNode, 0, MAX_FILES) ) {
+			final File file = files.get(fileNode);
+
+			boolean delete_ok = true;
+
+			// assuming the file isn't null
+			if( file.isDir ) {
+				if( file.getContents().length != 0 ){
+					delete_ok = false;
+					error = ERR_NONEMPTY_DIR;
+				}
+			}
+
+			if( delete_ok ) {
+				fileTable.remove(path);
+				files.set(fileNode, null);
+
+				for(int n = 0; n < files.size(); n++) {
+					if( files.get(n) == null ) {
+						firstUnused = n;
+						break;
+					}
 				}
 			}
 		}
-
-		return file_created;
-	}
-
-	public boolean hasDir(final String directory) {
-		return this.files.containsKey(directory) && this.files.get(directory).isDir;
-	}
-
-	public boolean hasFile(final String directory, final String name) {
-		boolean fileExists = false;
-		
-		if( hasDir(directory) ) {
-			final Directory dir = getDirectory(directory);
-			
-			fileExists = (dir.files.get(name) != null);
+		else {
+			error = ERR_FILE_DOES_NOT_EXIST;
 		}
 
-		return fileExists;
+		return error;
 	}
-
+	
 	public void copyFile(final String directory, final String name, final String directory1) {
 		String[] fileData;
 		
 		if( hasDir(directory) && hasFile(directory, name) ) {
-			final Directory dir1 = getDirectory(directory);
+			fileData = getFile(directory, name).getContents();
 			
-			fileData = getDirectory(directory).files.get(name).getContents();
-			
-			newFile(directory1, name, fileData);
+			newFile(directory + "/" + name, fileData);
 		}
 	}
+	
+	public int write(final String fileName, final String[] data, final char mode) {
+		int error = -5;
+		
+		// TODO resolve this kludge
+		File file = getFile(fileName);
+		
+		// TODO maybe files should have lists and simply present their contents as string arrays
+		switch(mode) {
+		case 'w':
+			file.setContents( data );
 
-	public void deleteFile(final String directory, final String name) {
-		if( hasDir(directory) && hasFile(directory, name) ) {
-			getDirectory(directory).files.remove(name);
+			error = 0;
+			
+			break;
+		case 'a':
+			List<String> new_contents = new LinkedList<String>();
+			
+			new_contents.addAll( Arrays.asList( file.getContents() ) );
+			new_contents.addAll( Arrays.asList( data ) );
+			
+			file.setContents( new_contents.toArray(new String[0]) );
+			
+			error = 0;
+			
+			break;
+		default:  break;
 		}
+		
+		return error;
+	}
+	
+	public boolean hasFile(final String directory, final String name) {
+		return hasFile(directory + "/" + name);
+	}
+	
+	// requires an absolute path starting with root
+	public boolean hasFile(final String path) {
+		final Integer fileNode = fileTable.containsKey(path) ? fileTable.get(path) : -1;
+
+		if( fileNode != null && fileNode != -1 && Utils.range(fileNode, 0, MAX_FILES) ) {
+			final File file = files.get(fileNode);
+			
+			if( file != null ) return true;
+		}
+		
+		return false;
+	}
+	
+	// requires an absolute path starting with root
+	public boolean hasDir(final String path) {
+		final Integer fileNode = fileTable.containsKey(path) ? fileTable.get(path) : -1;
+
+		if( fileNode != null && fileNode != -1 && Utils.range(fileNode, 0, MAX_FILES) ) {
+			final File file = files.get(fileNode);
+			
+			if( file != null && file.isDir ) return true;
+		}
+		
+		return false;
+	}
+	
+	public File getFile(final String directory, final String name) {
+		return getFile(directory + "/" + name);
+	}
+	
+	public File getFile(final String path) {
+		final Integer fileNode = fileTable.containsKey(path) ? fileTable.get(path) : -1;
+
+		if( fileNode != null && fileNode != -1 && Utils.range(fileNode, 0, MAX_FILES) ) {
+			final File file = files.get(fileNode);
+			
+			if( file != null ) return file;
+		}
+		
+		return null;
+	}
+	
+	public File getDirectory(final String directory) {
+		final Integer fileNode = fileTable.containsKey(directory) ? fileTable.get(directory) : -1;
+
+		if( fileNode != null && fileNode != -1 && Utils.range(fileNode, 0, MAX_FILES) ) {
+			final File file = files.get(fileNode);
+			
+			if( file != null ) return file;
+		}
+		
+		return null;
+	}
+
+	public String getDirectoryNames(final String directory) {
+		final StringBuilder sb = new StringBuilder();
+		
+		File dir = getDirectory(directory);
+		
+		for(String filename : dir.getContents()) {
+			sb.append(filename + " ");
+		}
+
+		return sb.toString();
 	}
 
 	private int countFiles() {
 		int count = 0;
 
 		final List<File> fileList = new LinkedList<File>();
-
-		for(final String s : this.files.keySet()) fileList.add( files.get(s) );
-
-		for(final File file : fileList) {
-			if( !file.isDir ) count++;
-		}
-
-		return count;
-	}
-
-	private int countDirs() {
-		int count = 0;
-
-		final List<File> fileList = new LinkedList<File>();
-
-		for(final String s : this.files.keySet()) fileList.add( files.get(s) );
-
-		for(final File file : fileList) {
-			if( file.isDir ) count++;
+		
+		for(final String s : this.fileTable.keySet()) {
+			if( s!= null ) count++;
 		}
 
 		return count;

@@ -43,8 +43,8 @@ public final class Constants {
 		}
 	};
 	
-	// Named Rooms
-	public static final int VOID = -1;        // an invalid room dbref (so it doesn't technically exist anywhere)
+	//
+	public static final int VOID = -1;
 	
 	// Channel Names/IDs? (move to another constants class - ChanID?)
 	public static final String OOC_CHANNEL = "ooc";
@@ -77,4 +77,11 @@ public final class Constants {
 	// time
 	public static final int REAL = 0;
 	public static final int GAME = 1;
+	
+	// logging
+	public static final String LOG = "log";
+	public static final String ERROR_LOG = "error";
+	public static final String DEBUG_LOG = "debug";
+	public static final String CHAT_LOG = "chat";
+	
 }

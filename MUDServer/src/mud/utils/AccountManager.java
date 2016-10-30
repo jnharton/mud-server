@@ -29,9 +29,13 @@ public final class AccountManager {
 		return ++(this.last_account_id);
 	}
 	
-	public void addAccount(final String name, final String password, final int char_limit) {
+	public Account addAccount(final String name, final String password, final int char_limit) {
 		int aId = nextId();
-		this.iamap.put( aId, new Account(aId, name, password, char_limit) );
+		Account account = new Account(aId, name, password, char_limit);
+		//this.iamap.put( aId, new Account(aId, name, password, char_limit) );
+		this.iamap.put( aId, account );
+		
+		return account;
 	}
 	
 	public void addAccount(final Account account) {

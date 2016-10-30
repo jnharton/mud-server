@@ -3,6 +3,8 @@ GET
 
 Get something from a container.
 
-Syntax: get <container> <item>
+Syntax: get (from) <container> <item>
+
+* text in () is implied rather than meant for typing out
 
 Last Updated: November 8th, 2014

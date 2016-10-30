@@ -1,6 +1,7 @@
 package mud.utils;
 
-import java.util.*;
+import java.util.LinkedList;
+import java.util.List;
 
 public class EditList {
 	private final String name;

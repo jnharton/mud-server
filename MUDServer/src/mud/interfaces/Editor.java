@@ -1,4 +1,4 @@
-package mud.utils;
+package mud.interfaces;
 
 /*
 Copyright (c) 2012 Jeremy N. Harton
@@ -17,12 +17,19 @@ CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTH
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+/**
+ * an interface that defines the basic commands/functions that all editors share
+ * 
+ * @author Jeremy
+ *
+ */
 public interface Editor {
 	// abort, save, show, done
 	
 	public void abort();
 	public void done();
 	public void help();
+	public void help(final String arg);
 	public void save();
 	public void show();
 }

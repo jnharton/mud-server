@@ -18,8 +18,10 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
 import java.util.ArrayList;
+import java.util.Hashtable;
 import java.util.List;
 
+import mud.interfaces.Stackable;
 import mud.misc.Coins;
 import mud.objects.Item;
 import mud.objects.Player;
@@ -35,6 +37,8 @@ public class Trade {
 	public final List<Item> p1_items; // items player 1 is offering to trade
 	public final List<Item> p2_items; // items player 2 is offering to trade
 	
+	public final Hashtable<Player, Tuple<Coins, List<Item>>> offers;
+	
 	public Trade(final Player player1, final Player player2) {
 		this.p1 = player1;
 		this.p2 = player2;
@@ -44,6 +48,8 @@ public class Trade {
 		
 		this.p1_items = new ArrayList<Item>(10);
 		this.p2_items = new ArrayList<Item>(10);
+		
+		this.offers = new Hashtable<Player, Tuple<Coins, List<Item>>>();
 	}
 	
 	public Tuple<Player, Player> getTraders() {
@@ -70,10 +76,16 @@ public class Trade {
 	
 	public void addItem(final Player player, final Item item) {
 		if( player == p1 ) {
-			p1_items.add( item );
+			if( item instanceof Stackable) {
+				p1_items.add( ((Stackable<Item>) item).split(1) );
+			}
+			else  p1_items.add( item );
 		}
 		else if( player == p2 ) {
-			p2_items.add( item );
+			if( item instanceof Stackable) {
+				p2_items.add( ((Stackable<Item>) item).split(1) );
+			}
+			else p2_items.add( item );
 		}
 	}
 	

@@ -34,6 +34,15 @@ public class Counter {
 		return this.value;
 	}
 	
+	public boolean isMax() {
+		return (this.value == this.max);
+	}
+	
+	public void reset() {
+		if( this.using_bounds ) this.value = 0;
+		else                    this.value = this.min;
+	}
+	
 	public void setValue(final Integer value) {
 		if( using_bounds ) {
 			if( Utils.range(value, this.min, this.max) ) {

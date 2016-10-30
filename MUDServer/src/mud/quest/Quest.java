@@ -2,10 +2,10 @@ package mud.quest;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import mud.colors.Colors;
 import mud.misc.Zone;
-import mud.objects.Item;
 import mud.objects.Player;
 import mud.utils.Date;
 
@@ -19,37 +19,39 @@ import mud.utils.Date;
  * @author Jeremy
  *
  */
-public class Quest {
+public final class Quest {
 	private static int lastId = 0;       // the last quest id issued
 	
 	private int id;                      // quest id (int for easier comparison)
+	
 	private String name;                 // quest name
 	private String description;          // quest description (does it need a short and long version or just this?)
 	private Zone location;               // the quest region (for instance if you must kill the kobolds in region X for the reward)
 	
-	// TODO should I really be using dates here?
 	private Date issueDate = null;       // the in-game date the quest was given
 	private Date expireDate = null;      // the in-game date that the quests expires (for time-limited things?)
+	
+	private List<Task> tasks;            // a list of tasks that must be completed to finish the quest
+	
+	private Reward reward;
 	
 	private boolean isComplete = false;  // is the quest completed? (this should put it in a deletion queue if we delete completed quests)
 	private boolean isIgnored = false;   // is the quest being ignored? (i.e. it shouldn't show up in the main quest list for the player)
 	private boolean isCopy = false;      // is this quest the original object or a copy
-	private boolean isRepeatable = true; // can you repeat the quest 
-	
-	final private ArrayList<Task> tasks; // a list of tasks that must be completed to finish the quest
-	
-	private Reward reward;
+	private boolean isRepeatable = true; // can you repeat the quest
 	
 	public boolean Edit_Ok = true;       // can the quest be edited safely (no one else is editing it)
 	
 	/**
 	 * Construct a "blank quest" (for editing purposes)
 	 */
-	public Quest( final String qName, final String qDescription ) {
+	public Quest(final String qName, final String qDescription) {
 		this.id = -1;
+		
 		this.name = qName;
 		this.description = qDescription;
 		this.location = null;
+		
 		this.tasks = new ArrayList<Task>();
 	}
 	
@@ -60,11 +62,13 @@ public class Quest {
 	 * @param qDescription
 	 * @param qLocation
 	 */
-	public Quest( final String qName, final String qDescription, final Zone qLocation ) {
+	public Quest(final String qName, final String qDescription, final Zone qLocation) {
 		this.id = lastId++;
+		
 		this.name = qName;
 		this.description = qDescription;
 		this.location = qLocation;
+		
 		this.tasks = new ArrayList<Task>();
 	}
 	
@@ -76,8 +80,9 @@ public class Quest {
 	 * @param qLocation
 	 * @param tasks
 	 */
-	public Quest( final String qName, final String qDescription, final Zone qLocation, final Task...tasks ) {
+	public Quest(final String qName, final String qDescription, final Zone qLocation, final Task...tasks) {
 		this(qName, qDescription, qLocation);
+		
 		this.tasks.addAll(Arrays.asList(tasks));
 	}
 	
@@ -91,18 +96,17 @@ public class Quest {
 	 * 
 	 * @param template
 	 */
-	protected Quest( final Quest template ) {
+	private Quest(final Quest template) {
 		this.id = template.id;
+		
 		this.name = template.name;
 		this.description = template.description;
 		this.location = template.location;
 		
-		if( !this.isCopy ) this.isCopy = true;
-		
 		this.tasks = new ArrayList<Task>();
 		
-		for(Task task : template.getTasks()) {
-			this.tasks.add( task.clone() );
+		for(final Task task : template.getTasks()) {
+			this.tasks.add( task.getCopy() );
 		}
 		
 		if( !(template.reward == null) ) {
@@ -110,6 +114,8 @@ public class Quest {
 			this.reward = template.reward;
 		}
 		else System.out.println("Quest: reward is NULL.");
+		
+		if( !this.isCopy ) this.isCopy = true;
 	}
 	
 	public void addTask(final Task newTask) {
@@ -137,23 +143,39 @@ public class Quest {
 		return this.name;
 	}
 	
-	public void setDescription(final String newDescription) {
-		if( !isCopy ) this.description = newDescription;
-	}
-	
 	public String getDescription() {
 		return this.description;
 	}
 	
-	public void setLocation(final Zone newLocation) {
-		if( !isCopy ) this.location = newLocation;
+	public void setDescription(final String newDescription) {
+		if( !isCopy ) this.description = newDescription;
 	}
 	
 	public Zone getLocation() {
 		return this.location;
 	}
 	
-	public ArrayList<Task> getTasks() {
+	public void setLocation(final Zone newLocation) {
+		if( !isCopy ) this.location = newLocation;
+	}
+	
+	public Date getIssued() {
+		return this.issueDate;
+	}
+	
+	public void setIssued(final Date issuedDate) {
+		this.issueDate = issuedDate;
+	}
+	
+	public Date getExpires() {
+		return this.expireDate;
+	}
+	
+	public void setExpires(final Date expirationDate) {
+		this.expireDate = expirationDate;
+	}
+	
+	public List<Task> getTasks() {
 		return this.tasks;
 	}
 	
@@ -168,6 +190,55 @@ public class Quest {
 		}
 		
 		return tasks;
+	}
+	
+	public Reward getReward() {
+		return this.reward;
+	}
+	
+	public void setReward(final Reward newReward) {
+		this.reward = newReward;
+	}
+	
+	public void init() {
+		if( this.id == -1 ) this.id = lastId++;
+	}
+	
+	public boolean isComplete() {
+		return this.isComplete;
+	}
+	
+	public boolean isCopy() {
+		return this.isCopy;
+	}
+	
+	public boolean isIgnored() {
+		return this.isIgnored;
+	}
+	
+	public boolean isRepeatable() {
+		return this.isRepeatable;
+	}
+	
+	/**
+	 * Perform a series of check to determine the suitability
+	 * of this quest for the specified player.
+	 * 
+	 * - level range?
+	 * - alignment?
+	 * - class?
+	 * - party? party size?
+	 * 
+	 * @param player
+	 * @return
+	 */
+	public boolean isSuitable(final Player player) {
+		// TODO quest suitability, this is a kludge
+		return true;
+	}
+	
+	public void setIgnore(boolean ignore) {
+		if( isCopy ) this.isIgnored = ignore;
 	}
 	
 	/**
@@ -234,55 +305,6 @@ public class Quest {
 		System.out.println("Quest State: " + questChanged);
 		
 		return questChanged;
-	}
-	
-	public void setIssued(final Date issuedDate) {
-		this.issueDate = issuedDate;
-	}
-	
-	public void setExpires(final Date expirationDate) {
-		this.expireDate = expirationDate;
-	}
-	
-	public Reward getReward() {
-		return this.reward;
-	}
-	
-	public void setReward(final Reward newReward) {
-		this.reward = newReward;
-	}
-	
-	public boolean isComplete() {
-		return this.isComplete;
-	}
-	
-	public void init() {
-		if( this.id == -1 ) this.id = lastId++;
-	}
-	
-	/**
-	 * Perform a series of check to determine the suitability
-	 * of this quest for the specified player.
-	 * 
-	 * - level range?
-	 * - alignment?
-	 * - class?
-	 * - party? party size?
-	 * 
-	 * @param player
-	 * @return
-	 */
-	public boolean isSuitable(final Player player) {
-		// TODO quest suitability, this is a kludge
-		return true;
-	}
-	
-	public void setIgnore(boolean ignore) {
-		if( isCopy ) this.isIgnored = ignore;
-	}
-
-	public boolean isIgnored() {
-		return isIgnored;
 	}
 	
 	public Quest getCopy() {

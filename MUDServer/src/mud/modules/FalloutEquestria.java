@@ -45,18 +45,21 @@ public final class FalloutEquestria implements GameModule, ExtraCommands {
 	/* the class members are static because this is a class where
 	 * there is only supposed to be a single instance, ever.	
 	 */
+	
+	// class
 	private static Map<String, Command> commands;
 	private static Map<String, Item> prototypes;
 	private static Map<String, Thing> prototypes1;
 
 	private static List<Faction> factions;
 	
-	private Map<Player, mud.foe.Terminal> terminals = new HashMap<Player, mud.foe.Terminal>(1, 0.75f);
-	
 	public static Faction DASHITES;
 	
 	public static final Currency EQUESTRIAN_BIT = new Currency("Bit", "eb", null, 1.0);
 	public static final Currency BOTTLE_CAPS = new Currency("bottle cap", "bc", null, 1.0);
+	
+	// instance
+	private Map<Player, mud.foe.Terminal> terminals = new HashMap<Player, mud.foe.Terminal>(1, 0.75f);
 	
 	public FalloutEquestria() {
 		//init();
@@ -104,7 +107,7 @@ public final class FalloutEquestria implements GameModule, ExtraCommands {
 		// PipBuck (foe version of PipBoy from Bethesda's Fallout video games)
 		PipBuck pipbuck = new mud.foe.items.PipBuck("PipBuck 3000");
 		
-		pipbuck.setLocation(-1);
+		//pipbuck.setLocation(-1); // TODO this should be unnecessary
 		
 		prototypes.put("mud.foe.pipbuck", pipbuck);
 		

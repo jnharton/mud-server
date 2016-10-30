@@ -40,48 +40,87 @@ public class Pager
 	 * @param file
 	 */
 	public Pager(final String[] file) {
-		content = file;
-		topLine = 0;
+		this.content = file;
+		this.topLine = 0;
 	}
-
+	
+	/**
+	 * getRows
+	 * 
+	 * @return
+	 */
 	public int getRows() {
-		return displayRows;
+		return this.displayRows;
 	}
-
+	
+	/**
+	 * setRows
+	 * 
+	 * @param newRows
+	 */
 	public void setRows(final int newRows) {
-		displayRows = newRows;
+		this.displayRows = newRows;
 	}
-    
+	
+	/**
+	 * getBottom
+	 * 
+	 * @return
+	 */
     public int getBottom() {
-        final int end = topLine + displayRows;
-        return end > content.length ? content.length : end;
+        final int end = this.topLine + this.displayRows;
+        return end > this.content.length ? this.content.length : end;
     }
-
+    
+    /**
+     * getView
+     * 
+     * @return
+     */
 	public String[] getView() {
-		if( topLine + displayRows > content.length ) {
-			return Arrays.copyOfRange(content, getBottom() - displayRows, getBottom());
+		if( this.topLine + this.displayRows > this.content.length ) {
+			return Arrays.copyOfRange(this.content, getBottom() - this.displayRows, getBottom());
 		}
 		else {
-			return Arrays.copyOfRange(content, topLine, getBottom());
+			return Arrays.copyOfRange(this.content, this.topLine, getBottom());
 		}
 	}
 	
+	/**
+	 * getTop
+	 * 
+	 * @return
+	 */
 	public int getTop() {
 		return this.topLine;
 	}
 	
+	/**
+	 * getContent
+	 * 
+	 * @return
+	 */
 	public String[] getContent() {
 		return this.content;
 	}
 	
+	/**
+	 * scrollUp
+	 * @return
+	 */
 	public String[] scrollUp() {
-        topLine = topLine >= displayRows ? topLine - displayRows : 0;
+		this.topLine = this.topLine >= this.displayRows ? this.topLine - this.displayRows : 0;
 		return getView();
 	}
 	
+	/**
+	 * scrollDown
+	 * 
+	 * @return
+	 */
 	public String[] scrollDown() { 
-		if (topLine + displayRows <= content.length) {
-			topLine += displayRows;
+		if (this.topLine + this.displayRows <= this.content.length) {
+			this.topLine += this.displayRows;
 		}
 
 		// topline, end, view size, amount to scroll down (view range)

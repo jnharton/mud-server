@@ -7,8 +7,8 @@ public class CollectTask extends Task {
 	public Integer toCollect = 0;
 	public Integer collects = 0;
 	
-	public CollectTask(String tDescription, Room location, Data objectiveData) {
-		super(tDescription, TaskType.COLLECT, location);
+	public CollectTask(final String tDescription, final Room location, final Data objectiveData) {
+		super(TaskType.COLLECT, tDescription, location);
 	}
 	
 	private CollectTask(final CollectTask ct) {
@@ -28,9 +28,8 @@ public class CollectTask extends Task {
 		}
 		else { this.isComplete = false; }
 	}
-
-	@Override
-	protected Task clone() {
+	
+	protected Task getCopy() {
 		return new CollectTask(this);
 	}
 }

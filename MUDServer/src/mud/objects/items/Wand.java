@@ -99,10 +99,6 @@ public class Wand extends Item implements MagicItem {
 	}
 	*/
 	
-	public ArrayList<String> look() {
-		return null;
-	}
-	
 	@Override
 	public Spell getSpell() {
 		// TODO Auto-generated method stub

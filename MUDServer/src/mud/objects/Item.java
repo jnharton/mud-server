@@ -285,18 +285,6 @@ public class Item extends MUDObject {
 		
 		return Utils.join(output, "#");
 	}
-
-	@Override
-	public String toJSON() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public MUDObject fromJSON() {
-		// TODO Auto-generated method stub
-		return null;
-	}
 	
 	public Item getCopy() {
 		return new Item(this);

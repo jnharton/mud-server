@@ -4,9 +4,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 
+import mud.interfaces.Editor;
 import mud.objects.Player;
 import mud.quest.Quest;
-import mud.utils.Editor;
 import mud.utils.EditorData;
 import mud.utils.Utils;
 
@@ -88,6 +88,12 @@ public class QuestEditor implements Editor {
 
 	@Override
 	public void show() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void help(String arg) {
 		// TODO Auto-generated method stub
 		
 	}

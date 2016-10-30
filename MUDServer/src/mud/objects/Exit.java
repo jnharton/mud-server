@@ -175,16 +175,4 @@ public class Exit extends MUDObject
 	public String toString() {
 		return "";
 	}
-
-	@Override
-	public String toJSON() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public Exit fromJSON() {
-		// TODO Auto-generated method stub
-		return null;
-	}
 }

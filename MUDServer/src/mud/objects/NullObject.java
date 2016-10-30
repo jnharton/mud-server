@@ -76,16 +76,4 @@ public class NullObject extends MUDObject {
 	public String toString() {
 		return "$NULLOBJECT$";
 	}
-
-	@Override
-	public String toJSON() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public MUDObject fromJSON() {
-		// TODO Auto-generated method stub
-		return null;
-	}
 }

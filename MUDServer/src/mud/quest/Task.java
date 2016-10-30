@@ -1,9 +1,6 @@
 package mud.quest;
 
-import mud.MUDObject;
-import mud.TypeFlag;
 import mud.colors.Colors;
-import mud.objects.Creature;
 import mud.objects.Room;
 import mud.utils.Data;
 
@@ -20,106 +17,89 @@ public abstract class Task {
 	
 	protected TaskType taskType;          // what kind of task is it? (see TaskType)
 	
+	// TODO do we need task names?
 	protected String name;
 	protected String description;
-	protected Room location = null;        // a specific location associated with the task, may be null
-	
-	protected boolean isComplete = false; // is the task complete?
+	protected Room location = null;       // a specific location associated with the task, may be null
 
 	protected Data objective = null;
 	
+	protected boolean isComplete = false; // is the task complete?
+	
 	/**
 	 * Create a task with a description and task type.
-	 * 
-	 * @param tDescription task description
 	 * @param tType task type
+	 * @param tDescription task description
 	 */
-	protected Task(String tDescription, TaskType tType, Room location) {
-		this.description = tDescription;
+	protected Task(final TaskType tType, final String tDescription, final Room location) {
 		this.taskType = tType;
+		this.description = tDescription;
 		this.location = location;
 	}
-
-	/**
-	 * Create a task with a description and task type, and
-	 * some objective data related to the type. 
-	 * 
-	 * @param tDescription task description
-	 * @param tType task type
-	 * @param other data about the objectives for the task type
-	 */
-	/*public Task(String tDescription, TaskType tType, Room location, Data objectiveData) {
-		this.description = tDescription;
-		this.taskType = tType;
-		this.location = location;
-		
-		this.objective = objectiveData;
-	}*/
 
 	/**
 	 * Copy Constructor
 	 * 
 	 * @param template
 	 */
-	public Task(Task template) {
+	public Task(final Task template) {
 		this.taskType = template.taskType;
 		
-		this.name = template.name;
+		//this.name = template.name;
 		this.description = template.description;
 		this.location = template.location;
 		
 		this.objective = template.objective;
-
-		/*if (template.taskType == TaskType.KILL) {
-			this.toKill = template.toKill;
-			this.kills = 0;
-
-			if(template.objective != null) {
-				this.objective = new Data( template.objective );
-			}
-		}*/
 	}
 
 	public int getId() {
 		return this.id;
 	}
 
-	public void setId(int newId) {
+	public void setId(final int newId) {
 		this.id = newId;
 	}
-
+	
+	public TaskType getType() {
+		return this.taskType;
+	}
+	
+	public boolean isType(final TaskType tType) {
+		return this.taskType == tType;
+	}
+	
 	public String getName() {
 		return this.name;
 	}
-
+	
 	public String getDescription() {
 		return this.description;
 	}
 
-	public void setDescription(String tDescription) {
+	public void setDescription(final String tDescription) {
 		this.description = tDescription;
-	}
-
-	public TaskType getType() {
-		return this.taskType;
-	}
-
-	public boolean isType(TaskType tType) {
-		return this.taskType == tType;
 	}
 
 	public Room getLocation() {
 		return location;
 	}
 	
+	public Data getObjective() {
+		return this.objective;
+	}
+	
+	public boolean isComplete() {
+		return this.isComplete;
+	}
+	
 	public abstract String getProgress();
 	
 	public abstract void update();
 	
-	public boolean update(TaskUpdate update) {
+	public boolean update(final TaskUpdate update) {
 		boolean taskChanged = applyUpdate(update);
 
-		if (taskChanged) {
+		if ( taskChanged ) {
 			update();
 			return true;
 		}
@@ -135,20 +115,11 @@ public abstract class Task {
 	 * @param update
 	 * @return boolean indicates whether or not we changed the Task
 	 */
-	private boolean applyUpdate(TaskUpdate update) {
+	private boolean applyUpdate(final TaskUpdate update) {
 		return true;
 	}
-
-	public boolean isComplete() {
-		return this.isComplete;
-	}
 	
-	public Data getObjective() {
-		return this.objective;
-	}
-	
-	@Override
-	protected abstract Task clone();
+	protected abstract Task getCopy();
 
 	@Override
 	public String toString() {

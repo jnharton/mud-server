@@ -9,7 +9,7 @@ public class KillTask extends Task {
 	public Integer kills = 0;
 	
 	public KillTask(final String description, final Room location, final Data objectiveData) {
-		super(description, TaskType.KILL, location);
+		super(TaskType.KILL, description, location);
 		
 		final Object o = objectiveData.getObject("toKill");
 
@@ -50,9 +50,8 @@ public class KillTask extends Task {
 		}
 		else { this.isComplete = false; }
 	}
-
-	@Override
-	protected Task clone() {
+	
+	protected Task getCopy() {
 		return new KillTask(this);
 	}
 }

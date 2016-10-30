@@ -39,25 +39,19 @@ public class AttackCommand extends Command {
 
 		try {
 			if ( !arg.equals("") ) {
-				// TODO fix this kludge (designed to allow use of the target command to
-				// take precedence over creature target
-				
-				if( player.getTarget() == null ) {
-					// if we haven't preselected a target, we'll try and find the one specified
-					MUDObject mobj = null;
+				MUDObject mobj = null;
 
-					final List<Creature> creatures = getCreaturesByRoom( getRoom( player.getLocation() ) );
+				final List<Creature> creatures = getCreaturesByRoom( getRoom( player.getLocation() ) );
 
-					for(final Creature c : creatures) {
-						if( c.getName().equalsIgnoreCase(arg) ) {
-							mobj = c;
-						}
+				for(final Creature c : creatures) {
+					if( c.getName().equalsIgnoreCase(arg) ) {
+						mobj = c;
 					}
-					
-					player.setTarget(mobj);
 				}
+
+				player.setTarget(mobj);
 			}
-			
+
 			// if we have a target
 			if (player.getTarget() != null) {
 				// can we attack them?

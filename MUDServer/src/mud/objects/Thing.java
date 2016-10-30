@@ -124,16 +124,4 @@ public class Thing extends MUDObject {
 	public String toString() {
 		return this.name;
 	}
-
-	@Override
-	public String toJSON() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public Thing fromJSON() {
-		// TODO Auto-generated method stub
-		return null;
-	}
 }

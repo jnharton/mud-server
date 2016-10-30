@@ -492,6 +492,7 @@ public class Player extends MUDObject implements Mobile
 		addConfigOption("hud_enabled", false);          // is the "heads-up display" that accompanies the room description enabled (default: false)
 		addConfigOption("notify_newmail", false);       // notify the player on receipt of new mail? (default: false)
 		addConfigOption("silly_messages", false);       // enable sillier/more humorous error messages where used (default: false)
+		addConfigOption("server_echo", false);          // do we want the server to echo command if that option is enabled (default: false)
 	}
 
 	public void setClient(final Client c) {
@@ -1405,7 +1406,6 @@ public class Player extends MUDObject implements Mobile
 	}
 
 	public void setEditor(final Editors editor) {
-		if( editor != Editors.NONE ) setStatus("EDT");
 		this.editor = editor;
 	}
 
@@ -1454,8 +1454,8 @@ public class Player extends MUDObject implements Mobile
 		
 		return Utils.join(output, "#");
 	}
-
-	@Override
+	
+	// TODO remove?
 	public String toJSON() {
 		final StringBuilder sb = new StringBuilder();
 
@@ -1565,11 +1565,5 @@ public class Player extends MUDObject implements Mobile
 		sb.append("}\n");
 
 		return sb.toString();
-	}
-
-	@Override
-	public Player fromJSON() {
-		// TODO Auto-generated method stub
-		return null;
 	}
 }

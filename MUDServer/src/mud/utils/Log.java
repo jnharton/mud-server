@@ -42,12 +42,16 @@ import java.util.TimeZone;
  *
  */
 public class Log {
+	public static enum Type { LOG, ERROR, DEBUG, CHAT };
+	
 	private static final String DATA_DIR = "data//";
 	
 	private static final Integer BUFFER_SIZE = 1000;
 	private static final Integer MAX_LOG_SIZE = 10000;
-
+	
+	private String name;
 	private String filename;
+	private Type type;
 	private PrintWriter output;
 	
 	private boolean isOpen = false;
@@ -100,6 +104,7 @@ public class Log {
 		final String date = (month + 1) + "-" + day + "-" + year;
 		final String time = hour + "-" + minute;
 		
+		this.name = name;
 		this.filename = name + "_" + date + "_" + time + ".txt";
 		
 		this.useBuffer = buffer;
@@ -109,8 +114,16 @@ public class Log {
 		this.lines_written = 0;
 	}
 	
+	public String getName() {
+		return this.name;
+	}
+	
 	public String getFileName() {
 		return this.filename;
+	}
+	
+	public Type getType() {
+		return this.type;
 	}
 	
 	/**
@@ -224,7 +237,7 @@ public class Log {
 				openLog();
 			}
 		}
-		else System.out.println("Game> Log File not open, debug coding.");
+		else System.out.println("Game> Log File not open, debug coding. [" + getFileName() + "]");
 	}
 
 	/**
@@ -242,7 +255,7 @@ public class Log {
 			this.isOpen = false;
 		}
 		else {
-			System.out.println("Game> Log File not open, debug coding.");
+			System.out.println("Game> Log File not open, debug coding. [" + getFileName() + "]");
 		}
 	}
 	
