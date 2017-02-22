@@ -33,7 +33,7 @@ public class Slot {
 	private String description;        // descriptive text
 	
 	private SlotType slotType;         // the type of slot this is
-	private ItemType itemType;         // the type of item the slot can hold
+	private ItemType[] itemTypes;      // the type of item the slot can hold
 	
 	private Item item;                 // the item the slot currently holds
 
@@ -45,9 +45,9 @@ public class Slot {
 	 * @param itemType
 	 */
 	//public Slot(final SlotType[] slotTypes, final ItemType itemType) {
-	public Slot(final SlotType slotType, final ItemType itemType) {
+	public Slot(final SlotType slotType, final ItemType...itemTypes) {
 		this.slotType = slotType;
-		this.itemType = itemType;
+		this.itemTypes = itemTypes;
 	}
 	
 	/**
@@ -110,7 +110,11 @@ public class Slot {
 	 * @return a string indicating the item type that fits in the slot
 	 */
 	public ItemType getItemType() {
-		return this.itemType;
+		return this.itemTypes[0];
+	}
+	
+	public ItemType[] getItemTypes() {
+		return this.itemTypes;
 	}
 	
 	/**
@@ -120,7 +124,15 @@ public class Slot {
 	 * @return a boolean indicative of whether this slot is of that type
 	 */
 	public boolean isType(final ItemType iType) {
-		return this.itemType == iType;
+		boolean typeMatch = false;
+		
+		for(final ItemType it : this.itemTypes) {
+			typeMatch = (it == iType);
+			
+			if( typeMatch ) break;
+		}
+		
+		return typeMatch;
 	}
 	
 	/**

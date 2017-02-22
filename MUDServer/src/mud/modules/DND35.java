@@ -74,8 +74,8 @@ public class DND35 implements GameModule {
 		player.addSlot("ring5",    new Slot(SlotTypes.FINGER, ItemTypes.RING));
 		player.addSlot("ring6",    new Slot(SlotTypes.FINGER, ItemTypes.RING));
 		player.addSlot("gloves",   new Slot(SlotTypes.HANDS,  ItemTypes.CLOTHING));
-		player.addSlot("weapon",   new Slot(SlotTypes.RHAND,  ItemTypes.WEAPON));
-		player.addSlot("weapon1",  new Slot(SlotTypes.LHAND,  ItemTypes.WEAPON));
+		player.addSlot("weapon",   new Slot(SlotTypes.RHAND,  ItemTypes.WEAPON, ItemTypes.WAND));
+		player.addSlot("weapon1",  new Slot(SlotTypes.LHAND,  ItemTypes.WEAPON, ItemTypes.WAND));
 		player.addSlot("weapon2",  new Slot(SlotTypes.HANDS,  ItemTypes.WEAPON));
 		player.addSlot("belt",     new Slot(SlotTypes.WAIST,  ItemTypes.CLOTHING));
 		player.addSlot("boots",    new Slot(SlotTypes.FEET,   ItemTypes.CLOTHING));

@@ -39,6 +39,9 @@ public class Trade {
 	
 	public final Hashtable<Player, Tuple<Coins, List<Item>>> offers;
 	
+	public boolean p1_confirm = false;
+	public boolean p2_confirm = false;
+	
 	public Trade(final Player player1, final Player player2) {
 		this.p1 = player1;
 		this.p2 = player2;

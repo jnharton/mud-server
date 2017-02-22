@@ -40,8 +40,8 @@ public class Creature extends MUDObject implements Mobile {
 	
 	protected boolean ridable = false; // can this creature be ridden (default: false)
 	
-	int hp = 10;
-	int maxhp = 10;
+	public int hp = 10;
+	public int maxhp = 10;
 	
 	// movement
 	protected boolean moving;

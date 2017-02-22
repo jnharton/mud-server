@@ -116,10 +116,8 @@ public class ChatChanneler
 	 * @param channelName
 	 * 
 	 * @return
-	 * 
-	 * @throws NoSuchChannelException
 	 */
-	public Result add(final Player player, final String channelName) throws NoSuchChannelException {
+	public Result add(final Player player, final String channelName) {
 		return add(player, channelName, "");
 	}
 	
@@ -137,8 +135,6 @@ public class ChatChanneler
 	 * @param password
 	 * 
 	 * @return
-	 * 
-	 * @throws NoSuchChannelException
 	 */
 	public Result add(final Player player, final String channelName, final String password) {
 		Result result = Result.NIL;

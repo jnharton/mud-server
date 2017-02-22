@@ -10,12 +10,24 @@ public class TableEntry implements Comparable<TableEntry>{
 	
 	public TableEntry(final Integer nId, final Object...objects) {
 		this.id = nId;
+		this.cols = objects.length;
+		
+		this.data = objects;
+	}
+	
+	public TableEntry(final Integer nId, final Column[] columns, final Object...objects) {
+		this.id = nId;
+		this.cols = objects.length;
+		
 		this.data = objects;
 	}
 	
 	public Integer getId() {
 		return this.id;
-		
+	}
+	
+	public Integer getNumColumns() {
+		return this.cols;
 	}
 	
 	public Object[] getData() {

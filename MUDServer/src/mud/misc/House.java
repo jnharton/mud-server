@@ -18,7 +18,9 @@ package mud.misc;
  */
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -56,8 +58,7 @@ import mud.utils.Point;
  */
 
 // TODO I'm thinking house should be a subclass of building
-public class House
-{
+public class House {
 	// where dropped stuff goes
 	private final int FLOOR   = 1;
 	private final int STORAGE = 2;
@@ -68,13 +69,15 @@ public class House
 	public final int MEDIUM = 2;
 	public final int LARGE = 3;
 
-	final public List<Room> rooms = new ArrayList<Room>();
+	final private List<Room> rooms;
 
-	final public List<Thing> things = new LinkedList<Thing>();
-	final public List<Item> items = new LinkedList<Item>();
+	final private List<Thing> things;
+	final private List<Item> items;
 
-	final public Map<Thing, Point> thingPos = new HashMap<Thing, Point>();
-	final public Map<Item,  Point> itemPos  = new HashMap<Item,  Point>();
+	final private Map<Thing, Point> thingPos;
+	final private Map<Item,  Point> itemPos;
+	
+	final private Map<Player, String> accessPerms;
 
 	private Player owner;
 
@@ -95,12 +98,30 @@ public class House
 	 */
 	
 	public House(final Player owner, final int maxRooms) {
+		this.rooms = new ArrayList<Room>();
+
+		this.things = new LinkedList<Thing>();
+		this.items = new LinkedList<Item>();
+
+		this.thingPos = new Hashtable<Thing, Point>();
+		this.itemPos  = new Hashtable<Item,  Point>();
+		
+		this.accessPerms = new Hashtable<Player, String>();
+		
 		this.owner = owner;
 		this.max_rooms = maxRooms;
 	}
 
 	public int getMaxRooms() {
 		return this.max_rooms;
+	}
+	
+	public Player getOwner() {
+		return this.owner;
+	}
+	
+	public void setOwner(final Player newOwner) {
+		this.owner = newOwner;
 	}
 
 	public int getSize() {
@@ -119,6 +140,14 @@ public class House
 		};
 
 		return info;
+	}
+	
+	public void getRoom() {
+		
+	}
+	
+	public List<Room> getRooms() {
+		return Collections.unmodifiableList(this.rooms);
 	}
 
 	public boolean addRoom(final Room room) {

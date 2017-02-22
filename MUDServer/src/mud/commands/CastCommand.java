@@ -64,7 +64,7 @@ public class CastCommand extends Command {
 		// should this be reversed???
 		// ^No, but the player's level and effective caster level is not equivalent to the spell's level
 		// PL -> SL: 0 -> 0, 1,2 -> 1, 3,4 -> 2, 5,6 -> 3, 7 -> 4...
-		if (player.getLevel() < spell.getLevel()) {
+		if (player.getLevel() >= spell.getLevel()) {
 			// add reagents check!
 			if( spell.getReagents() != null ) {
 				/*for(Reagent r : spell.getReagents().values()) {
@@ -95,7 +95,8 @@ public class CastCommand extends Command {
 			}
 
 			// expend mana
-			player.setMana(-spell.getManaCost());
+			//player.setMana(-spell.getManaCost());
+			player.setMana(-5);
 			
 			// calculate spell failure (basic, just checks armor for now)
 			Armor armor = (Armor) player.getSlots().get("armor").getItem();
@@ -145,6 +146,7 @@ public class CastCommand extends Command {
 			
 			player.setLastSpell(spell);
 		}
+		else send("Insufficient spell mastery (level too low).", client);
 	}
 	
 	// is TARGET a valid target for SPELL cast by PLAYER

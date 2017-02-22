@@ -96,13 +96,21 @@ public class Merchant extends NPC implements Vendor {
 	}
 
 	public boolean hasItem(final String name) {
+		boolean exactMatch = false;
+		boolean partialMatch = false;
+		
 		for (final Item item : this.stock) {
-			if (item.getName().equals(name)) {
-				return true;
+			final String itemName = item.getName();
+			
+			if ( itemName.equals(name) )          exactMatch = true;
+			else if ( itemName.startsWith(name) ) partialMatch = true;
+			
+			if ( exactMatch ) {
+				
 			}
 		}
 		
-		return false;
+		return exactMatch || partialMatch;
 	}
 
 	public Item getItem(final String name) {

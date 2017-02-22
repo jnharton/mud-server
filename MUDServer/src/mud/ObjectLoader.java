@@ -71,7 +71,8 @@ public class ObjectLoader {
 			char oTypeFlag;
 
 			if (oInfo.charAt(0) == '&') { // means to ignore that line
-				debug("`loadObjects` ignoring line: " + oInfo);
+				debug("`loadObjects` ignoring line: ");
+				debug(oInfo);
 				debug("");
 				
 				// grab the dbref number and remove the prefixing & character
@@ -80,8 +81,8 @@ public class ObjectLoader {
 				NullObject no = new NullObject(oDBRef);
 				no.lock(); // lock the NullObject
 				
-				debug("NULLObject (" + oDBRef + ") Locked?: " + no.isLocked()); // print out the lock state
-				debug("");
+				//debug("NULLObject (" + oDBRef + ") Locked?: " + no.isLocked()); // print out the lock state
+				//debug("");
 
 				objectDB.add(no);
 				
@@ -97,7 +98,8 @@ public class ObjectLoader {
 				oFlags = attr[2].substring(1, attr[2].length());
 				oDesc = attr[3];
 				oLocation = Integer.parseInt(attr[4]);
-
+				
+				debug("---- Database Object");
 				debug("DBRef: " + oDBRef);
 				debug("Name: " + oName);
 				debug("Flags: " + oFlags);
@@ -713,9 +715,15 @@ public class ObjectLoader {
 			
 			return container;
 		}
+		/*else if (it == ItemTypes.DRINK) {
+			
+			final Drink drink;
+			
+			return drink;
+		}*/
 		else if (it == ItemTypes.POTION) {
 			int stack_size = Integer.parseInt(attr[7]);
-			String sn = attr[8];
+			String spellName = attr[8];
 			
 			// TODO loading and storing spell and effect info?
 			
@@ -764,7 +772,7 @@ public class ObjectLoader {
 			return new Item(oDBRef, oName, flags, oDesc, oLocation);
 		}
 		else throw new InvalidItemTypeException("No such ItemType (" + itemType + ")");
-		// ^ throwing an exception seems cool, but isn't helpful unless I have a check for every item type
+		// TODO FIX THIS?! throwing an exception seems cool, but isn't helpful unless I have a check for every item type
 	}
 	
 	private final Thing loadThing(final String itemData) throws InvalidThingTypeException {

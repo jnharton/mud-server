@@ -9,5 +9,6 @@ public class LoginData {
 	public String temp = "";
 	
 	public LoginData(final String initialState) {
+		this.state = initialState;
 	}
 }

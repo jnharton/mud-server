@@ -296,7 +296,8 @@ public class PipBuck extends Item implements Device, ExtraCommands {
 				}
 			}
 		});
-
+		
+		// ex. vp <args>
 		commands.put("vp",
 				new Command("view pipbuck") {
 			public void execute(final String arg, final Client client) {

@@ -12,9 +12,9 @@ public final class ItemTypes {
 	public static final ItemType CIRCLET   = new ItemType("Circlet",   3);  // TODO kill
 	public static final ItemType CLOTHING  = new ItemType("Clothing",  4);
 	public static final ItemType CONTAINER = new ItemType("Container", 5);
-	public static final ItemType DRINK     = new ItemType("Drink",     8);
-	public static final ItemType EAR_RING  = new ItemType("Earring",   6);  // TODO kill
-	public static final ItemType FOOD      = new ItemType("Food",      7);
+	public static final ItemType DRINK     = new ItemType("Drink",     6);
+	public static final ItemType EAR_RING  = new ItemType("Earring",   7);  // TODO kill
+	public static final ItemType FOOD      = new ItemType("Food",      8);
 	public static final ItemType NECKLACE  = new ItemType("Necklace",  9);  // TODO kill
 	public static final ItemType NONE      = new ItemType("None",      10);
 	public static final ItemType POTION    = new ItemType("Potion",    11);

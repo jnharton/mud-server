@@ -150,29 +150,26 @@ public final class ObjectDB implements ODBI {
 	 */
 	private void addUnused(int unusedId) {
 		MUDObject mobj = getById(unusedId);
-		int next = peekNextId();{
+		
+		// TODO do we really need to double check what we've presumably already vetted?
+		if( mobj instanceof NullObject ) {
+			NullObject no = (NullObject) mobj;
 
-			if( mobj instanceof NullObject ) {
-				NullObject no = (NullObject) mobj;
-
-				if( !no.isLocked() ) {
-					System.out.println("dbref isn't in use");
-					this.unusedDBNs.push(unusedId);
-				}
-				else {
-					System.out.println("NullObject is locked");
-				}
-			}
-			else if( reservedDBNs.contains(unusedId) ) {
-				System.out.println("That id is reserved!");
-			}
-			else if(unusedDBNs.empty() && unusedId == next - 1) { // we just made a new one, but it's the most recent one in the db, just go back one
-				this.nextId--;
+			if( !no.isLocked() ) {
+				System.out.println("dbref isn't in use");
+				this.unusedDBNs.push(unusedId);
 			}
 			else {
-				System.out.println("Something is already using that id!");
+				System.out.println("NullObject is locked");
 			}
 		}
+		else if( reservedDBNs.contains(unusedId) ) {
+			System.out.println("That id is reserved!");
+		}
+		else {
+			System.out.println("Something is already using that id!");
+		}
+
 	}
 
 	public Stack<Integer> getUnused() {
@@ -275,9 +272,9 @@ public final class ObjectDB implements ODBI {
 	 * mostly used for adding objects in file to in-memory database, all of
 	 * which have, of course, valid dbrefs that follow each other sequentially.
 	 * 
-	 * @param item
+	 * @param object
 	 */
-	public void add(final MUDObject item) {
+	public void add(final MUDObject object) {
 		//System.out.println("");
 		//System.out.println("ObjectDB " + nextId + ": " + item.getDBRef());
 
@@ -292,84 +289,138 @@ public final class ObjectDB implements ODBI {
 		 * the code below will lock the NullObject (prevent editing) so that the errors
 		 * are easier to find in the database later?
 		 */
-		while( item.getDBRef() != nextId && getById(item.getDBRef()) == null ) {
-			// TODO fix this code, seriously! it will fill up the database with nullobjects if it hits ONE problem!
-			System.out.println("nextId: " + nextId);
-			System.out.println("dbref:  " + item.getDBRef());
-			System.out.println("");
 
-			NullObject no = new NullObject(nextId);
-			no.lock();
+		// >>> fills in gaps in DBRef Ids with nullobjects and handles ignored db lines (hence locking)
+		// if the item dbref doesn't match the next one AND there is no entry for that id...
 
-			this.objsById.put(no.getDBRef(), no);
-
-			System.out.println("Inserted NullObject!");
-			System.out.println("");
-
-			this.nextId++;
-
-			continue;
-		}
 
 		System.out.println("");
-		System.out.println("ObjectDB " + nextId + ": " + item.getDBRef());
+		System.out.println("ObjectDB " + nextId + ": " + object.getDBRef());
 
-		System.out.println(item.getDBRef() + ": " + item.getName());
+		System.out.println(object.getDBRef() + ": " + object.getName());
 		System.out.println("");
 
-		if(item instanceof NullObject) {
-			NullObject no = (NullObject) item;
+		// --
+		if( object.getDBRef() != nextId ) {
+			// TODO This shouldn't be a problem at all, maybe... (There should always be a line in the database for every dbref that's ever been used?
+			if( object.getDBRef() > nextId ) {
+				// TODO the check for a non-null object is a KLUDGE so that we can use add(...) for loading and new stuff.
+				while( object.getDBRef() != nextId && getById(object.getDBRef()) == null) {
+					// TODO fix this code, seriously! it will fill up the database with nullobjects if it hits ONE problem!
+					System.out.println("nextId: " + nextId);
+					System.out.println("dbref:  " + object.getDBRef());
+					System.out.println("");
 
-			objsById.put(no.getDBRef(), no);
+					// create a NullObject AND lock it
+					NullObject no = new NullObject(nextId);
+					no.lock();
 
-			System.out.println("Inserted NullObject!");
-			System.out.println("");
+					// insert NullObject
+					this.objsById.put(no.getDBRef(), no);
 
-			if( !no.isLocked() ) {
-				addUnused(item.getDBRef());
+					System.out.println("Inserted NullObject!");
+					System.out.println("");
+
+					this.nextId++;
+
+					continue;
+				}
+
 			}
-
-			nextId++;
 		}
-		else {
-			if( item.isType(TypeFlag.EXIT) ) {
-				if( ((Exit) item).getExitType() == ExitType.DOOR ) {
-					final Door d = (Door) item;
+		
+		boolean skip = false;
+
+		this.objsById.put(object.getDBRef(), object);
+
+		/* If there's a null object in the database, let us know.
+		 * If it's just because of an ignored line it will be locked,
+		 * but otherwise we should take note of the dbref for re-use
+		 */
+		if(object instanceof NullObject) {
+			System.out.println("Inserted NullObject!");
+
+			NullObject no = (NullObject) object;
+
+			// if it's just an empty space from a deleted objects we can reuse the id
+			if( no.isLocked() ) System.out.println(">>> Object is Locked <<<");
+			else                addUnused( object.getDBRef() );
+
+			skip = true;
+		}
+
+		this.objsByName.put(object.getName(), object);
+
+		// TODO what type is a NullObject, does it have a type? (if it does we can avoid the boolean here...)
+		if( !skip ) {
+			// add additional names for exits (conveniences/game/player use)
+			if( object.isType(TypeFlag.EXIT) ) {
+				final Exit exit = (Exit) object; 
+
+				if( exit.getExitType() == ExitType.DOOR ) {
+					final Door d = (Door) object;
 
 					// kludge for doors here (give one object two different name entries)
 					if( d.getName().contains("/") ) {
 						String[] temp = d.getName().split("/");
 
-						objsByName.put(temp[0], item);
-						objsByName.put(temp[1], item);
+						this.objsByName.put(temp[0], object);
+						this.objsByName.put(temp[1], object);
 					}
 				}
 			}
-			else {
-				objsByName.put(item.getName(), item);
-			}
-
-			objsById.put(item.getDBRef(), item);
-
-			nextId++;
 		}
+
+		this.nextId++;
 	}
 	
-	public void addAsNew(final MUDObject item) {
-		if( !this.unusedDBNs.empty() ) {
-			item.setDBRef( this.unusedDBNs.pop() );
+	// TODO NOTE: do not use addAsNew with NULLObjects?
+	public void addAsNew(final MUDObject object) {
+		if( object instanceof NullObject) {
+			System.out.println("ObjectDB (addAsNew): Error");
+			return;
 		}
-		else {
-			item.setDBRef( this.nextId );
-		}
+		
+		if( !this.unusedDBNs.empty() ) object.setDBRef( this.unusedDBNs.pop() );
+		else                           object.setDBRef( this.nextId++ );
+		
+		// TODO adding it is a buggy mess due to conflicting uses of add(...), load vs add new stuff
+		//add(item);
+		
+		this.objsById.put(object.getDBRef(), object);
+		this.objsByName.put(object.getName(), object);
 
-		add(item);
+		// add additional names for exits (conveniences/game/player use)
+		if( object.isType(TypeFlag.EXIT) ) {
+			final Exit exit = (Exit) object; 
+
+			if( exit.getExitType() == ExitType.DOOR ) {
+				final Door d = (Door) object;
+
+				// kludge for doors here (give one object two different name entries)
+				if( d.getName().contains("/") ) {
+					String[] temp = d.getName().split("/");
+
+					this.objsByName.put(temp[0], object);
+					this.objsByName.put(temp[1], object);
+				}
+			}
+		}
 	}
 
 	// remove object from DB, but insert a NullObject placeholder
-	public void remove(final MUDObject item) {    	
-		this.objsById.put(item.getDBRef(), new NullObject(item.getDBRef()));
-		this.objsByName.remove(item.getName());
+	public void remove(final MUDObject item) {
+		final int DBREF = item.getDBRef();
+		
+		this.objsById.remove( DBREF );
+		this.objsByName.values().remove(item);
+		
+		final NullObject no = new NullObject( DBREF );
+		
+		this.objsById.put(DBREF, no);
+		this.objsByName.put(no.getName(), no);
+		
+		addUnused( DBREF );
 	}
 
 	// Ensure object is in both maps, overwriting any object in the id map.

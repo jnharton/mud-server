@@ -1,7 +1,6 @@
 package mud.misc;
 
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -10,13 +9,22 @@ import java.util.NoSuchElementException;
 import mud.utils.Utils;
 
 public class Table implements Iterable<TableEntry> {
-	enum CType { INTEGER, STRING };
+	public enum CType { INTEGER, STRING };
 
 	private String name;
 
 	private Column[] columns;
 	private List<TableEntry> rows;
-
+	
+	/**
+	 * 
+	 * table format string consists of a sequence of markers such as:
+	 * %i%s%s%i%s
+	 * 
+	 * @param tableName
+	 * @param tableFormat
+	 * @param names
+	 */
 	public Table(final String tableName, final String tableFormat, final String...names) {
 		this.name = tableName;
 		this.columns = new Column[names.length];
@@ -46,47 +54,53 @@ public class Table implements Iterable<TableEntry> {
 		}
 	}
 	
-	public void add(final TableEntry te) {
-		// if it exists, change it, else add it
-		if( this.rows.contains(te) ) {
-			int index = this.rows.indexOf(te);
-			this.rows.set(index, te);
-		}
-		else {
-			this.rows.add(te);
-		}
-	}
-	
-	public void add(final Object...data ) {
-		//TableEntry te = new TableEntry(0, Arrays.copyOfRange(data, 0, columns.length));
-		this.rows.add( new TableEntry(0, Arrays.copyOfRange(data, 0, columns.length)) );
-	}
-	
 	public String getName() {
 		return this.name;
 	}
+	
+	/**
+	 * Add an entry to the table.
+	 * 
+	 * WARNING: Whether the entry structure matches the table's
+	 * isn't checked here...
+	 * 
+	 * @param te
+	 */
+	public void add(final TableEntry te) {
+		if( te.getNumColumns() == columns.length ) {
+			// if it exists, change it, else add it
+			if( this.rows.contains(te) ) {
+				int index = this.rows.indexOf(te);
+				this.rows.set(index, te);
+			}
+			else {
+				this.rows.add(te);
+			}
+		}
+	}
+	
+	/*public void add(final Object...data ) {
+		//TableEntry te = new TableEntry(0, Arrays.copyOfRange(data, 0, columns.length));
+		this.rows.add( new TableEntry(0, Arrays.copyOfRange(data, 0, columns.length)) );
+	}*/
 
 	public TableEntry get(final int index) {
 		return this.rows.get(index);
 	}
-
-	// numerical sort
+	
+	private void swap(int tableIndex1, int tableIndex2) {
+		final TableEntry te = get(tableIndex1);
+		
+		this.rows.set(tableIndex1, get(tableIndex2));
+		this.rows.set(tableIndex2, te);
+	}
+	
+	public int size() {
+		return this.rows.size();
+	}
+	
 	public void sort() {
-		for(int i = 0; i < this.rows.size(); i += 2) {
-			TableEntry te = this.rows.get(i);
-			TableEntry te1 = this.rows.get(i + 1);
-			
-			if(te.compareTo(te1) == 1) {
-				this.rows.set(i + 1, te);
-				this.rows.set(i, te1);
-			}
-			else if(te.compareTo(te1) == 0) {
-			}
-			else if(te.compareTo(te1) == -1) {
-				this.rows.set(i, te1);
-				this.rows.set(i + 1, te);
-			}
-		}
+		Collections.sort(this.rows);
 	}
 
 	@Override
@@ -95,22 +109,17 @@ public class Table implements Iterable<TableEntry> {
 	}
 
 	public class TableIterator implements Iterator<TableEntry> {
-		int index = -1;
+		private int index = -1;
 
 		@Override
 		public boolean hasNext() {
-			return (index < rows.size() - 1);
+			return (this.index < rows.size() - 1);
 		}
 
 		@Override
 		public TableEntry next() {
-			if (hasNext()){
-				index++;
-				return rows.get(index);
-			}
-			else {
-				throw new NoSuchElementException();
-			}
+			if( hasNext() ) return rows.get(index++);
+			else            throw new NoSuchElementException();
 		}
 
 		@Override
@@ -150,10 +159,10 @@ public class Table implements Iterable<TableEntry> {
 		Table table = new Table("Treasure Values per Encounter", "%i %s", "Encounter Level", "Treasure per Encounter");
 		
 		table.add( new TableEntry(0, 1, "300 gp"));
-		table.add( new TableEntry(0, 2, "600 gp"));
-		table.add( new TableEntry(0, 3, "900 gp"));
-		table.add( new TableEntry(0, 4, "1200 gp"));
-		table.add( new TableEntry(0, 5, "1600 gp"));
+		table.add( new TableEntry(1, 2, "600 gp"));
+		table.add( new TableEntry(2, 3, "900 gp"));
+		table.add( new TableEntry(3, 4, "1200 gp"));
+		table.add( new TableEntry(4, 5, "1600 gp"));
 		
 		printTable(table);
 		

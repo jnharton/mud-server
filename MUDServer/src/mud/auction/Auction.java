@@ -23,12 +23,12 @@ public class Auction {
 	private Coins initial_price; // starting price
 	private Coins buyout_price;  // price at which you can buy the item outright (if one is set)
 	
-	private int duration;        // length of the auction ( in seconds )
+	protected int duration;      // length of the auction ( in seconds )
 	protected int remaining;     // time until the auction ends ( in seconds )
 	
-	private Bid currentBid;
+	private List<Bid> bids;
 	
-	private LinkedList<Bid> bids;
+	private Bid currentBid;
 	
 	/**
 	 * create an auction for the specified items, setting
@@ -54,10 +54,10 @@ public class Auction {
 			this.duration = 3600;  // default is 1 hour ( 60s/min x 60min/hr = 3600s)
 			this.remaining = 3600; // starts same as duration
 		}
-
-		this.currentBid = null;
 		
-		bids = new LinkedList<Bid>();
+		this.bids = new LinkedList<Bid>();
+		
+		this.currentBid = null;
 	}
 	
 	/**
@@ -72,6 +72,14 @@ public class Auction {
 		this(seller, auctionItem, initial, duration);
 		
 		this.buyout_price = buyout;
+	}
+	
+	public Player getSeller() {
+		return this.seller;
+	}
+	
+	public Item getItem() {
+		return this.item;
 	}
 	
 	/**
@@ -93,16 +101,8 @@ public class Auction {
 	}
 	
 	public boolean hasBids() {
-		if( bids.size() > 0 ) { return true; }
-		else { return false; }
-	}
-	
-	public Player getSeller() {
-		return this.seller;
-	}
-	
-	public Item getItem() {
-		return this.item;
+		if( bids.size() > 0 ) return true;
+		else                  return false;
 	}
 	
 	public List<Bid> getBids() {

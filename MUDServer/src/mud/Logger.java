@@ -88,7 +88,7 @@ public final class Logger {
 	public Map<String, Boolean> getConfig() {
 		return Collections.unmodifiableMap(this.config);
 	}
-
+	
 	public void register(final Log log) {
 		if( this.logs.containsKey( log.getName() ) ) {
 			System.out.println("That log conflicts with an existing log by the same name.");

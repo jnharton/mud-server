@@ -24,21 +24,21 @@ import java.util.List;
 import java.util.Map;
 
 import mud.objects.Exit;
-import mud.objects.Room;
 
-public class Building {
+public class Structure {
 	private String name;
 	private String shortName;
-	
-	private Room parent;
 	
 	private Map<String, Exit> entrances; // places where you can enter the building (ex. doors, windows, holes in the walls)
 	private Map<String, Exit> exits;     // places where you can leave the building (ex. doors, windows, holes in the walls)
 	
 	private List<Edge> sides;
 	
-	public Building(Room parent, String name, String shortName, Edge...edges) {
-		this.parent = parent;
+	public Structure(final String name, final String shortName) {
+		this(name, shortName, new Edge[0]);
+	}
+	
+	public Structure(final String name, final String shortName, Edge...edges) {
 		this.name = name;
 		this.shortName = shortName;
 		this.sides = new LinkedList<Edge>( Arrays.asList( edges ) );	
@@ -58,12 +58,11 @@ public class Building {
 	 * character can walk.
 	 * 
 	 * NOTE:
-	 * Edges consist of two points and the length of the straight line connecting
-	 * them.
+	 * Edges consist of two points and the length of the straight line connecting them.
 	 * 
 	 * @return
 	 */
 	public List<Edge> getSides() {
-		return Collections.unmodifiableList( sides );
+		return Collections.unmodifiableList( this.sides );
 	}
 }

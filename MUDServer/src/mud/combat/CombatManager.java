@@ -36,11 +36,15 @@ public class CombatManager {
 	
 	public void addCombatant(final Player player) {
 		this.addCombatant(player);
-		this.sortByInitiative();
+		//this.sortByInitiative();
 	}
 	
 	public void removeCombatant(final Player player) {
 		combatants.remove(player);
+	}
+	
+	private int calcInitiative() {
+		return Utils.roll(1, 20);
 	}
 	
 	private void sortByInitiative() {
@@ -49,7 +53,7 @@ public class CombatManager {
 		List<Player> temp = new ArrayList<Player>(this.combatants.size());
 		
 		for(final Player p : this.combatants) {
-			int initiative = Utils.roll(1, 20); // roll initiative
+			int initiative = calcInitiative();  // roll initiative
 			plrInits.put(p, initiative);        // store in the hashtable
 			
 			if( temp.isEmpty() ) temp.add(p);

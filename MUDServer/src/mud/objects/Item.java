@@ -7,6 +7,7 @@ import mud.TypeFlag;
 import mud.MUDObject;
 import mud.magic.Enchantment;
 import mud.misc.Coins;
+import mud.misc.GameData;
 import mud.misc.Script;
 import mud.misc.SlotType;
 import mud.misc.SlotTypes;
@@ -31,6 +32,7 @@ public class Item extends MUDObject {
 	protected Coins baseValue = Coins.gold(1);      // should be 'protected'?
 	
 	// game/system level "rules"
+	protected GameData gd;
 	
 	protected boolean canAuction = true;      // allows/disallows auctioning this item (default: true)
     
@@ -38,8 +40,6 @@ public class Item extends MUDObject {
     protected boolean edible = false;         // edible -- implies FOOD
     protected boolean equippable = false;     // equippable -- implies Equippable (default: false)
     
-    //protected boolean magical = false;
-	
     protected boolean unique = false;         // is this item Unique (only one of them, cannot be copied)
 	
     // environment "rules"
