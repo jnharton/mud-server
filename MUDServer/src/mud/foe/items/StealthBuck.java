@@ -7,6 +7,7 @@ import java.util.TimerTask;
 import mud.Command;
 import mud.foe.FOEItemTypes;
 import mud.foe.FOESlotTypes;
+import mud.foe.GameUtils;
 import mud.foe.misc.Module;
 import mud.interfaces.ExtraCommands;
 import mud.misc.Effect;
@@ -44,8 +45,8 @@ public final class StealthBuck extends Item implements ExtraCommands, Module {
 	{
 		commands.put("stealth", new Command("turn stealth field ON or OFF.") {
 			public void execute(final String arg, final Client client) {
-				final Player player = getPlayer(client);
-				final PipBuck p = PipBuck.getPipBuck(player); // get pipbuck
+				final Player player = getPlayer(client);        // get player
+				final PipBuck p = GameUtils.getPipBuck(player); // get pipbuck
 
 				if( p != null ) {
 					final Module module = p.getModule("StealthBuck");
@@ -243,6 +244,7 @@ public final class StealthBuck extends Item implements ExtraCommands, Module {
 	public StealthBuck getCopy() {
 		return new StealthBuck(this);
 	}
+	
 	@Override
 	public String toString() {
 		return getName();

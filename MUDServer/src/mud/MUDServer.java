@@ -21,11 +21,13 @@ package mud;
 
 // Java Libraries
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -2604,7 +2606,7 @@ public class MUDServer implements MUDServerI, MUDServerAPI {
 				// TODO there's a check for cmd == "" here
 				// if( "".equals(cmd) ) return;
 
-				// see if there are any namerefs, and if so evaluate them
+				// evaluate any named references (namerefs) in the arguments
 				arg = nameref_eval(arg, client);
 
 				debug("Argument(evaluated): \"" + arg + "\""); // print the trimmed argument
@@ -8752,9 +8754,11 @@ public class MUDServer implements MUDServerI, MUDServerAPI {
 				globalNameRefs = true;
 			}
 		}
+		
+		final String arg_lc = arg.toLowerCase();
 
 		if (!globalNameRefs) {
-			if (arg.toLowerCase().equals("#list")) {
+			if ( arg_lc.equals("#list") || arg_lc.equals("#l") ) {
 				send("Name Reference Table", client);
 				send("------------------------------------------------", client);
 
@@ -8764,18 +8768,21 @@ public class MUDServer implements MUDServerI, MUDServerAPI {
 
 				send("------------------------------------------------", client);
 			}
-			else if (arg.toLowerCase().equals("#clear")) {
+			else if ( arg_lc.equals("#clear") ) {
 				player.clearNameRefs();
+				
 				send("Name Reference Table cleared!", client);
 			}
 			else if (args.length == 2) {
-				if (args[0].equals("#delete")) {
+				if ( args[0].equals("#delete") || args[0].equals("#d") ) {
 					player.getNameReferences().remove(args[1]);
+					
 					send("nameRef deleted.", client);
 				}
 				else {
 					try {
 						player.setNameRef(args[0], Integer.parseInt(args[1]));
+						
 						send("nameRef allocated.", client);
 						send(args[0].substring(0, args[0].length()) + " allocated to " + args[1], client);
 					}
@@ -8825,8 +8832,6 @@ public class MUDServer implements MUDServerI, MUDServerAPI {
 		final List<String> output = new LinkedList<String>();
 		
 		// TODO should I use room names for location information?
-		//send("Race         Name             Loc   Ctrld Controller", client);
-		//send("------------ ---------------- ----- ----- ----------------", client);
 		output.add("Race         Name             Loc   Ctrld Controller");
 		output.add("------------ ---------------- ----- ----- ----------------");
 
@@ -8846,7 +8851,6 @@ public class MUDServer implements MUDServerI, MUDServerAPI {
 			}
 			else controlled = "No";
 			
-			//send(race + " " + name + " " + location + " " + Utils.padRight(controlled, ' ', 5) + " " + controller, client);
 			output.add(race + " " + name + " " + location + " " + Utils.padRight(controlled, ' ', 5) + " " + controller);
 		}
 		
@@ -15890,6 +15894,22 @@ public class MUDServer implements MUDServerI, MUDServerAPI {
 		objectDB.save(BACKUP_DIR + filename);
 	}
 
+	public void saveJSON() {
+		GsonBuilder builder = new GsonBuilder(); // Or use new GsonBuilder().create();
+
+		builder.setPrettyPrinting();
+
+		Gson gson = builder.create();
+
+		for(final MUDObject object : objectDB.getObjects()) {
+			System.out.println(object.getDBRef() + " : " + object.getName());
+
+			final String fileName = DATA_DIR + "json\\" + object.getDBRef() + ".json";;
+
+			Utils.saveStrings(fileName, new String[] { gson.toJson(object) });
+		}
+	}
+
 	public void saveHelpFiles() {
 		synchronized (this.helpTable) {
 			for (final Entry<String, String[]> hme : this.helpTable.entrySet()) {
@@ -16479,6 +16499,32 @@ public class MUDServer implements MUDServerI, MUDServerAPI {
 			
 			br.close();
 			fr.close();
+		}
+		catch(final NullPointerException npe) {
+			System.out.println("--- Stack Trace ---");
+			npe.printStackTrace();
+		}
+		catch(final FileNotFoundException fnfe) {
+			System.out.println("--- Stack Trace ---");
+			fnfe.printStackTrace();
+		}
+		catch(final IOException ioe) {
+			System.out.println("--- Stack Trace ---");
+			ioe.printStackTrace();
+		}
+	}
+	
+	public void saveChannels(final String filename) {
+		File f;
+		FileWriter fw;
+		BufferedWriter bw;
+		
+		try {
+			f = new File(filename);
+			fw = new FileWriter(f);
+			bw = new BufferedWriter(fw);
+			
+			
 		}
 		catch(final NullPointerException npe) {
 			System.out.println("--- Stack Trace ---");
@@ -17239,19 +17285,7 @@ public class MUDServer implements MUDServerI, MUDServerAPI {
 		// TODO work on this part, maybe write some type adapters?
 		
 		/// JSON
-		/*GsonBuilder builder = new GsonBuilder(); // Or use new GsonBuilder().create();
-
-		builder.setPrettyPrinting();
-
-		Gson gson = builder.create();
-
-		for(final MUDObject object : objectDB.getObjects()) {
-			System.out.println(object.getDBRef() + " : " + object.getName());
-			
-			final String fileName = DATA_DIR + "json\\" + object.getDBRef() + ".json";;
-			
-			Utils.saveStrings(fileName, new String[] { gson.toJson(object) });
-		}*/
+		saveJSON();
 		
 		log("Done.");
 		

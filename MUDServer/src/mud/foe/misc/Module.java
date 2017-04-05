@@ -16,18 +16,24 @@ public interface Module {
 	
 	public abstract boolean isEnabled();
 	
-	//
-	public abstract boolean requiresCharging();
+	public default boolean isCompatible(final Device dev) {
+		return true;
+	}
 	
-	default public int getCharge() {
+	//
+	public default boolean requiresCharging() {
+		return false;
+	}
+	
+	public default int getCharge() {
 		return -1;
 	}
 	
-	default public TimerTask charge() {
+	public default TimerTask charge() {
 		return null;
 	}
 	
-	default public boolean isCharged() {
+	public default boolean isCharged() {
 		return false;
 	}
 	

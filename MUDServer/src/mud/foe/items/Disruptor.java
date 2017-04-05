@@ -40,7 +40,6 @@ public class Disruptor extends Item implements ExtraCommands, Module {
 	private TimerTask tt;
 
 	private static final Map<String, Command> commands = new Hashtable<String, Command>();
-
 	{		
 		commands.put("disrupt", new Command("Emit a disruption pulse.") {
 			public void execute(final String arg, final Client client) {

@@ -29,9 +29,12 @@ import mud.utils.Message;
 public class ChatChannel { 
 	private String name;      // channel name
 	private String shortname; // short version of channel name
+	
 	private int restrict;     // restrict access based on some integer
-	private boolean hidden;   // can everyone see this channel
-	private boolean protect;  //
+	
+	private boolean hidden;     // can everyone see this channel
+	private boolean restricted; // is channel access restricted?
+	private boolean protect;    // is the channel protected (is there a password set?)
 	
 	private String password;
 	
@@ -39,7 +42,7 @@ public class ChatChannel {
 	private String chan_color; // channel title color
 	private String text_color; // the color of the channel text
 	
-	private List<Player> listeners;           // players who are listening to the channel
+	private List<Player> listeners;  // players who are listening to the channel
 	private Queue<Message> messages; // messages 'written' to the channel
 	
 	public ChatChannel(final String name) {
@@ -49,10 +52,10 @@ public class ChatChannel {
 	public ChatChannel(final String name, final String chanColor, final String textColor) {
 		this.name = name;
 		this.shortname = name.substring(0, 3).toLowerCase();
+		
 		this.restrict = 0;
 		this.hidden = false;
 		this.protect = false;
-		
 		this.password = "";
 		
 		this.chan_color = chanColor;
@@ -120,7 +123,7 @@ public class ChatChannel {
 	}
 	
 	public boolean checkPassword(final String password) {
-		return this.password.equals(password);
+		return this.password == null || this.password.equals(password);
 	}
 	
 	public void setPassword(final String newPassword) {

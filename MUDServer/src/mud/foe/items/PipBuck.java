@@ -11,9 +11,12 @@ import mud.MUDObject;
 
 import mud.foe.FOEItemTypes;
 import mud.foe.FOESlotTypes;
+import mud.foe.GameUtils;
 import mud.foe.misc.Device;
 import mud.foe.misc.FileSystem;
+import mud.foe.misc.ModularDevice;
 import mud.foe.misc.Module;
+import mud.foe.misc.Result;
 import mud.foe.misc.Tag;
 
 import mud.interfaces.ExtraCommands;
@@ -29,7 +32,7 @@ import mud.utils.Time;
 import mud.utils.Utils;
 
 // TODO need to deal with these commands having a null parent here...
-public class PipBuck extends Item implements Device, ExtraCommands {
+public class PipBuck extends Item implements ModularDevice, ExtraCommands {
 	private Integer id;
 	private String name;
 	private FileSystem fs;
@@ -48,8 +51,8 @@ public class PipBuck extends Item implements Device, ExtraCommands {
 	{
 		commands.put("enable", new Command("enable a module") {
 			public void execute(final String arg, final Client client) {
-				final Player player = getPlayer(client);      // get player
-				final PipBuck p = PipBuck.getPipBuck(player); // get pipbuck
+				final Player player = getPlayer(client);        // get player
+				final PipBuck p = GameUtils.getPipBuck(player); // get pipbuck
 
 				if( p != null ) {
 					if( arg.equalsIgnoreCase("efs") ) {
@@ -63,29 +66,29 @@ public class PipBuck extends Item implements Device, ExtraCommands {
 
 					// enable the module
 					if( module != null ) {
-						if( module.getPowerReq() <= p.current_power) {
-							send("Enabling Module: " + module.getModuleName(), client);
+						send("Enabling Module: " + module.getModuleName(), client);
 
-							p.enableModule( module );
+						final Result result = p.enableModule( module );
+						
+						send("Pipbuck: " + result.getMessage(), client);
+						
+						// ExtraCommands init
+						if( module instanceof ExtraCommands ) {
+							ExtraCommands ec = (ExtraCommands) module;
 
-							if( module instanceof ExtraCommands ) {
-								ExtraCommands ec = (ExtraCommands) module;
+							for(Map.Entry<String, Command> cmdE : ec.getCommands().entrySet()) {
+								final String text = cmdE.getKey();
+								final Command cmd = cmdE.getValue();
 
-								for(Map.Entry<String, Command> cmdE : ec.getCommands().entrySet()) {
-									final String text = cmdE.getKey();
-									final Command cmd = cmdE.getValue();
+								initCmd(cmd);
 
-									initCmd(cmd);
+								player.addCommand( cmdE.getKey(), cmdE.getValue() );
 
-									player.addCommand( cmdE.getKey(), cmdE.getValue() );
-									
-									final String moduleName = module.getModuleName();
+								final String moduleName = module.getModuleName();
 
-									debug("Added " + cmdE.getKey() + " to player's command map from " + p.getName() + " module: " + moduleName);
-								}
+								debug("Added " + cmdE.getKey() + " to player's command map from " + p.getName() + " module: " + moduleName);
 							}
 						}
-						else send("PipBuck: Insufficent power to enable ", client);
 					}
 				}
 			}
@@ -94,8 +97,8 @@ public class PipBuck extends Item implements Device, ExtraCommands {
 
 		commands.put("disable", new Command("disable a module") {
 			public void execute(final String arg, final Client client) {
-				final Player player = getPlayer(client);      // get player
-				final PipBuck p = PipBuck.getPipBuck(player); // get pipbuck
+				final Player player = getPlayer(client);        // get player
+				final PipBuck p = GameUtils.getPipBuck(player); // get pipbuck
 
 				if( p != null ) {
 					if( arg.equalsIgnoreCase("efs") ) {
@@ -110,7 +113,14 @@ public class PipBuck extends Item implements Device, ExtraCommands {
 					// disable the module
 					if( module != null ) {
 						final String moduleName = module.getModuleName();
+
+						send("Disabling Module: " + moduleName, client);
+
+						final Result result = p.disableModule( module );
 						
+						send("Pipbuck: " + result.getMessage(), client);
+						
+						// ExtraCommands de-init
 						if( module instanceof ExtraCommands ) {
 							ExtraCommands ec = (ExtraCommands) module;
 
@@ -121,10 +131,6 @@ public class PipBuck extends Item implements Device, ExtraCommands {
 								debug("Removed " + cmd.getKey() + " from " + p.getName() + " module: " + moduleName + " from player's command map.");
 							}
 						}
-
-						send("Disabling Module: " + moduleName, client);
-
-						p.disableModule( module );
 					}
 				}
 			}
@@ -133,8 +139,8 @@ public class PipBuck extends Item implements Device, ExtraCommands {
 		commands.put("charge", new Command("charge a module") {
 			@Override
 			public void execute(final String arg, final Client client) {
-				final Player player = getPlayer(client);      // get player
-				final PipBuck p = PipBuck.getPipBuck(player); // get pipbuck
+				final Player player = getPlayer(client);        // get player
+				final PipBuck p = GameUtils.getPipBuck(player); // get pipbuck
 
 				if( p != null ) {
 					// get the intended module
@@ -173,8 +179,8 @@ public class PipBuck extends Item implements Device, ExtraCommands {
 
 		commands.put("register", new Command("register a pipbuck tag") {
 			public void execute(final String arg, final Client client) {
-				final Player player = getPlayer(client);      // get player
-				final PipBuck p = PipBuck.getPipBuck(player); // get pipbuck
+				final Player player = getPlayer(client);        // get player
+				final PipBuck p = GameUtils.getPipBuck(player); // get pipbuck
 
 				// register <tag name>=<tag id>
 				if( p != null ) {
@@ -194,43 +200,46 @@ public class PipBuck extends Item implements Device, ExtraCommands {
 
 		commands.put("slot", new Command("attach a module to your device") {
 			public void execute(final String arg, final Client client) {
-				final Player player = getPlayer(client);      // get player
-				final PipBuck p = PipBuck.getPipBuck(player); // get pipbuck
+				final Player player = getPlayer(client);        // get player
+				final PipBuck p = GameUtils.getPipBuck(player); // get pipbuck
 
 				if( p != null ) {
-					// get modules list
-					final List<Module> modules = p.getModules();
-
-					Module module = null;
 					Item item = null;
+					Module module = null;
 
 					for(final Item item2 : player.getInventory()) {
 						if( item2 != null ) {
 							if(item2 instanceof Module) {
-								debug("Found a Module - \'" + item2.getName() + "\'");
+								module = (Module) item;
+
+								final String moduleName = module.getModuleName();
+
+								debug("Found a Module - \'" + moduleName + "\'");
 
 								item = item2;
 								module = (Module) item;
-								
-								final String moduleName = module.getModuleName();
-								
-								if( !modules.contains(module) && moduleName.equalsIgnoreCase(arg) ) {
-									break;
-								}
+
+								if( moduleName.equalsIgnoreCase(arg) ) break;
 							}
 							else debug("Not a Module - \'" + item2.getName() + "\'");
 						}
 					}
 
-					player.getInventory().remove( item );
-
-					// slot module
 					if( module != null ) {
 						final String moduleName = module.getModuleName();
 						
-						p.addModule( module );
-						
-						send("You slot the " + moduleName + " into your Pipbuck.", client);
+						// get modules list
+						final List<Module> modules = p.getModules();
+
+						if( !modules.contains( module ) && module.isCompatible( p ) ) {
+							// remove item from inventory
+							player.getInventory().remove( item );
+
+							// slot module
+							p.addModule( module );
+
+							send("You slot the " + moduleName + " into your Pipbuck.", client);
+						}
 					}
 					else send("You don't have such a module.", client);
 				}
@@ -239,8 +248,8 @@ public class PipBuck extends Item implements Device, ExtraCommands {
 
 		commands.put("tags", new Command("list your registed pipbuck tags") {
 			public void execute(final String arg, final Client client) {
-				final Player player = getPlayer(client);      // get player
-				final PipBuck p = PipBuck.getPipBuck(player); // get pipbuck
+				final Player player = getPlayer(client);        // get player
+				final PipBuck p = GameUtils.getPipBuck(player); // get pipbuck
 
 				if( p != null ) {
 					send("--- Tags", client);
@@ -254,8 +263,8 @@ public class PipBuck extends Item implements Device, ExtraCommands {
 		});
 		commands.put("unslot", new Command("detach a module from your device") {
 			public void execute(final String arg, final Client client) {
-				final Player player = getPlayer(client);      // get player
-				final PipBuck p = PipBuck.getPipBuck(player); // get pipbuck
+				final Player player = getPlayer(client);        // get player
+				final PipBuck p = GameUtils.getPipBuck(player); // get pipbuck
 
 				if( p != null ) {
 					// NOTE: we know that modules are Items, so this is reasonably safe...
@@ -279,8 +288,8 @@ public class PipBuck extends Item implements Device, ExtraCommands {
 
 		commands.put("modules", new Command("list the modules attached to your device") {
 			public void execute(final String arg, final Client client) {
-				final Player player = getPlayer(client);      // get player
-				final PipBuck p = PipBuck.getPipBuck(player); // get pipbuck
+				final Player player = getPlayer(client);        // get player
+				final PipBuck p = GameUtils.getPipBuck(player); // get pipbuck
 
 				if( p != null ) {
 					final List<Module> modules = p.getModules();
@@ -301,8 +310,8 @@ public class PipBuck extends Item implements Device, ExtraCommands {
 		commands.put("vp",
 				new Command("view pipbuck") {
 			public void execute(final String arg, final Client client) {
-				final Player player = getPlayer(client);      // get player
-				final PipBuck p = PipBuck.getPipBuck(player); // get pipbuck
+				final Player player = getPlayer(client);        // get player
+				final PipBuck p = GameUtils.getPipBuck(player); // get pipbuck
 
 				if( p != null ) {
 					if( arg.equals("") ) {
@@ -399,8 +408,8 @@ public class PipBuck extends Item implements Device, ExtraCommands {
 		// scan/efs
 		commands.put("efs", new Command("eyes-forward sparkle") {
 			public void execute(final String arg, final Client client) {
-				final Player player = getPlayer(client);      // get player
-				final PipBuck p = PipBuck.getPipBuck(player); // get pipbuck
+				final Player player = getPlayer(client);        // get player
+				final PipBuck p = GameUtils.getPipBuck(player); // get pipbuck
 
 				if( p != null ) {
 					if( p.efs_enabled ) {
@@ -462,7 +471,12 @@ public class PipBuck extends Item implements Device, ExtraCommands {
 	public DeviceType getDeviceType() {
 		return DeviceType.PIPBUCK;
 	}
-
+	
+	@Override
+	public List<Module> getModules() {
+		return this.modules;
+	}
+	
 	/**
 	 * Add a module to the PipBuck
 	 * 
@@ -493,19 +507,29 @@ public class PipBuck extends Item implements Device, ExtraCommands {
 		return null;
 	}
 
-	@Override
-	public List<Module> getModules() {
-		return this.modules;
+	private Result enableModule(final Module module) {
+		Result result;
+
+		if( module.getPowerReq() <= this.current_power) {
+			this.current_power -= module.getPowerReq();
+			
+			module.enable();
+			
+			result = Result.ENABLED;
+		}
+		else {
+			result = Result.INSUFFICIENT_POWER;
+		}
+		
+		return result;
 	}
 
-	private void enableModule(final Module module) {
-		this.current_power -= module.getPowerReq();
-		module.enable();
-	}
-
-	private void disableModule(final Module module) {
+	private Result disableModule(final Module module) {
 		module.disable();
+		
 		this.current_power += module.getPowerReq();
+		
+		return Result.DISABLED;
 	}
 	
 	public Map<String, Command> getCommands() {
@@ -555,17 +579,5 @@ public class PipBuck extends Item implements Device, ExtraCommands {
 	@Override
 	public PipBuck getCopy() {
 		return new PipBuck(this);
-	}
-
-	static final PipBuck getPipBuck(final Player player) {
-		PipBuck p = null;
-
-		final Slot slot = player.getSlots().get("special");
-		final Slot slot1 = player.getSlots().get("special2");
-
-		if( slot != null && !slot.isEmpty() )       p = (PipBuck) slot.getItem();
-		else if( slot1 != null && !slot.isEmpty() ) p = (PipBuck) slot.getItem();
-
-		return p;
 	}
 }

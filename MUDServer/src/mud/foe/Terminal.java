@@ -873,11 +873,6 @@ public class Terminal extends Thing implements IODevice {
 	}
 	
 	@Override
-	public List<Module> getModules() {
-		return null;
-	}
-	
-	@Override
 	/**
 	 * Write a line to the terminal input.
 	 * 

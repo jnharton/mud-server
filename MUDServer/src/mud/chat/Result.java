@@ -6,7 +6,7 @@ public enum Result {
 	JOIN,
 	CURR_LISTEN,
 	CURR_NOLISTEN,
-	LEAVE,
+	LEAVE("Left channel: %s"),
 	MODIFY_OK,
 	MODIFY_NOK,
 	NO_CHANNEL,
@@ -25,5 +25,9 @@ public enum Result {
 	
 	public String getMessage() {
 		return this.message;
+	}
+	
+	public String formatMessage(final Object...parameters) {
+		return String.format(message, parameters);
 	}
 }
