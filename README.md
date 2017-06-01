@@ -11,7 +11,7 @@ This code is very much in an unfinished state, despite the fact that it is fairl
 
 *For major changes see [Updates](https://github.com/jnharton/mud-server/wiki/Updates) page in wiki.*
 
-This code requires at least Java 7 (1.7)
+This code requires at least Java 8 (1.8) due to use of streams and predicates.
 
 ## Usage
 
