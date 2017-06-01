@@ -1,6 +1,6 @@
 package mud.misc;
 
-public class CombinationLock extends Lock {
+public class CombinationLock implements Lock {
 	public static final int LEFT = -1;
 	public static final int RIGHT = 1;
 	
@@ -68,18 +68,30 @@ public class CombinationLock extends Lock {
 		if( this.currPos == this.combination.getNum(1) ) {
 			this.tumbler1 = true;
 		}
-		else if( this.currPos == this.combination.getNum(2) ) {
+		else if( this.tumbler1 && this.currPos == this.combination.getNum(2) ) {
 			this.tumbler2 = true;
 		}
-		else if( this.currPos == this.combination.getNum(3) ) {
+		else if( this.tumbler1 && this.tumbler2 && this.currPos == this.combination.getNum(3) ) {
 			this.tumbler3 = true;
 		}
 		
 		if( tumbler1 && tumbler2 && tumbler3 ) this.locked = false;
-		else                                   this.locked = true;
+		//else                                   this.locked = true;
 	}
 	
 	public boolean isLocked() {
 		return this.locked;
+	}
+
+	@Override
+	public void lock() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void unlock() {
+		// TODO Auto-generated method stub
+		
 	}
 }

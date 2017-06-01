@@ -35,7 +35,7 @@ import mud.utils.Point;
  * 
  */
 public abstract class MUDObject {
-	private static final int NUM_PROPS = 10;
+	private static final int NUM_PROPS = 100;
 	private static final float LOAD_FACT = 0.75f;
 	
 	/* object data - persistent */

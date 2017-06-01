@@ -3,9 +3,10 @@
 
 Bulletin Board Command
 
-Syntax: '@bb +write [board/]<subject>=<message>' add a message to the board
-        '@bb +delete [board/]<message number>'   delete the specified message
-        '@bb +read [board/]<message number>'     read a specific message
-        '@bb +scan [board]'                      list all the messages
+Syntax: @bb +write <board> <subject>=<message>     add a message to the board
+        @bb +delete <board>.<message num>          delete the specified message
+        @bb +reply <board>.<message num> <message>
+        @bb +read <board>.<message num>            read a specific message
+        @bb +scan <board>                          list all the messages
         
-Last Updated: December 11th, 2014
+Last Updated: April 21st, 2017

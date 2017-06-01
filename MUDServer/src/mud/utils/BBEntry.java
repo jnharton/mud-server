@@ -57,12 +57,35 @@ public class BBEntry {
 	public String getMessage() {
 		return this.message;
 	}
-
+	
+	/**
+	 * output formatting when we want to list the messages, shows
+	 * just enough information to have a sense for what it's about
+	 * @return
+	 */
 	public String toView() {
-		// left(id, 3) | right(author, 8) | right(subject, 8) | right(message, 20) |
-		return Utils.padLeft(this.id + "", 3) + ") " + Utils.padRight(this.subject, 20) + "(" + this.author + ")";
+		return toView(76);
 	}
-
+	
+	public String toView(int width) {
+		// left(id, 3) | right(author, 8) | right(subject, 8) | right(message, 20) |
+		StringBuilder sb = new StringBuilder();
+		
+		sb.append( Utils.padLeft(this.id + "", 5) );
+		sb.append( " " );
+		sb.append( Utils.padRight(this.subject, 20) );
+		sb.append( "(" );
+		sb.append( this.author );
+		sb.append( ")" );
+		
+		return Utils.padRight( sb.toString(), width );
+	}
+	
+	/**
+	 * toString
+	 * 
+	 * string representation for the purpose of storing the messages
+	 */
 	public String toString() {
 		// <id>#<author>#<subject>#<message>
 		return Utils.join(Utils.mkList("" + this.id, this.author, this.subject, this.message), "#");

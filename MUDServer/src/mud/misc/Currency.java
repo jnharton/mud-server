@@ -53,12 +53,8 @@ public class Currency {
 	 * @return
 	 */
 	public Double toDouble() {
-		if (base != null) {
-			return base.toDouble();
-		}
-		else {
-			return this.value;
-		}
+		if (base != null) return base.toDouble();
+		else              return this.value;
 	}
 	
 	public String toString() {

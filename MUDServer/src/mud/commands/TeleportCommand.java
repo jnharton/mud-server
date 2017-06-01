@@ -1,8 +1,11 @@
 package mud.commands;
 
+import java.util.Arrays;
+
 import mud.Command;
 import mud.Constants;
 import mud.MUDObject;
+import mud.TypeFlag;
 import mud.net.Client;
 import mud.objects.Player;
 import mud.objects.Room;
@@ -33,75 +36,80 @@ public class TeleportCommand extends Command {
 		final Room room = getRoom( player.getLocation() );
 		
 		String[] args = arg.split("=");
+		
+		System.out.println( Arrays.asList(args) );
+		
+		Room dest = null;
 
 		MUDObject target = null;
-		boolean no_target = true;
 		
 		final int destination;
+		
+		boolean no_target = true;
+		boolean valid_target = false;
+		boolean destination_exists = false;
 		
 		if(args.length > 1) {
 			no_target = false;
 			
 			target = getObject(args[0]);
-			
 			destination = Utils.toInt(args[1], -1);
 		}
 		else {
 			destination = Utils.toInt(arg, -1);
 		}
 		
-		boolean success = false; // does the destination exist?
-
+		//
+		if( target != null ) valid_target = true;
+		
 		// try to find the room, by dbref or by name
-		Room room1 = (destination != -1) ? getRoom(destination) : getRoom(arg);
+		if( destination != -1 ) dest = getRoom( destination );
+		else                    dest = getRoom(arg);
 
-		if (room1 != null) {
-			success = true;
-		}
+		if (dest != null) destination_exists = true;
 
 		// if we found the room, send the player there
-		if ( success ) {
+		if ( destination_exists ) {
 			if( no_target ) {
 				room.removeListener(player); // remove listener
 
-				send("Teleporting to " + room1.getName() + "... ", client);
+				send("Teleporting to " + dest.getName() + "... ", client);
 				
-				player.setLocation(room1.getDBRef());
+				player.setLocation( dest.getDBRef() );
 				player.setPosition(0, 0);
 				
 				send("Done.", client);
 
-				room1.addListener(player); // add listener
-				
-				//send(look(room1, player), client);
+				dest.addListener(player); // add listener
 			}
-			else {
+			else if( valid_target ) {
 				if( target != null ) {
-					if( target instanceof Player ) {
+					send("Teleporting " + target.getName() + " to " + dest.getName() + "... ", client);
+					
+					if( target.isType(TypeFlag.PLAYER) ) {
 						final Player p = (Player) target;
 						final Room r = getRoom( p.getLocation() );
 						
 						r.removeListener(p);
+						
+						target.setLocation( dest.getDBRef() );
+						target.setPosition(0, 0);
+						
+						final Room r2 = getRoom( p.getLocation() );
+						
+						r2.addListener(p);
+						
+						send("You were teleported.", p.getClient());
+					}
+					else {
+						target.setLocation( dest.getDBRef() );
+						target.setPosition(0, 0);
 					}
 					
-					send("Teleporting " + target.getName() + " to " + room1.getName() + "... ", client);
-
-					target.setLocation(room.getDBRef());
-					target.setPosition(0, 0);
-
 					send("Done.", client);
-					
-					if( target instanceof Player ) {
-						final Player p = (Player) target;
-						final Room r = getRoom( p.getLocation() );
-						
-						r.addListener(p);
-						
-						//send(look(r, p), client);
-					}
 				}
-				else send("Invalid Target.", client);
 			}
+			else send("Invalid Target.", client);
 		}
 		else {
 			send("Teleport failed.", client);

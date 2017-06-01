@@ -91,7 +91,16 @@ public class BulletinBoard {
 	}
 	
 	public BBEntry getEntry(int messageNum) {
-		return this.entries.get(messageNum);
+		BBEntry message = null;
+		
+		try {
+			message = this.entries.get(messageNum);
+		}
+		catch(final IndexOutOfBoundsException ioobe) {
+			ioobe.printStackTrace();
+		}
+		
+		return message;
 	}
 	
 	public List<BBEntry> getEntries() {

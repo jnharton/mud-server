@@ -9,7 +9,7 @@ import java.util.NoSuchElementException;
 import mud.utils.Utils;
 
 public class Table implements Iterable<TableEntry> {
-	public enum CType { INTEGER, STRING };
+	public enum CType { INTEGER, OBJECT, STRING };
 
 	private String name;
 
@@ -41,6 +41,8 @@ public class Table implements Iterable<TableEntry> {
 					case 'i':
 						columns[index] = new Column(names[index], CType.INTEGER);
 						break;
+					case 'o':
+						columns[index] = new Column(names[index], CType.OBJECT);
 					case 's':
 						columns[index] = new Column(names[index], CType.STRING);
 						break;

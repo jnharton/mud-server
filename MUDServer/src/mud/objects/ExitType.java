@@ -23,6 +23,9 @@ package mud.objects;
  * Standard - the representation of a "virtual" exit such as may exist between to game areas, and
  * may have no physical representation of any kind (i.e. kind of like the border between two countries,
  * which exists, but rarely has a physical presence.
+ * 
+ * Window - represents any opening that generally permits entrance/exit from a -building- but
+ * which isn't a door.
  */
 public enum ExitType {
 	DOOR("DOOR"),     // 0

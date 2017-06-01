@@ -13,7 +13,7 @@ import mud.objects.Item;
 import mud.objects.Player;
 import mud.objects.Thing;
 import mud.objects.items.Weapon;
-import mud.utils.MudUtils;
+import mud.utils.CombatUtils;
 import mud.utils.Utils;
 
 /*
@@ -40,39 +40,52 @@ public class AttackCommand extends Command {
 		try {
 			if ( !arg.equals("") ) {
 				MUDObject mobj = null;
-
-				final List<Creature> creatures = getCreaturesByRoom( getRoom( player.getLocation() ) );
+				
+				/*final List<Creature> creatures = getCreaturesByRoom( getRoom( player.getLocation() ) );
 
 				for(final Creature c : creatures) {
 					if( c.getName().equalsIgnoreCase(arg) ) {
 						mobj = c;
 					}
+				}*/
+				
+				final List<MUDObject> objects = getByRoom( getRoom( player.getLocation() ) );
+				
+				for(final MUDObject o : objects) {
+					final String objName = o.getName();
+					
+					if( objName.equalsIgnoreCase(arg) || objName.equalsIgnoreCase( arg.replace("_", " ") ) ) {
+						mobj = o;
+					}
 				}
+				
 
 				player.setTarget(mobj);
 			}
 
 			// if we have a target
 			if (player.getTarget() != null) {
+				final MUDObject target = player.getTarget();
+				
 				// can we attack them?
-				boolean attack = MudUtils.canAttack( player.getTarget() );
+				boolean attack = CombatUtils.canAttack( target );
 
 				if (attack) {
 					debug(playerName + ": Can attack");
-					debug(playerName + " attacks " + player.getTarget().getName() + "");
+					debug(playerName + " attacks " + target.getName() + "");
 
 					// start attacking
 
 					// get weapon
-					Weapon weapon = MudUtils.getWeapon(player);
+					Weapon weapon = CombatUtils.getWeapon(player);
 
-					// check range
+					// check range (assuming all weapons can reach enemies for now)
 					boolean inRange = true;
 
 					if (inRange) { // are they in range of our weapon?
 						debug(playerName + ": In range");
 
-						boolean hit = MudUtils.canHit( player.getTarget() );
+						boolean hit = CombatUtils.canHit( target );
 
 						if (hit) { // did we hit?
 							debug(playerName + ": Can hit");
@@ -86,7 +99,7 @@ public class AttackCommand extends Command {
 							
 							boolean criticalHit = Utils.range(criticalCheckRoll, weapon.getCritMin(), weapon.getCritMax());
 
-							int damage = MudUtils.calculateDamage(weapon, criticalHit);
+							int damage = CombatUtils.calculateDamage(weapon, criticalHit);
 							
 							debug(playerName + ": hits " + player.getTarget() + " for " + damage + " damage");
 							
@@ -111,8 +124,6 @@ public class AttackCommand extends Command {
 							 */
 
 							// damage the target
-							MUDObject target = player.getTarget();
-
 							if(target instanceof Player) {
 								final Player p = (Player) target;
 								

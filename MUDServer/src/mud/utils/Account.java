@@ -223,9 +223,16 @@ public class Account implements Serializable {
 	 * @param newStatus the status to change the account status too
 	 */
 	public void setStatus(final Status newStatus) {
-		this.status = newStatus;
+		final Date today = Utils.getDate();
 		
-		setModified( Utils.getDate() );
+		if( newStatus == Status.ARCHIVED && this.status != Status.ARCHIVED ) {
+			this.status = newStatus;
+			
+			setArchived( today );
+		}
+		else this.status = newStatus;
+		
+		setModified( today );
 	}
 	
 	/**

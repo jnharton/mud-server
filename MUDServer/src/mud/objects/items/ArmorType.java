@@ -17,7 +17,8 @@ public enum ArmorType {
 	SPLINT_MAIL(     Type.HEAVY,  "Splint Mail",     new int[] { 0, 200,  0, 0 },  6, 0, -7, 0.40, 45), // 8
 	BANDED_MAIL(     Type.HEAVY,  "Banded Mail",     new int[] { 0, 250,  0, 0 },  6, 1, -6, 0.35, 35), // 9
 	HALF_PLATE(      Type.HEAVY,  "Half Plate",      new int[] { 0, 600,  0, 0 },  7, 0, -7, 0.40, 50), // 10
-	FULL_PLATE(      Type.HEAVY,  "Full Plate",      new int[] { 0, 1500, 0, 0 },  8, 1, -6, 0.35, 50); // 11
+	FULL_PLATE(      Type.HEAVY,  "Full Plate",      new int[] { 0, 1500, 0, 0 },  8, 1, -6, 0.35, 50), // 11
+	NONE(            Type.LIGHT,  "None",            new int[] { 0, 0,    0, 0 },  0, 0,  0, 0.00, 0 ); // 12
 
 	public static enum Type { LIGHT, MEDIUM, HEAVY };
 	

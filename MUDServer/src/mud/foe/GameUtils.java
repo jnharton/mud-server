@@ -10,9 +10,13 @@ public final class GameUtils {
 
 		final Slot slot = player.getSlots().get("special");
 		final Slot slot1 = player.getSlots().get("special2");
-
-		if( slot != null && !slot.isEmpty() )       p = (PipBuck) slot.getItem();
-		else if( slot1 != null && !slot.isEmpty() ) p = (PipBuck) slot.getItem();
+		
+		if( slot != null ) {
+			if( !slot.isEmpty() )  p = (PipBuck) slot.getItem();
+		}
+		else if( slot1 != null ) {
+			if( !slot1.isEmpty() ) p = (PipBuck) slot1.getItem();
+		}
 
 		return p;
 	}

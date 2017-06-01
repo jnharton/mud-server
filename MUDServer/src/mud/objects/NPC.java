@@ -51,6 +51,10 @@ public class NPC extends Player implements InteractiveI
 
 	// TODO make the below work (may need to modify Player)
 	public NPC(final String name) {
+		this(name, "A generic npc.");
+	}
+	
+	public NPC(final String name, final String description) {
 		super(-1);
 
 		this.name = name;
@@ -70,20 +74,8 @@ public class NPC extends Player implements InteractiveI
 		this.stats = new LinkedHashMap<Ability, Integer>(ruleset.getAbilities().length, 0.75f);
 	}
 
-	// "normal", but not default, constructor
-	/*public NPC(int tempDBRef, String tempName, String tempDesc, int tempLoc, String tempTitle) {
-		super(tempDBRef);
-		this.name = tempName;
-		this.flags = "N";
-		this.locks = ""; // should take tempLocks argument
-		this.desc = tempDesc;
-		this.status = "NPC";
-		this.title = tempTitle;
-		this.location = tempLoc;
-		this.money = new Integer[]{ 0, 0, 0 ,0 };
-	}*/
-
 	/**
+	 * Loading Constructor
 	 * 
 	 * @param tempDBRef
 	 * @param tempName
@@ -92,10 +84,9 @@ public class NPC extends Player implements InteractiveI
 	 * @param tempLoc
 	 * @param tempMoney
 	 */
-	public NPC(final int tempDBRef, final String tempName, final EnumSet<ObjectFlag> tempFlags, final String tempDesc, 
-			final int tempLoc, final Coins tempMoney)
+	public NPC(final int tempDBRef, final String tempName, final EnumSet<ObjectFlag> tempFlags, final String tempDesc, final int tempLoc, final Coins tempMoney)
 	{
-		super(tempDBRef, tempName, tempFlags, tempDesc, tempLoc, null, null, null, new Integer[] {10, 10, 10, 10, 10, 10}, tempMoney);
+		super(tempDBRef, tempName, tempFlags, tempDesc, tempLoc, null, null, "NPC", new Integer[] {10, 10, 10, 10, 10, 10}, tempMoney);
 		
 		this.type = TypeFlag.NPC;
 	}

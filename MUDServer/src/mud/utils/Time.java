@@ -29,9 +29,11 @@ public class Time {
 	}
 	
 	/**
-	 * Create a new time object from a give timestring
+	 * Create a new time object from a given time string,
 	 * in the format described below:
-	 * 	hh:mm:ss
+	 * 	
+	 * hh:mm:ss
+	 * 
 	 * @return
 	 */
 	public static Time fromString(String timeString) {

@@ -46,8 +46,7 @@ public class BankAccount {
 	 * @param id
 	 */
 	public BankAccount(int id) {
-		this.id = id;
-		this.balance = new Coins(new int[] { 0, 0, 0, 0 });
+		this(id, new Coins(new int[] { 0, 0, 0, 0 }));
 	}
 	
 	/**
@@ -82,10 +81,6 @@ public class BankAccount {
 	 * @return the internal representation of the money
 	 */
 	public Coins getBalance() {
-		/*
-		 * possibly insecure, if we can modify it after
-		 * being returned and actually change the one in the bank
-		 */
 		return Coins.copper( this.balance.numOfCopper() );
 	}
 	

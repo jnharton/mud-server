@@ -5,6 +5,14 @@ import java.util.List;
 
 import mud.misc.Script;
 
+/**
+ * CNode
+ * 
+ * A conversation node.
+ * 
+ * @author Jeremy
+ *
+ */
 public class CNode {
 	private Integer id;
 	private String text;
@@ -13,7 +21,7 @@ public class CNode {
 	
 	public boolean ends = false;
 	
-	private Script script;
+	public Script script;
 	
 	// player says, npc responds
 	public CNode(final Integer id, final String text, final String response) {

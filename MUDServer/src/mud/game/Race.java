@@ -21,9 +21,10 @@ public class Race {
 	private Subrace sub;
 	private int id;
 	private Integer[] statAdj;  // stats adjustments pertaining to a particular race
+	private boolean canFly;     // is this race capable of flight
+	
 	private boolean playable;   // is the race a playable one
 	private boolean restricted; // is the race restricted (not available from normal selection)
-	private boolean canFly;     // is this race capable of flight
 	
 	// no args constructor
 	/*public Race() {
@@ -85,6 +86,10 @@ public class Race {
 		this.statAdj = newAdjust;
 	}
 	
+	public boolean canFly() {
+		return this.canFly;
+	}
+	
 	public boolean isPlayable() {
 		return this.playable;
 	}
@@ -93,10 +98,6 @@ public class Race {
 		return this.restricted;
 	}
 	
-	public boolean canFly() {
-		return this.canFly;
-	}
-
 	public String toString() {
 		if (sub == null) {
 			return this.name;
@@ -120,18 +121,6 @@ public class Race {
 		}
 		
 		return false;
-	}
-	
-	public class Subrace {
-		public Race parentRace;
-		public String name;     // name of the subrace
-		public String alt;      // common alternate name for the subrace
-
-		public Subrace(Race pRace, String name, String alt) {
-			this.parentRace = pRace;
-			this.name = name;
-			this.alt = alt;
-		}
 	}
 	
 	public final class Subraces {

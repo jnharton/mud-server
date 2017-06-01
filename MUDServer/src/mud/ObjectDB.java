@@ -41,8 +41,8 @@ public final class ObjectDB implements ODBI {
 	private int nextId = 0;
 
 	// TreeMap allows instant retrieval by id and by name.
-	private final TreeMap<String, MUDObject>  objsByName = new TreeMap<String, MUDObject>();
-	private final TreeMap<Integer, MUDObject> objsById = new TreeMap<Integer, MUDObject>();
+	private final Map<String, MUDObject>  objsByName = new TreeMap<String, MUDObject>();
+	private final Map<Integer, MUDObject> objsById = new TreeMap<Integer, MUDObject>();
 
 	// holds unused database references, that exist due to "recycled" objects
 	private Stack<Integer> unusedDBNs = new Stack<Integer>();
@@ -197,7 +197,7 @@ public final class ObjectDB implements ODBI {
 		final List<String> output = new ArrayList<String>(this.objsById.size());
 
 		for (final MUDObject obj : objsById.values()) {
-			output.add( String.format("%s: %s (#%s)", i, obj.getName(), obj.getDBRef()) );
+			output.add( String.format("%d: %s (#%d)", i, obj.getName(), obj.getDBRef()) );
 			i += 1;
 		}
 
@@ -568,9 +568,13 @@ public final class ObjectDB implements ODBI {
 	 */
 	public List<MUDObject> findByLower(final String name) {
 		final LinkedList<MUDObject> acc = new LinkedList<MUDObject>();
-
-		for (final MUDObject obj : this.objsByName.values()) {
-			if(obj.getName().toLowerCase().startsWith(name.toLowerCase())) {
+		
+		final String testName = name.toLowerCase();
+		
+		for (final MUDObject obj : this.objsById.values()) {
+			String objectName = obj.getName().toLowerCase();
+			
+			if( objectName.startsWith( testName ) ) {
 				acc.add(obj);
 			}
 		}
@@ -1014,6 +1018,7 @@ public final class ObjectDB implements ODBI {
 		return this.playersById.get(dbref);
 
 	}
+	
 	public Player getPlayer(final String name) {
 		// TODO fix kludginess, used with/for cnames
 		final Player player = this.playersByName.get(name);
@@ -1028,7 +1033,6 @@ public final class ObjectDB implements ODBI {
 		}
 
 		return player;
-		//return players.get(name);
 	}
 
 	public int getNumPlayers(final PClass c) {

@@ -22,7 +22,7 @@ public class FOESlotTypes {
 	private FOESlotTypes() {}
 
 	private static SlotType[] types = {
-		NONE, HEAD, EARS, EYES, BODY, BACK, HOOVES, RFHOOF, LFHOOF, WINGS, HORN
+		NONE, HEAD, EARS, EYES, BODY, BACK, HOOVES, RFHOOF, LFHOOF, /*RBHOOF, LBHOOF,*/ WINGS, HORN
 	};
 
 	public static SlotType getType(final Integer typeId) {

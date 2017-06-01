@@ -35,7 +35,15 @@ public class Merchant extends NPC implements Vendor {
 	private Hashtable<String, Integer> stockTable = new Hashtable<String, Integer>();
 	// sword, 15
 	
-	private String merchantType = "";
+	public Merchant(final String mName) {
+		this(mName, "A merchant");
+	}
+	
+	public Merchant(final String mName, final String mDesc) {
+		super(mName, mDesc);
+		
+		this.flags = EnumSet.of(ObjectFlag.MERCHANT, ObjectFlag.VENDOR);
+	}
 
 	public Merchant(final int tempDBRef, final String tempName, final EnumSet<ObjectFlag> tempFlags, final String tempDesc,
 			final String tempTitle, final String tempPStatus, final int tempLoc, final Coins tempMoney) {
@@ -121,14 +129,5 @@ public class Merchant extends NPC implements Vendor {
 		}
 		
 		return null;
-	}
-	
-	// hacked in functionality for setting what sort of merchant this is
-	public void setMerchantType(final String type) {
-		this.merchantType = type;
-	}
-	
-	public String getMerchantType() {
-		return this.merchantType;
 	}
 }

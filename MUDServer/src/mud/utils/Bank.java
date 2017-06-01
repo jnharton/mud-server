@@ -28,7 +28,7 @@ public class Bank {
 	
 	private int nextId = 0;
 	
-	public Bank(String bankName) {
+	public Bank(final String bankName) {
 		this.name = bankName;
 		this.accounts = new LinkedHashMap<Integer, BankAccount>(1, 0.75f);
 	}

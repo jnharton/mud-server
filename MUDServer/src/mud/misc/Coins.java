@@ -133,29 +133,37 @@ public class Coins
     // true -> units separated
     public String toString(final boolean showUnits) {
         final StringBuilder buf = new StringBuilder();
-
+        
         Coins left = this;
+        
+        // platinum
         if (left.numOfPlatinum() > 0) {
             buf.append(left.numOfPlatinum());
             buf.append(showUnits ? "pp " : ",");
         }
         else if(!showUnits) { buf.append( 0 + ","); }
-
+        
         left = left.subtractPlatinum(left.numOfPlatinum());
+        
+        // gold
         if (left.numOfGold() > 0) {
             buf.append(left.numOfGold());
             buf.append(showUnits ? "gp " : ",");
         }
         else if(!showUnits) { buf.append( 0 + ","); }
-
+        
         left = left.subtractGold(left.numOfGold());
+        
+        // silver
         if (left.numOfSilver() > 0) {
             buf.append(left.numOfSilver());
             buf.append(showUnits ? "sp " : ",");
         }
         else if(!showUnits) { buf.append( 0 + ","); }
-
+        
         left = left.subtractSilver(left.numOfSilver());
+        
+        // copper
         if (left.numOfCopper() > 0) {
             buf.append(left.numOfCopper());
             buf.append(showUnits ? "cp " : ",");

@@ -5,7 +5,7 @@
     "manacost": 5,
     "name": "cure light wounds",
     "castmsg": "You cast cure light wounds on &target.",
-    "effects": [ "heal+5", "heal+10", "positive+(1d8+1*&caster_level) ],
+    "effects": [ "heal+5", "heal+10", "positive+(1d8+1*&caster_level)" ],
     "reagents": "none",
     "targets": [ "enemy", "self", "friend" ]
 }

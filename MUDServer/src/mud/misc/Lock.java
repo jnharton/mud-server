@@ -1,6 +1,7 @@
 package mud.misc;
 
-public abstract class Lock {
-	public Lock() {
-	}
+public interface Lock {
+	public void lock();
+	public void unlock();
+	public boolean isLocked();
 }

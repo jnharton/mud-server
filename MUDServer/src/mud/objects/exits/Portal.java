@@ -116,31 +116,6 @@ public class Portal extends Exit implements EventSource, SayEventListener {
 		
 		this.active = true;
 	}
-	
-	// convenience constructors?
-
-	// standard, "always open" and one-way portal (default is active)
-	public Portal(int pOrigin, int pDestination) {
-		this(PortalType.STD, pOrigin, pDestination);
-	}
-	
-	// standard, "always open" and one-way portal (default is active) -- multi destination
-	public Portal(int pOrigin, int[] pDestinations) {
-		this(PortalType.STD, pOrigin, pDestinations);
-	}
-
-	// keyed portal (default is inactive)
-	public Portal(int pOrigin, int pDestination, final Object pKey) {
-		this(PortalType.STD, pOrigin, pDestination);
-		
-		if (pKey != null) {
-			this.key = pKey;
-			
-			this.requiresKey = true;
-			
-			this.active = false;
-		}
-	}
 
 	// keyed portal (default is inactive) -- multi destination
 	public Portal(PortalType pType, int pOrigin, int[] pDestinations, Object pKey) {
@@ -252,6 +227,10 @@ public class Portal extends Exit implements EventSource, SayEventListener {
 		else {
 			return destination;
 		}
+	}
+	
+	public List<Integer> getDestinations() {
+		return Collections.unmodifiableList(this.destinations);
 	}
 
 	/**

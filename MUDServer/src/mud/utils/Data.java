@@ -19,6 +19,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.Map;
 import java.util.Map.Entry;
 
 /**
@@ -29,8 +30,8 @@ import java.util.Map.Entry;
  *
  */
 public class Data {
-	private HashMap<String, Object> objects;
-	private HashMap<Object, Boolean> locks;
+	private Map<String, Object> objects;
+	private Map<Object, Boolean> locks;
 	
 	public Data() {
 		this.objects = new HashMap<String, Object>(1, 0.75f);
@@ -104,7 +105,7 @@ public class Data {
 		return this.objects.get(key);
 	}
 	
-	public HashMap<String, Object> getObjects() {
+	public Map<String, Object> getObjects() {
 		return this.objects;
 	}
 	

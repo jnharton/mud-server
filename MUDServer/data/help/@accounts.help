@@ -6,15 +6,22 @@ the creation of new accounts
 
 
 Syntax: '@accounts'
+
         '@accounts +add me'                        Creates a new account
                                                    with the name and password
-                                                   of the player typing the command.
-        '@accounts +add <account name> <password>' Creates a new account with
+                                                   of the player typing
+                                                   the command.
+        
+        '@accounts +add <acct name> <password>'    Creates a new account with
                                                    the specified name and
                                                    password, and links the
                                                    current character to it.
-        '@accounts +info <name> <password>'        Show account information,
+                                                   
+        '@accounts +link <acct id> <player name>'  Link a player to the specif-
+                                                   ied account.
+                                                   
+        '@accounts +info <acct name> <acct pass>'  Show account information,
                                                    requires the account name
                                                    and password.
-
-Last Updated: April 9th, 2014
+                                                   
+Last Updated: June 1st, 2017

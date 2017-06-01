@@ -34,7 +34,7 @@ import mud.utils.Time;
 
 public abstract class Command {
 	private MUDServer parent;
-	private ODBI db;
+	private ODBI dbi;
 	
 	private String description;
 	
@@ -46,7 +46,7 @@ public abstract class Command {
 		this.parent = mParent;
 		
 		if( mParent != null ) {
-			this.db = mParent.getDBInterface();
+			this.dbi = mParent.getDBInterface();
 		}
 	}
 	
@@ -152,11 +152,11 @@ public abstract class Command {
 	}
 	
 	protected final MUDObject getObject(final String name) {
-		return this.db.getByName(name);
+		return this.dbi.getByName(name);
 	}
 	
 	protected final MUDObject getObject(Integer dbref) {
-		return this.db.getById(dbref);
+		return this.dbi.getById(dbref);
 	}
 	
 	/**
@@ -168,7 +168,7 @@ public abstract class Command {
 	 * @return
 	 */
 	protected final Player getPlayer(final String name) {
-		return this.db.getPlayer(name);
+		return this.dbi.getPlayer(name);
 	}
 	
 	protected final Player getPlayer(final String name, boolean online) {
@@ -190,11 +190,11 @@ public abstract class Command {
 	}
 	
 	protected final NPC getNPC(final String npcName) {
-		return this.db.getNPC(npcName);
+		return this.dbi.getNPC(npcName);
 	}
 	
 	protected final NPC getNPC(final int DBRef) {
-		return this.db.getNPC(DBRef);
+		return this.dbi.getNPC(DBRef);
 	}
 	
 	/**
@@ -207,35 +207,39 @@ public abstract class Command {
 	 * @return
 	 */	
 	protected final Room getRoom(final String name) {
-		return this.db.getRoomByName(name);
+		return this.dbi.getRoomByName(name);
 	}
 	
 	protected final Room getRoom(final int DBRef) {
-		return this.db.getRoomById(DBRef);
+		return this.dbi.getRoomById(DBRef);
 	}
 	
 	protected final Exit getExit(final String exitName) {
-		return this.db.getExit(exitName);
+		return this.dbi.getExit(exitName);
 	}
 	
 	protected final Exit getExit(final int DBRef) {
-		return this.db.getExit(DBRef);
+		return this.dbi.getExit(DBRef);
 	}
 	
 	protected final Item getItem(final String itemName) {
-		return this.db.getItem(itemName);
+		return this.dbi.getItem(itemName);
 	}
 	
 	protected final Item getItem(final int DBRef) {
-		return this.db.getItem(DBRef);
+		return this.dbi.getItem(DBRef);
 	}
 	
 	protected final List<Player> getPlayers() {
 		return parent.getPlayers();
 	}
 	
+	protected List<MUDObject> getByRoom(final Room room) {
+		return this.dbi.getByRoom(room);
+	}
+	
 	protected final List<Creature> getCreaturesByRoom(final Room room) {
-		return this.db.getCreaturesByRoom(room);
+		return this.dbi.getCreaturesByRoom(room);
 	}
 	
 	protected final void addSpellTimer(final Player player, final SpellTimer s) {

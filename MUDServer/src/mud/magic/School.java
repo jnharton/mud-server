@@ -1,5 +1,8 @@
 package mud.magic;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public enum School {
 	ABJURATION("Abjuration"),
 	CONJURATION("Conjuration"),
@@ -14,8 +17,10 @@ public enum School {
 	
 	final private String name;
 	
+	static List<School> schools = new ArrayList<School>();
+	
 	School(String name) {
-		this.name = name;
+		this.name = name; 
 	}
 	
 	public String toString() {

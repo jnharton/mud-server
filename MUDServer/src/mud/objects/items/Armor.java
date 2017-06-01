@@ -38,7 +38,7 @@ public class Armor extends Item {
 		
 		this.mod = 0;
 		
-		this.armor_type = null;
+		this.armor_type = ArmorType.NONE;
 		this.weight = 5;
 	}
 	

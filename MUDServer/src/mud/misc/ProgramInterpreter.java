@@ -11,6 +11,7 @@ import mud.MUDObject;
 import mud.MUDServer;
 import mud.interfaces.ODBI;
 import mud.objects.Item;
+import mud.objects.NPC;
 import mud.objects.Player;
 import mud.utils.Message;
 import mud.utils.Point;
@@ -256,6 +257,14 @@ public final class ProgramInterpreter {
 					if( debug_enabled ) System.out.println(params[0]);
 					
 					return Utils.rainbow(params[0], parent.getColors());
+				}
+				else if ( functionName.equals("test") ) {
+					final Integer i = Utils.toInt(params[0], -1);
+					
+					parent.cmd("interact " + ((NPC) object).getName(), player.getClient());
+					parent.cmd("list", player.getClient());
+					
+					return NONE;
 				}
 				else { return "PGM: No such function!"; }
 				//else { return "Incomplete function statement, no parameters!"; }
