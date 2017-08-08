@@ -43,4 +43,6 @@ public interface GameModule {
 	public void run();                                       // stuff that the module wants to happen in the main loop...
 	public void op(final String input, final Player player); // status bound handling
 	public boolean use(final Player p, final MUDObject m);
+	
+	public void test();                                      // do some test setup
 }

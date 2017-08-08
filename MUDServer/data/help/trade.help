@@ -3,10 +3,13 @@ TRADE
 
 Trade with another player
 
-Syntax: trade <player>
-        trade #add    <player> -- add something to the trade
-        trade #rem    <player> -- remove something from the trade
-        trade #accept <player> -- accept a trade in progress
-        trade #cancel <player> -- cancel an in progress trade
+Syntax: trade <player>         -- offer to trade with other player
+        trade #accept <player> -- accept an offer to trade
+        trade #cancel          -- cancel an in progress trade
+        trade #add    <item>   -- add something to the trade
+        trade #remove <item>   -- remove something from the trade
+        trade #list            -- list items in trade, respectively
+        trade #confirm         -- finalize a trade in progress
+        trade #rescind         -- rescind your confirmation
 
-Last Updated: November 8th, 2014
+Last Updated: June 1st, 2017

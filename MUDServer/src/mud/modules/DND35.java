@@ -154,4 +154,10 @@ public class DND35 implements GameModule {
 	public boolean use(Player p, MUDObject m) {
 		return false;
 	}
+
+	@Override
+	public void test() {
+		// TODO Auto-generated method stub
+		
+	}
 }

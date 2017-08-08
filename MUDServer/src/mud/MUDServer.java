@@ -1271,18 +1271,13 @@ public class MUDServer implements MUDServerI, MUDServerAPI {
 			
 			debug("Command Execution (Thread) Started!");
 		}
-
-		// System.out.println("");
+		
 		debug("");
-
+		
 		if (testing_enabled) {
 			weather_test(); // set up basic weather system of sorts (should generally be okay on a new database all though it may not be desired)
-			
-			synchronized(objectDB) {
-				world_test(); // set up some testing (probably not valid on your database)
-			}
 		}
-
+		
 		debug("");
 		
 		chan.makeChannel(Constants.STAFF_CHANNEL);
@@ -1322,7 +1317,11 @@ public class MUDServer implements MUDServerI, MUDServerAPI {
 		// TODO resolve the problems that make this not work
 		if ( module != null ) {
 			debug("Module: " + module.getName());
-
+			
+			// initialize module
+			module.init();
+			
+			// "install" ruleset
 			final Ruleset modRS = module.getRuleset();
 
 			// just going to be extra careful here...
@@ -1337,6 +1336,11 @@ public class MUDServer implements MUDServerI, MUDServerAPI {
 						numPlayersOnlinePerClass.put(pcl, 0);
 					}
 				}
+			}
+			
+			// setup testing
+			synchronized(objectDB) {
+				world_test(); // set up some testing (probably not valid on your database)
 			}
 
 			debug("");
@@ -1891,8 +1895,6 @@ public class MUDServer implements MUDServerI, MUDServerAPI {
 
 		/* FOE Items Testing -- NOT DB Safe */
 		if (DB_FILE.endsWith("foe.txt")) { // Fallout Equestria testing database (this code uses stuff from a package not included on github)
-			module.init();
-			
 			// TODO need to prototype all these things or something and then just make an instance in the test database
 
 			// rules = mud.foe.FOESpecial.getInstance();
@@ -2042,6 +2044,14 @@ public class MUDServer implements MUDServerI, MUDServerAPI {
 							"Ah, for the golden days of Old Equestria. Once just ordinary Ursas,",
 							"until your favorite friend, magical radiation, did a stellar job of",
 							"creating an A-1 menace."));
+			
+			wsg.addPage(
+					Utils.mkList("Chapter 3: Food",
+							"We're very lucky that pre-war Equestrians we're so diligent about preparing for"
+							+ "the apocalypse. They died too quickly to care about their wasted effort, but"
+							+ "thanks to them us few Wastelanders can survive for a very long time on their stockpiles"
+							+ "Sure, it's hardly the most nutritious stuff compared to fresh food (I would know), but"
+							+ "it's tastier than radroaches and less irradiated, most of the time."));
 
 			initCreatedItem(wsg);
 			wsg.setLocation(atrium2.getDBRef());
@@ -11047,7 +11057,6 @@ public class MUDServer implements MUDServerI, MUDServerAPI {
 	
 	String getPackagePath(final String packageName) {
 		return MAIN_DIR + "\\" + packageName.replace(".", "\\");
-		
 	}
 
 	/**
@@ -11393,12 +11402,18 @@ public class MUDServer implements MUDServerI, MUDServerAPI {
 	 * @param client
 	 */
 	private void cmd_trade(final String arg, final Client client) {
-		// trade <player> -- offer to trade with other player
-		// trade #accept -- accept offer to trade
+		// trade <player>    -- offer to trade with other player
+		// trade #accept     -- accept offer to trade
 		// trade #add <item> -- add something to the trade
 		// trade #rem <item> -- remove something from the trade
-		// trade #finalize    -- finalize a trade in progress
+		// trade #confirm    -- finalize a trade in progress
 		// trade #cancel     -- cancel an in progress trade
+		
+		// -- P1 trades with P2
+		// trade P2
+		// trade #accept P1
+		// trade #add P1_item / P2_item OR trade #rem P1_item / P2_item
+		// trade #confirm OR trade #cancel
 
 		// NOTES:
 		// each player may be only trade with one other player and no
@@ -11410,7 +11425,7 @@ public class MUDServer implements MUDServerI, MUDServerAPI {
 		final String[] args = arg.split(" ");
 
 		if (args.length >= 1) {
-			if (args[0].charAt(0) == '#') {				
+			if ( args[0].startsWith("#") ) {				
 				final String param = args[0].substring(1).toLowerCase();
 				final String arg2 = (args.length == 2) ? args[1] : "";
 				
@@ -11445,7 +11460,7 @@ public class MUDServer implements MUDServerI, MUDServerAPI {
 						}
 					}
 					else if ( param.equals("cancel") ) {
-						send("You cancel your trade with " + player1 + ".", client);
+						notify(player, "You cancel your trade with " + player1.getName() + ".");
 						notify(player1, player.getName() + " has canceled their trade with you.");
 						
 						trades.remove( player );
@@ -11475,28 +11490,52 @@ public class MUDServer implements MUDServerI, MUDServerAPI {
 						else {
 							notify(player, "You confirm the trade. (use 'trade #rescind' if you've changed your mind)");
 							notify(player, "Waiting for " + player1.getName() + " to confirm the trade.");
+							
+							notify(player1, player.getName() + " has confirmed the trade. (use 'trade #confirm' if you wish to complete it)");
+						}
+					}
+					else if ( param.equals("rescind") || param.equals("resc") ) {
+						if ( player == trade.p1 ) {
+							trade.p1_confirm = false;
+							
+							notify(player, "You rescind the trade.");
+							notify(player1, player.getName() + " has rescinded the trade.");
+						}
+						else if ( player == trade.p2 ) {
+							trade.p2_confirm = false;
+							
+							notify(player, "You rescind the trade.");
+							notify(player1, player.getName() + " has rescinded the trade.");
 						}
 					}
 					else if ( param.equals("list") || param.equals("l") ) {
-						send("-- Trade", client);
-						
-						send("- You", client);
-						
 						List<Item> items;
+						List<String> output = new ArrayList<String>();
+						
+						//send("-- Trade", client);
+						output.add("-- Trade");
+						
+						//send("- You", client);
+						output.add("- You");
 						
 						items = ((player == trade.p1) ? trade.p1_items : trade.p2_items);
 						
 						for(final Item item : items){
-							send(colors(item.getName(), getDisplayColor(TypeFlag.ITEM)), client);
+							//send(colors(item.getName(), getDisplayColor(TypeFlag.ITEM)), client);
+							output.add( colors(item.getName(), getDisplayColor(TypeFlag.ITEM)) );
 						}
+						
+						//send("- Them", client);
+						output.add("- Them");
 						
 						items = ((player == trade.p1) ? trade.p2_items : trade.p1_items);
 						
-						send("- Them", client);
-
 						for(final Item item : items){
-							send(colors(item.getName(), getDisplayColor(TypeFlag.ITEM)), client);
+							//send(colors(item.getName(), getDisplayColor(TypeFlag.ITEM)), client);
+							output.add( colors(item.getName(), getDisplayColor(TypeFlag.ITEM)) );
 						}
+						
+						send( output, client );
 					}
 					else {
 					}
@@ -11549,7 +11588,7 @@ public class MUDServer implements MUDServerI, MUDServerAPI {
 	 * 
 	 * travel <landmark -- known location>
 	 * 
-	 * Note: credit for basic idea behind design to Ryan Hamshire
+	 * Note: credit for ideas behind design to Ryan Hamshire
 	 * (http://textgaming.blogspot.com/2011/01/updating-navigation.html)
 	 * 
 	 * @param arg
@@ -18653,32 +18692,40 @@ public class MUDServer implements MUDServerI, MUDServerAPI {
 		final Player player = getPlayer(client);
 
 		if( player != null && room != null ) {
+			final List<String> output = new LinkedList<String>();
+			
 			int line_limit = player.getLineLimit(); /* Make the description conform to a column limit */
 
 			// TODO make this get it's header data from somewhere else to make it customizable
 			if (player.getConfigOption("hud_enabled")) {
-				send(getHeader("--| %r |%s[ %z ]--", room), client);
+				//send(getHeader("--| %r |%s[ %z ]--", room), client);
+				output.add( getHeader("--| %r |%s[ %z ]--", room) );
 			}
 			else {
 				if (!room.getFlags().contains(ObjectFlag.SILENT)) {
-					send(colors(room.getName() + " (#" + room.getDBRef() + ")",  getDisplayColor("room")), client);
+					//send(colors(room.getName() + " (#" + room.getDBRef() + ")",  getDisplayColor("room")), client);
+					output.add( colors(room.getName() + " (#" + room.getDBRef() + ")",  getDisplayColor("room")) );
 				}
 				else {
-					send(colors(room.getName(), getDisplayColor("room")), client);
+					//send(colors(room.getName(), getDisplayColor("room")), client);
+					output.add( colors(room.getName(), getDisplayColor("room")) );
 				}
 
-				send(Utils.padRight("", '-', line_limit), client);
+				//send(Utils.padRight("", '-', line_limit), client);
+				output.add( Utils.padRight("", '-', line_limit) );
 			}
-
+			
+			//send("", client);
+			output.add( "" );
+			
 			/* Start Description */
-
-			send("", client);
 
 			// TODO is this duplicated in TimeLoop?
 			TimeOfDay[] night = { TimeOfDay.DUSK, TimeOfDay.MIDNIGHT, TimeOfDay.NIGHT, TimeOfDay.BEFORE_DAWN };
 
 			if (room.getRoomType() == RoomType.OUTSIDE && Arrays.asList(night).contains(game_time.getTimeOfDay())) {
-				send("It's too dark to be able to see anything.", client);
+				//send("It's too dark to be able to see anything.", client);
+				output.add( "It's too dark to be able to see anything." );
 			}
 			else {
 				// TODO resolve timeOfDay issue
@@ -18692,10 +18739,11 @@ public class MUDServer implements MUDServerI, MUDServerAPI {
 				String tempDescription = check(description);
 
 				// showDesc(description, line_limit, client);
-				showDesc(tempDescription, line_limit, client);
+				output.addAll( showDesc(tempDescription, line_limit, client) );
 			}
 
-			send("", client);
+			//send("", client);
+			output.add( "" );
 
 			/* End Description */
 
@@ -18713,8 +18761,11 @@ public class MUDServer implements MUDServerI, MUDServerAPI {
 					final String wsName = weather.getState().getName();
 					final String wsDesc = weather.getState().getDescription();
 					
-					send("*** " + colors(wsName, "purple") + ": " + wsDesc, client);
-					send("", client);
+					//send("*** " + colors(wsName, "purple") + ": " + wsDesc, client);
+					//send("", client);
+					
+					output.add( "*** " + colors(wsName, "purple") + ": " + wsDesc );
+					output.add( "" );
 				}
 
 				// send(gameTime(), client); // the in-game time of day
@@ -18727,19 +18778,21 @@ public class MUDServer implements MUDServerI, MUDServerAPI {
 
 			// TODO make this get it's footer data from somewhere else to make it customizable
 			if (player.getConfigOption("hud_enabled")) {
-				send(getFooter("--[%S]%s[ %Tam ]--[ %D ]--"), client);
+				//send(getFooter("--[%S]%s[ %Tam ]--[ %D ]--"), client);
+				output.add( getFooter("--[%S]%s[ %Tam ]--[ %D ]--") );
 			}
-			else send(Utils.padRight("", '-', line_limit), client);
+			else {
+				//send(Utils.padRight("", '-', line_limit), client);
+				output.add( Utils.padRight("", '-', line_limit) );
+			}
 
 			if (room.getThings().size() > 0) {
 				StringBuilder sb = new StringBuilder();
 
-				final EnumSet<ObjectFlag> roomFlags = room.getFlags();
-
 				for (final Thing thing : room.getThings()) {
-					if (!thing.getFlags().contains(ObjectFlag.DARK)) { // only shown non-Dark things
-						// if (!room.getFlags().contains(ObjectFlag.SILENT)) {
-						if (!roomFlags.contains(ObjectFlag.SILENT)) {
+					
+					if ( !thing.hasFlag(ObjectFlag.DARK) ) { // only shown non-Dark things
+						if ( !room.hasFlag(ObjectFlag.SILENT) ) {
 							// send(colors(thing.getName() + "(#" + thing.getDBRef() + ")", "yellow"), client);
 							sb.append(colors(thing.getName() + "(#" + thing.getDBRef() + ")", "yellow") + ", ");
 						}
@@ -18750,7 +18803,9 @@ public class MUDServer implements MUDServerI, MUDServerAPI {
 					}
 				}
 
-				send(sb.toString().substring(0, sb.length() - 2), client); // dropping the last two characters clips the ending ", "
+				//send(sb.toString().substring(0, sb.length() - 2), client); // dropping the last two characters clips the ending ", "
+				
+				output.add( sb.toString().substring(0, sb.length() - 2) );
 			}
 
 			/*
@@ -18768,55 +18823,72 @@ public class MUDServer implements MUDServerI, MUDServerAPI {
 			 * to list it; exits such as portals/secret doors which could be absent,
 			 * obscured, etc might not always show up)
 			 */
+			
 			final String exitNames = room.getExitNames();
 
 			// Exits:
 
 			if ( exitNames != null && !exitNames.equals("") ) {
-				send("Obvious exits are: " + colors(exitNames, getDisplayColor("exit")), client);
+				//send("Obvious exits are: " + colors(exitNames, getDisplayColor("exit")), client);
+				output.add( "Obvious exits are: " + colors(exitNames, getDisplayColor("exit")) );
 			}
 
-			send("Contents:", client);
+			//send("Contents:", client);
+			output.add( "Contents:" );
 
-			if ( !room.getFlags().contains(ObjectFlag.SILENT) ) {
+			if ( !room.hasFlag(ObjectFlag.SILENT) ) {
 				for (final Item item : room.getItems()) {
-					send(colors(item.getName() + "(#" + item.getDBRef() + ")", "yellow"), client);
+					//send(colors(item.getName() + "(#" + item.getDBRef() + ")", "yellow"), client);
+					output.add( colors(item.getName() + "(#" + item.getDBRef() + ")", "yellow") );
 				}
 			} 
 			else {
 				for (final Item item : room.getItems()) {
-					send(colors(item.getName(), "yellow"), client);
+					//send(colors(item.getName(), "yellow"), client);
+					output.add( colors(item.getName(), "yellow") );
 				}
 			}
 
-			send("With:", client);
+			//send("With:", client);
+			output.add( "With:" );
 
 			for (final NPC npc : objectDB.getNPCsByRoom( room )) {
-				if ( !room.getFlags().contains(ObjectFlag.SILENT) ) {
-					send(colors("[" + npc.getStatus() + "] " + npc.getName() + "(#" + npc.getDBRef() + ")", "cyan"), client);
+				if ( !room.hasFlag(ObjectFlag.SILENT) ) {
+					//send(colors("[" + npc.getStatus() + "] " + npc.getName() + "(#" + npc.getDBRef() + ")", "cyan"), client);
+					output.add( colors("[" + npc.getStatus() + "] " + npc.getName() + "(#" + npc.getDBRef() + ")", "cyan") );
 				}
 				else {
-					send(colors("[" + npc.getStatus() + "] " + npc.getName(), "cyan"), client);
+					//send(colors("[" + npc.getStatus() + "] " + npc.getName(), "cyan"), client);
+					output.add( colors("[" + npc.getStatus() + "] " + npc.getName(), "cyan") );
 				}
 			}
 
 			for (final Creature creep : objectDB.getCreaturesByRoom( room )) {
-				if ( !room.getFlags().contains(ObjectFlag.SILENT) ) {
-					send(colors(creep.getName() + "(#" + creep.getDBRef() + ")", "cyan"), client);
+				if ( !room.hasFlag(ObjectFlag.SILENT) ) {
+					//send(colors(creep.getName() + "(#" + creep.getDBRef() + ")", "cyan"), client);
+					output.add( colors(creep.getName() + "(#" + creep.getDBRef() + ")", "cyan") );
 				}
 				else {
-					send(colors(creep.getName(), "cyan"), client);
+					//send(colors(creep.getName(), "cyan"), client);
+					output.add( colors(creep.getName(), "cyan") );
 				}
 			}
 			
 			// players (logged-in player), objectDB.getPlayersByRoom( ... )
+			final List<String> names = player.getNames();
+			
 			for (final Player player1 : players) {
+				String pName = player1.getName();
+				String pCName = player1.getCName();
+				String pStatus = player1.getStatus();
+				
 				if ( !players.contains(player1) ) continue; // temporary kludge to hide offline players, which I'd like to show
 
 				String dcolor = getDisplayColor("player");
 
 				if ( player1 == player && player1.hasEffect("invisibility") ) {
-					send(colors("[" + player1.getStatus() + "] " + player1.getName() + " (invisible)", dcolor), client);
+					//send(colors("[" + player1.getStatus() + "] " + player1.getName() + " (invisible)", dcolor), client);
+					output.add( colors("[" + player1.getStatus() + "] " + player1.getName() + " (invisible)", dcolor) );
 					continue;
 				}
 
@@ -18826,32 +18898,40 @@ public class MUDServer implements MUDServerI, MUDServerAPI {
 						boolean sdesc = false; // short descriptions (true=yes,false=no)
 
 						if ( sdesc ) { // if using short descriptions
-							send(evaluate(player, player1), client);
+							//send(evaluate(player, player1), client);
+							output.add( evaluate(player, player1) );
 						}
 						else { // otherwise
-							if ( player.getNames().contains(player1.getName()) || player.getName().equals(player1.getName()) ) {
-								if (player.mount != null) {
-									send(colors("[" + player1.getStatus() + "] " + player1.getName() + "( riding a " + player.mount.getName() + " )", dcolor), client);
+							boolean knownPlayer = ( names.contains( pName ) || player.getName().equals( pName ) );
+							boolean mount = ( player1.mount != null );
+							
+							if( mount ) {
+								if( knownPlayer ) {
+									//send(colors("[" + pStatus + "] " + pName + "( riding a " + player1.mount.getName() + " )", dcolor), client);
+									output.add( colors("[" + pStatus + "] " + pName + "( riding a " + player1.mount.getName() + " )", dcolor) );
 								}
 								else {
-									send(colors("[" + player1.getStatus() + "] " + player1.getName(), dcolor), client);
+									//send(colors("[" + pStatus + "] " + pCName + "( riding a " + player1.mount.getName() + " )", dcolor), client);
+									output.add( colors("[" + pStatus + "] " + pCName + "( riding a " + player1.mount.getName() + " )", dcolor) );
 								}
 							}
 							else {
-
-								if (player.mount != null) {
-									send(colors("[" + player1.getStatus() + "] " + player1.getCName() + "( riding a " + player.mount.getName() + " )", dcolor), client);
+								if( knownPlayer ) {
+									//send(colors("[" + pStatus + "] " + pName, dcolor), client);
+									output.add( colors("[" + pStatus + "] " + pName, dcolor) );
 								}
 								else {
-									send(colors("[" + player1.getStatus() + "] " + player1.getCName(), dcolor), client);
+									//send(colors("[" + pStatus + "] " + pCName, dcolor), client);
+									output.add( colors("[" + pStatus + "] " + pCName, dcolor) );
 								}
 							}
 						}
 					}
 				}
 			}
-
-			final ArrayList<Portal> tempPortals = new ArrayList<Portal>(5);
+			
+			// Portal
+			final List<Portal> tempPortals = new ArrayList<Portal>(5);
 
 			for (final Portal portal : portals) {
 				/*
@@ -18869,8 +18949,10 @@ public class MUDServer implements MUDServerI, MUDServerAPI {
 				}
 			}
 
-			if (tempPortals.size() == 1)     send("There is a portal here.", client);
-			else if (tempPortals.size() > 1) send("There are several portals here.", client);
+			if (tempPortals.size() == 1)     output.add( "There is a portal here." ); //send("There is a portal here.", client);
+			else if (tempPortals.size() > 1) output.add( "There are several portals here."); //send("There are several portals here.", client);
+			
+			send( output, client );
 		}
 		else if (player == null) send("Game> Player is NULL? (this should be impossible here, ignoring bugs)", client);
 		else if (room == null)   send("Game> Invalid Room?", client);
@@ -20255,8 +20337,8 @@ public class MUDServer implements MUDServerI, MUDServerAPI {
 	 * 
 	 * A wrapper for showDesc that passes in default line wrap value.
 	 */
-	public void showDesc(final String description, final Client client) {
-		showDesc(description, 80, client);
+	public List<String> showDesc(final String description, final Client client) {
+		return showDesc(description, 80, client);
 	}
 
 	/**
@@ -20268,9 +20350,11 @@ public class MUDServer implements MUDServerI, MUDServerAPI {
 	 * @param description the string to wrap at LIMIT characters
 	 * @param line_limit  the maximum length of a string to send
 	 * @param client      the client
+	 * @return TODO
 	 */
-	public void showDesc(final String description, final int line_limit, final Client client) {
-
+	public List<String> showDesc(final String description, final int line_limit, final Client client) {
+		final List<String> retVal = new LinkedList<String>();
+		
 		final StringBuilder result = new StringBuilder(line_limit);
 
 		String temp;
@@ -20304,12 +20388,14 @@ public class MUDServer implements MUDServerI, MUDServerAPI {
 
 					if (temp1.one.equals("&n")) {
 						if (result.length() != 0) {
-							send(result.toString(), client);              // send the current contents of the buffer
+							//send(result.toString(), client);              // send the current contents of the buffer
+							retVal.add( result.toString() );
 							
 							result.delete(0, result.length()); // clear the buffer
 						}
 						else {
-							send("", client);
+							//send("", client);
+							retVal.add( "" );
 						}
 					}
 					else {
@@ -20395,7 +20481,8 @@ public class MUDServer implements MUDServerI, MUDServerAPI {
 
 				else { // if it will overflow, send and clear, and append current word
 					//debug("send", 4);
-					send(result.toString(), client);
+					//send(result.toString(), client);
+					retVal.add( result.toString() );
 					
 					result.delete(0, result.length());
 					result.append(word);
@@ -20406,10 +20493,13 @@ public class MUDServer implements MUDServerI, MUDServerAPI {
 		// make sure we send the last word if there was only one left
 		if (result.length() > 0) {
 			// debug("send", 4);
-			send(result.toString(), client);
+			//send(result.toString(), client);
+			retVal.add( result.toString() );
 			
 			result.delete(0, result.length());
 		}
+		
+		return retVal;
 	}
 
 	// Use Methods
@@ -22255,8 +22345,10 @@ public class MUDServer implements MUDServerI, MUDServerAPI {
 	 * Takes in a format string and replaces certain markers with game data
 	 * 
 	 * %s - space, fills the remaining space up to the line_limit with some
-	 * character %S - current status information %T - current time %D - current
-	 * date
+	 * character
+	 * %S - current status information
+	 * %T - current time
+	 * %D - current date
 	 * 
 	 * @param formatString
 	 * @return
@@ -22424,8 +22516,8 @@ public class MUDServer implements MUDServerI, MUDServerAPI {
 	}
 
 	public void setClientData(final Client client, final ClientData newData) {
-		if (!(newData == null)) clientData.put(client, newData);
-		else                    clientData.remove(client);
+		if ( newData == null )  clientData.remove(client);
+		else                    clientData.put(client, newData);
 	}
 
 	public ClientData getClientData(final Client client) {

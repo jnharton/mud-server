@@ -234,8 +234,11 @@ public class Room extends MUDObject implements EventSource, Instance
 		return this.dirMap[dir.getValue()];
 	}
 	/**
+	 * getExits
+	 * 
 	 * NOTE: the returned list /should/ be unmodifiable. that is, the
 	 * return here is not for modifying the list the exits
+	 * 
 	 * @return the exits
 	 */
 	public List<Exit> getExits() {
@@ -246,24 +249,30 @@ public class Room extends MUDObject implements EventSource, Instance
 	public String getExitNames() {
 		if( exits.size() > 0 ) {
 			final StringBuilder buf = new StringBuilder();
+			
 			for (final Exit e : exits) {
 				if( e instanceof Door ) {
 					Door d = (Door) e;
 					
 					if( getDBRef() == d.getLocation() ) {
 						if( d.isLocked() ) buf.append(", ").append(d.getName().split("/")[0] + " (locked)");
-						else buf.append(", ").append(d.getName().split("/")[0]);
+						else               buf.append(", ").append(d.getName().split("/")[0]);
 					}
 					else if( getDBRef() == d.getDestination() ) {
 						if( d.isLocked() ) buf.append(", ").append(d.getName().split("/")[1] + " (locked)");
-						else buf.append(", ").append(d.getName().split("/")[1]);
+						else               buf.append(", ").append(d.getName().split("/")[1]);
 					}
 				} 
 				else buf.append(", ").append(e.getName());
 			}
+			
 			return buf.toString().substring(2); // clip off the initial, unnecessary " ,"
 		}
-		else { return ""; }
+		else return "";
+	}
+	
+	public String getExitNames(boolean visible) {
+		return "";
 	}
 	
 	// TODO excise method
@@ -290,10 +299,15 @@ public class Room extends MUDObject implements EventSource, Instance
 	}
 
 	/**
+	 * setExits
+	 * 
+	 * Make this room have the exits specified
+	 * 
 	 * @param exits the exits to set
 	 */
-	public void setExits(final ArrayList<Exit> exits) {
-		this.exits = exits;
+	public void setExits(final List<Exit> exits) {
+		this.exits.clear();
+		this.exits.addAll( exits );
 	}
 	
 	public void addExit(final Exit exit) {

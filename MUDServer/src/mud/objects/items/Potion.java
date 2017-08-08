@@ -133,13 +133,21 @@ public class Potion extends Item implements Drinkable, MagicItem, Stackable<Poti
 
 	@Override
 	public boolean stack(Potion object) {
-		if (p == null) {
-			p = object;
-			return true;
+		boolean result = false;
+
+		if( this.getName().equals( object.getName() ) ) { // name equality is treated as Item equality
+			if( stackSize() < Stackable.maxDepth ) {
+				if ( p == null ) {
+					object.setLocation( this.getDBRef() ); // the new location of the arrow in question is the old arrow
+					p = object;
+
+					result = true;
+				}
+				else result = p.stack(object);
+			}
 		}
-		else {
-			return p.stack(object);
-		}
+
+		return result;
 	}
 
 	@Override

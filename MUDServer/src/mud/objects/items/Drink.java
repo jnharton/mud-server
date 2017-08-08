@@ -35,20 +35,20 @@ public class Drink extends Item implements Drinkable, Stackable<Drink> {
 
 	@Override
 	public boolean stack(Drink object) {
-		boolean success = false;
+		boolean result = false;
 		
 		if( this.getName().equals( object.getName() ) ) { // name equality is treated as Item equality
 			if( stackSize() < Stackable.maxDepth ) { 
 				if (drink == null ) {
 					object.setLocation( this.getDBRef() );
 					drink = object;
-					success = true;
+					result = true;
 				}
-				else success = drink.stack(object);
+				else result = drink.stack(object);
 			}
 		}
 
-		return success;
+		return result;
 	}
 
 	@Override

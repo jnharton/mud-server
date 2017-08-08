@@ -64,22 +64,21 @@ public class Arrow extends Item implements Projectile, Stackable<Arrow> {
 
 	@Override
 	public boolean stack(Arrow object) {
+		boolean result = false;
+		
 		if( this.getName().equals( object.getName() ) ) { // name equality is treated as Item equality
-			if( stackSize() < Stackable.maxDepth ) { 
+			if( stackSize() < Stackable.maxDepth ) {
 				if (arrow == null ) {
 					object.setLocation( this.getDBRef() ); // the new location of the arrow in question is the old arrow
 					arrow = object;
-					return true;
+					
+					result = true;
 				}
-				else {
-					return arrow.stack(object);
-				}
+				else result = arrow.stack(object);
 			}
-
-			return false;
 		}
 
-		return false;
+		return result;
 	}
 
 	@Override

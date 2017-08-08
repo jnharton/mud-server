@@ -33,18 +33,21 @@ public class BottleCap extends Item implements Stackable<BottleCap> {
 	}
 	
 	public boolean stack(BottleCap object) {
+		boolean result = false;
+
 		if( this.getName().equals( object.getName() ) ) { // name equality is treated as Item equality
-			if (bc == null && stackSize() < Stackable.maxDepth) {
-				object.setLocation( this.getDBRef() ); // the new location of the arrow in question is the old arrow
-				bc = object;
-				return true;
-			}
-			else {
-				return bc.stack(object);
+			if( stackSize() < Stackable.maxDepth ) {
+				if ( bc == null ) {
+					object.setLocation( this.getDBRef() ); // the new location of the arrow in question is the old arrow
+					bc = object;
+
+					result = true;
+				}
+				else result = bc.stack(object);
 			}
 		}
-		
-		return false;
+
+		return result;
 	}
 	
 	public BottleCap split(int number) {

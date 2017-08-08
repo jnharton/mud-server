@@ -25,7 +25,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  * @param <E> Some object type that will implement stackable.
  */
 public interface Stackable<E> {
-	public int maxDepth = 10;
+	public int maxDepth = 50;
 	
 	/**
 	 * Takes a stackable object e and returns a boolean
