@@ -54,6 +54,10 @@ public class DND35 implements GameModule {
 		// TODO Auto-generated method stub
 
 	}
+	
+	@Override
+	public void init(final String dataDir) {
+	}
 
 	public void init_player(Player player) {
 		// TODO Auto-generated method stub

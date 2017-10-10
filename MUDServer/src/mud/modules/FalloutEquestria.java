@@ -1,5 +1,6 @@
 package mud.modules;
 
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -9,6 +10,7 @@ import java.util.Map;
 
 import mud.Command;
 import mud.MUDObject;
+import mud.MUDServer;
 import mud.ObjectFlag;
 import mud.TypeFlag;
 import mud.foe.*;
@@ -18,6 +20,7 @@ import mud.game.Race;
 import mud.interfaces.ExtraCommands;
 import mud.interfaces.GameModule;
 import mud.misc.Currency;
+import mud.misc.Script;
 import mud.misc.Slot;
 import mud.misc.SlotType;
 import mud.misc.TriggerType;
@@ -42,6 +45,8 @@ import mud.utils.Utils;
 
 /* this class is marked final because there shouldn't ever be a subclass */
 public final class FalloutEquestria implements GameModule, ExtraCommands {
+	private String DATA_DIR;
+	
 	/* the class members are static because this is a class where
 	 * there is only supposed to be a single instance, ever.	
 	 */
@@ -84,9 +89,15 @@ public final class FalloutEquestria implements GameModule, ExtraCommands {
 	public boolean hasClasses() {
 		return false;
 	}
-
+	
 	@Override
 	public void init() {
+	}
+
+	@Override
+	public void init(final String dataDir) {
+		this.DATA_DIR = dataDir;
+		
 		/* factions */
 		factions = new LinkedList<Faction>() {{
 			add( new Faction("Dashites") );
@@ -467,6 +478,19 @@ public final class FalloutEquestria implements GameModule, ExtraCommands {
 			
 			//return new Terminal( oName, oDesc );
 			return term;
+		}
+		else if( tt == FOEThingTypes.VENDING_MACHINE ) {
+			final Thing thing = new Thing(oDBRef, oName, flags, oDesc, oLocation);
+			
+			thing.thing_type = FOEThingTypes.VENDING_MACHINE;
+			
+			String[] temp = Utils.loadStrings( String.format("%s\\%s\\%s", DATA_DIR, "scripts", "pipbuck_machine.s") );
+			
+			String script = Utils.join(temp, "").replace(" ", "");
+			
+			thing.setScriptOnTrigger(TriggerType.onUse, script);
+			
+			return thing;
 		}
 		else {
 			return new Thing(oDBRef, oName, flags, oDesc, oLocation);

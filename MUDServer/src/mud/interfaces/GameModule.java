@@ -23,6 +23,7 @@ public interface GameModule {
 	public List<Faction> getFactions();
 	
 	public void init();                      // initialize the module
+	public void init(final String dataDir);  // initialize the module
 	public void PCInit(final Player player); // initialize a new player for this game
 	
 	public ItemType getItemType(final Integer typeId);

@@ -1,6 +1,7 @@
 package mud.objects;
 
 import mud.MUDObject;
+import mud.TypeFlag;
 import mud.utils.Utils;
 
 /*
@@ -27,6 +28,8 @@ public class NullObject extends MUDObject {
 	
 	public NullObject(int dbref) {
 		super(dbref);
+		
+		this.type = TypeFlag.NOTHING;
 		
 		cleanup();
 	}
@@ -64,11 +67,11 @@ public class NullObject extends MUDObject {
 	public String toDB() {
 		String[] output = new String[5];
 		
-		output[0] = getDBRef() + ""; // database reference number
-		output[1] = "null";          // no name
-		output[2] = "null";          // no flags
-		output[3] = "null";          // no description
-		output[4] = "-1";            // no location
+		output[0] = getDBRef() + "";                   // database reference number
+		output[1] = "null";                            // no name
+		output[2] = TypeFlag.asLetter(this.type) + ""; // flags
+		output[3] = "null";                            // no description
+		output[4] = "-1";                              // no location
 		
 		return Utils.join(output, "#");
 	}

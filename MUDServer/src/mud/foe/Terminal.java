@@ -12,6 +12,7 @@ import java.util.Scanner;
 
 import mud.Constants;
 import mud.ObjectFlag;
+import mud.colors.Colors;
 import mud.foe.misc.Device;
 import mud.foe.misc.File;
 import mud.foe.misc.FileSystem;
@@ -446,8 +447,7 @@ public class Terminal extends Thing implements IODevice {
 			ldat.password = input;
 
 			if( login( ldat.username, ldat.password ) ) {
-				writeToScreen("Logged in as \'" + ldat.username + "\'." );
-				writeToScreen( "\n\n" );
+				writeToScreen("Logged in as \'" + ldat.username + "\'.\n" );
 				writeToScreen( "TERM> ");
 				
 				login_state = Login.LOGGED_IN;
@@ -526,8 +526,20 @@ public class Terminal extends Thing implements IODevice {
 				return 0;
 			}
 			else if ( cmd.equalsIgnoreCase("help") ) {
-				writeToScreen( "Commands" );
-				writeToScreen( "\t cd, copy, delete, done, help, logout, ls, mkdir, pwd, time, view" );
+				/*
+				 * commands:
+				 * cd, copy, delete, done, help, logout, ls, mkdir, pwd, time, view, clear
+				 * adduser, deluser, modperm, perms, users
+				 */
+				//writeToScreen( "Commands" );
+				writeToScreen( "" + Colors.YELLOW );
+				writeToScreen( "Commands\n" );
+				writeToScreen( "" + Colors.WHITE );
+				writeToScreen( "\t cd, copy, delete, done, help, logout, ls, mkdir, pwd, time, view\n" );
+				
+				if( users.get(current_user).getPerm() == 4 ) {
+					writeToScreen( "\t adduser, deluser, modperm, perms, users\n" );	
+				}
 			}
 			else if( cmd.equalsIgnoreCase("ls") ) {
 				if( !arg.equals("") ) {
@@ -568,11 +580,13 @@ public class Terminal extends Thing implements IODevice {
 				}
 			}
 			else if( cmd.equalsIgnoreCase("logout") ) {
-				writeToScreen( "Logging out..." );
+				writeToScreen( "Logging out... " );
 
 				login_state = Terminal.Login.LOGGED_OUT;
 
 				writeToScreen( "Logged out." );
+				
+				writeToScreen( "\n" );
 
 				writeToScreen( Utils.center( "STABLE-TEC INDUSTRIES UNIFIED OPERATING SYSTEM", 80 ) );
 				writeToScreen( Utils.center( "COPYRIGHT 1015-1020 STABLE-TEC INDUSTRIES", 80 ) );
@@ -651,7 +665,8 @@ public class Terminal extends Thing implements IODevice {
 	private void requestAction(final String actionKey, final String actionParams) {
 		switch(actionKey) {
 		case "add_user":
-			writeToScreen("CONFIRM adding user 'Stormy' (yes/no)?");
+			String newUser = actionParams.split(" ")[0];
+			writeToScreen( String.format("CONFIRM adding user '%s' (yes/no)?", newUser) );
 			input_state = "confirm";
 			action = new Pair<String>(actionKey, actionParams);
 			break;

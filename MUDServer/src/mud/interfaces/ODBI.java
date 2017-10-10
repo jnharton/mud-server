@@ -51,6 +51,7 @@ public interface ODBI {
 
 	// Creature
 	public List<Creature> getCreatures();
+	
 	public List<Creature> getCreaturesByRoom(final Room room);
 
 	// NPC
@@ -75,6 +76,7 @@ public interface ODBI {
 	public Thing getThing(final String name);
 
 	public List<Thing> getThings();
+	
 	public List<Thing> getThingsForRoom(final Room room);
 
 	// Player

@@ -110,12 +110,11 @@ public class Wand extends Item implements MagicItem {
 		// TODO Auto-generated method stub
 		return null;
 	}
-
-	@Override
-	public Effect getEffect() {
+	
+	/*public Effect getEffect() {
 		// TODO Auto-generated method stub
-		return null;
-	}
+		this.spell.getEffects()
+	}*/
 
 	public String toDB() {
 		final String[] output = new String[2];
@@ -140,5 +139,16 @@ public class Wand extends Item implements MagicItem {
 	@Override
 	public Wand getCopy() {
 		return new Wand(this);
+	}
+
+	@Override
+	public Effect getEffect() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
+	@Override
+	public List<Effect> getEffects() {
+		return this.spell.getEffects();
 	}
 }

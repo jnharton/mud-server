@@ -89,6 +89,11 @@ public class Jewelry extends Item implements MagicItem {
 		return this.effect;
 	}
 	
+	@Override
+	public List<Effect> getEffects() {
+		return Utils.mkList( this.effect );
+	}
+	
 	public void setEffect(final Effect newEffect) {
 		this.effect = newEffect;
 	}

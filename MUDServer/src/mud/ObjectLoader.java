@@ -775,11 +775,11 @@ public class ObjectLoader {
 		// TODO FIX THIS?! throwing an exception seems cool, but isn't helpful unless I have a check for every item type
 	}
 	
-	private final Thing loadThing(final String itemData) throws InvalidThingTypeException {
-		String[] attr = itemData.split("#");
+	private final Thing loadThing(final String thingData) throws InvalidThingTypeException {
+		String[] attr = thingData.split("#");
 		
 		System.out.println("");
-		System.out.println("debug(itemData): " + itemData);
+		System.out.println("debug(thingData): " + thingData);
 		System.out.println("");
 		
 		Integer oDBRef = Integer.parseInt(attr[0]);
@@ -800,14 +800,14 @@ public class ObjectLoader {
 		System.out.println("ThingType ID: " + thingType);
 		
 		if( tt != null ) {
-			System.out.println("ItemType: " + tt.getName());
+			System.out.println("ThingType: " + tt.getName());
 			System.out.println("");
 		}
 		else throw new InvalidThingTypeException("No such ThingType ( " + thingType + ")");
 
 		// module level thingtype handling...
 		if( tt.getId() >= 16 ) {
-			final Thing thing = parent.getGameModule().loadThing(itemData);
+			final Thing thing = parent.getGameModule().loadThing(thingData);
 			
 			System.out.println("Thing DBRef: " + thing.getDBRef());
 			System.out.println("");

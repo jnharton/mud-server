@@ -32,5 +32,5 @@ public interface MagicItem {
 	 * 
 	 * @return
 	 */
-	//public List<Effect> getEffects();
+	public List<Effect> getEffects();
 }

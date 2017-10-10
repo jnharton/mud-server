@@ -22,6 +22,7 @@ public enum TypeFlag
 	CREATURE("CREATURE", 'C'),
 	EXIT("EXIT", 'E'),
 	ITEM("ITEM", 'I'),
+	NOTHING("NOTHING", 'X'),
 	NPC("NPC", 'N'),
 	OBJECT("OBJECT", 'O'),
     PLAYER("PLAYER", 'P'),

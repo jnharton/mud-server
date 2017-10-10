@@ -120,7 +120,7 @@ import mud.weather.*;
  *        or modified, significant problem is fixed, etc? Last Worked On:
  *        2.4.2013
  **/
-public class MUDServer implements MUDServerI, MUDServerAPI {
+public final class MUDServer implements MUDServerI, MUDServerAPI {
 	/*
 	 * config options --------------
 	 * P ansi color -> ansi: <on/off>
@@ -976,6 +976,21 @@ public class MUDServer implements MUDServerI, MUDServerAPI {
 		}
 		
 		debug("");
+		
+		debug("Module Setup...");
+		
+		// TODO deal with kludgy module issues
+		if ( module != null ) {
+			debug("Module: " + module.getName());
+			
+			// initialize module
+			module.init(DATA_DIR);
+			
+			// "install" ruleset
+			final Ruleset modRS = module.getRuleset();
+		}
+		
+		debug("");
 
 		debug("Loading Database...");
 
@@ -1315,11 +1330,11 @@ public class MUDServer implements MUDServerI, MUDServerAPI {
 		debug("");
 
 		// TODO resolve the problems that make this not work
-		if ( module != null ) {
+		/*if ( module != null ) {
 			debug("Module: " + module.getName());
 			
 			// initialize module
-			module.init();
+			module.init(DATA_DIR);
 			
 			// "install" ruleset
 			final Ruleset modRS = module.getRuleset();
@@ -1344,7 +1359,7 @@ public class MUDServer implements MUDServerI, MUDServerAPI {
 			}
 
 			debug("");
-		}
+		}*/
 
 		/* Server Initialization (network level) */
 
@@ -5496,8 +5511,8 @@ public class MUDServer implements MUDServerI, MUDServerAPI {
 	private void cmd_commands(final String arg, final Client client) {
 		final Player player = getPlayer(client);
 		final int access = player.getAccess();
-
-		final List<Set<String>> commandMaps = new LinkedList<Set<String>>();
+		
+		/*final List<Set<String>> commandMaps = new LinkedList<Set<String>>();
 		
 		commandMaps.add( commandMap.keySet() );
 		commandMaps.add( player.getCommands().keySet() );
@@ -5508,6 +5523,7 @@ public class MUDServer implements MUDServerI, MUDServerAPI {
 
 		for (final Set<String> s : commandMaps) {
 			for (String key : s) {
+				System.out.println(key);
 				debug(key);
 				if (sb.toString().equals("")) sb.append(key);
 				else                          sb.append(", " + key);
@@ -5515,9 +5531,11 @@ public class MUDServer implements MUDServerI, MUDServerAPI {
 
 			switch (c) {
 			case 0:
+				//System.out.println("mapped cmd");
 				showDesc(colors("mapped: ", "yellow") + sb.toString(), client);
 				break;
 			case 1:
+				//System.out.println("mapped player cmd");
 				showDesc(colors("mapped(player): ", "yellow") + sb.toString(), client);
 				break;
 			default:
@@ -5527,24 +5545,35 @@ public class MUDServer implements MUDServerI, MUDServerAPI {
 			sb.delete(0, sb.length());
 
 			c++;
-		}
-
-		showDesc(colors("user commands: ", "green") + Utils.join(user_cmds, ", "), client);
+		}*/
+		
+		// TODO decide if I need to use showDesc here and debug to why it doesn't work in here anymore
+		
+		//showDesc(colors("user commands: ", "green") + Utils.join(user_cmds, ", "), client);
+		send(colors("user commands: ", "green") + Utils.join(user_cmds, ", "), client);
 
 		if (access >= Constants.BUILD) {
-			showDesc(colors("builder commands: ", "cyan") + Utils.join(build_cmds, ", "), client);
+			System.out.println( Arrays.asList(build_cmds) );
+			//showDesc(colors("builder commands: ", "cyan") + Utils.join(build_cmds, ", "), client);
+			send(colors("builder commands: ", "cyan") + Utils.join(build_cmds, ", "), client);
 		}
 
 		if (access >= Constants.ADMIN) {
-			showDesc(colors("admin commands: ", "red") + Utils.join(admin_cmds, ", "), client);
+			System.out.println( Arrays.asList(admin_cmds) );
+			//showDesc(colors("admin commands: ", "red") + Utils.join(admin_cmds, ", "), client);
+			send(colors("admin commands: ", "red") + Utils.join(admin_cmds, ", "), client);
 		}
 
 		if (access >= Constants.WIZARD) {
-			showDesc(colors("wizard commands: ", "magenta") + Utils.join(wiz_cmds, ", "), client);
+			System.out.println( Arrays.asList(wiz_cmds) );
+			//showDesc(colors("wizard commands: ", "magenta") + Utils.join(wiz_cmds, ", "), client);
+			send(colors("wizard commands: ", "magenta") + Utils.join(wiz_cmds, ", "), client);
 		}
 
 		if (access >= Constants.SUPERUSER) {
-			showDesc( colors("superuser commands: ", "yellow") + Utils.join(superuser_cmds, ", "), client);
+			System.out.println( Arrays.asList(superuser_cmds) );
+			//showDesc( colors("superuser commands: ", "yellow") + Utils.join(superuser_cmds, ", "), client);
+			send( colors("superuser commands: ", "yellow") + Utils.join(superuser_cmds, ", "), client);
 		}
 	}
 
@@ -18293,20 +18322,34 @@ public class MUDServer implements MUDServerI, MUDServerAPI {
 	 * @param client
 	 */
 	public void examine(final MUDObject m, final Client client) {
-		if (!(m instanceof NullObject) && m != null) {
+		if( m == null ) {
+			send("NULL object reference", client);
+			return;
+		}
+		
+		if( m.isType(TypeFlag.NOTHING) ) {
+			final String lockState;
+
+			if (((NullObject) m).isLocked()) lockState = "Locked";
+			else                             lockState = "unLocked";
+
+			send("-- NullObject -- (#" + m.getDBRef() + ") [" + lockState + "]", client);
+		}
+		else {
 			send(colors(m.getName() + "(#" + m.getDBRef() + ")", getDisplayColor(m.type)), client);
 			
 			final String typeName = m.type.getName();
 			
 			send("Type: " + typeName + " Flags: " + ObjectFlag.toInitString(m.getFlags()), client);
-
-			if (m instanceof Item) {
+			
+			if ( m.isType(TypeFlag.ITEM) ) {
 				Item item = (Item) m;
 
 				send("Item  Type: " + item.getItemType().toString(), client);
 				send("Slot  Type: " + item.getSlotType().toString(), client);
+				send("Equippable: " + item.isEquippable(), client);
 			}
-			else if (m instanceof Thing) {
+			else if ( m.isType(TypeFlag.THING) ) {
 				send("Thing Type: " + ((Thing) m).thing_type.toString(), client);
 			}
 			
@@ -18322,13 +18365,14 @@ public class MUDServer implements MUDServerI, MUDServerAPI {
 			send("Description: " + m.getDesc(), client);
 
 			final MUDObject m1 = getObject(m.getLocation());
+			
+			String locInfo = "null";
 
 			if (m1 != null) {
-				send("Location: " + colors(m1.getName(), getDisplayColor(m1.type)) + " (#" + m1.getDBRef() + ")", client);
+				locInfo = colors(m1.getName(), getDisplayColor(m1.type)) + " (#" + m1.getDBRef() + ")";
 			}
-			else {
-				send("Location: null", client);
-			}
+			
+			send("Location: " + locInfo, client);
 			
 			// send("Coordinates:", client);
 
@@ -18347,14 +18391,10 @@ public class MUDServer implements MUDServerI, MUDServerAPI {
 					send(item.getName(), client);
 				}
 			}
-		}
-		else {
-			final String lockState;
-
-			if (((NullObject) m).isLocked()) lockState = "Locked";
-			else                             lockState = "unLocked";
-
-			send("-- NullObject -- (#" + m.getDBRef() + ") [" + lockState + "]", client);
+			
+			if(m instanceof MagicItem) {
+				send("Effects: " + ((MagicItem) m).getEffects(), client);
+			}
 		}
 	}
 	
