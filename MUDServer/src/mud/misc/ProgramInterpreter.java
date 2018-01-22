@@ -1,6 +1,5 @@
 package mud.misc;
 
-import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.Hashtable;
 import java.util.LinkedList;
@@ -15,7 +14,6 @@ import mud.objects.NPC;
 import mud.objects.Player;
 import mud.utils.Message;
 import mud.utils.Point;
-import mud.utils.Tuple;
 import mud.utils.Utils;
 
 /*
@@ -80,10 +78,28 @@ public final class ProgramInterpreter {
 		this.vars.put(name, value);
 	}
 	
+	/**
+	 * Ask if the interpreter has a variable set by that name,
+	 * returns false if the KEY has a null VALUE.
+	 * 
+	 * @param name variable name
+	 * @return
+	 */
 	public boolean hasVar(final String name) {
 		return this.vars.containsKey(name) && this.vars.get(name) != null;
 	}
-
+	
+	/**
+	 * Get the value of an -existing- variable in the interpreter's vars.
+	 * 
+	 * @param name     String variable name
+	 * @return
+	 */
+	public String getVar(final String name) {
+		// TODO consider a dummy result instead of NULL when the var is null?
+		return this.vars.get(name);
+	}
+	
 	/**
 	 * Set an -existing- variable in the interpreter's vars
 	 * to a new value.
@@ -97,7 +113,7 @@ public final class ProgramInterpreter {
 	}
 
 	/**
-	 * Remove a variable from the interpreter's vars.
+	 * Remove an -existing- variable from the interpreter's vars.
 	 * 
 	 * @param name String variable name
 	 */
@@ -204,6 +220,15 @@ public final class ProgramInterpreter {
 	}
 
 	private String evaluate(final String functionName, final String[] params, final Player player, final MUDObject object) {
+		
+		// TODO fix kludge?
+		// what should cmd, arg, how be set to?
+		addVar("cmd", "");
+		addVar("arg", "");
+		addVar("how", "");
+		addVar("player", "" + player.getDBRef());
+		addVar("this", "" + object.getDBRef());
+		
 		if( debug_enabled ) {
 			System.out.println("# Params: " + params.length);
 			System.out.println("");
@@ -250,7 +275,7 @@ public final class ProgramInterpreter {
 					// {dbref:object}
 					final MUDObject mobj = database.getByName(params[0]);
 
-					if( mobj != null ) return "" + mobj.getDBRef();
+					if( mobj != null ) return "" + mobj.getDBRef(); 
 					else               return "" + -1;
 				}
 				else if (functionName.equals("rainbow")) {
@@ -626,7 +651,40 @@ public final class ProgramInterpreter {
 			}
 		}
 		else {
+			//return functionName.substring(2, functionName.length() - 2) + ": Incomplete function statement, insufficient parameters!";
+			/* all ZERO parameter functions */
 			switch(functionName) {
+			case "{name}":
+				return parent.getServerName();
+			case "{version}":
+				return MUDServer.getVersion();
+			default:
+				String temp = functionName.substring(1, functionName.length() - 1);
+
+				// e.g. {&arg}
+				if( temp.startsWith("&") ) {
+					/*
+					 * special
+					 * &cmd - command that started this
+					 * &arg - function argument?
+					 * &this - object code is executing from?
+					 * &player - player context of executing code?
+					 */
+
+					final String varName = temp.substring(1);
+					final String value = getVar(varName);
+
+					if( value != null ) {
+						return value;
+					}
+					else return "";
+				}
+				else return functionName;
+			}
+			
+			// TODO convert all & 'functions' to var retrievals and store data in vars
+			// TODO consider making a separate area for protected/static vars
+			/*switch(functionName) {
 			case "{&arg}":
 				return vars.get("arg");
 			case "{&cmd}":
@@ -641,15 +699,13 @@ public final class ProgramInterpreter {
 				return "" + player.getDBRef();
 			case "{version}":
 				return MUDServer.getVersion();
-			case "{colors}":
-				return "Incomplete function statement, no inputs!";
 			default:
 				String temp = functionName.substring(1, functionName.length() - 1);
 				
 				//if( functionName.startsWith("&") ) {
 				if( temp.startsWith("&") ) {
 					final String varName = temp.substring(1);
-					final String value = this.vars.get(varName);
+					final String value = getVar(varName);
 
 					if( value != null ) {
 						return value;
@@ -657,7 +713,7 @@ public final class ProgramInterpreter {
 					else return "";
 				}
 				else return functionName;
-			}
+			}*/
 		}
 	}
 	
