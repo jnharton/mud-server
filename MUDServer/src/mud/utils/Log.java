@@ -154,7 +154,7 @@ public class Log {
 			try {
 				// make sure we have a real file
 				if( !file.exists() ) {
-					System.out.println("Creating file...");
+					System.out.println( String.format("%s: %s", name, "Creating file...") );
 					file.createNewFile();
 				}
 				

@@ -316,12 +316,12 @@ public final class FalloutEquestria implements GameModule, ExtraCommands {
 
 	@Override
 	public Map<String, Item> getItemPrototypes() {
-		return this.prototypes;
+		return FalloutEquestria.prototypes;
 	}
 
 	@Override
 	public Map<String, Thing> getThingPrototypes() {
-		return this.prototypes1;
+		return FalloutEquestria.prototypes1;
 	}
 
 	@Override

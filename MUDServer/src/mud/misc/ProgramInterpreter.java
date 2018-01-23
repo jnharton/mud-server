@@ -454,16 +454,6 @@ public final class ProgramInterpreter {
 					final int dbref = Utils.toInt(params[1], -1);
 					
 					return prop(property, dbref);
-					/*final MUDObject object1 = database.getById(dbref);
-
-					if( object1 != null ) {
-						if( debug_enabled ) System.out.println("Object1: " + object1.getName());
-
-						return "" +  object1.getProperty(property);
-					}
-					else return "";*/
-					
-					//else { return "Incomplete function statement, no parameters!"; }
 				}
 				else if( functionName.equals("propdir") ) {
 					// {prop:name, object}
@@ -771,9 +761,20 @@ public final class ProgramInterpreter {
 		if( object1 != null ) {
 			if( debug_enabled ) System.out.println("Object1: " + object1.getName());
 
-			return "" +  object1.getProperty(propName);
+			return "" + object1.getProperty(propName);
 		}
 		else return "";
+		
+		/*final MUDObject object1 = database.getById(dbref);
+
+		if( object1 != null ) {
+			if( debug_enabled ) System.out.println("Object1: " + object1.getName());
+
+			return "" +  object1.getProperty(property);
+		}
+		else return "";*/
+		
+		//else { return "Incomplete function statement, no parameters!"; }
 	}
 	
 	private String propdir(final String propName, final Integer objDBREF) {

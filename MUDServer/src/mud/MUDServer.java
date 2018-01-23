@@ -37,6 +37,10 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.DecimalFormat;
 
 import java.util.Arrays;
@@ -211,11 +215,20 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 	// but, only some of the error messages are currently converted to french
 	private final String lang = "en";
 
-	// directories to use (existence will be checked when setup() is run)
-	private final String MAIN_DIR = new File("").getAbsolutePath() + "\\"; // Program Directory
-	private final String DATA_DIR = MAIN_DIR + "data\\";                   // Data Directory
-
-	private final String ACCOUNT_DIR = DATA_DIR + "accounts" + "\\"; // Account Directory
+	
+	
+	// directories to use (existence will be checked when setup() is run) -- these are pathnames..
+	//private final String MAIN_DIR = new File("").getAbsolutePath() + "\\"; // Program Directory
+	//private final String DATA_DIR = MAIN_DIR + "data\\";                   // Data Directory
+	
+	private final String MAIN_DIR = resolvePath("");               // Program Directory
+	private final String DATA_DIR = resolvePath(MAIN_DIR, "data"); // Data Directory
+	
+	//"" + resolvePath(MAIN_DIR, "data");
+	//"" + resolvePath(DATA_DIR, "accounts");
+	//"" + fs.getPath(MAIN_DIR, DATA_DIR).toAbsolutePath();
+	
+	/*private final String ACCOUNT_DIR = DATA_DIR + "accounts" + "\\"; // Account Directory
 	private final String BACKUP_DIR = DATA_DIR + "backup" + "\\";    // Backup Directory
 	private final String BOARD_DIR = DATA_DIR + "boards" + "\\";     // Boards Directory
 	private final String CONFIG_DIR = DATA_DIR + "config" + "\\";    // Config Directory
@@ -227,11 +240,26 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 	private final String THEME_DIR = DATA_DIR + "theme" + "\\";      // Help Directory
 	private final String LOG_DIR = DATA_DIR + "logs" + "\\";         // Log Directory
 	private final String SESSION_DIR = DATA_DIR + "sessions" + "\\"; // Session Directory
-	private final String WORLD_DIR = DATA_DIR + "worlds" + "\\";     // World Directory
+	private final String WORLD_DIR = DATA_DIR + "worlds" + "\\";     // World Directory*/
+	
+	//"" + resolvePath(MAIN_DIR, "data", "accounts"
+	private final String ACCOUNT_DIR = resolvePath(DATA_DIR, "accounts");     // Account Directory
+	private final String BACKUP_DIR = resolvePath(DATA_DIR, "backup");        // Backup Directory
+	private final String BOARD_DIR = resolvePath(DATA_DIR, "boards");         // Boards Directory
+	private final String CONFIG_DIR = resolvePath(DATA_DIR, "config");        // Config Directory
+	private final String HELP_DIR = resolvePath(DATA_DIR, "help");            // Help Directory
+	private final String TOPIC_DIR = resolvePath(DATA_DIR, "help", "topics"); // Topic Directory
+	private final String MAP_DIR = resolvePath(DATA_DIR, "maps");             // MAP Directory
+	private final String MOTD_DIR = resolvePath(DATA_DIR, "motd");            // MOTD Directory
+	private final String SPELL_DIR = resolvePath(DATA_DIR, "spells");         // Spell Directory
+	private final String THEME_DIR = resolvePath(DATA_DIR, "theme");          // Help Directory
+	private final String LOG_DIR = resolvePath(DATA_DIR, "logs");             // Log Directory
+	private final String SESSION_DIR = resolvePath(DATA_DIR, "sessions");     // Session Directory
+	private final String WORLD_DIR = resolvePath(DATA_DIR, "worlds");         // World Directory
 	
 	// server storage of default music/sounds for client download?
-	private final String MUSIC_DIR = DATA_DIR + "music" + "\\";
-	private final String SOUND_DIR = DATA_DIR + "sound" + "\\";
+	private final String MUSIC_DIR = resolvePath(DATA_DIR, "music");
+	private final String SOUND_DIR = resolvePath(DATA_DIR, "sound");
 
 	/*
 	 * filename variables used to be final -- i'd like to be able to reload or
@@ -242,16 +270,16 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 	// reference the dirs every time
 
 	// files to use (existence will be checked when setup() is run)
-	private String DB_FILE = DATA_DIR + "db.txt";                      // database file (ALL) -- will replace all 3 or supersede them
-	private String ERRORS_FILE = DATA_DIR + "errors_" + lang + ".txt"; // messages file (errors) [localized?]
-	private String SPELLS_FILE = DATA_DIR + "spells.txt";              // database file (spells) -- contains spell names, messages, and more
-	private String ALIASES_FILE = CONFIG_DIR + "aliases.conf";         // aliases.conf -- command aliases
-	private String BANLIST_FILE = CONFIG_DIR + "banlist.txt";          // banlist.txt -- banned ip addresses (IPv4)
-	private String CHANNELS_FILE = CONFIG_DIR + "channels.txt";        // channels.txt -- preset chat channels to load
-	private String CONFIG_FILE = CONFIG_DIR + "config.txt";            // config.txt -- configuration options file
-	private String FORBIDDEN_FILE = CONFIG_DIR + "forbidden.txt";      // forbidden.txt -- forbidden names/words
-	private String MOTD_FILE = MOTD_DIR + "motd.txt";                  // motd.txt -- message of the day/intro screen
-	private String THEME_FILE = THEME_DIR + "default.thm";             // theme file to load
+	private String DB_FILE = resolvePath(DATA_DIR,          "db.txt");                  // database file (ALL) -- will replace all 3 or supersede them
+	private String ERRORS_FILE = resolvePath(DATA_DIR,      "errors_" + lang + ".txt"); // messages file (errors) [localized?]
+	private String SPELLS_FILE = resolvePath(DATA_DIR,      "spells.txt");              // database file (spells) -- contains spell names, messages, and more
+	private String ALIASES_FILE = resolvePath(CONFIG_DIR,   "aliases.conf");            // aliases.conf -- command aliases
+	private String BANLIST_FILE = resolvePath(CONFIG_DIR,   "banlist.txt");             // banlist.txt -- banned ip addresses (IPv4)
+	private String CHANNELS_FILE = resolvePath(CONFIG_DIR,  "channels.txt");            // channels.txt -- preset chat channels to load
+	private String CONFIG_FILE = resolvePath(CONFIG_DIR,    "config.txt");              // config.txt -- configuration options file
+	private String FORBIDDEN_FILE = resolvePath(CONFIG_DIR, "forbidden.txt");           // forbidden.txt -- forbidden names/words
+	private String MOTD_FILE = resolvePath(MOTD_DIR,        "motd.txt");                // motd.txt -- message of the day/intro screen
+	private String THEME_FILE = resolvePath(THEME_DIR,      "default.thm");             // theme file to load
 
 	// ???
 	private Integer start_room = 9; // default starting room
@@ -610,7 +638,8 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 	public MUDServer(final String address, int port) {
 		this.port = port;
 	}
-
+	
+	// TODO try to clean up server.X references...
 	public static void main(String args[]) {
 		/* options: <port>, --port=<port>, --debug */
 		MUDServer server = null;
@@ -648,7 +677,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 						System.out.println("");
 					}
 					else if (param.equals("db")) {
-						server.DB_FILE = server.DATA_DIR + "databases\\" + args[a + 1];
+						server.DB_FILE = server.resolvePath(server.DATA_DIR, "databases", args[a + 1]);
 						System.out.println("Using database " + args[a + 1]);
 						// System.out.println("");
 					}
@@ -658,7 +687,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 						// server.DATA_DIR = "";
 					}
 					else if (param.equals("theme")) {
-						server.THEME_FILE = server.THEME_DIR + args[a + 1];
+						server.THEME_FILE = server.resolvePath(server.THEME_DIR, args[a + 1]);
 						System.out.println("Using theme " + args[a + 1]);
 						// System.out.println("");
 					}
@@ -774,9 +803,9 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		}
 
 		// Tell Us where the program is running from
-		System.out.println("Current Working Directory: " + new File("").getAbsolutePath());
-		System.out.println("MAIN_DIR: " + MAIN_DIR);
-
+		System.out.println("Working: " + MAIN_DIR);
+		System.out.println("Data:    " + DATA_DIR);
+		
 		System.out.println("");
 
 		System.out.println("Important!: The two above should be the same if the top is where you have the program AND it's data");
@@ -810,11 +839,11 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 				boolean success = dir.mkdir();
 
 				if (success) {
-					System.out.println("Directory: " + dir.getAbsolutePath() + " created");
+					System.out.println("Directory: " + dir + " created");
 				}
 			}
 			else {
-				System.out.println("Directory: " + dir.getAbsolutePath() + " exists.");
+				System.out.println("Directory: " + dir + " exists.");
 			}
 		}
 
@@ -950,12 +979,13 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		debug("Loading Zones...");
 		
 		debug("");
-
+		
+		// TODO be nice to do all these resolutions in one place..
 		// Load Zones (only doing this here, because Rooms may be in a zone, and
-		// so
-		// by loading Zones first then rooms can be placed in them by the
-		// ObjectLoader
-		loadZones(WORLD_DIR + world + "\\zones.txt");
+		// so by loading Zones first then rooms can be placed in them by the ObjectLoader
+		//loadZones(WORLD_DIR + world + "\\zones.txt");
+		loadZones( resolvePath(WORLD_DIR, world, "zones.txt") );
+		
 
 		debug("");
 
@@ -1101,7 +1131,9 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 				c.increment();
 			}
 			
-			final String[] helpfile = Utils.loadStrings(this.HELP_DIR + helpFileName);
+			// TODO path kludging AGAIN! this vs vague reference to globals?
+			//final String[] helpfile = Utils.loadStrings(this.HELP_DIR + helpFileName);
+			final String[] helpfile = Utils.loadStrings( resolvePath(this.HELP_DIR, helpFileName) );
 			
 			final String key = helpfile[0];
 			
@@ -1147,7 +1179,8 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 				c.increment();
 			}
 
-			final String[] topicfile = Utils.loadStrings(this.TOPIC_DIR + topicFileName);
+			//final String[] topicfile = Utils.loadStrings(this.TOPIC_DIR + topicFileName);
+			final String[] topicfile = Utils.loadStrings( resolvePath(this.TOPIC_DIR, topicFileName) );
 
 			topicTable.put(topicfile[0], topicfile);
 
@@ -1329,8 +1362,8 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 
 		debug("");
 
-		// TODO resolve the problems that make this not work
-		/*if ( module != null ) {
+		// TODO resolve the problems that make this not work (which are?)
+		if ( module != null ) {
 			debug("Module: " + module.getName());
 			
 			// initialize module
@@ -1359,7 +1392,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			}
 
 			debug("");
-		}*/
+		}
 
 		/* Server Initialization (network level) */
 
@@ -1728,35 +1761,24 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 	}
 
 	private void create_data() {
-		// generate blank motd
-		String[] motdData = new String[] {
-				"*** Welcome to:",
-				"",
-				"<insert mud name or initial graphic here>",
-				"",
-				"<other info>",
-				"",
-				"<connection details>",
-				"",
-				"To connect to your character use 'connect <playername> <password>'",
-				"To create a character use 'create <playername> <password>'"
-				};
-
-		Utils.saveStrings(MOTD_DIR + "motd.txt", motdData);
+		// Error Message Localization
+		Utils.saveStrings( resolvePath(DATA_DIR, "errors_en.txt"), new String[] { "1:Invalid Syntax!", "2:NaN Not a Number!" } );
+		Utils.saveStrings( resolvePath(DATA_DIR, "errors_fr.txt"), new String[] { "1:Syntaxe Invalide!", "2:NaN N'est pas un nombre!" } );
 
 		// generate blank/basic config files
-		Utils.saveStrings(CONFIG_DIR + "aliases.conf", new String[] {
+		Utils.saveStrings( resolvePath(CONFIG_DIR, "aliases.conf"), new String[] {
 				"# Command Aliases File", "alias north:n",
 				"alias northeast:ne", "alias northwest:nw", "alias south:s",
 				"alias southeast:se", "alias southwest:sw", "alias east:e",
 				"alias west:w", "alias inventory:inv,i", "alias look:l",
 				"alias pconfig:pconf", "alias quit:QUIT" });
-		Utils.saveStrings(CONFIG_DIR + "banlist.txt", new String[] { "# Banlist" });
-		Utils.saveStrings(CONFIG_DIR + "channels.txt", new String[] { "Support,0", "Testing,0" });
-		Utils.saveStrings(CONFIG_DIR + "forbidden.txt", new String[] { "# Forbidden names list" });
+		
+		Utils.saveStrings( resolvePath(CONFIG_DIR, "banlist.txt"), new String[] { "# Banlist" });
+		Utils.saveStrings( resolvePath(CONFIG_DIR, "channels.txt"), new String[] { "Support,0", "Testing,0" });
+		Utils.saveStrings( resolvePath(CONFIG_DIR, "forbidden.txt"), new String[] { "# Forbidden names list" });
 
 		// generate an single, default message for the mud-wide bulletin board
-		Utils.saveStrings(BOARD_DIR + "bboard.txt", new String[] { "0#admin#Welcome#Test Message" });
+		Utils.saveStrings( resolvePath(BOARD_DIR, "bboard.txt"), new String[] { "0#admin#Welcome#Test Message" });
 
 		final String[] theme = new String[] {
 				"[theme]", "name = MUD",
@@ -1789,31 +1811,45 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 				"[/years]"
 		};
 
-		Utils.saveStrings(THEME_DIR + "default.thm", theme);
+		Utils.saveStrings( resolvePath(THEME_DIR, "default.thm"), theme);
+		
+		// generate an empty world directory and necessary sub directories
+		final File world_d = new File( resolvePath(WORLD_DIR, "world") );
+		final File mail_d = new File( resolvePath(WORLD_DIR, "world", "mail") );
+		final File motd_d = new File( resolvePath(WORLD_DIR, "world", "motd") );
 
-		// generate an empty world directory
-		final File temp = new File(WORLD_DIR + "world");
+		// check that the directories exist, if not create them
+		for (final File dir : Utils.mkList(world_d, mail_d, motd_d)) {
+			if (!dir.exists()) {
+				boolean success = dir.mkdir();
 
-		if (!temp.exists()) {
-			boolean success = temp.mkdir();
-
-			if (success) {
-				System.out.println("Directory: " + temp.getAbsolutePath() + " created");
+				if (success) System.out.println("Directory: " + dir + " created");
+			}
+			else {
+				System.out.println("Directory: " + dir.getAbsolutePath() + " exists.");
 			}
 		}
-		else {
-			System.out.println("Directory: " + temp.getAbsolutePath() + " exists.");
-		}
 
-		// create an empty zones file
-		String[] zones = new String[] { "# Zones" };
+		// generate blank motd
+		String[] motdData = new String[] {
+				"*** Welcome to:",
+				"",
+				"<insert mud name or initial graphic here>",
+				"",
+				"<other info>",
+				"",
+				"<connection details>",
+				"",
+				"To connect to your character use 'connect <playername> <password>'",
+				"To create a character use 'create <playername> <password>'"
+		};
 
-		Utils.saveStrings(WORLD_DIR + "world\\zones.txt", zones);
+		Utils.saveStrings( resolvePath(WORLD_DIR, "world", "motd", "motd.txt"), motdData);
 
 		// create plain, mostly empty database (contains a single room and an admin player)
 		String[] dbData = new String[2];
 
-		final Room room = createRoom("Main Environment Room", "You see nothing.", 0);
+		final Room room = createRoom("An Empty Room", "You see nothing.", 0);
 		room.setDBRef(0);
 
 		final Player admin = new Player(1, "admin", Utils.hash("password"), 0);
@@ -1826,12 +1862,30 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		dbData[0] = room.toDB();
 		dbData[1] = admin.toDB();
 
-		Utils.saveStrings(DB_FILE, dbData);
+		Utils.saveStrings( resolvePath(WORLD_DIR, "world", "db.txt"), dbData);
+		
+		// creates races file
+		
+		String[] races = new String[] {
+				"[",
+				"{",
+				"\"name\": \"Human\",",
+				"\"subrace\": null,",
+				"\"id\": 2,",
+				"\"statAdj\": [ 0, 0, 0, 0, 0, 0 ],",
+				"\"restricted\": false,",
+				"\"canFly\": false",
+				"}",
+				"]"
+		};
+		Utils.saveStrings( resolvePath(WORLD_DIR, "world", "races.json"), races );
+		
+		// create an empty zones file
+		String[] zones = new String[] { "# Zones" };
 
-		// Error Message Localization
-		Utils.saveStrings(DATA_DIR + "errors_en.txt", new String[] { "1:Invalid Syntax!", "2:NaN Not a Number!" });
-		Utils.saveStrings(DATA_DIR + "errors_fr.txt", new String[] { "1:Syntaxe Invalide!", "2:NaN N'est pas un nombre!" });
-
+		Utils.saveStrings( resolvePath(WORLD_DIR, "world", "zones.txt"), zones );
+		
+		/*
 		// create topics directory
 		final File temp1 = new File(TOPIC_DIR);
 
@@ -1845,6 +1899,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		else {
 			System.out.println("Directory: " + temp1.getAbsolutePath() + " exists.");
 		}
+		*/
 	}
 
 	private void weather_test() {
@@ -1910,6 +1965,8 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 
 		/* FOE Items Testing -- NOT DB Safe */
 		if (DB_FILE.endsWith("foe.txt")) { // Fallout Equestria testing database (this code uses stuff from a package not included on github)
+			debug("Fallout Equestria (FOE) Item Testing setup");
+			
 			// TODO need to prototype all these things or something and then just make an instance in the test database
 
 			// rules = mud.foe.FOESpecial.getInstance();
@@ -7546,7 +7603,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			// probably ought to somehow prevent editing of the header
 			// load the help file with an offset so I can avoid borking
 			// the two header data lines ?
-			final List<String> lines = Utils.loadList(HELP_DIR + arg + ".help");
+			final List<String> lines = Utils.loadList( resolvePath(HELP_DIR, arg + ".help") );
 			
 			player.setEditList( new EditList(arg, lines) );
 			
@@ -8678,7 +8735,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 	private void cmd_map(final String arg, final Client client) {
 		debug(MAP_DIR + "map.txt");
 
-		String mapFile = MAP_DIR + "map.txt";
+		String mapFile = resolvePath(MAP_DIR, "map.txt");
 		String[] test1 = new String[1];
 
 		try {
@@ -11084,8 +11141,9 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		}
 	}
 	
-	String getPackagePath(final String packageName) {
-		return MAIN_DIR + "\\" + packageName.replace(".", "\\");
+	// TODO what the heck is this for
+	private String getPackagePath(final String packageName) {
+		return "" + resolvePath("", packageName.split("."));
 	}
 
 	/**
@@ -11096,7 +11154,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 	 */
 	private void cmd_spawn(final String arg, final Client client) {
 		final Player player = getPlayer(client);
-		
+
 		Creature c = new Creature(arg, "a spawned creature");
 
 		if( c != null ) {
@@ -11109,68 +11167,68 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 
 			send("Spawned " + c.getName(), client);
 		}
-		
-		/*if( arg.startsWith("#") ) {
+
+		if( arg.startsWith("#") ) {
 			final String param = arg.substring(1);
-			
+
 			if( param.equals("list") ) {
 				send("-- Creatures", client);
-				
+
 				final String path = getPackagePath("mud.objects.creatures");
 				File file = new File(path);
-				
+
 				if( file.isDirectory() ) {
 					for(final String fileName : file.list()) {
 						send(fileName, client);
 					}
 				}
 			}
-			
+
 		}
 		else {
-		Class<?> c = getClass("mud.objects.creatures." + arg);
+			Class<?> cla = getClass("mud.objects.creatures." + arg);
 
-		Creature cre = null;
+			Creature cre = null;
 
-		if( c != null ) {
-			try {
-				cre = (Creature) c.getConstructor().newInstance();
+			if( cla != null ) {
+				try {
+					cre = (Creature) cla.getConstructor().newInstance();
+				}
+				catch (final InstantiationException e)    { e.printStackTrace(); }
+				catch (final IllegalAccessException e)    { e.printStackTrace(); }
+				catch (final IllegalArgumentException e)  { e.printStackTrace(); }
+				catch (final InvocationTargetException e) { e.printStackTrace(); }
+				catch (final NoSuchMethodException e)     { e.printStackTrace(); }
+				catch (final SecurityException e)         { e.printStackTrace(); }
+
+				if( cre != null ) {
+					cre.setLocation(getPlayer(client).getLocation());
+
+					// TODO set virtual flag?
+					objectDB.addAsNew(cre);
+					objectDB.addCreature(cre);
+
+					send("Spawned " + arg, client);
+				}
 			}
-			catch (final InstantiationException e)    { e.printStackTrace(); }
-			catch (final IllegalAccessException e)    { e.printStackTrace(); }
-			catch (final IllegalArgumentException e)  { e.printStackTrace(); }
-			catch (final InvocationTargetException e) { e.printStackTrace(); }
-			catch (final NoSuchMethodException e)     { e.printStackTrace(); }
-			catch (final SecurityException e)         { e.printStackTrace(); }
+			else {
+				// TODO kludge land, fix this...
+				cre = new Creature(arg, "");
 
-			if( cre != null ) {
-				cre.setLocation(getPlayer(client).getLocation());
+				if( cre != null ) {
+					cre.setLocation(getPlayer(client).getLocation());
 
-				// TODO set virtual flag?
-				objectDB.addAsNew(cre);
-				objectDB.addCreature(cre);
+					// set virtual flag?
 
-				send("Spawned " + arg, client);
+					objectDB.addAsNew(cre);
+					objectDB.addCreature(cre);
+
+					send("Spawned " + arg, client);
+				}
+
+				send("No such Creature exists.", client);
 			}
 		}
-		else {
-			// TODO kludge land, fix this...
-			cre = new Creature(arg, "");
-
-			if( cre != null ) {
-				cre.setLocation(getPlayer(client).getLocation());
-
-				// set virtual flag?
-
-				objectDB.addAsNew(cre);
-				objectDB.addCreature(cre);
-
-				send("Spawned " + arg, client);
-			}
-			
-			send("No such Creature exists.", client);
-		}
-		}*/
 	}
 	
 	/**
@@ -12002,7 +12060,8 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 	 * item.getName().equals( arg )) { player.wear( (Wearable) item ); return; }
 	 * } }
 	 */
-
+	
+	// TODO for my own sake, please, please make a utility function to load log files... resolvePath(...) out the wazoo
 	/**
 	 * Allow you to ask to have an arbitrary part of the current log file be
 	 * printed out to the screen for viewing purposes.
@@ -12046,10 +12105,10 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 						final int start = Utils.toInt(params[0], 0);
 						final int end = Utils.toInt(params[1], log.getLinesWritten());
 
-						lines = Utils.loadList(LOG_DIR + "\\" + log.getFileName(), start, end);
+						lines = Utils.loadList(resolvePath(LOG_DIR, log.getFileName()), start, end);
 					}
 					else {
-						lines = Utils.loadList(LOG_DIR + "\\" + log.getFileName());
+						lines = Utils.loadList( resolvePath(LOG_DIR, log.getFileName()) );
 					}
 
 					send(lines, client);
@@ -12063,7 +12122,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 					if (params.length >= 1) {
 						final Time time = Time.fromString(params[0]);
 						
-						lines = Utils.loadList(LOG_DIR + "\\" + log.getFileName());
+						lines = Utils.loadList( resolvePath(LOG_DIR, log.getFileName()) );
 
 						int startIndex = 0;
 
@@ -16089,7 +16148,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 
 		for (final Account acct : acctMgr.getAccounts()) {
 			try {
-				fos = new FileOutputStream(ACCOUNT_DIR + acct.getUsername() + ".acct");
+				fos = new FileOutputStream( resolvePath(ACCOUNT_DIR, acct.getUsername() + ".acct") );
 				oos = new ObjectOutputStream(fos);
 				
 				System.out.println( gson.toJson( acct ) );
@@ -16117,7 +16176,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 	 */
 	public void saveDB(final String filename) {
 		// save databases to disk, modifies 'real' files
-		objectDB.save(BACKUP_DIR + filename);
+		objectDB.save( resolvePath(BACKUP_DIR, filename) );
 		send("Done");
 	}
 
@@ -16131,9 +16190,11 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		for(final MUDObject object : objectDB.getObjects()) {
 			System.out.println(object.getDBRef() + " : " + object.getName());
 
-			final String fileName = DATA_DIR + "json\\" + object.getDBRef() + ".json";;
+			//final String fileName = DATA_DIR + "json\\" + object.getDBRef() + ".json";
+			final String fileName = object.getDBRef() + ".json";;
+			final String filePath = resolvePath(DATA_DIR, "json", fileName);
 
-			Utils.saveStrings(fileName, new String[] { gson.toJson(object) });
+			Utils.saveStrings(filePath, new String[] { gson.toJson(object) });
 		}
 	}
 
@@ -16142,7 +16203,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			for (final Entry<String, String[]> hme : this.helpTable.entrySet()) {
 				debug("Saving " + HELP_DIR + hme.getKey() + ".help" + "... ");
 				
-				Utils.saveStrings(HELP_DIR + hme.getKey() + ".help", hme.getValue());
+				Utils.saveStrings( resolvePath(HELP_DIR, hme.getKey() + ".help"), hme.getValue() );
 			}
 		}
 	}
@@ -16152,7 +16213,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			for (final Entry<String, String[]> tme : this.topicTable.entrySet()) {
 				debug("Saving " + TOPIC_DIR + tme.getKey() + ".topic" + "... ");
 				
-				Utils.saveStrings(TOPIC_DIR + tme.getKey() + ".topic", tme.getValue());
+				Utils.saveStrings( resolvePath(TOPIC_DIR, tme.getKey() + ".topic"), tme.getValue() );
 			}
 		}
 	}
@@ -16204,9 +16265,10 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		System.out.println(BOARD_DIR + board.getFilename());
 
 		File file;
-
+		
+		// TODO resolvePath(...) is ugly as sin
 		try {
-			file = new File(BOARD_DIR + board.getFilename());
+			file = new File( resolvePath(BOARD_DIR, board.getFilename()) );
 		}
 		catch (final NullPointerException npe) {
 			// TODO do I really need to catch an exception here?
@@ -16603,13 +16665,15 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 
 				if (section.equals("theme")) {
 					// TODO should db be a variable in Theme?
+					// TODO more nasty path kludge... conflict between file/dir names and needing the full path..
 					if(var.equals("name") )            ;
 					else if (var.equals("mud_name"))   mud_name = val;
 					else if (var.equals("motd_file"))  motd_file = val;
 					else if (var.equals("start_room")) start_room = Utils.toInt(val, 0);
 					else if (var.equals("module"))     ;
 					else if (var.equals("world"))      world = val;
-					else if (var.equals("db"))         this.DB_FILE = DATA_DIR + "databases\\" + val;
+					//else if (var.equals("db"))         this.DB_FILE = DATA_DIR + "databases\\" + val;
+					else if (var.equals("db"))         this.DB_FILE = resolvePath(DATA_DIR, "worlds", world, val);
 					else {
 						debug("Theme Loader (" + section + "): unknown var \'" + var + "\' with value of \'" + val + "\'.");
 					}
@@ -16845,8 +16909,10 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 	 * @return String - the message of the day
 	 */
 	public String messageOfTheDay() {
+		// TODO even MORE path kludges
 		//return new String( Utils.loadBytes(WORLD_DIR + world + "\\motd\\" + motd_file) );
-		byte[] temp = Utils.loadBytes(WORLD_DIR + world + "\\motd\\" + motd_file);
+		//byte[] temp = Utils.loadBytes(WORLD_DIR + world + "\\motd\\" + motd_file);
+		byte[] temp = Utils.loadBytes( resolvePath(WORLD_DIR, world, "motd", motd_file) );
 		
 		String motd;
 		
@@ -17433,7 +17499,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 	// public void sys_help_reload() throws NullPointerException
 	public void help_reload() {
 		for (final String helpFileName : generateHelpFileIndex()) {
-			String helpLines[] = Utils.loadStrings(HELP_DIR + helpFileName);
+			String helpLines[] = Utils.loadStrings( resolvePath(HELP_DIR, helpFileName) );
 			
 			this.helpTable.put(helpLines[0], helpLines);
 		}
@@ -17813,6 +17879,15 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		}
 	}
 	
+	public void debug(final String data, final Boolean test) {
+		if ( debug ) {
+			if ( test ) {
+				System.out.println( data.trim() );
+				logDebug( data.trim() );
+			}
+		}
+	}
+	
 	/* Logging Methods */
 	
 	private void log(final String string) {
@@ -17872,16 +17947,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 	private void logDebug(final String debugMessage) {
 		if( log_debug ) log(debugMessage, Constants.DEBUG_LOG);
 	}
-
-	public void debug(final String data, final Boolean test) {
-		if ( debug ) {
-			if ( test ) {
-				System.out.println( data.trim() );
-				logDebug( data.trim() );
-			}
-		}
-	}
-
+	
 	/**
 	 * Game Time
 	 * 
@@ -20042,6 +20108,9 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 
 			return newItem;
 		}
+		else {
+			debug("ERROR: null template?!");
+		}
 
 		return null;
 	}
@@ -20890,7 +20959,9 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		send("Backing up game...");
 
 		// backs the current database up to current_database_name.bak
-		backup(BACKUP_DIR + DB_FILE.substring(DB_FILE.lastIndexOf('\'') + 1, DB_FILE.length() - 3) + ".bak");
+		//backup(BACKUP_DIR + DB_FILE.substring(DB_FILE.lastIndexOf('\'') + 1, DB_FILE.length() - 3) + ".bak");
+		String current_db = ( new File(DB_FILE).getName() );
+		backup( resolvePath(BACKUP_DIR, current_db.replace(".txt", ".bak")) );
 
 		send("Finished backing up");
 
@@ -21077,7 +21148,8 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		
 		boolean name_set = false;
 		
-		final ArrayList<String> lines = loadListDatabase(BOARD_DIR + bb.getFilename());
+		// TODO path kludges FOR THE WIN!
+		final ArrayList<String> lines = loadListDatabase( resolvePath(BOARD_DIR, bb.getFilename()) );
 
 		bb.setInitialCapacity(lines.size());
 		
@@ -21154,8 +21226,10 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 	 */
 	private void loadMail(Player player) {
 		int msg = 0;
-
-		String mailBox = WORLD_DIR + world + "\\" + "mail\\mail-" + player.getName() + ".txt";
+		
+		// TODO yay path resolution!
+		//String mailBox = WORLD_DIR + world + "\\" + "mail\\mail-" + player.getName() + ".txt";
+		String mailBox = resolvePath(WORLD_DIR, world, "mail", "mail-" + player.getName() + ".txt");
 		String lines[] = null;
 
 		/*
@@ -21281,7 +21355,10 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		final MailBox mb = player.getMailBox();
 
 		try {
-			PrintWriter pw = new PrintWriter(WORLD_DIR + world + "\\mail\\mail-" + player.getName() + ".txt");
+			final String mailFile = String.format("mail-%s.txt", player.getName());
+			
+			//PrintWriter pw = new PrintWriter(WORLD_DIR + world + "\\mail\\mail-" + player.getName() + ".txt");
+			PrintWriter pw = new PrintWriter( resolvePath(WORLD_DIR, world, "mail", mailFile) );
 
 			for (final Mail mail : mb) {
 				pw.println(mail.getRecipient()); // Recipient
@@ -22698,14 +22775,20 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		gb.registerTypeAdapter(Race.class, new mud.misc.json.RaceAdapter());
 
 		com.google.gson.Gson gson = gb.create();
-
-		String path = WORLD_DIR + world + "\\";
 		
-		debug("races: " + path + "races.json");
+		// TODO fix path kludges (this is just like the zones problem)
+		//String path = WORLD_DIR + world + "\\";
+		String races_file = resolvePath(WORLD_DIR, world, "races.json");
+		
+		//debug("races: " + path + "races.json");
+		//debug("");
+		
+		debug("races: " + races_file);
 		debug("");
 
 		try {
-			String[] temp = Utils.loadStrings(path + "races.json");
+			//String[] temp = Utils.loadStrings(path + "races.json");
+			String[] temp = Utils.loadStrings(races_file);
 			String json = Utils.join(temp, " ");
 
 			Race[] racesArr = gson.fromJson(json, Race[].class);
@@ -23985,4 +24068,8 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 	/*public Merchant createMerchant() {
 		
 	}*/
+	
+	private final String resolvePath(final String path, final String...dirs) {
+		return "" + Paths.get(path, dirs).toAbsolutePath();
+	}
 }

@@ -573,7 +573,7 @@ public class PipBuck extends Item implements ModularDevice, ExtraCommands {
 
 	@Override
 	public String toString() {
-		return name + "(" + type.toString() + ")";
+		return this.getName() + "(" + type.toString() + ")";
 	}
 	
 	@Override
