@@ -98,6 +98,7 @@ public class Player extends MUDObject implements Mobile
 	private int id;                                     // unique player id (for the account system) **UNUSED
 	private String pass;                                // The player's password in it's hashed state (timed lockout w/ password verification?)
 	private PlayerMode mode = PlayerMode.NORMAL;        // Play Mode (default: normal)
+	protected int access = 0;                           // the player's access level (permissions) - 0=player,1=admin (default: 0)
 	protected String status;                            // The player's status (MU)
 	protected String title;                             // The player's title (for where, MU)
 	
@@ -107,16 +108,12 @@ public class Player extends MUDObject implements Mobile
 	private transient boolean idle_state = false;       // Whether or not the player is currently ide (default: false) **UNUSED
 	private transient int idle = 0;                     // the amount of time that the player has been idle (MU)
 	private transient String prev_status = "";
+	private transient boolean isNew = true;             // is the player new? (e.g. hasn't done chargen)
+	private transient boolean controller = false;       // place to indicate if we are controlling an npc (by default, we are not)
+	private transient boolean initialized = false;      // has the player been initialzed as per module PCInit(...)
 
 	private transient MailBox mailbox = new MailBox();  // player mailbox
 
-	protected int access = 0;                           // the player's access level (permissions) - 0=player,1=admin (default: 0)
-	
-	private boolean initialized = false;                //
-	private boolean isNew = true;                       // is the player new? (e.g. hasn't done chargen)
-
-	private transient boolean controller = false;       // place to indicate if we are controlling an npc (by default, we are not)
-	
 	// TODO move preference to ACCOUNT DATA?
 	// ^ does that mean I can't keep it for non-account players OR?
 	
@@ -407,12 +404,12 @@ public class Player extends MUDObject implements Mobile
 		
 		// ---
 		
-		this.hp = 10;
-		this.totalhp = 10;
+		this.hp = 200;
+		this.totalhp = 200;
 		this.state = State.ALIVE;
 		
-		this.mana = 40;
-		this.totalmana = 40;
+		this.mana = 100;
+		this.totalmana = 100;
 		
 		this.speed = 1;
 		this.capacity = 100;

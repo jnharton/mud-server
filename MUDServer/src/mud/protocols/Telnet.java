@@ -119,16 +119,23 @@ public class Telnet  {
 	 * @param input - a telnet "phrase" consisting of keywords that map to bytes
 	 * @return an array of bytes
 	 */
-	static public byte[] translate(String input) {
-		String[] work = input.split(" "); // split the phrase into it's constituent parts
+	static public byte[] translate(final String input) {
+		// split the phrase into it's constituent parts
+		final String[] temp = input.split(" ");
 		
-		byte[] ba = new byte[work.length]; // make a new byte array that can hold the phrase's byte equivalents
+		// make a new byte array that can hold the phrase's byte equivalents
+		final byte[] ba = new byte[temp.length];
+		
+		String temp1 = "";
 		
 		System.out.println("Translate from String to Byte (sending)");
 		
-		for (int s = 0; s < work.length; s++) {
-			System.out.println(work[s] + " " + map.get(work[s]));
-			ba[s] = map.get(work[s]);
+		for(int s = 0; s < temp.length; s++) {
+			ba[s] = getMap( temp[s] );
+			
+			temp1 = String.format("%3d %3d %-4s", ba[s], ba[s] & 0x00FF, temp[s]);
+			
+			System.out.println( temp1 );
 		}
 		
 		return ba;
@@ -141,16 +148,31 @@ public class Telnet  {
 	 * @param input - a byte array containing keywords
 	 * @return a string containing string representations of those keywords
 	 */
-	static public String translate(byte[] input) {
-		String[] output = new String[input.length]; // make a new string array to store the parts of the phrase in
+	static public String translate(final byte[] input) {
+		final String[] output = new String[input.length]; // make a new string array to store the parts of the phrase in
+		
+		String temp = "";
 		
 		System.out.println("Translate from Byte to String (receiving)");
 		
 		for (int b = 0; b < input.length; b++) {
-			System.out.println( input[b] + " " + map1.get(input[b]));
-			output[b] = map1.get(input[b]);
+			temp = String.format("%3d %3d %-4s", input[b], input[b] & 0x00FF, getMap1( input[b] ));
+			
+			System.out.println( temp );
+			
+			output[b] = getMap1( input[b] );
 		}
 		
 		return Utils.join(output, " ");
+	}
+	
+	final static Byte getMap(final String s) {
+		return map.get( s );
+	}
+	
+	final static String getMap1(final Byte b) {
+		String result = map1.get( b );
+		
+		return (( result == null ) ? "DATA" : result);
 	}
 }

@@ -39,17 +39,18 @@ public class ChatChannel {
 	private String password;
 	
 	// output format
-	private String chan_color; // channel title color
-	private String text_color; // the color of the channel text
+	private String chan_color;    // channel title color
+	private String sender_color;  // color of sender
+	private String text_color;    // the color of the channel text
 	
 	private List<Player> listeners;  // players who are listening to the channel
 	private Queue<Message> messages; // messages 'written' to the channel
 	
 	public ChatChannel(final String name) {
-		this(name, "white", "white");
+		this(name, "magenta", "orange", "green");
 	}
 	
-	public ChatChannel(final String name, final String chanColor, final String textColor) {
+	public ChatChannel(final String name, final String chanColor, String senderColor, final String textColor) {
 		this.name = name;
 		this.shortname = name.substring(0, 3).toLowerCase();
 		
@@ -59,6 +60,7 @@ public class ChatChannel {
 		this.password = "";
 		
 		this.chan_color = chanColor;
+		this.sender_color = senderColor;
 		this.text_color = textColor;
 		
 		this.listeners = new ArrayList<Player>();
@@ -146,6 +148,14 @@ public class ChatChannel {
 	
 	public void setChanColor(final String newColor) {
 		this.chan_color = newColor;
+	}
+	
+	public String getSenderColor() {
+		return this.sender_color;
+	}
+	
+	public void setSenderColor(final String newColor) {
+		this.sender_color = newColor;
 	}
 	
 	/**

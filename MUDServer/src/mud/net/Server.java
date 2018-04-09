@@ -72,6 +72,8 @@ public class Server implements Runnable {
 				System.out.println("Accepted client socket.");
 
 				final Client client = new Client(socket);
+				
+				new Thread(client).start();
 
 				this.clients.add(client);
 
@@ -122,11 +124,11 @@ public class Server implements Runnable {
 		final List<Client> dead = new LinkedList<Client>();
 
 		// used to be a list of clients
-		for (final Client c : clients) {
+		for (final Client c : this.clients) {
 			if (c.isRunning())  c.write(data);
 			else                dead.add(c);
 		}
 
-		clients.removeAll( dead );
+		this.clients.removeAll( dead );
 	}
 }

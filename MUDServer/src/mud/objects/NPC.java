@@ -251,6 +251,16 @@ public class NPC extends Player implements InteractiveI
 		
 		return success;
 	}
+	
+	public void remember(final Player player) {
+		//this.names.add( player.getName() );
+		addName( player.getName() );
+	}
+	
+	public void forget(final Player player) {
+		//this.names.remove( player.getName() );
+		removeName( player.getName() );
+	}
 
 	/**
 	 * Translate the persistent aspects of the player into the string

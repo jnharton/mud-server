@@ -168,12 +168,21 @@ public abstract class Command {
 	 * @return
 	 */
 	protected final Player getPlayer(final String name) {
-		return this.dbi.getPlayer(name);
+		return getPlayer(name, false);
 	}
 	
+	/**
+	 * Attempt to get a Player with the given name. If we want only
+	 * an online player, check the player list, otherwise get it from
+	 * the database.
+	 * 
+	 * @param name
+	 * @param online
+	 * @return
+	 */
 	protected final Player getPlayer(final String name, boolean online) {
 		if( online ) return parent.getPlayer(name);
-		else         return getPlayer(name);
+		else         return this.dbi.getPlayer(name);
 	}
 	
 	protected final Player getPlayer(final int DBRef) {

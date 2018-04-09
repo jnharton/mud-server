@@ -335,7 +335,9 @@ public abstract class MUDObject {
 	 * @return property value
 	 */
 	public final String getProperty(final String key) {
-		return this.properties.get(key);
+		final String value = this.properties.get(key); 
+		
+		return (value != null) ? value : Constants.NONE;
 	}
 	
 	/**

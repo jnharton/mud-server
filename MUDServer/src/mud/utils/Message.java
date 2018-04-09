@@ -1,5 +1,6 @@
 package mud.utils;
 
+import mud.objects.Item;
 /*
 Copyright (c) 2012 Jeremy N. Harton
 
@@ -63,6 +64,25 @@ public class Message
 	}
 	
 	/**
+	 * Copy Constructor
+	 * 
+	 * Create a new message with the same attributes as a template object
+	 * 
+	 * @param template
+	 */
+	protected Message(final Message template) {	
+		this.type = template.type;
+		
+		this.sender = template.sender;
+		this.recipient = template.recipient;
+		this.message = template.message;
+		
+		this.location = template.location;
+		
+		this.wasSent = template.wasSent;
+	}
+	
+	/**
 	 * Broadcast (Local) -- initiated by server
 	 * 
 	 * @param tempSender
@@ -121,6 +141,10 @@ public class Message
 	
 	public void markSent() {
 		this.wasSent = true;
+	}
+	
+	public Message getCopy() {
+		return new Message(this);
 	}
 	
 	@Override

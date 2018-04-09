@@ -24,11 +24,13 @@ package mud.weather;
  */
 public class Weather
 {
-	private Season season;
-	private WeatherState ws;
+	private Season season;     // current season
+	private WeatherPattern wp; //
+	private WeatherState ws;   // current weather
 
 	public Weather(final Season initialSeason, final WeatherState initialState) {
 		this.season = initialSeason;
+		this.wp = initialSeason.getPattern();
 		this.ws = initialState;
 	}
 	
@@ -45,7 +47,9 @@ public class Weather
 	}
 	
 	public void nextState() {
-		final WeatherPattern wp = this.season.getPattern(); 
-		setState( wp.getNextState(this.ws) );
+		WeatherState next = wp.getNextState(this.ws);
+		
+		setState( next );
+		//setState( wp.getNextState(this.ws) );
 	}
 }

@@ -38,7 +38,7 @@ public class MemoryOrb extends Item {
 		
 		this.durability = 20;
 		
-		this.memory = template.memory; //should this be a deep copy?
+		this.memory = template.memory; // TODO should this be a deep copy?
 		
 		this.setAuctionable(false);
 	}

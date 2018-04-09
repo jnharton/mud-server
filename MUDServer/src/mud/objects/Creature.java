@@ -3,6 +3,7 @@ package mud.objects;
 import mud.MUDObject;
 import mud.ObjectFlag;
 import mud.TypeFlag;
+import mud.combat.Strategy;
 import mud.game.Race;
 import mud.interfaces.Mobile;
 import mud.objects.creatures.Size;
@@ -49,6 +50,8 @@ public class Creature extends MUDObject implements Mobile {
 	
 	public Player target = null;
 	public boolean isHostile = false;
+	
+	private Strategy strategy;
 	
 	public Creature() {
 		this("creature", "some non-descript creature");

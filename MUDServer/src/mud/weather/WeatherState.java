@@ -27,17 +27,24 @@ public class WeatherState
 	
 	public int upDown = 0;                   // indicator of in which direction (up/down) the weather transitioned, if it changed
 	
-	public WeatherState(double tdp, boolean precip, boolean wind, boolean clouds, boolean storm) {
+	/*public WeatherState(double tdp, boolean precip, boolean wind, boolean clouds, boolean storm) {
 		this.TransitionDownProbability = tdp;
 		this.Precipitation = precip;
 		this.Wind = wind;
 		this.Clouds = clouds;
 		this.Storm = storm;
-	}
+	}*/
 	
 	public WeatherState(String name, double tdp, boolean precip, boolean wind, boolean clouds, boolean storm) {
-		this(tdp, precip, wind, clouds, storm);
 		this.name = name;
+		
+		this.TransitionDownProbability = tdp;
+		
+		this.Precipitation = precip;
+		
+		this.Wind = wind;
+		this.Clouds = clouds;
+		this.Storm = storm;
 	}
 	
 	public String getName() {

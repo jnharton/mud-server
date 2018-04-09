@@ -3,7 +3,7 @@ package mud.chat;
 public enum Result {
 	CREATE,
 	DESTROY,
-	JOIN,
+	JOIN("Joined channel: %s"),
 	CURR_LISTEN,
 	CURR_NOLISTEN,
 	LEAVE("Left channel: %s"),

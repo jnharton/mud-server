@@ -58,6 +58,8 @@ public class ObjectLoader {
 	private final MUDServer parent;
 	private final ObjectDB objectDB;
 	
+	private boolean loaded = false;
+	
 	public ObjectLoader(final MUDServer parent, final ObjectDB objectDB) {
 		this.parent = parent;
 		this.objectDB = objectDB;
@@ -431,6 +433,8 @@ public class ObjectLoader {
 			catch (ConcurrentModificationException cme)   { cme.printStackTrace();    }
 			catch (ArrayIndexOutOfBoundsException aioobe) { aioobe.printStackTrace(); }
 		}
+		
+		loaded = true;
 	}
 
 	/*
@@ -944,6 +948,10 @@ public class ObjectLoader {
 		else tt = ThingTypes.getType(typeId);
 		
 		return tt;
+	}
+	
+	public boolean isLoaded() {
+		return this.loaded;
 	}
 	
 	public void debug(final String data) {

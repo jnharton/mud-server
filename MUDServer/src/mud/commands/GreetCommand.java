@@ -3,6 +3,7 @@ package mud.commands;
 import mud.Command;
 import mud.Constants;
 import mud.net.Client;
+import mud.objects.NPC;
 import mud.objects.Player;
 
 /*
@@ -17,36 +18,76 @@ import mud.objects.Player;
 
 public class GreetCommand extends Command {
 	public GreetCommand() {
-		super("Greet another player (this tells them your name with some specificity).");
+		super("Greet another player/npc (this tells them your name with some specificity).");
 	}
 
 	@Override
 	public void execute(final String arg, final Client client) {
-		final Player player = getPlayer(client);
-		final Player player1 = getPlayer(arg);
+		// TODO figure out whether we are tryng to greet an NPC and respond accordingly
+		final Player self = getPlayer(client);
+		
+		// TODO need to make this locality dependent
+		final Player player = getPlayer(arg);		
+		final NPC npc = getNPC(arg);
 
-		debug("player:  " + player.getName());
-		debug("player1: " + player1.getName());
+		debug("player:  " + self.getName());
+		debug("player1: " + player.getName());
+		
+		if ( player != null ) {
+			// TODO this is a poor test indeed
+			if( player.getClient() == null ) {
+				send("Game> That player is not logged-in", client);
+				return;
+			}
 
-		if( player1.getClient() == null ) {
-			send("Game> That player is not logged-in", client);
-			return;
-		}
-
-		if ( !player1.knowsName( player.getName() ) ) {
-			player1.addName( player.getName() );
-
-			if ( player.knowsName( player1.getName() ) ) {
-				send("You tell " + player1.getName() + " that your name is " + player.getName() + ".", client);
+			if ( !player.knowsName( self.getName() ) ) {
+				player.addName( self.getName() );
+				
+				String msg = "";
+				
+				// message to you
+				if ( self.knowsName( player.getName() ) ) {
+					msg = String.format("You tell %s that your name is %s.", player.getName(), self.getName());
+				}
+				else {
+					msg = String.format("You tell %s that your name is %s.", arg, self.getName());
+				}
+				
+				send( msg, client );
+				
+				// message to other player
+				send(self.getCName() + " tells you that their name is " + self.getName() + ".", player.getClient());
 			}
 			else {
-				send("You tell " + arg + " that your name is " + player.getName() + ".", client);
+				send("You've already greeted that player.", client);
 			}
-
-			send(player.getCName() + " tells you that their name is " + player.getName() + ".", player1.getClient());
+		}
+		else if ( npc != null ) {
+			// TODO exists so NPC can greet you by name only if they know it
+			if ( !npc.knowsName( self.getName() ) ) {
+				npc.addName( self.getName() );
+				
+				String msg = "";
+				
+				// message to you
+				if ( self.knowsName( npc.getName() ) ) {
+					msg = String.format("You tell %s that your name is %s.", npc.getName(), self.getName());
+				}
+				else {
+					msg = String.format("You tell %s that your name is %s.", arg, self.getName());
+				}
+				
+				send( msg, client );
+				
+				// message to NPC?
+				//send(self.getCName) + " tells you that their name is " + self.getName() + ".", player.getClient());
+			}
+			else {
+				send("You've already greeted that npc?", client);
+			}
 		}
 		else {
-			send("You've already greeted that player.", client);
+			send("There is no one by that name here.", client);
 		}
 	}
 

@@ -54,6 +54,12 @@ public class AttackCommand extends Command {
 				for(final MUDObject o : objects) {
 					final String objName = o.getName();
 					
+					System.out.println("ATTACK");
+					System.out.println(arg);
+					System.out.println(arg.replace("_", " "));
+					System.out.println("");
+					System.out.println(objName);
+							
 					if( objName.equalsIgnoreCase(arg) || objName.equalsIgnoreCase( arg.replace("_", " ") ) ) {
 						mobj = o;
 					}

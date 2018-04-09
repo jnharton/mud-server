@@ -1,10 +1,12 @@
 package mud.misc;
 
+import java.util.Hashtable;
+import java.util.Map;
+
 import mud.MUDServer;
 import mud.utils.Date;
 import mud.utils.Message;
 import mud.utils.Time;
-import mud.utils.Utils;
 import mud.utils.Message.MessageType;
 
 /*
@@ -48,7 +50,9 @@ public class TimeLoop implements Runnable
 	private int weather_update_interval = 3; // how many minutes between weather broadcasts
 
 	final private int[] DAYS;              // array containing the number of days in each month
-
+	
+	final private Map<TimeOfDay, Message> messages = new Hashtable<TimeOfDay, Message>();
+	
 	final private MUDServer server;
 
 	/**
@@ -71,6 +75,15 @@ public class TimeLoop implements Runnable
 
 		this.hour = startTime.hour;        // the initial hour (start time)
 		this.minute = startTime.minute;    // the initial minute (start time)
+		
+		setMessage(TimeOfDay.MIDNIGHT,    "It is now midnight.");
+		setMessage(TimeOfDay.BEFORE_DAWN, "It is now just before dawn.");
+		setMessage(TimeOfDay.DAWN,        "It is now dawn.");
+		setMessage(TimeOfDay.MORNING,     "It is now morning.");
+		setMessage(TimeOfDay.MIDDAY,      "It is now midday.");
+		setMessage(TimeOfDay.AFTERNOON,   "It is now afternoon.");
+		setMessage(TimeOfDay.DUSK,        "It is now dusk.");
+		setMessage(TimeOfDay.NIGHT,       "It is now night.");
 	}
 
 	// message sending with specifics needs a loginCheck(client), but it needs to not cause the game to crash
@@ -126,40 +139,15 @@ public class TimeLoop implements Runnable
 			hour = 0;
 			incrementDay();
 		}
-
-		// TODO deal with redundancy, set time of day sends a regular server messages, but then we send a debug version..
-		if (this.hour == 0) {
-			setTimeOfDay(TimeOfDay.MIDNIGHT, new Message("It is now midnight.", MessageType.BROADCAST));
-			server.debug("It is now midnight.");
-		}
-		else if (this.hour == 5) {
-			setTimeOfDay(TimeOfDay.BEFORE_DAWN, new Message("It is now just before dawn.", MessageType.BROADCAST));
-			server.debug("It is now just before dawn.");
-		}
-		else if (this.hour == 6) {
-			setTimeOfDay(TimeOfDay.DAWN, new Message("It is now dawn.", MessageType.BROADCAST));
-			server.debug("It is now dawn.");
-		}
-		else if (this.hour == 7) {
-			setTimeOfDay(TimeOfDay.MORNING, new Message("It is now morning.", MessageType.BROADCAST));
-			server.debug("It is now morning.");
-		}
-		else if (this.hour == 12) {
-			setTimeOfDay(TimeOfDay.MIDDAY, new Message("It is now midday.", MessageType.BROADCAST));
-			server.debug("It is now midday.");
-		}
-		else if (this.hour == 13) {
-			setTimeOfDay(TimeOfDay.AFTERNOON, new Message("It is now afternoon.", MessageType.BROADCAST));
-			server.debug("It is now afternoon.");
-		}
-		else if (this.hour == 18) {
-			setTimeOfDay(TimeOfDay.DUSK, new Message("It is now dusk.", MessageType.BROADCAST));
-			server.debug("It is now dusk.");
-		}
-		else if (this.hour == 19) {
-			setTimeOfDay(TimeOfDay.NIGHT, new Message("It is now night.", MessageType.BROADCAST));
-			server.debug("It is now night.");
-		}
+		
+		if (this.hour == 0)       setTimeOfDay(TimeOfDay.MIDNIGHT);
+		else if (this.hour == 5)  setTimeOfDay(TimeOfDay.BEFORE_DAWN);
+		else if (this.hour == 6)  setTimeOfDay(TimeOfDay.DAWN);
+		else if (this.hour == 7)  setTimeOfDay(TimeOfDay.MORNING);
+		else if (this.hour == 12) setTimeOfDay(TimeOfDay.MIDDAY);
+		else if (this.hour == 13) setTimeOfDay(TimeOfDay.AFTERNOON);
+		else if (this.hour == 18) setTimeOfDay(TimeOfDay.DUSK);
+		else if (this.hour == 19) setTimeOfDay(TimeOfDay.NIGHT);
 
 		/*if (minute != 0) {
             return;
@@ -193,13 +181,20 @@ public class TimeLoop implements Runnable
 
 		server.onYearIncrement();
 	}
+	
+	public void setMessage(final TimeOfDay tod, final String msg) {
+		this.messages.put(tod, new Message(msg, MessageType.BROADCAST));
+	}
 
 	public TimeOfDay getTimeOfDay() {
 		return timeOfDay;
 	}
 
-	private void setTimeOfDay(final TimeOfDay tod, final Message msg) {
-		server.addMessage(msg);
+	protected void setTimeOfDay(final TimeOfDay tod) {
+		final Message msg = this.messages.get(tod);
+		
+		server.addMessage( msg.getCopy() );
+		server.debug( msg.getMessage() );
 
 		timeOfDay = tod;
 

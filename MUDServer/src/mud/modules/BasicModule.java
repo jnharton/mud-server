@@ -31,6 +31,12 @@ public class BasicModule implements GameModule {
 	public String getName() {
 		return this.name;
 	}
+	
+	@Override
+	public String getShortName() {
+		//return this.name;
+		return "Basic";
+	}
 
 	@Override
 	public Integer getVersion() {
@@ -55,6 +61,7 @@ public class BasicModule implements GameModule {
 	public void init(final String dataDir) {
 	}
 	
+	@Override
 	public void init2(final List<Faction> mFactions, Hashtable<String, ItemType> mItemTypes) {
 		this.factions = mFactions;
 		this.itemTypes = mItemTypes;
@@ -138,5 +145,9 @@ public class BasicModule implements GameModule {
 	public void test() {
 		// TODO Auto-generated method stub
 		
+	}
+
+	@Override
+	public void levelup(Player player) {
 	}
 }

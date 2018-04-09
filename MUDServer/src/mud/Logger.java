@@ -5,14 +5,14 @@ import java.util.Hashtable;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import mud.magic.Spell;
 import mud.utils.Log;
-import mud.utils.Utils;
 
 public final class Logger {
 	private final Map<String, Boolean> config;
 	private final Map<String, Log> logs;
-
+	
+	private String directory = "";
+	
 	private boolean started = false;
 
 	public Logger() {
@@ -89,17 +89,33 @@ public final class Logger {
 		return Collections.unmodifiableMap(this.config);
 	}
 	
+	public void setDirectory(final String dirPath) {
+		this.directory = dirPath;
+	}
+	
 	public void register(final Log log) {
 		if( this.logs.containsKey( log.getName() ) ) {
 			System.out.println("That log conflicts with an existing log by the same name.");
 		}
 		else {
+			log.setLogDirectory(directory);
+			
 			this.logs.put(log.getName(), log);
 			
 			if( started ) {
 				log.openLog();
 			}
 		}
+	}
+	
+	public Log getLog(final String name) {
+		Log l = null;
+		
+		if( this.logs.containsKey( name ) ) {
+			l = logs.get(name);
+		}
+		
+		return l;
 	}
 
 	public void start() {

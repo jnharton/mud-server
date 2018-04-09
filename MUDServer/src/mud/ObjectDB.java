@@ -472,6 +472,8 @@ public final class ObjectDB implements ODBI {
 		objects.addAll( getItemsByLoc( room.getDBRef() )    );
 		objects.addAll( getNPCsByRoom( room ) );
 		objects.addAll( getPlayersByRoom( room ) );
+		objects.addAll( getCreaturesByRoom( room ) );
+		
 
 		return objects;
 	}

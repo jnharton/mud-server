@@ -1,5 +1,6 @@
 package mud.interfaces;
 
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 
@@ -14,6 +15,7 @@ import mud.objects.ThingType;
 
 public interface GameModule {
 	public String getName();
+	public String getShortName();
 	public Integer getVersion();
 	
 	public Ruleset getRuleset();
@@ -24,6 +26,7 @@ public interface GameModule {
 	
 	public void init();                      // initialize the module
 	public void init(final String dataDir);  // initialize the module
+	public void init2(final List<Faction> mFactions, Hashtable<String, ItemType> mItemTypes);
 	public void PCInit(final Player player); // initialize a new player for this game
 	
 	public ItemType getItemType(final Integer typeId);
@@ -46,4 +49,6 @@ public interface GameModule {
 	public boolean use(final Player p, final MUDObject m);
 	
 	public void test();                                      // do some test setup
+	
+	public void levelup(final Player player);
 }

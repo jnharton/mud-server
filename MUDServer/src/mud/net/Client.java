@@ -18,6 +18,7 @@ import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import mud.protocols.Telnet;
@@ -32,20 +33,25 @@ public class Client implements Runnable {
 	private final OutputStream output;
 
 	private boolean running = false;
-	private boolean tn_neg_seq = false; // indicates if the bytes currently being received are part of a negotiation sequence
-	private boolean debug = false;      // start out with debug disabled
+	private boolean debug = false;
+	
+	public boolean tn_neg_seq = false; // indicates if the bytes currently being received are part of a negotiation sequence
+	public boolean tn_cmd = false;
+	public boolean tn_subneg = false;
 
 	// temporary storage
 	private final StringBuffer sb = new StringBuffer(80);
 	private List<Byte> buffer = new LinkedList<Byte>();
 
 	// received data
-	public final List<Byte[]> received_telnet_msgs = new LinkedList<Byte[]>();
-	private final ConcurrentLinkedQueue<String> queuedLines = new ConcurrentLinkedQueue<String>();
+	private final Queue<Byte[]> received_telnet_msgs;
+	private final Queue<String> queuedLines;
 	
 	// response
 	private String response = "";
 	private boolean response_expected = false;
+	
+	public boolean NAWS = false;
 
 	public Client(final String host, final int port) throws IOException, UnknownHostException {
 		this(new Socket(host, port));
@@ -59,10 +65,9 @@ public class Client implements Runnable {
 
 		this.input = socket.getInputStream();
 		this.output = socket.getOutputStream();
-
-		this.running = true;
-
-		new Thread(this).start();
+		
+		this.received_telnet_msgs = new LinkedList<Byte[]>();
+		this.queuedLines = new ConcurrentLinkedQueue<String>();
 	}
 
 	public void run() {
@@ -73,41 +78,69 @@ public class Client implements Runnable {
 
 		boolean received_line = false;
 
+		this.running = true;
+		this.debug = true;   // start out with debug enabled
+
 		try {
 			while( running ) {
 				readValue = 0;
 				bytes = 0;
-				
+
 				while( input.available() > 0 ) {
 					// read in a value
 					readValue = input.read();
-
+					
+					// output what we read
+					//debug("Read: " + readValue);
+					
 					// if we are in a TELNET NEGOTIATON SEQUENCE
 					if( tn_neg_seq ) {
-						if( bytes < TELNET_COMMAND_LENGTH ) {
+						if( tn_cmd ) {
+							if( bytes < TELNET_COMMAND_LENGTH ) {
+								debug("Read: " + readValue);
+								
+								buffer.add( (byte) readValue );
+								bytes++;
+							}
+							
+							if( bytes == TELNET_COMMAND_LENGTH ) {
+								/*  response section -- properly belongs in the server end
+								 * 
+								 *  would be wise probably just to send a nice, fixed size array to the server and let it deal with the bytes
+								 */
+
+								received_telnet_msgs.add( buffer.toArray(new Byte[0]) );
+
+								/* end response section */
+
+								buffer.clear();
+								bytes = 0;
+								
+								tn_neg_seq = false;
+								tn_cmd = false;
+							}
+						}
+						else if( tn_subneg ) {
+							if( (byte) readValue == Telnet.IAC ) {
+								received_telnet_msgs.add( buffer.toArray(new Byte[0]) );
+								
+								buffer.clear();
+								bytes = 0;
+
+								debug("TELNET Command");
+							}
+							
+							debug("Read: " + readValue);
+							
 							buffer.add( (byte) readValue );
 							bytes++;
+							
+							if( (byte) readValue == Telnet.IAC ) {
+								//tn_cmd = true;
+								//tn_subneg = false;
 
-							debug("Read: " + readValue);
-						}
-
-						if( bytes == TELNET_COMMAND_LENGTH ) {
-							/*  response section -- properly belongs in the server end
-							 * 
-							 *  would be wise probably just to send a nice, fixed size array to the server and let it deal with the bytes
-							 */
-
-							Byte[] ba = new Byte[buffer.size()];
-
-							buffer.toArray(ba);
-
-							received_telnet_msgs.add(ba);
-
-							/* end response section */
-
-							buffer.clear();
-							bytes = 0;
-							tn_neg_seq = false;
+								continue;
+							}
 						}
 					}
 					else {
@@ -116,12 +149,14 @@ public class Client implements Runnable {
 							buffer.clear();
 
 							debug("TELNET Command");
+							
 							debug("Read: " + readValue);
-
+							
 							buffer.add( (byte) readValue );
 							bytes++;
 
 							tn_neg_seq = true;
+							tn_cmd = true;
 
 							continue;
 						}
@@ -132,18 +167,22 @@ public class Client implements Runnable {
 						// the above combinations are detected and the cr after the nl or the nl after the cr
 						// are ignored because it introduces an extra line into the command
 
-						if (ch == '\012') { // newline (\n)
+						if (ch == '\012') {
+							// newline (\n)
 							if( last_ch == '\015' ) sb.delete(0, sb.length());
 							else                    received_line = true;
 						}
-						else if(ch == '\015') { // carriage-return (\r)
+						else if(ch == '\015') {
+							// carriage-return (\r)
 							if( last_ch == '\012' ) sb.delete(0, sb.length());
 							else                    received_line = true;
 						}
-						else if (ch == '\010') { // backspace
+						else if (ch == '\010') {
+							// backspace
 							if( sb.length() != 0 ) sb.deleteCharAt( sb.length() - 1 );
 						}
-						else { // any other character
+						else {
+							// any other character
 							debug("Read: " + ch + "(" + readValue + ")");
 
 							sb.append(ch);
@@ -166,21 +205,21 @@ public class Client implements Runnable {
 					}
 
 					// ---------------------------------------------------------------------------------
-					
+
 					/*
-					
+
 					// can't use BufferedReader here - we need access to the buffer for telnet commands, 
 					// which won't be followed by a newline
 					final byte buf[] = new byte[BUF_SIZE];
-					
+
 					int numRead = 0;
 					int numParsed = 0;
 
 					while (running) {
 						final int lastNumRead = input.read(buf, numRead, BUF_SIZE - numRead);
-						
+
 						numRead += lastNumRead;
-						
+
 						for(int n = numParsed; n < numRead - 1; n++) {
 							// test for telnet bytes?
 							if( 1 == 0 ) {
@@ -190,33 +229,33 @@ public class Client implements Runnable {
 								// if we read more than one character total and we found a carriage-return ('\r)
 								// or a newline (\n) character, turn the input into a string and dump it into
 								// queued lines
-								
+
 								if( buf[n] == '\r' || buf[n] == '\n' ) {
 									final String input = sb.toString();
-									
+
 									queuedLines.add( sb.toString() );
-									
+
 									sb.delete(0, sb.length());
 								}
 								else {
 									sb.append((char) buf[n]);
 								}
-								
+
 								numParsed++;
 							}
 						}
-						
+
 						if( numParsed == BUF_SIZE ) {
 							numParsed = 0;
-							
+
 							if( BUF_SIZE - numRead == 0 ) {
 								numRead = 0;   // TODO be careful with this one
 							}
 						}
 					}
-					
-					*/
-					
+
+					 */
+
 					/*if (numRead > 1 && (buf[numRead - 1] == '\r' || buf[numRead - 1] == '\n')) {
 						final String input = new String(buf, 0, numRead); // convert read characters into string
 
@@ -229,10 +268,15 @@ public class Client implements Runnable {
 							}
 						}
 					}*/
+					//}
 				}
-				
-				try { Thread.sleep(10); }
-				catch (InterruptedException e) { e.printStackTrace(); }
+
+				try {
+					Thread.sleep(10); // wait 10 ms between reads...
+				}
+				catch (final InterruptedException ie) {
+					ie.printStackTrace();
+				}
 			}
 		}
 		catch (final SocketException se) {
@@ -323,7 +367,15 @@ public class Client implements Runnable {
 	public void writeln(final String data) {
 		write( (data + "\r\n").getBytes() );
 	}
-
+	
+	/**
+	 * write (list of String)
+	 * 
+	 * Writes a list of strings to the client, with
+	 * implied newline characters.
+	 * 
+	 * @param data
+	 */
 	public void write(final List<String> data) {
 		for(final String string : data) {
 			writeln(string);
@@ -347,5 +399,16 @@ public class Client implements Runnable {
 		if( debug ) {
 			System.out.println(message);
 		}
+	}
+	
+	public Byte[] getTelnetMessage() {
+		boolean haveMsg = !this.received_telnet_msgs.isEmpty();
+		
+		if( haveMsg ) return this.received_telnet_msgs.poll();
+		else          return new Byte[0];                         
+	}
+
+	public boolean isAlive() {
+		return socket.isConnected() && socket.isClosed();
 	}
 }

@@ -288,8 +288,6 @@ public final class MudUtils {
 			
 			// for string in A, is A.S a substring of string name N.S
 			if ( sameName || startsWith || endsWith || nameContains || compsContain || test ) {
-				System.out.println(itemName + " true");
-
 				item = item1;
 				
 				break;

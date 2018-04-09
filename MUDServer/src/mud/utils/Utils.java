@@ -1067,4 +1067,24 @@ public final class Utils {
 		if( Utils.mkList("t", "T", "true", "True", "TRUE").contains(value) )         return true;
 		else if (Utils.mkList("f", "F", "false", "False", "FALSE").contains(value) ) return false;
 	}*/
+	
+	private final static boolean or(boolean a, boolean b) {
+		return a || b;
+	}
+	
+	public final static boolean or(boolean...conditions) {
+		if( conditions.length == 1)      return conditions[0];
+		else if( conditions.length == 2) return or( conditions[0], conditions[1] );
+		else if( conditions.length > 2 ) {
+			return or(conditions[0], 1, conditions);
+		}
+		else return false;
+	}
+	
+	private final static boolean or(boolean initial, int startIndex, boolean...conditions) {
+		if( startIndex < conditions.length - 1 ) {
+			return or(initial, or(conditions[startIndex], startIndex + 1, conditions)); 
+		}
+		else return or(initial, conditions[startIndex]);
+	}
 }

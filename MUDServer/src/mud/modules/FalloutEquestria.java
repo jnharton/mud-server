@@ -74,6 +74,11 @@ public final class FalloutEquestria implements GameModule, ExtraCommands {
 	public String getName() {
 		return "Fallout Equestria";
 	}
+	
+	@Override
+	public String getShortName() {
+		return "FOE";
+	}
 
 	@Override
 	public Integer getVersion() {
@@ -110,10 +115,12 @@ public final class FalloutEquestria implements GameModule, ExtraCommands {
 			add( new Faction("Stable Dwellers") );
 		}};
 		
-		/* Item Prototypes */
+		/* Items */
 		prototypes  = new Hashtable<String, Item>();
 		
-		// prototype - pipbuck
+		/************************************************************/
+		/** PipBuck                                                **/
+		/************************************************************/
 		
 		// PipBuck (foe version of PipBoy from Bethesda's Fallout video games)
 		PipBuck pipbuck = new mud.foe.items.PipBuck("PipBuck 3000");
@@ -122,7 +129,9 @@ public final class FalloutEquestria implements GameModule, ExtraCommands {
 		
 		prototypes.put("mud.foe.pipbuck", pipbuck);
 		
-		// prototype - memory orb
+		/************************************************************/
+		/** Memory Orb                                             **/
+		/************************************************************/
 		mud.foe.items.MemoryOrb MemoryOrb = new mud.foe.items.MemoryOrb();
 
 		MemoryOrb.setName("Memory Orb");
@@ -133,8 +142,10 @@ public final class FalloutEquestria implements GameModule, ExtraCommands {
 		MemoryOrb.setLocation(-1);
 
 		prototypes.put("mud.foe.memory_orb", MemoryOrb);
-
-		// prototype - Sparkle Cola soda
+		
+		/************************************************************/
+		/** Sparkle Cola soda                                      **/
+		/************************************************************/
 		Drink SparkleCola = new Drink(-1); // item - drinkable
 
 		SparkleCola.setName("Sparkle Cola");
@@ -153,7 +164,9 @@ public final class FalloutEquestria implements GameModule, ExtraCommands {
 
 		prototypes.put("mud.foe.sparkle_cola", SparkleCola);
 		
-		// prototype - Sunrise Sarsaparilla soda
+		/************************************************************/
+		/** Sunrise Sarsaparilla soda                              **/
+		/************************************************************/
 		Drink SunriseSarsaparilla = new Drink(-1);
 		
 		SunriseSarsaparilla.setName("Sunrise Sarsaparilla");
@@ -168,7 +181,9 @@ public final class FalloutEquestria implements GameModule, ExtraCommands {
 		
 		prototypes.put("mud.foe.sunrise_sarsaparilla", SunriseSarsaparilla);
 		
-		// prototype - bottle cap
+		/************************************************************/
+		/** Bottle Cap (SC)                                        **/
+		/************************************************************/
 		BottleCap BottleCap = new BottleCap();
 
 		BottleCap.setName("Bottle Cap");
@@ -182,7 +197,9 @@ public final class FalloutEquestria implements GameModule, ExtraCommands {
 
 		prototypes.put("mud.foe.bottlecap_sc", BottleCap);
 		
-		// prototype - bottle cap
+		/************************************************************/
+		/** Bottle Cap (SS)                                        **/
+		/************************************************************/
 		BottleCap BottleCap1 = new BottleCap();
 
 		BottleCap1.setName("Bottle Cap");
@@ -198,7 +215,9 @@ public final class FalloutEquestria implements GameModule, ExtraCommands {
 		
 		/* Weapons */
 		
-		// prototype - pistol
+		/************************************************************/
+		/** Pistol                                                 **/
+		/************************************************************/
 		final Weapon pgun = new Weapon("10mm Pistol", "A basic pistol, developed for the security forces of what used to be Equestria.");
 		
 		pgun.setSlotType(FOESlotTypes.HOOVES);
@@ -210,7 +229,9 @@ public final class FalloutEquestria implements GameModule, ExtraCommands {
 
 		prototypes.put("mud.foe.weapons.pistol", pgun);
 		
-		// prototype - laser rifle
+		/************************************************************/
+		/** Laser Rifle                                            **/
+		/************************************************************/
 		final Weapon laser_rifle = new Weapon("Laser Rifle", "An energy weapon modeled after a basic rifle.");
 		
 		laser_rifle.setSlotType(FOESlotTypes.HOOVES);
@@ -222,7 +243,9 @@ public final class FalloutEquestria implements GameModule, ExtraCommands {
 		
 		prototypes.put("mud.foe.laser_rifle", laser_rifle);
 		
-		// prototype - wing blades
+		/************************************************************/
+		/** Wing Blades                                            **/
+		/************************************************************/
 		final Weapon wing_blades = new Weapon("Wing Blades", "Sharp, curved metal blades designed to be strapped onto a pegasus' wings.");
 		
 		wing_blades.setSlotType(FOESlotTypes.WINGS);
@@ -234,24 +257,34 @@ public final class FalloutEquestria implements GameModule, ExtraCommands {
 		
 		prototypes.put("mud.foe.wing_blades", wing_blades);
 
-		/* Thing Prototypes */
+		/* Things */
 		prototypes1 = new Hashtable<String, Thing>();
 
-		// prototype - Spark Generator
+		/************************************************************/
+		/** Spark Generator                                        **/
+		/************************************************************/
 		Thing SparkGenerator = new Thing("Spark Generator", "This advanced piece of magitech produces near limitless electric power via magic");
 
 		SparkGenerator.setProperty("thingtype", "spark_generator");
 		SparkGenerator.setProperty("power", 10);
 
 		prototypes1.put("mud.foe.spark_generator", SparkGenerator);
-
-		// prototype - terminal
+		
+		/************************************************************/
+		/** Terminal                                               **/
+		/************************************************************/
 		mud.foe.Terminal terminal = new mud.foe.Terminal(
 				"Terminal",
 				"A Stable-Tec terminal, old pre-war technology whose durability is plain to see. On the screen, passively glowing green text indicates that it awaits input.",
 				mud.foe.Terminal.Power.POWER_ON, null, null);
 
 		prototypes1.put("mud.foe.terminal", terminal);
+	}
+	
+	@Override
+	public void init2(final List<Faction> mFactions, Hashtable<String, ItemType> mItemTypes) {
+		//this.factions = mFactions;
+		//this.itemTypes = mItemTypes;
 	}
 
 	/**
@@ -308,6 +341,10 @@ public final class FalloutEquestria implements GameModule, ExtraCommands {
 			// initialize faction reputation
 			for(final Faction faction : getFactions()) player.setReputation(faction, 0);
 		}
+	}
+	
+	public void levelup(final Player player) {
+		
 	}
 
 	public List<Faction> getFactions() {
@@ -374,8 +411,8 @@ public final class FalloutEquestria implements GameModule, ExtraCommands {
 
 		// TODO equipType, slotType are new, work them in (3-17-2015)
 		int itemType  = Utils.toInt(attr[5], 0); // get the type of item it should be
-		int equipType = Utils.toInt(attr[6], 0);
-		int slotType  = Utils.toInt(attr[7], 0);
+		int slotType  = Utils.toInt(attr[6], 0); // get the slot type
+		//int equipType = Utils.toInt(attr[6], 0);
 
 		// TODO fix kludge?
 		final ItemType it = FOEItemTypes.getType(itemType);
@@ -571,10 +608,17 @@ public final class FalloutEquestria implements GameModule, ExtraCommands {
 		if( mobj.isType(TypeFlag.THING) ) {
 			final Thing thing = (Thing) mobj;
 			
+			/*switch( thing.thing_type ) {
+			case FOEThingTypes.TERMINAL:
+				break;
+			default:
+				break;
+			}*/
+			
 			if( thing.thing_type == FOEThingTypes.TERMINAL ) {
 				final Terminal term = (Terminal) thing;
 				
-				if ( term.checkStatus(mud.foe.Terminal.Power.POWER_ON, mud.foe.Terminal.Use.USABLE) ) {
+				if ( term.checkStatus(Terminal.Power.POWER_ON, Terminal.Use.USABLE) ) {
 					
 				}
 				
@@ -603,6 +647,10 @@ public final class FalloutEquestria implements GameModule, ExtraCommands {
 	@Override
 	public void test() {
 		// TODO Auto-generated method stub
+		
+	}
+	
+	public void validatePlayer(final Player player) {
 		
 	}
 	

@@ -240,12 +240,18 @@ public class ChatChanneler
 		}
 	}
 	
+	/**
+	 * Resolve a channel's short name into it's full name
+	 * 
+	 * @param shortName
+	 * @return
+	 */
 	public String resolveShortName(final String shortName) {
     	String name = "";
     	
     	for(final ChatChannel ch : this.getChatChannels()) {
     		if( ch.getShortName().equalsIgnoreCase(shortName) ) {
-    			name = shortName;
+    			name = ch.getName();
     			break;
     		}
     	}

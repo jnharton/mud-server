@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -44,20 +45,25 @@ import java.util.TimeZone;
 public class Log {
 	public static enum Type { LOG, ERROR, DEBUG, CHAT };
 	
-	private static final String DATA_DIR = "data//";
-	
 	private static final Integer BUFFER_SIZE = 1000;
 	private static final Integer MAX_LOG_SIZE = 10000;
+	
+	private String LOG_DIR;
 	
 	private String name;
 	private String filename;
 	private Type type;
 	private PrintWriter output;
 	
+	// status
 	private boolean isOpen = false;
 	private boolean isFull = false;
-	private boolean useBuffer = false;
 	
+	// options
+	private boolean useBuffer = false;
+	private boolean useTimestamp = true;
+	
+	// other
 	private int lines_written;
 	private int log_num = 1;
 	
@@ -87,6 +93,11 @@ public class Log {
 	}
 	
 	public Log(final String name, final boolean buffer) {
+		this(name, buffer, true);
+	}
+	
+	public Log(final String name, final boolean buffer, final boolean timestamp) {
+		// TODO reduce redundant timestamp code
 		final TimeZone tz = TimeZone.getTimeZone("America/New_York");
 		final Locale lc = new Locale("ENGLISH", "US");
 		
@@ -108,10 +119,15 @@ public class Log {
 		this.filename = name + "_" + date + "_" + time + ".txt";
 		
 		this.useBuffer = buffer;
+		this.useTimestamp = timestamp;
 		
 		if( this.useBuffer ) this.buffer = new ArrayList<String>(Log.BUFFER_SIZE);
 		
 		this.lines_written = 0;
+	}
+	
+	public void setLogDirectory(final String dir) {
+		this.LOG_DIR = dir;
 	}
 	
 	public String getName() {
@@ -149,7 +165,7 @@ public class Log {
 	public void openLog()
 	{
 		if ( !this.isOpen ) {
-			final File file = new File(DATA_DIR + "logs/" + this.filename);
+			final File file = new File( resolvePath(this.LOG_DIR, this.filename) );
 			
 			try {
 				// make sure we have a real file
@@ -173,7 +189,7 @@ public class Log {
 			}
 		}
 		else {
-			System.out.println("Game> Log File already open, debug coding.");
+			System.out.println("Log File already open.");
 		}
 	}
 
@@ -186,7 +202,11 @@ public class Log {
 		if ( this.isOpen ) {
 			if ( !this.isFull ) {
 				final String timeString = getTimeString();
-				final String logString = "[" + timeString + "] " + message;
+				
+				String logString = "";
+				
+				if( useTimestamp ) logString = "[" + timeString + "] " + message;
+				else               logString = message;
 
 				logString.trim();
 
@@ -222,11 +242,12 @@ public class Log {
 				}
 				
 				// report full log
+				System.out.println("Log Full!");
 				
 				// close current log file and open a new one and call write again
 				closeLog();
 				
-				// change filename (e.g. test_date.log > test_date_1.log)
+				// change filename (e.g. test_date_time.log > test1_date_time.log)
 				final String prefix = filename.substring(0, filename.indexOf('_'));
 				
 				filename.replace(prefix, prefix + this.log_num);
@@ -237,7 +258,7 @@ public class Log {
 				openLog();
 			}
 		}
-		else System.out.println("Game> Log File not open, debug coding. [" + getFileName() + "]");
+		else System.out.println("Log File not open.[" + getFileName() + "]");
 	}
 
 	/**
@@ -255,7 +276,7 @@ public class Log {
 			this.isOpen = false;
 		}
 		else {
-			System.out.println("Game> Log File not open, debug coding. [" + getFileName() + "]");
+			System.out.println("Log File not open. [" + getFileName() + "]");
 		}
 	}
 	
@@ -271,7 +292,7 @@ public class Log {
 	 */
 	private String getTimeString(final char sep) {
 		final TimeZone tz = TimeZone.getTimeZone("America/New_York");
-		final Locale lc =new Locale("ENGLISH", "US");
+		final Locale lc = new Locale("ENGLISH", "US");
 		
 		final Calendar cal = Calendar.getInstance(tz, lc);
 		
@@ -291,5 +312,9 @@ public class Log {
 		else        second = "" + s;
 		
 		return hour + sep + minute + sep + second ;
+	}
+	
+	private final String resolvePath(final String path, final String...dirs) {
+		return "" + Paths.get(path, dirs).toAbsolutePath();
 	}
 }

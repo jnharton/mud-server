@@ -38,6 +38,11 @@ public class DND35 implements GameModule {
 	public String getName() {
 		return "Dungeons & Dragons 3.5e";
 	}
+	
+	@Override
+	public String getShortName() {
+		return "DND35";
+	}
 
 	@Override
 	public Integer getVersion() {
@@ -58,10 +63,11 @@ public class DND35 implements GameModule {
 	@Override
 	public void init(final String dataDir) {
 	}
-
-	public void init_player(Player player) {
-		// TODO Auto-generated method stub
-
+	
+	@Override
+	public void init2(final List<Faction> mFactions, Hashtable<String, ItemType> mItemTypes) {
+		//this.factions = mFactions;
+		//this.itemTypes = mItemTypes;
 	}
 	
 	@Override
@@ -163,5 +169,9 @@ public class DND35 implements GameModule {
 	public void test() {
 		// TODO Auto-generated method stub
 		
+	}
+
+	@Override
+	public void levelup(Player player) {
 	}
 }
