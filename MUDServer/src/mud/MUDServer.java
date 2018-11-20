@@ -6576,7 +6576,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 					send(parseDesc(m.getDesc(), 80), client);
 				}
 			}
-			else send("Game> Object - Error: object not editable (!Edit_Ok)", client);
+			else send("object not editable (!Edit_Ok)", client);
 		}
 		else send("No such object!", client);
 	}
@@ -8247,14 +8247,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 				item.Edit_Ok = false; // further edit access not permitted (only one person may access at a time)
 			}
 			else {
-				// item is not editable, exit the editor reset player, and clear edit flag and editor setting
-				player.setStatus(old_status);
-				player.setEditor(Editors.NONE);
-
-				// clear editor data
-				player.setEditorData(null);
-
-				send("Game> Item Editor - Error: item not editable (!Edit_Ok)", client);
+				abortEdit("item not editable (!Edit_Ok)", old_status, client);
 
 				return;
 			}
@@ -8282,14 +8275,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 					item.Edit_Ok = false; // further edit access not permitted (only one person may access at a time
 				}
 				else {
-					// item is not editable, exit the editor reset player, and clear edit flag and editor setting
-					player.setStatus(old_status);
-					player.setEditor(Editors.NONE);
-
-					// clear editor data
-					player.setEditorData(null);
-
-					send("Game> Item Editor - Error: item not editable (!Edit_Ok)", client);
+					abortEdit("item not editable (!Edit_Ok)", old_status, client);
 
 					return;
 				}
@@ -10096,12 +10082,17 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			// 1, 4, 7 or 1, 2, 3
 			// 2, 5, 8    4, 5, 6
 			// 3. 6, 9    7, 8, 9
+			
+			int count = 0;
+			int size = player.getSkills().size();
 
 			send("------------------------------[ Skills ]------------------------------", client);
 			for (final Skill s : player.getSkills().keySet()) {
 				String skill = s.toString();
 				Integer value = player.getSkills().get(s);
 				Integer mod = player.getSkillMod(s);
+				
+				debug( skill + ": " + value + " (" + mod + ")");
 
 				String color = "";
 				String output = "";
@@ -10109,18 +10100,24 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 				if (value == -1)     color = "red";
 				else if (value == 0) color = "yellow";
 				else if (value > 0)  color = "green";
-				
-				output = colors(Utils.padRight(skill, ' ', 18), color) + " : " + Utils.padLeft("" + value, ' ', 2) + " (" + mod + ")";
 
-				if (si > columns) {
+				output = colors(Utils.padRight(skill, ' ', 18), color) + " : " + Utils.padLeft("" + value, ' ', 2) + " (" + mod + ")";
+				
+				row.append( Utils.padRight(output, 46) );
+				
+				if( si == columns || count == size - 1 ) {
+					debug("SI: " + si);
+
 					client.write(row.toString() + '\n');
 					row.delete(0, row.length());
+					
 					si = 1;
 				}
-
-				row.append(Utils.padRight(output, 46));
-
-				si++;
+				else {
+					si++;
+				}
+				
+				count++;
 			}
 
 			client.write('\n');
@@ -10385,7 +10382,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			}
 			else {
 				// quest is not editable, exit the editor
-				abortEditor("Game> Quest Editor - Error: quest not editable (!Edit_Ok)", old_status, client);
+				abortEdit("quest not editable (!Edit_Ok)", old_status, client);
 				return;
 			}
 
@@ -11512,7 +11509,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			// newEDD
 			op_skilledit("show", client);
 		} else {
-			abortEditor("no such skill", old_status, client);
+			abortEdit("Invalid Skill!", old_status, client);
 		}
 	}
 
@@ -14158,7 +14155,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 					send("< Line " + toDelete + " deleted. >", client);
 				}
 			}
-			else if (hcmd.equals("help") || hcmd.equals("h")) {
+			else if (hcmd.equals("help") || hcmd.equals("h") || hcmd.equals("?")) {
 				send("<Help Editor Help>", client);
 				send(".abort[.a]      - throw out the current help file changes and exit", client);
 				send(".del[.d] <#>    - delete the indicated line", client);
@@ -14307,7 +14304,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 				player.setEditor(Editors.NONE);
 				player.setStatus("OOC");
 			}
-			else if (lcmd.equals("help") || lcmd.equals("h")) {
+			else if (lcmd.equals("help") || lcmd.equals("h") || lcmd.equals("?")) {
 				send("<List Editor Help>", client);
 				send(".abort(.a)  - throw out the current list and exit", client);
 				send(".help(.h)   - display this help", client);
@@ -14476,7 +14473,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			player.setStatus((String) data.getObject("pstatus"));
 			player.setEditor(Editors.NONE);
 		}
-		else if (ccmd.equals("help")) {
+		else if (ccmd.equals("help") || ccmd.equals("?")) {
 			if (carg.equals("")) {
 				// output help information
 				final List<String> output = (List<String>) Utils.mkList(
@@ -14869,7 +14866,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 				}
 			}
 		}
-		else if (rcmd.equals("help")) {
+		else if (rcmd.equals("help") || rcmd.equals("?")) {
 			if (rarg.equals("")) {
 				// output help information
 				final List<String> output = (List<String>) Utils.mkList("Room Editor -- Help",
@@ -15419,17 +15416,23 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			// exit
 			send("< Exiting... >", client);
 		}
-		else if (icmd.equals("help")) {
-			send("Item Editor -- Help", client);
-			send(Utils.padRight("", '-', 40), client);
-			send("abort", client);
-			send("desc <new description>", client);
-			send("done", client);
-			send("help", client);
-			send("name <new name>", client);
-			send("save", client);
-			send("show", client);
-			send("type", client);
+		else if (icmd.equals("help") || icmd.equals("?")) {
+			// output help information
+			final List<String> output = (List<String>) Utils.mkList("Item Editor -- Help",
+					Utils.padRight("", '-', 74),
+					"abort                           abort the editor (no changes will be kept)",
+					"desc <param> <new description>  change/set the item description",
+					"done                            finish editing (save & exit)",
+					"help                            shows this help information",
+					"name <new name>                 change/set the item name",
+					"save                            save changes to the item",
+					"show                            show basic information about the item",
+					"type                            change the item's type",
+					"types                           list of valid item types",
+					Utils.padRight("", '-', 74)
+					);
+
+			client.write(output);
 		}
 		else if (icmd.equals("name")) {
 			data.setObject("name", iarg);
@@ -15466,9 +15469,9 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			final Item item = (Item) data.getObject("item");
 
 			// will be a little like examine, just here to show changes
-			send(Utils.padRight("", '-', 80), client);
-			// send("----------------------------------------------------",
-			// client);
+			send("--- Item Editor " + Utils.padRight("", '-', 80 - 16), client);
+			// send("----------------------------------------------------", client);
+			
 			send("DB Reference #: " + item.getDBRef(), client);
 			send("Name: " + data.getObject("name"), client);
 			send("Item Type: " + ((ItemType) data.getObject("type")).toString(),client);
@@ -15486,6 +15489,9 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			data.setObject("type", ItemTypes.getType(iarg));
 
 			send("Ok.", client);
+		}
+		else if (icmd.equals("types")) {
+			send("Not Implemented Yet.", client);
 		}
 		else {
 			// currently causes a loop effect, where the command gets funneled back into op_iedit regardless
@@ -15561,7 +15567,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			// exit
 			send("< Exiting... >", client);
 		}
-		else if (qcmd.equals("help")) {
+		else if (qcmd.equals("help") || qcmd.equals("?")) {
 			send("Quest Editor -- Help", client);
 			send(Utils.padRight("", '-', 40), client);
 			send("abort", client);
@@ -15599,7 +15605,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		}
 		else if (qcmd.equals("show")) {
 			// will be a little like examine, just here to show changes
-			send(Utils.padRight("", '-', 80), client);
+			send("--- Quest Editor " + Utils.padRight("", '-', 80 - 17), client);
 
 			send("Quest ID#: " + quest.getId(), client);
 			send("Name: " + (String) data.getObject("name"), client);
@@ -15608,22 +15614,31 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			
 			parseDesc((String) data.getObject("desc"), 80);
 			
+			send(Utils.padRight("", '-', 80), client);
+			
 			send("Reward:", client);
 			
 			final Reward r = quest.getReward();
-			
-			final Coins c = r.getCoins();
-			final List<Item> itemList = r.getItems();
-			
-			if( c != null ) send(c.toString(true), client);
-			
-			if( itemList != null ) {
-				for(final Item item : itemList) {
-					send(item.getName(), client);
+
+			if( r != null ) {
+				final Coins c = r.getCoins();
+				final List<Item> itemList = r.getItems();
+
+				if( c != null ) send(c.toString(true), client);
+
+				if( itemList != null ) {
+					for(final Item item : itemList) {
+						send(item.getName(), client);
+					}
 				}
 			}
-			
+			else {
+				send("-None-", client);
+			}
+
 			send(Utils.padRight("", '-', 80), client);
+			
+			send("Tasks:", client);
 
 			int i = 0;
 
@@ -15639,7 +15654,9 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 				final Zone zone = zoneData.getKey();
 				
 				if( zone != null ) {
-					send(zone.getInstanceId() + " - " + zone.getName(), client);
+					// NOTE: what was I thinking with instance id here?
+					//send(zone.getInstanceId() + " - " + zone.getName(), client);
+					send(zone.getId() + " - " + zone.getName(), client);
 				}
 			}
 		}
@@ -15691,20 +15708,25 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 
 				if (args.length > 0) {
 					for (String s : args) {
-						final String className = s.substring(1);
-						final PClass newClass = Classes.getClass(className);
+						if( !s.isEmpty() ) {
+							final String className = s.substring(1);
+							final PClass newClass = Classes.getClass(className);
 
-						if (data.getObject("classes") instanceof List<?>) {
-							List<PClass> classes = (List<PClass>) data.getObject("classes");
+							if (data.getObject("classes") instanceof List<?>) {
+								List<PClass> classes = (List<PClass>) data.getObject("classes");
 
-							if (s.charAt(0) == '+') {
-								classes.addAll(Utils.mkList(newClass));
-								send("Added " + newClass + " to classes for " + (String) data.getObject("name"), client);
+								if (s.charAt(0) == '+') {
+									classes.addAll(Utils.mkList(newClass));
+									send("Added " + newClass + " to classes for " + (String) data.getObject("name"), client);
+								}
+								else if (s.charAt(0) == '-') {
+									classes.remove(newClass);
+									send("Removed " + newClass + " from classes for " + (String) data.getObject("name"), client);
+								}
 							}
-							else if (s.charAt(0) == '-') {
-								classes.remove(newClass);
-								send("Removed " + newClass + " from classes for " + (String) data.getObject("name"), client);
-							}
+						}
+						else {
+							send("Error: no such class.", client);
 						}
 					}
 				}
@@ -15714,7 +15736,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			// send list of valid class names
 			send("NONE, BARBARIAN, BARD, CLERIC, DRUID, FIGHTER, MONK, PALADIN, RANGER, ROGUE, SORCERER, WIZARD, ADEPT, ARISTOCRAT, COMMONER, EXPERT, WARRIOR", client);
 		}
-		else if (scmd.equals("help")) {
+		else if (scmd.equals("help") || scmd.equals("?")) {
 			if (sarg.equals("")) {
 				// output help information
 				final List<String> output = (List<String>) Utils.mkList("Skill Editor -- Help",
@@ -15750,7 +15772,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		}
 		else if (scmd.equals("save")) {
 		}
-		else if (scmd.equals("show")) {
+		else if (scmd.equals("show") || scmd.equals("sh")) {
 			/*
 			send(Utils.padRight("", '-', 80), client);
 			send("   Name: " + (String) data.getObject("name"), client);
@@ -15840,7 +15862,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		}
 		else if (zcmd.equals("addroom")) {
 		}
-		else if (zcmd.equals("help")) {
+		else if (zcmd.equals("help") || zcmd.equals("?")) {
 			if (zarg.equals("")) {
 				// output help information
 				final List<String> output = (List<String>) Utils.mkList("Skill Editor -- Help",
@@ -21662,16 +21684,20 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 	/**
 	 * Handle aborting an error, takes an error message to print as an argument
 	 */
-	public void abortEditor(final String errorMessage, final String old_status, final Client client) {
+	public void abortEdit(final String errorMessage, final String old_status, final Client client) {
 		final Player player = getPlayer(client);
-
-		// reset player, and clear edit flag and editor setting and editor data
+		
+		final String msg = String.format("Game> %s - Error: %s", player.getEditor().getName(), errorMessage);
+		
+		// reset player status, clear edit flag and drop editor data (plus return editor setting to None)
 		player.setStatus(old_status);
 		player.setEditor(Editors.NONE);
 		player.setEditorData(null);
+		
 
 		// tell us what went wrong
-		send(errorMessage, client);
+		//send(errorMessage, client);
+		send(msg, client);
 	}
 
 	/**
@@ -24469,7 +24495,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 				creature.Edit_Ok = false;
 			}
 			else {
-				abortEditor("Game> Creature Editor - Error: creature not editable (!Edit_Ok)", old_status, client);
+				abortEdit("creature not editable (!Edit_Ok)", old_status, client);
 				return;
 			}
 
@@ -24518,7 +24544,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			}
 			else {
 				// room is not editable, exit the editor
-				abortEditor("Game> Room Editor - Error: room not editable (!Edit_Ok)", old_status, client);
+				abortEdit("room not editable (!Edit_Ok)", old_status, client);
 				return;
 			}
 

@@ -21,6 +21,7 @@ import mud.objects.Thing;
 import mud.objects.ThingType;
 import mud.objects.ThingTypes;
 import mud.rulesets.d20.D20;
+import mud.rulesets.d20.Skills;
 
 public class DND35 implements GameModule {
 	private static Map<String, Command> commands;
@@ -90,6 +91,16 @@ public class DND35 implements GameModule {
 		player.addSlot("belt",     new Slot(SlotTypes.WAIST,  ItemTypes.CLOTHING));
 		player.addSlot("boots",    new Slot(SlotTypes.FEET,   ItemTypes.CLOTHING));
 		player.addSlot("other",    new Slot(SlotTypes.NONE,   ItemTypes.NONE ));
+		
+		player.addSkill(Skills.DIPLOMACY);
+		player.addSkill(Skills.BALANCE);
+		player.addSkill(Skills.CONCENTRATION);
+		player.addSkill(Skills.HIDE);
+		
+		player.setSkill(Skills.HIDE, 10);
+		player.setSkill(Skills.CONCENTRATION, 5);
+		player.setSkill(Skills.DIPLOMACY, 3);
+		player.setSkill(Skills.BALANCE, 15);
 	}
 
 	@Override
