@@ -218,7 +218,9 @@ public final class FalloutEquestria implements GameModule, ExtraCommands {
 		/************************************************************/
 		/** Pistol                                                 **/
 		/************************************************************/
-		final Weapon pgun = new Weapon("10mm Pistol", "A basic pistol, developed for the security forces of what used to be Equestria.");
+		final Weapon pgun = new Weapon(
+				"10mm Pistol",
+				"A basic pistol, developed for the security forces of what used to be Equestria.");
 		
 		pgun.setSlotType(FOESlotTypes.HOOVES);
 		
@@ -232,7 +234,9 @@ public final class FalloutEquestria implements GameModule, ExtraCommands {
 		/************************************************************/
 		/** Laser Rifle                                            **/
 		/************************************************************/
-		final Weapon laser_rifle = new Weapon("Laser Rifle", "An energy weapon modeled after a basic rifle.");
+		final Weapon laser_rifle = new Weapon(
+				"Laser Rifle",
+				"An energy weapon modeled after a basic rifle.");
 		
 		laser_rifle.setSlotType(FOESlotTypes.HOOVES);
 		
@@ -246,7 +250,9 @@ public final class FalloutEquestria implements GameModule, ExtraCommands {
 		/************************************************************/
 		/** Wing Blades                                            **/
 		/************************************************************/
-		final Weapon wing_blades = new Weapon("Wing Blades", "Sharp, curved metal blades designed to be strapped onto a pegasus' wings.");
+		final Weapon wing_blades = new Weapon(
+				"Wing Blades",
+				"Sharp, curved metal blades designed to be strapped onto a pegasus' wings.");
 		
 		wing_blades.setSlotType(FOESlotTypes.WINGS);
 		
@@ -263,7 +269,9 @@ public final class FalloutEquestria implements GameModule, ExtraCommands {
 		/************************************************************/
 		/** Spark Generator                                        **/
 		/************************************************************/
-		Thing SparkGenerator = new Thing("Spark Generator", "This advanced piece of magitech produces near limitless electric power via magic");
+		Thing SparkGenerator = new Thing(
+				"Spark Generator",
+				"This advanced piece of magitech produces near limitless electric power via magic");
 
 		SparkGenerator.setProperty("thingtype", "spark_generator");
 		SparkGenerator.setProperty("power", 10);

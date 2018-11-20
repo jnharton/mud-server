@@ -1,13 +1,19 @@
 package mud.game;
 
+/*
+ * PClass
+ * 
+ * A Player Class data object.
+ * 
+ */
 public class PClass {
-	private String name;
-	private String abrv;
-	private int id;
-	private String hit_dice;
-	private boolean npc;
-	private boolean caster;
-	private String color;
+	private String name;     // class name (e.g. Fighter)  
+	private String abrv;     // short form of class name for condensed output (e.g. FHT)
+	private int id;          // class identifier, used in data storage -- separate?
+	private String hit_dice; // was thinking about d20srd originally -- remove?
+	private boolean npc;     // is this class intended for NPCs (non-player characters)
+	private boolean caster;  // does this class cast magic
+	private String color;    // an output color -- separate?
 	
 	/**
 	 * Default PClass constructor, mostly intended for loading user specified, "soft-coded" classes

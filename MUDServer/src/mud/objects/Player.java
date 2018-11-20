@@ -486,7 +486,7 @@ public class Player extends MUDObject implements Mobile
 		addConfigOption("show-weather", true);          // show weather information in room descriptions (default: true)
 		addConfigOption("tagged-chat", false);          // "tag" the beginning chat lines with CHAT for the purpose of triggers, etc (default: false)
 		addConfigOption("compact-editor", true);        // compact the output of editor's 'show' commands (default: true)
-		addConfigOption("hud_enabled", false);          // is the "heads-up display" that accompanies the room description enabled (default: false)
+		addConfigOption("hud_enabled", true);          // is the "heads-up display" that accompanies the room description enabled (default: false)
 		addConfigOption("notify_newmail", false);       // notify the player on receipt of new mail? (default: false)
 		addConfigOption("silly_messages", false);       // enable sillier/more humorous error messages where used (default: false)
 		addConfigOption("server_echo", false);          // do we want the server to echo command if that option is enabled (default: false)

@@ -46,7 +46,7 @@ public class Log {
 	public static enum Type { LOG, ERROR, DEBUG, CHAT };
 	
 	private static final Integer BUFFER_SIZE = 1000;
-	private static final Integer MAX_LOG_SIZE = 10000;
+	private static final Integer MAX_LOG_SIZE = 100000;
 	
 	private String LOG_DIR;
 	

@@ -44,7 +44,6 @@ import javax.crypto.spec.PBEKeySpec;
 
 import mud.Constants;
 import mud.colors.Palette;
-import mud.misc.Counter;
 
 /**
  * A class containing utilities useful across all the whole codebase

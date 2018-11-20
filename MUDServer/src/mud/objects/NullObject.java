@@ -54,12 +54,11 @@ public class NullObject extends MUDObject {
 	
 	private void cleanup() {
 		// we don't need properties
-		//this.properties = null;
+		this.properties.clear();
 		// we don't need effects
-		//this.effects = null;
-		// we don't need a position
-		//this.pos = null;
+		this.effects.clear();
 		
+		// never okay to edit
 		this.Edit_Ok = false;
 	}
 	

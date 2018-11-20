@@ -26,8 +26,8 @@ import mud.objects.Room;
  */
 
 /**
- * Message class to encapsulate messages transmitted from one
- * connected player to another.
+ * Message class to encapsulate messages transmitted to connected players,
+ * whether by another player directly or indirectly by the game.
  * 
  * @author Jeremy N. Harton
  * 

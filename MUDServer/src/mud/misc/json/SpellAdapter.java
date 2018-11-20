@@ -113,7 +113,7 @@ public class SpellAdapter extends TypeAdapter<Spell> {
 					
 					reader.endArray();
 					
-					spell.target = Spell.encodeTargets(targets);
+					spell.setTargets( Spell.encodeTargets(targets) );
 					
 					break;
 				default:

@@ -1,3 +1,14 @@
 [
-{ "name":"Human",    "subrace":null, "id":0,  "statAdj": [ 0, 0, 0, 0, 0, 0 ],   "restricted":false, "canFly":false },
+{ "name":"Dragon",   "subrace":null, "id":0,  "statAdj": [ 0, 0, 0, 0, 0, 0 ],   "restricted":true,  "canFly":true  },
+{ "name":"Dwarf",    "subrace":null, "id":3,  "statAdj": [ 0, 0, 2, 0, -2, 0 ],  "restricted":false, "canFly":false },
+{ "name":"Elf",      "subrace":null, "id":1,  "statAdj": [ 0, 2, -2, 0, 0, 0 ],  "restricted":false, "canFly":false },
+{ "name":"Gnome",    "subrace":null, "id":4,  "statAdj": [ -2, 0, 2, 0, 0, 0 ],  "restricted":false, "canFly":false },
+{ "name":"Half-Elf", "subrace":null, "id":6,  "statAdj": [ 0, 0, 0, 0, 0, 0 ],   "restricted":true,  "canFly":false },
+{ "name":"Half-Orc", "subrace":null, "id":10, "statAdj": [ 2, 0, 0, -2, -2, 0 ], "restricted":true,  "canFly":false },
+{ "name":"Halfling", "subrace":null, "id":11, "statAdj": [ 0, 0, 0, 0, 0, 0 ],   "restricted":true,  "canFly":false },
+{ "name":"Human",    "subrace":null, "id":2,  "statAdj": [ 0, 0, 0, 0, 0, 0 ],   "restricted":false, "canFly":false },
+{ "name":"Orc",      "subrace":null, "id":5,  "statAdj": [ 0, 0, 0, 0, 0, 0 ],   "restricted":false, "canFly":false },
+{ "name":"Kobold",   "subrace":null, "id":7,  "statAdj": [ -4, 2, -2, 0, 0, 0 ], "restricted":true,  "canFly":false },
+{ "name":"None",     "subrace":null, "id":8,  "statAdj": [ 0, 0, 0, 0, 0, 0 ],   "restricted":true,  "canFly":false },
+{ "name":"Unknown", "subrace":null,  "id":9,  "statAdj": [ 0, 0, 0, 0, 0, 0 ],   "restricted":true,  "canFly":false }
 ]

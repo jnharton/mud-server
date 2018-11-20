@@ -3,7 +3,7 @@ package mud.auction;
 import java.util.TimerTask;
 
 import mud.auction.Auction;
-import mud.misc.Counter;
+import mud.utils.Counter;
 
 public class AuctionTimer extends TimerTask {
 	private Auction auction;

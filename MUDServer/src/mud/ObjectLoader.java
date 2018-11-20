@@ -5,6 +5,9 @@ import java.util.Arrays;
 import java.util.ConcurrentModificationException;
 import java.util.EnumSet;
 import java.util.List;
+
+import com.google.gson.JsonArray;
+
 import java.util.LinkedList;
 
 import mud.objects.*;
@@ -63,6 +66,15 @@ public class ObjectLoader {
 	public ObjectLoader(final MUDServer parent, final ObjectDB objectDB) {
 		this.parent = parent;
 		this.objectDB = objectDB;
+	}
+	
+	public void loadObjects(final JsonArray ja) {
+		Integer oDBRef = 0;
+		Integer oLocation = 0;
+		String oName = "";
+		String oFlags = "";
+		String oDesc = "";
+		char oTypeFlag;
 	}
 	
 	// TODO fix this so I actually us the logger

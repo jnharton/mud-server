@@ -114,6 +114,7 @@ public class Auction {
 
 		if( getTimeLeft() > 0 ) {
 			if( currentBid != null) {
+				// NOTE: not handling max bids in here
 				if( newBid.getAmount().numOfCopper() > currentBid.getAmount().numOfCopper() ) {
 					currentBid = newBid;
 					this.bids.add(newBid);

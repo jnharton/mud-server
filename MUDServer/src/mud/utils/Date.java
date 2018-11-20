@@ -122,6 +122,7 @@ public class Date implements Serializable {
 		if(this.year < 1000) ystr = "0" + this.year;
 		else                 ystr = "" + this.year;
 		
-		return mstr + "-" + dstr + "-" + ystr;
+		//return mstr + "-" + dstr + "-" + ystr;
+		return String.format("%s-%s-%s", mstr, dstr, ystr);
 	}
 }

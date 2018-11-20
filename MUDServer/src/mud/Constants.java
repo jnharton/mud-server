@@ -57,6 +57,14 @@ public final class Constants {
 	public static final String REGISTER = "REGISTER";
 	public static final String LOGIN = "LOGIN";
 	
+	// Password Recovery State
+	public static final String QUERY = "QUERY";
+	public static final String ACCOUNT = "ACCOUNT";
+	public static final String PLAYER = "PLAYER";
+	public static final String KEY = "KEY";
+	public static final String NEWPASS = "NEWPASS";
+	public static final String CONFIRM = "CONFIRM";
+	
 	// Color Options
 	public static final int DISABLED = 0;
 	public static final int ANSI = 1;

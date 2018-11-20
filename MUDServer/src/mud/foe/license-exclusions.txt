@@ -1,0 +1,4 @@
+Fallout Equestria
+
+All files in the mud.foe package and all sub-packages are excluded from the general project licensing,
+but may be freely used.

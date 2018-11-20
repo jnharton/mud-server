@@ -78,6 +78,19 @@ public final class AccountManager {
 		return a;
 	}
 	
+	public Account getAccount(final String name) {
+		Account a = null;
+		
+		for (final Account account : iamap.values()) {
+			if (account.getUsername().equals(name) ) {
+				a = account;
+				break;
+			}
+		}
+		
+		return a;
+	}
+	
 	public Account getAccount(final String name, final String pass) {
 		Account a = null;
 		
@@ -87,7 +100,7 @@ public final class AccountManager {
 				break;
 			}
 		}
-
+		
 		return a;
 	}
 	

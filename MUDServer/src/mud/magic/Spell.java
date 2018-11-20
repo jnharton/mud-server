@@ -54,20 +54,22 @@ public class Spell
 	protected List<Effect> effects;   // list of spell effects
 	protected List<Reagent> reagents; // list of spell requirements
 	
-	public int target = 0;
+	protected int targets = 0; // type of targets for this spell
 	
 	public Spell() {
 		this("NoName", SpellType.ARCANE, School.OTHER, 0, "You cast &name at &target.", new ArrayList<Effect>(), new ArrayList<Reagent>());
 		
 		this.castTime = 1;
-		this.manaCost = 5;
+		this.manaCost = 20;
 		this.duration = 5;
 	}
 	
 	public Spell(String tName, SpellType tType, School tSchool, int tLevel, String tCastMsg) {
+		this.manaCost = 20;
 	}
 	
-	public Spell(String tName, SpellType tType, School tSchool, int tLevel, String tCastMsg, List<Effect> tEffects) {	
+	public Spell(String tName, SpellType tType, School tSchool, int tLevel, String tCastMsg, List<Effect> tEffects) {
+		this.manaCost = 20;
 	}
 	
 	public Spell(String tName, SpellType tType, School tSchool, int tLevel, String tCastMsg, List<Effect> tEffects, List<Reagent> tReagents) {
@@ -82,6 +84,8 @@ public class Spell
 		
 		this.effects = tEffects;
 		this.reagents = tReagents;
+		
+		this.manaCost = 20;
 	}
 	
 	public void setName(String spellName) {
@@ -180,6 +184,14 @@ public class Spell
 		return this.reagents;
 	}
 	
+	public void setTargets(final int encodedTargets) {
+		this.targets = encodedTargets;
+	}
+	
+	public int getTargets() {
+		return this.targets;
+	}
+	
 	/**
 	 * Decode an integer to reconstruct data about valid targets
 	 * for the spell in question.
@@ -194,7 +206,7 @@ public class Spell
 
 		final StringBuilder sb = new StringBuilder();
 
-		int temp = spell.target;
+		int temp = spell.targets;
 
 		// decode targets
 		// S, F, E
@@ -242,6 +254,9 @@ public class Spell
 		
 		return sb.toString();
 	}
+	
+	
+	
 	
 	/**
 	 * Convert valid targets for spells into a short form to store it

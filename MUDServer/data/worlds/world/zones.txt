@@ -3,3 +3,11 @@
 Root
 $NULL
 ~
+1
+World
+$root
+~
+2
+Red Dragon Inn
+$world
+~

@@ -1,6 +1,4 @@
-package mud.misc;
-
-import mud.utils.Utils;
+package mud.utils;
 
 public class Counter {
 	private Integer value;
@@ -32,6 +30,10 @@ public class Counter {
 	
 	public Integer getValue() {
 		return this.value;
+	}
+	
+	public boolean isMin() {
+		return (this.value == this.min);
 	}
 	
 	public boolean isMax() {

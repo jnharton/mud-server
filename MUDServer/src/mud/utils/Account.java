@@ -99,6 +99,8 @@ public class Account implements Serializable {
 	private int charLimit = 3;     // character limit
 	
 	private String lastIPAddress; //
+	
+	private String recoveryKey;
 
 	/* active properties (current state) */
 	private transient ArrayList<Player> characters; // all the characters that exist for an account
@@ -141,7 +143,7 @@ public class Account implements Serializable {
 	 * @param aCharLimit
 	 * @param aCharacters
 	 */
-	public Account(int aId, Status aStatus, Date aCreated, Date aModified, String aUsername, String aPassword, int aCharLimit, Player...aCharacters) {
+	public Account(final int aId, final Status aStatus, final Date aCreated, final Date aModified, final String aUsername, final String aPassword, final int aCharLimit, final Player...aCharacters) {
 		this.id = aId;             // the account id
 		this.status = aStatus;     // the status of the account
 
@@ -291,6 +293,13 @@ public class Account implements Serializable {
 		this.lastIPAddress = ipAddress;
 	}
 	
+	public String getRecoveryKey() {
+		return this.recoveryKey;
+	}
+	
+	public void setRecoveryKey(final String k) {
+		this.recoveryKey = k;
+	}
 	/**
 	 * Link an existing character to this account
 	 * 

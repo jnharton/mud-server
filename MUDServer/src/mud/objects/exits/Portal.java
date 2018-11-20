@@ -239,14 +239,20 @@ public class Portal extends Exit implements EventSource, SayEventListener {
 	 * @param key
 	 */
 	public boolean activate(final Object pKey) {
+		boolean success = false;
+		
 		if (key instanceof String) {
 			if ( ((String) pKey).equals((String) this.key) ) {
 				this.active = true;
-				return true;
+				success = true;
 			}
 		}
+		else if( pKey == this.key ) {
+			this.active = true;
+			success = true;
+		}
 		
-		return false;
+		return success;
 	}
 
 	/**
@@ -254,14 +260,20 @@ public class Portal extends Exit implements EventSource, SayEventListener {
 	 * @param key
 	 */
 	public boolean deactivate(final Object pKey) {
+		boolean success = false;
+		
 		if (key instanceof String) {
 			if ( ((String) pKey).equals((String) this.key) ) {
 				this.active = false;
-				return true;
+				success = true;
 			}
 		}
+		else if( pKey == this.key ) {
+			this.active = true;
+			success = true;
+		}
 		
-		return false;
+		return success;
 	}
 
 	public boolean isActive() {
@@ -324,12 +336,12 @@ public class Portal extends Exit implements EventSource, SayEventListener {
 	public void handleSayEvent(final SayEvent se) {
 		// TODO these messages should probably be communicated via events or something
 		if( active ) {
-			if( deactivate(se.getMessage() ) ) {
+			if( deactivate( se.getMessage() ) ) {
 				System.out.println("Portal: deactivated");
 			}
 		}
 		else {
-			if( activate(se.getMessage()) ) {
+			if( activate( se.getMessage()) ) {
 				System.out.println("Portal: activated");
 			}
 		}
