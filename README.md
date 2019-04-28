@@ -22,9 +22,14 @@ Usage: java -jar mud_server.jar [ parameters ]
   --db <database>       Specifies the database file to load (databases directory)
   --debug               Enable debugging messages
   --enable-logging      Enable logging of various things
-  --theme               Use the specified theme file (theme directory)
+  --enable-testing      Enable certain code that's being tested
+  --int-login           Use an interactive login (as opposed to simple 'connect <name> <password>')
+  --magic               Use the magic stuff for games with magic
+  --module <identifier> Specifies one of a set of pre-existing modules to use (these are object Classes)
   --setup               Run first time setup
   --telnet              Indicate that you'd like the server to handle pure telnet
+  --theme <theme>       Specifies a theme file to use (theme directory)
+  --use-accounts        Use the account system instead of one-to-one login/player
 
 * generally speaking, you will only use setup once, and can run the server with just that
 * parameter if you just want to generate the necessary files and don't need anything else set
@@ -39,10 +44,11 @@ For help using the code and miscellaneous documentation, see the [Wiki](https://
 
 ### Updates
 
-See [Updates](https://github.com/jnharton/mud-server/wiki/Updates) for more details.
+Pay attention to the following Trello board for future plans and progress info:
+[MUDServer Dev](https://trello.com/b/tAX4S8pU/mudserver-dev)
 
 ### Copyright
 
-Copyright (c) 2012 Jeremy Harton. See LICENSE.txt for further details.
+Copyright (c) 2012-2019 Jeremy Harton. See LICENSE.txt for further details.
 
-The license given basically applies to all files in the source (MUDServer/src) directory unless otherwise specified here or in a file (license-exclusions.txt) within the package/folder in question.
+The license given basically applies to all files in the source (MUDServer/src) directory unless otherwise specified here or in a file (license-exclusions.txt) within the package/folder in question. It does not apply to any data files that might be included.
