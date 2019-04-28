@@ -1074,10 +1074,8 @@ public final class Utils {
 	public final static boolean or(boolean...conditions) {
 		if( conditions.length == 1)      return conditions[0];
 		else if( conditions.length == 2) return or( conditions[0], conditions[1] );
-		else if( conditions.length > 2 ) {
-			return or(conditions[0], 1, conditions);
-		}
-		else return false;
+		else if( conditions.length > 2 ) return or(conditions[0], 1, conditions);
+		else                             return false;
 	}
 	
 	private final static boolean or(boolean initial, int startIndex, boolean...conditions) {

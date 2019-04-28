@@ -7,6 +7,7 @@ import mud.Constants;
 import mud.MUDObject;
 import mud.TypeFlag;
 import mud.net.Client;
+import mud.objects.Item;
 import mud.objects.Player;
 import mud.objects.Room;
 import mud.utils.Utils;
@@ -101,7 +102,15 @@ public class TeleportCommand extends Command {
 						
 						send("You were teleported.", p.getClient());
 					}
-					else {
+					else if( target.isType(TypeFlag.ITEM) ) {
+						int tl = target.getLocation();
+						
+						Room r1 = getRoom( tl );
+						Room r2 = getRoom( destination );
+						
+						r1.removeItem( (Item) target);
+						r2.addItem( (Item) target );
+						
 						target.setLocation( dest.getDBRef() );
 						target.setPosition(0, 0);
 					}

@@ -224,10 +224,10 @@ public final class ProgramInterpreter {
 		// TODO fix kludge?
 		// what should cmd, arg, how be set to?
 		addVar("cmd", "");
-		addVar("arg", "");
+		//addVar("arg", ""); // note this got changed because it broke an external call of {dbref:{&arg}} by overwriting the var
 		addVar("how", "");
 		addVar("player", "" + player.getDBRef());
-		addVar("this", "" + object.getDBRef());
+		addVar("this", "" + (object != null ? object.getDBRef() : -1));
 		
 		if( debug_enabled ) {
 			System.out.println("# Params: " + params.length);
@@ -649,6 +649,7 @@ public final class ProgramInterpreter {
 			case "{version}":
 				return MUDServer.getVersion();
 			default:
+				// strip curly braces from both ends
 				String temp = functionName.substring(1, functionName.length() - 1);
 
 				// e.g. {&arg}

@@ -14,9 +14,7 @@ import mud.objects.*;
 import mud.objects.exits.Door;
 import mud.objects.items.Arrow;
 import mud.objects.items.Container;
-import mud.utils.Utils;
 
-import mud.game.PClass;
 import mud.interfaces.ODBI;
 
 /*
@@ -172,100 +170,12 @@ public final class ObjectDB implements ODBI {
 
 	}
 
-	public Stack<Integer> getUnused() {
-		return this.unusedDBNs;
+	public List<Integer> getUnused() {
+		return Collections.unmodifiableList( this.unusedDBNs );
 	}
-
-	/*public List<Integer> getUnused() {
-    	List<Integer> result = new LinkedList<Integer>();
-
-    	for(Integer i : unusedDBNs) {
-    		result.add(i);
-    	}
-
-    	return result;
-    }*/
 
 	public int getSize() {
 		return this.objsById.size();
-	}
-
-	// Send all objects
-	public List<String> dump() {
-		int i = 0;
-
-		final List<String> output = new ArrayList<String>(this.objsById.size());
-
-		for (final MUDObject obj : objsById.values()) {
-			output.add( String.format("%d: %s (#%d)", i, obj.getName(), obj.getDBRef()) );
-			i += 1;
-		}
-
-		return output;
-	}
-
-	// Serialize all objects via `toDB` and save array to file.
-	// TODO fix save method, this one depends on saving over the old database
-	public void save(final String filename) {
-		final String[] old = Utils.loadStrings(filename);         // old (current in file) database
-		final String[] toSave = new String[this.objsById.size()]; // new (save to file) database
-
-		// TODO sometimes has issues with NullPointerException(s)
-
-		System.out.println("Old Size: " + old.length);
-		System.out.println("New Size: " + toSave.length);
-
-		int index = 0;
-
-		if( old != null ) {
-			for (final MUDObject obj : this.objsById.values()) {
-				if(obj instanceof NullObject) {
-					NullObject no = (NullObject) obj;
-
-					// a locked NullObject probably means a line whose data we are ignoring (but want to keep)
-					if( no.isLocked() ) {
-						System.out.println(index + " Old Data: " + old[index] + " Keeping...");
-						toSave[index] = old[index]; // keep old data
-					}
-					else {
-						System.out.println(index + " No Previous Data, Overwriting...");
-						toSave[index] = obj.toDB(); // just save the null object
-					}
-				}
-				else if(obj instanceof Player) {
-					Player player = (Player) obj;
-
-					if( !player.isNew() ) { // if the player is not new, save it
-						toSave[index] = obj.toDB();
-					}
-					else { // otherwise, store a NullObject
-						toSave[index] = new NullObject(obj.getDBRef()).toDB();
-					}
-				}
-				else {
-					System.out.println(obj.getName());
-
-					toSave[index] = obj.toDB();
-				}
-
-				index++;
-			}
-		}
-		else {
-			// TODO figure out if this part of save(...) should just go elsewhere. This is essentially
-			// breaking the notion of save since we aren't saving over an existing database
-			for (final MUDObject obj : objsById.values()) {
-				System.out.println(obj.getName());
-
-				toSave[index] = obj.toDB();
-
-				System.out.println(toSave[index]);
-
-				index++;
-			}
-		}
-
-		Utils.saveStrings(filename, toSave);
 	}
 	
 	/**
@@ -499,7 +409,19 @@ public final class ObjectDB implements ODBI {
 	 * @return true if there is object with the specified name
 	 */
 	public boolean hasName(final String name) {
-		return this.objsByName.containsKey(name);
+		return hasName(name, TypeFlag.OBJECT);
+	}
+	
+	public boolean hasName(final String name, final TypeFlag flag) {
+		boolean result = false;
+		
+		switch(flag) {
+		case PLAYER: result = this.playersByName.containsKey(name); break;
+		case OBJECT: result = this.objsByName.containsKey(name);    break;
+		default:     result = this.objsByName.containsKey(name);    break;
+		}
+		
+		return result;
 	}
 
 	// the function just below the one below may have rendered this one unnecessary
@@ -660,10 +582,6 @@ public final class ObjectDB implements ODBI {
 		return acc;
 	}
 
-	public List<Room> getWeatherRooms() {
-		return getRoomsByType(RoomType.OUTSIDE);
-	}
-
 	public List<Room> getRoomsByParentLocation(final int loc) {
 		final List<Room> acc = new LinkedList<Room>();
 
@@ -801,26 +719,27 @@ public final class ObjectDB implements ODBI {
 	 */
 	public NPC getNPC(final String name) {
 		if( name.equals("") ) return null;
-
-		return this.npcsByName.get(name);
+		else                  return this.npcsByName.get(name);
 	}
 
 	public List<NPC> getNPCs() {
 		return new ArrayList<NPC>(this.npcsById.values());
 	}
-
-	public List<NPC> getNPCsByRoom(final Room room) {
+	
+	public List<NPC> getNPCsByLocation(final Integer location) {
 		final List<NPC> acc = new LinkedList<NPC>();
 
-		int loc = room.getDBRef();
-
 		for (final NPC n : this.npcsById.values()) {
-			if (n.getLocation() == loc) {
+			if (n.getLocation() == location) {
 				acc.add(n);
 			}
 		}
 
 		return acc;
+	}
+	
+	public List<NPC> getNPCsByRoom(final Room room) {
+		return getNPCsByLocation( room.getDBRef() );
 	}
 
 	////////////////// ITEMS
@@ -926,7 +845,7 @@ public final class ObjectDB implements ODBI {
 	/**
 	 * stack all the stackable items
 	 */
-	public void stackItems() {
+	private void stackItems() {
 		List<Item> items = getItems();
 
 		List<Arrow> arrows = new LinkedList<Arrow>();
@@ -1035,17 +954,9 @@ public final class ObjectDB implements ODBI {
 
 		return player;
 	}
-
-	public int getNumPlayers(final PClass c) {
-		int count = 0;
-
-		for (final Player p : this.playersByName.values()) {
-			if ( c.equals(p.getPClass()) ) {
-				count += 1;
-			}
-		}
-
-		return count;
+	
+	public List<Player> getPlayers() {
+		return new ArrayList<Player>(this.playersById.values());
 	}
 
 	public List<Player> getPlayersByRoom(final Room room) {
@@ -1060,10 +971,6 @@ public final class ObjectDB implements ODBI {
 		}
 
 		return acc;
-	}
-	
-	public List<Player> getPlayers() {
-		return new ArrayList<Player>(this.playersById.values());
 	}
 
 	/**

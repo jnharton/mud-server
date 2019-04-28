@@ -4,6 +4,7 @@ import mud.Command;
 import mud.misc.ProgramInterpreter;
 import mud.misc.Script;
 import mud.net.Client;
+import mud.objects.Player;
 
 /*
  * Copyright (c) 2015 Jeremy N. Harton
@@ -40,9 +41,17 @@ public class ScriptedCommand extends Command {
 		
 		// make sure we have exclusive control of the interpreter?
 		synchronized(this.pgmi) {
+			System.out.println("Argument: " + arg);
+			
 			this.pgmi.addVar("arg", arg);
 			
-			result = this.pgmi.interpret(script, getPlayer(client), getPlayer(client));
+			System.out.println("PGMI('arg'): " + this.pgmi.getVar("arg"));
+			
+			final Player player = getPlayer(client);
+			
+			// invoke the interpreter, providing the player, object context to execute within
+			result = this.pgmi.interpret(script, player, player);
+
 			
 			this.pgmi.delVar("arg");
 		}

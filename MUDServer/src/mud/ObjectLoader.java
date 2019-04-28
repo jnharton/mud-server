@@ -7,6 +7,8 @@ import java.util.EnumSet;
 import java.util.List;
 
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 
 import java.util.LinkedList;
 
@@ -68,13 +70,33 @@ public class ObjectLoader {
 		this.objectDB = objectDB;
 	}
 	
-	public void loadObjects(final JsonArray ja) {
+	public void loadObjects(final JsonArray ja, final Logger logger) {
 		Integer oDBRef = 0;
 		Integer oLocation = 0;
 		String oName = "";
 		String oFlags = "";
 		String oDesc = "";
 		char oTypeFlag;
+		
+		for(final JsonElement je : ja) {
+			JsonObject obj = je.getAsJsonObject();
+			
+			oDBRef =    obj.get("dbref").getAsInt();
+			oName =     obj.get("name").getAsString();
+			oFlags =    obj.get("flags").getAsString();
+			oTypeFlag = oFlags.charAt(0);
+			oFlags =    oFlags.substring(1, oFlags.length());
+			oDesc =     obj.get("desc").getAsString();
+			oLocation = obj.get("location").getAsInt();
+			
+			debug("---- Database Object");
+			debug("DBRef: " + oDBRef);
+			debug("Name: " + oName);
+			debug("Flags: " + oFlags);
+			debug("Description: " + oDesc);
+			debug("Location: " + oLocation);
+			debug("");
+		}
 	}
 	
 	// TODO fix this so I actually us the logger

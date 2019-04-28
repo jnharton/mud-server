@@ -156,7 +156,8 @@ public abstract class MUDObject {
 	 * 
 	 * @return
 	 */
-	public final Integer getDBRef()
+	//public final Integer getDBRef()
+	public final int getDBRef()
 	{
 		return this.dbref;
 	}
