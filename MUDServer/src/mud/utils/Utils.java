@@ -127,6 +127,8 @@ public final class Utils {
 	 * Saves string arrays to files (the assumption being that said file is a
 	 * collection/list of arbitrary strings in a particular layout
 	 * 
+	 * NOTE: This will overwrite an existing file (see PrintWriter documentation)
+	 * 
 	 * @param filename
 	 * @param sArray
 	 */

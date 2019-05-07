@@ -663,6 +663,14 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 						System.out.println("Using port " + server.port);
 						System.out.println("");
 					}
+					else if (param.equals("config-file")) {
+						server.readConfigFile(args[a + 1]);
+					}
+					else if (param.equals("db")) {
+						server.DB_FILE = server.resolvePath(server.DATA_DIR, "databases", args[a + 1]);
+						System.out.println("Using database " + args[a + 1]);
+						// System.out.println("");
+					}
 					else if (param.equals("debug")) {
 						server.debug = true;
 						System.out.println("Debugging Enabled.");
@@ -673,20 +681,15 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 						System.out.println("Logging Enabled.");
 						System.out.println("");
 					}
-					else if (param.equals("db")) {
-						server.DB_FILE = server.resolvePath(server.DATA_DIR, "databases", args[a + 1]);
-						System.out.println("Using database " + args[a + 1]);
-						// System.out.println("");
+					else if (param.equals("enable-testing")) {
+						server.testing = true;
+						System.out.println("Testing Enabled!");
 					}
-					// TODO is this really a useful parameter?
-					else if (param.equals("dir")) {
-						// server.MAIN_DIR = "";
-						// server.DATA_DIR = "";
+					else if (param.equals("int-login")) {
+						server.int_login = true;
 					}
-					else if (param.equals("theme")) {
-						server.THEME_FILE = server.resolvePath(server.THEME_DIR, args[a + 1]);
-						System.out.println("Using theme " + args[a + 1]);
-						// System.out.println("");
+					else if( param.equals("magic") ) {
+						server.magic = true;
 					}
 					else if (param.equals("module")) {
 						String moduleName = args[a + 1];
@@ -696,27 +699,19 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 						if (moduleName.equals("dnd-fr")) server.module = new mud.modules.DND35();
 						else                             ; //load and initialize a GameModule subclass?
 					}
-					else if( param.equals("magic") ) {
-						server.magic = true;
-					}
 					else if (param.equals("setup")) {
 						server.firstRun = true;
 					}
 					else if (param.equals("telnet")) {
 						server.telnet = Utils.toInt(args[a + 1], 0);
 					}
-					else if (param.equals("config-file")) {
-						server.readConfigFile(args[a + 1]);
-					}
-					else if (param.equals("int-login")) {
-						server.int_login = true;
+					else if (param.equals("theme")) {
+						server.THEME_FILE = server.resolvePath(server.THEME_DIR, args[a + 1]);
+						System.out.println("Using theme " + args[a + 1]);
+						// System.out.println("");
 					}
 					else if (param.equals("use-accounts")) {
 						server.use_accounts = true;
-					}
-					else if (param.equals("enable-testing")) {
-						server.testing = true;
-						System.out.println("Testing Enabled!");
 					}
 				}
 			}
@@ -16239,7 +16234,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 
 				acctMgr.addAccount(username, password, 3);
 				
-				// TODO where should hashing occur?
+				// TODO where should hashing occur? 
 				final Account account = acctMgr.getAccount(username, Utils.hash(password));
 				
 				if( client == null ) System.out.println("CLIENT IS NULL!");
@@ -16304,7 +16299,8 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 				loginData.remove(client);
 
 				// TODO create the account handler
-				final Account account1 = acctMgr.getAccount(data.username, Utils.hash( data.password ) );
+				//final Account account1 = acctMgr.getAccount(data.username, Utils.hash( data.password ) );
+				final Account account1 = acctMgr.getAccount(data.username, data.password);
 
 				if (account1 != null) {
 					// if there is no active player or multiplay is allowed
@@ -16344,7 +16340,8 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 
 	private void handle_account_menu(final String input, final Client client) {
 		debug("HANDLE ACCOUNT MENU");
-
+		
+		// pull account data for the client
 		final Account account = caTable.get(client);
 
 		if (account != null) {
@@ -16480,7 +16477,14 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		
 		return success;
 	}
-
+	
+	/**
+	 * 
+	 * @param account
+	 * @param action
+	 * @param data
+	 * @param client
+	 */
 	public void handle_account_action(final Account account, final String action, final Data data, final Client client) {
 		if( account != null && data != null ) {
 			if( action.equals("change_password") ) {
@@ -16493,6 +16497,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			else {
 				// are we going to store a string for the player name or something else
 				final Player player = (Player) data.getObject("player");
+				final Boolean authorized = (Boolean) data.getObject("authorized");
 				
 				if( player != null ) {
 					switch(action) {
@@ -16522,7 +16527,16 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			}
 		}
 	}
-
+	
+	/**
+	 * handle_mail
+	 * 
+	 * Input handler for writing mail interactively.
+	 * 
+	 * @param input
+	 * @param client
+	 * @return
+	 */
 	public Mail handle_mail(final String input, final Client client) {
 		// TODO resolve the issue of where to send the new mail object since I
 		// can't return it because this is a handler
@@ -16556,7 +16570,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			player.setStatus((String) data.getObject("pstatus"));
 			player.setEditor(Editors.NONE);
 
-			sendMail(mail, player);
+			sendMail(mail, getPlayer(recipient));
 
 			return mail;
 		}
@@ -17080,7 +17094,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 	}
 
 	/**
-	 * Save Database (calls save method on instance of ObjectDB)
+	 * Save Database
 	 */
 	public void saveDB() {
 		// save databases to disk, modifies 'real' files
@@ -17089,7 +17103,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 	}
 	
 	/**
-	 * Save Database (calls save method on instance of ObjectDB)
+	 * Save Database (to a specific file, possibly distinct from the original one loaded)
 	 */
 	public void saveDB(final String filename) {
 		// save databases to disk, modifies 'real' files
@@ -17228,6 +17242,15 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			}
 		};
 		
+		GsonBuilder builder = new GsonBuilder(); // Or use new GsonBuilder().create();
+		
+		// NOTE: default representation of Date isn't bad...
+		//builder.registerTypeAdapter(Account.class, new AccountAdapter());
+		
+		builder.setPrettyPrinting();
+
+		Gson gson = builder.create();
+		
 		// TODO use a FilenameFilter to get only .acct files, what is the best listing method?
 		for (final File file : dir.listFiles(af)) {
 			//if (file.isFile() && file.getName().endsWith(".acct")) {
@@ -17261,6 +17284,8 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 					// associated even if not logged in
 
 					if (player != null) account2.linkCharacter(player);
+					
+					System.out.println( gson.toJson(account2) );
 
 					acctMgr.addAccount(account2);
 
@@ -18016,6 +18041,8 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		if (account != null) {
 			debug("ACCOUNT EXISTS!");
 			
+			account.setLastIPAddress( client.getIPAddress() );
+			
 			account.setClient(client);
 			account.setPlayer(player);
 			account.setOnline(true);
@@ -18500,7 +18527,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		log("Backing up Database...");
 
 		// NOTE: real file modification occurs here
-		boolean using_filename = ( "".equals(filename) );
+		boolean using_filename = !( "".equals(filename) );
 		
 		if( using_filename ) {
 			log("Using specified filename - \'" + filename + "\'");
@@ -18685,6 +18712,8 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		if (errorString == null || errorString.length() == 0) {
 			errorString = "unknown error";
 		}
+		
+		logError(funcName + ": " + errorString);
 
 		return "Error ( " + funcName + " ): " + errorString;
 	}
@@ -18717,8 +18746,10 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			for (char c : data.toCharArray()) {
 				write(c);
 			}
-
-			write("\r\n");
+			
+			write('\r');
+			write('\n');
+			//write("\r\n");
 		}
 	}
 
@@ -18787,6 +18818,8 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			// DEBUG or Error or ?
 			System.out.println("Error: Client is inactive (maybe disconnected), message not sent");
 			System.out.println(data);
+			
+			gameError("send", ErrorCodes.CLIENT_DISCONNECTED);
 		}
 	}
 	
@@ -22249,6 +22282,9 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		}
 
 		MailBox mb = player.getMailBox();
+		
+		// toss current data so that we don't create duplicate objects..
+		mb.clear();
 
 		final int SENDER = 1;
 		final int RECIP = 2;
@@ -22372,7 +22408,17 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			debug( fnfe );
 		}
 	}
-
+	
+	/**
+	 * compare
+	 * 
+	 * Compare two items, item1 and item2, based on value
+	 * and durability
+	 * 
+	 * @param item1
+	 * @param item2
+	 * @return
+	 */
 	public Item compare(final Item item1, final Item item2) {
 		// comparisons:
 
@@ -22413,7 +22459,8 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		final int numRightBrace = Utils.countNumOfChar(script, '}');
 
 		if (numLeftBrace != 0 && numRightBrace != 0 && numLeftBrace == numRightBrace) {
-			send(pgm.interpret(trig.getScript(), getPlayer(client), mudObject), client);
+			String interpResult = pgm.interpret(trig.getScript(), getPlayer(client), mudObject);
+			send(interpResult, client);
 		}
 	}
 
@@ -23666,9 +23713,10 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 	 * @param client
 	 */
 	public void echo(final String string, boolean newline, final Client client) {
-		/*
-		 * if( newline ) { client.writeln(string); } else client.write(string);
-		 */
+		if( echo_enabled || getPlayer(client).getConfigOption("server_echo") ) { 
+			if( newline ) client.writeln(string);
+			else          client.write(string);
+		}
 	}
 	
 	/**
@@ -23922,9 +23970,17 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		handle_interactive_login(client);
 	}
 	
+	/**
+	 * handle_interactive_login
+	 * 
+	 * Input handler for interactive login
+	 * 
+	 * @param client
+	 */
 	private void handle_interactive_login(final Client client) {
 		final LoginData ld = getLoginData(client);
 		
+		// indicate current state (debug info?)
 		System.out.println("Interactive Login, STATE: " + ld.state);
 		
 		if ( ld.state.equals(Constants.USERNAME) ) {
@@ -23949,6 +24005,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			// TODO: FIX NEEDED, clearing client state here breaks account logins
 			// TODO figure out what to do, it seems silly to try a login and then test if it worked
 			
+			// assume a successful connection, then check to see if it wasn't
 			boolean conn_success = true;
 			
 			// after attempting a connection
@@ -23969,13 +24026,17 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 				}
 			}
 			
-			if( !conn_success ) {
-				ld.state = "NAME";
-				handle_interactive_login(client);
+			if( conn_success ) {
+				// we successfully logged in
+				if( use_accounts ) setClientState(client, "account_menu");
+				else               setClientState(client, "");             // clear state
+				
+				setLoginData(client, null); // clear login data
 			}
 			else {
-				setClientState(client, ""); // we successfully logged in, clear state
-				setLoginData(client, null); // clear login data
+				// start over and try again
+				ld.state = "NAME";
+				handle_interactive_login(client);
 			}
 		}
 	}
@@ -25253,10 +25314,21 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 	}
 	
 	// Serialize all objects via `toDB` and save array to file.
-	// TODO fix save method, this one depends on saving over the old database
+	// 
+	
+	/**
+	 * save
+	 * 
+	 * Saves the game database to the specified file.
+	 * 
+	 * TODO fix save method, this one depends on saving over the old database
+	 * 
+	 * @param filename
+	 */
 	public void save(final String filename) {
-		// old (current in file) database, toSave (save to file) database
-		final String[] old = Utils.loadStrings(filename);       
+		// old (current in file) database
+		// toSave (save to file) database
+		final String[] old = Utils.loadStrings(DB_FILE);
 		final String[] toSave = new String[objectDB.getSize()];
 
 		// TODO sometimes has issues with NullPointerException(s)

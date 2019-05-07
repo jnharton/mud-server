@@ -97,6 +97,7 @@ public class MailCommand extends Command {
 			// record prior player status
 			newEDD.addObject("pstatus", old_status);
 			
+			newEDD.addObject("sender", player.getName());
 			newEDD.addObject("recipient", "");
 			newEDD.addObject("subject", "");
 			newEDD.addObject("message", "");
@@ -116,6 +117,7 @@ public class MailCommand extends Command {
 
 				send("Message #: " + msg, client);
 				send("To:        " + mail.getRecipient(), client);
+				send("From:      " + mail.getSender(), client);
 				send("Subject:   " + mail.getSubject(), client);
 				send(" ", client);
 				send(mail.getMessage(), client);

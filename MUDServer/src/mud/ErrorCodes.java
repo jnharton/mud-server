@@ -11,5 +11,5 @@ package mud;
  */
 
 public enum ErrorCodes {
-	NULL, INVALID_SYNTAX, NOT_A_NUMBER
+	NULL, INVALID_SYNTAX, NOT_A_NUMBER, CLIENT_DISCONNECTED
 }

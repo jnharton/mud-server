@@ -73,7 +73,11 @@ public class MailBox implements Iterable<Mail> {
 		
 		return null;
 	}
-
+	
+	public void clear() {
+		this.mailbox.clear();
+	}
+	
 	public Iterator<Mail> iterator() {
 		return new MailBoxIterator();
 	}

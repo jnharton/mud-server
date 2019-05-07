@@ -86,19 +86,20 @@ public class Account implements Serializable {
 	 */
 	
 	/* passive properties (generally don't change) */
+	private final int id;          // id
+	
 	private final Date created;    // creation date
 	private Date modified;         // modification date (when any of these properties were last modified)
 	private Date archived;         // archival date (null, unless account is archived)
 	
 	private Status status;         // status
 	
-	private final int id;          // id
 	private final String username; // username
 	private String password;       // password
 	
 	private int charLimit = 3;     // character limit
 	
-	private String lastIPAddress; //
+	private String lastIPAddress;  // the last ip address this account logged in from
 	
 	private String recoveryKey;
 
@@ -111,6 +112,9 @@ public class Account implements Serializable {
 	private transient boolean online; // is there a Player in-game from this account/is the account logged in
 	
 	/**
+	 * Account -Creation- constructor
+	 * 
+	 * NOTE: For NEW accounts only.
 	 * 
 	 * @param aId
 	 */
@@ -266,11 +270,24 @@ public class Account implements Serializable {
 	
 	/**
 	 * Set account password
+	 *
+	 * Hashes the supplied new password and stores it. The result of hashing is
+	 * dependent on the implemented hash() function. However, the resultant hash
+	 * needs to be a string
+	 * 
+	 * <br /><br />
+	 * 
+	 * <b>WARNING</b>: This makes this class dependent on the existence of a hash() function
+	 * that returns a string, and having a blank hash function will result in any
+	 * player with a new account or having changed their password being left
+	 * totally insecure, since password are stored as hashes and any new players
+	 * or those who changed their password would have an empty hash. Because hash
+	 * would always return empty any password would work for those players logins.
 	 * 
 	 * @param newPassword the password to set on the account 
 	 */
 	public void setPassword(final String newPassword) {
-		this.password = newPassword;
+		this.password = Utils.hash( newPassword );
 		
 		setModified( Utils.getDate() );
 	}
