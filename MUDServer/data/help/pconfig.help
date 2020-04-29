@@ -1,9 +1,10 @@
 pconfig
 PCONFIG
 
-Set player config options
+Set a configuration option for the current player.
 
-Syntax: 'pconfig <opt>=<true|false>' # set a particular option to true or false
-        'pconfig #opt'               # list player config options
+Syntax: pconfig                    # show all the options AND their current setting
+        pconfig <opt>=<true|false> # set a particular option to true or false
+        pconfig #options           # list player configuration options
 
-Last Updated: December 14, 2013
+Last Updated: April 29, 2020

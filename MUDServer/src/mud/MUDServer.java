@@ -695,6 +695,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 						String moduleName = args[a + 1];
 						
 						// TODO fix these explicit checks
+						if (moduleName.equals("basic") ) server.module = new mud.modules.BasicModule("Basic", null);
 						if (moduleName.equals("foe"))    server.module = new mud.modules.FalloutEquestria();
 						if (moduleName.equals("dnd-fr")) server.module = new mud.modules.DND35();
 						else                             ; //load and initialize a GameModule subclass?
@@ -1803,45 +1804,79 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		
 		return sb.toString();
 	}
-
+	
+	/**
+	 * Create the very basic data files needed for a new game.
+	 * 
+	 * NOTE: commented out stuff to keep from blowing manually generated data away
+	 */
 	private void create_data() {
 		// Error Message Localization
-		Utils.saveStrings( resolvePath(DATA_DIR, "errors_en.txt"), new String[] { "1:Invalid Syntax!", "2:NaN Not a Number!" } );
-		Utils.saveStrings( resolvePath(DATA_DIR, "errors_fr.txt"), new String[] { "1:Syntaxe Invalide!", "2:NaN N'est pas un nombre!" } );
-
-		// generate blank/basic config files
-		Utils.saveStrings( resolvePath(CONFIG_DIR, "aliases.conf"), new String[] {
-				"# Command Aliases File", "alias north:n",
-				"alias northeast:ne", "alias northwest:nw", "alias south:s",
-				"alias southeast:se", "alias southwest:sw", "alias east:e",
-				"alias west:w", "alias inventory:inv,i", "alias look:l",
-				"alias pconfig:pconf", "alias quit:QUIT" });
+		final File errors_en = new File( resolvePath(DATA_DIR, "errors_en.txt") );
+		final File errors_fr = new File( resolvePath(DATA_DIR, "errors_fr.txt") );
 		
-		Utils.saveStrings( resolvePath(CONFIG_DIR, "banlist.txt"), new String[] { "# Banlist" });
-		Utils.saveStrings( resolvePath(CONFIG_DIR, "channels.txt"), new String[] { "Support,0", "Testing,0" });
-		Utils.saveStrings( resolvePath(CONFIG_DIR, "forbidden.txt"), new String[] { "# Forbidden names list" });
+		if( !errors_en.exists() ) {
+			Utils.saveStrings( resolvePath(DATA_DIR, "errors_en.txt"), new String[] { "1:Invalid Syntax!", "2:NaN Not a Number!" } );
+		}
+		if( !errors_fr.exists() ) {
+			Utils.saveStrings( resolvePath(DATA_DIR, "errors_fr.txt"), new String[] { "1:Syntaxe Invalide!", "2:NaN N'est pas un nombre!" } );
+		}
+		
+		// generate blank/basic config files
+		final File aliases =   new File( resolvePath(CONFIG_DIR, "aliases.conf") );
+		final File banlist =   new File( resolvePath(CONFIG_DIR, "banlist.txt") );
+		final File channels =  new File( resolvePath(CONFIG_DIR, "channels.txt") );
+		final File forbidden = new File( resolvePath(CONFIG_DIR, "forbidden.txt") );
+		final File bboard =    new File( resolvePath(BOARD_DIR, "bboard.txt") );
+
+		if( !aliases.exists() ) {
+			Utils.saveStrings(
+					resolvePath(CONFIG_DIR, "aliases.conf"),
+					new String[] {
+							"# Command Aliases File",
+							"alias north:n", "alias northeast:ne", "alias northwest:nw",
+							"alias south:s", "alias southeast:se", "alias southwest:sw",
+							"alias east:e", "alias west:w",
+							"alias inventory:inv,i", "alias look:l", "alias pconfig:pconf", "alias quit:QUIT"
+					}
+					);
+		}
+		
+		if( !banlist.exists() ) {
+			Utils.saveStrings( resolvePath(CONFIG_DIR, "banlist.txt"), new String[] { "# Banlist", "0.0.0.0" });
+		}
+		
+		if( !channels.exists() ) {
+			Utils.saveStrings( resolvePath(CONFIG_DIR, "channels.txt"), new String[] { "Support,0", "Testing,0" });
+		}
+		
+		if( !forbidden.exists() ) {
+			Utils.saveStrings( resolvePath(CONFIG_DIR, "forbidden.txt"), new String[] { "# Forbidden names list", "shit" });
+		}
 
 		// generate an single, default message for the mud-wide bulletin board
-		Utils.saveStrings( resolvePath(BOARD_DIR, "bboard.txt"), new String[] { "0#admin#Welcome#Test Message" });
+		if( !bboard.exists() ) {
+			Utils.saveStrings( resolvePath(BOARD_DIR, "bboard.txt"), new String[] { "0#admin#Welcome#Test Message" });
+		}
 
 		final String[] theme = new String[] {
-				"[theme]", "name = MUD",
-				"mud_name = DefaultMUD",
+				"[theme]",
+				"name = MUD",
+				"mud_name = NewMUD",
 				"motd_file = motd.txt",
 				"start_room = 0",
-				"world = world",
+				"world = new-world",
 				"db = db.txt",
 				"[/theme]",
 				"",
 				"[calendar]",
-				"day = 1",
-				"month = 1",
-				"year = 0",
-				"season = summer",
+				"day = 1", "month = 1", "year = 0", "season = summer",
 				"[/calendar]",
 				"",
 				"// number = name",
 				"[months]",
+				"1 = January", "2 = February", "3 = March", "4 = April", "5 = May", "6 = June",
+				"7 = July", "8 = August", "9 = September", "10 = October", "11 = November", "12 = December",
 				"[/months]",
 				"",
 				"[months_alt]",
@@ -1854,13 +1889,15 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 				"[years]",
 				"[/years]"
 		};
-
-		Utils.saveStrings( resolvePath(THEME_DIR, "default.thm"), theme);
+		
+		Utils.saveStrings( resolvePath(THEME_DIR, "new.thm"), theme);
+		
+		/* Create new world folder and files */
 		
 		// generate an empty world directory and necessary sub directories
-		final File world_d = new File( resolvePath(WORLD_DIR, "world") );
-		final File mail_d = new File( resolvePath(WORLD_DIR, "world", "mail") );
-		final File motd_d = new File( resolvePath(WORLD_DIR, "world", "motd") );
+		final File world_d = new File( resolvePath(WORLD_DIR, "new-world") );
+		final File mail_d = new File( resolvePath(WORLD_DIR, "new-world", "mail") );
+		final File motd_d = new File( resolvePath(WORLD_DIR, "new-world", "motd") );
 
 		// check that the directories exist, if not create them
 		for (final File dir : Utils.mkList(world_d, mail_d, motd_d)) {
@@ -1888,11 +1925,9 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 				"To create a character use 'create <playername> <password>'"
 		};
 
-		Utils.saveStrings( resolvePath(WORLD_DIR, "world", "motd", "motd.txt"), motdData);
+		Utils.saveStrings( resolvePath(WORLD_DIR, "new-world", "motd", "motd.txt"), motdData);
 
 		// create plain, mostly empty database (contains a single room and an admin player)
-		String[] dbData = new String[2];
-
 		final Room room = createRoom("An Empty Room", "You see nothing.", 0);
 		room.setDBRef(0);
 
@@ -1900,34 +1935,47 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		
 		admin.setDesc("admin character");
 		admin.setAccess(Constants.SUPERUSER);
-		admin.setRace(Races.NONE);
+		admin.setRace(Races.DRAGON); // 0 in Races.java
 		admin.setPClass(Classes.NONE);
+		
+		String[] dbData = new String[] {
+				room.toDB(),
+				admin.toDB()
+		};
+		//String[] dbData = new String[2];
+		//dbData[0] = room.toDB();
+		//dbData[1] = admin.toDB();
 
-		dbData[0] = room.toDB();
-		dbData[1] = admin.toDB();
-
-		Utils.saveStrings( resolvePath(WORLD_DIR, "world", "db.txt"), dbData);
+		Utils.saveStrings( resolvePath(WORLD_DIR, "new-world", "db.txt"), dbData);
 		
 		// creates races file
-		
 		String[] races = new String[] {
 				"[",
 				"{",
 				"\"name\": \"Human\",",
 				"\"subrace\": null,",
-				"\"id\": 2,",
+				"\"id\": 0,",
 				"\"statAdj\": [ 0, 0, 0, 0, 0, 0 ],",
 				"\"restricted\": false,",
+				"\"canFly\": false",
+				"},",
+				"{",
+				"\"name\": \"None\",",
+				"\"subrace\": null,",
+				"\"id\": 8,",
+				"\"statAdj\": [ 0, 0, 0, 0, 0, 0 ],",
+				"\"restricted\": true,",
 				"\"canFly\": false",
 				"}",
 				"]"
 		};
-		Utils.saveStrings( resolvePath(WORLD_DIR, "world", "races.json"), races );
+		
+		Utils.saveStrings( resolvePath(WORLD_DIR, "new-world", "races.json"), races );
 		
 		// create an empty zones file
 		String[] zones = new String[] { "# Zones" };
 
-		Utils.saveStrings( resolvePath(WORLD_DIR, "world", "zones.txt"), zones );
+		Utils.saveStrings( resolvePath(WORLD_DIR, "new-world", "zones.txt"), zones );
 		
 		/*
 		// create topics directory
@@ -2652,10 +2700,14 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 
 			// if the command has arguments
 			if (inputList.size() > 1) {
-				// don't display/log the arguments to connect or create, since
-				// they contain sensitive user information,
-				// including their name and password
-				if (!cmd.toLowerCase().equals("connect") && !cmd.toLowerCase().equals("create")) {
+				/* we don't display/log the arguments for:
+				 * connect, create, or passwd 
+				 * since these they contain sensitive user information, including their name and password
+				 * */
+				String cmd_lc = cmd.toLowerCase(); 
+				
+				//if (!cmd.toLowerCase().equals("connect") && !cmd.toLowerCase().equals("create") && !cmd.toLowerCase().equals("passwd")) 
+				if (!cmd_lc.equals("connect") && !cmd_lc.equals("create") && !cmd_lc.equals("passwd")) {
 					debug("Arguments: \"" + arg + "\"", 2);       // print arguments
 					arg = Utils.trim(arg);                        // trim arguments
 					debug("Arguments(trimmed): \"" + arg + "\""); // print trimmed arguments
@@ -4628,7 +4680,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 
 						send("Item Bought!", client); // tell us that we bought the item
 
-						send(colors(npc.getName(), getDisplayColor("npc")) + " takes your money and gives you a " + item1.getName(), client); // response
+						send(colors(npc.getName(), getDisplayColor("npc")) + " takes your money and gives you a " + colors(item1.getName(), getDisplayColor("item")), client); // response
 
 						item1.setLocation(player.getDBRef()); // change item's location
 
@@ -5193,14 +5245,24 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			}
 		}
 		else if (args.length == 1) {
-			if (args[0].equals("colors")) {
+			if (args[0].equals("color")) {
+				if( color != Constants.DISABLED ) send("Colors are on.", client);
+				else                              send("Colors are off.", client);
+			}
+			else if (args[0].equals("colors")) {
 				if (color == Constants.ANSI)       send("Using " + Utils.rainbow("ANSI", ANSI) + " colors.", client);
 				else if (color == Constants.XTERM) send("Using " + Utils.rainbow("XTERM256", XTERM256) + " colors.", client);
 				else                               send("Colors are disabled.", client);
 			}
 			else if (args[0].equals("msp")) {
-				if (msp == 0)      send("Game> MSP: off", client);
-				else if (msp == 1) send("Game> MSP: on", client);
+				switch(msp) {
+				case 0:  send("MSP: off", client);       break;
+				case 1:  send("MSP: on", client);        break;
+				default: send("MSP: -invalid-", client); break;
+				}
+				
+				//if (msp == 0)      send("MSP: off", client);
+				//else if (msp == 1) send("MSP: on", client);
 			}
 
 			if (args[0].equals("linelimit")) {
@@ -5769,57 +5831,57 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			init_conn(player, client, true);
 		}
 	}
-	
+
 	// TODO write code for cmd_creatureedit(...)
-		private void cmd_creatureedit(final String arg, final Client client) {
-			final Player player = getPlayer(client);
+	private void cmd_creatureedit(final String arg, final Client client) {
+		final Player player = getPlayer(client);
 
-			Creature creature = null;
-			boolean exist = false;
+		Creature creature = null;
+		boolean exist = false;
 
-			// get a room
-			if (arg.equals("new")) { // create new room if no room to edit specified
-				creature = createCreature();
+		// get a room
+		if (arg.equals("new")) { // create new room if no room to edit specified
+			creature = createCreature();
 
-				// add new creature to database
-				// objectDB.addAsNew(creature);
-				// objectDB.addCreature(creature);
+			// add new creature to database
+			// objectDB.addAsNew(creature);
+			// objectDB.addCreature(creature);
 
-				exist = true;
+			exist = true;
+		}
+		else {
+			final int dbref = Utils.toInt(arg, -1);
+
+			if (dbref != -1) {
+				creature = null; // get creature by dbref? (Integer)
+
+				for (final Creature c : objectDB.getCreatures()) {
+					if (c.getDBRef() == dbref) {
+						creature = c;
+						break;
+					}
+				}
 			}
 			else {
-				final int dbref = Utils.toInt(arg, -1);
+				creature = null; // get creature by name (String)
 
-				if (dbref != -1) {
-					creature = null; // get creature by dbref? (Integer)
-
-					for (final Creature c : objectDB.getCreatures()) {
-						if (c.getDBRef() == dbref) {
-							creature = c;
-							break;
-						}
+				for (final Creature c : objectDB.getCreatures()) {
+					if (c.getName().equalsIgnoreCase(c.getName())) {
+						creature = c;
+						break;
 					}
-				}
-				else {
-					creature = null; // get creature by name (String)
-
-					for (final Creature c : objectDB.getCreatures()) {
-						if (c.getName().equalsIgnoreCase(c.getName())) {
-							creature = c;
-							break;
-						}
-					}
-				}
-
-				if (creature != null) {
-					exist = true;
 				}
 			}
 
-			if (exist) {
-				editCreature(player, creature);
+			if (creature != null) {
+				exist = true;
 			}
 		}
+
+		if (exist) {
+			editCreature(player, creature);
+		}
+	}
 
 	/**
 	 * Command: @check
@@ -5846,7 +5908,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			send("", client);
 
 			if (exit.getExitType() == ExitType.DOOR) {
-				send("\tLocked: " + (((Door) exit).isLocked() ? "Yes" : "No"), client);
+				send("\tLocked: " + (((Door) exit).isLocked() ? colors("Yes", "red") : colors("No", "yellow")), client);
 				send("", client);
 			}
 
@@ -7282,19 +7344,24 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 				send("Adding Flag(s)", client);
 				
 				for(final Character c : args[1].toCharArray()) {
-					ObjectFlag of = ObjectFlag.fromLetter(c);
-					
-					if (m != null) {
-						if( !MudUtils.isAllowed(of, m.getType()) ) {
-							send("You may not set " + of.name() + " on a " + m.getType().getName(), client);
-							continue;
+					try {
+						ObjectFlag of = ObjectFlag.fromLetter(c);
+
+						if (m != null) {
+							if( !MudUtils.isAllowed(of, m.getType()) ) {
+								send("You may not set " + of.name() + " on a " + m.getType().getName(), client);
+								continue;
+							}
+
+							m.setFlag(of);
+
+							send(m.getName() + " flagged as " + of, client);
 						}
-
-						m.setFlag(of);
-
-						send(m.getName() + " flagged as " + of, client);
+						else send("No such object.", client);
 					}
-					else send("No such object.", client);
+					catch(final IllegalArgumentException iae) {
+						send("Invalid Flag: " + c, client);
+					}
 				}
 				
 				/*if (m != null) {
@@ -8623,7 +8690,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 					
 					final StringBuilder sb = new StringBuilder();
 					
-					output.add("-----< Stock >--------------------");
+					output.add("-----< Stock >----------------------");
 					
 					for(final Tuple<Item, Integer> t : sl.values()) {
 						final Item item = t.one;
@@ -8634,7 +8701,8 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 						sb.append( Utils.padRight("" + item.getWeight(), 6) );
 						sb.append(price);
 						sb.append( " (" );
-						sb.append( Utils.padRight("x" + quantity, ' ', 4) );
+						sb.append( "x" );
+						sb.append( Utils.padLeft("" + quantity, ' ', 3) );
 						sb.append( ") " );
 						
 						output.add( sb.toString() );
@@ -8642,7 +8710,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 						sb.delete(0, sb.length());
 					}
 					
-					output.add("----------------------------------");
+					output.add("------------------------------------");
 					
 					send(output, client);
 				}
@@ -8795,8 +8863,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 				return;
 			}
 			else {
-				// decide what else is visible and then find the best match in
-				// there
+				// decide what else is visible and then find the best match in there
 				ArrayList<MUDObject> objectsFound = findVisibleObjects(room);
 				objectsFound.addAll(player.getInventory());
 
@@ -9897,6 +9964,8 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 
 			send("Your password has been changed to: '" + arg + "'", client);
 			send("CAUTION: Exercise care in remembering this password, as the admins cannot do anything for you if you forget it.", client);
+			
+			debug( String.format("EVENT> %s changed their password.", player.getName() ) );
 		}
 		else {
 			send("Syntax: passwd <new password>", client);
@@ -9925,6 +9994,9 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 				if ( param.equals("options") || param.equals("opt") ) {
 					// TODO why treat the current player's options as the whole set?
 					final List<String> output = new LinkedList<String>();
+					
+					output.add("Configuration Options (player specific)");
+					output.add( Utils.padLeft("", '-', 40) );
 					
 					for (final String key : player.getConfig().keySet()) {
 						//send(key, client);
@@ -11398,7 +11470,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 					final Coins payment = v.sell(item);
 
 					// assume that you can sell anything to any vendor
-					send("The shopkeeper takes a " + colors(item.getName(), getDisplayColor("item")) + " and gives you " + payment.toString(true));
+					send(colors(npc.getName(), getDisplayColor("npc")) + " takes a " + colors(item.getName(), getDisplayColor("item")) + " and gives you " + payment.toString(true));
 					
 					player.getInventory().remove(item);
 					player.setMoney( player.getMoney().add(payment) );
@@ -12972,7 +13044,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 
 					// race
 					sb.append(' ');
-					sb.append("(" + race + ")");
+					sb.append("(" + colors(race, "magenta") + ")");
 					sb.append("\r");
 					sb.append('\n');
 
@@ -14953,7 +15025,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 						"                                zone as this one",
 						"save                            save changes to the room",
 						"setlocation                     change the location (deprecated?)",
-						"setzone                         set the zone that this room belongs to",
+						"setzone <zone name>             set the zone that this room belongs to",
 						"show                            show basic information about the room",
 						"trigger <type> <data>           setup a trigger of the specified type with",
 						"                                the specified data",
@@ -15882,6 +15954,9 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 
 			send("Stats: " + sb.toString(), client);
 			// send( "Abilities: " + sb.toString(), client );
+		}
+		else {
+			send("No such command in this editor.", client);
 		}
 	}
 
@@ -18384,6 +18459,9 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 
 	// event triggered on client connection
 	public void clientConnected(final Client someClient) {
+		// wait for client to get up and running
+		while( !someClient.isRunning() ) ;
+		
 		send("Connecting from " + someClient.getIPAddress(), someClient);
 
 		// decide if a player (or in this case, IP address) will be allowed to
@@ -19993,7 +20071,8 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 				if ( !players.contains(player1) ) continue; // temporary kludge to hide offline players, which I'd like to show
 
 				String dcolor = getDisplayColor("player");
-
+				
+				// NOTE: invisible players can 'see' themselves
 				if ( player1 == player && player1.hasEffect("invisibility") ) {
 					//send(colors("[" + player1.getStatus() + "] " + player1.getName() + " (invisible)", dcolor), client);
 					output.add( colors("[" + player1.getStatus() + "] " + player1.getName() + " (invisible)", dcolor) );
@@ -20026,7 +20105,8 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 							else {
 								if( knownPlayer ) {
 									//send(colors("[" + pStatus + "] " + pName, dcolor), client);
-									output.add( colors("[" + pStatus + "] " + pName, dcolor) );
+									//output.add( colors("[" + pStatus + "] " + pName, dcolor) );
+									output.add( colors("[", "blue") + colors(pStatus, "green") + colors("]", "blue") + " " + colors(pName, dcolor) );
 								}
 								else {
 									//send(colors("[" + pStatus + "] " + pCName, dcolor), client);
@@ -21270,17 +21350,47 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 
 	// TODO check and see what the location is set to by default in MUDObject,
 	// subclass constructors
-
+	
+	// INITIALIZE OBJECTS
+	// creates a database entry and assigns a db ref
+	
+	private void initCreatedObject(final MUDObject m) {
+		this.objectDB.addAsNew(m);
+		
+		//if( m.isType(TypeFlag.ITEM) )  
+		
+		switch( m.type ) {
+		case OBJECT: break;
+		case ITEM:   this.objectDB.addItem((Item) m);   break;
+		case THING:  this.objectDB.addThing((Thing) m); break;
+		case NPC:   this.objectDB.addNPC((NPC) m);     break;
+		default:     break;
+		}
+	}
+	
+	/**
+	 * initialize a created item (add to database)
+	 * 
+	 * @param item
+	 */
 	private void initCreatedItem(final Item item) {
 		this.objectDB.addAsNew(item);
 		this.objectDB.addItem(item);
 	}
-
+	
+	/**
+	 * initialize a created thing 
+	 * @param thing
+	 */
 	private void initCreatedThing(final Thing thing) {
 		this.objectDB.addAsNew(thing);
 		this.objectDB.addThing(thing);
 	}
-
+	
+	/**
+	 * initialized a created NPC
+	 * @param npc
+	 */
 	private void initCreatedNPC(final NPC npc) {
 		this.objectDB.addAsNew(npc);
 		this.objectDB.addNPC(npc);
@@ -21977,7 +22087,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		send("Pausing game!");
 
 		// Pause all combat
-		input_hold = true; // Halt Player Input
+		input_hold = true;     // Halt Player Input
 		game_time.pauseLoop(); // Pause the time tracking
 
 		final GameMode old_mode = mode;
@@ -22286,18 +22396,20 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		// toss current data so that we don't create duplicate objects..
 		mb.clear();
 
-		final int SENDER = 1;
-		final int RECIP = 2;
-		final int SUBJECT = 3;
-		final int MSG = 4;
+		final int SENDER = 0;
+		final int RECIP = 1;
+		final int SUBJECT = 2;
+		final int MSG = 3;
+		final int DATE = 4;
 		final int FLAG = 5;
 		final int MARK = 6;
-		final int END = 7;
+		final int END = 8;
 
 		String sender = "";
 		String recipient = "";
 		String subject = "";
 		String message = "";
+		String date = "";
 		char flag = ' ';
 		char mark = ' ';
 
@@ -22323,6 +22435,10 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 				break;
 			case MSG:
 				message = line;
+				part = DATE;
+				break;
+			case DATE:
+				date = line;
 				part = FLAG;
 				break;
 			case FLAG:
@@ -22348,11 +22464,12 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 				boolean validRpt = !recipient.equals("");
 				boolean validSub = !subject.equals("");
 				boolean validMsg = !message.equals("");
+				boolean validDate = true;
 				boolean validFlag = flag != ' ' && Utils.mkList("A", "R", "U").contains("" + flag);
 				
-				if (validSdr && validRpt && validSub && validMsg && validFlag && mark == '~') {
+				if (validSdr && validRpt && validSub && validMsg && validFlag && validDate && mark == '~') {
 					// create mail object
-					Mail mail = new Mail(msg, sender, recipient, subject, message, getDate().toString(), flag);
+					Mail mail = new Mail(msg, sender, recipient, subject, message, date, flag);
 
 					// add the mail object to the mailbox
 					mb.add(mail);
@@ -22372,6 +22489,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 				subject = "";
 				message = "";
 				flag = ' ';
+				date = null;
 				mark = ' ';
 
 				part = SENDER;
@@ -23477,8 +23595,18 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		final Zone parent = (zone != null) ? zone.getParent() : null;
 
 		temp = temp.replace("%r", room.getName());
-		temp = (zone != null) ? temp.replace("%z", zone.getName()) : temp.replace("%z", "???");
-		temp = (zone != null) ? (parent != null) ? temp.replace("%p", parent.getName()) : temp.replace("%p", "???") : temp;
+		
+		//temp = (zone != null) ? temp.replace("%z", zone.getName()) : temp.replace("%z", "???");
+		//temp = (zone != null) ? (parent != null) ? temp.replace("%p", parent.getName()) : temp.replace("%p", "???") : temp;
+		
+		if( zone != null ) {
+			temp = temp.replace("%z", zone.getName());
+			temp = (parent != null) ? temp.replace("%p", parent.getName()) : temp.replace("%p", "???");
+		}
+		else {
+			temp = temp.replace("%z", "???");
+			temp = temp.replace("%p", "null");
+		}
 
 		// temp = (z != null) ? (z.getParent() != null) ? temp.replace("%z",
 		// z.getName() + ", " + z.getParent().getName()) : temp.replace("%z",

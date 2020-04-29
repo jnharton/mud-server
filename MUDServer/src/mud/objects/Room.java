@@ -319,18 +319,28 @@ public class Room extends MUDObject implements EventSource, Instance
 	}
 	
 	public void setDimension(final String dim, final int size) {
-		if( dim.equalsIgnoreCase("x") )      this.y = size;
-		else if( dim.equalsIgnoreCase("y") ) this.y = size;
-		else if( dim.equalsIgnoreCase("z") ) this.z = size;
+		switch( dim.toLowerCase() ) {
+		case "x": this.x = size; break;
+		case "y": this.y = size; break;
+		case "z": this.z = size; break;
+		default:  break;
+		}
 	}
 	
 	public int getDimension(final String dim) {
-		if( dim.equalsIgnoreCase("x") )      return this.x;
-		else if( dim.equalsIgnoreCase("y") ) return this.y;
-		else if( dim.equalsIgnoreCase("z") ) return this.z;
-		else                                 return -1;
+		int m = 0; // magnitude?
+		
+		switch( dim.toLowerCase() ) {
+		case "x": m = this.x; break;
+		case "y": m = this.y; break;
+		case "z": m = this.z; break;
+		default:  m = -1;     break;
+		}
+		
+		return m;
 	}
 	
+	// adjustDimensions with just change data? does this render set/get redundant?
 	public void setDimensions(int xSize, int ySize, int zSize) {
 		this.x = xSize;
 		this.y = ySize;

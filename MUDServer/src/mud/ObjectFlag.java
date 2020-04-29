@@ -11,6 +11,9 @@ package mud;
  */
 
 import java.util.EnumSet;
+import java.util.List;
+
+import mud.utils.Utils;
 
 /**
  * 
@@ -29,33 +32,34 @@ public enum ObjectFlag
     NO_TELEPORT("NO_TELEPORT",  7, TypeFlag.OBJECT), // prevent teleporting to the location (for rooms) or moving the object (for everything else)
     NO_ENTER("NO_ENTER",        8, TypeFlag.ROOM),
     NO_LEAVE("NO_LEAVE",        9, TypeFlag.ROOM),
-    QUIET("QUIET",             10, TypeFlag.OBJECT), 
-    SHOP("SHOP",               11, TypeFlag.ROOM),
-    SILENT("SILENT",           12, TypeFlag.OBJECT),
-    VENDOR("VENDOR",           13, TypeFlag.NPC),
-	VIRTUAL("VIRTUAL",         14, TypeFlag.OBJECT);
+    NIL("NIL",                 10, TypeFlag.NOTHING),
+    QUIET("QUIET",             11, TypeFlag.OBJECT), 
+    SHOP("SHOP",               12, TypeFlag.ROOM),
+    SILENT("SILENT",           13, TypeFlag.OBJECT),
+    VENDOR("VENDOR",           14, TypeFlag.NPC),
+	VIRTUAL("VIRTUAL",         15, TypeFlag.OBJECT);
 	
 	// 13 flags    
 	// 0 1 2 3 5 7 = 0, 1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16, 17, 18
 	// 0000000000000
 	// restrict the use of flags to certain types?
 	
-    private String name;   // name of the flag
-    private Integer index; //
-    private TypeFlag type; // type of object this flag can be set on
+    private String name;          // name of the flag
+    private Integer index;        //
+    private List<TypeFlag> types; // types of object this flag can be set on
     
-    private ObjectFlag(final String flagName, final Integer index, final TypeFlag type) {
+    private ObjectFlag(final String flagName, final Integer index, final TypeFlag...types) {
     	this.name = flagName;
     	this.index = index;
-    	this.type = type;
+    	this.types = Utils.mkList(types);
     }
     
     public String getName() {
     	return this.name;
     }
     
-    public TypeFlag getAllowedType() {
-    	return this.type;
+    public List<TypeFlag> getAllowedTypes() {
+    	return this.types;
     }
 
     static public ObjectFlag fromLetter(final char c) {

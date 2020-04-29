@@ -1419,7 +1419,8 @@ public class Player extends MUDObject implements Mobile
 	 * format used by the database
 	 */
 	public String toDB() {
-		final String[] output = new String[14];
+		//final String[] output = new String[14];
+		final String[] output = new String[13];
 		
 		output[0] = getDBRef() + "";                      // database reference number
 		output[1] = getName();                            // name
@@ -1448,6 +1449,8 @@ public class Player extends MUDObject implements Mobile
 		output[9] = race.getId() + "";                    // race
 		output[10] = pclass.getId() + "";                 // class
 		output[11] = status;                              // status
+		
+		output[12] = "" + ((owner != null) ? owner.getDBRef() : -1);
 		
 		return Utils.join(output, "#");
 	}

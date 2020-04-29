@@ -137,10 +137,10 @@ public final class MudUtils {
 	 * @return
 	 */
 	public static boolean isAllowed(final ObjectFlag of, final TypeFlag tf) {
-		final TypeFlag flag = of.getAllowedType();
+		final List<TypeFlag> flags = of.getAllowedTypes();
 		
-		if( flag == tf || flag == TypeFlag.OBJECT ) return true;
-		else                                        return false;
+		if( flags.contains(tf) || flags.contains(TypeFlag.OBJECT) ) return true;
+		else                                                        return false;
 	}
 
 	// utility function

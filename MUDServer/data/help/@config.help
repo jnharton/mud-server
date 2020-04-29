@@ -1,6 +1,8 @@
 @config
 @CONFIG
 
+Adjust /global/ configuration options for the server.
+
 Syntax: @config <option> <value>
 
 Type    Option    values
@@ -10,4 +12,4 @@ STRING  colors    ansi, xterm
 INTEGER linelimit 0-?
 STRING  msp       on, off
 
-Last Updated: September 8th, 2016
+Last Updated: April 29, 2020

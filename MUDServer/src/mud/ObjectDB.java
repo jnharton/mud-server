@@ -43,6 +43,8 @@ public final class ObjectDB implements ODBI {
 	private final Map<Integer, MUDObject> objsById = new TreeMap<Integer, MUDObject>();
 
 	// holds unused database references, that exist due to "recycled" objects
+	// trying to avoid having to scan the entire 'database' looking for the next usable one or
+	// resorting to an ever increasing one with unused numbers
 	private Stack<Integer> unusedDBNs = new Stack<Integer>();
 	private List<Integer> reservedDBNs = new LinkedList<Integer>();
 
@@ -840,6 +842,10 @@ public final class ObjectDB implements ODBI {
 		}
 
 		return acc;
+		
+		// could just be?
+		//final Room r = getRoom(loc);
+		//return r.getItems();
 	}
 
 	/**
