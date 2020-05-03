@@ -407,7 +407,15 @@ public class Client implements Runnable {
 		if( haveMsg ) return this.received_telnet_msgs.poll();
 		else          return new Byte[0];                         
 	}
-
+	
+	/**
+	 * Is the client still alive?
+	 * 
+	 * Being alive is defined as having a socket which was initially connected
+	 * and which has not yet been closed.
+	 * 
+	 * @return
+	 */
 	public boolean isAlive() {
 		return socket.isConnected() && socket.isClosed();
 	}

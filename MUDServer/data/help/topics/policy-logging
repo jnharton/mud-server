@@ -1,0 +1,7 @@
+policy-logging
+POLICY-LOGGING
+
+At this time all inputs to the game may be logged at any time. Passwords will
+be obscured by replacing with equal length strings of asterisks (*).
+
+Last Updated: April 30, 2020

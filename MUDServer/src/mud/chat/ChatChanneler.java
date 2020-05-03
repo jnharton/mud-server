@@ -103,6 +103,30 @@ public class ChatChanneler
 		return result;
 	}
 	
+	public Result modifyProtection(final String channelName, final String newPassword) {
+		Result result = Result.NIL;
+		
+		final ChatChannel channel = channels.get(channelName);
+		
+		if( channel != null ) {
+			// TODO kludge to avoid writing a getter
+			if( !channel.checkPassword( newPassword ) ) {
+				channel.changePassword( newPassword );
+				
+				/*if( newPassword.equals("") ) channel.setProtected(false);
+				else                         channel.setProtected(true);*/
+				
+				result = Result.MODIFY_OK;
+			}
+			else result = Result.MODIFY_NOK;
+			
+			//if( player.getAccess() >= channel.getRestrict() ) {}
+		}
+		else result = Result.NO_CHANNEL;
+		
+		return result;
+	}
+	
 	/**
 	 * 
 	 * NOTE: this used to have an exception, because I'd like to properly report an invalid/
@@ -207,19 +231,30 @@ public class ChatChanneler
 		}*/
 		return channels.containsKey(channelName) && channels.get(channelName).isListener(player);
 	}
-
+	
+	// should be used for any message sent by a player
 	public boolean send(final String channelName, final Player player, final String message) {
+		Result result = Result.NIL; // unused atm
+		
 		boolean success = false;
 
 		final ChatChannel channel = channels.get(channelName);
 
 		if (channel != null) {
-			if( player.getAccess() >= channel.getRestrict() ) {
+			// can't send messages to channels we aren't listening
+			if( channel.isListener(player) ) {
 				channel.write(player, message); // add message to ChatChannel message queue
-				//mud.debug("(" + channelName + ") <" + player.getName() + "> " + message + "\n");
 
 				success = true;
 			}
+		}
+		else {
+			// test to see whether a mapping to null exists...
+			if( channels.containsKey(channelName) ) {
+				channels.remove(channelName); // explicit remove a mapping to a null value
+			}
+			
+			result = Result.NO_CHANNEL;
 		}
 		
 		return success;

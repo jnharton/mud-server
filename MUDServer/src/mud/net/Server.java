@@ -16,7 +16,9 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.util.List;
+import java.util.Map;
 import java.util.ArrayList;
+import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.Vector;
 
@@ -29,6 +31,7 @@ public class Server implements Runnable {
 	private Integer port;
 
 	final private Vector<Client> clients;
+	final public Map<String, Thread> threads;
 
 	private boolean running;
 
@@ -37,6 +40,7 @@ public class Server implements Runnable {
 		this.port = port;
 
 		this.clients = new Vector<Client>();
+		this.threads = new Hashtable<String, Thread>();
 
 		this.running = false;
 	}
@@ -73,9 +77,10 @@ public class Server implements Runnable {
 
 				final Client client = new Client(socket);
 				
-				new Thread(client).start();
-
 				this.clients.add(client);
+				
+				//new Thread(client).start();
+				startThread(client, "client" + clients.size() + "_" + socket.getInetAddress().getHostAddress());
 
 				parent.clientConnected(client);
 			}
@@ -110,6 +115,7 @@ public class Server implements Runnable {
 	public void disconnect(final Client client) {
 		client.stopRunning();
 		this.clients.remove(client);
+		//this.threads.remove
 	}
 
 	public void write(final String data) {
@@ -130,5 +136,13 @@ public class Server implements Runnable {
 		}
 
 		this.clients.removeAll( dead );
+	}
+	
+	private final void startThread(final Runnable r, final String threadName) {
+		Thread thread = new Thread(r, threadName);
+		
+		thread.start();
+		
+		//this.threads.put(thread.getName(), thread);
 	}
 }

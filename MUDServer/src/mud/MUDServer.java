@@ -185,7 +185,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 	
 	private boolean logging = false;        // logging? (true=yes,false=no)
 	
-	private boolean prompt_enabled = false; // show player information bar
+	private boolean prompt_enabled = true; // show player information bar
 	
 	private boolean log_chat = true;        // log chat messages? (true=yes,false=no)
 	private boolean log_debug = true;       // log debug messages? (true=yes,false=no)
@@ -627,6 +627,9 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 	
 	String[] serverArgs;
 	
+	
+	private String new_world = "new-world";
+	
 	public MUDServer() {
 	}
 
@@ -702,6 +705,10 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 					}
 					else if (param.equals("setup")) {
 						server.firstRun = true;
+						
+						if( args.length > a && !args[a+1].startsWith("--") ) {
+							server.new_world = args[a+1];
+						}
 					}
 					else if (param.equals("telnet")) {
 						server.telnet = Utils.toInt(args[a + 1], 0);
@@ -869,25 +876,15 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		}*/
 		
 		System.out.println("");
-		
-		// TODO should module be another theme file entry?
-		// TODO this is a kludge to set the ruleset based on the module
-		if (module != null) {
-			if (module.getName().equals("Fallout Equestria")) {
-				rules = mud.rulesets.foe.FOESpecial.getInstance();
-				rs_special = true;
-			}
-			else rules = D20.getInstance();
-		}
-		else rules = D20.getInstance();
-
-		Player.ruleset = rules; // set static Ruleset reference in Player
 
 		// if this is the first run (as indicated by setup parameter)
 		if (firstRun) {
 			System.out.print("Running initial setup...");
-			create_data();
+			create_data(new_world);
 			System.out.println("Done");
+			
+			// set theme file
+			THEME_FILE = resolvePath(THEME_DIR, "new.thm");
 		}
 
 		// Logging
@@ -921,11 +918,22 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		}
 
 		debug(""); // formatting
-
+		
+		// if there is a module set, tell us what it is and handle the ruleset bit
 		if (module != null) {
 			debug("Module: " + module.getName() + " v" + module.getVersion());
+			
+			// TODO this is a kludge to set the ruleset based on the module
+			if (module.getName().equals("Fallout Equestria")) {
+				rules = mud.rulesets.foe.FOESpecial.getInstance();
+				rs_special = true;
+			}
+			else rules = D20.getInstance();
 		}
+		else rules = D20.getInstance();
 
+		Player.ruleset = rules; // set static Ruleset reference in Player
+		
 		debug(""); // formatting
 
 		// TODO should it always load a theme or only when specified?
@@ -1810,7 +1818,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 	 * 
 	 * NOTE: commented out stuff to keep from blowing manually generated data away
 	 */
-	private void create_data() {
+	private void create_data(final String worldName) {
 		// Error Message Localization
 		final File errors_en = new File( resolvePath(DATA_DIR, "errors_en.txt") );
 		final File errors_fr = new File( resolvePath(DATA_DIR, "errors_fr.txt") );
@@ -1865,7 +1873,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 				"mud_name = NewMUD",
 				"motd_file = motd.txt",
 				"start_room = 0",
-				"world = new-world",
+				"world = " + worldName,
 				"db = db.txt",
 				"[/theme]",
 				"",
@@ -1895,9 +1903,9 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		/* Create new world folder and files */
 		
 		// generate an empty world directory and necessary sub directories
-		final File world_d = new File( resolvePath(WORLD_DIR, "new-world") );
-		final File mail_d = new File( resolvePath(WORLD_DIR, "new-world", "mail") );
-		final File motd_d = new File( resolvePath(WORLD_DIR, "new-world", "motd") );
+		final File world_d = new File( resolvePath(WORLD_DIR, worldName) );
+		final File mail_d =  new File( resolvePath(WORLD_DIR, worldName, "mail") );
+		final File motd_d =  new File( resolvePath(WORLD_DIR, worldName, "motd") );
 
 		// check that the directories exist, if not create them
 		for (final File dir : Utils.mkList(world_d, mail_d, motd_d)) {
@@ -1925,7 +1933,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 				"To create a character use 'create <playername> <password>'"
 		};
 
-		Utils.saveStrings( resolvePath(WORLD_DIR, "new-world", "motd", "motd.txt"), motdData);
+		Utils.saveStrings( resolvePath(WORLD_DIR, worldName, "motd", "motd.txt"), motdData);
 
 		// create plain, mostly empty database (contains a single room and an admin player)
 		final Room room = createRoom("An Empty Room", "You see nothing.", 0);
@@ -1946,7 +1954,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		//dbData[0] = room.toDB();
 		//dbData[1] = admin.toDB();
 
-		Utils.saveStrings( resolvePath(WORLD_DIR, "new-world", "db.txt"), dbData);
+		Utils.saveStrings( resolvePath(WORLD_DIR, worldName, "db.txt"), dbData);
 		
 		// creates races file
 		String[] races = new String[] {
@@ -1970,12 +1978,12 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 				"]"
 		};
 		
-		Utils.saveStrings( resolvePath(WORLD_DIR, "new-world", "races.json"), races );
+		Utils.saveStrings( resolvePath(WORLD_DIR, worldName, "races.json"), races );
 		
 		// create an empty zones file
 		String[] zones = new String[] { "# Zones" };
 
-		Utils.saveStrings( resolvePath(WORLD_DIR, "new-world", "zones.txt"), zones );
+		Utils.saveStrings( resolvePath(WORLD_DIR, worldName, "zones.txt"), zones );
 		
 		/*
 		// create topics directory
@@ -5032,19 +5040,28 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			final List<String> sendList = new LinkedList<String>();
 
 			sendList.add("Chat Channels");
-			sendList.add("--------------------------------");
+			sendList.add("------------------------------------------"); // 14+1+8+1+8+1+6+1+1+1=42
 
 			final StringBuilder sb = new StringBuilder();
 
 			for (final ChatChannel channel : chan.getChatChannels()) {
 				if( !channel.isHidden() || checkAccess(player, Constants.WIZARD) || channel.isListener(player) ) {
-					sb.append(Utils.padRight(channel.getName(), 8));
+					sb.append(Utils.padRight(channel.getName(), 14)); // old -> 8
 					sb.append(" ");
-					sb.append(Utils.padRight("[" + Utils.padRight(channel.getShortName().toUpperCase(), '_', 4)+ "]", 6));
+					sb.append(Utils.padRight("[" + Utils.padRight(channel.getShortName().toUpperCase(), '_', 6)+ "]", 8)); // old -> 4, 6
 					sb.append(" ");
 
-					if ( channel.isListener( player ) ) sb.append(colors("Enabled", "green"));
+					if ( channel.isListener( player ) ) sb.append(colors("Enabled ", "green"));
 					else                                sb.append(colors("Disabled", "red"));
+					
+					sb.append(" ");
+					
+					if ( channel.isHidden() )           sb.append(colors("Hidden", "yellow"));
+					else                                sb.append("      ");
+					
+					sb.append(" ");
+					
+					if ( channel.isProtected() )        sb.append(colors("P", "cyan"));
 
 					sendList.add(sb.toString());
 
@@ -5052,7 +5069,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 				}
 			}
 
-			sendList.add("--------------------------------");
+			sendList.add("------------------------------------------");
 
 			send(sendList, client);
 		}
@@ -5062,9 +5079,10 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 
 			if (param.charAt(0) == '#') { // chat subcommand
 				final String channelName = args[1];
-				final String password = ( args.length == 3 ) ? args[2] : ""; // TODO kludgy...
 
 				if (param.equalsIgnoreCase("#join")) {
+					final String password = ( args.length == 3 ) ? args[2] : ""; // TODO kludgy...
+					
 					final Result result = chan.add(player, channelName, password);
 
 					String message = "";
@@ -5103,7 +5121,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 				else if (param.equalsIgnoreCase("#listeners")) { // argument: show listeners on a specific channel
 					final List<String> sendList = new LinkedList<String>();
 
-					if( checkAccess(player, Constants.WIZARD) ) {
+					if( checkAccess(player, Constants.ADMIN) ) {
 						sendList.add("Listeners on Chat Channel: " + channelName.toUpperCase());
 						sendList.add("------------------------------");
 
@@ -5139,6 +5157,28 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 					}
 					else send("Chat> Error: param '#restrict' requires Admin permissions.", client); 
 				}
+				else if (param.equalsIgnoreCase("#protect")) {
+					if( checkAccess(player, Constants.ADMIN) ) {
+						final String password = ( args.length == 3 ) ? args[2] : ""; // TODO kludgy...
+						
+						final Result result = chan.modifyProtection(channelName, password);
+						
+						switch(result) {
+						case MODIFY_OK:
+							send("Chat> " + channelName + " password changed.", client);
+							break;
+						case MODIFY_NOK:
+							send("Chat>  " + channelName + " password not changed.", client);
+							break;
+						case NO_CHANNEL:
+							send("No such channel.", client);
+							break;
+						default:
+							break;
+						}
+					}
+					else send("Chat> Error: param '#protect' requires Admin permissions.", client);
+				}
 				else if (param.equalsIgnoreCase("#destroy")) {
 					// test for permissions
 					if( checkAccess(player, Constants.ADMIN) ) {
@@ -5159,22 +5199,25 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 					send("No such chat channel.", client);
 				}*/
 			}
-		}
-		else { // sending a chat message
-			final String test = chan.resolveShortName(args[0]);
+			else { // sending a chat message
+				final String test = chan.resolveShortName(args[0]);
 
-			final String channelName = test.equals("") ? args[0] : test;
-			final String msg = arg.replace(channelName, "").trim();
+				final String channelName = test.equals("") ? args[0] : test;
+				final String msg = args[1];
 
-			if (chan.hasChannel(channelName)) {
-				chan.send(channelName, player, msg);
-
-				debug("New message (" + channelName + "): " + msg);
-
-				logChat("(" + channelName + ") <" + player.getName() + "> " + arg);
-			}
-			else {
-				send("Chat> No such chat channel.", client);
+				if (chan.hasChannel(channelName)) {
+					boolean success = chan.send(channelName, player, msg);
+					
+					// NOTE: doesn't make a lot of sense to debug/log if a message was not successfully sent
+					if( success ) {
+						debug("New message (" + channelName + "): " + msg);
+						
+						logChat("(" + channelName + ") <" + player.getName() + "> " + msg);
+					}
+				}
+				else {
+					send("Chat> No such chat channel.", client);
+				}
 			}
 		}
 	}
@@ -6303,6 +6346,16 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			 */
 			for (final Season s : Seasons.getSeasons()) {
 				send(s + ": " + MONTH_NAMES[s.beginMonth - 1] + " to " + MONTH_NAMES[s.endMonth - 1], client);
+			}
+		}
+		else if (param.equals("threads")) {
+			send("Threads", client);
+			send("----------------------------------------");
+			for(final String t : threads.keySet()) {
+				send(t, client);
+			}
+			for(final String t : s.threads.keySet()) {
+				send(t, client);
 			}
 		}
 		else if (param.equals("telnet")) {
@@ -7915,7 +7968,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 						if( aliases.get(key).equals(arg) ) sb.append(key + " ");
 					}
 
-					send("ALIASES: " + sb.toString().trim());
+					send("ALIASES: " + sb.toString().trim(), client);
 				}
 			}
 			else {
@@ -9133,7 +9186,8 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		final Player player = getPlayer( client );
 		final Room room = getRoom( player.getLocation() );
 		
-		// mine <resource> ? mine <node> ? copper.1 ? copper.rich? rich copper vein
+		// mine <resource> ?
+		// mine <node> ? (copper.1, copper.rich, rich copper vein)
 		
 		// search for minable nodes
 		List<Node> minable_nodes = getMinableNodes(room, Resource.ResType.ORE);
@@ -9184,18 +9238,21 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		}
 	}
 	
-	public Item getResource() {
-		Item ore = createItem(
-				"Iron Ore",
-				"A chunk of iron ore. Bands of reddish brown are intertwined with darker gray spots.",
-				-1
-				);
+	private void cmd_prospect(final String arg, final Client client) {
+		final Player player = getPlayer( client );
+		final Room room = getRoom( player.getLocation() );
 		
-		ore.setProperty("type", "ore");
-		ore.setProperty("material", "iron");
-		ore.setProperty("purity", "0.90");
+		// search for minable nodes
+		List<Node> minable_nodes = getMinableNodes(room, Resource.ResType.ORE);
 		
-		return ore;
+		//  list them (plus short id strings)
+		if( arg.equals("") ) {
+			List<String> out = Utils.mkList("-- Minable Nodes");
+			
+			for(final Node n : minable_nodes) out.add( n.getName() );
+			
+			send( out, client );
+		}
 	}
 	
 	/**
@@ -10045,33 +10102,39 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 				}
 			}
 			else {
+				// set option
+				// <option>=<true/false>
+				
 				final String[] args = arg.split("=");
 				
 				final String option = args[0].trim();
-				final String value = args[1].trim();
 				
-				if (args.length > 1) {
-					if ( !player.hasConfigOption( option ) ) {
-						send("No such config option! (see 'pconf #opt')", client);
-						return;
-					}
-
-					switch (value) {
-					case "true":
-						player.setConfigOption(option, true);
-						send("set " + option + " to TRUE.", client);
-						break;
-					case "false":
-						player.setConfigOption(option, false);
-						send("set " + option + " to FALSE.", client);
-						break;
-					default:
-						send("Invalid config setting! (use 'true' or 'false')", client);
-						break;
-					}
+				if ( !player.hasConfigOption( option ) ) {
+					send("No such config option! (see 'pconf #opt')", client);
 				}
 				else {
-					send(option + " = " + getPlayer(client).getConfigOption(option), client);
+					// if a value was specified, change the value
+					if (args.length > 1) {
+						final String value = args[1].trim();
+
+						switch (value) {
+						case "true":
+							player.setConfigOption(option, true);
+							send("set " + option + " to TRUE.", client);
+							break;
+						case "false":
+							player.setConfigOption(option, false);
+							send("set " + option + " to FALSE.", client);
+							break;
+						default:
+							send("Invalid config setting! (use 'true' or 'false')", client);
+							break;
+						}
+					}
+					// if not, report current value
+					else {
+						send(option + " = " + getPlayer(client).getConfigOption(option), client);
+					}
 				}
 			}
 		}
@@ -13498,11 +13561,11 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			}
 			
 			// could also just grab their party and pull that specific channel...
-			/*final Party party = getPartyContainingPlayer(player);
+			final Party party = getPartyContainingPlayer(player);
 			
 			if( party != null ) {
 				party.getChannel().write("");
-			}*/
+			}
 			
 			boolean writeSuccess = chan.send(temp, player, arg); // send chat message
 			
@@ -17829,6 +17892,11 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		}
 	}
 	
+	/**
+	 * Save the basic information about existing chat channels necessary
+	 * to recreate them.
+	 * @param filename
+	 */
 	public void saveChannels(final String filename) {
 		File f;
 		FileWriter fw;
@@ -17839,7 +17907,12 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			fw = new FileWriter(f);
 			bw = new BufferedWriter(fw);
 			
+			for(final ChatChannel cc : chan.getChatChannels()) {
+				// e.g. Staff,sta,4
+				bw.write( String.format("%s,%s,%s\n", cc.getName(), cc.getShortName(), cc.getRestrict()) );
+			}
 			
+			bw.close();
 		}
 		catch(final NullPointerException npe) {
 			System.out.println("--- Stack Trace ---");
@@ -18164,7 +18237,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 
 		/* ChatChannel Setup */
 		// TODO clean up the below, where we add players to channels, also we
-		// should re-add them to any channels they joined before
+		// should re-add them to any channels they had joined before
 		
 		String[] chns = { Constants.OOC_CHANNEL, Constants.STAFF_CHANNEL };
 		
@@ -18205,19 +18278,19 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		this.players.add(player);
 
 		/* run any connect properties specified by the player */
-		cProps(player); // really should check permissions..
+		cProps(player); // TODO really should check permissions..
 
 		/* look at the current room */
 		final Room current = getRoom( player.getLocation() ); // determine the room they are in
 		current.addListener(player);                          // add them to the listeners group for the room
 		look(current, client);                                // show the room
 	}
-
+	
 	/**
 	 * De-Initialize Connection (Disconnect)
 	 * 
-	 * @param player
 	 * @param client
+	 * @param logout
 	 */
 	public void init_disconn(final Client client, final Boolean logout) {
 		debug("init_disconn(" + client.getIPAddress() + ")");
@@ -18234,9 +18307,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 
 		final String playerName = player.getName();
 		
-		// break any current control of npcs
-		// TODO fix this kludgy use of a command invocation..
-		//cmd_control("#break", client);
+		// break any current control of npcs (directly)
 		ctl_break( client );
 
 		// remove as listener from room/location
@@ -18298,6 +18369,8 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 				}
 			}
 		}
+		
+		// NOTE: from here down we need special handling for a total disconnection or a simple logout
 		
 		// get time
 		final Time time = getTime();
@@ -18646,6 +18719,43 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		//saveTopicFiles();
 		
 		//log("Done.");
+	}
+	
+	/**
+	 * Do a 'live' backup while the game is running, as opposed to an
+	 * automatic one at shutdown. 
+	 */
+	public void live_backup() {
+		send("Pausing game!");
+
+		// Pause all combat
+		input_hold = true;     // Halt Player Input
+		game_time.pauseLoop(); // Pause the time tracking
+
+		final GameMode old_mode = mode;
+		
+		changeMode(GameMode.MAINTENANCE); // Put the game into Maintenance mode (no new logins, except Wizards)
+		
+		send("Entering " + mode.toString() + " Mode.");
+
+		send("Backing up game...");
+
+		// backs the current database up to current_database_name.bak
+		//backup(BACKUP_DIR + DB_FILE.substring(DB_FILE.lastIndexOf('\'') + 1, DB_FILE.length() - 3) + ".bak");
+		String current_db = ( new File(DB_FILE).getName() );
+		backup( resolvePath(BACKUP_DIR, current_db.replace(".txt", ".bak")) );
+
+		send("Finished backing up");
+
+		send("Unpausing game!");
+
+		game_time.unpauseLoop(); // Resume tracking time
+		input_hold = false; // Resume Player Input
+		// Unpause all combat
+		
+		changeMode(old_mode);
+		
+		send("Entering " + mode.toString() + " Mode.");
 	}
 	
 	// TODO figure out what I'm trying to accomplish here
@@ -22083,39 +22193,6 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 	public void onYearIncrement() {
 	}
 
-	public void live_backup() {
-		send("Pausing game!");
-
-		// Pause all combat
-		input_hold = true;     // Halt Player Input
-		game_time.pauseLoop(); // Pause the time tracking
-
-		final GameMode old_mode = mode;
-		
-		changeMode(GameMode.MAINTENANCE); // Put the game into Maintenance mode (no new logins, except Wizards)
-		
-		send("Entering " + mode.toString() + " Mode.");
-
-		send("Backing up game...");
-
-		// backs the current database up to current_database_name.bak
-		//backup(BACKUP_DIR + DB_FILE.substring(DB_FILE.lastIndexOf('\'') + 1, DB_FILE.length() - 3) + ".bak");
-		String current_db = ( new File(DB_FILE).getName() );
-		backup( resolvePath(BACKUP_DIR, current_db.replace(".txt", ".bak")) );
-
-		send("Finished backing up");
-
-		send("Unpausing game!");
-
-		game_time.unpauseLoop(); // Resume tracking time
-		input_hold = false; // Resume Player Input
-		// Unpause all combat
-		
-		changeMode(old_mode);
-		
-		send("Entering " + mode.toString() + " Mode.");
-	}
-
 	/**
 	 * Evaluate a string and resolve name references
 	 * 
@@ -24863,6 +24940,10 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		else send("No such room!", client);
 	}
 	
+	private void editItem(final Player player, final Item item) {
+		
+	}
+	
 	/**
 	 * Is the specified input the given command name or an alias?
 	 * 
@@ -25187,14 +25268,12 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		
 		// make this channel hidden and password protected
 		ch.setHidden(true);
-		ch.setPassword( Utils.hash("acegikmoqsuwy99999999") );
+		ch.changePassword( Utils.hash("acegikmoqsuwy99999999") );
 		
 		party.setChannel(ch);
 		
 		// add all party members as listeners to the channel
-		for(final Player player : party.getPlayers()) {
-			ch.addListener(player);
-		}
+		ch.addListeners( party.getPlayers() );
 		
 		return party;
 	}
@@ -25268,6 +25347,11 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 	    return p -> !p.isUnique();
 	}
 	
+	/**
+	 * Attach a Logger object to the server
+	 * 
+	 * @param l
+	 */
 	public void attach(final Logger l) {
 		this.logger = l;
 	}
@@ -25519,7 +25603,19 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		Utils.saveStrings(filename, toSave);
 	}
 	
-	
+	public Item getResource() {
+		Item ore = createItem(
+				"Iron Ore",
+				"A chunk of iron ore. Bands of reddish brown are intertwined with darker gray spots.",
+				-1
+				);
+		
+		ore.setProperty("type", "ore");
+		ore.setProperty("material", "iron");
+		ore.setProperty("purity", "0.90");
+		
+		return ore;
+	}
 	
 	public List<Node> getMinableNodes(final Room r, final Resource.ResType t) {
 		final List<Node> minable_nodes = new ArrayList<Node>();

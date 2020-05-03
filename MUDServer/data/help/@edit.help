@@ -1,0 +1,11 @@
+@edit
+@EDIT
+
+MUDObject Editor
+
+Launch an appropriate interactive editor specific to the type of MUDObject given. See
+the 'editors' help topic for available editors.
+
+Syntax: @edit <database ref number>
+
+Last Updated: April 30, 2020

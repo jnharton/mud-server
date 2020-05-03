@@ -1,17 +1,17 @@
 party
 PARTY
 
-A command for creating parties, invite other players to them, accepting invitations,
+A command for creating parties, inviting other players to them, accepting invitations,
 and leaving your current party.
 
-party: list the members of your party (if you are in one)
-party #create: create a new party with you as the leader (if you're not in a party)
-party #delete: delete an existing party that you are the leader of
-party #invite <player name> ...: invite a player or players to the party
-party #join: join the party you were most recently invited to
-party #kick <player name> ...: kick a player out of the party
-party #leave: leave your current party
+Syntax: party                        : list the members of your party (if you are in one)
+        party #create                : create a new party with you as the leader (if you're not in a party)
+        party #delete                : delete an existing party (if you are the leader)
+        party #invite <player names> : invite a player/players to the party (if you are the leader)
+        party #join                  : join a party you were invited to (most recent one)
+        party #leave                 : leave your current party
+        party #kick <player names>   : kick a player out of the party (if you are the leader)
 
-Syntax: party [#<invite/join/leave>]
+* in case of invites/kicking a space-delimited list of players may be given
 
-Last Updated: September 26, 2013
+Last Updated: April 30, 2020

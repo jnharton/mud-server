@@ -4,17 +4,20 @@ CHAT
 Command to chat with other players via various channels.
 
 Syntax: chat <channel> <message>
-        chat #channels               List channels that exist (shows enabled, disabled if you are in/not in it)
-        chat #create <channel name>  Create a new channel with that name (if it doesn't exist already)
-        chat #destroy <channel name> Destroy an existing channel with that name (if it already exists)
-        chat #join <channel name>    Join an existing channel with that name (if you aren't listening)
-        chat #leave <channel name>   Leave an existing channel with that name (if you are listening)
+        chat #channels                  List channels that exist (shows enabled, disabled if you are in/not in it)
+        chat #create <channel>          Create a new channel with that name (if it doesn't exist already)
+        chat #restrict <channel> <perm> Restrict a channel to a permissions level
+        chat #protect <channel> <pass>  Protect a channel with an access password.
+        chat #destroy <channel>         Destroy an existing channel with that name (if it already exists)
+        chat #join <channel> [<pass>]   Join an existing channel with that name (if you aren't listening)
+        chat #leave <channel>           Leave an existing channel with that name (if you are listening)
         
         chat <channel> #listeners
         chat <channel> #messages
 
-* additionally the command interpreter supports the following "aliasing" '#<channel name> <message>',
-for example '#ooc Hello, world!' will produce the same result as 'chat ooc Hello, world!'
+* additionally the command interpreter supports the following "aliasing"
+* #<channel short name> <message>
+* E.g. '#ooc Hello, world!' will produce the same result as 'chat ooc Hello, world!'
 * channels can have shortnames, however they can only be used for sending chat messages
 
-Last Updated: April 9, 2016
+Last Updated: April 30, 2020

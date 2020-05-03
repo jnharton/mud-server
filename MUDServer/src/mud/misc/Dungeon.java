@@ -46,7 +46,7 @@ public class Dungeon implements Instance
 	public int[] roomIds;
 	private int counter = 0; // index to roomIds;
 
-	public Dungeon(String name, int x, int y)
+	public Dungeon(final String name, final int x, final int y)
 	{
 		dimX = x;
 		dimY = y;

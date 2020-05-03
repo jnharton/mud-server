@@ -120,6 +120,10 @@ public class ChatChannel {
 		this.hidden = state;
 	}
 	
+	public void setProtected(final boolean protect) {
+		this.protect = protect;
+	}
+	
 	public boolean isProtected() {
 		return this.protect;
 	}
@@ -128,13 +132,11 @@ public class ChatChannel {
 		return this.password == null || this.password.equals(password);
 	}
 	
-	public void setPassword(final String newPassword) {
+	public void changePassword(final String newPassword) {
 		this.password = newPassword;
 		
-		if( this.password.equals("") ) {
-			this.protect = false;
-		}
-		else this.protect = true;
+		if( this.password.equals("") ) this.protect = false;
+		else                           this.protect = true;
 	}
 	
 	/**
@@ -181,6 +183,10 @@ public class ChatChannel {
 	 */
 	public boolean addListener(final Player p) {
 		return this.listeners.add(p);
+	}
+	
+	public boolean addListeners(final List<Player> players) {
+		return this.listeners.addAll(players);
 	}
 	
 	/**
