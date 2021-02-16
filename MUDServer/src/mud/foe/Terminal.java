@@ -810,7 +810,7 @@ public class Terminal extends Thing implements IODevice {
 		boolean success = false;
 		
 		if( this.users.containsKey(username) ) {
-			if( this.users.get(username).equals( password ) ) {
+			if( this.users.get(username).getPassword().equals( password ) ) {
 				this.users.remove(username);
 				
 				success = true;

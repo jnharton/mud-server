@@ -702,6 +702,10 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 						if (moduleName.equals("foe"))    server.module = new mud.modules.FalloutEquestria();
 						if (moduleName.equals("dnd-fr")) server.module = new mud.modules.DND35();
 						else                             ; //load and initialize a GameModule subclass?
+						
+						System.out.println("Using module " + server.module.getName());
+						
+						server.module.getName();
 					}
 					else if (param.equals("setup")) {
 						server.firstRun = true;
@@ -876,6 +880,25 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		}*/
 		
 		System.out.println("");
+		
+		debug(""); // formatting
+		
+		// if there is a module set, tell us what it is and handle the ruleset bit
+		if (module != null) {
+			debug("Module: " + module.getName() + " v" + module.getVersion());
+			
+			// TODO this is a kludge to set the ruleset based on the module
+			if (module.getName().equals("Fallout Equestria")) {
+				rules = mud.rulesets.foe.FOESpecial.getInstance();
+				rs_special = true;
+			}
+			else rules = D20.getInstance();
+		}
+		else rules = D20.getInstance();
+
+		Player.ruleset = rules; // set static Ruleset reference in Player
+		
+		debug(""); // formatting
 
 		// if this is the first run (as indicated by setup parameter)
 		if (firstRun) {
@@ -916,23 +939,6 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			// tell us it's disabled
 			debug("Logging Disabled.");
 		}
-
-		debug(""); // formatting
-		
-		// if there is a module set, tell us what it is and handle the ruleset bit
-		if (module != null) {
-			debug("Module: " + module.getName() + " v" + module.getVersion());
-			
-			// TODO this is a kludge to set the ruleset based on the module
-			if (module.getName().equals("Fallout Equestria")) {
-				rules = mud.rulesets.foe.FOESpecial.getInstance();
-				rs_special = true;
-			}
-			else rules = D20.getInstance();
-		}
-		else rules = D20.getInstance();
-
-		Player.ruleset = rules; // set static Ruleset reference in Player
 		
 		debug(""); // formatting
 
