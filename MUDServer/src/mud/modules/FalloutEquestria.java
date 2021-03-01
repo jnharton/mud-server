@@ -18,7 +18,6 @@ import mud.foe.items.*;
 import mud.game.Faction;
 import mud.game.Race;
 import mud.interfaces.ExtraCommands;
-import mud.interfaces.GameModule;
 import mud.misc.Currency;
 import mud.misc.Script;
 import mud.misc.Slot;
@@ -44,7 +43,7 @@ import mud.utils.Utils;
  */
 
 /* this class is marked final because there shouldn't ever be a subclass */
-public final class FalloutEquestria implements GameModule, ExtraCommands {
+public final class FalloutEquestria extends GameModule implements ExtraCommands {
 	private String DATA_DIR;
 	
 	/* the class members are static because this is a class where

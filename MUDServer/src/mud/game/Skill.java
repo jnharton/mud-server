@@ -20,6 +20,7 @@ package mud.game;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 
 import mud.rulesets.d20.Abilities;
 
@@ -90,6 +91,10 @@ public class Skill
 		
 	public ArrayList<PClass> getClasses() {
 		return new ArrayList<PClass>(Arrays.asList(this.classes)); 
+	}
+	
+	public void setClasses(List<PClass> classes) {
+		this.classes = classes.toArray(new PClass[classes.size()]);
 	}
 	
 	public String toString() {

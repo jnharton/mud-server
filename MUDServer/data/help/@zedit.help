@@ -1,0 +1,8 @@
+@zedit
+@ZEDIT
+
+Syntax: @zedit new         create a new zone
+        @zedit <zone id>   edit an existing zone (w/specified ID number)
+        @zedit <zone name> edit an existing zone (w/specified name)
+
+Last Updated: February 28th, 2021

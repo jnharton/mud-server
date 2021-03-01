@@ -6,6 +6,6 @@ Show zone list, create new zones, add rooms to existing zones, etc
 Syntax: '@zones'                    # List existing zones and the number of rooms
         '@zones +new [zone name]'   # Create a new zone with the indicated name
         '@zones +add [room]=[zone]' # Add the indicated room to the indicated zone
-        '@zones +info'              # Not Implemented
+        '@zones +info [zone]'       # Show basic information about the specified zone 
 
 Last Updated: December 26, 2013

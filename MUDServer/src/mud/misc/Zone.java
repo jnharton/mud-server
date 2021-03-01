@@ -35,6 +35,10 @@ public class Zone {
 	public Zone(final Zone toCopy) {
     }
 	
+	public int getId() {
+		return this.id;
+	}
+	
 	public boolean setId(int newId) {
 		if( id == -1 ) {
 			this.id = newId; return true;
@@ -43,13 +47,13 @@ public class Zone {
 			return false;
 		}
 	}
-	
-	public int getId() {
-		return this.id;
-	}
 
 	public String getName() {
 		return this.name;
+	}
+	
+	public void setName(final String newName) {
+		this.name = newName;
 	}
 	
 	public Zone getParent() {

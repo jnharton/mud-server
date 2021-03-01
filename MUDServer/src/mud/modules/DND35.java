@@ -7,7 +7,6 @@ import java.util.Map;
 import mud.Command;
 import mud.MUDObject;
 import mud.game.Faction;
-import mud.interfaces.GameModule;
 import mud.interfaces.Ruleset;
 import mud.misc.Currency;
 import mud.misc.Slot;
@@ -23,7 +22,7 @@ import mud.objects.ThingTypes;
 import mud.rulesets.d20.D20;
 import mud.rulesets.d20.Skills;
 
-public class DND35 implements GameModule {
+public class DND35 extends GameModule {
 	private static Map<String, Command> commands;
 	private static Map<String, Item> prototypes;
 	private static Map<String, Thing> prototypes1;

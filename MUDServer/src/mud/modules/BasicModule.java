@@ -6,7 +6,6 @@ import java.util.Map;
 
 import mud.MUDObject;
 import mud.game.Faction;
-import mud.interfaces.GameModule;
 import mud.interfaces.Ruleset;
 import mud.misc.SlotType;
 import mud.objects.Item;
@@ -15,7 +14,7 @@ import mud.objects.Player;
 import mud.objects.Thing;
 import mud.objects.ThingType;
 
-public class BasicModule implements GameModule {
+public class BasicModule extends GameModule {
 	private final String name;
 	private final Ruleset rules;
 	

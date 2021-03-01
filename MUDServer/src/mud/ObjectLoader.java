@@ -23,7 +23,6 @@ import mud.objects.things.Box;
 import mud.rulesets.d20.Classes;
 import mud.rulesets.d20.Races;
 import mud.utils.Utils;
-import mud.interfaces.GameModule;
 import mud.magic.Spell;
 import mud.misc.Coins;
 import mud.misc.Effect;
@@ -33,6 +32,7 @@ import mud.misc.SlotType;
 import mud.misc.SlotTypes;
 import mud.misc.Zone;
 import mud.misc.Effect.DurationType;
+import mud.modules.GameModule;
 
 /*
  Copyright (c) 2012 Jeremy N. Harton

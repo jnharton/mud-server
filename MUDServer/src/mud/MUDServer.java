@@ -79,6 +79,7 @@ import mud.interfaces.Readable;
 import mud.magic.*;
 import mud.misc.*;
 import mud.misc.json.*;
+import mud.modules.GameModule;
 import mud.net.*;
 import mud.objects.*;
 import mud.objects.exits.*;
@@ -627,6 +628,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 	
 	String[] serverArgs;
 	
+	private static final int HELP_WIDTH = 80;
 	
 	private String new_world = "new-world";
 	
@@ -643,7 +645,8 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		MUDServer server = null;
 
 		if (args.length < 1) {
-			System.out.println("No port number specified. Exiting...");
+			//System.out.println("No port number specified. Exiting...");
+			System.out.println("No parameters specifed. Exiting...");
 			System.exit(-1);
 		}
 
@@ -701,7 +704,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 						if (moduleName.equals("basic") ) server.module = new mud.modules.BasicModule("Basic", null);
 						if (moduleName.equals("foe"))    server.module = new mud.modules.FalloutEquestria();
 						if (moduleName.equals("dnd-fr")) server.module = new mud.modules.DND35();
-						else                             ; //load and initialize a GameModule subclass?
+						else                             //load and initialize a GameModule subclass?
 						
 						System.out.println("Using module " + server.module.getName());
 						
@@ -713,6 +716,95 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 						if( args.length > a && !args[a+1].startsWith("--") ) {
 							server.new_world = args[a+1];
 						}
+						
+						server.module = new GameModule() {
+							@Override
+							public String getName() {
+								return "PlaceHolder";
+							}
+
+							@Override
+							public String getShortName() {
+								return "PH";
+							}
+
+							@Override
+							public Integer getVersion() {
+								return 0;
+							}
+
+							@Override
+							public Ruleset getRuleset() {
+								return D20.getInstance();
+							}
+
+							@Override
+							public void init() {
+								// TODO Auto-generated method stub
+								
+							}
+
+							@Override
+							public void init(String dataDir) {
+								// TODO Auto-generated method stub
+								
+							}
+
+							@Override
+							public void init2(List<Faction> mFactions, Hashtable<String, ItemType> mItemTypes) {
+								// TODO Auto-generated method stub
+								
+							}
+
+							@Override
+							public void PCInit(Player player) {
+								// TODO Auto-generated method stub
+								
+							}
+
+							@Override
+							public Item loadItem(String itemData) {
+								// TODO Auto-generated method stub
+								return null;
+							}
+
+							@Override
+							public Thing loadThing(String itemData) {
+								// TODO Auto-generated method stub
+								return null;
+							}
+
+							@Override
+							public void run() {
+								// TODO Auto-generated method stub
+								
+							}
+
+							@Override
+							public void op(String input, Player player) {
+								// TODO Auto-generated method stub
+								
+							}
+
+							@Override
+							public boolean use(Player p, MUDObject m) {
+								// TODO Auto-generated method stub
+								return false;
+							}
+
+							@Override
+							public void test() {
+								// TODO Auto-generated method stub
+								
+							}
+
+							@Override
+							public void levelup(Player player) {
+								// TODO Auto-generated method stub
+								
+							}
+							
+						};
 					}
 					else if (param.equals("telnet")) {
 						server.telnet = Utils.toInt(args[a + 1], 0);
@@ -907,7 +999,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			System.out.println("Done");
 			
 			// set theme file
-			THEME_FILE = resolvePath(THEME_DIR, "new.thm");
+			THEME_FILE = resolvePath(THEME_DIR, new_world + ".thm");
 		}
 
 		// Logging
@@ -1904,7 +1996,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 				"[/years]"
 		};
 		
-		Utils.saveStrings( resolvePath(THEME_DIR, "new.thm"), theme);
+		Utils.saveStrings( resolvePath(THEME_DIR, new_world + ".thm"), theme);
 		
 		/* Create new world folder and files */
 		
@@ -8387,7 +8479,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		player.setStatus(Constants.ST_EDIT);
 		player.setEditor(Editors.ITEM);
 
-		EditorData newEDD = new EditorData();
+		final EditorData newEDD = new EditorData();
 
 		// create new item if no item to edit specified
 		if (arg.equals("")) {
@@ -10486,7 +10578,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		player.setStatus(Constants.ST_EDIT);
 		player.setEditor(Editors.QUEST);
 
-		EditorData newEDD = new EditorData();
+		final EditorData newEDD = new EditorData();
 
 		Quest quest = null;
 		boolean exist = false;
@@ -10541,16 +10633,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 				return;
 			}
 
-			// record prior player status
-			newEDD.addObject("pstatus", old_status);
-
-			// add quest and it's constituent parts to the editor data
-			newEDD.addObject("quest", quest);
-			newEDD.addObject("name", quest.getName());
-			newEDD.addObject("location", -1);
-			newEDD.addObject("desc", "");
-
-			player.setEditorData(newEDD);
+			editQuest(player, quest);
 		}
 		else {
 			// quest doesn't exist (abort) reset player, and clear edit flag and editor setting
@@ -13185,43 +13268,37 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 
 	private void cmd_zoneedit(final String arg, final Client client) {
 		Player player = getPlayer(client);
-		String old_status = player.getStatus();
-
-		player.setStatus(Constants.ST_EDIT); // set the 'edit' status flag
-		player.setEditor(Editors.ZONE); // zone editor
-
-		EditorData newEDD = new EditorData();
 
 		Zone zone = null;
-
-		if ( arg.equals("new") ) {
+		
+		boolean exist = false;
+		
+		if ( arg.equals("") ) {
+			send("Please specify a Zone to edit, whether by name or number.", client);
+		}
+		else if ( arg.equals("new") ) {
 			zone = new Zone("New Zone", null);
+			
+			zones.put(zone, 10);
+			
+			send("Created new Zone!", client);
+			send("Opening Zone Editor...", client);
+			
+			exist = true;
 		}
 		else {
 			if (arg.charAt(0) == '#') {
+				zone = getZone( arg.substring(1) );
 			}
 			else {
 				zone = getZone(arg);
+				
+				exist = true;
 			}
 		}
-
-		if (zone != null) {
-			// record prior player status
-			newEDD.addObject("pstatus", old_status);
-
-			// editable zone data
-			newEDD.addObject("zone", zone);
-			newEDD.addObject("name", zone.getName());
-
-			//
-			player.setEditorData(newEDD);
-
-			// newEDD
-			op_zoneedit("show", client);
-		}
-		else {
-			send("No such zone!");
-			// abort editing..
+		
+		if ( exist ) {
+			editZone(player, zone);
 		}
 	}
 
@@ -13233,7 +13310,8 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 	 * @param client
 	 */
 	private void cmd_zoneinfo(final String arg, final Client client) {
-		final Zone zone = getZone(getPlayer(client));
+		final Player player = getPlayer(client);
+		final Zone zone = getZone(player);
 
 		if (zone != null) {
 			final Integer zoneID = zone.getId();
@@ -13337,7 +13415,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 							if (zone != null) {
 								MudUtils.addRoomToZone(zone, room);
 
-								send(room.getName() + " added to " + zone.getName(), client);
+								send(colors(room.getName(), "green") + " added to " + colors(zone.getName(), "magenta"), client);
 							}
 							else send("No such zone!", client);
 						}
@@ -13346,11 +13424,10 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 				}
 			}
 			else if (params[0].equals("+info")) {
-				// TODO this parameter is redundant with the zoneinfo command
+				// NOTE this parameter is redundant with the zoneinfo command
 
-				// need to fix this so that the portion of this kind of argument
-				// '+info Red Dragon Inn' gets
-				// zoined back into a single string
+				// TODO need to fix this string join so that it treats everything after the parameter as a single string
+				// e.g. '+info Red Dragon Inn' should be seen as: '+info', 'Red Dragon Inn'
 				String s = Utils.join(Arrays.copyOfRange(params, 1, params.length), " ");
 
 				final Zone zone = getZone(s);
@@ -13364,7 +13441,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 					// send("Zone - " + zone.getName() + "(" + zone.getId() + ")", client);
 
 					// send("" + zone.getName() + " ( " + zone.getRooms().size() + " Rooms )", client);
-					send("" + colors(zoneName + " [" + zoneID + "] ", "purple") + " ( " + zoneSize + " Rooms )", client);
+					send(colors(zoneName + " [" + zoneID + "] ", "magenta") + " ( " + zoneSize + " Rooms )", client);
 
 					for (final Room room : zone.getRooms()) {
 						send("- " + room.getName() + " (#" + room.getDBRef() + ")", client);
@@ -14620,12 +14697,11 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 	// TODO write code for op_creatureedit
 	public void op_creatureedit(final String input, final Client client) {
 		final Player player = getPlayer(client);
+		final EditorData data = player.getEditorData();
 
 		String ccmd = "";
 		String carg = "";
-
-		final EditorData data = player.getEditorData();
-
+		
 		if (input.indexOf(" ") != -1) {
 			ccmd = input.substring(0, input.indexOf(" ")).toLowerCase();
 			carg = input.substring(input.indexOf(" ") + 1, input.length());
@@ -14681,7 +14757,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 				// output help information
 				final List<String> output = (List<String>) Utils.mkList(
 						"Creature Editor -- Help",
-						Utils.padRight("", '-', 74),
+						Utils.padRight("", '-', HELP_WIDTH),
 						"abort                           abort the editor (no changes will be kept)",
 						"desc <new description>          change/set the creature description",
 						//"desc <param> <new description>  change/set the room description",
@@ -14695,7 +14771,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 						"setzone                         set the zone that this room belongs to",
 						"show                            show basic information about the room",
 						"zones                           list the zones that exist",
-						Utils.padRight("", '-', 74)
+						Utils.padRight("", '-', HELP_WIDTH)
 						);
 				client.write(output);
 			}
@@ -14832,12 +14908,11 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 	@SuppressWarnings("unchecked")
 	public void op_roomedit(final String input, final Client client) {
 		final Player player = getPlayer(client);
+		final EditorData data = player.getEditorData();
 
 		String rcmd = "";
 		String rarg = "";
-
-		EditorData data = player.getEditorData();
-
+		
 		if (input.indexOf(" ") != -1) {
 			rcmd = input.substring(0, input.indexOf(" ")).toLowerCase();
 			rarg = input.substring(input.indexOf(" ") + 1, input.length());
@@ -15072,8 +15147,9 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		else if (rcmd.equals("help") || rcmd.equals("?")) {
 			if (rarg.equals("")) {
 				// output help information
-				final List<String> output = (List<String>) Utils.mkList("Room Editor -- Help",
-						Utils.padRight("", '-', 74),
+				final List<String> output = (List<String>) Utils.mkList(
+						"Room Editor -- Help",
+						Utils.padRight("", '-', HELP_WIDTH),
 						"abort                           abort the editor (no changes will be kept)",
 						"addexit <name> <destination>    creates a new exit",
 						"additem <prototype key>         creates a new instance of the indicated",
@@ -15099,7 +15175,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 						"trigger <type> <data>           setup a trigger of the specified type with",
 						"                                the specified data",
 						"zones                           list the zones that exist",
-						Utils.padRight("", '-', 74)
+						Utils.padRight("", '-', HELP_WIDTH)
 						);
 
 				client.write(output);
@@ -15566,12 +15642,11 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 	 */
 	public void op_itemedit(final String input, final Client client) {
 		final Player player = getPlayer(client);
+		final EditorData data = player.getEditorData();
 
 		String icmd = "";
 		String iarg = "";
-
-		EditorData data = player.getEditorData();
-
+		
 		if (input.indexOf(" ") != -1) {
 			icmd = input.substring(0, input.indexOf(" ")).toLowerCase();
 			iarg = input.substring(input.indexOf(" ") + 1, input.length());
@@ -15585,6 +15660,8 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		debug("iarg: \"" + iarg + "\"");
 
 		if (icmd.equals("abort")) {
+			send("< Aborting Changes... >", client);
+			
 			// / clear edit flag
 			((Item) data.getObject("item")).Edit_Ok = true;
 
@@ -15620,22 +15697,28 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			send("< Exiting... >", client);
 		}
 		else if (icmd.equals("help") || icmd.equals("?")) {
-			// output help information
-			final List<String> output = (List<String>) Utils.mkList("Item Editor -- Help",
-					Utils.padRight("", '-', 74),
-					"abort                           abort the editor (no changes will be kept)",
-					"desc <param> <new description>  change/set the item description",
-					"done                            finish editing (save & exit)",
-					"help                            shows this help information",
-					"name <new name>                 change/set the item name",
-					"save                            save changes to the item",
-					"show                            show basic information about the item",
-					"type                            change the item's type",
-					"types                           list of valid item types",
-					Utils.padRight("", '-', 74)
-					);
-
-			client.write(output);
+			if (iarg.equals("")) {
+				// output help information
+				final List<String> output = (List<String>) Utils.mkList(
+						"Item Editor -- Help",
+						Utils.padRight("", '-', HELP_WIDTH),
+						"abort                           abort the editor (no changes will be kept)",
+						"desc <param> <new description>  change/set the item description",
+						"done                            finish editing (save & exit)",
+						"help                            shows this help information",
+						"name <new name>                 change/set the item name",
+						"save                            save changes to the item",
+						"show                            show basic information about the item",
+						"type                            change the item's type",
+						"types                           list of valid item types",
+						Utils.padRight("", '-', HELP_WIDTH)
+						);
+				
+				client.write(output);
+			}
+			else {
+				// output help information specific to the command name given
+			}
 		}
 		else if (icmd.equals("name")) {
 			data.setObject("name", iarg);
@@ -15711,6 +15794,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 	public void op_questedit(final String input, final Client client) {
 		final Player player = getPlayer(client);
 		final EditorData data = player.getEditorData();
+		
 		final Quest quest = (Quest) data.getObject("quest");
 
 		String qcmd = "";
@@ -15771,17 +15855,28 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			send("< Exiting... >", client);
 		}
 		else if (qcmd.equals("help") || qcmd.equals("?")) {
-			send("Quest Editor -- Help", client);
-			send(Utils.padRight("", '-', 40), client);
-			send("abort", client);
-			send("desc <new description>", client);
-			send("done", client);
-			send("help", client);
-			send("name <new name>", client);
-			send("save", client);
-			send("setloc", client);
-			send("show", client);
-			send("zones", client);
+			if (qarg.equals("")) {
+				// output help information
+				final List<String> output = (List<String>) Utils.mkList(
+						"Quest Editor -- Help",
+						Utils.padRight("", '-', HELP_WIDTH),
+						
+						"abort                          abort the editor (no changes will be kept)",
+						"desc <new description>         change/set the quest description",
+						"done                           finish editing (save & exit)",
+						"help                           shows this help information",
+						"name <new name>                change/set the quest name",
+						"save                           save changes to the quest",
+						"setloc                         set the quest location",
+						"show                           show basic information about the quest",
+						"zones",
+						Utils.padRight("", '-', HELP_WIDTH));
+				
+				client.write(output);
+			}
+			else {
+				// output help information specific to the command name given
+			}
 		}
 		else if (qcmd.equals("name")) {
 			if( data.setObject("name", qarg) ) {
@@ -15870,7 +15965,8 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 	@SuppressWarnings("unchecked")
 	public void op_skilledit(final String input, final Client client) {
 		final Player player = getPlayer(client);
-		final EditorData data = player.getEditorData(); 
+		final EditorData data = player.getEditorData();
+		
 		final Skill skill = (Skill) data.getObject("skill");
 
 		String scmd = "";
@@ -15889,6 +15985,8 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		debug("sarg: \"" + sarg + "\"");
 
 		if (scmd.equals("abort")) {
+			send("< Aborting Changes... >", client);
+			
 			// reset editor and player status
 			player.setStatus((String) data.getObject("pstatus"));
 			player.setEditor(Editors.NONE);
@@ -15899,11 +15997,12 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			// exit
 			send("< Exiting... >", client);
 		}
-		else if (scmd.equals("abrv")) {
+		else if (scmd.equals("abbrev") || scmd.equals("abrv")) {
 			data.setObject("abbrev", sarg);
 			send("Ok.", client);
 		}
 		else if (scmd.equals("abbrevs")) {
+			send("Sorry. -- NOT IMPLEMENTED", client);
 		}
 		else if (scmd.equals("class")) {
 			if (sarg != null) {
@@ -15939,27 +16038,52 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			// send list of valid class names
 			send("NONE, BARBARIAN, BARD, CLERIC, DRUID, FIGHTER, MONK, PALADIN, RANGER, ROGUE, SORCERER, WIZARD, ADEPT, ARISTOCRAT, COMMONER, EXPERT, WARRIOR", client);
 		}
+		else if (scmd.equals("desc")) {
+			send("Sorry. -- NOT IMPLEMENTED", client);
+		}
+		else if (scmd.equals("done")) {
+			//send("Sorry. -- NOT IMPLEMENTED", client);
+			send("< Saving Changes... >", client);
+
+			// save changes
+			op_skilledit("save", client);
+
+			send("< Done >", client);
+
+			// clear edit flag
+			// NOTE skill doesn't have an edit flag atm
+
+			// reset editor and player status
+			player.setStatus((String) data.getObject("pstatus"));
+			player.setEditor(Editors.NONE);
+
+			// clear editor data
+			player.setEditorData(null);
+
+			// exit
+			send("< Exiting... >", client);
+		}
 		else if (scmd.equals("help") || scmd.equals("?")) {
 			if (sarg.equals("")) {
 				// output help information
-				final List<String> output = (List<String>) Utils.mkList("Skill Editor -- Help",
-						Utils.padRight("", '-', 74),
+				final List<String> output = (List<String>) Utils.mkList(
+						"Skill Editor -- Help",
+						Utils.padRight("", '-', HELP_WIDTH),
 						"abort                          abort the editor (no changes will be kept)",
 						"abrv                           designate abbreviated form of skill name",
-						"abbrevs                        ?",
+						"abbrevs                        ? (NOT IMPLEMENTED)",
 						"class                          add/remove classes that have/can use this skill",
-						"classes                        list of valid class names",
-						"desc <param> <new description> change/set the room description **",
-						"done                           finish editing (save & exit) **",
+						"classes                        print list of valid class names",
+						"desc <param> <new description> change/set the skill description (NOT IMPLEMENTED)",
+						"done                           finish editing (save & exit)",
 						"help                           shows this help information",
 						"name <new name>                change/set the skill name",
-						"quit                           ",
 						"save                           save changes to the skill (NOT IMPLEMENTED)",
 						"show                           show basic information about the skill",
 						"skills                         list all skills (NOT IMPLEMENTED)",
 						"stat                           change the stat this skill is associated with",
-						"stats                          list all stats",
-						Utils.padRight("", '-', 74));
+						"stats                          print list of all stats",
+						Utils.padRight("", '-', HELP_WIDTH));
 				
 				client.write(output);
 			}
@@ -15971,9 +16095,10 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			data.setObject("name", sarg);
 			send("Ok.", client);
 		}
-		else if (scmd.equals("quit")) {
-		}
 		else if (scmd.equals("save")) {
+			send("Sorry. -- NOT IMPLEMENTED", client);
+			
+			skill.setClasses( (List<PClass>) data.getObject("classes") );
 		}
 		else if (scmd.equals("show") || scmd.equals("sh")) {
 			/*
@@ -15999,6 +16124,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			send(output, client);
 		}
 		else if (scmd.equals("skills")) {
+			send("Sorry. -- NOT IMPLEMENTED", client);
 		}
 		else if (scmd.equals("stat")) {
 			// change the stat a skill is associated with
@@ -16038,7 +16164,6 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 	public void op_zoneedit(final String input, final Client client) {
 		final Player player = getPlayer(client);
 		final EditorData data = player.getEditorData();
-		final Zone zone = (Zone) data.getObject("zone");
 
 		String zcmd = "";
 		String zarg = "";
@@ -16056,6 +16181,8 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		debug("zarg: \"" + zarg + "\"");
 
 		if (zcmd.equals("abort")) {
+			send("< Aborting Changes... >", client);
+			
 			// reset editor and player status
 			player.setStatus((String) data.getObject("pstatus"));
 			player.setEditor(Editors.NONE);
@@ -16067,25 +16194,49 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			send("< Exiting... >", client);
 		}
 		else if (zcmd.equals("addroom")) {
+			send("Sorry. -- NOT IMPLEMENTED", client);
+		}
+		else if (zcmd.equals("desc")) {
+			data.setObject("desc", zarg);
+			send("Ok.", client);
+		}
+		else if (zcmd.equals("done")) {
+			// save changes
+			op_zoneedit("save", client);
+
+			// clear edit flag
+			//((Item) data.getObject("item")).Edit_Ok = true;
+
+			// reset editor and player status
+			player.setStatus((String) data.getObject("pstatus"));
+			player.setEditor(Editors.NONE);
+
+			// clear editor data
+			player.setEditorData(null);
+
+			// exit
+			send("< Exiting... >", client);
+		}
+		else if (zcmd.equals("delroom")) {
+			send("Sorry. -- NOT IMPLEMENTED", client);
 		}
 		else if (zcmd.equals("help") || zcmd.equals("?")) {
 			if (zarg.equals("")) {
 				// output help information
-				final List<String> output = (List<String>) Utils.mkList("Skill Editor -- Help",
-						Utils.padRight("", '-', 74),
+				final List<String> output = (List<String>) Utils.mkList(
+						"Zone Editor -- Help",
+						Utils.padRight("", '-', HELP_WIDTH),
 						"abort                          abort the editor (no changes will be kept)",
-						"addroom",
-						"desc <param> <new description> change/set the room description **",
-						"delroom                        (NOT IMPLEMENTED)",
-						"remroom                        (NOT IMPLEMENTED)",
-						"setparent                      (NOT IMPLEMENTED)",
-						"done                           finish editing (save & exit) ** (NOT IMPLEMENTED)",
+						"addroom                        add a room to this zone (NOT IMPLEMENTED)",
+						"desc <param> <new description> change/set the zone description",
+						"delroom                        delete a room from this zone (NOT IMPLEMENTED)",
+						"done                           finish editing (save & exit)",
 						"help                           shows this help information",
-						"name <new name>                change/set the zone name (NOT IMPLEMENTED)",
-						"quit                           (NOT IMPLEMENTED)",
-						"save                           save changes to the zone (NOT IMPLEMENTED)",
+						"name <new name>                change/set the zone name",
+						"save                           save changes to the zone",
+						"setparent <parent>             ? (NOT IMPLEMENTED)",
 						"show                           show basic information about the zone",
-						Utils.padRight("", '-', 74));
+						Utils.padRight("", '-', HELP_WIDTH));
 				
 				client.write(output);
 			}
@@ -16093,15 +16244,68 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 				// output help information specific to the command name given
 			}
 		}
-		else if (zcmd.equals("remroom")) {
+		else if (zcmd.equals("name")) {
+			data.setObject("name", zarg);
+			send("Ok.", client);
+		}
+		else if (zcmd.equals("save") ) {
+			final Zone zone = (Zone) data.getObject("zone");
+			
+			//zone.setId( (Integer) data.getObject("id") );
+			zone.setName( (String) data.getObject("name") );
+			
+			//zones.put(zone, 10); // store a new zone object
 		}
 		else if (zcmd.equals("setparent")) {
+			send("Sorry. -- NOT IMPLEMENTED", client);
 		}
 		else if (zcmd.equals("show")) {
+			final Zone zone = (Zone) data.getObject("zone");
+			
 			send("--- Zone Editor " + Utils.padRight("", '-', 80 - 16), client);
 			send("   Name: " + (String) data.getObject("name"), client);
 			send("     ID: " + zone.getId(), client);
 			send(Utils.padRight("", '-', 80), client);
+			
+			if (zone != null) {
+				final Integer zoneID = zone.getId();
+				final String zoneName = zone.getName();
+
+				final Integer zoneSize = zone.getRooms().size();
+
+				// send("Zone - " + zone.getName() + "(" + zone.getId() + ")", client);
+
+				// send("" + zone.getName() + " ( " + zone.getRooms().size() + " Rooms )", client);
+				send(colors(zoneName + " [" + zoneID + "] ", "magenta") + " ( " + zoneSize + " Rooms )", client);
+
+				for (final Room room : zone.getRooms()) {
+					send("- " + room.getName() + " (#" + room.getDBRef() + ")", client);
+				}
+
+				send("Quests:", client);
+
+				for (final Quest quest : getQuestsByZone(zone)) {
+					send(quest.getId() + ": " + quest.getName(), client);
+				}
+
+				final StringBuilder subzones = new StringBuilder();
+
+				int zc = 0;
+
+				for (final Zone zone1 : zones.keySet()) {
+					if (zone1.getParent() == zone) {
+						subzones.append(zone1.getName());
+
+						if (zc < zones.size()) {
+							subzones.append(", ");
+						}
+					}
+
+					zc++;
+				}
+
+				send("Subzones: " + subzones.toString());
+			}
 		}
 	}
 
@@ -23598,7 +23802,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 	 * @return
 	 */
 	private Zone getZone(final MUDObject obj) {
-		Zone zone = null;
+		Zone zone = null; // we don't know yet if there is a zone
 
 		if (obj != null) {
 			Room room = null;
@@ -23608,7 +23812,11 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 
 			if (room != null) {
 				zone = room.getZone();
-				debug("Zone ID: " + zone.getId());
+				
+				if( zone != null) {
+					debug("Zone ID: " + zone.getId());
+				}
+				else send(room.getName() + " is not in any zone.");
 			}
 		}
 
@@ -24948,6 +25156,71 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 	
 	private void editItem(final Player player, final Item item) {
 		
+	}
+	
+	private void editQuest(final Player player, final Quest quest) {
+		// NOTE: by definition the player shouldn't be null in here
+		final Client client = player.getClient();
+		String old_status = player.getStatus();
+
+		if (quest != null ) {
+			player.setStatus(Constants.ST_EDIT); // set the 'edit' status flag
+			player.setEditor(Editors.ZONE); // zone editor
+
+			final EditorData newEDD = new EditorData();
+			
+			if (quest.Edit_Ok) {
+				quest.Edit_Ok = false;
+			}
+			else {
+				// quest is not editable, exit the editor
+				abortEdit("quest not editable (!Edit_Ok)", old_status, client);
+				return;
+			}
+
+			// record prior player status
+			newEDD.addObject("pstatus", old_status);
+
+			// add quest and it's constituent parts to the editor data
+			newEDD.addObject("quest", quest);
+			newEDD.addObject("name", quest.getName());
+			newEDD.addObject("location", -1);
+			newEDD.addObject("desc", "");
+			
+			//
+			player.setEditorData(newEDD);
+			
+			//
+			op_questedit("show", client);
+		}
+		else send("Quest object was, in point of fact, a NULL value!", client);
+	}
+	
+	private void editZone(final Player player, final Zone zone) {
+		// NOTE: by definition the player shouldn't be null in here
+		final Client client = player.getClient();
+		String old_status = player.getStatus();
+		
+		if (zone != null) {
+			player.setStatus(Constants.ST_EDIT); // set the 'edit' status flag
+			player.setEditor(Editors.ZONE); // zone editor
+
+			final EditorData newEDD = new EditorData();
+			
+			// record prior player status
+			newEDD.addObject("pstatus", old_status);
+
+			// editable zone data
+			newEDD.addObject("zone", zone);
+			newEDD.addObject("name", zone.getName());
+
+			//
+			player.setEditorData(newEDD);
+
+			// newEDD
+			op_zoneedit("show", client);
+		}
+		else send("No such zone!", client); // abort editing..
 	}
 	
 	/**
