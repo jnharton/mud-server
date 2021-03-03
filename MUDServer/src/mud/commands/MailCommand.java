@@ -4,9 +4,9 @@ import mud.Command;
 import mud.Constants;
 import mud.objects.Player;
 import mud.utils.EditorData;
-import mud.utils.Mail;
 import mud.utils.Utils;
 import mud.misc.Editors;
+import mud.misc.Mail;
 import mud.net.Client;
 
 /*

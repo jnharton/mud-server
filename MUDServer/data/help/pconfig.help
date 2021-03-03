@@ -5,6 +5,7 @@ Set a configuration option for the current player.
 
 Syntax: pconfig                    # show all the options AND their current setting
         pconfig <opt>=<true|false> # set a particular option to true or false
+        pconfig #help <option>     # show help regarding a particular option
         pconfig #options           # list player configuration options
 
-Last Updated: April 29, 2020
+Last Updated: March 1st, 2021

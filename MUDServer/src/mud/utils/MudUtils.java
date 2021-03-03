@@ -11,6 +11,8 @@ import mud.Constants;
 import mud.MUDObject;
 import mud.ObjectFlag;
 import mud.TypeFlag;
+import mud.misc.BBEntry;
+import mud.misc.BulletinBoard;
 import mud.misc.Coins;
 import mud.misc.Direction;
 import mud.misc.Effect;
@@ -164,15 +166,10 @@ public final class MudUtils {
 		if(bb != null) {
 			out = new ArrayList<String>(bb.getNumMessages() + 2);
 
-			out.add( bb.getName() );
-
-			out.add("+------------------------------------------------------------------------------+");
-
 			for (final BBEntry entry : bb.getEntries()) {
-				out.add("| " + entry.toView() + " |");
+				//out.add("| " + entry.toView() + " |");
+				out.add( String.format("| %s |", entry.toView()) );
 			}
-
-			out.add("+------------------------------------------------------------------------------+");
 		}
 		
 		return out;

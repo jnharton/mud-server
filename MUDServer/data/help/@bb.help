@@ -3,10 +3,12 @@
 
 Bulletin Board Command
 
-Syntax: @bb +write <board> <subject>=<message>     add a message to the board
-        @bb +delete <board>.<message num>          delete the specified message
-        @bb +reply <board>.<message num> <message>
-        @bb +read <board>.<message num>            read a specific message
-        @bb +scan <board>                          list all the messages
+Perform a specific action on one of the game's bulletin boards
+
+Syntax: @bb +write  <board> <subject>=<message>  add a message to the board
+        @bb +delete <board>.<message num>        delete the specified message
+        @bb +reply  <board>.<message num> <msg>  reply to the specified message
+        @bb +read   <board | board.message_num>  read a board/specific message
+        @bb +scan   [<board>]                    list board messages/show boards + message count
         
-Last Updated: April 21st, 2017
+Last Updated: March 3rd, 2021

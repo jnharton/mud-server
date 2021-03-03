@@ -1,0 +1,11 @@
+@nameref
+@NAMEREF
+
+Create, alter, or delete named references to DBREFs. To use a named reference, prefix the name with $ and use it anywhere a DBREF is a valid parameter.
+
+Syntax: @nameref <name> <dbref number>
+        @nameref #list                 list all entries in the nameref table
+        @nameref #delete <name>        delete the entry in the nameref table with the given name           
+        @nameref #clear                clear the entire table
+
+Last Updated: March 1st, 2021

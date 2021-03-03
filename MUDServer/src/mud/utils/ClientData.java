@@ -1,4 +1,4 @@
-package mud.misc;
+package mud.utils;
 
 import java.util.BitSet;
 import java.util.Hashtable;

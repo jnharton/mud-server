@@ -292,47 +292,48 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 	// pna - per name association?
 	
 	// TODO consider reworking ANSI and XTERM256 /classes/ so that they can be used to export strings
-	public static final Palette ANSI = new Palette("ansi", Constants.ANSI);
-	public static final Palette XTERM256 = new Palette("xterm256", Constants.XTERM);
-	
-	{
-		ANSI.addColor("black", 30);
-		ANSI.addColor("red", 31);
-		ANSI.addColor("green",  32);
-		ANSI.addColor("yellow", 33);
-		ANSI.addColor("blue", 34);
-		ANSI.addColor("magenta", 35);
-		ANSI.addColor("cyan", 36);
-		ANSI.addColor("white", 37);
-	}
-	
-	{
-		XTERM256.addColor("red", 9);
-		XTERM256.addColor("green", 10);
-		XTERM256.addColor("yellow", 11);
-		XTERM256.addColor("blue", 12);
-		XTERM256.addColor("magenta", 13);
-		XTERM256.addColor("cyan", 14);
-		XTERM256.addColor("white", 15);
-		XTERM256.addColor("purple", 55);
-		XTERM256.addColor("purple2", 92);
-		XTERM256.addColor("orange", 208);
-		XTERM256.addColor("other", 82);
-		XTERM256.addColor("pink", 161);
-		XTERM256.addColor("pink2", 163);
-		XTERM256.addColor("pink3", 212);
-	}
-	
+	public static final Palette ANSI = new Palette("ansi", Constants.ANSI) {
+		{
+			addColor("black",   30);
+			addColor("red",     31);
+			addColor("green",   32);
+			addColor("yellow",  33);
+			addColor("blue",    34);
+			addColor("magenta", 35);
+			addColor("cyan",    36);
+			addColor("white",   37);
+		}
+	};
+
+	public static final Palette XTERM256 = new Palette("xterm256", Constants.XTERM) {
+		{
+			addColor("red",      9);
+			addColor("green",   10);
+			addColor("yellow",  11);
+			addColor("blue",    12);
+			addColor("magenta", 13);
+			addColor("cyan",    14);
+			addColor("white",   15);
+			addColor("purple",  55);
+			addColor("purple2", 92);
+			addColor("orange", 208);
+			addColor("other",   82);
+			addColor("pink",   161);
+			addColor("pink2",  163);
+			addColor("pink3",  212);
+		}
+	};
+
 	private Map<String, Thread> threads = new Hashtable<String, Thread>();
 
 	private final Map<String, Pair<String>> displayColors = new HashMap<String, Pair<String>>(8, 0.75f); // HashMap specifying particular colors for parts of text (dynamic)
 
 	private final Map<String, String> aliases = new LinkedHashMap<String, String>(20, 0.75f); // HashMap to store command aliases (static)
-	private final Map<Integer, String> Errors = new HashMap<Integer, String>(5, 0.75f);      // HashMap to store error messages for easy retrieval (static)
-	private final Map<String, Date> holidays = new HashMap<String, Date>(10, 0.75f);               // HashMap that holds an in-game date for a "holiday" name string
-	private final Map<Integer, String> years = new HashMap<Integer, String>(50, 0.75f);            // HashMap that holds year names for game themes that supply them (static)
-	private final Map<String, Command> commandMap = new HashMap<String, Command>(20, 0.75f); // HashMap that holds an instance of each command currently (dynamic)
-	private final Map<Zone, Integer> zones = new LinkedHashMap<Zone, Integer>(1, 0.75f);   // HashMap that tracks currently "loaded" zones (dynamic)
+	private final Map<Integer, String> Errors = new HashMap<Integer, String>(5, 0.75f);       // HashMap to store error messages for easy retrieval (static)
+	private final Map<String, Date> holidays = new HashMap<String, Date>(10, 0.75f);          // HashMap that holds an in-game date for a "holiday" name string
+	private final Map<Integer, String> years = new HashMap<Integer, String>(50, 0.75f);       // HashMap that holds year names for game themes that supply them (static)
+	private final Map<String, Command> commandMap = new HashMap<String, Command>(20, 0.75f);  // HashMap that holds an instance of each command currently (dynamic)
+	private final Map<Zone, Integer> zones = new LinkedHashMap<Zone, Integer>(1, 0.75f);      // HashMap that tracks currently "loaded" zones (dynamic)
 	
 	private final Map<Client, Player> sclients = new HashMap<Client, Player>();
 	
@@ -1137,7 +1138,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		final ObjectLoader loader = new ObjectLoader(this, objectDB);
 
 		// Load everything from databases by flag
-		loader.loadObjects(loadListDatabase(DB_FILE), logger);
+		loader.loadObjects(GameUtils.loadListDatabase(DB_FILE), logger);
 
 		debug("Database Loaded!");
 		debug("");
@@ -1180,10 +1181,10 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		conversation_test();
 		
 		// instantiate banned ip list
-		banlist = loadListDatabase(BANLIST_FILE);
+		banlist = GameUtils.loadListDatabase(BANLIST_FILE);
 
 		// instantiate forbidden names list
-		forbiddenNames = loadListDatabase(FORBIDDEN_FILE);
+		forbiddenNames = GameUtils.loadListDatabase(FORBIDDEN_FILE);
 
 		// load configuration data (file -- default.config)
 		// loadConfiguration(CONFIG_DIR + "config.txt", configs); ?
@@ -1929,11 +1930,11 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		}
 		
 		// generate blank/basic config files
-		final File aliases =   new File( resolvePath(CONFIG_DIR, "aliases.conf") );
-		final File banlist =   new File( resolvePath(CONFIG_DIR, "banlist.txt") );
-		final File channels =  new File( resolvePath(CONFIG_DIR, "channels.txt") );
-		final File forbidden = new File( resolvePath(CONFIG_DIR, "forbidden.txt") );
-		final File bboard =    new File( resolvePath(BOARD_DIR, "bboard.txt") );
+		final File aliases =    new File( resolvePath(CONFIG_DIR, "aliases.conf") );
+		final File banlist =    new File( resolvePath(CONFIG_DIR, "banlist.txt") );
+		final File channels =   new File( resolvePath(CONFIG_DIR, "channels.txt") );
+		final File forbidden =  new File( resolvePath(CONFIG_DIR, "forbidden.txt") );
+		final File main_board = new File( resolvePath(BOARD_DIR,  "main.bb") );
 
 		if( !aliases.exists() ) {
 			Utils.saveStrings(
@@ -1961,7 +1962,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		}
 
 		// generate an single, default message for the mud-wide bulletin board
-		if( !bboard.exists() ) {
+		if( !main_board.exists() ) {
 			Utils.saveStrings( resolvePath(BOARD_DIR, "bboard.txt"), new String[] { "0#admin#Welcome#Test Message" });
 		}
 
@@ -3822,15 +3823,30 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 	}
 
 	private void cmd_aliases(final String arg, final Client client) {
+		int count = 0;
+		
+		StringBuffer sb = new StringBuffer(80);
+		
 		send("Aliases", client);
 		
-		send("-------------------------------------------", client);
+		//send("-------------------------------------------", client);
+		send(Utils.padRight("", '-', 80), client);
 		
 		for (final Entry<String, String> e : getAliases().entrySet()) {
-			send(e.getKey() + " : " + e.getValue(), client);
+			//send(e.getKey() + " : " + e.getValue(), client);
+			
+			if( count > 0 && count %2 == 0) {
+				send(sb.toString(), client);
+				sb.delete(0, sb.length());
+			}
+			
+			sb.append( Utils.padRight(e.getKey() + " : " + e.getValue(), ' ', 40) );
+			
+			count++;
 		}
 		
-		send("-------------------------------------------", client);
+		//send("-------------------------------------------", client);
+		send(Utils.padRight("", '-', 80), client);
 	}
 
 	/**
@@ -4422,7 +4438,9 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			debug("# of args: " + args.length);
 
 			// initialize this to the main system board
-			BulletinBoard board = null; //boards.get("board");
+			BulletinBoard board = null;
+			
+			String boardName = "";
 			Integer messageNum = -1;
 
 			// TODO change this to get the appropriate bulletin board
@@ -4430,7 +4448,10 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			// important components of argument data
 			String command = "";
 			String param = "";
-
+			
+			Integer dotIndex = -1;
+			Boolean dotSpec = false;
+			
 			// @bb <command> <params>
 			// args[0]: <command>
 			// args[1...?]: <params>
@@ -4439,37 +4460,82 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 				command = args[0];
 				param = args[1];
 
-				int dotIndex = param.indexOf('.');
-
+				dotIndex = param.indexOf('.');
+				
 				if ( dotIndex != -1 ) {
-					board = getBoard( param.substring(0, dotIndex) );
-					
+					// if dot specified
+					dotSpec = true;
+
+					boardName = param.substring(0, dotIndex);
 					messageNum = Utils.toInt(param.substring(dotIndex + 1, param.length()), -1);
 
+					board = getBoard( boardName );
+				}
+				else {
+					// if not
+					boardName = param;
+
+					final List<String> params = (List<String>) Arrays.asList(args);
+
+					param = Utils.join( params.subList(2, params.size()), " ");
+
+					board = getBoard( boardName);
+				}
+			}
+			else {
+				command = arg;
+			}
+			
+			debug("command: " + command);
+			debug("  param: " + param);
+			
+			if( board != null ) {
+				if( dotSpec ) {
 					System.out.println("    board: " + board.getName());
 					System.out.println("message #: " + messageNum);
 				}
 				else {
-					board = getBoard(param);
-
-					final List<String> params = (List<String>) Arrays.asList(args);
-					
-					param = Utils.join( params.subList(2, params.size()), " ");
-					
+					System.out.println(" board: " + board.getName());
 				}
 			}
-
-			debug("command: " + command);
-			debug("  param: " + param);
 			
 			if ( command.equals("+scan") | command.equals("+s") ) {
 				debug("bb:scan");
+				
+				// TODO this should probably just test whether the requested board is null, since we kind of get the board up top regardless...
+				
+				// FIXME there's a problem here, because we've already gotten the board above and so if the board happens to be null then NPE or else the board isn't specified and...
+				
+				if( board != null ) {
+					final List<String> out = new LinkedList<String>();
+					
+					// render output
+					
+					//out.add( bb.getName() );
+					out.add("+----------------------+");
+					out.add("| " + Utils.padRight(board.getName(), ' ', 20) + " |");
+					
+					out.add("+----------------------+-------------------------------------------------------+");
+					
+					final List<String> formatted_messages = MudUtils.scan(board);
+					
+					if( formatted_messages.isEmpty() ) {
+						out.add("| " + Utils.padRight("No Messages.", ' ', 76) + " |");
+					}
+					else {
+						//for (final String s : MudUtils.scan(board)) out.add(s);
+						for(final String s : formatted_messages) out.add(s);
+					}
+					
+					out.add("+------------------------------------------------------------------------------+");
 
-				final List<String> out = new LinkedList<String>();
-
-				for (final String s : MudUtils.scan(board)) out.add(s);
-
-				send(out, client);
+					send(out, client);
+				}
+				else {
+					for(final BulletinBoard board1 : this.boards.values()) {
+						send("The board '" + board1.getName() + "' has " + board1.getNumMessages() + " messages.", client);
+					}
+				}	
 			}
 			else if ( command.equals("+delete") || command.equals("+d") ) {
 				debug("bb:delete");
@@ -4484,10 +4550,10 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 						if ( entry.getAuthor().equals( player.getName() ) ) {
 							debug("Removing Message...");
 							board.removeEntry(messageNum);
-							
+
 							debug("Renumbering entries...");
 							board.renumber(messageNum);
-							
+
 							debug("Done.");
 						}
 						else send("BB: You may only delete your own posts.", client);
@@ -4498,24 +4564,34 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			}
 			else if ( command.equals("+read")  ) {
 				debug("bb:read");
+				
+				// NOTE (Syntax): @bb +read <board | board.message_num>
+				
+				if( board != null ) {
+					// assume we either got no message number or a totally invalid input
+					if( messageNum == -1 ) {
+						send( String.format("%s.%d: No such Message", board.getName(), messageNum), client);
+						send( "Showing the last message to the board...");
 
-				// should this be handled elsewhere (index/bounds issue)
-				if (board.getNumMessages() <= 0 || messageNum >= board.getNumMessages()) {
-					send( String.format("%s.%d: No such Message", board.getName(), messageNum), client);
-				}
-				else {
-					final BBEntry entry = board.getEntry(messageNum);
-
-					if (entry != null) {						
-						send( Utils.mkList(
-								"ID: " + entry.getId(),
-								"Author: " + entry.getAuthor(),
-								"Subject: " + entry.getSubject(),
-								"",
-								entry.getMessage()
-								), client);
+						messageNum = board.getNumMessages() - 1;
 					}
-					else send("No such entry!", client);
+
+					if( Utils.range(messageNum, 0, board.getNumMessages()) ) {
+						final BBEntry entry = board.getEntry(messageNum);
+
+						if (entry != null) {						
+							send( Utils.mkList(
+									"| ID: "      + entry.getId(),
+									"| Author: "  + entry.getAuthor(),
+									"| Subject: " + entry.getSubject(),
+									"| ",
+									"| " + entry.getMessage()), client);
+						}
+						else send("No such entry!", client);
+					}
+					else {
+						send( String.format("%s.%d: No such Message", board.getName(), messageNum), client);
+					}
 				}
 			}
 			else if ( command.equals("+reply") ) {
@@ -8456,7 +8532,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			double weight = MudUtils.calculateWeight(player) + MudUtils.calculateWeight(player.getMoney());
 
 			//send("Weight: " + weight + "/" + player.getCapacity() + " lbs.", client);
-			send(String.format("Weight: %f / %d lbs.", weight, player.getCapacity()), client);
+			send(String.format("Weight: %.2f / %d lbs.", weight, player.getCapacity()), client);
 		}
 	}
 
@@ -17841,27 +17917,6 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		debug("Done loading exits:", 2);
 	}
 
-	public ArrayList<String> loadListDatabase(String filename) {
-		String[] string_array; // create string array
-		ArrayList<String> strings; // create arraylist of strings
-
-		string_array = Utils.loadStrings(filename);
-
-		strings = new ArrayList<String>(string_array.length);
-
-		for (int line = 0; line < string_array.length; line++) {
-			// we will completely drop any empty lines, as they are irrelevant
-			if( !string_array[line].isEmpty() ) {
-				if (string_array[line].charAt(0) != '#')
-					strings.add(string_array[line]);
-				else
-					debug("-- Skip - Line Commented Out --", 2);
-			}
-		}
-
-		return strings;
-	}
-
 	public void loadSpells(final String[] temp) {
 		// name#cast message#duration#effects#reagents#targets
 		// name: eagles_splendor
@@ -18846,7 +18901,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		final ObjectLoader loader = new ObjectLoader(this, objectDB);
 
 		// load objects from databases
-		loader.loadObjects(loadListDatabase(DB_FILE), this.logger);
+		loader.loadObjects(GameUtils.loadListDatabase(DB_FILE), this.logger);
 
 		// tell us that loading is done (supply custom message?)
 		send("Game> Done.");
@@ -18863,7 +18918,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		final ObjectLoader loader = new ObjectLoader(this, objectDB);
 
 		// load objects from databases
-		loader.loadObjects(loadListDatabase(DB_FILE), this.logger);
+		loader.loadObjects(GameUtils.loadListDatabase(DB_FILE), this.logger);
 
 		// tell us that loading is done (supply custom message?)
 		send("Game> Done.");
@@ -22559,75 +22614,13 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 
 		return objectsFound;
 	}
-
-	/**
-	 * Load a board into the bulletinboard structure.
-	 * 
-	 * This consists of dividing the file into posts, creating bbentry objects
-	 * and putting them in a "bulletinboard".
-	 * 
-	 * @param board the name of the board to load (filename without extension?)
-	 */
-	private BulletinBoard loadBoard(final String filename) {
-		// TODO should derive board name from board file
-		// create bulletin board object
-		final BulletinBoard bb = new BulletinBoard("temp", filename);
-		
-		boolean name_set = false;
-		
-		// TODO path kludges FOR THE WIN!
-		final ArrayList<String> lines = loadListDatabase( resolvePath(BOARD_DIR, bb.getFilename()) );
-
-		bb.setInitialCapacity(lines.size());
-		
-		for (final String line : lines) {
-			final String[] entryInfo = line.split("#");
-			
-			if( line.startsWith("!") ) {
-				if( !name_set ) {
-					final String nameLine = line.substring(1).trim();
-					
-					final int dot = nameLine.indexOf('.');
-					
-					if( dot != -1 ) {
-						bb.setName( nameLine.substring(0, dot) );
-						bb.setShortName( nameLine.substring(dot + 1, nameLine.length()) );
-					}
-					else {
-						bb.setName(nameLine);
-					}
-					
-					System.out.println("Board name set to: " + bb.getName());
-					
-					name_set = true;
-					continue;
-				}
-			}
-
-			try {
-				final int id = Integer.parseInt(entryInfo[0]);
-				final String author = entryInfo[1];
-				final String subject = entryInfo[2];
-				final String message = entryInfo[3];			
-				
-				bb.loadEntry( new BBEntry(id, author, subject, message) );
-			}
-			catch (final NumberFormatException nfe) {
-				debug("setup(): loading bulletin board entries (number format exception)");
-				
-				debug( nfe );
-			}
-		}
-		
-		return bb;
-	}
 	
 	private void loadBoards() {
 		// WORLD_DIR + world + "\\" + "boards" + "\\" + filename + ".txt";
 		final FilenameFilter f = new FilenameFilter() {
 			@Override
 			public boolean accept(File arg0, String arg1) {
-				return arg1.endsWith(".txt");
+				return arg1.endsWith(".bb");
 			}
 		};
 		
@@ -22636,7 +22629,14 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 
 			final BulletinBoard board = loadBoard(fileName);
 			
-			addBoard(board);
+			//addBoard(board);
+			final String shortname = board.getShortName();
+			
+			// if there is a valid shortname, use that as the map key INSTEAD of the full name
+			if( shortname != null && !shortname.equals("") ) this.boards.put(board.getShortName(), board);
+			else                                             this.boards.put(board.getName(), board);
+			
+			System.out.println("Board has " +  board.getNumMessages() + " messages.");
 		}
 	}
 
@@ -23000,7 +23000,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		this.timer.schedule(task, 0L); // immediate scheduling
 	}
 
-	// global nameref access functions
+	// START global Name Reference (nameref) access functions
 
 	/**
 	 * Get a value for a Name Reference from the global table.
@@ -23037,6 +23037,8 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 	private void clearNameRefs() {
 		this.nameRef.clear();
 	}
+	
+	// END global Name Reference (nameref) access functions
 
 	private void processTelnetCommand() {
 	}
@@ -25488,6 +25490,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 	private void addBoard(final BulletinBoard bb) {
 		final String shortname = bb.getShortName();
 		
+		// if there is a valid shortname, use that as the map key INSTEAD of the full name
 		if( shortname != null && !shortname.equals("") ) this.boards.put(shortname, bb);
 		else                                             this.boards.put(bb.getName(), bb);
 	}
@@ -25495,6 +25498,78 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 	// TODO is returning a particular board actually a good solution?
 	private BulletinBoard getBoard(final String boardName) {
 		return this.boards.get(boardName);
+	}
+	
+	/**
+	 * Load a board into the bulletinboard structure.
+	 * 
+	 * This consists of dividing the file into posts, creating bbentry objects
+	 * and putting them in a "bulletinboard".
+	 * 
+	 * @param board the name of the board to load (filename without extension?)
+	 */
+	private BulletinBoard loadBoard(final String filename) {
+		// TODO should derive board name from board file
+		// create bulletin board object
+		final BulletinBoard bb = new BulletinBoard("temp", filename);
+
+		boolean name_set = false;
+
+		// TODO path kludges FOR THE WIN!
+		final List<String> lines = GameUtils.loadListDatabase( resolvePath(BOARD_DIR, bb.getFilename()) );
+
+		bb.setInitialCapacity(lines.size());
+
+		int count = 0;
+
+		for (final String line : lines) {
+			final String[] entryInfo = line.split("#");
+
+			if( line.startsWith("!") ) {
+				if( !name_set ) {
+					final String nameLine = line.substring(1).trim();
+
+					final int dot = nameLine.indexOf('.');
+
+					if( dot != -1 ) {
+						bb.setName( nameLine.substring(0, dot) );
+						bb.setShortName( nameLine.substring(dot + 1, nameLine.length()) );
+					}
+					else {
+						bb.setName(nameLine);
+					}
+
+					System.out.println("Board name set to: " + bb.getName());
+
+					name_set = true;
+				}
+			}
+			else {
+				try {
+					final int id = Integer.parseInt(entryInfo[0]);
+					final String author = entryInfo[1];
+					final String subject = entryInfo[2];
+					final String message = entryInfo[3];			
+
+					bb.loadEntry( new BBEntry(id, author, subject, message) );
+				}
+				catch (final NumberFormatException nfe) {
+					debug("setup(): loading bulletin board entries (number format exception)");
+
+					debug( nfe );
+				}
+				catch (final ArrayIndexOutOfBoundsException aioobe) {
+					debug( String.format("line %d:", count) );
+					debug("setup(): loading bulletin board entries (index out of bounds)");
+
+					debug( aioobe );
+				}
+			}
+
+			count++;
+		}
+
+		return bb;
 	}
 	
 	private void handleCombat() {

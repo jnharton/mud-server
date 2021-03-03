@@ -11,7 +11,7 @@ import mud.MUDObject;
 
 import mud.foe.FOEItemTypes;
 import mud.foe.FOESlotTypes;
-import mud.foe.GameUtils;
+import mud.foe.FOEGameUtils;
 import mud.foe.misc.Device;
 import mud.foe.misc.FileSystem;
 import mud.foe.misc.ModularDevice;
@@ -52,7 +52,7 @@ public class PipBuck extends Item implements ModularDevice, ExtraCommands {
 		commands.put("enable", new Command("enable a module") {
 			public void execute(final String arg, final Client client) {
 				final Player player = getPlayer(client);        // get player
-				final PipBuck p = GameUtils.getPipBuck(player); // get pipbuck
+				final PipBuck p = FOEGameUtils.getPipBuck(player); // get pipbuck
 
 				if( p != null ) {
 					if( arg.equalsIgnoreCase("efs") ) {
@@ -98,7 +98,7 @@ public class PipBuck extends Item implements ModularDevice, ExtraCommands {
 		commands.put("disable", new Command("disable a module") {
 			public void execute(final String arg, final Client client) {
 				final Player player = getPlayer(client);        // get player
-				final PipBuck p = GameUtils.getPipBuck(player); // get pipbuck
+				final PipBuck p = FOEGameUtils.getPipBuck(player); // get pipbuck
 
 				if( p != null ) {
 					if( arg.equalsIgnoreCase("efs") ) {
@@ -140,7 +140,7 @@ public class PipBuck extends Item implements ModularDevice, ExtraCommands {
 			@Override
 			public void execute(final String arg, final Client client) {
 				final Player player = getPlayer(client);        // get player
-				final PipBuck p = GameUtils.getPipBuck(player); // get pipbuck
+				final PipBuck p = FOEGameUtils.getPipBuck(player); // get pipbuck
 
 				if( p != null ) {
 					// get the intended module
@@ -180,7 +180,7 @@ public class PipBuck extends Item implements ModularDevice, ExtraCommands {
 		commands.put("register", new Command("register a pipbuck tag") {
 			public void execute(final String arg, final Client client) {
 				final Player player = getPlayer(client);        // get player
-				final PipBuck p = GameUtils.getPipBuck(player); // get pipbuck
+				final PipBuck p = FOEGameUtils.getPipBuck(player); // get pipbuck
 
 				// register <tag name>=<tag id>
 				if( p != null ) {
@@ -201,7 +201,7 @@ public class PipBuck extends Item implements ModularDevice, ExtraCommands {
 		commands.put("slot", new Command("attach a module to your device") {
 			public void execute(final String arg, final Client client) {
 				final Player player = getPlayer(client);        // get player
-				final PipBuck p = GameUtils.getPipBuck(player); // get pipbuck
+				final PipBuck p = FOEGameUtils.getPipBuck(player); // get pipbuck
 
 				if( p != null ) {
 					Item item = null;
@@ -249,7 +249,7 @@ public class PipBuck extends Item implements ModularDevice, ExtraCommands {
 		commands.put("tags", new Command("list your registed pipbuck tags") {
 			public void execute(final String arg, final Client client) {
 				final Player player = getPlayer(client);        // get player
-				final PipBuck p = GameUtils.getPipBuck(player); // get pipbuck
+				final PipBuck p = FOEGameUtils.getPipBuck(player); // get pipbuck
 
 				if( p != null ) {
 					send("--- Tags", client);
@@ -264,7 +264,7 @@ public class PipBuck extends Item implements ModularDevice, ExtraCommands {
 		commands.put("unslot", new Command("detach a module from your device") {
 			public void execute(final String arg, final Client client) {
 				final Player player = getPlayer(client);        // get player
-				final PipBuck p = GameUtils.getPipBuck(player); // get pipbuck
+				final PipBuck p = FOEGameUtils.getPipBuck(player); // get pipbuck
 
 				if( p != null ) {
 					// NOTE: we know that modules are Items, so this is reasonably safe...
@@ -289,7 +289,7 @@ public class PipBuck extends Item implements ModularDevice, ExtraCommands {
 		commands.put("modules", new Command("list the modules attached to your device") {
 			public void execute(final String arg, final Client client) {
 				final Player player = getPlayer(client);        // get player
-				final PipBuck p = GameUtils.getPipBuck(player); // get pipbuck
+				final PipBuck p = FOEGameUtils.getPipBuck(player); // get pipbuck
 
 				if( p != null ) {
 					final List<Module> modules = p.getModules();
@@ -311,7 +311,7 @@ public class PipBuck extends Item implements ModularDevice, ExtraCommands {
 				new Command("view pipbuck") {
 			public void execute(final String arg, final Client client) {
 				final Player player = getPlayer(client);        // get player
-				final PipBuck p = GameUtils.getPipBuck(player); // get pipbuck
+				final PipBuck p = FOEGameUtils.getPipBuck(player); // get pipbuck
 
 				if( p != null ) {
 					if( arg.equals("") ) {
@@ -409,7 +409,7 @@ public class PipBuck extends Item implements ModularDevice, ExtraCommands {
 		commands.put("efs", new Command("eyes-forward sparkle") {
 			public void execute(final String arg, final Client client) {
 				final Player player = getPlayer(client);        // get player
-				final PipBuck p = GameUtils.getPipBuck(player); // get pipbuck
+				final PipBuck p = FOEGameUtils.getPipBuck(player); // get pipbuck
 
 				if( p != null ) {
 					if( p.efs_enabled ) {
