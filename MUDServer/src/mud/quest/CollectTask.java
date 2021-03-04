@@ -1,13 +1,12 @@
 package mud.quest;
 
-import mud.objects.Room;
 import mud.utils.Data;
 
 public class CollectTask extends Task {
 	public Integer toCollect = 0;
 	public Integer collects = 0;
 	
-	public CollectTask(final String tDescription, final Room location, final Data objectiveData) {
+	public CollectTask(final String tDescription, final Integer location, final Data objectiveData) {
 		super(TaskType.COLLECT, tDescription, location);
 	}
 	
@@ -22,11 +21,14 @@ public class CollectTask extends Task {
 		return "" + this.collects + " / " + this.toCollect;
 	}
 	
-	public void update() {
+	@Override
+	protected boolean update(TaskUpdate update) {
 		if (this.collects == this.toCollect) {
 			this.isComplete = true;
 		}
-		else { this.isComplete = false; }
+		//else { this.isComplete = false; }
+		
+		return true;
 	}
 	
 	protected Task getCopy() {

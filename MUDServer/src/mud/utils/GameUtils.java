@@ -2,9 +2,11 @@ package mud.utils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Predicate;
 
 import mud.misc.BBEntry;
 import mud.misc.BulletinBoard;
+import mud.objects.Item;
 
 public class GameUtils {
 	// try to do same as other function without exposing the t
@@ -115,4 +117,13 @@ public class GameUtils {
 
 		return bb;
 	}
+	
+	public static Predicate<Item> itemIsUnique() {
+	    return p -> p.isUnique();
+	}
+	
+	public static Predicate<Item> itemIsNotUnique() {
+	    return p -> !p.isUnique();
+	}
+	
 }

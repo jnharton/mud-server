@@ -442,7 +442,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 	private boolean use_weather = false;     // indicate whether the weather should be updated regularly        [default: false]
 	private boolean use_accounts = false;    // enable the use of accounts/the account system                   [default: false]
 	private boolean use_cnames = false;      // will generate names for players you don't know use classes      [default: false]
-	private boolean int_login = false;       // interactive login?                                              [default: false]
+	private boolean interactive_login = false;       // interactive login?                                              [default: false]
 	private boolean magic = false;           // use the coded magic system?                                     [default: false]
 	private boolean notify_immediate = true; // notifications using notify(...) are sent immediately            [default: true]
 	private boolean input_hold = false;      // don't accept new input during automatic backups are running     [default: false]   
@@ -693,7 +693,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 						System.out.println("Testing Enabled!");
 					}
 					else if (param.equals("int-login")) {
-						server.int_login = true;
+						server.interactive_login = true;
 					}
 					else if( param.equals("magic") ) {
 						server.magic = true;
@@ -2698,7 +2698,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 					"Help the Innkeeper",
 					"The inn's basement is full of rats. Help the innkeeper out by killing a few.",
 					rdi,
-					new KillTask("Kill 5 rats", room, objectiveData)
+					new KillTask("Kill 5 rats", room.getDBRef(), objectiveData)
 					);
 			
 			Item bread = new Item("Bread", "A tasty looking loaf of yellow bread.");
@@ -2960,7 +2960,8 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 				case SKILL:    op_skilledit(input, client);    break;
 				case ZONE:     op_zoneedit(input, client);     break;
 				case NONE:
-					send("Exiting " + editor.getName(), client);
+						send("You are not editing anything", client);
+						send("Input was: '" + input + "'", client);
 					break;
 				default:       break;
 				}
@@ -10649,19 +10650,16 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 	 */
 	private void cmd_questedit(final String arg, final Client client) {
 		final Player player = getPlayer(client);
-		final String old_status = player.getStatus();
-
-		player.setStatus(Constants.ST_EDIT);
-		player.setEditor(Editors.QUEST);
-
-		final EditorData newEDD = new EditorData();
 
 		Quest quest = null;
+		
 		boolean exist = false;
 
 		if (arg.equals("new")) {
 			// the below uses a form of the constructor that doesn't assign an id
 			quest = new Quest("New Quest", "A new, blank quest.");
+			
+			send("New Quest Created!", client);
 
 			// add new quest to global table
 			// quests.add( quest );
@@ -10677,56 +10675,22 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			
 			try {
 				quest = getQuest(id);
+				
+				exist = true;
 			}
 			catch(final IndexOutOfBoundsException ioobe) {
 				// invalid quest id/list index, cannot edit (abort)
 				System.out.println("--- Stack Trace ---");
 				ioobe.printStackTrace();
 
-				// reset player, and clear edit flag and editor setting
-				player.setStatus(old_status);
-				player.setEditor(Editors.NONE);
-
-				// clear editor data
-				player.setEditorData(null);
-
-				send("Game> Quest Editor - Unexpected error caused abort (bounds exception)", client);
-			}
-
-			if (quest != null) {
-				exist = true;
+				send("Game> Quest Editor - Unexpected error caused abort (bounds exception)\nThe Quest ID provided does not match any existing Quest!", client);
 			}
 		}
 
 		// quest exists
 		if (exist) {
-			if (quest.Edit_Ok) {
-				quest.Edit_Ok = false;
-			}
-			else {
-				// quest is not editable, exit the editor
-				abortEdit("quest not editable (!Edit_Ok)", old_status, client);
-				return;
-			}
-
 			editQuest(player, quest);
 		}
-		else {
-			// quest doesn't exist (abort) reset player, and clear edit flag and editor setting
-
-			player.setStatus(old_status);
-			player.setEditor(Editors.NONE);
-
-			// clear editor data
-			player.setEditorData(null);
-
-			send("Game> Quest Editor - Error: quest does not exist", client);
-
-			return;
-		}
-
-		// show the current state of the quest
-		op_questedit("show", client);
 	}
 
 	/**
@@ -10858,7 +10822,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 										if (task.getType().equals(TaskType.KILL)) {
 											final KillTask kt = (KillTask) task;
 
-											client.write(" [ " + kt.kills + " / " + kt.toKill + " ]");
+											client.write(" [ " + kt.getProgress() + " ]");
 										}
 									}
 									else {
@@ -10867,11 +10831,11 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 										if (task.getType().equals(TaskType.KILL)) {
 											final KillTask kt = (KillTask) task;
 
-											client.write(" [ " + kt.kills + " / " + kt.toKill + " ]");
+											client.write(" [ " + kt.getProgress() + " ]");
 										}
 									}
 
-									client.write(Colors.MAGENTA + " ( " + task.getLocation().getName() + " ) " + Colors.CYAN);
+									client.write(Colors.MAGENTA + " ( " + getRoom( task.getLocation() ).getName() + " ) " + Colors.CYAN);
 									client.write('\n');
 								}
 							}
@@ -10929,7 +10893,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 							if (task.getType().equals(TaskType.KILL)) {
 								final KillTask kt = (KillTask) task;
 
-								client.write(" [ " + kt.kills + " / "  + kt.toKill + " ]");
+								client.write(" [ " + kt.getProgress() + " ]");
 							}
 						}
 						else {
@@ -10937,11 +10901,11 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 
 							if (task.getType().equals(TaskType.KILL)) {
 								final KillTask kt = (KillTask) task;
-								client.write(" [ " + kt.kills + " / " + kt.toKill + " ]");
+								client.write(" [ " + kt.getProgress() + " ]");
 							}
 						}
 
-						client.write(Colors.MAGENTA + " ( " + task.getLocation().getName() + " ) " + Colors.CYAN);
+						client.write(Colors.MAGENTA + " ( " + getRoom( task.getLocation() ).getName() + " ) " + Colors.CYAN);
 						client.write('\n');
 					}
 				}
@@ -15002,6 +14966,8 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		debug("rarg: \"" + rarg + "\"");
 
 		if (rcmd.equals("abort")) {
+			send("< Aborting Changes... >", client);
+			
 			// clear edit flag
 			((Room) data.getObject("room")).Edit_Ok = true;
 
@@ -15892,17 +15858,42 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			send("< Aborting Changes... >", client);
 
 			// clear edit flag
-			quest.Edit_Ok = true;
-
+			//quest.Edit_Ok = true;
+			((Quest) data.getObject("quest")).Edit_Ok = true;
+			
 			// reset editor and player status
 			player.setStatus((String) data.getObject("pstatus"));
 			player.setEditor(Editors.NONE);
 
 			// clear editor data
 			player.setEditorData(null);
-
+			
 			// exit
 			send("< Exiting... >", client);
+		}
+		else if ( qcmd.equals("addtask") ) {
+			final Integer tc = (Integer) data.getObject("taskcount");
+			
+			final TaskType tt = TaskType.valueOf(qarg.toUpperCase());
+			
+			final Task t;
+			
+			switch(tt) {
+			case NONE:     t = null;                                   break;
+			case DELIVER:  t = null;                                   break;
+			case RETRIEVE: t = new RetrieveTask("", null, new Data()); break;
+			case COLLECT:  t = new CollectTask("", null, new Data());  break;
+			case KILL:     t = new KillTask("", null, new Data());     break;
+			default:       t = null;                                   break;
+			}
+			
+			if( data.addObject("task" + tc, t) ) { 
+				data.setObject("taskcount", tc + 1);
+				send("Ok.", client);
+			}
+		}
+		else if ( qcmd.equals("deltask") ) {
+			
 		}
 		else if ( qcmd.equals("desc") ) {
 			if( data.setObject("desc", qarg) ) {
@@ -15938,6 +15929,8 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 						Utils.padRight("", '-', HELP_WIDTH),
 						
 						"abort                          abort the editor (no changes will be kept)",
+						"addtask <task type>            add a new task of the specified type",
+						"deltask <?>                    delete an existing task",
 						"desc <new description>         change/set the quest description",
 						"done                           finish editing (save & exit)",
 						"help                           shows this help information",
@@ -15945,6 +15938,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 						"save                           save changes to the quest",
 						"setloc                         set the quest location",
 						"show                           show basic information about the quest",
+						"types                          print out a list of valid task types",
 						"zones",
 						Utils.padRight("", '-', HELP_WIDTH));
 				
@@ -16016,12 +16010,29 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 
 			int i = 0;
 
-			for (final Task t : quest.getTasks()) {
-				send(" " + i + ") " + t.getDescription(), client);
-				i++;
+			/*
+			 * for (final Task t : quest.getTasks()) { send(" " + i + ") " +
+			 * t.getDescription(), client); i++; }
+			 */
+
+			for (final String s : data.getKeysByPrefix("task")) {
+				if( s.equals("taskcount") ) continue;
+				
+				final Task task = (Task) data.getObject(s);
+				
+				if(task != null) {
+					send("[" + s + "] " + task.getName() + "(" + task.getType().getName() + ")", client);
+				}
 			}
 
 			send(Utils.padRight("", '-', 80), client);
+		}
+		else if (qcmd.equals("types") ) {
+			List<TaskType> task_types = Utils.mkList(TaskType.DELIVER, TaskType.RETRIEVE, TaskType.COLLECT, TaskType.KILL, TaskType.NONE);
+			
+			for(final TaskType t : task_types) {
+				send(t.getName());
+			}
 		}
 		else if (qcmd.equals("zones")) {
 			for (final Entry<Zone, Integer> zoneData : zones.entrySet()) {
@@ -18832,7 +18843,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		send("Mode: " + mode, someClient);
 
 		// TODO need a way to either exit int login for another method or to create a character in int login
-		if (int_login) {
+		if (interactive_login) {
 			send("Using Interactive Login", someClient);
 			send("");
 
@@ -23219,10 +23230,10 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			
 			// remove stuff from player (they retain unique stuff?)
 			List<Item> loss = new ArrayList<Item>( player.getInventory() );
-			loss.removeIf( itemIsUnique() );
+			loss.removeIf( GameUtils.itemIsUnique() );
 			room.addItems( loss );
 			
-			player.getInventory().removeIf( itemIsNotUnique() );
+			player.getInventory().removeIf( GameUtils.itemIsNotUnique() );
 			
 			// send the player to the void
 			player.setLocation(Constants.VOID);
@@ -23281,9 +23292,18 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 
 				if (active_quest.getLocation() == getZone(player)) {
 					debug("Player is in the quest's Zone");
-
-					// check each task
-					for (final Task task : active_quest.getTasks(true)) { // get incomplete tasks
+					
+					//
+					final QuestUpdate qu = new QuestUpdate(active_quest.getId());
+					TaskUpdate tu;
+					
+					// check each task (well, the incomplete ones)
+					for (final Task task : active_quest.getTasks(false)) {
+						tu = null; // TODO make it possible to reuse task update object?
+						
+						boolean done = false;
+						
+						// only worried about kill tasks at the moment
 						if ( task.isType(TaskType.KILL) ) {
 							final KillTask kt = (KillTask) task;
 							
@@ -23307,40 +23327,22 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 									final Creature c = (Creature) objective;
 
 									if (c == creature || c.getRace() == creature.getRace() || c.getName() == creature.getName()) {
-										kt.kills++;
+										tu = new TaskUpdate(task.getId(), new Data());
+										tu.getData().addObject("kills", 1);
+										
+										qu.taskUpdates.add( tu );
+										
+										active_quest.update( qu );
+										
+										done = true;
 									}
 								}
 								else if (objective.isType(TypeFlag.PLAYER)) {
 								}
-
-								task.update(null); // dummy update
-
-								if ( task.isComplete() ) {
-									// send("You completed the task ( " + task.getDescription() + " )" , player.getClient());
-									final String taskDesc = colors(task.getDescription(), "green");
-									send("You completed the task " + taskDesc, player.getClient());
-								}
-								else send("task not done yet.", player.getClient());
-
-								//
-
-								final QuestUpdate qu = new QuestUpdate(active_quest.getId());
-								final TaskUpdate tu = new TaskUpdate(task.getId());
-
-								qu.taskUpdates.add(tu);
-
-								active_quest.update(qu);
-
-								if (active_quest.isComplete()) {
-									// send("You completed the quest ("+
-									// active_quest.getName() + ")",
-									// player.getClient());
-									final String questName = colors(active_quest.getName(), getDisplayColor("quest"));
-									send("You completed the quest " + questName, player.getClient());
-								}
-								else send("Quest not completed!", player.getClient());
-
-								break;
+								
+								if( done ) break; // exit the loop
+								
+								// update quest? tasks?
 							}
 							else send("Task> Invalid Target!", player.getClient());
 						}
@@ -23349,7 +23351,9 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			}
 			
 			// TODO this next part should basically resolve the quest where we advance an inactive quest (should we make it active at that time?)
-
+			
+			/*
+			 * 
 			// for each of the player's quests
 			for (Quest quest1 : player.getQuests()) {
 				// SKIP active quest
@@ -23372,7 +23376,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 
 									if (c == creature || c.getRace() == creature.getRace() || c.getName() == creature.getName()) {
 										kt.kills++;
-										task.update(null); // dummy update
+										task.applyUpdate(null); // dummy update
 
 										if (task.isComplete()) {
 											send("You completed the task ( " + task.getDescription() + " )", player.getClient());
@@ -23388,6 +23392,8 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 					}
 				}
 			}
+			
+			*/
 		}
 	}
 
@@ -24736,7 +24742,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 								port = n;
 							}
 						case "int-login":
-							if (value.equals("true")) int_login = true;
+							if (value.equals("true")) interactive_login = true;
 							break;
 						default:
 							break;
@@ -25097,7 +25103,6 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 	private void editRoom(final Player player, final Room room) {
 		// NOTE: by definition the player shouldn't be null in here
 		final Client client = player.getClient();
-
 		final String old_status = player.getStatus();
 
 		if (room != null) {
@@ -25163,16 +25168,18 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 	private void editQuest(final Player player, final Quest quest) {
 		// NOTE: by definition the player shouldn't be null in here
 		final Client client = player.getClient();
-		String old_status = player.getStatus();
+		final String old_status = player.getStatus();
 
 		if (quest != null ) {
 			player.setStatus(Constants.ST_EDIT); // set the 'edit' status flag
-			player.setEditor(Editors.ZONE); // zone editor
+			player.setEditor(Editors.QUEST);     // quest editor
 
 			final EditorData newEDD = new EditorData();
 			
 			if (quest.Edit_Ok) {
 				quest.Edit_Ok = false;
+				
+				send("Quest marked as not okay for anyone else to edit!", client);
 			}
 			else {
 				// quest is not editable, exit the editor
@@ -25188,6 +25195,8 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			newEDD.addObject("name", quest.getName());
 			newEDD.addObject("location", -1);
 			newEDD.addObject("desc", "");
+			
+			newEDD.addObject("taskcount", 0);
 			
 			//
 			player.setEditorData(newEDD);
@@ -25693,22 +25702,8 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		}
 	}
 	
-	public static Predicate<Item> itemIsUnique() {
-	    return p -> p.isUnique();
-	}
 	
-	public static Predicate<Item> itemIsNotUnique() {
-	    return p -> !p.isUnique();
-	}
 	
-	/**
-	 * Attach a Logger object to the server
-	 * 
-	 * @param l
-	 */
-	public void attach(final Logger l) {
-		this.logger = l;
-	}
 	
 	// standard, "always open" and one-way portal (default is active)
 	public Portal createPortal(int pOrigin, int pDestination) {
@@ -25862,6 +25857,15 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		}
 
 		return count;
+	}
+	
+	/**
+	 * Attach a Logger object to the server
+	 * 
+	 * @param l
+	 */
+	public void attach(final Logger l) {
+		this.logger = l;
 	}
 	
 	// Send all objects

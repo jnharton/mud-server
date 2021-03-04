@@ -179,14 +179,25 @@ public final class Quest {
 		return this.tasks;
 	}
 	
-	public ArrayList<Task> getTasks(boolean incomplete) {
-		ArrayList<Task> tasks = new ArrayList<Task>();
+	/**
+	 * 
+	 * @param complete include completed tasks?
+	 * @return
+	 */
+	public List<Task> getTasks(boolean completed) {
+		final List<Task> tasks = new ArrayList<Task>();
 		
-		if( incomplete ) {
-			for(Task task : this.tasks) if( !task.isComplete() ) tasks.add(task);
+		if( completed ) {
+			tasks.addAll( this.tasks );
+			
+			/*for(final Task task : this.tasks) {
+				tasks.add(task);
+			}*/
 		}
 		else {
-			for(Task task : this.tasks) if( task.isComplete() ) tasks.add(task);
+			for(final Task task : this.tasks) {
+				if( !task.isComplete() ) tasks.add(task);
+			}
 		}
 		
 		return tasks;
@@ -266,12 +277,22 @@ public final class Quest {
 		boolean questChanged = applyUpdate(qu);
 
 		if (questChanged) {
-			update();
-			return true;
+			this.isComplete = true;
+			
+			for (final Task task : this.tasks) {
+				if ( !task.isComplete() ) {
+					this.isComplete = false;
+					break;
+				}
+			}
+			
+			
 		}
 		else {
 			return false;
 		}
+		
+		return true;
 	}
 
 	
@@ -289,13 +310,13 @@ public final class Quest {
 		boolean questChanged = false;
 		
 		for (final Task task : this.tasks) {
-			for (final TaskUpdate tu : new ArrayList<TaskUpdate>(update.taskUpdates)) {
-				if ( tu.taskId == task.getId() ) {
-					if ( task.update(tu) ) {
+			for (final TaskUpdate taskUpdate : new ArrayList<TaskUpdate>(update.taskUpdates)) {
+				if ( taskUpdate.getTaskId() == task.getId() ) {
+					if ( task.applyUpdate(taskUpdate) ) {
                         questChanged = true;
                     }
 					
-					update.taskUpdates.remove(tu);
+					update.taskUpdates.remove(taskUpdate);
 					
 					break;
 				}

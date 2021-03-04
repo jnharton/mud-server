@@ -15,12 +15,11 @@ import mud.utils.Data;
 public abstract class Task {
 	private int id = 0;
 	
-	protected TaskType taskType;          // what kind of task is it? (see TaskType)
+	protected TaskType taskType;  // what kind of task is it? (see TaskType)
 	
-	// TODO do we need task names?
-	protected String name;
-	protected String description;
-	protected Room location = null;       // a specific location associated with the task, may be null
+	protected String name;        // TODO do we need task names?
+	protected String description; //
+	protected Integer location;   // a specific location associated with the task
 
 	protected Data objective = null;
 	
@@ -31,12 +30,14 @@ public abstract class Task {
 	 * @param tType task type
 	 * @param tDescription task description
 	 */
-	protected Task(final TaskType tType, final String tDescription, final Room location) {
+	protected Task(final TaskType tType, final String tDescription, final Integer location) {
 		this.taskType = tType;
 		this.description = tDescription;
 		this.location = location;
 	}
-
+	
+//	public abstract Task(final String tDescription, final Room location, final Data objectiveData);
+	
 	/**
 	 * Copy Constructor
 	 * 
@@ -80,7 +81,7 @@ public abstract class Task {
 		this.description = tDescription;
 	}
 
-	public Room getLocation() {
+	public Integer getLocation() {
 		return location;
 	}
 	
@@ -93,31 +94,25 @@ public abstract class Task {
 	}
 	
 	public abstract String getProgress();
-	
-	public abstract void update();
-	
-	public boolean update(final TaskUpdate update) {
-		boolean taskChanged = applyUpdate(update);
 
-		if ( taskChanged ) {
-			update();
-			return true;
-		}
-		else {
-			return false;
-		}
+	
+	public boolean applyUpdate(final TaskUpdate update) {
+		boolean taskChanged = update(update);
+
+		if ( taskChanged ) return true;
+		else               return false;
 	}
 
 	/**
 	 * Evaluates the update, changing the status of this Task
 	 * to match the new data.
 	 * 
+	 * NOTE: we can assume that the provided task update will be for this task
+	 * 
 	 * @param update
-	 * @return boolean indicates whether or not we changed the Task
+	 * @return TODO
 	 */
-	private boolean applyUpdate(final TaskUpdate update) {
-		return true;
-	}
+	protected abstract boolean update(final TaskUpdate update);
 	
 	protected abstract Task getCopy();
 
@@ -129,7 +124,7 @@ public abstract class Task {
 	public String toDisplay() {
 		final StringBuilder buf = new StringBuilder();
 		buf.append(isComplete() ? Colors.GREEN : Colors.CYAN).append("      o ").append(getDescription());
-		buf.append(Colors.MAGENTA).append(" ( ").append(location.getName()).append(" ) ").append(Colors.CYAN);
+		buf.append(Colors.MAGENTA).append(" ( ").append("%LOCATION%").append(" ) ").append(Colors.CYAN);
 		buf.append("[+]\n");
 		return buf.toString();
 	}

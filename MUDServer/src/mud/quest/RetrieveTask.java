@@ -1,12 +1,11 @@
 package mud.quest;
 
-import mud.objects.Room;
 import mud.utils.Data;
 
 public class RetrieveTask extends Task {
-	public boolean hasItem = false;
+	private boolean hasItem = false;
 	
-	public RetrieveTask(final String tDescription, final Room location, final Data objectiveData) {
+	public RetrieveTask(final String tDescription, final Integer location, final Data objectiveData) {
 		super(TaskType.RETRIEVE, tDescription, location);
 	}
 
@@ -22,11 +21,13 @@ public class RetrieveTask extends Task {
 	}
 
 	@Override
-	public void update() {
+	public boolean update(final TaskUpdate update) {
 		if ( this.hasItem ) {
 			this.isComplete = true;
 		}
-		else { this.isComplete = false; }
+		//else { this.isComplete = false; }
+		
+		return true;
 	}
 	
 	protected Task getCopy() {

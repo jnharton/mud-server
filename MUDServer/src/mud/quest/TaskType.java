@@ -13,5 +13,19 @@ package mud.quest;
  *
  */
 public enum TaskType {
-	NONE, DELIVER, RETRIEVE, COLLECT, KILL
+	NONE("None"),
+	DELIVER("Deliver"),
+	RETRIEVE("Retrieve"),
+	COLLECT("Collect"),
+	KILL("Kill");
+	
+	private String name;
+	
+	TaskType(String name) {
+		this.name = name;
+	}
+	
+	public String getName() {
+		return this.name;
+	}
 }

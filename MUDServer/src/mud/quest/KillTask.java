@@ -1,14 +1,13 @@
 package mud.quest;
 
 import mud.MUDObject;
-import mud.objects.Room;
 import mud.utils.Data;
 
 public class KillTask extends Task {
-	public Integer toKill = 0;
-	public Integer kills = 0;
+	private Integer toKill = 0;
+	private Integer kills = 0;
 	
-	public KillTask(final String description, final Room location, final Data objectiveData) {
+	public KillTask(final String description, final Integer location, final Data objectiveData) {
 		super(TaskType.KILL, description, location);
 		
 		final Object o = objectiveData.getObject("toKill");
@@ -44,11 +43,20 @@ public class KillTask extends Task {
 		return "" + this.kills + " / " + this.toKill;
 	}
 	
-	public void update() {
+	public boolean update(final TaskUpdate update) {
+		final Data ud = update.getData();
+		
+		final Integer k = (Integer) ud.getObject("kills");
+		
+		this.kills += k;
+		
 		if (this.kills == this.toKill) {
 			this.isComplete = true;
+			
 		}
-		else { this.isComplete = false; }
+		//else this.isComplete = false;
+		
+		return true;
 	}
 	
 	protected Task getCopy() {
