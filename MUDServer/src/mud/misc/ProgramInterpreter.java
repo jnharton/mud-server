@@ -61,8 +61,7 @@ public final class ProgramInterpreter {
 		this.parent = parent;
 		this.database = parent.getDBInterface();
 
-		//this.debug_enabled = enable_debug;
-		this.debug_enabled = true;
+		this.debug_enabled = enable_debug;
 		
 		this.permissions = EnumSet.copyOf(perms);
 		
@@ -76,6 +75,15 @@ public final class ProgramInterpreter {
 	 */
 	public void addVar(final String name, final String value) {
 		this.vars.put(name, value);
+	}
+	
+	/**
+	 * Remove an -existing- variable from the interpreter's vars.
+	 * 
+	 * @param name String variable name
+	 */
+	public void delVar(final String name) {
+		this.vars.remove(name);
 	}
 	
 	/**
@@ -110,15 +118,6 @@ public final class ProgramInterpreter {
 	 */
 	public void setVar(final String name, final String newValue) {
 		this.vars.replace(name, newValue);
-	}
-
-	/**
-	 * Remove an -existing- variable from the interpreter's vars.
-	 * 
-	 * @param name String variable name
-	 */
-	public void delVar(final String name) {
-		this.vars.remove(name);
 	}
 
 	public String interpret(final Script script, final Player player, final MUDObject object) {
@@ -263,7 +262,8 @@ public final class ProgramInterpreter {
 			// Functions that take 1 parameter
 			if( params.length == 1 ) {
 				if( debug_enabled ) System.out.println("Parameter (1): " + params[0]);
-
+				
+				//if(functionName.equals("create_item") && permissions.contains(Perms.WRITE)) {
 				if(functionName.equals("create_item")) {
 					// {create_item:identifier}
 					final Item item = parent.createItem(params[0], true);
@@ -744,8 +744,9 @@ public final class ProgramInterpreter {
 		return "";
 	}
 	
-	//{list:listname,obj}
-	private void lexec(final String listName, final Integer objDBREF) {
+	// lexec - list execute
+	//{lexec:listname,obj}
+	private void list_exec(final String listName, final Integer objDBREF) {
 		final MUDObject object = database.getById(objDBREF);
 		
 		if( object != null ) {
@@ -754,6 +755,7 @@ public final class ProgramInterpreter {
 		}
 	}
 	
+	// prop - get a property
 	// {prop:name, object}
 	// throws PermissionException
 	private String prop(final String propName, final Integer objDBREF) {
@@ -778,6 +780,7 @@ public final class ProgramInterpreter {
 		//else { return "Incomplete function statement, no parameters!"; }
 	}
 	
+	// {propdir}
 	private String propdir(final String propName, final Integer objDBREF) {
 		String retval;
 		
@@ -794,6 +797,8 @@ public final class ProgramInterpreter {
 		
 		return retval;
 	}
+	
+	/* Utility Functions */
 	
 	private static void fixParams(final List<String> params) {
 		ProgramInterpreter.fixParams(params, false);

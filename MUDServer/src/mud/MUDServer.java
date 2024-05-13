@@ -1441,7 +1441,9 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			
 			debug("");
 		}
-
+		
+		world_test1();
+		
 		/* Testing */
 		if( testing ) {
 			// TODO is this necessary
@@ -2188,6 +2190,90 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 
 			cre.setLocation( target.getDBRef() );
 		}
+	}
+
+	private void world_test1() {
+		// Item properties testing -- Not DB Safe
+		Item ore = createItem(
+				"Copper Ore",
+				"A chunk of copper ore. Veins of copper swirl through the baser rock surrounding them.",
+				start_room
+				);
+
+		Item ore2 = createItem(
+				"Iron Ore",
+				"A chunk of iron ore. Bands of reddish brown are intertwined with darker gray spots.",
+				start_room
+				);
+
+		Room ore_loc = null;
+		int n = 0;
+
+		ore_loc = getRoom( ore.getLocation() );
+
+		n = 5;
+
+		while( n > 0 ) {
+			Item oreC = ore.getCopy();
+
+			oreC.setProperty("type", "ore");
+			oreC.setProperty("material", "copper");
+			oreC.setProperty("purity", "0.90");
+
+			initCreatedItem(oreC);
+
+			oreC.setLocation( ore_loc.getDBRef() );
+			ore_loc.addItem( oreC );
+
+			n--;
+		}
+
+		n = 5;
+		ore_loc = getRoom( ore2.getLocation() );
+
+		while( n > 0 ) {
+			Item oreC = ore2.getCopy();
+
+			oreC.setProperty("type", "ore");
+			oreC.setProperty("material", "iron");
+			oreC.setProperty("purity", "0.90");
+
+			initCreatedItem(oreC);
+
+			oreC.setLocation( ore_loc.getDBRef() );
+			ore_loc.addItem( oreC );
+
+			n--;
+		}
+
+		//initCreatedItem(ore);
+		//getRoom( ore.getLocation() ).addItem(ore);
+
+		recipes.put("iron ingot", new Recipe("IRON_BAR", "iron ore"));
+		recipes.put("copper ingot", new Recipe("COPPER_BAR", "copper ore"));
+		recipes.put("iron dagger", new Recipe("IRON_DAGGER", "iron ingot"));
+
+		//Item IronIngot = createItem("Iron Ingot", "", -1);
+		//prototypes.put("mud.iron_ingot", IronIngot);
+
+		prototypes.put("mud.iron_ingot", createItem("Iron Ingot", "", -1));
+
+		//Item CopperIngot = createItem("Copper Ingot", "", -1);
+		//prototypes.put("mud.iron_ingot", IronIngot);
+
+		prototypes.put("mud.copper_ingot", createItem("Copper Ingot", "", -1));
+
+		Weapon IronDagger = new Weapon("Iron Dagger", "A sharp dagger made of iron", 0.5);
+
+		IronDagger.setDamage(3);
+		IronDagger.setDamageType(DamageType.SLASHING);
+
+		IronDagger.setSlotType(SlotTypes.RHAND);
+
+		prototypes.put("mud.iron_dagger", IronDagger);
+
+		nodeList.add( new Node( new Ore("Copper", true) ) );
+		nodeList.add( new Node( new Ore("Iron", true) ) );
 	}
 
 	private void world_test() {
@@ -2943,7 +3029,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			final Room room = getRoom( player.getLocation() );
 
 			// if the user is editing something, pass their input to the editor
-			if (player.getStatus().equals(Constants.ST_EDIT)) {
+			if (checkStatus(player, Constants.ST_EDIT)) {
 				final Editors editor = player.getEditor();
 
 				switch (editor) {
@@ -2959,14 +3045,14 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 				case ROOM:     op_roomedit(input, client);     break;
 				case SKILL:    op_skilledit(input, client);    break;
 				case ZONE:     op_zoneedit(input, client);     break;
-				case NONE:
-						send("You are not editing anything", client);
-						send("Input was: '" + input + "'", client);
+				case NONE:     
+					send("You are not editing anything", client);
+					send("Input was: '" + input + "'", client);
 					break;
 				default:       break;
 				}
 			}
-			else if (player.getStatus().equals("CNVS")) { // Conversation
+			else if (checkStatus(player, Constants.ST_CNVS)) { // Conversation
 				debug(">> In a conversation");
 
 				if (input.equalsIgnoreCase("leave") || input.equalsIgnoreCase("bye")) {
@@ -2987,7 +3073,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 					handle_conversation(npc, player, Utils.toInt(input, -1));
 				}
 			}
-			else if (player.getStatus().equals("VIEW")) { // viewing help files
+			else if (checkStatus(player, Constants.ST_VIEW)) { // viewing help files
 				op_pager(input, client);
 			}
 			// TODO fix this. (what's broken?)
@@ -5768,16 +5854,19 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 				if (user.equals("admin") && pass.equals("admin")) {
 					client.write("Launching Console...");
 					
-					cmon.addConsole(client);
+					cmon.createConsole(client);
 					
 					client.writeln("Done.");
 					client.writeln("");
 					client.writeln("MUDServer Console");
 				}
 			}
+			else {
+				client.writeln("Console Monitor: Invalid Credentials!");
+			}
 		}
 		else {
-			client.writeln("Console Disabled.");
+			client.writeln("Console functionality is Disabled.");
 		}
 	}
 	
@@ -5877,21 +5966,28 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 	 */
 	private void cmd_craft(final String arg, final Client client) {
 		final Player player = getPlayer(client);
-
-		debug( String.format("CRAFT: '%s'", arg) );
-
-		boolean haveMaterials = false;
+		final Room room = getRoom( player.getLocation() );
 
 		if( arg != null ) {
+			debug( String.format("CRAFT: '%s'", arg) );
+			
+			boolean haveMaterials = false;
+			
 			if( arg.equals("recipes" ) ) {
 				final List<String> output = new ArrayList<String>(recipes.size());
 				
-				List<String> recipeData;
+				Recipe recipe;
+				final ArrayList<String> recipeData = new ArrayList<String>();
 				
 				for(final String recipeName : recipes.keySet()) {
-					recipeData = Arrays.asList( recipes.get(recipeName).getComponents() );
+					recipe = recipes.get(recipeName);
+					
+					recipeData.addAll( recipe.getComponents() );
+					recipeData.trimToSize();
 					
 					output.add( String.format("%s - %s", recipeName, recipeData) );
+					
+					recipeData.clear();
 				}
 				
 				send(output, client);
@@ -5910,10 +6006,13 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 						System.out.println("Component: " + component);
 						
 						// TODO this should never return similar items only exact ones
-						final Item item = MudUtils.findItem(component, player.getInventory());
+						final Item item = MudUtils.findItem(component, player.getInventory(), true);
 
-						if( item != null ) materials.add(item);
-						else               missing.add( component );
+						if( item != null ) {
+							materials.add(item);
+							System.out.println("HAVE (" + component + "): " + item.getName());
+						}
+						else missing.add( component );
 					}
 
 					haveMaterials = (missing.size() == 0); // no missing materials
@@ -8109,7 +8208,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 
 				if( file.length > 25 && pagerEnabled) {
 					player.setPager( new Pager(temp) );
-					player.setStatus("VIEW");
+					player.setStatus(Constants.ST_VIEW);
 
 					op_pager("view", client);
 				}
@@ -12027,11 +12126,11 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 
 		}
 		else {
-			Class<?> cla = getClass("mud.objects.creatures." + arg);
-
-			Creature cre = null;
-
+			final Class<?> cla = getClass("mud.objects.creatures." + arg);
+			
 			if( cla != null ) {
+				Creature cre = null;
+				
 				try {
 					cre = (Creature) cla.getConstructor().newInstance();
 				}
@@ -12054,7 +12153,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			}
 			else {
 				// TODO kludge land, fix this...
-				cre = new Creature(arg, "");
+				Creature cre = new Creature(arg, "");
 
 				if( cre != null ) {
 					cre.setLocation(getPlayer(client).getLocation());
@@ -12080,19 +12179,20 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 	 */
 	private void cmd_stats(final String arg, final Client client) {
 		System.out.println(objectDB.getSize());
-
+		
+		// Player, NPC, Exit, Room, Item, Thing
 		final int[] counts = objectDB.getFlagCounts(new String[] { "P", "N", "E", "R", "I", "T" });
-		final int usersCount = counts[0];
-		final int npcsCount = counts[1];
-		final int exitsCount = counts[2];
-		final int roomsCount = counts[3];
-		final int itemsCount = counts[4];
+		
+		final int usersCount  = counts[0];
+		final int npcsCount   = counts[1];
+		final int exitsCount  = counts[2];
+		final int roomsCount  = counts[3];
+		final int itemsCount  = counts[4];
 		final int thingsCount = counts[5];
 
-		int total = usersCount + npcsCount + exitsCount + roomsCount
-				+ itemsCount + thingsCount;
+		int total = usersCount + npcsCount + exitsCount + roomsCount + itemsCount + thingsCount;
 
-		send(serverName + " Statistics", client);
+		/*send(serverName + " Statistics", client);
 		send("----------------------", client);
 		send(String.format("Players: %-4s %5.2f%%", usersCount, usersCount * 100.0 / total), client);
 		send(String.format("NPCS:    %-4s %5.2f%%", npcsCount, npcsCount * 100.0 / total), client);
@@ -12101,7 +12201,23 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		send(String.format("Items:   %-4s %5.2f%%", itemsCount, itemsCount * 100.0 / total), client);
 		send(String.format("Things:  %-4s %5.2f%%", thingsCount, thingsCount * 100.0 / total), client);
 		send("Total:   " + total, client);
-		send("----------------------", client);
+		send("----------------------", client);*/
+		
+		final List<String> output = Utils.mkList(
+				serverName + " Statistics",
+				"----------------------",
+				String.format("Players: %-4s %5.2f%%", usersCount,  usersCount  * 100.0 / total),
+				String.format("NPCS:    %-4s %5.2f%%", npcsCount,   npcsCount   * 100.0 / total),
+				String.format("Exits:   %-4s %5.2f%%", exitsCount,  exitsCount  * 100.0 / total),
+				String.format("Rooms:   %-4s %5.2f%%", roomsCount,  roomsCount  * 100.0 / total),
+				String.format("Items:   %-4s %5.2f%%", itemsCount,  itemsCount  * 100.0 / total),
+				String.format("Things:  %-4s %5.2f%%", thingsCount, thingsCount * 100.0 / total),
+				"",
+				"Total:   " + total,
+				"----------------------"
+				);
+		
+		send(output, client);
 	}
 
 	// output format borrowed from TorilMud status command
@@ -25310,7 +25426,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		return new Player(-1, gName, gFlags, gDesc, start_room, "", gPass, "OOC", new Integer[] { 0, 0, 0, 0, 0, 0 }, Coins.copper(0));
 	}
 	
-	Class<?> getClass(final String className) {
+	private Class<?> getClass(final String className) {
 		Class<?> c = null;
 		
 		try {
@@ -25989,5 +26105,9 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		}
 		
 		return minable_nodes;
+	}
+	
+	public boolean checkStatus(final Player player, final String status) {
+		return player.getStatus().equals( status );
 	}
 }

@@ -71,8 +71,10 @@ public final class Constants {
 	public static final int XTERM = 2;
 	
 	// status
+	public static final String ST_CNVS = "CNVS";
 	public static final String ST_EDIT = "EDT";
 	public static final String ST_INTERACT = "INT";
+	public static final String ST_VIEW = "VIEW";
 	
 	// stat generation
 	public static final int ROLL = 0;

@@ -1,4 +1,4 @@
-package mud.misc.fsm;
+package mud.misc;
 
 final class Transition {
 	private Condition test;

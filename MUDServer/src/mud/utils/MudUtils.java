@@ -237,6 +237,19 @@ public final class MudUtils {
 	 * @return
 	 */
 	public static Item findItem(final String itemName, final List<Item> items) {
+		return findItem(itemName, items, false);
+	}
+	
+	/**
+	 * Find the Item with the specified name in the list of Items provided, if
+	 * it's there.
+	 * 
+	 * @param itemName
+	 * @param items
+	 * 
+	 * @return
+	 */
+	public static Item findItem(final String itemName, final List<Item> items, final boolean exact) {
 		/** Extracted from MUDServer **/
 		final String arg = itemName;
 		final String arg_lc = arg.toLowerCase();
@@ -272,13 +285,13 @@ public final class MudUtils {
 			boolean startsWith = name_lc.startsWith(arg_lc);
 			boolean endsWith = name_lc.endsWith(arg_lc);
 			boolean nameContains = name_lc.contains(arg_lc);
-			boolean compsContain = components.contains(arg_lc);
+			boolean compsContain = exact ? false : components.contains(arg_lc);
 
 			boolean test = false;
 
 			for (final String s : components) {
 				for (final String s1 : Arrays.asList(arg.toLowerCase().split(" "))) {
-					if (s.contains(s1)) test = true;
+					if (s.contains(s1) && !exact) test = true;
 					break;
 				}
 			}
