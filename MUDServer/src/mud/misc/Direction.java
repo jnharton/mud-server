@@ -3,13 +3,13 @@ package mud.misc;
 public class Direction {
 	public static final Direction NONE      = new Direction(0);
 	public static final Direction NORTH     = new Direction(1);
-	public static final Direction NORTHEAST = new Direction(3);
-	public static final Direction NORTHWEST = new Direction(4);
-	public static final Direction SOUTH     = new Direction(5);
-	public static final Direction SOUTHEAST = new Direction(6);
-	public static final Direction SOUTHWEST = new Direction(7);
-	public static final Direction EAST      = new Direction(8);
-	public static final Direction WEST      = new Direction(9);
+	public static final Direction NORTHEAST = new Direction(2);
+	public static final Direction NORTHWEST = new Direction(3);
+	public static final Direction SOUTH     = new Direction(4);
+	public static final Direction SOUTHEAST = new Direction(5);
+	public static final Direction SOUTHWEST = new Direction(6);
+	public static final Direction EAST      = new Direction(7);
+	public static final Direction WEST      = new Direction(8);
 	
 	private Integer value;
 	

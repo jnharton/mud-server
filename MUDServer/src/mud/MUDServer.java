@@ -15288,6 +15288,13 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			player.setStatus((String) data.getObject("pstatus"));
 			player.setEditor(Editors.NONE);
 		}
+		else if (rcmd.equals("dump")) {
+			final Map<String, Object> tempData = data.getObjects();
+			
+			for(final String s : tempData.keySet()) {
+				System.out.println("" + s + "___" + tempData.get(s));
+			}
+		}
 		else if (rcmd.equals("flags")) {
 			final ObjectFlag[] flags = new ObjectFlag[] {
 					ObjectFlag.BANK,     ObjectFlag.DARK,     ObjectFlag.ENTER_OK,
@@ -15318,6 +15325,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 						"dim <dimension> <size>          change a dimension of the room (x/y/z)",
 						"dirset <direction> <exit dbref> associate an exit with a cardinal direction",
 						"done                            finish editing (save & exit)",
+						"dump                            print data to system output",
 						"help                            shows this help information",
 						"items                           list available item prototypes",
 						"npcs",
