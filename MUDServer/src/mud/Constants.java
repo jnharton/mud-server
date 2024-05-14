@@ -94,5 +94,6 @@ public final class Constants {
 	public static final String DEBUG_LOG = "debug";
 	public static final String CHAT_LOG = "chat";
 	
-	public static final String NONE = "";
+	// ?
+	public static final String NO_PROP_VALUE = "NO-PROP";
 }

@@ -61,7 +61,14 @@ public enum ObjectFlag
     public List<TypeFlag> getAllowedTypes() {
     	return this.types;
     }
-
+    
+    /**
+     * Get an ObjectFlag based on the character supplied.
+     * 
+     * @param c
+     * @return
+     * @throws IllegalArgumentException
+     */
     static public ObjectFlag fromLetter(final char c) {
         switch (c) {
         case 'B':    return BANK;
@@ -77,6 +84,13 @@ public enum ObjectFlag
         }
     }
     
+    /**
+     * Get an ObjectFlag based on the string supplied.
+     * 
+     * @param s
+     * @return ObjectFlag
+     * @throws IllegalArgumentException
+     */
     static public ObjectFlag fromString(final String s) {
     	switch(s.toUpperCase()) {
     	case "ENTER_OK":    return ENTER_OK;

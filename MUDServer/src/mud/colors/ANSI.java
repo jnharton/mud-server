@@ -20,7 +20,7 @@ public enum ANSI {
 	CYAN(36),
 	WHITE(37);
 	
-	private final String prefix = "\33[";
+	private final String prefix = "\033[";
 	private final String suffix = "m";
 	
 	private int num;

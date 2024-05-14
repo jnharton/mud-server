@@ -10,7 +10,7 @@ public class ConfigObject {
 	private String name;
 	private Object object;
 	
-	private Class objectClass;
+	private Class<? extends Object> objectClass;
 	
 	public ConfigObject(final String name, final Object object) {
 		this.name = name;

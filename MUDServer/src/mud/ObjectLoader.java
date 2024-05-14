@@ -22,6 +22,7 @@ import mud.objects.npcs.Merchant;
 import mud.objects.things.Box;
 import mud.rulesets.d20.Classes;
 import mud.rulesets.d20.Races;
+import mud.utils.Tuple;
 import mud.utils.Utils;
 import mud.magic.Spell;
 import mud.misc.Coins;
@@ -235,12 +236,12 @@ public class ObjectLoader {
 						int lockState = Utils.toInt(attr[7], 0); //valid lock states are: 0, 1
 						int keyDBRef = Utils.toInt(attr[8], -1);
 						
-						System.out.println("   Location: " + oLocation);
-						System.out.println("Destination: "  + oDest);
+						debug("   Location: " + oLocation);
+						debug("Destination: "  + oDest);
 						
 						String[] temp = oName.split(";");
 						
-						System.out.println(Arrays.asList(temp));
+						debug((Arrays.asList(temp)).toString());
 						
 						oName = temp[0];
 
@@ -250,8 +251,8 @@ public class ObjectLoader {
 							String[] names = temp[0].split("/");
 							String[] aliases = temp[1].split("/");
 							
-							System.out.println("  Names: " + Arrays.asList(names));
-							System.out.println("Aliases: " + Arrays.asList(aliases));
+							debug("  Names: " + Arrays.asList(names));
+							debug("Aliases: " + Arrays.asList(aliases));
 							
 							// set up any aliases
 							if (aliases.length > 0) {
@@ -270,9 +271,31 @@ public class ObjectLoader {
 							
 							if( item != null ) door.setKey(item);
 						}
+
+						// initialize name to exit mapping for doors
+						String doorName = door.getName();
 						
-						door.init();
-						
+						if( doorName.contains("/") ) {
+							String[] temp1 = doorName.split("/");
+
+							debug((Arrays.asList(temp1)).toString(), 2);
+							debug(temp1[0], 2);
+							debug(temp1[1], 2);
+
+							door.side1 = new Tuple<Integer, String>(door.location, temp1[0]);
+
+							debug("Side 1", 2);
+							debug("INTEGER: " + door.side1.one, 2);
+							debug(" STRING: " + door.side1.two, 2);
+
+							//door.side2 = new Tuple<Integer, String>(door.destination, temp1[1]);
+							door.side2 = new Tuple<Integer, String>(door.getDestination(), temp1[1]);
+
+							debug("Side 2", 2);
+							debug("INTEGER: " + door.side2.one, 2);
+							debug(" STRING: " + door.side2.two, 2);
+						}
+
 						debug( "exit (origin): " + door.getName(oLocation) );
 						debug( "exit (dest): " + door.getName(oDest) );
 						
@@ -539,12 +562,12 @@ public class ObjectLoader {
 		raceNum = Utils.toInt(attr[9], Races.NONE.getId());
 		//player.setRace(Races.getRace(raceNum));
 		player.setRace(parent.getRace(raceNum));
-		System.out.println("Race: " + raceNum + " ( " + parent.getRace(raceNum).getName() + " )");
+		debug("Race: " + raceNum + " ( " + parent.getRace(raceNum).getName() + " )");
 
 		/* Set Player Class */
 		classNum = Utils.toInt(attr[10], Classes.NONE.getId());
 		player.setPClass(Classes.getClass(classNum));
-		System.out.println("Class: " + classNum + " ( " + Classes.getClass(classNum).getName() + " )");
+		debug("Class: " + classNum + " ( " + Classes.getClass(classNum).getName() + " )");
 
 		/* Set Status */
 		player.setStatus(attr[11]);
@@ -642,9 +665,9 @@ public class ObjectLoader {
 	final private Item loadItem(final String itemData) throws InvalidItemTypeException {
 		String[] attr = itemData.split("#");
 		
-		System.out.println("");
-		System.out.println("debug(itemData): " + itemData);
-		System.out.println("");
+		debug("");
+		debug("debug(itemData): " + itemData);
+		debug("");
 		
 		Integer oDBRef = Integer.parseInt(attr[0]);
 		String oName = attr[1];
@@ -661,26 +684,26 @@ public class ObjectLoader {
 		final ItemType it = getItemType(itemType);
 		final SlotType st = getSlotType(slotType);
 		
-		System.out.println("ItemType ID: " + itemType);
-		System.out.println("SlotType ID: " + slotType);
+		debug("ItemType ID: " + itemType);
+		debug("SlotType ID: " + slotType);
 		
 		if( it != null ) {
-			System.out.println("ItemType: " + it.getName());
-			System.out.println("");
+			debug("ItemType: " + it.getName());
+			debug("");
 		}
 		else throw new InvalidItemTypeException("No such ItemType (" + itemType + ")");
 		
 		if( st != null ) {
-			System.out.println("SlotType: " + st.getName());
-			System.out.println("");
+			debug("SlotType: " + st.getName());
+			debug("");
 		}
 		
 		// module level itemtype handling...
 		if( it.getId() >= 16 ) {
 			final Item item = parent.getGameModule().loadItem(itemData);
 
-			System.out.println("Item DBRef: " + item.getDBRef());
-			System.out.println("");
+			debug("Item DBRef: " + item.getDBRef());
+			debug("");
 
 			return item;
 		}
@@ -816,9 +839,9 @@ public class ObjectLoader {
 	private final Thing loadThing(final String thingData) throws InvalidThingTypeException {
 		String[] attr = thingData.split("#");
 		
-		System.out.println("");
-		System.out.println("debug(thingData): " + thingData);
-		System.out.println("");
+		debug("");
+		debug("debug(thingData): " + thingData);
+		debug("");
 		
 		Integer oDBRef = Integer.parseInt(attr[0]);
 		String oName = attr[1];
@@ -835,11 +858,11 @@ public class ObjectLoader {
 		
 		final ThingType tt = getThingType(thingType);
 		
-		System.out.println("ThingType ID: " + thingType);
+		debug("ThingType ID: " + thingType);
 		
 		if( tt != null ) {
-			System.out.println("ThingType: " + tt.getName());
-			System.out.println("");
+			debug("ThingType: " + tt.getName());
+			debug("");
 		}
 		else throw new InvalidThingTypeException("No such ThingType ( " + thingType + ")");
 
@@ -847,8 +870,8 @@ public class ObjectLoader {
 		if( tt.getId() >= 16 ) {
 			final Thing thing = parent.getGameModule().loadThing(thingData);
 			
-			System.out.println("Thing DBRef: " + thing.getDBRef());
-			System.out.println("");
+			debug("Thing DBRef: " + thing.getDBRef());
+			debug("");
 			
 			return thing;
 		}

@@ -26,27 +26,7 @@ public class Door extends Exit implements Lockable<Item> {
 		this.eType = ExitType.DOOR;
 	}
 	
-	public void init() {
-		if( this.name.contains("/") ) {
-			String[] temp1 = name.split("/");
-			
-			System.out.println(Arrays.asList(temp1));
-			System.out.println(temp1[0]);
-			System.out.println(temp1[1]);
-			
-			this.side1 = new Tuple<Integer, String>(this.location, temp1[0]);
-			
-			System.out.println("Side 1");
-			System.out.println("INTEGER: " + this.side1.one);
-			System.out.println(" STRING: " + this.side1.two);
-			
-			this.side2 = new Tuple<Integer, String>(this.destination, temp1[1]);
-			
-			System.out.println("Side 2");
-			System.out.println("INTEGER: " + this.side2.one);
-			System.out.println(" STRING: " + this.side2.two);
-		}
-	}
+	// door init? (moved out of this class
 	
 	public String getName(final Integer source) {
 		String name = "";

@@ -129,13 +129,14 @@ public final class MudUtils {
 	}
 
 	/**
-	 * isAllowed
-	 * 
 	 * Determine if the specified ObjectFlag can be applied
 	 * to the specified object type (indicated by TypeFlag).
+	 * <br><br>
 	 * 
-	 * @param of
-	 * @param tf
+	 * pulls a list of allowed types from the flag itself.
+	 * 
+	 * @param of ObjectFlag
+	 * @param tf TypeFlag
 	 * @return
 	 */
 	public static boolean isAllowed(final ObjectFlag of, final TypeFlag tf) {

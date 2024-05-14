@@ -104,14 +104,8 @@ public class Item extends MUDObject {
 		
 		this.weight = template.weight;
 		
-		System.out.println("Cloning... " + template.getName());
-		
 		if( template.onUse != null ) {
 			this.onUse = new Trigger( template.onUse.getScript().getText() );
-			System.out.println("Item (onUse Script): " + this.getScript(TriggerType.onUse).getText());
-		}
-		else {
-			System.out.println("Item (onUse Script): No Trigger/No Script!");
 		}
 	}
 	
