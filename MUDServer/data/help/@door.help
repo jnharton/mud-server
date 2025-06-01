@@ -1,0 +1,11 @@
+@door
+@DOOR
+
+Create a bi-directional exit from one location (source) to another location (destination).
+
+The exit name should be a string and the source and destination should be database references (a.k.a ID), which
+should be positive valued integers.
+
+Syntax: @door <name>=<source>=<destination>
+
+Last Updated: May 31st, 2025

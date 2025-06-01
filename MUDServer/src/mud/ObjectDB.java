@@ -381,7 +381,7 @@ public final class ObjectDB implements ODBI {
 
 		objects.addAll( getExitsByRoom( room ) );
 		objects.addAll( getThingsForRoom( room ) );
-		objects.addAll( getItemsByLoc( room.getDBRef() )    );
+		objects.addAll( getItemsByLocation( room.getDBRef() )    );
 		objects.addAll( getNPCsByRoom( room ) );
 		objects.addAll( getPlayersByRoom( room ) );
 		objects.addAll( getCreaturesByRoom( room ) );
@@ -654,18 +654,19 @@ public final class ObjectDB implements ODBI {
 		}
 	}
 
-	public void removeExit(final Exit e) {
-		this.exitsById.values().remove(e.getDBRef());
+	public void removeExit(final Exit exit) {
+		//this.exitsById.remove(exit.getDBRef());
+		this.exitsById.remove(exit.getDBRef(), exit);
 
-		if( e.getExitType() == ExitType.DOOR ) {
-			String[] temp = e.getName().split(";");
+		if( exit.getExitType() == ExitType.DOOR ) {
+			String[] temp = exit.getName().split(";");
 			String[] names = temp[0].split("/");
 
 			this.exitsByName.values().remove(names[0]);
 			this.exitsByName.values().remove(names[1]);
 		}
 		else {
-			this.exitsByName.remove(e.getName());
+			this.exitsByName.remove(exit.getName());
 		}
 	}
 
@@ -774,7 +775,7 @@ public final class ObjectDB implements ODBI {
 			if( item instanceof Container ) {
 				Container c = (Container) item;
 
-				List<Item> items1 = getItemsByLoc(item.getDBRef());
+				List<Item> items1 = getItemsByLocation(item.getDBRef());
 
 				for(Item item2 : items1) {
 					c.insert(item2);
@@ -832,7 +833,7 @@ public final class ObjectDB implements ODBI {
 	 * @param loc the dbref of the object where the items are located
 	 * @return list of items located in the object referred to by dbref
 	 */
-	public List<Item> getItemsByLoc(final int loc) {
+	public List<Item> getItemsByLocation(final int loc) {
 		final List<Item> acc = new LinkedList<Item>();
 
 		for (final Item item : this.items) {
@@ -932,7 +933,12 @@ public final class ObjectDB implements ODBI {
 	///////////////////////////// PLAYERS
 	private final Map<Integer, Player> playersById = new HashMap<Integer, Player>();
 	private final Map<String, Player> playersByName = new HashMap<String, Player>();
-
+	
+	/**
+	 * Add a Player object to the database.
+	 * 
+	 * @param p
+	 */
 	public void addPlayer(final Player p) {
 		this.playersById.put(p.getDBRef(), p);
 		this.playersByName.put(p.getName(), p);
@@ -942,7 +948,6 @@ public final class ObjectDB implements ODBI {
 		if( dbref < 0 ) return null;
 
 		return this.playersById.get(dbref);
-
 	}
 	
 	public Player getPlayer(final String name) {
@@ -964,9 +969,28 @@ public final class ObjectDB implements ODBI {
 	public List<Player> getPlayers() {
 		return new ArrayList<Player>(this.playersById.values());
 	}
-
-	public List<Player> getPlayersByRoom(final Room room) {
+	
+	public List<Player> getPlayersByLocation(final int loc) {
 		final List<Player> acc = new LinkedList<Player>();
+
+		for (final Player p : this.playersById.values()) {
+			if (p.getLocation() == loc) {
+				acc.add(p);
+			}
+		}
+
+		return acc;
+	}
+	
+	/**
+	 * Get a List of Players whose current location is the specified Room.
+	 */
+	public List<Player> getPlayersByRoom(final Room room) {
+		int loc = room.getDBRef();
+		
+		return getPlayersByLocation( loc );
+		
+		/*final List<Player> acc = new LinkedList<Player>();
 
 		int loc = room.getDBRef();
 
@@ -976,7 +1000,7 @@ public final class ObjectDB implements ODBI {
 			}
 		}
 
-		return acc;
+		return acc;*/
 	}
 
 	/**

@@ -21,6 +21,7 @@ import mud.objects.ThingType;
 import mud.objects.ThingTypes;
 import mud.rulesets.d20.D20;
 import mud.rulesets.d20.Skills;
+import mud.utils.GameUtils;
 
 public class DND35 extends GameModule {
 	private static Map<String, Command> commands;
@@ -62,6 +63,37 @@ public class DND35 extends GameModule {
 	
 	@Override
 	public void init(final String dataDir) {
+		/* Items */
+		prototypes  = new Hashtable<String, Item>();
+		
+		/************************************************************/
+		/** Copper Ore                                             **/
+		/************************************************************/
+		
+		final Item copper_ore = GameUtils.createItem(
+				"Copper Ore",
+				"A chunk of copper ore. Veins of copper swirl through the baser rock surrounding them."
+				);
+		
+		copper_ore.setProperty("type", "ore");
+		copper_ore.setProperty("material", "copper");
+		copper_ore.setProperty("purity", "0.90");
+		
+		prototypes.put("mud.dnd35.ores.copper", copper_ore);
+		
+		final Item iron_ore = GameUtils.createItem(
+				"Iron Ore",
+				"A chunk of iron ore. Bands of reddish brown are intertwined with darker gray spots."
+				);
+		
+		iron_ore.setProperty("type", "ore");
+		iron_ore.setProperty("material", "iron");
+		iron_ore.setProperty("purity", "0.90");
+		
+		prototypes.put("mud.dnd35.ores.iron", iron_ore);
+		
+		/* Things */
+		prototypes1 = new Hashtable<String, Thing>();
 	}
 	
 	@Override
@@ -144,12 +176,12 @@ public class DND35 extends GameModule {
 	
 	@Override
 	public Map<String, Item> getItemPrototypes() {
-		return null;
+		return DND35.prototypes;
 	}
 
 	@Override
 	public Map<String, Thing> getThingPrototypes() {
-		return null;
+		return DND35.prototypes1;
 	}
 
 	@Override

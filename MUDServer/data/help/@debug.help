@@ -10,6 +10,7 @@ client              - tell us about the client object that represents us
 clients             - print info on all connected clients (ip address, object name)
 colors              - test colors (print out single char in all colors)
 creatures           - list the creatures in the database
+players             - list the players in the database
 dbdump              - list out the whole database*
 holidays            - list the defined holidays
 instance <#> <type> - is the specific object of the type/class specified**
@@ -30,4 +31,4 @@ Turns debug message reporting on/off and display certain data (live)
 * instanceof - on the spot checking of the actual class/type of an object
 ^ requires fully qualified class name
 
-Last Updated: April 24th, 2016
+Last Updated: May 3rd, 2025

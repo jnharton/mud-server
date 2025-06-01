@@ -95,6 +95,9 @@ public class Console {
 		else if( command.equalsIgnoreCase("logout") ) {
 			cm.fireEvent(this, "logout");
 		}
+		else if( command.equalsIgnoreCase("modereset") ) {
+			cm.fireEvent(this, "modereset");
+		}
 		else if( command.equalsIgnoreCase("who") ) {
 			cm.fireEvent(this, "who");
 		}

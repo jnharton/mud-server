@@ -1,0 +1,6 @@
+home
+HOME
+
+Moves the player to a room with the Id specified in their nameref table (or the global nameref table).
+
+Last Updated: May 31st, 2025

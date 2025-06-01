@@ -130,6 +130,9 @@ public class ConsoleMonitor {
 
 				client.write( output );
 			}
+			else if (message.equalsIgnoreCase("modereset") ) {
+				server.changeMode(GameMode.WIZARD);
+			}
 		}
 	}
 }

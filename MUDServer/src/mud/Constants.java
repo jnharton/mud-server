@@ -70,6 +70,12 @@ public final class Constants {
 	public static final int ANSI = 1;
 	public static final int XTERM = 2;
 	
+	// ?
+	public static final int CONFIG_OFF = 0;
+	public static final int CONFIG_ON = 1;
+	
+	// game modes?
+	
 	// status
 	public static final String ST_CNVS = "CNVS";
 	public static final String ST_EDIT = "EDT";

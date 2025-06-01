@@ -349,10 +349,6 @@ public final class FalloutEquestria extends GameModule implements ExtraCommands 
 			for(final Faction faction : getFactions()) player.setReputation(faction, 0);
 		}
 	}
-	
-	public void levelup(final Player player) {
-		
-	}
 
 	public List<Faction> getFactions() {
 		return FalloutEquestria.factions;
@@ -661,4 +657,7 @@ public final class FalloutEquestria extends GameModule implements ExtraCommands 
 		
 	}
 	
+	@Override
+	public void levelup(final Player player) {	
+	}
 }

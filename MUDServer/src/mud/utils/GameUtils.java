@@ -1,9 +1,11 @@
 package mud.utils;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.function.Predicate;
 
+import mud.ObjectFlag;
 import mud.misc.BBEntry;
 import mud.misc.BulletinBoard;
 import mud.objects.Item;
@@ -124,6 +126,49 @@ public class GameUtils {
 	
 	public static Predicate<Item> itemIsNotUnique() {
 	    return p -> !p.isUnique();
+	}
+	
+	/**
+	 * create a new basic, untyped Item for us to modify and work on
+	 * 
+	 * @return
+	 */
+	public static Item createItem() {
+		final Item item = new Item(-1);
+
+		item.setName("");
+		item.setFlags(EnumSet.noneOf(ObjectFlag.class));
+		item.setDesc("");
+		item.setLocation(-1);
+
+		// TODO remember to make the created items get passed through init
+		// objectDB.addAsNew(item);
+		// objectDB.addItem(item);
+
+		return item;
+	}
+	
+	public static Item createItem(String name, String description) {
+		final Item item = new Item(-1);
+
+		item.setName(name);
+		item.setFlags(EnumSet.noneOf(ObjectFlag.class));
+		item.setDesc(description);
+		item.setLocation(-1);
+
+		return item;
+	}
+	
+	
+	public static Item createItem(String name, String description, int location) {
+		final Item item = new Item(-1);
+
+		item.setName(name);
+		item.setFlags(EnumSet.noneOf(ObjectFlag.class));
+		item.setDesc(description);
+		item.setLocation(location);
+
+		return item;
 	}
 	
 }

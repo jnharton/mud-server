@@ -12,12 +12,12 @@ Syntax: chat <channel> <message>
         chat #join <channel> [<pass>]   Join an existing channel with that name (if you aren't listening)
         chat #leave <channel>           Leave an existing channel with that name (if you are listening)
         
-        chat <channel> #listeners
-        chat <channel> #messages
+        chat #listeners <channel>
+        chat #messages <channel> 
 
 * additionally the command interpreter supports the following "aliasing"
 * #<channel short name> <message>
 * E.g. '#ooc Hello, world!' will produce the same result as 'chat ooc Hello, world!'
 * channels can have shortnames, however they can only be used for sending chat messages
 
-Last Updated: April 30, 2020
+Last Updated: May 3rd, 2025

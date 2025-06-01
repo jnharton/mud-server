@@ -416,6 +416,18 @@ public final class Utils {
 		boolean test = m.find();
 		return test;
 	}
+	
+	// match("give 5 gold joe", "give %d %s %s")
+	// match("give %d %s %s", "give", "5", "gold", "joe")
+	/*private boolean match(final String pattern, final String... input) {
+		if (Utils.countTokens(pattern) == input.length) {
+			if (input[0].equals("")) {
+
+			}
+		}
+
+		return false;
+	}*/
 
 	/**
 	 * Convert an arraylist of strings to a string array
@@ -974,13 +986,19 @@ public final class Utils {
 	public static String checkMem() {
 		Runtime r = Runtime.getRuntime();
 		
+		double free = r.freeMemory();
 		double in_use = r.totalMemory();
 		double max = r.maxMemory();
 		
 		double in_use_mb = in_use / 1048576, in_use_kb = in_use / 1024; // MB, KB 
+		double free_mb = free / 1048576, free_kb = free / 1024;       // MB, KB
 		double max_mb = max / 1048576, max_kb = max / 1024;             // MB, KB
 
-		return "Memory: " + in_use_mb + " MB (" + in_use_kb + " KB) / " + max_mb + " MB (" + max_kb + " KB)";
+		//return "Memory: " + in_use_mb + " MB (" + in_use_kb + " KB) / " + max_mb + " MB (" + max_kb + " KB)";
+		//return "Memory: " + (in_use_mb - free_mb) + " MB (" + (in_use_kb - free_kb) + " KB) ";
+		//return "Memory: " + (in_use_mb - free_mb) + " MB / " + in_use_mb + "MB";
+		return "Memory: " + (in_use_kb - free_kb) + " KB / " + in_use_kb + " KB";
+		
 	}
 	
 	public static Date getDate() {

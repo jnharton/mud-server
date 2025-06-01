@@ -82,7 +82,7 @@ public interface ODBI {
 
 	public List<Item> getItems();
 	public Map<Item, Player> getItemsHeld();
-	public List<Item> getItemsByLoc(final int loc);
+	public List<Item> getItemsByLocation(final int loc);
 
 	// Thing
 	public Thing getThing(final int dbref);

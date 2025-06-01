@@ -20,7 +20,7 @@ Zone Editor     (@zedit)
 Skill Editor    (@skedit)
 
 In addition to these specific commands, the general command '@edit' can be used
-with an argument specifiying any MUDObject and will open the appropriate editor
+with an argument specifying any MUDObject and will open the appropriate editor
 based on the object type
 
 Last Updated: June 6th, 2014

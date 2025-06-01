@@ -71,6 +71,7 @@ public final class ProgramInterpreter {
 	/**
 	 * Add a variable to the interpreter's vars.
 	 * 
+	 * @param name variable name
 	 * @param value String variable value
 	 */
 	public void addVar(final String name, final String value) {
@@ -114,12 +115,18 @@ public final class ProgramInterpreter {
 	 * 
 	 * @param name     String variable name
 	 * @param newValue String variable value
-	 * @return
 	 */
 	public void setVar(final String name, final String newValue) {
 		this.vars.replace(name, newValue);
 	}
-
+	
+	/**
+	 * 
+	 * @param script
+	 * @param player
+	 * @param object
+	 * @return string
+	 */
 	public String interpret(final Script script, final Player player, final MUDObject object) {
 		return interpret( script.getText(), player, object );
 	}
@@ -128,7 +135,7 @@ public final class ProgramInterpreter {
 	 * Function to evaluate a script/program
 	 * 
 	 * @param script
-	 * @return
+	 * @return string
 	 */
 	private String interpret(final String script, final Player player, final MUDObject object) {	
 		//System.out.println("PGM: <" + script + ">");
@@ -217,7 +224,16 @@ public final class ProgramInterpreter {
 		
 		return result;
 	}
-
+	
+	/**
+	 * Evaluate the named function, giving it the specified params, in the context of a Player and a MUDObject.
+	 * 
+	 * @param functionName
+	 * @param params
+	 * @param player
+	 * @param object
+	 * @return
+	 */
 	private String evaluate(final String functionName, final String[] params, final Player player, final MUDObject object) {
 		
 		// TODO fix kludge?

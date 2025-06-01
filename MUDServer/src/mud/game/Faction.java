@@ -4,6 +4,14 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Faction
+ * 
+ * noun. a group or clique within a larger group, party, government, organization, or the like, typically having different opinions and interests than the larger group
+ * 
+ * @author jnhar
+ *
+ */
 public class Faction {
 	public static int HOSTILE = -100;
 	public static int NEUTRAL = 0;

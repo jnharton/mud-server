@@ -1354,6 +1354,10 @@ public class Player extends MUDObject implements Mobile
 		return this.isNew;
 	}
 	
+	public void setNew(final boolean state) {
+		this.isNew = state;
+	}
+	
 	// set weapons...
 	public Weapon getWeapon(final boolean primary) {
 		if( primary ) return this.primary;
