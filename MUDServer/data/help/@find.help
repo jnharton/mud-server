@@ -1,11 +1,13 @@
 @find
 @FIND
 
-Syntax: 'find [-<parameter>]'
+Syntax: '@find <search string>'
+        '@find [-<type>] <search string>'
 
 Parameters:
 
-n   npcs (ONLY!)
-r   rooms  (ONLY!)
+  n   npcs    (ONLY!)
+  p   players (ONLY!)
+  r   rooms   (ONLY!)
 
-Last Updated: April 21st, 2015
+Last Updated: June 3rd, 2025

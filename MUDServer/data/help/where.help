@@ -1,6 +1,8 @@
 where
 WHERE
-test
-List the players that are connected and some of their state info.
+
+Print out a formatted list of the players that are connected along with their class, status, current location, etc.
 
 Syntax: 'where'
+
+Last Updated: June 3rd, 2025

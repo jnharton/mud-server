@@ -17,11 +17,11 @@ Syntax: '@accounts'
                                                    password, and links the
                                                    current character to it.
                                                    
-        '@accounts +link <acct id> <player name>'  Link a player to the specif-
-                                                   ied account.
+        '@accounts +link <acct id> <player name>'  Link a player to the speci-
+                                                   fied account.
                                                    
         '@accounts +info <acct name> <acct pass>'  Show account information,
                                                    requires the account name
                                                    and password.
                                                    
-Last Updated: June 1st, 2017
+Last Updated: June 3rd, 2025

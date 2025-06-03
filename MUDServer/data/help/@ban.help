@@ -6,7 +6,9 @@ suspending command.
 
 NOTE: Currently the player needs to be connected.
 
-Syntax: '@ban <player name>'
-        '@ban #list'         List banned ip addresses.
+Syntax: @ban <player name>     -- ban a player
+        @ban #ip <address>     -- ban an IP address
+        @ban #list             -- list banned players and ip addresses.
+        @ban +ip <player name> -- ban a player and their current IP address
 
-Last Updated: March 25, 2013
+Last Updated: June 3rd, 2025

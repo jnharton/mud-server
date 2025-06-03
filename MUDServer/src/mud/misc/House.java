@@ -70,10 +70,12 @@ public class House {
 	public final int LARGE = 3;
 
 	final private List<Room> rooms;
-
+	
+	// lists of placeable objects
 	final private List<Thing> things;
 	final private List<Item> items;
-
+	
+	// positions of placeable objects
 	final private Map<Thing, Point> thingPos;
 	final private Map<Item,  Point> itemPos;
 	
@@ -128,7 +130,7 @@ public class House {
 		return rooms.size();
 	}
 	
-	// TODO return list?
+	// TODO return list? map?
 	public String[] getInfo() {
 		final String[] info = new String[] {
 				"House",

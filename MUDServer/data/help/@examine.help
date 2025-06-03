@@ -1,2 +1,10 @@
 @examine
 @EXAMINE
+
+Syntax: @examine <reference/DBRef/name>
+
+NOTES
+- database references (or object ids) are integer values, but must be prefixed by a '#'
+- valid "reference" values are: here, me
+
+Last Updated: June 3rd, 2025
