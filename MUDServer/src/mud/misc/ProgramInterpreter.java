@@ -255,7 +255,7 @@ public final class ProgramInterpreter {
 
 		if( params.length > 0 ) {
 			/*
-			 * TODO: resolve this kludge and figure out a way to ensure that each
+			 * TODO resolve this kludge and figure out a way to ensure that each
 			 * function doesn't have to worry about receiving the correct number
 			 * of parameters.
 			 */

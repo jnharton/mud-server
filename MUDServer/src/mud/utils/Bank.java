@@ -19,7 +19,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 import java.util.LinkedHashMap;
 
-import mud.misc.Coins;
+import mud.game.Coins;
 
 public class Bank {
 	

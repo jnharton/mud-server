@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
 
+import mud.game.Coins;
 import mud.interfaces.Stackable;
 import mud.objects.Item;
 import mud.objects.Player;

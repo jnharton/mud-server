@@ -8,8 +8,8 @@ import java.util.EnumSet;
 
 import mud.ObjectFlag;
 import mud.game.Ability;
+import mud.game.Coins;
 import mud.interfaces.*;
-import mud.misc.Coins;
 import mud.objects.Item;
 import mud.objects.NPC;
 import mud.rulesets.d20.Abilities;
@@ -26,7 +26,7 @@ import mud.rulesets.d20.Races;
  * changes are made to the one referred to.
  */
 
-public class Innkeeper extends NPC implements Vendor {
+public class Innkeeper extends NPC implements Vendor<Item> {
 	private ArrayList<Item> stock;
 
 	public Innkeeper(final int tempDBRef, final String tempName, final EnumSet<ObjectFlag> tempFlags, final String tempDesc,
@@ -53,7 +53,11 @@ public class Innkeeper extends NPC implements Vendor {
 	public List<Item> getStock() {
 		return Collections.unmodifiableList(this.stock);
 	}
-
+	
+	public void setStock(List<Item> stock) {
+		this.stock = new ArrayList<Item>(stock);
+	}
+	
 	public Item buy(final String name, final Coins payment) {
 		Item bought = null;
 
@@ -94,4 +98,6 @@ public class Innkeeper extends NPC implements Vendor {
 
 		return null;
 	}
+
+	
 }

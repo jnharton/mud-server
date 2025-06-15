@@ -3,8 +3,8 @@ package mud.objects.items;
 import java.util.EnumSet;
 
 import mud.ObjectFlag;
+import mud.game.Coins;
 import mud.game.Skill;
-import mud.misc.Coins;
 import mud.misc.SlotTypes;
 import mud.objects.Item;
 import mud.objects.ItemTypes;
@@ -12,10 +12,11 @@ import mud.utils.Tuple;
 import mud.utils.Utils;
 
 public class Weapon extends Item {
-	public enum DamageType { ENERGY, PIERCING, SLASHING, MAGICAL };
-	
 	public static final int MELEE = 0;
 	public static final int RANGED = 1;
+	
+	private WeaponType weaponType;
+	protected int modifier = 0;    // modifier - +0, +2, +3, +4, ... and so on
 	
 	private Skill required_skill;
 	private int req_skill_value;
@@ -23,7 +24,6 @@ public class Weapon extends Item {
 	private DamageType dType;      // damage type
 	
 	private int damage = 1;
-	private int mod = 0;           // modifier - +0, +2, +3, +4, ... and so on
 	
 	private int critMin;           // minimum roll for a critical hit
 	private int critMax;           // maximum roll for a critical hit
@@ -38,6 +38,9 @@ public class Weapon extends Item {
 		
 		this.item_type = ItemTypes.WEAPON;
 		this.slot_type = SlotTypes.NONE;
+		
+		this.weaponType = WeaponTypes.NONE;
+		this.modifier = 0;
 		
 		this.equippable = true;
 		
@@ -57,16 +60,18 @@ public class Weapon extends Item {
 		this.item_type = ItemTypes.WEAPON;
 		this.slot_type = SlotTypes.NONE;
 		
+		this.weaponType = WeaponTypes.NONE;
+		this.modifier = 0;
+		
 		this.equippable = true;
 		
 		this.weight = wType.getWeight(); // the weight of the weapon
 		
 		this.dType = wType.getDamageType();
 		
+		// TODO revise this later, as the weapon type specified a dice roll for damage...
 		this.damage = 1;
 		//this.damage = wType.getDamage();
-		
-		//this.mod = wMod;
 		
 		this.critMin = wType.getCritMin();
 		this.critMax = wType.getCritMax();
@@ -81,10 +86,12 @@ public class Weapon extends Item {
 	protected Weapon(final Weapon template) {
 		super( template );
 		
+		this.weaponType = template.weaponType;
+		
 		this.required_skill = template.required_skill;
 		this.req_skill_value = template.req_skill_value;
 		
-		this.mod = template.getModifer();
+		this.modifier = template.getModifer();
 		
 		this.damage = template.damage;
 	}
@@ -100,12 +107,15 @@ public class Weapon extends Item {
 	 * @param wDesc
 	 * @param wLoc
 	 */
-	public Weapon(final int wDBREF, final String wName, EnumSet<ObjectFlag> wFlags, final String wDesc, final int wLoc)
+	public Weapon(final int wDBREF, final String wName, EnumSet<ObjectFlag> wFlags, final String wDesc, final int wLoc, final WeaponType weapon)
 	{
 		super(wDBREF, wName, wFlags, wDesc, wLoc);
 		
 		this.item_type = ItemTypes.WEAPON;
 		this.slot_type = SlotTypes.NONE;
+		
+		this.weaponType = weapon;
+		this.modifier = 0;
 		
 		this.equippable = true;
 	}
@@ -150,11 +160,11 @@ public class Weapon extends Item {
 	}
 	
 	public void setModifier(int newMod) {
-		this.mod = newMod;
+		this.modifier = newMod;
 	}
 	
 	public int getModifer() {
-		return this.mod;
+		return this.modifier;
 	}
 	
 	public int getCritMin() {
@@ -183,8 +193,8 @@ public class Weapon extends Item {
 	public String toDB() {
 		final String[] output = new String[2];
 		
-		output[0] = -1 + "";       // weapon type ?
-		output[1] = this.mod + ""; // modifier
+		output[0] = WeaponTypes.getId("") + ""; // weapon type
+		output[1] = this.modifier + "";         // modifier
 		
 		return super.toDB() + "#" + Utils.join(output, "#");
 	}
@@ -192,7 +202,7 @@ public class Weapon extends Item {
 	@Override
 	public String toString() {
 		// e.g. Rapier +1
-		if( this.mod > 0 ) return this.getName() + "+" + this.mod;
-		else               return this.getName();
+		if( this.modifier > 0 ) return this.getName() + "+" + this.modifier;
+		else                    return this.getName();
 	}
 }

@@ -4,9 +4,9 @@ import java.util.EnumSet;
 
 import mud.ObjectFlag;
 import mud.TypeFlag;
+import mud.game.Coins;
 import mud.MUDObject;
 import mud.magic.Enchantment;
-import mud.misc.Coins;
 import mud.misc.Script;
 import mud.misc.SlotType;
 import mud.misc.SlotTypes;

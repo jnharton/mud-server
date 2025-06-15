@@ -3,7 +3,7 @@ package mud.quest;
 import java.util.LinkedList;
 import java.util.List;
 
-import mud.misc.Coins;
+import mud.game.Coins;
 import mud.objects.Item;
 
 public class Reward {

@@ -5,8 +5,6 @@ package mud.objects.items;
  * scimitar: 15g 
  */
 
-import mud.objects.items.Weapon.DamageType;
-
 public class WeaponType {
 	public static final int MELEE = 0;
 	public static final int RANGED = 1;
@@ -22,10 +20,10 @@ public class WeaponType {
 	private int critMax;           // maximum roll for a critical hit
 	private int critical;          // damage multiplier for a critical hit
 	
-	public WeaponType(int id, String name, DamageType dType, String damage, int critMin, int critMax, int critical, double weight ) {
+	public WeaponType(int id, String name, DamageType dType, String damageRoll, int critMin, int critMax, int critical, double weight ) {
 		this.name = name;
 		this.dType = dType;
-		this.damage = damage;
+		this.damage = damageRoll;
 		this.critMin = critMin;
 		this.critMax = critMax;
 		this.critical = critical;

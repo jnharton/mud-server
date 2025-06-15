@@ -19,6 +19,11 @@ import mud.objects.Player;
 import mud.objects.Thing;
 import mud.objects.ThingType;
 import mud.objects.ThingTypes;
+import mud.objects.items.Armor;
+import mud.objects.items.ArmorType;
+import mud.objects.items.ArmorTypes;
+import mud.objects.items.Weapon;
+import mud.objects.items.WeaponTypes;
 import mud.rulesets.d20.D20;
 import mud.rulesets.d20.Skills;
 import mud.utils.GameUtils;
@@ -81,6 +86,10 @@ public class DND35 extends GameModule {
 		
 		prototypes.put("mud.dnd35.ores.copper", copper_ore);
 		
+		/************************************************************/
+		/** Iron Ore                                               **/
+		/************************************************************/
+		
 		final Item iron_ore = GameUtils.createItem(
 				"Iron Ore",
 				"A chunk of iron ore. Bands of reddish brown are intertwined with darker gray spots."
@@ -91,6 +100,22 @@ public class DND35 extends GameModule {
 		iron_ore.setProperty("purity", "0.90");
 		
 		prototypes.put("mud.dnd35.ores.iron", iron_ore);
+		
+		/************************************************************/
+		/** Chain Maille (Armor)                                   **/
+		/************************************************************/
+		
+		final Armor chain_maille = new Armor(0, ArmorTypes.CHAIN_MAIL);
+		
+		prototypes.put("mud.dnd35.armor.chainmail", chain_maille);
+		
+		/************************************************************/
+		/** Long Sword (Weapon)                                   **/
+		/************************************************************/
+		
+		final Weapon long_sword = new Weapon(WeaponTypes.LONG_SWORD);
+		
+		prototypes.put("mud.dnd35.armor.longsword", long_sword);
 		
 		/* Things */
 		prototypes1 = new Hashtable<String, Thing>();

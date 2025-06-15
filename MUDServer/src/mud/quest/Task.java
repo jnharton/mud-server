@@ -110,7 +110,7 @@ public abstract class Task {
 	 * NOTE: we can assume that the provided task update will be for this task
 	 * 
 	 * @param update
-	 * @return TODO
+	 * @return
 	 */
 	protected abstract boolean update(final TaskUpdate update);
 	

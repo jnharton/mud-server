@@ -9,8 +9,8 @@ import java.util.EnumSet;
 
 import mud.ObjectFlag;
 import mud.game.Ability;
+import mud.game.Coins;
 import mud.interfaces.Vendor;
-import mud.misc.Coins;
 import mud.objects.Item;
 import mud.objects.NPC;
 import mud.rulesets.d20.Abilities;
@@ -27,7 +27,7 @@ import mud.rulesets.d20.Races;
  * changes are made to the one referred to.
  */
 
-public class Merchant extends NPC implements Vendor {
+public class Merchant extends NPC implements Vendor<Item> {
 	/**
 	 * 
 	 */
@@ -66,7 +66,6 @@ public class Merchant extends NPC implements Vendor {
 		this.status = tempPStatus;
 	}
 	
-	@Override
 	public List<Item> getStock() {
 		return Collections.unmodifiableList(this.stock);
 	}

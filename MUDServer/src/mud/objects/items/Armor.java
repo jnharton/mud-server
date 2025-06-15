@@ -3,7 +3,7 @@ package mud.objects.items;
 import java.util.EnumSet;
 
 import mud.ObjectFlag;
-import mud.misc.Coins;
+import mud.game.Coins;
 import mud.objects.Item;
 import mud.objects.ItemType;
 import mud.objects.ItemTypes;
@@ -24,9 +24,9 @@ public class Armor extends Item {
 
 	// weight - light, medium, heavy
 	//private String group = "";
-	private ArmorType armor_type;
+	private ArmorType armorType;
 	
-	protected int mod = 0;                    // modifier - +0, +2, +3, +4, ... and so on
+	protected int modifier = 0;                    // modifier - +0, +2, +3, +4, ... and so on
 	
 	// TODO what kind of armor is it? armortype being null is a problem
 	public Armor(final String name, final String desc) {
@@ -36,9 +36,9 @@ public class Armor extends Item {
 		
 		this.equippable = true;
 		
-		this.mod = 0;
+		this.modifier = 0;
 		
-		this.armor_type = ArmorType.NONE;
+		this.armorType = ArmorTypes.NONE;
 		this.weight = 5;
 	}
 	
@@ -49,9 +49,9 @@ public class Armor extends Item {
 		
 		this.equippable = true;
 		
-		this.mod = aMod;
+		this.modifier = aMod;
 		
-		this.armor_type = armor;
+		this.armorType = armor;
 		this.weight = armor.getWeight();
 	}
 	
@@ -66,7 +66,7 @@ public class Armor extends Item {
 	protected Armor( Armor template ) {
 		super( template );
 		
-		this.armor_type = template.armor_type;
+		this.armorType = template.armorType;
 	}
 	
 	/**
@@ -80,75 +80,75 @@ public class Armor extends Item {
 	 * @param tempLoc
 	 * @param tempDBREF
 	 */
-	public Armor(int wDBREF, String wName, EnumSet<ObjectFlag> wFlags, String wDesc, int wLoc, ArmorType armor)
+	public Armor(final int aDBREF, final String aName, final EnumSet<ObjectFlag> aFlags, final String aDesc, final int aLoc, final ArmorType armor)
 	{
-		super(wDBREF, wName, wFlags, wDesc, wLoc);
+		super(aDBREF, aName, aFlags, aDesc, aLoc);
 		
 		this.item_type = ItemTypes.ARMOR;
 		
 		this.equippable = true;
 		
 		//this.mod = aMod;
-		this.mod = 0;
+		this.modifier = 0;
 		
-		this.armor_type = armor;
+		this.armorType = armor;
 		
 		this.weight = armor.getWeight();
 	}
 	
+	// TODO decide if this is really needed... especially since names are important
+	/*
 	@Override
 	public String getName() {
-		if( this.armor_type != null ) return this.armor_type.getName() + " Armor";
-		else                          return this.name;
-	}
+		if( this.armorType != null ) return this.armorType.getName() + " Armor";
+		else                         return this.name;
+	}*/
 	
 	public int getArmorBonus() {
-		return this.armor_type.getArmorBonus();
+		return this.armorType.getArmorBonus();
 	}
 	
 	public int getDexBonus() {
-		return this.armor_type.getDexBonus();
+		return this.armorType.getDexBonus();
 	}
 	
 	public double getSpellFailure() {
-		return this.armor_type.getSpellFailure();
+		return this.armorType.getSpellFailure();
 	}
 	
 	@Override
 	public Coins getValue() {
-		return Coins.fromArray(armor_type.getCost());
+		return Coins.fromArray(armorType.getCost());
 		//return new Coins(armor_type.getCost());
 	}
 	
-	public int getMod() {
-		return this.mod;
+	public int getModifier() {
+		return this.modifier;
 	}
 	
-	public void setMod(int newMod) {
-		this.mod = newMod;
+	public void setModifier(int newMod) {
+		this.modifier = newMod;
+	}
+	
+	@Override
+	public Armor getCopy() {
+		return new Armor(this);
 	}
 	
 	@Override
 	public String toDB() {
 		final String[] output = new String[2];
 		
-		output[0] = this.armor_type.ordinal() + ""; // armor type
-		output[1] = this.mod + "";                  // modifier
+		output[0] = ArmorTypes.getId(this.armorType.getName()) + ""; // armor type
+		output[1] = this.modifier + "";                              // modifier
 		
 		return super.toDB() + "#" + Utils.join(output, "#");
 	}
 	
 	@Override
 	public String toString() {
-		int modifier = 0;
-		
-		if (this.mod > 0)      return "+" + this.mod + " " + this.getName();
-		else if (this.mod < 0) return this.mod + " " + this.getName();
+		if (this.modifier > 0)      return "+" + this.modifier + " " + this.getName();
+		else if (this.modifier < 0) return this.modifier + " " + this.getName();
 		else                   return this.getName();
-	}
-	
-	@Override
-	public Armor getCopy() {
-		return new Armor(this);
 	}
 }

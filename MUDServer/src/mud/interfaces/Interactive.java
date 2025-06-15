@@ -1,4 +1,4 @@
-package mud.objects.npcs;
+package mud.interfaces;
 
 /*
 Copyright (c) 2012 Jeremy N. Harton
@@ -17,11 +17,18 @@ CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTH
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-import mud.misc.Coins;
-import mud.objects.InteractiveI;
+import mud.net.Client;
+import mud.objects.Player;
+import mud.utils.Message;
 
-public interface BankerI extends InteractiveI
+/**
+ * Defines a interface for npcs, etc that can be interacted with
+ * 
+ * @author Jeremy
+ *
+ */
+public interface Interactive
 {
-	public Coins withdraw(final Coins money);
-	public void deposit(final Coins money);
+	public abstract void interact(Player player);
+	public abstract Message say(String message);
 }

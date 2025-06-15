@@ -8,7 +8,8 @@ import java.util.EnumSet;
 import mud.ObjectFlag;
 import mud.TypeFlag;
 import mud.game.Ability;
-import mud.misc.Coins;
+import mud.game.Coins;
+import mud.interfaces.Interactive;
 import mud.misc.Slot;
 import mud.quest.Quest;
 import mud.rulesets.d20.Classes;
@@ -37,7 +38,7 @@ import mud.utils.Utils;
  * @author Jeremy N. Harton
  * 
  */
-public class NPC extends Player implements InteractiveI
+public class NPC extends Player implements Interactive
 {
 	public String greeting = "Lovely weather we're having around these parts.";
 

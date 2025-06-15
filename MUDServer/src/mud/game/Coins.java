@@ -1,4 +1,4 @@
-package mud.misc;
+package mud.game;
 
 /*
  * Copyright (c) 2013 Jeremy N. Harton
@@ -12,7 +12,7 @@ package mud.misc;
 
 /**
  * 
- * @author joshgit
+ * @author joshgit, jnharton
  *
  */
 public class Coins
@@ -21,7 +21,13 @@ public class Coins
     	SILVER_RATIO = 100,
     	GOLD_RATIO = SILVER_RATIO * 100,
     	PLATINUM_RATIO = GOLD_RATIO * 100;
-
+    
+    /*
+     *   1 silver coin = 100 copper coins
+     *     1 gold coin = 100 silver coins
+     * 1 platinum coin = 100 gold coins
+     */
+    
     // 230 copper coins: Coins.copper(230)
     // 6 silver coins: Coins.silver(6)
     // etc.

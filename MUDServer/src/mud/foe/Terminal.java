@@ -43,7 +43,7 @@ public class Terminal extends Thing implements IODevice {
 	// usable state: USABLE, LOCKOUT, BROKEN
 
 	public enum Power { NO_POWER, POWER_OFF, POWER_ON };
-	public enum Login { LOGGED_IN, LOGGED_OUT, GET_USER, GET_PASS, LOCKOUT};
+	public enum Login { LOGGED_IN, LOGGED_OUT, GET_USER, GET_PASS, LOCKED_OUT};
 	public enum Use { USABLE, BROKEN };
 
 	/* the states above are pseudo-independent. Obviously usable/broken
@@ -147,6 +147,8 @@ public class Terminal extends Thing implements IODevice {
 		
 		term.init();
 		term.powerOn();
+		
+		term.paused = false;
 
 		Scanner s = new Scanner(System.in);
 		
@@ -860,6 +862,7 @@ public class Terminal extends Thing implements IODevice {
 				case GET_PASS: prompt = "Pass?> "; break;
 				default:       prompt = "";        break;
 				}
+			case LOCKED_OUT: prompt = "SYSTEM MESSAGE - THIS TERMINAL IS LOCKED OUT!";
 			default:        prompt = "> ";     break;
 			}
 		}

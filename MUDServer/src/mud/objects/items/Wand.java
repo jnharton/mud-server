@@ -45,7 +45,7 @@ public class Wand extends Item implements MagicItem {
 	 * @param dbref
 	 * @param name
 	 * @param description
-	 * @param flags TODO
+	 * @param flags
 	 * @param location
 	 * @param tCharges
 	 * @param spell

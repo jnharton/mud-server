@@ -60,14 +60,14 @@ import mud.utils.Point;
 // TODO I'm thinking house should be a subclass of building
 public class House {
 	// where dropped stuff goes
-	private final int FLOOR   = 1;
-	private final int STORAGE = 2;
-	private final int TRASH   = 3;
+	private static final int FLOOR   = 1;
+	private static final int STORAGE = 2;
+	private static final int TRASH   = 3;
 	
 	// house sizes
-	public final int SMALL = 1;
-	public final int MEDIUM = 2;
-	public final int LARGE = 3;
+	public static final int SMALL = 1;
+	public static final int MEDIUM = 2;
+	public static final int LARGE = 3;
 
 	final private List<Room> rooms;
 	

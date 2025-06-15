@@ -24,8 +24,8 @@ import mud.rulesets.d20.Classes;
 import mud.rulesets.d20.Races;
 import mud.utils.Tuple;
 import mud.utils.Utils;
+import mud.game.Coins;
 import mud.magic.Spell;
-import mud.misc.Coins;
 import mud.misc.Effect;
 import mud.misc.InvalidItemTypeException;
 import mud.misc.InvalidThingTypeException;
@@ -727,26 +727,26 @@ public class ObjectLoader {
 			
 			return wand;
 		}
-		else if (it == ItemTypes.WEAPON) { // Weapon Merchant
-			//int weaponType = Integer.parseInt(attr[7]);
+		else if (it == ItemTypes.WEAPON) { // Weapon
+			// TODO resolve whatever is going on here
+			int weaponType = Integer.parseInt(attr[7]);
 			int mod = Integer.parseInt(attr[8]);
 
-			final Weapon weapon = new Weapon(oDBRef, oName, flags, oDesc, oLocation);
+			final Weapon weapon = new Weapon(oDBRef, oName, flags, oDesc, oLocation, WeaponTypes.getWeaponType(weaponType));
 			
 			weapon.setSlotType(st);
-			
 			weapon.setModifier(mod);
 			
 			return weapon;
 		}
-		else if (it == ItemTypes.ARMOR) { // Armor Merchant
+		else if (it == ItemTypes.ARMOR) { // Armor
 			int armorType = Integer.parseInt(attr[7]);
 			int mod = Integer.parseInt(attr[8]);
 
-			final Armor armor = new Armor(oDBRef, oName, flags, oDesc, oLocation, ArmorType.values()[armorType]);
+			final Armor armor = new Armor(oDBRef, oName, flags, oDesc, oLocation, ArmorTypes.getArmorType(armorType));
 			
 			armor.setSlotType(st);
-			armor.setMod(mod);
+			armor.setModifier(mod);
 			
 			return armor;
 		}

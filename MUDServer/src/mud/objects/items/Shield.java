@@ -4,7 +4,7 @@ import java.util.EnumSet;
 
 import mud.ObjectFlag;
 import mud.TypeFlag;
-import mud.misc.Coins;
+import mud.game.Coins;
 import mud.objects.Item;
 import mud.objects.ItemType;
 import mud.objects.ItemTypes;

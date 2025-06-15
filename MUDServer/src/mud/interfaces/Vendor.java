@@ -19,17 +19,21 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 import java.util.List;
 
-import mud.misc.Coins;
+import mud.game.Coins;
 import mud.objects.Item;
 
-public interface Vendor {
-	public List<Item> getStock();
+public interface Vendor<T> {
+	public List<T> getStock();
 	
-	public Item buy(final String name, final Coins payment);
+	public void setStock(final List<T> stock);
 	
-	public Coins sell(final Item item);
+	public T buy(final String name, final Coins payment);
+	
+//	public T buy(final T object, final Coins payment);
+	
+	public Coins sell(final T item);
 
 	public boolean hasItem(final String arg);
 
-	public Item getItem(final String arg);
+	public T getItem(final String arg);
 }

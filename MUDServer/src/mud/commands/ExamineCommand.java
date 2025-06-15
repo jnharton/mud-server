@@ -57,7 +57,7 @@ public class ExamineCommand extends Command {
 				MUDObject mobj = getObject(arg);
 				
 				if( mobj != null ) {
-					/** TODO: fix the following kludge **/
+					/** TODO fix the following kludge **/
 					if( mobj.getLocation() != player.getLocation() ) {
 						send("That doesn't exist.", client);
 						return;

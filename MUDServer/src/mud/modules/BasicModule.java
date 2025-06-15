@@ -1,5 +1,6 @@
 package mud.modules;
 
+import java.util.Collections;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
@@ -74,8 +75,7 @@ public class BasicModule extends GameModule {
 
 	@Override
 	public List<Faction> getFactions() {
-		// TODO Auto-generated method stub
-		return null;
+		return Collections.emptyList();
 	}
 	
 	@Override
@@ -109,12 +109,12 @@ public class BasicModule extends GameModule {
 	
 	@Override
 	public Map<String, Item> getItemPrototypes() {
-		return null;
+		return Collections.emptyMap();
 	}
 
 	@Override
 	public Map<String, Thing> getThingPrototypes() {
-		return null;
+		return Collections.emptyMap();
 	}
 
 	@Override
