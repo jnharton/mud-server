@@ -1433,7 +1433,8 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 				System.out.println(sb.toString().trim());
 				sb.delete(0, sb.length());
 				cntr.reset();
-			} else {
+			}
+			else {
 				sb.append(Utils.padRight(topicFileName, ' ', 25)).append(" ");
 				cntr.increment();
 			}
@@ -1605,7 +1606,12 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 
 			debug("");
 		}
-
+		
+		// TODO fix kludge, we are directly pulling prototypes from the game module in here
+		// pull in prototypes
+		prototypes.putAll(module.getItemPrototypes());
+		prototypes1.putAll(module.getThingPrototypes());
+					
 		/* Testing */
 		if (testing) {
 			// TODO is this necessary
@@ -5917,7 +5923,8 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		if (user.equalsIgnoreCase("account")) {
 			setClientState(client, "account_login");
 			handle_account_login(user, client);
-		} else if (user.equalsIgnoreCase("guest")) {
+		}
+		else if (user.equalsIgnoreCase("guest")) {
 			if (guest_users == 1) {
 				player = getNextGuest();
 
@@ -5931,9 +5938,10 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 				init_conn(player, client, false);
 
 				guests++;
-			} else
-				send("Sorry. Guest users have been disabled.", client);
-		} else {
+			}
+			else send("Sorry. Guest users have been disabled.", client);
+		}
+		else {
 			/*
 			 * NOTE: if all players always existed, then instead of instantiating a player
 			 * i'd simply assign a client to it. Otherwise I need to get the player data
@@ -5965,11 +5973,11 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 						this.caTable.put(client, a);
 						account_menu(a, client);
 						setClientState(client, "account_menu");
-					} else {
+					}
+					else {
 						final String message = Account.msgmap.get(a.getStatus());
 
-						if (message != null)
-							send(message, client);
+						if (message != null) send(message, client);
 					}
 
 					return;
@@ -6024,15 +6032,18 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			// connect to the game
 			if (mode == GameMode.NORMAL) {
 				init_conn(p, client, false); // Open Mode
-			} else if (mode == GameMode.WIZARD) {
+			}
+			else if (mode == GameMode.WIZARD) {
 				// if (p.getFlags().contains("W") || p.getAccess() >= Constants.WIZARD) {
 				if (p.getAccess() >= Constants.WIZARD) {
 					init_conn(p, client, false); // Wizard-Only Mode
-				} else
-					send("Sorry, only Wizards are allowed to login at this time.", client);
-			} else if (mode == GameMode.MAINTENANCE) {
+				}
+				else send("Sorry, only Wizards are allowed to login at this time.", client);
+			}
+			else if (mode == GameMode.MAINTENANCE) {
 				send("Sorry, the mud is currently in maintenance mode.", client);
-			} else {
+			}
+			else {
 				send("Sorry, you cannot connect to the mud at this time. Please try again later.", client);
 			}
 		}
@@ -6304,7 +6315,8 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		if (objectDB.hasName(user, TypeFlag.PLAYER) || !validateName(user)) {
 			// indicate the unavailability and/or unsuitability of the chosen name
 			send("That name is not available, please choose another and try again.", client);
-		} else {
+		}
+		else {
 			// create a new player object for the new player
 			final Player player = new Player(-1, user, Utils.hash(pass), start_room);
 
@@ -6633,8 +6645,11 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		String[] args2 = arg.split(" ");
 
 		String param = arg.toLowerCase();
-
-		if (param.equals("on")) {
+		
+		if (param.equals("")) {
+			send("The current Debugging Level is: " + debugLevel, client);
+		}
+		else if (param.equals("on")) {
 			debug = true;
 			send("Game> Debugging: On", client);
 		}
@@ -6809,6 +6824,16 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			}
 			
 			send("--------------------------------------------------------------------------", client);
+		}
+		else if (param.equals("object-types")) {
+			List<String> types = Utils.mkList(
+					"mud.objects.Creature", "mud.objects.Exit", "mud.objects.Item", "mud.objects.Mount", "mud.objects.NPC", "mud.objects.NullObject",
+					"mud.objects.Player", "mud.objects.Room", "mud.objects.Thing", "mud.objects.exits.Door", "mud.objects.exits.Portal",
+					"mud.objects.items.Armor", "mud.objects.items.Arrow", "mud.objects.items.Book", "mud.objects.items.Clothing", "mud.objects.items.Container",
+					"mud.objects.items.Drink", "mud.objects.Jewelry", "mud.objects.items.Armor.Pack", "mud.objects.items.Armor.Potion",
+					"mud.objects.items.Wand", "mud.objects.items.Weapon");
+			
+			send(types, client);
 		}
 		else if (param.equals("pos")) {
 			Player player = getPlayer(client);
@@ -6991,7 +7016,8 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 				}
 			}
 		}
-		else if (!arg.equals("")) {
+		/*else if (!arg.equals("")) {
+			// TODO 
 			final int level = Utils.toInt(arg, debugLevel);
 
 			if (debugLevel != level) {
@@ -6999,8 +7025,9 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			}
 
 			debugLevel = level;
-		}
+		}*/
 		else {
+			send("No debug tool called " + param + " was found.", client);
 			// print help information?
 			// cmd_help("@debug", client);
 		}
@@ -8414,11 +8441,12 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		if (arg.equals("@reload")) {
 			if (checkAccess(player, Constants.BUILD)) {
 				help_reload();
+				topic_reload();
 				notify(player, "Game> Help Files Reloaded!\n");
 			}
-		} else {
-			if (arg.equals(""))
-				arg = "help";
+		}
+		else {
+			if (arg.equals("")) arg = "help";
 
 			// config options retrieval
 			final boolean pagerEnabled = player.getConfigOption("pager_enabled");
@@ -9167,16 +9195,13 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 					send("You leveled up to level " + player.getLevel() + "!", client);
 
 					// TODO call game module function here
-					if (module != null)
-						module.levelup(player);
+					if (module != null) module.levelup(player);
 				}
-				send("You are already at max level?!", client);
-			} else {
-				send("You are not currently ready to level-up.", client);
+				else send("You are already at max level?!", client);
 			}
-		} else {
-			send("Your character is invalid.", client);
+			else send("You are not currently ready to level-up.", client);
 		}
+		else send("Your character is invalid.", client);
 	}
 	
 	/**
@@ -13321,15 +13346,14 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		final StringBuilder sb = new StringBuilder();
 
 		// tell us how many hitpoints and how much mana we have
-		sb.append("HP: " + player.getHP() + "/" + player.getTotalHP()).append(" ");
-		sb.append("MANA: " + player.getMana() + "/" + player.getTotalMana()).append(" ");
+		//sb.append("HP: " + player.getHP() + "/" + player.getTotalHP()).append(" ");
+		//sb.append("MANA: " + player.getMana() + "/" + player.getTotalMana()).append(" ");
 
-		/*
-		 * sb.append(colors("HP", "red")).append(":").append(" ");
-		 * sb.append(player.getHP() + "/" + player.getTotalHP()).append(" ");
-		 * sb.append(colors("MANA", "blue")).append(":").append(" ");
-		 * sb.append(player.getMana() + "/" + player.getTotalMana()).append(" ");
-		 */
+
+		sb.append(colors("HP", "red")).append(":").append(" ");
+		sb.append(player.getHP() + "/" + player.getTotalHP()).append(" ");
+		sb.append(colors("MANA", "blue")).append(":").append(" ");
+		sb.append(player.getMana() + "/" + player.getTotalMana()).append(" ");
 
 		// refresh player state info
 		player.updateCurrentState();
@@ -16179,6 +16203,8 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 
 			item.setName((String) data.getObject("name"));
 			item.setDesc((String) data.getObject("desc"));
+			
+			item.setLocation((Integer) data.getObject("location"));
 
 			// TODO what am I trying to accomplish here exactly, is item type a
 			// changeable thing?
@@ -16202,6 +16228,11 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			}
 
 			send("Command not implemented.", client);
+		} else if(icmd.equals("setlocation")) {
+			data.setObject("location", Utils.toInt(iarg, -1));
+			
+			send("Ok.", client);
+			
 		} else if (icmd.equals("show")) {
 			final Item item = (Item) data.getObject("item");
 
@@ -18865,7 +18896,8 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		// NOTE: I should probably add a mapping here somewhere that ties the
 		// player to their account, if they have one
 
-		if (newCharacter) { // if new, do some setup
+		if (newCharacter) {
+			// if new, do some setup
 			// send a welcome mail to them
 
 			final int id = player.getMailBox().numMessages() + 1;
@@ -19325,6 +19357,14 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			String helpLines[] = Utils.loadStrings(resolvePath(HELP_DIR, helpFileName));
 
 			this.helpTable.put(helpLines[0], helpLines);
+		}
+	}
+	
+	public void topic_reload() {
+		for (final String topicFileName : generateTopicFileIndex()) {
+			String topicLines[] = Utils.loadStrings(resolvePath(TOPIC_DIR, topicFileName));
+
+			this.topicTable.put(topicLines[0], topicLines);
 		}
 	}
 
@@ -22088,7 +22128,8 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			}
 
 			return newItem;
-		} else {
+		}
+		else {
 			debug("ERROR: null template?!");
 		}
 
@@ -22377,14 +22418,15 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			if (helpTable.containsKey(command)) {
 				// System.out.println("Help File Exists!");
 				return helpTable.get(aliases.get(name));
-			} else
-				return null;
-		} else {
+			}
+			else return null;
+		}
+		else {
 			if (helpTable.containsKey(name)) {
 				// System.out.println("Help File Exists!");
 				return helpTable.get(name);
-			} else
-				return null;
+			}
+			else return null;
 		}
 	}
 
@@ -26352,8 +26394,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 				else {
 					return false;
 				}
-			} else
-				return false;
+			} else return false;
 		} else {
 			return true; // assuming that the spell can target any non-player object, regardless
 		}

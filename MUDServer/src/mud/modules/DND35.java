@@ -107,6 +107,8 @@ public class DND35 extends GameModule {
 		
 		final Armor chain_maille = new Armor(0, ArmorTypes.CHAIN_MAIL);
 		
+		chain_maille.setSlotType(SlotTypes.BODY);
+		
 		prototypes.put("mud.dnd35.armor.chainmail", chain_maille);
 		
 		/************************************************************/
@@ -115,7 +117,9 @@ public class DND35 extends GameModule {
 		
 		final Weapon long_sword = new Weapon(WeaponTypes.LONG_SWORD);
 		
-		prototypes.put("mud.dnd35.armor.longsword", long_sword);
+		long_sword.setSlotType(SlotTypes.RHAND);
+		
+		prototypes.put("mud.dnd35.weapon.longsword", long_sword);
 		
 		/* Things */
 		prototypes1 = new Hashtable<String, Thing>();
@@ -148,6 +152,7 @@ public class DND35 extends GameModule {
 		player.addSlot("boots",    new Slot(SlotTypes.FEET,   ItemTypes.CLOTHING));
 		player.addSlot("other",    new Slot(SlotTypes.NONE,   ItemTypes.NONE ));
 		
+		// add/initialize skills
 		player.addSkill(Skills.DIPLOMACY);
 		player.addSkill(Skills.BALANCE);
 		player.addSkill(Skills.CONCENTRATION);

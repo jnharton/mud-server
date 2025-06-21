@@ -1,0 +1,11 @@
+@setskill
+@SETSKILL
+
+Examine the value of the named skill (for the player executing the command).
+
+NOTE: skill names must be entirely in lowercase
+
+Syntax: '@setskill <skillname>'
+        '@setskill <skillname>=<new integer value>'
+
+Last Updated: June 21st, 2025
