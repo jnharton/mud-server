@@ -26,6 +26,8 @@ public class GreetCommand extends Command {
 		// TODO figure out whether we are tryng to greet an NPC and respond accordingly
 		final Player self = getPlayer(client);
 		
+		boolean done = false;
+		
 		// TODO need to make this locality dependent
 		final Player player = getPlayer(arg);		
 		final NPC npc = getNPC(arg);

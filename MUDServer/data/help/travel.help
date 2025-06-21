@@ -1,0 +1,13 @@
+travel
+TRAVEL
+
+Travel (fast travel?) to a new location.
+
+syntax: travel               -- list known landmarks
+        travel <landmark>    -- travel to a known landmark
+		travel record <name> -- start recording the steps you take as being a route to a landmark called <name>
+		travel pause         -- pause travel and/or recording
+		travel resume        -- resume travel and/or recording
+		travel end           -- end travel and/or recording
+
+Last Updated: June 18th, 2025

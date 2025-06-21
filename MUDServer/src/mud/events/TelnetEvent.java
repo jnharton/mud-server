@@ -4,6 +4,7 @@ import java.util.EventObject;
 
 import mud.net.Client;
 
+@SuppressWarnings("serial")
 public class TelnetEvent extends EventObject {
 	String message;
 	

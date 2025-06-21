@@ -10,6 +10,7 @@ import java.util.EventObject;
 
 import mud.objects.exits.Portal;
 
+@SuppressWarnings("serial")
 public class PortalEvent extends EventObject {
 	private String message;
 	private EventType eventType;

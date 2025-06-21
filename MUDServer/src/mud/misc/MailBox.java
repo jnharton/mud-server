@@ -35,7 +35,12 @@ public class MailBox implements Iterable<Mail> {
 		this.mailbox = new ArrayList<Mail>();
 	}
 	
-	public void add(Mail mail) {
+	/**
+	 * add a Mail object to the mailbox.
+	 * 
+	 * @param mail
+	 */
+	public void add(final Mail mail) {
         this.mailbox.add(mail);
 	}
 	
@@ -43,25 +48,47 @@ public class MailBox implements Iterable<Mail> {
 		return this.mailbox.get(index);
 	}
 	
+	
+	public boolean remove(final Mail mail) {
+		return mailbox.remove(mail);
+	}
+	
 	public Mail remove(int index) {
-		return mailbox.remove(index);
+		return this.mailbox.remove(index);
 	}
-
+	
+	/**
+	 * 
+	 * @return total number of mails
+	 */
 	public int numMessages() {
-		return mailbox.size();
+		return this.mailbox.size();
 	}
-
+	
+	/**
+	 * 
+	 * @return total number of unread mails
+	 */
 	public int numUnreadMessages() {
-        int num = 0;
-		for (final Mail m : mailbox) {
-			if (m.isUnread()) {
-				num++;
+		int num = 0;
+		
+		// make sure it can't be modified at the same time
+		synchronized(this) {
+			for (final Mail m : this.mailbox) {
+				if (m.isUnread()) {
+					num++;
+				}
 			}
 		}
+
 		return num;
 	}
 
-	// allow moving directly to next message
+	/**
+	 * get the next unread mail
+	 * 
+	 * @return
+	 */
 	public Mail getNextUnreadMail() {
 		for (final Mail m : mailbox) {
 			if (m.isUnread()) {

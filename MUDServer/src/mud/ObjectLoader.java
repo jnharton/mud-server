@@ -491,7 +491,7 @@ public class ObjectLoader {
 			catch (ArrayIndexOutOfBoundsException aioobe) { aioobe.printStackTrace(); }
 		}
 		
-		loaded = true;
+		this.loaded = true;
 	}
 
 	/*
@@ -807,7 +807,7 @@ public class ObjectLoader {
 		}
 		else if (it == ItemTypes.SHIELD) { // Armor Merchant
 			int shieldType = Utils.toInt(attr[7], 0); //Integer.parseInt(attr[7]);
-			int mod = Utils.toInt(attr[8], 0); //Integer.parseInt(attr[8]);
+			int mod = Utils.toInt(attr[8], 0);        //Integer.parseInt(attr[8]);
 
 			Shield shield = new Shield(oDBRef, oName, flags, oDesc, oLocation, it, ShieldType.values()[shieldType], mod);
 			
@@ -821,7 +821,7 @@ public class ObjectLoader {
 			
 			//int effect = Integer.parseInt(attr[]);
 			
-			// TODO this is special, an 'item type' without an associated class
+			// TODO this is special, an 'item type' without an associated class!
 			//ring.setItemType(ItemTypes.RING);
 			
 			// TODO fix this, all rings are rings of invisibility now...

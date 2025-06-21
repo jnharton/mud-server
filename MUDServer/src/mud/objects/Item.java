@@ -32,19 +32,21 @@ public class Item extends MUDObject {
 	
 	// game/system level "rules"
 	protected boolean canAuction = true;      // allows/disallows auctioning this item (default: true)
-    
-	protected boolean drinkable = false;      // drinkable -- implies DRINK
-    protected boolean edible = false;         // edible -- implies FOOD
-    protected boolean equippable = false;     // equippable -- implies Equippable (default: false)
-    
+	protected boolean canSell = true;         // allows/disallows selling this item (default: true)
+	
     protected boolean unique = false;         // is this item Unique (only one of them, cannot be copied)
 	
     // environment "rules"
-	protected boolean isAbsorb = false;        // does this item absorb water? (default: false)
+	protected boolean isAbsorb = false;       // does this item absorb water? (default: false)
 	protected boolean isWet = false;          // defines whether the item is wet or not (default: false)
 	
 	protected boolean reducesWeight = false;  // does this item reduce the weight of it's contents (default: false)
 	protected double reduction_factor = 1.0;  // weight reduction multiplier (default: 1 = 100% of original weight)
+	
+	// properties?
+	protected boolean drinkable = false;      // drinkable -- implies DRINK
+    protected boolean edible = false;         // edible -- implies FOOD
+    protected boolean equippable = false;     // equippable -- implies Equippable (default: false)
 	
 	// original idea was a multiplying factor for weight when wet such as
 	// 1.0 - normal, 1.25 - damp, 1.50 - soaked, 2.00 - saturated, etc ("feels" x times as heavy)
@@ -199,32 +201,37 @@ public class Item extends MUDObject {
 		return this.isWet;
 	}
 	
-	public void setAuctionable(boolean canAuction) {
-		this.canAuction = canAuction;
+	public boolean isAuctionable() {
+		return this.canAuction;
 	}
 	
-	public boolean isAuctionable() {
-		return canAuction;
+	public void setAuctionable(boolean canAuction) {
+		// boolean auctionable ?
+		this.canAuction = canAuction;
 	}
 	
 	public boolean isEquippable() {
 		return this.equippable;
 	}
 	
-	public void setUnique(boolean unique) {
-		this.unique = unique;
+	public boolean isDrinkable() {
+		return this.drinkable;
+	}
+	
+	/*public void setDrinkable(boolean drinkable) {
+		this.drinkable = drinkable;
+	}*/
+	
+	public boolean isEdible() {
+		return this.edible;
 	}
 	
 	public boolean isUnique() {
 		return this.unique;
 	}
 	
-	public boolean isDrinkable() {
-		return this.drinkable;
-	}
-	
-	public boolean isEdible() {
-		return this.edible;
+	public void setUnique(boolean unique) {
+		this.unique = unique;
 	}
 	
 	public boolean isEnchanted() {

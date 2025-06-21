@@ -14,6 +14,7 @@ public final class Abilities {
 	public static final Ability AGILITY =      new Ability("Agility",      "agi", 5);
 	public static final Ability LUCK =         new Ability("Luck",         "luc", 6);
 	
+	@SuppressWarnings("serial")
 	public static final LinkedHashMap<String, Ability> abilityMap = new LinkedHashMap<String, Ability>() {
 		{
 			put("STR", Abilities.STRENGTH);

@@ -386,7 +386,7 @@ public abstract class MUDObject {
 	}
 	
 	public final <T> void setProperty(final String key, final T value) {
-		final Class c = value.getClass();
+		final Class<?> c = value.getClass();
 		
 		if( c.getSimpleName().equals("Boolean") ) {
 			final Boolean b = (Boolean) value;

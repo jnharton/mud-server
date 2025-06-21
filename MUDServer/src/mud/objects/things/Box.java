@@ -172,6 +172,7 @@ public class Box extends Thing implements Closeable, Lockable<Item>, Storage<Ite
 		return null;
 	}
 	
+	@Override
 	public boolean isEmpty() {
 		return this.empty;
 	}

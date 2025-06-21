@@ -136,11 +136,16 @@ public class Container extends Item implements Storage<Item> {
 		boolean success = false;
 		
 		if( !isFull() ) {
+			this.weight += item.getWeight();
 			this.contents.add(item);
 			success = true;
 		}
 		
 		return success;
+	}
+	
+	public boolean isEmpty() {
+		return this.contents.size() == 0;
 	}
 	
 	public boolean isFull() {
@@ -173,6 +178,7 @@ public class Container extends Item implements Storage<Item> {
 		output[0] = "" + this.size;
 		//output[1] = sb.toString();
 		
+		// NOTE: uses the toDB() method of Item and simply ppends the size to the end 
 		return super.toDB() + "#" + Utils.join(output, "#");
 	}
 	

@@ -1,6 +1,7 @@
 package mud.objects;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.LinkedHashMap;
 import java.util.EnumSet;
@@ -11,6 +12,7 @@ import mud.game.Ability;
 import mud.game.Coins;
 import mud.interfaces.Interactive;
 import mud.misc.Slot;
+import mud.net.Client;
 import mud.quest.Quest;
 import mud.rulesets.d20.Classes;
 import mud.rulesets.d20.Races;
@@ -47,6 +49,8 @@ public class NPC extends Player implements Interactive
 	private transient List<Quest> questList = new ArrayList<Quest>();
 
 	private transient CNode conversation = null;
+
+	private Client client = null;
 
 	//private Direction lastDir = Direction.NONE;
 
@@ -117,6 +121,20 @@ public class NPC extends Player implements Interactive
 		super(-1);
 		
 		this.type = TypeFlag.NPC;
+	}
+	
+	// TODO this is here to fix a problem resulting from being in control of an npc and therefore not having a name list...
+	public List<String> getNames() {
+		return Collections.emptyList();
+	}
+	
+	// TODO need this for players controlling npcs, so the npc can receive messages..
+	public void setClient(final Client c) {
+		this.client = c;
+	}
+
+	public Client getClient() {
+		return client;
 	}
 
 	// TODO perhaps these should just return the message object?

@@ -23,8 +23,14 @@ import mud.objects.Item;
 
 public interface Storage<T extends Item> {
 	public T retrieve(final String tName);
+	
 	public T retrieve(final int index);
+	
 	public boolean insert(final T element);
+	
+	public boolean isEmpty();
+	
 	public boolean isFull();
+	
 	public List<T> getContents();
 }

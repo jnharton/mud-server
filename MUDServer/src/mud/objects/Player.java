@@ -222,12 +222,13 @@ public class Player extends MUDObject implements Mobile
 	/* End */
 	
 	/* Editing */
-	private transient Editors editor;
-	 
-	private transient EditList currentEdit;  // List Editor
+	private transient Editors editor; 
+	
 	private transient EditorData edd = null; // Miscellaneous Editor
-
+	
+	/* List Editor */
 	private transient Map<String, EditList> editMap; // array of lists belonging to this player
+	private transient EditList currentEdit;          // current list being edited (if any)
 
 	public EditList getEditList() {
 		return this.currentEdit;
@@ -255,6 +256,8 @@ public class Player extends MUDObject implements Mobile
 	public void abortEditing() {
 		this.currentEdit = null;
 	}
+	
+	/* End List Editor */
 	
 	/**
 	 * No argument constructor for subclasses
@@ -478,18 +481,18 @@ public class Player extends MUDObject implements Mobile
 
 	private void initConfig() {
 		addConfigOption("global-nameref-table", false); // use the global name reference table instead of a local one (default: false)
-		addConfigOption("pinfo-brief", true);           // make your player info output brief/complete (default: true)
-		addConfigOption("prompt_enabled", false);       // enable/disable the prompt (default: false)
-		addConfigOption("msp_enabled", false);          // enable/disable MUD Sound Protocol, a.k.a. MSP (default: false)
-		addConfigOption("complex-inventory", false);    // use/don't use complex inventory display (default: false)
-		addConfigOption("pager_enabled", false);        // enabled/disable the help pager view (default: false)
-		addConfigOption("show-weather", true);          // show weather information in room descriptions (default: true)
-		addConfigOption("tagged-chat", false);          // "tag" the beginning chat lines with CHAT for the purpose of triggers, etc (default: false)
-		addConfigOption("compact-editor", true);        // compact the output of editor's 'show' commands (default: true)
-		addConfigOption("hud_enabled", true);          // is the "heads-up display" that accompanies the room description enabled (default: false)
-		addConfigOption("notify_newmail", false);       // notify the player on receipt of new mail? (default: false)
-		addConfigOption("silly_messages", false);       // enable sillier/more humorous error messages where used (default: false)
-		addConfigOption("server_echo", false);          // do we want the server to echo command if that option is enabled (default: false)
+		addConfigOption("pinfo-brief",          true);  // make your player info output brief/complete (default: true)
+		addConfigOption("prompt_enabled",       false); // enable/disable the prompt (default: false)
+		addConfigOption("msp_enabled",          false); // enable/disable MUD Sound Protocol, a.k.a. MSP (default: false)
+		addConfigOption("complex-inventory",    false); // use/don't use complex inventory display (default: false)
+		addConfigOption("pager_enabled",        false); // enabled/disable the help pager view (default: false)
+		addConfigOption("show-weather",         true);  // show weather information in room descriptions (default: true)
+		addConfigOption("tagged-chat",          false); // "tag" the beginning chat lines with CHAT for the purpose of triggers, etc (default: false)
+		addConfigOption("compact-editor",       true);  // compact the output of editor's 'show' commands (default: true)
+		addConfigOption("hud_enabled",          true);  // is the "heads-up display" that accompanies the room description enabled (default: false)
+		addConfigOption("notify_newmail",       false); // notify the player on receipt of new mail? (default: false)
+		addConfigOption("silly_messages",       false); // enable sillier/more humorous error messages where used (default: false)
+		addConfigOption("server_echo",          false); // do we want the server to echo command if that option is enabled (default: false)
 	}
 
 	public void setClient(final Client c) {
@@ -516,14 +519,6 @@ public class Player extends MUDObject implements Mobile
 	 */
 	public void setAccess(final int newAccessLevel) {
 		this.access = newAccessLevel;
-	}
-
-	public void addName(final String tName) {
-		this.names.add(tName);
-	}
-
-	public void removeName(final String tName) {
-		this.names.remove(tName);
 	}
 
 	public Race getRace() { return this.race; }
@@ -606,7 +601,6 @@ public class Player extends MUDObject implements Mobile
 		return false;
 	}
 
-
 	// get the players password (BAD, BAD, BAD!!!) -- do not let this have any normal access
 	// note: as of ?/?/2011 this should not be a problem since only the hashed version is ever stored
 	// might not be as safe as possible, but actual password can't be lost
@@ -671,7 +665,8 @@ public class Player extends MUDObject implements Mobile
 	public void setStatus(final String arg) {
 		this.status = arg;
 	}
-
+	
+	// player meta status - active, banned
 	public Status getPStatus() {
 		return this.pstatus;
 	}
@@ -992,19 +987,32 @@ public class Player extends MUDObject implements Mobile
 	public boolean hasItem(final Item item) {
 		return this.inventory.contains(item);
 	}
+	
+	// stuff for storing names of other players
+	public void addName(final String tName) {
+		this.names.add(tName);
+	}
 
+	public void removeName(final String tName) {
+		this.names.remove(tName);
+	}
+	
 	public List<String> getNames() {
-		return this.names;
+		return Collections.unmodifiableList(this.names);
+	}
+	
+	public boolean knowsName(final String tName) {
+		return this.names.contains(tName);
 	}
 
 	/**
-	 * Get Class Name
+	 * <b>Get C(lass) Name</b><br />
 	 * 
 	 * Returns the name and number combination assigned to the
 	 * Player on login that indicates that they are the Xth player
-	 * of that class who is currently connected
+	 * of that class who is currently connected<br/>
 	 * 
-	 * @return
+	 * @return class-based name assigned to the player
 	 */
 	public String getCName() {
 		return this.cName;
@@ -1012,10 +1020,6 @@ public class Player extends MUDObject implements Mobile
 
 	public void setCName(final String newCName) {
 		this.cName = newCName;
-	}
-	
-	public boolean knowsName(final String name) {
-		return this.names.contains(name);
 	}
 
 	public void setController(final boolean isController) {
@@ -1132,7 +1136,7 @@ public class Player extends MUDObject implements Mobile
 	}
 
 	/**
-	 * Check to see if the player's  state is that specified.
+	 * Check to see if the player's physical/health state is that specified.
 	 * 
 	 * @param checkState
 	 * @return
@@ -1166,7 +1170,9 @@ public class Player extends MUDObject implements Mobile
 	public void clearNameRefs() {
 		this.nameRef.clear();
 	}
-
+	
+	/* End NRT methods */
+	
 	/**
 	 * Determines if the player has sufficient experience to
 	 * "level up" to the next level.
@@ -1390,6 +1396,8 @@ public class Player extends MUDObject implements Mobile
 	public Map<String, Command> getCommands() {
 		return Collections.unmodifiableMap( this.commandMap );
 	}
+	
+	/* End Commands */
 
 	// Editors
 	

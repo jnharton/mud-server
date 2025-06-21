@@ -51,7 +51,7 @@ public final class AccountManager {
 	}
 	
 	public void removeAccount(final Account toRemove) {
-		this.iamap.remove(toRemove);
+		this.iamap.remove(toRemove.getId());
 	}
 	
 	public void removeAccount(final Integer id) {

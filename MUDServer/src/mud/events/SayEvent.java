@@ -15,6 +15,7 @@ import mud.objects.Room;
  * @author Jeremy
  *
  */
+@SuppressWarnings("serial")
 public class SayEvent extends EventObject {
 	private String message;
 	
