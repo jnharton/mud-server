@@ -23,6 +23,8 @@ import mud.objects.ItemType;
 import mud.objects.ItemTypes;
 import mud.objects.Player;
 import mud.objects.Room;
+import mud.objects.exits.Portal;
+import mud.objects.exits.PortalType;
 import mud.objects.items.Container;
 import mud.objects.items.Weapon;
 import mud.objects.items.WeaponType;
@@ -356,5 +358,34 @@ public final class MudUtils {
 		}
 
 		return filtered;
+	}
+	
+	private static List<String> getNames(final List<? extends MUDObject> list) {
+		List<String> l = new ArrayList<String>(list.size());
+
+		for (final MUDObject m : list) {
+			l.add(m.getName());
+		}
+
+		return l;
+	}
+	
+	// standard, "always open" and one-way portal (default is active)
+	public Portal createPortal(int pOrigin, int pDestination) {
+		return new Portal(PortalType.STD, pOrigin, pDestination);
+	}
+
+	// standard, "always open" and one-way portal (default is active) -- multi
+	// destination
+	public Portal createPortal(int pOrigin, int[] pDestinations) {
+		return new Portal(PortalType.STD, pOrigin, pDestinations);
+	}
+	
+	// keyed portal (default is inactive)
+	public Portal createPortal(int pOrigin, int pDestination, final Object pKey) {
+		if (pKey != null) {
+			return new Portal(PortalType.STD, pOrigin, new int[] { pDestination }, pKey); 
+		}
+		else return null;
 	}
 }

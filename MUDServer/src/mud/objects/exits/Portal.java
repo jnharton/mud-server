@@ -294,7 +294,7 @@ public class Portal extends Exit implements EventSource, SayEventListener {
 	
 	/* Triggers & Scripting */
 	public void enableTriggers(final TriggerType tType) {
-		triggers.put(tType, new LinkedList<Trigger>());
+		this.triggers.put(tType, new LinkedList<Trigger>());
 	}
 	
 	public void setTrigger(final TriggerType type, final Trigger trigger) {

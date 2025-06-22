@@ -2592,8 +2592,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			pipbuck_machine.setLocation(it.getDBRef());
 			it.addThing(pipbuck_machine);
 
-			System.out
-					.println("# of PipBuck(s) left: " + pipbuck_machine.getProperty("contents/pipbuck", Integer.class));
+			System.out.println("# of PipBuck(s) left: " + pipbuck_machine.getProperty("contents/pipbuck", Integer.class));
 
 			/*
 			 * mud.foe.Terminal terminal = new mud.foe.Terminal("Terminal");
@@ -3350,25 +3349,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 						cmd_creatureedit(arg, client);
 					}
 					else if (cmdIs(cmd, "@create_npc")) {
-						final String[] args = arg.split(" ");
-
-						for (final String s : args) {
-							System.out.println(s);
-						}
-
-						final String npcName = args[0];
-
-						// getRace checks equality, ignoring case
-						// final Race npcRace = getRace(args[1]);
-						final Race npcRace = Races.NONE;
-						// final Integer[] stats = Utils.stringsToIntegers(args[2].split(","));
-						final Integer[] stats = Utils.stringsToIntegers("7,7,7,7,7,7,7".split(","));
-
-						final Room location = getRoom(getPlayer(client).getLocation());
-
-						createNPC(npcName, npcRace, stats, location);
-						
-						send("Created new NPC!", client);
+						cmd_create_npc(arg, client);
 					}
 					else if (cmdIs(cmd, "@dig")) {
 						cmd_dig(arg, client);
@@ -3550,7 +3531,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 						// we'll just create a new and temporary instance (debugging enabled)
 						ProgramInterpreter newInterp = new ProgramInterpreter(this, true);
 
-						newInterp.lex(arg);
+						ProgramInterpreter.lex(arg);
 
 						Script script = new Script(arg);
 
@@ -3561,9 +3542,19 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 					}
 					else if (cmdIs(cmd, "@save")) {
 						final Calendar cal = Calendar.getInstance();
-
-						saveDB(String.format("%s.%d-%d-%d.txt", "backup", cal.get(Calendar.YEAR),
-								cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)));
+						
+						int year, month, day;
+						
+						year = cal.get(Calendar.YEAR);
+						month = cal.get(Calendar.MONTH);
+						day = cal.get(Calendar.DAY_OF_MONTH);
+						
+						//saveDB(String.format("%s.%d-%d-%d.txt", "backup", cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)));
+						//final String filename = String.format("%s.%d-%d-%d.txt", "backup", cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH));
+						//saveDB( filename );
+						
+						saveDB(String.format("%s.%d-%d-%d.txt", "backup", year, month, day));
+						
 					}
 					else if (cmdIs(cmd, "@set")) {
 						cmd_set(arg, client);
@@ -3591,6 +3582,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 						cmd_setxp(arg, client); // DM/Debug Command
 					}
 					else if (cmdIs(cmd, "@tune")) {
+						// TODO finish implementing this!
 						String[] args = arg.split(" ");
 
 						if (args[0].equals("cmdDelay")) {
@@ -3659,6 +3651,8 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 					if (cmdIs(cmd, "ask"))
 						cmd_ask(arg, client);
 					// attack (a soft command)
+					else if (cmdIs(cmd, "aconfig"))
+						cmd_aconfig(arg, client);
 					else if (cmdIs(cmd, "aliases"))
 						cmd_aliases(arg, client);
 					else if (cmdIs(cmd, "auction"))
@@ -3683,6 +3677,8 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 						cmd_chargen(arg, client);
 					else if (cmdIs(cmd, "chat"))
 						cmd_chat(arg, client);
+					else if (cmdIs(cmd, "chown"))
+						cmd_chown(arg, client);
 					else if (cmdIs(cmd, "climb"))
 						cmd_climb(arg, client);
 					else if (cmdIs(cmd, "cls"))
@@ -4098,9 +4094,15 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 	 * @param arg
 	 * @param client
 	 */
-	/*
-	 * private void cmd_aconfig(String arg, Client client) { }
-	 */
+	private void cmd_aconfig(String arg, Client client) {
+		final Player player = getPlayer(client); // get the player
+		
+		if( use_accounts ) {
+			send("The account system is ENABLED.", client);
+		}
+		
+		send("ACONFIG: This command has not been implemented.", client);
+	}
 
 	private void cmd_alias(final String arg, final Client client) {
 		// @alias command=alias string
@@ -5662,6 +5664,30 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			}
 		}
 	}
+	
+	/**
+	 * (ch)ange (own)ership of an object.
+	 * 
+	 * @param arg
+	 * @param client
+	 */
+	private void cmd_chown(final String arg, final Client client) {
+		final Player player = getPlayer(client);
+		final Room room = getRoom(player.getLocation());
+		
+		String params[] = arg.split("=");
+		
+		if(params.length == 2) {
+			final MUDObject obj = getObject(params[0]);
+			final Player plyr = getPlayer(params[1]);
+			
+			if(!obj.isType(TypeFlag.PLAYER) && (obj.getOwner() == player || checkAccess(player, Constants.SUPERUSER))) {
+				obj.setOwner(plyr);
+				send(String.format("Transferred ownership of %s (#%d) to %s.", obj.getName(), obj.getDBRef(), plyr.getName()), client);
+			}
+		}
+		
+	}
 
 	private void cmd_colors(final String arg, final Client client) {
 		if (arg.equals("")) {
@@ -6367,6 +6393,28 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			// initiate the connection
 			init_conn(player, client, true);
 		}
+	}
+	
+	private void cmd_create_npc(final String arg, final Client client) {
+		final String[] args = arg.split(" ");
+
+		for (final String s : args) {
+			System.out.println(s);
+		}
+
+		final String npcName = args[0];
+
+		// getRace checks equality, ignoring case
+		// final Race npcRace = getRace(args[1]);
+		final Race npcRace = Races.NONE;
+		// final Integer[] stats = Utils.stringsToIntegers(args[2].split(","));
+		final Integer[] stats = Utils.stringsToIntegers("7,7,7,7,7,7,7".split(","));
+
+		final Room location = getRoom(getPlayer(client).getLocation());
+
+		createNPC(npcName, npcRace, stats, location);
+		
+		send("Created new NPC!", client);
 	}
 
 	// TODO write code for cmd_creatureedit(...)
@@ -12255,7 +12303,12 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			}
 		}
 	}
-
+	
+	/**
+	 * 
+	 * @param arg
+	 * @param client
+	 */
 	private void cmd_success(final String arg, final Client client) {
 		final String[] args = arg.split("=");
 		// List<Exit> exits =
@@ -12540,16 +12593,6 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 
 		send("Spells", client);
 		send(Utils.padRight("", '-', 75), client);
-	}
-
-	private static List<String> getNames(final List<? extends MUDObject> list) {
-		List<String> l = new ArrayList<String>(list.size());
-
-		for (final MUDObject m : list) {
-			l.add(m.getName());
-		}
-
-		return l;
 	}
 
 	private void cmd_talk(final String arg, final Client client) {
@@ -22219,13 +22262,31 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 	}
 
 	// TODO need to deal with the ambiguity of stat values...
+	/**
+	 * createNPC
+	 * 
+	 * @param name
+	 * @param location
+	 * @return
+	 */
 	public NPC createNPC(final String name, final Room location) {
 		return createNPC(name, null, new Integer[] { 0, 0, 0, 0, 0, 0 }, location);
 	}
-
+	
+	/**
+	 * createNPC 2
+	 * 
+	 * @param name
+	 * @param race
+	 * @param stats
+	 * @param location
+	 * @return
+	 */
 	public NPC createNPC(final String name, final Race race, final Integer[] stats, final Room location) {
 		NPC npc = new NPC(name);
-
+		
+		npc.setLocation(location.getDBRef());
+		
 		npc.setRace(race);
 
 		int index = 0;
@@ -22239,13 +22300,15 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			}
 		}
 
-		npc.setLocation(location.getDBRef());
+		
 
 		initCreatedNPC(npc);
 
 		final Room room = getRoom(npc.getLocation());
-		if (room != null)
+		
+		if (room != null) {
 			room.addListener(npc);
+		}
 
 		return npc;
 	}
@@ -22815,6 +22878,19 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		}
 
 		return check >= accessLevel;
+	}
+	
+	/**
+	 * checkStatus
+	 * 
+	 * Check that the specified player's status matches the specified status string.
+	 * 
+	 * @param player
+	 * @param status
+	 * @return
+	 */
+	public boolean checkStatus(final Player player, final String status) {
+		return player.getStatus().equals(status);
 	}
 
 	/**
@@ -26307,27 +26383,6 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		}
 	}
 
-	// standard, "always open" and one-way portal (default is active)
-	public Portal createPortal(int pOrigin, int pDestination) {
-		return new Portal(PortalType.STD, pOrigin, pDestination);
-	}
-
-	// standard, "always open" and one-way portal (default is active) -- multi
-	// destination
-	public Portal createPortal(int pOrigin, int[] pDestinations) {
-		return new Portal(PortalType.STD, pOrigin, pDestinations);
-	}
-
-	// keyed portal (default is inactive)
-	/*
-	 * public Portal createPortal(int pOrigin, int pDestination, final Object pKey)
-	 * { final Portal p = new Portal(PortalType.STD, pOrigin, pDestination);
-	 * 
-	 * if (pKey != null) 0 p.key = pKey; p.requiresKey = true;
-	 * 
-	 * p.deactivate(pKey); } }
-	 */
-
 	/*
 	 * public Merchant createMerchant() {
 	 * 
@@ -26586,18 +26641,5 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		}
 
 		return minable_nodes;
-	}
-	
-	/**
-	 * checkStatus
-	 * 
-	 * Check that the specified player's status matches the specified status string.
-	 * 
-	 * @param player
-	 * @param status
-	 * @return
-	 */
-	public boolean checkStatus(final Player player, final String status) {
-		return player.getStatus().equals(status);
 	}
 }
