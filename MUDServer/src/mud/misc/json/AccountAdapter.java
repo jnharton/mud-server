@@ -11,7 +11,6 @@ import mud.objects.Player;
 import mud.utils.Account;
 import mud.utils.Account.Status;
 import mud.utils.Date;
-import mud.utils.Utils;
 
 public class AccountAdapter extends TypeAdapter<Account> {
 

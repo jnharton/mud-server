@@ -20,6 +20,7 @@ pos                 - print our position data (cartesian coordinate system)
 portals             - print all portals and their current state
 seasons             - print the defined seasons
 telnet              - ?
+threads             - list threads used for the game and client connections
 timedata            - print the current real world time and in-game time
 timers              - list all current running timers
 udbnstack           - list information about unused database reference numbers

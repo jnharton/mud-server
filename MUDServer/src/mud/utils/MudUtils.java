@@ -18,6 +18,7 @@ import mud.misc.Direction;
 import mud.misc.Effect;
 import mud.misc.Slot;
 import mud.misc.Zone;
+import mud.objects.Exit;
 import mud.objects.Item;
 import mud.objects.ItemType;
 import mud.objects.ItemTypes;
@@ -388,4 +389,38 @@ public final class MudUtils {
 		}
 		else return null;
 	}
+	
+	// generate a dungeon as a rectangular grid of rooms (specific width and length)
+		private void generateDungeon(String entranceDir, int startX, int startY, int xRooms, int yRooms) {
+			List<Room> dRooms = new ArrayList<Room>(xRooms * yRooms);
+
+			// list of room/hall? types
+			// array of room types
+			// generate room based on room types (adding exits as necessary
+			// do a second pass over generated rooms to link them together
+
+			Room r = null;
+
+			for (int n = 0; n < xRooms * yRooms; n++) {
+				r = new Room();
+				r.setName("A Room");
+
+				dRooms.add(r);
+			}
+
+			Random rng = new Random();
+
+			for (final Room room : dRooms) {
+				int numExits = rng.nextInt(3) + 1; // 4 - N,S,E,W
+				int countEE = 0; // exits that enter this room
+
+				for (final Exit exit : room.getExits()) {
+					int d = exit.getDestination();
+
+					if (d != -1) {
+
+					}
+				}
+			}
+		}
 }

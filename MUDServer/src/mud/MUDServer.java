@@ -59,7 +59,6 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.function.ObjDoubleConsumer;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.regex.Matcher;
@@ -194,7 +193,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 	private boolean firstRun = false; // is the first time the software been's run [default: false]
 	private boolean testing = false; // enable the execution of bits of random code [default: false]
 	private boolean gson_test = true; // enable experimental code that uses google gson [default: true]
-	private boolean use_weather = false; // indicate whether the weather should be updated regularly [default: false]
+	private boolean use_weather = true; // indicate whether the weather should be updated regularly [default: false]
 	private boolean use_accounts = false; // enable the use of accounts/the account system [default: false]
 	private boolean use_cnames = true; // will generate names for players you don't know use classes [default: false]
 	private boolean interactive_login = false; // interactive login? [default: false]
@@ -1062,7 +1061,8 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		if (firstRun) {
 			System.out.print("Running initial setup...");
 			
-			create_data(new_world);
+			create_game_data(new_world);
+			create_world_data(new_world);
 			
 			System.out.println("Done");
 
@@ -2001,63 +2001,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 	 * 
 	 * NOTE: commented out stuff to keep from blowing manually generated data away
 	 */
-	private void create_data(final String worldName) {
-		// Error Message Localization
-		final File errors_en = new File(resolvePath(DATA_DIR, "errors_en.txt"));
-		final File errors_fr = new File(resolvePath(DATA_DIR, "errors_fr.txt"));
-
-		if (!errors_en.exists()) {
-			Utils.saveStrings(resolvePath(DATA_DIR, "errors_en.txt"),
-					new String[] { "1:Invalid Syntax!", "2:NaN Not a Number!" });
-		}
-		if (!errors_fr.exists()) {
-			Utils.saveStrings(resolvePath(DATA_DIR, "errors_fr.txt"),
-					new String[] { "1:Syntaxe Invalide!", "2:NaN N'est pas un nombre!" });
-		}
-
-		// generate blank/basic config files
-		final File aliases = new File(resolvePath(CONFIG_DIR, "aliases.conf"));
-		final File banlist = new File(resolvePath(CONFIG_DIR, "banlist.txt"));
-		final File channels = new File(resolvePath(CONFIG_DIR, "channels.txt"));
-		final File forbidden = new File(resolvePath(CONFIG_DIR, "forbidden.txt"));
-		final File main_board = new File(resolvePath(BOARD_DIR, "main.bb"));
-
-		if (!aliases.exists()) {
-			Utils.saveStrings(resolvePath(CONFIG_DIR, "aliases.conf"),
-					new String[] { "# Command Aliases File", "alias north:n", "alias northeast:ne",
-							"alias northwest:nw", "alias south:s", "alias southeast:se", "alias southwest:sw",
-							"alias east:e", "alias west:w", "alias inventory:inv,i", "alias look:l",
-							"alias pconfig:pconf", "alias quit:QUIT" });
-		}
-
-		if (!banlist.exists()) {
-			Utils.saveStrings(resolvePath(CONFIG_DIR, "banlist.txt"), new String[] { "# Banlist", "0.0.0.0" });
-		}
-
-		if (!channels.exists()) {
-			Utils.saveStrings(resolvePath(CONFIG_DIR, "channels.txt"), new String[] { "Support,0", "Testing,0" });
-		}
-
-		if (!forbidden.exists()) {
-			Utils.saveStrings(resolvePath(CONFIG_DIR, "forbidden.txt"),
-					new String[] { "# Forbidden names list", "shit" });
-		}
-
-		// generate an single, default message for the mud-wide bulletin board
-		if (!main_board.exists()) {
-			Utils.saveStrings(resolvePath(BOARD_DIR, "bboard.txt"), new String[] { "0#admin#Welcome#Test Message" });
-		}
-
-		final String[] theme = new String[] { "[theme]", "name = MUD", "mud_name = NewMUD", "motd_file = motd.txt",
-				"start_room = 0", "world = " + worldName, "db = db.txt", "[/theme]", "", "[calendar]", "day = 1",
-				"month = 1", "year = 0", "season = summer", "[/calendar]", "", "// number = name", "[months]",
-				"1 = January", "2 = February", "3 = March", "4 = April", "5 = May", "6 = June", "7 = July",
-				"8 = August", "9 = September", "10 = October", "11 = November", "12 = December", "[/months]", "",
-				"[months_alt]", "[/months_alt]", "", "// month,day = name", "[holidays]", "[/holidays]", "", "[years]",
-				"[/years]" };
-
-		Utils.saveStrings(resolvePath(THEME_DIR, new_world + ".thm"), theme);
-
+	private void create_world_data(final String worldName) {
 		/* Create new world folder and files */
 
 		// generate an empty world directory and necessary sub directories
@@ -2078,15 +2022,36 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		}
 
 		// generate blank motd
-		String[] motdData = new String[] { "*** Welcome to:", "", "<insert mud name or initial graphic here>", "",
-				"<other info>", "", "<connection details>", "",
+		String[] motdData = new String[] {
+				"*** Welcome to:",
+				"",
+				"<insert mud name or initial graphic here>",
+				"",
+				"<other info>",
+				"",
+				"<connection details>", "",
 				"To connect to your character use 'connect <playername> <password>'",
-				"To create a character use 'create <playername> <password>'" };
+				"To create a character use 'create <playername> <password>'"
+				};
 
 		Utils.saveStrings(resolvePath(WORLD_DIR, worldName, "motd", "motd.txt"), motdData);
 
-		// create plain, mostly empty database (contains a single room and an admin
-		// player)
+		// creates races file
+		String[] races = new String[] { "[",
+				"{", "\"name\": \"Human\",", "\"subrace\": null,", "\"id\": 0,", "\"statAdj\": [ 0, 0, 0, 0, 0, 0 ],",
+				"\"restricted\": false,", "\"canFly\": false", "},",
+				"{", "\"name\": \"None\",", "\"subrace\": null,", "\"id\": 8,", "\"statAdj\": [ 0, 0, 0, 0, 0, 0 ],",
+				"\"restricted\": true,", "\"canFly\": false", "}",
+				"]"};
+
+		Utils.saveStrings(resolvePath(WORLD_DIR, worldName, "races.json"), races);
+		
+		// create a basic Zone file
+		String[] zones = new String[] { "# Zones", "0", "World", "$NULL", "~" };
+
+		Utils.saveStrings(resolvePath(WORLD_DIR, worldName, "zones.txt"), zones);
+		
+		// create plain, mostly empty database (contains a single room and an admin player)
 		final Room room = createRoom("An Empty Room", "You see nothing.", 0);
 		room.setDBRef(0);
 
@@ -2103,19 +2068,90 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		// dbData[1] = admin.toDB();
 
 		Utils.saveStrings(resolvePath(WORLD_DIR, worldName, "db.txt"), dbData);
+	}
+	
+	/**
+	 * worldName is only needed to create a named theme file...
+	 * 
+	 * @param worldName
+	 */
+	private void create_game_data(final String worldName) {
+		// Error Message Localization
+		final File errors_en = new File(resolvePath(DATA_DIR, "errors_en.txt"));
+		final File errors_fr = new File(resolvePath(DATA_DIR, "errors_fr.txt"));
 
-		// creates races file
-		String[] races = new String[] { "[", "{", "\"name\": \"Human\",", "\"subrace\": null,", "\"id\": 0,",
-				"\"statAdj\": [ 0, 0, 0, 0, 0, 0 ],", "\"restricted\": false,", "\"canFly\": false", "},", "{",
-				"\"name\": \"None\",", "\"subrace\": null,", "\"id\": 8,", "\"statAdj\": [ 0, 0, 0, 0, 0, 0 ],",
-				"\"restricted\": true,", "\"canFly\": false", "}", "]" };
+		if (!errors_en.exists()) {
+			Utils.saveStrings(resolvePath(DATA_DIR, "errors_en.txt"),
+					new String[] { "1:Invalid Syntax!", "2:NaN Not a Number!" });
+		}
+		if (!errors_fr.exists()) {
+			Utils.saveStrings(resolvePath(DATA_DIR, "errors_fr.txt"),
+					new String[] { "1:Syntaxe Invalide!", "2:NaN N'est pas un nombre!" });
+		}
 
-		Utils.saveStrings(resolvePath(WORLD_DIR, worldName, "races.json"), races);
+		// generate blank/basic config files
+		final File aliases = new File(resolvePath(CONFIG_DIR, "aliases.conf"));
+		final File banlist = new File(resolvePath(CONFIG_DIR, "banlist.txt"));
+		final File channels = new File(resolvePath(CONFIG_DIR, "channels.txt"));
+		final File forbidden = new File(resolvePath(CONFIG_DIR, "forbidden.txt"));
+		
+		final File main_board = new File(resolvePath(BOARD_DIR, "main.bb"));
+		
+		// only create and write to the file if it doesn't already exist
+		if (!aliases.exists()) {
+			Utils.saveStrings(resolvePath(CONFIG_DIR, "aliases.conf"),
+					new String[] {
+							"# Command Aliases File",
+							"alias north:n", "alias northeast:ne", "alias northwest:nw",
+							"alias south:s", "alias southeast:se", "alias southwest:sw",
+							"alias east:e", "alias west:w",
+							"alias attack:kill", "alias equip:eq", "alias inventory:inv,i", "alias look:l",
+							"alias pconfig:pconf", "alias quit:QUIT",
+							"alias @alias:@aliases", "alias @examine:@ex,@exam", "alias @jump:@j,@jmp",
+							"alias @viewlog:@vl", "alias @zoneinfo:@zinfo"
+							});
+		}
 
-		// create an empty zones file
-		String[] zones = new String[] { "# Zones" };
+		if (!banlist.exists()) {
+			Utils.saveStrings(resolvePath(CONFIG_DIR, "banlist.txt"), new String[] { "# Banlist", "0.0.0.0" });
+		}
 
-		Utils.saveStrings(resolvePath(WORLD_DIR, worldName, "zones.txt"), zones);
+		if (!channels.exists()) {
+			Utils.saveStrings(resolvePath(CONFIG_DIR, "channels.txt"), 
+					new String[] { "# Channels", "Support,0", "Testing,0", "System,sys,4" });
+		}
+
+		if (!forbidden.exists()) {
+			Utils.saveStrings(resolvePath(CONFIG_DIR, "forbidden.txt"),
+					new String[] { "# Forbidden names list", "shit", "fuck", "damn" });
+		}
+
+		// generate an single, default message for the mud-wide bulletin board
+		if (!main_board.exists()) {
+			Utils.saveStrings(resolvePath(BOARD_DIR, "main.bb"), new String[] { "!main", "0#admin#Welcome#Test Message" });
+		}
+		
+		// generate a theme file
+		final String[] theme = new String[] {
+				"[theme]",
+				"name = MUD", "mud_name = NewMUD", "motd_file = motd.txt", "start_room = 0", "world = " + worldName, "db = db.txt",
+				"[/theme]", "",
+				"[calendar]",
+				"day = 1", "month = 1", "year = 0", "season = summer",
+				"[/calendar]", "",
+				"// number = name",
+				"[months]",
+				"1 = January", "2 = February", "3 = March", "4 = April", "5 = May", "6 = June",
+				"7 = July", "8 = August", "9 = September", "10 = October", "11 = November", "12 = December",
+				"[/months]", "",
+				"[months_alt]",
+				"[/months_alt]", "", 
+				"// month,day = name",
+				"[holidays]", "[/holidays]", "",
+				"[years]",
+				"[/years]" };
+
+		Utils.saveStrings(resolvePath(THEME_DIR, new_world + ".thm"), theme);
 
 		/*
 		 * // create topics directory final File temp1 = new File(TOPIC_DIR);
@@ -3253,6 +3289,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 						// run the door function
 						cmd_door(arg, client);
 					} else if (cmdIs(cmd, "@dungeon")) {
+						send("this command is not functional", client);
 						// TODO fix code implementation?
 						// run the dungeon function
 						// cmd_dungeon(arg, client);
@@ -6086,16 +6123,18 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 
 						// remove materials from inventory
 						for (final Item item : materials) {
+							debug("Using " + item.getName() + "(#" + item.getDBRef() + ") to make ...");
 							inventory.remove(item);
 						}
 
-						materials.clear();
+						//materials.clear();
 
 						final Item item = createItem("mud." + arg.replace(" ", "_"), true);
 
 						if (item != null) {
 							// TODO need to not destroy input material in case of code bugs?
 							// also destroy by removing from db)
+							// TODO is synchronize on objectDB necessary?
 							for (final Item item1 : materials) {
 								objectDB.remove(item1);
 								objectDB.removeItem(item1);
@@ -6105,6 +6144,8 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 
 							inventory.add(item);
 							item.setLocation(player.getDBRef());
+
+							materials.clear();
 						}
 						else {
 							send("crafting failed.", client);
@@ -6659,18 +6700,6 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 
 		} else if (param.equals("mem")) {
 			send(Utils.checkMem(), client);
-		} else if (param.equals("players")) {
-			send("Players", client);
-			send(String.format("%s %s %s %s %s", Utils.padRight("DBREF", 6), Utils.padRight("Name", 16),
-					Utils.padRight("Room", 24), Utils.padRight("DBREF", 6), "New"), client);
-			send("--------------------------------------------------------------------------", client);
-
-			for (final Player p : objectDB.getPlayers()) {
-				send(String.format("%s %s %s (#%s) %s", p.getDBRef(), p.getName(), getRoom(p.getLocation()).getName(),
-						p.getLocation(), p.isNew() ? "YES" : "NO"), client);
-			}
-
-			send("--------------------------------------------------------------------------", client);
 		} else if (param.equals("object-types")) {
 			List<String> types = Utils.mkList("mud.objects.Creature", "mud.objects.Exit", "mud.objects.Item",
 					"mud.objects.Mount", "mud.objects.NPC", "mud.objects.NullObject", "mud.objects.Player",
@@ -6681,6 +6710,18 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 					"mud.objects.items.Wand", "mud.objects.items.Weapon");
 
 			send(types, client);
+		} else if (param.equals("players")) {
+			send("Players", client);
+			send(String.format("%s %s %s %s %s", Utils.padRight("DBREF", 6), Utils.padRight("Name", 16),
+					Utils.padRight("Room", 24), Utils.padRight("DBREF", 6), "New"), client);
+			send("--------------------------------------------------------------------------", client);
+
+			for (final Player p : objectDB.getPlayers()) {
+				send(String.format("%-6s %-16s %-24s (#%-6s) %s", p.getDBRef(), p.getName(), getRoom(p.getLocation()).getName(),
+						p.getLocation(), p.isNew() ? "YES" : "NO"), client);
+			}
+
+			send("--------------------------------------------------------------------------", client);
 		} else if (param.equals("pos")) {
 			Player player = getPlayer(client);
 			Point position = player.getPosition();
@@ -18472,8 +18513,49 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			br = new BufferedReader(fr);
 
 			String line = br.readLine();
+			
+			do {
+				debug("LINE: \'" + line + "\'");
 
-			while (line != null) {
+				if (line.startsWith("#")) {
+					debug("SKIP");
+					//continue; // skip commented out lines
+				}
+				else {
+					String[] channelData = line.split(",");
+
+					if (channelData.length == 3) {
+						final String channelName = channelData[0].toLowerCase();
+						final String shortName = channelData[1].toLowerCase();
+						final int channel_perm = Utils.toInt(channelData[2], Constants.USER);
+
+						final ChatChannel channel = chan.makeChannel(channelName);
+
+						if (channel != null) {
+							channel.setShortName(shortName);
+
+							channel.setRestrict(channel_perm);
+
+							channel.setChanColor("magenta");
+							channel.setSenderColor("orange");
+							channel.setTextColor("green");
+						}
+						else {
+							debug("Channel is NULL!");
+						}
+
+						debug("Channel Added: " + channelName);
+					}
+					else {
+						debug("Invalid Channel Data!");
+					}
+				}
+				
+				line = br.readLine();
+			}
+			while( line != null );
+
+			/*while (line != null) {
 				debug("LINE: \'" + line + "\'");
 
 				if (line.startsWith("#"))
@@ -18506,7 +18588,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 				}
 
 				line = br.readLine();
-			}
+			}*/
 
 			br.close();
 			fr.close();
@@ -26279,6 +26361,8 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 	/**
 	 * Retrieve the loot table for a given creature
 	 * 
+	 * returns an empty list if no table could be found
+	 * 
 	 * @param creature
 	 * @return
 	 */
@@ -26333,40 +26417,6 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 
 	private final void scheduleAtFixedRate(final TimerTask task, final long delay, final long period) {
 		timer.scheduleAtFixedRate(task, delay, period);
-	}
-
-	// generate a dungeon as a rectangular grid of rooms (specific width and length)
-	private void generateDungeon(String entranceDir, int startX, int startY, int xRooms, int yRooms) {
-		List<Room> dRooms = new ArrayList<Room>(xRooms * yRooms);
-
-		// list of room/hall? types
-		// array of room types
-		// generate room based on room types (adding exits as necessary
-		// do a second pass over generated rooms to link them together
-
-		Room r = null;
-
-		for (int n = 0; n < xRooms * yRooms; n++) {
-			r = new Room();
-			r.setName("A Room");
-
-			dRooms.add(r);
-		}
-
-		Random rng = new Random();
-
-		for (final Room room : dRooms) {
-			int numExits = rng.nextInt(3) + 1; // 4 - N,S,E,W
-			int countEE = 0; // exits that enter this room
-
-			for (final Exit exit : room.getExits()) {
-				int d = exit.getDestination();
-
-				if (d != -1) {
-
-				}
-			}
-		}
 	}
 
 	// 4.8.2018 -- utility functions ripped out of ObjectDB because they don't

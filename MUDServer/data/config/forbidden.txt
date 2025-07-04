@@ -1,1 +1,4 @@
 # Forbidden names list
+shit
+fuck
+damn

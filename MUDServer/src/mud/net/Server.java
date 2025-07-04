@@ -143,6 +143,6 @@ public class Server implements Runnable {
 		
 		thread.start();
 		
-		//this.threads.put(thread.getName(), thread);
+		this.threads.put(thread.getName(), thread);
 	}
 }
