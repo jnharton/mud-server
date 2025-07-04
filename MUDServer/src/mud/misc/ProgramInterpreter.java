@@ -241,7 +241,9 @@ public final class ProgramInterpreter {
 		addVar("cmd", "");
 		//addVar("arg", ""); // note this got changed because it broke an external call of {dbref:{&arg}} by overwriting the var
 		addVar("how", "");
-		addVar("player", "" + player.getDBRef());
+		// TODO little oopsie here, since we might not always have a valid player...
+		if( player != null) addVar("player", "" + player.getDBRef());
+		else                addVar("player", "");
 		addVar("this", "" + (object != null ? object.getDBRef() : -1));
 		
 		if( debug_enabled ) {

@@ -37,7 +37,7 @@ public class Weapon extends Item {
 		super(-1, wName, wDesc);
 		
 		this.item_type = ItemTypes.WEAPON;
-		this.slot_type = SlotTypes.NONE;
+		this.slot_type = SlotTypes.RHAND;
 		
 		this.weaponType = WeaponTypes.NONE;
 		this.modifier = 0;
@@ -58,7 +58,7 @@ public class Weapon extends Item {
 		super(-1, wType.getName(), "");
 		
 		this.item_type = ItemTypes.WEAPON;
-		this.slot_type = SlotTypes.NONE;
+		this.slot_type = SlotTypes.RHAND;
 		
 		this.weaponType = WeaponTypes.NONE;
 		this.modifier = 0;
@@ -112,7 +112,7 @@ public class Weapon extends Item {
 		super(wDBREF, wName, wFlags, wDesc, wLoc);
 		
 		this.item_type = ItemTypes.WEAPON;
-		this.slot_type = SlotTypes.NONE;
+		this.slot_type = SlotTypes.RHAND;
 		
 		this.weaponType = weapon;
 		this.modifier = 0;

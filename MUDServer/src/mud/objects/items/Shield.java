@@ -5,6 +5,7 @@ import java.util.EnumSet;
 import mud.ObjectFlag;
 import mud.TypeFlag;
 import mud.game.Coins;
+import mud.misc.SlotTypes;
 import mud.objects.Item;
 import mud.objects.ItemType;
 import mud.objects.ItemTypes;
@@ -25,6 +26,7 @@ public class Shield extends Item
 		super(-1);
 		
 		this.item_type = ItemTypes.SHIELD;
+		this.slot_type = SlotTypes.LHAND;
 		
 		this.equippable = true;
 		
@@ -32,22 +34,43 @@ public class Shield extends Item
 		//this.type = sType;                 // the actual type of shield
 		this.weight = sWeight;             // the weight of the shield
 	}
-
+	
 	/**
-	 * Object Loading Constructor
+	 * <b>Copy Constructor</b>
+	 * 
+	 * @param template
+	 */
+	protected Shield(Shield template) {
+		//super(-1);
+		super( template );
+		
+		this.mod = template.getMod();
+		this.shield_type = template.getShieldType();
+		
+		// TODO modify any values specific to this class here
+	}
+	
+	/**
+	 * <b>Object Loading Constructor</b><br/><br/>
 	 * 
 	 * Use this only for testing purposes and loading objects into the
 	 * server database, for anything else, use one of the other two constructors
 	 * that have parameters.
-	 * @param tempName
-	 * @param tempDesc
-	 * @param tempLoc
-	 * @param tempDBREF
+	 * 
+	 * @param sDBREF
+	 * @param sName
+	 * @param sFlags
+	 * @param sDesc
+	 * @param sLoc
+	 * @param item
+	 * @param shield
+	 * @param sMod
 	 */
 	public Shield(int sDBREF, String sName, EnumSet<ObjectFlag> sFlags, String sDesc, int sLoc, ItemType item, ShieldType shield, int sMod) {
 		super(sDBREF, sName, sFlags, sDesc, sLoc);
 		
 		this.item_type = ItemTypes.SHIELD;
+		this.slot_type = SlotTypes.LHAND;
 		
 		this.equippable = true;
 		
@@ -55,10 +78,6 @@ public class Shield extends Item
 		this.shield_type = shield;
 		
 		this.weight = 0;
-	}
-	
-	protected Shield(Shield template) {
-		super(-1);
 	}
 
 	public int getShieldBonus() {

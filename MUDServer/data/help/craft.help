@@ -4,5 +4,6 @@ CRAFT
 Craft stuff using materials
 
 Syntax: craft <recipe/item name>
+        craft recipes            print a list of recipes
 
-Last Updated: May 17th, 2017
+Last Updated: June 23rd, 2025

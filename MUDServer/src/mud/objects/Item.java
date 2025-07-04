@@ -86,7 +86,7 @@ public class Item extends MUDObject {
 	}
 	
 	/**
-	 * Copy Constructor
+	 * <b>Copy Constructor</b><br/><br/>
 	 * 
 	 * Create a new item with the same attributes as a template object
 	 * 

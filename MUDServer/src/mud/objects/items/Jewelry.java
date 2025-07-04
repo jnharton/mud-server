@@ -47,7 +47,11 @@ public class Jewelry extends Item implements MagicItem {
 	}
 	
 	/**
-	 * Object Loading Constructor
+	 * <b>Object Loading Constructor</b><br/><br/>
+	 * 
+	 * Use this only for testing purposes and loading objects into the
+	 * server database, for anything else, use one of the other two constructors
+	 * that have parameters.
 	 * 
 	 * @param dbref
 	 * @param name

@@ -97,7 +97,7 @@ public class Account implements Serializable {
 	private final String username; // username
 	private String password;       // password
 	
-	private int charLimit = 3;     // character limit
+	private int charLimit = 5;     // character limit
 	
 	private String lastIPAddress;  // the last ip address this account logged in from
 	
@@ -129,7 +129,9 @@ public class Account implements Serializable {
 		this.archived = null;
 
 		this.username = aUsername;
-		this.password = Utils.hash(aPassword);
+		//TODO decide where this hashing ought to be done!
+		//this.password = Utils.hash(aPassword);
+		this.password = aPassword;
 		
 		this.charLimit = aCharLimit;
 		this.characters = new ArrayList<Player>(aCharLimit);

@@ -5,7 +5,6 @@ import java.util.EnumSet;
 import mud.ObjectFlag;
 import mud.game.Coins;
 import mud.objects.Item;
-import mud.objects.ItemType;
 import mud.objects.ItemTypes;
 import mud.utils.Utils;
 

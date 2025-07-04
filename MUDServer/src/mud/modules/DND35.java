@@ -136,7 +136,8 @@ public class DND35 extends GameModule {
 		// add/initialize slots
 		player.addSlot("helmet",   new Slot(SlotTypes.HEAD,   ItemTypes.ARMOR));
 		player.addSlot("necklace", new Slot(SlotTypes.NECK,   ItemTypes.NECKLACE));
-		player.addSlot("armor",    new Slot(SlotTypes.CHEST,  ItemTypes.ARMOR));
+		//player.addSlot("armor",    new Slot(SlotTypes.CHEST,  ItemTypes.ARMOR));
+		player.addSlot("armor",    new Slot(SlotTypes.BODY,  ItemTypes.ARMOR));
 		player.addSlot("cloak",    new Slot(SlotTypes.BACK,   ItemTypes.CLOTHING));
 		player.addSlot("ring1",    new Slot(SlotTypes.FINGER, ItemTypes.RING));
 		player.addSlot("ring2",    new Slot(SlotTypes.FINGER, ItemTypes.RING));

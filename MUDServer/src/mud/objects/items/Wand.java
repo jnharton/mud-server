@@ -14,8 +14,8 @@ import mud.objects.ItemTypes;
 import mud.utils.Utils;
 
 public class Wand extends Item implements MagicItem {
-	// wand should really have the itemType WAND, but it needs weapon right now, so that it can
-	// fit in the slot it needs to be in
+	// TODO wand should really have the itemType WAND
+	// NOTE: if the player does not have an equipment slot of that ItemType, you won't be able to use it? Weapon works for using stuff...
 
 	public int charges;
 	public Spell spell;

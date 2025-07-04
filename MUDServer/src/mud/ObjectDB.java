@@ -169,7 +169,6 @@ public final class ObjectDB implements ODBI {
 		else {
 			System.out.println("Something is already using that id!");
 		}
-
 	}
 
 	public List<Integer> getUnused() {

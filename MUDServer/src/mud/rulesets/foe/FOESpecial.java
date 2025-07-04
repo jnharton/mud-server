@@ -27,10 +27,10 @@ public final class FOESpecial implements SpecialRuleset {
     
     public static FOESpecial getInstance() {
         if( instance == null ) {
-            instance = new FOESpecial();
+            FOESpecial.instance = new FOESpecial();
         }
         
-        return instance;
+        return FOESpecial.instance;
     }
     
     public String getName() {

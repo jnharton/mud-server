@@ -20,7 +20,13 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
 /**
- * class that defines a single bulletin board entry
+ * class that defines a single bulletin board entry which has an:<br/>
+ * <ul>
+ * <li style="list-style-type: square;">id (integer)</li>
+ * <li style="list-style-type: square;">author (string)</li>
+ * <li style="list-style-type: square;">subject (string)</li>
+ * <li style="list-style-type: square;">message (string)</li>
+ * </ul>
  * 
  * @author Jeremy
  *
@@ -33,10 +39,10 @@ public class BBEntry {
 	
 	private Integer topic = 0;
 	
-	public BBEntry(final Integer id, final String author, final String tempSubject, final String message) {
+	public BBEntry(final Integer id, final String author, final String subject, final String message) {
 		this.id = id;
 		this.author = author;
-		this.subject = tempSubject;
+		this.subject = subject;
 		this.message = message;
 	}
 	

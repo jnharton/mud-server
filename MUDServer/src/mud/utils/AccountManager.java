@@ -13,13 +13,14 @@ package mud.utils;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Hashtable;
+import java.util.Map;
 
 import mud.objects.Player;
 
 public final class AccountManager {
 	private Integer last_account_id = -1;
 	
-	private final Hashtable<Integer, Account> iamap; // integer account map
+	private final Map<Integer, Account> iamap; // integer account map
 	
 	public AccountManager() {
 		this.iamap = new Hashtable<Integer, Account>();
@@ -32,6 +33,7 @@ public final class AccountManager {
 	public Account addAccount(final String name, final String password, final int char_limit) {
 		int aId = nextId();
 		Account account = new Account(aId, name, password, char_limit);
+		
 		//this.iamap.put( aId, new Account(aId, name, password, char_limit) );
 		this.iamap.put( aId, account );
 		
@@ -50,6 +52,8 @@ public final class AccountManager {
 		}
 	}
 	
+	
+	// TODO these functions duplicate effort...
 	public void removeAccount(final Account toRemove) {
 		this.iamap.remove(toRemove.getId());
 	}
@@ -59,11 +63,58 @@ public final class AccountManager {
 		
 		removeAccount(toRemove);
 	}
-
+	
+	/**
+	 * Get Account
+	 * 
+	 * retrieve the Account from iamap which has exactly the Id (integer value) provided.
+	 * @param accountId
+	 * @return
+	 */
 	public Account getAccount(int accountId) {
-		return iamap.get(accountId);
+		// TODO this may not work given that IAMAP uses Integer(s)
+		//return iamap.get(accountId);
+		Account a = null;
+		
+		for(final Account account : iamap.values()) {
+			if( account.getId() == accountId ) {
+				a = account;
+				break;
+			}
+		}
+		
+		return a;
 	}
-
+	
+	/**
+	 * Get Account
+	 * 
+	 * retrieve the Account from iamap which has the exact username provided
+	 * 
+	 * @param name
+	 * @return
+	 */
+	public Account getAccount(final String name) {
+		Account a = null;
+		
+		for (final Account account : iamap.values()) {
+			if (account.getUsername().equals(name) ) {
+				a = account;
+				break;
+			}
+		}
+		
+		return a;
+	}
+	
+	/**
+	 * Get Account
+	 * 
+	 * retrieve the Account from iamap to which the specified Player has been linked, if there is one
+	 * 
+	 * @param player
+	 * @return
+	 */
 	public Account getAccount(final Player player) {
 		Account a = null;
 		
@@ -78,26 +129,26 @@ public final class AccountManager {
 		return a;
 	}
 	
-	public Account getAccount(final String name) {
-		Account a = null;
-		
-		for (final Account account : iamap.values()) {
-			if (account.getUsername().equals(name) ) {
-				a = account;
-				break;
-			}
-		}
-		
-		return a;
-	}
-	
 	public Account getAccount(final String name, final String pass) {
 		Account a = null;
 		
+		
+		System.out.println( String.format("Name: %s Password: %s", Utils.padRight("'" + name + "'", 14), Utils.padRight("'" + pass + "'", 18)) );
+		
 		for (final Account account : iamap.values()) {
+			System.out.println(account.getId());
+			System.out.println(account.getUsername());
+			System.out.println(account.getPassword());
+			
+			// TODO should we be using a hash call here?
+			//if (account.getUsername().equals(name) && account.getPassword().equals( Utils.hash(pass) )) {
 			if (account.getUsername().equals(name) && account.getPassword().equals(pass)) {
 				a = account;
+				System.out.println("Match!");
 				break;
+			}
+			else {
+				System.out.println("No Match!");
 			}
 		}
 		
