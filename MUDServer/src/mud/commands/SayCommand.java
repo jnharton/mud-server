@@ -3,6 +3,7 @@ package mud.commands;
 import mud.Command;
 import mud.Constants;
 import mud.net.Client;
+import mud.objects.Player;
 import mud.utils.Message;
 
 public class SayCommand extends Command {
@@ -13,7 +14,9 @@ public class SayCommand extends Command {
 	@Override
 	public void execute(String arg, Client client) {
 		send("You say, \"" + arg + "\"", client);
-		Message msg = new Message(getPlayer(client), null, arg);
+		Player player = getPlayer(client);
+		//Message msg = new Message(getPlayer(client), null, arg);
+		Message msg = new Message(player, null, arg, getRoom(player.getLocation()));
 		addMessage(msg);
 	}
 

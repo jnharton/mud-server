@@ -3144,7 +3144,8 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			}
 			// TODO fix this. (what's broken?)
 			else if (module != null && module.getName().equals("Fallout Equestria")
-					&& !Utils.mkList("IC", "OOC", "INT").contains(player.getStatus())) {
+					&& !Utils.mkList("IC", "OOC", "AFK", "IDL", "INT").contains(player.getStatus())) {
+				// TODO need to fix this code, because any new status (not identified above) will cause input to be processed through here
 				System.out.println("Module Processing input");
 				module.op(input, player);
 			}
@@ -3625,11 +3626,12 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 
 					else if (cmdIs(cmd, "move"))
 						cmd_move(arg, client);
+					else if (cmdIs(cmd, "afk"))
+						player.setStatus("AFK");
 					else if (cmdIs(cmd, "ooc"))
 						player.setStatus("OOC"); // TODO CMD 12 fix this kludge
 					else if (cmdIs(cmd, "ic"))
 						player.setStatus("IC"); // TODO CMD 13 fix this kludge
-
 					else if (cmdIs(cmd, "open"))
 						cmd_open2(arg, client);
 					else if (cmdIs(cmd, "page"))
@@ -5815,8 +5817,8 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 				init_conn(player, client, false);
 
 				guests++;
-			} else
-				send("Sorry. Guest users have been disabled.", client);
+			}
+			else send("Sorry. Guest users have been disabled.", client);
 		}
 		else {
 			/*
@@ -6889,6 +6891,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			final Room room = getRoom(player.getLocation());
 
 			if (room != null) {
+				// TODO shouldn't we be checking if we're inside or outside? (cmd_debug)
 				Weather weather = room.getWeather();
 
 				if (weather != null) {
@@ -6906,6 +6909,9 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 
 					send(msg, client);
 
+				}
+				else {
+					send("there is no weather here", client);
 				}
 			}
 		}
@@ -10412,13 +10418,13 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 									this.partyInvites.put(player1, getPartyContainingPlayer(player));
 
 									notify(player1, player.getName() + " has invited you to their party!");
-								} else
-									send("That player is not logged-in.", client);
-							} else
-								send("No such player.", client);
+								}
+								else send("That player is not logged-in.", client);
+							}
+							else send("No such player.", client);
 						}
-					} else
-						send("Only the party leader may invite players!", client);
+					}
+					else send("Only the party leader may invite players!", client);
 				}
 			} else if (arg1.equals("join") || arg1.equals("j")) {
 				// accept a standing invite to join a party
@@ -13512,6 +13518,8 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 						locString = room.getName() + " (#" + location + ")";
 					}
 				}
+				
+				debug("player idle: " + player.getIdleTime());
 
 				String idle = MudUtils.getIdleString(player.getIdleTime());
 
@@ -20272,6 +20280,9 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 				room.fireEvent(message);
 
 				for (final Player bystander : room.getListeners()) {
+					debug("sender is " + sender.getName());
+					debug("bystander is" + bystander.getName());
+					
 					if (sender != bystander && !(bystander instanceof NPC)) {
 						send(sender.getName() + " says, \"" + message + "\".", bystander.getClient());
 					}
@@ -20307,18 +20318,15 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		default:
 			debug("Message Type Unknown");
 
-			if (sender != null)
-				debug("Sender: " + msg.getSender().getName());
-			if (recip != null)
-				debug("Recipient: " + msg.getRecipient().getName());
+			if (sender != null) debug("Sender: " + msg.getSender().getName());
+			if (recip != null)  debug("Recipient: " + msg.getRecipient().getName());
 
 			debug("Message: " + msg);
 
 			break;
 		}
 
-		if (msg.wasSent())
-			debug("addMessage, sent message", 4);
+		if (msg.wasSent()) debug("addMessage, sent message", 4);
 	}
 
 	/**
@@ -23272,7 +23280,8 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		int part = SENDER;
 
 		System.out.println("MSG: " + msg);
-
+		
+		// TODO because dates aren't used in mail, we ned to ignore that step
 		for (final String line : lines) {
 			System.out.println("Line: " + line);
 
@@ -23292,6 +23301,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			case MSG:
 				message = line;
 				part = DATE;
+				//part = FLAG;
 				break;
 			case DATE:
 				date = line;
@@ -23316,7 +23326,9 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 				 * validMessage = !message.equals(""); boolean validFlag = flag != ' ' &&
 				 * Utils.mkList("A", "R", "U").contains("" + flag);
 				 */
-
+				
+				// TODO we don't currently store a date and therefore assume it is always valid
+				
 				boolean validSdr = !sender.equals("");
 				boolean validRpt = !recipient.equals("");
 				boolean validSub = !subject.equals("");
@@ -23357,6 +23369,12 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 	/**
 	 * saveMail
 	 * 
+	 * NOTE: this will cheerfully write a blank file over top of previous mail if the
+	 * mail didn't get loaded properly!
+	 * 
+	 * TODO find some way to tell that nothing about the mail changed and skip the file save (saveMail)
+	 * TODO detect whether load mail failed and don't overwrite file? (saveMail)
+	 * 
 	 * @param player
 	 */
 	private void saveMail(final Player player) {
@@ -23368,12 +23386,13 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			PrintWriter pw = new PrintWriter(resolvePath(WORLD_DIR, world, "mail", mailFile));
 
 			for (final Mail mail : mb) {
-				pw.println(mail.getSender()); // Sender
+				pw.println(mail.getSender());    // Sender
 				pw.println(mail.getRecipient()); // Recipient
-				pw.println(mail.getSubject()); // Subject
-				pw.println(mail.getMessage()); // Message
-				pw.println(mail.getFlag()); // Flag (Read/Unread)
-				pw.println('~'); // Mark
+				pw.println(mail.getSubject());   // Subject
+				pw.println(mail.getMessage());   // Message
+				pw.println(mail.getDate());      // Date
+				pw.println(mail.getFlag());      // Flag (Read/Unread)
+				pw.println('~');                 // Mark
 			}
 
 			pw.flush();
@@ -25580,6 +25599,23 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 				player.setIdle(false);
 				player.setIdleTime(0);
 			}
+			else {
+				player.idle_counter = 0; // reset counter
+			}
+		}
+		else {
+			if(!isIdle) {
+				// yay! a magic number!
+				// idle counter is approximate number of input processing cycles where no input was received
+				if( player.idle_counter == 15 ) {
+					player.setIdle(true);
+					player.setIdleTime(0);
+					player.idle_counter = 0;
+				}
+				else {
+					player.idle_counter++;
+				}
+			}
 		}
 
 		// should not decide that you are idle here, since one loop without input = idle
@@ -25966,7 +26002,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		for (final Player p : players) {
 			if (p.isIdle()) {
 				int idle = p.getIdleTime();
-				p.setIdleTime(idle++);
+				p.setIdleTime(++idle);
 			}
 		}
 

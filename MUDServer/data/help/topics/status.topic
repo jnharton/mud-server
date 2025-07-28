@@ -1,0 +1,11 @@
+status
+STATUS
+
+Every player (and some NPCs?) in the game has a status identifier like 'IC', 'OOC', 'AFK'. This is a feature from
+MU* games where impromptu roleplay is typical and even encourage as part of the game. In that context it helps
+to identify whether a given player is In-Character (IC), Out-of-Character (OOC), Away From Keyboard (AFK), or Idle (IDL).
+
+In this game it is also used to identify whether the character is interacting (INT) with an NPC, using an editor (EDT),
+currently engaged in a conversation/dialog (CNVS), or using the pager to view a help file (VIEW).
+  
+Last Updated: July 28th, 2025

@@ -105,10 +105,11 @@ public class Player extends MUDObject implements Mobile
 	private Status pstatus = Status.ACTIVE;             // whether or not the player has been banned
 	
 	private transient String cName = "";                // name that show up for players who have initiated greeting, etc
-	private transient boolean idle_state = false;       // Whether or not the player is currently ide (default: false) **UNUSED
+	private transient boolean idle_state = false;       // Whether or not the player is currently idle (default: false) **UNUSED
+	public  transient int idle_counter = 0;             // used to decide if the player is idle
 	private transient int idle = 0;                     // the amount of time that the player has been idle (MU)
 	private transient String prev_status = "";
-	private transient boolean isNew = true;             // is the player new? (e.g. hasn't done chargen)
+	private transient boolean isNew = true;             // is the player new? (e.g. hasn't done character gen)
 	private transient boolean controller = false;       // place to indicate if we are controlling an npc (by default, we are not)
 	private transient boolean initialized = false;      // has the player been initialzed as per module PCInit(...)
 
