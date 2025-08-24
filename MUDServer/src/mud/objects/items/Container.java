@@ -6,7 +6,6 @@ import java.util.EnumSet;
 import java.util.List;
 
 import mud.ObjectFlag;
-import mud.TypeFlag;
 import mud.interfaces.Storage;
 import mud.objects.Item;
 import mud.objects.ItemTypes;

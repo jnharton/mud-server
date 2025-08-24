@@ -27,6 +27,12 @@ import mud.objects.Item;
 import mud.objects.Player;
 import mud.utils.Tuple;
 
+/**
+ * This class maintains the data needed for direct item trading between players.
+ * 
+ * @author jnhar
+ *
+ */
 public class Trade {
 	// public or method access?
 	public final Player p1;

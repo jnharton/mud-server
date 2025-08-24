@@ -83,14 +83,11 @@ public class Console {
 			cm.fireEvent(this, "clients");
 		}
 		else if( command.equalsIgnoreCase("mem") ) {
-			//client.writeln(Utils.checkMem());
-			client.writeln("mem: disabled");
 			cm.fireEvent(this, "checkmemory");
 		}
 		else if( command.equalsIgnoreCase("gc") ) {
-			/*System.gc();
-			client.writeln("Garbage Collection requested.");*/
-			client.writeln("gc: disabled");
+			cm.fireEvent(this, "collectgarbage");
+			client.writeln("Garbage Collection requested.");
 		}
 		else if( command.equalsIgnoreCase("logout") ) {
 			cm.fireEvent(this, "logout");
@@ -108,5 +105,13 @@ public class Console {
 	
 	public void write(final String message) {
 		this.client.writeln(message);
+	}
+	
+	public void write(final List<String> messages) {
+		/*for(final String msg : messages) {
+			this.client.writeln(msg);
+		}*/
+		
+		this.client.write(messages);
 	}
 }

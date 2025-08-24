@@ -1,0 +1,18 @@
+trading
+TRADING
+
+As a means of facilitating  easy exchange of items within the game, each player
+may initiate one trade (at a time) with any other single player. So each player
+could, in theory, have (n)*(n-1) trades underway at any given time.
+
+Because that might constitute a lot of data to hold onto and keep track of, the
+game does not retain trades across restarts and auto-cancels trades when you
+move to a new room via an exit (change in location).
+
+To initiate trading with another player, you would use the 'trade' command. And
+to accept a proposal to trade you would input 'trade #accept <player>' and
+specify which players trading proposal you would like to accept. At that
+point you can add Items or Coin(s), the in-game money, to the trade.
+
+
+Last Updated: August 24th, 2025

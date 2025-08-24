@@ -21,8 +21,13 @@ import java.util.List;
 
 import mud.objects.Item;
 
+/**
+ * @author jnhar
+ *
+ * @param <T> This describes my type parameter
+ */
 public interface Storage<T extends Item> {
-	public T retrieve(final String tName);
+	public T retrieve(final String name);
 	
 	public T retrieve(final int index);
 	

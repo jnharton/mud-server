@@ -1,6 +1,6 @@
 package mud.utils;
 
-import java.util.ArrayList;
+//import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -15,7 +15,7 @@ public class ConsoleMonitor {
 	private MUDServer server;
 	private Map<Client, Console> consoles;
 	
-	private List<Console> free_consoles;
+	//private List<Console> free_consoles;
 	
 	private String[] credentials = new String[] { "admin", "admin" };
 	
@@ -23,7 +23,7 @@ public class ConsoleMonitor {
 		this.server = server;
 		this.consoles = new HashMap<Client, Console>();
 		
-		this.free_consoles = new ArrayList<Console>(1);
+		//this.free_consoles = new ArrayList<Console>(1);
 	}
 	
 	public void createConsole(final Client client) {
@@ -41,8 +41,9 @@ public class ConsoleMonitor {
 		this.consoles.remove(client);
 	}
 	
+	
 	public void purgeConsoles() {
-		
+		// TODO would purge list of free consoles..
 	}
 	
 	public boolean hasConsole(final Client client) {
@@ -57,20 +58,25 @@ public class ConsoleMonitor {
 		return response;
 	}
 	
+	/**
+	 * method allows consoles to request that the console monitor perform an action on their behalf
+	 * 
+	 * @param source
+	 * @param message
+	 */
 	protected void fireEvent(final Console source, final String message) {
 		if( source != null ) {
-			Client client = source.getClient();
-			
-			if( message.equals("checkmemory") ) {
-				source.write( "" );
+			if( message.equalsIgnoreCase("checkmemory") ) {
+				//client.writeln(Utils.checkMem());
+				source.write("memory check: disabled");
 			}
-			else if( message.equals("clients") ) {
+			else if( message.equalsIgnoreCase("clients") ) {
 				int cn = 0;
 				
 				source.write("-- " + Utils.padRight("Clients ", '-', 69));
 				
 				for (final Client c : server.getClients()) {
-					final String ident = this.hasConsole(client) ? "Console" : server.loginCheck(c) ? "Logged-In" : "Not Logged-In";
+					final String ident = this.hasConsole(source.getClient()) ? "Console" : server.loginCheck(c) ? "Logged-In" : "Not Logged-In";
 					
 					if (c != null) {
 						source.write(cn + " " + c.getIPAddress() + " " + c.toString() + " " + ident );
@@ -80,11 +86,15 @@ public class ConsoleMonitor {
 					cn++;
 				}
 			}
-			else if( message.equals("logout") ) {
+			else if( message.equalsIgnoreCase("collectgarbage") ) {
+				//System.gc();
+				source.write("gc: disabled");
+			}
+			else if( message.equalsIgnoreCase("logout") ) {
 				source.write("Logged out of Console.");
 				this.destroyConsole(source.getClient());
 			}
-			else if( message.equals("who") ) {
+			else if( message.equalsIgnoreCase("who") ) {
 				List<String> output = new LinkedList<String>();
 
 				int n = 0;
@@ -127,8 +137,8 @@ public class ConsoleMonitor {
 				output.add(Utils.padRight("", '-', 74));
 				
 				output.add(n + " players currently online.");
-
-				client.write( output );
+				
+				source.write(output);
 			}
 			else if (message.equalsIgnoreCase("modereset") ) {
 				server.changeMode(GameMode.WIZARD);

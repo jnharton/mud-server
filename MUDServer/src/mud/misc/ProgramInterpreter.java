@@ -493,7 +493,8 @@ public final class ProgramInterpreter {
 					// {tell:message, player}
 
 					// TODO resolve this kludge, since I may need to parse for hidden formatting data
-					final String message = params[0].replace("#c", ",");
+					//final String message = params[0].replace("#c", ",");
+					final String message = params[0];
 					final Player p = parent.getPlayer(Utils.toInt(params[1], -1));
 
 					if( message != null && p != null ) {

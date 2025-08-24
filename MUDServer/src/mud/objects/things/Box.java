@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 
 import mud.ObjectFlag;
-import mud.TypeFlag;
 import mud.interfaces.Closeable;
 import mud.interfaces.Lockable;
 import mud.interfaces.Storage;
@@ -121,7 +120,7 @@ public class Box extends Thing implements Closeable, Lockable<Item>, Storage<Ite
 	}
 	
 	public boolean contains(final Item item) {
-		return contentMap.values().contains(item);
+		return contentMap.keySet().contains(item.getName());
 	}
 	
 	@Override

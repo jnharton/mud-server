@@ -5,7 +5,6 @@ import java.util.EnumSet;
 import java.util.List;
 
 import mud.ObjectFlag;
-import mud.TypeFlag;
 import mud.interfaces.Editable;
 import mud.misc.SlotTypes;
 import mud.objects.Item;

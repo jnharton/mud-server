@@ -92,12 +92,12 @@ retrieve   -
 say        - say something aloud to the room.                   [USER]
 score      -                                                    [USER]
 @set       -                                                    [ADMIN]
-sethp      -                                                    [?]
-setlevel   -                                                    [?]
-setmana                                                         [?]
+@sethp      -                                                   [ADMIN]
+@setlevel   -                                                   [ADMIN]
+@setmana                                                        [ADMIN]
 @setmode   - set the game mode                                  [WIZARD]
 @setskill  -                                                    [ADMIN]
-setxp      -                                                    [?]
+@setxp      -                                                   [ADMIN]
 sheathe    - put away your weapons, one at a time               [USER]
 @shutdown  - shutdown the mu                                    [WIZARD]
 skillcheck -                                                    [USER]
@@ -123,6 +123,6 @@ who        - lists players                                      [USER]
 --------------------------------------------------------------------------------
 USER - all players, BUILDER - builders, ADMIN - admins, WIZARD - wizards
 --------------------------------------------------------------------------------
-* permissions are marked as the lowest level required to use them
+*** permissions are marked as the lowest level required to use them
 NOTE: For more specific help, see 'help <command>'
-Last Updated: November 13, 2012
+Last Updated: August 21, 2025

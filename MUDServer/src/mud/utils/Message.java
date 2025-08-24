@@ -100,7 +100,10 @@ public class Message
 	public Message(final Player tSender, final Player tRecipient, final String tMessage, final Room tLocation) {
 		this.sender = tSender;
 		this.recipient = tRecipient;
-		this.message = Utils.trim(tMessage);
+		//this.message = Utils.trim(tMessage);
+		this.message = tMessage;
+		
+		// NOTE: using trim here will clip off special format/color codes..
 		
 		this.location = (tLocation != null) ? tLocation.getDBRef() : -1;
 		

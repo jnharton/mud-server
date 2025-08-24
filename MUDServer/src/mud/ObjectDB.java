@@ -12,6 +12,8 @@ import java.util.TreeMap;
 
 import mud.objects.*;
 import mud.objects.exits.Door;
+import mud.objects.exits.Portal;
+import mud.objects.exits.PortalType;
 import mud.objects.items.Arrow;
 import mud.objects.items.Container;
 
@@ -320,11 +322,11 @@ public final class ObjectDB implements ODBI {
 	}
 
 	// remove object from DB, but insert a NullObject placeholder
-	public void remove(final MUDObject item) {
-		final int DBREF = item.getDBRef();
+	public void remove(final MUDObject object) {
+		final int DBREF = object.getDBRef();
 		
 		this.objsById.remove( DBREF );
-		this.objsByName.values().remove(item);
+		this.objsByName.values().remove(object);
 		
 		final NullObject no = new NullObject( DBREF );
 		
@@ -634,6 +636,18 @@ public final class ObjectDB implements ODBI {
 			if (e.getLocation() == loc) {
 				acc.add(e);
 			}
+			
+			// TODO find a better solution than this kludge, as it doesn't make the portal bi-directional...
+			/*if(e.getExitType() == ExitType.PORTAL) {
+				final Portal p = (Portal) e;
+				
+				if( p.getPortalType() == PortalType.STD && (p.getOrigin() == room.getDBRef() || p.getDestination() == room.getDBRef()) ) {
+					acc.add( e );
+				}
+			}
+			else if (e.getLocation() == loc) {
+					acc.add(e);
+			}*/
 		}
 
 		return acc;

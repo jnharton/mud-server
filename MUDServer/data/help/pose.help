@@ -1,0 +1,15 @@
+pose
+POSE
+
+A command for role-playing that prefixes a statement with the player's name.
+
+Syntax: pose <actions>
+
+E.g.
+If a player named Susan type the following:
+
+'pose hops up and down, while holding their foot.'
+
+Everyone in the room would see 'Susan hops up and down, while holding their foot.'
+
+Last Updated: August 21st, 2025

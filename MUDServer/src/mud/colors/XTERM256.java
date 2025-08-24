@@ -67,7 +67,8 @@ public class XTERM256 {
 	}
 	
 	public String toString() {
-		return this.prefix + this.option + ";5;" + Utils.padLeft("" + this.num, '0', 3) + this.suffix;
+		//return XTERM256.prefix + this.option + ";5;" + Utils.padLeft("" + this.num, '0', 3) + XTERM256.suffix;
+		return XTERM256.prefix + this.option + ";5;" + this.num + XTERM256.suffix;
 	}
 	
 	public Integer getNumber() {
