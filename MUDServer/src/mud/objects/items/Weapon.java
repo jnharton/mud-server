@@ -3,6 +3,9 @@ package mud.objects.items;
 import java.util.EnumSet;
 
 import mud.ObjectFlag;
+import mud.combat.DamageType;
+import mud.combat.WeaponType;
+import mud.combat.WeaponTypes;
 import mud.game.Coins;
 import mud.game.Skill;
 import mud.misc.SlotTypes;
@@ -88,10 +91,10 @@ public class Weapon extends Item {
 		
 		this.weaponType = template.weaponType;
 		
+		this.modifier = template.getModifer();
+		
 		this.required_skill = template.required_skill;
 		this.req_skill_value = template.req_skill_value;
-		
-		this.modifier = template.getModifer();
 		
 		this.damage = template.damage;
 	}

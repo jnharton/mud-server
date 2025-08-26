@@ -74,6 +74,28 @@ public class Thing extends MUDObject {
 		this.attributes = new Hashtable<String, String>();
 	}
 	
+	/**
+	 * <b>Copy Constructor</b><br/><br/>
+	 * 
+	 * Create a new Thing with the same attributes as a template object
+	 * 
+	 * @param template
+	 */
+	public Thing(final Thing template) {
+		super(template);
+		
+		this.type = TypeFlag.THING;
+		
+		this.thing_type = template.thing_type;
+		
+		this.weight = template.weight;
+		
+		if( template.onUse != null ) {
+			this.onUse = new Trigger( template.onUse.getScript().getText() );
+		}
+		
+	}
+	
 	public Thing(final int dbref, final String name, final EnumSet<ObjectFlag> flags, final String description, final int location)
 	{
 		super(dbref, name, flags, description, location);
@@ -123,5 +145,9 @@ public class Thing extends MUDObject {
 
 	public String toString() {
 		return this.name;
+	}
+	
+	public Thing getCopy() {
+		return new Thing(this);
 	}
 }

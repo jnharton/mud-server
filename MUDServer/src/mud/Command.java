@@ -304,10 +304,16 @@ public abstract class Command {
 	}
 	
 	protected final void addHostile(final Creature hostile) {
-		parent.hostiles.add( hostile );
+		synchronized(parent.hostiles) {
+			if( !parent.hostiles.contains(hostile) ) {
+				parent.hostiles.add( hostile );
+			}
+		}
 	}
 	
 	protected final void removeHostile(final Creature hostile) {
-		parent.hostiles.remove( hostile );
+		synchronized(parent.hostiles) {
+			parent.hostiles.remove( hostile );
+		}
 	}
 }

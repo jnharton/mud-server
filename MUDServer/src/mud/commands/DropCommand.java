@@ -5,13 +5,13 @@ import java.util.List;
 import mud.Command;
 import mud.Constants;
 import mud.ObjectFlag;
+import mud.misc.Terrain;
 import mud.net.Client;
 import mud.utils.Point;
 import mud.utils.Utils;
 import mud.objects.Item;
 import mud.objects.Player;
 import mud.objects.Room;
-import mud.objects.Terrain;
 
 /*
  * Copyright (c) 2012 Jeremy N. Harton

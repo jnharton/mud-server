@@ -3,6 +3,8 @@ package mud.objects.items;
 import java.util.EnumSet;
 
 import mud.ObjectFlag;
+import mud.combat.ArmorType;
+import mud.combat.ArmorTypes;
 import mud.game.Coins;
 import mud.objects.Item;
 import mud.objects.ItemTypes;

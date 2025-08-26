@@ -47,7 +47,7 @@ public class Counter {
 	
 	public void setValue(final Integer value) {
 		if( using_bounds ) {
-			if( Utils.range(value, this.min, this.max) ) {
+			if( Utils.inRange(value, this.min, this.max) ) {
 				this.value = value;
 			}
 		}
@@ -56,7 +56,7 @@ public class Counter {
 	
 	public void increment() {
 		if( using_bounds ) {
-			if( Utils.range(value + 1, this.min, this.max) ) {
+			if( Utils.inRange(value + 1, this.min, this.max) ) {
 				this.value++;
 			}
 		}
@@ -65,7 +65,7 @@ public class Counter {
 	
 	public void decrement() {
 		if( using_bounds ) {
-			if( Utils.range(value - 1, this.min, this.max) ) {
+			if( Utils.inRange(value - 1, this.min, this.max) ) {
 				this.value--;
 			}
 		}

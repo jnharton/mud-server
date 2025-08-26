@@ -69,6 +69,8 @@ import com.google.gson.GsonBuilder;
 import mud.auction.*;
 import mud.chat.*;
 import mud.colors.*;
+import mud.combat.DamageType;
+import mud.combat.WeaponTypes;
 import mud.commands.*;
 import mud.crafting.Recipe;
 import mud.game.*;
@@ -1535,7 +1537,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 				world_test();
 
 				// more world testing, less specific
-				world_test1();
+				crafting_test();
 
 				// set up basic weather system of sorts
 				// should generally be okay on a new database
@@ -2271,8 +2273,8 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			cre.setLocation(target.getDBRef());
 		}
 	}
-
-	private void world_test1() {
+	
+	private void crafting_test() {
 		// Item properties testing -- Not DB Safe
 		Item ore = createItem("Copper Ore",
 				"A chunk of copper ore. Veins of copper swirl through the baser rock surrounding them.", start_room);
@@ -2349,7 +2351,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		resourceNodes.add(new ResourceNode(new Ore("Copper", true)));
 		resourceNodes.add(new ResourceNode(new Ore("Iron", true)));
 	}
-
+	
 	private void world_test() {
 		// ex. ansi, true
 		// ex. prompt, "< %mode %h/%H %m/%M %state >"
@@ -2368,314 +2370,10 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		 */
 
 		/* FOE Items Testing -- NOT DB Safe */
-		if (moduleLoaded("FOE") && DB_FILE.endsWith("foe.txt")) { // Fallout Equestria testing database (this code uses
-																	// stuff from a package not included on github)
-			debug("Fallout Equestria (FOE) Item Testing setup");
-
-			// TODO need to prototype all these things or something and then just make an
-			// instance in the test database
-
-			// rules = mud.foe.FOESpecial.getInstance();
-
-			System.out.println("Abilities: " + Arrays.asList(rules.getAbilities()));
-
-			// pull in prototypes
-			prototypes.putAll(module.getItemPrototypes());
-			prototypes1.putAll(module.getThingPrototypes());
-
-			// TODO greetings really should be persisted with npcs
-
-			/* Set NPC Greetings (bit of a hack, really) */
-			getNPC("Life Bloom").setGreeting("Welcome to Tenpony tower.");
-			getNPC("Ditzy Doo").setGreeting("Ditzy Doo smiles at you, which is oddly nice and also looks gross.");
-			
-			
-			
-			Data objectiveData = new Data();
-
-			Quest quest = new Quest(
-					"Explore Stable 64",
-					"Now that you have located the mysterious Stable 64, you may as well have a look around.",
-					getZone("Stable 64"),
-					new KillTask("Explore", -1, objectiveData));
-			
-			getNPC("Ditzy Doo").setQuestGiver(true);
-			getNPC("Ditzy Doo").addQuest(quest);
-
-			Room atrium = getRoom("Atrium");
-			Room atrium2 = getRoom("Atrium2");
-			Room it = getRoom("IT Center");
-
-			atrium2.setProperty("/visuals/grass",
-					"On a closer inspection, the \"grass\" is made of an unknown substance,probably inorganic. Looks pretty good, still you probably wouldn't want to eat it.");
-
-			// Safe
-			Box box = new Box("Safe", "A heavy metal safe");
-
-			box.lock();
-
-			initCreatedThing(box);
-			box.setLocation(atrium2.getDBRef());
-			atrium2.addThing(box);
-
-			// PipBuck (foe version of PipBoy from Bethesda's Fallout video games)
-			// Item pb = createItem("mud.foe.pipbuck", false);
-
-			// initCreatedItem(pb);
-
-			// pb.setLocation(box.getDBRef());
-			// pb.setLocation( atrium2.getDBRef() );
-			// box.insert(pb);
-			// atrium2.addItem( pb );
-
-			// StealthBuck - PipBuck Stealth/Invis Module
-			mud.foe.items.StealthBuck sb = new mud.foe.items.StealthBuck();
-
-			initCreatedItem(sb);
-
-			// sb.setLocation(box.getDBRef());
-			sb.setLocation(atrium2.getDBRef());
-			// box.insert(sb);
-			atrium2.addItem(sb);
-
-			// Disruptor - PipBuck Disruptor Module
-			mud.foe.items.Disruptor dr = new mud.foe.items.Disruptor();
-
-			initCreatedItem(dr);
-			// dr.setLocation(box.getDBRef());
-			dr.setLocation(atrium2.getDBRef());
-			// box.insert(dr);
-			atrium2.addItem(dr);
-
-			// Sparkle Cola Vending Machine
-			Thing vending_machine = new Thing("Vending Machine",
-					"What stand before you is a grime-coated relic of it's former glory. The once glorious purple and gold Sparkle Cola ad has "
-							+ "long since faded, though a few splotches of color remain to remind you of it's former state. In several spots the paint has begun peeling off the metal "
-							+ "and rust peeks out from beneath it.");
-
-			initCreatedThing(vending_machine);
-
-			vending_machine.setProperty("thingtype", "machine");
-			vending_machine.setProperty("machinetype", "vending_machine");
-			vending_machine.setProperty("inventory/sparkle_cola", 10);
-			vending_machine.setProperty("inventory/sparkle_cola_rad", 10);
-			vending_machine.setProperty("selection/0", "sparkle_cola");
-			vending_machine.setProperty("selection/1", "sparkle_cola_rad");
-			vending_machine.setProperty("money", 0);
-
-			// {if:{eq:{prop:money,291},
-			// 1},{give:{&player},{create_item:mud.foe.sparkle_cola}},Insufficient
-			// Money!}
-			// {tell:{&player},{&this} dispenses a bottle of Sparkle-Cola}
-
-			vending_machine.setProperty("money", 20);
-
-			// IF has money && sparkle_cola are valid drink/exist &&
-			// sparkle_colas > 0 THEN create new sparkle_cola and give to player
-			// and decrease money by 3 bits and decrease
-			// count of remaining sparkle_cola by 1
-
-			// TODO resolve issue with scripting system that makes it not work
-			// when you want to execute
-			// three functions in succession
-			/*
-			 * vending_machine.setScriptOnTrigger( TriggerType.onUse,
-			 * "{if:{ge:{prop:money,{&this}},1},{if:{ge:{prop:inventory/sparkle_cola,{&this}},1},{do:{tell:{colors:green,Enough Money!},{&player}},{store:money,{&this},{sub:{prop:money,{&this}},1}},{store:inventory/sparkle_cola,{&this},{sub:{prop:inventory/sparkle_cola,{&this}},1}},{tell:PCHING! A bottle of sparkle cola!,{&player}},{give:{&player},{create_item:mud.foe.sparkle_cola}}},{tell:Sold Out!,{&player}}},{tell:{colors:red,Insufficient Funds!},{&player}}}"
-			 * );
-			 */
-			vending_machine.setScriptOnTrigger(TriggerType.onUse, ""
-					+ "{do:{set:money,{prop:money,{&this}}},{set:stock,{prop:inventory/sparkle_cola,{&this}}},{if:{ge:{&money},1},{if:{ge:{&stock},1},{do:{tell:{colors:green,Enough Money!},{&player}},{set:money,{sub:{&money},1}},{store:money,{&this},{&money}},{set:stock,{sub:{&stock},1}},{store:inventory/sparkle_cola,{&this},{&stock}},{tell:PCHING! A bottle of sparkle cola!,{&player}},{give:{&player},{create_item:mud.foe.sparkle_cola}}},{tell:Sold Out!,{&player}}},{tell:{colors:red,Insufficient Funds!},{&player}}}}");
-
-			System.out.println("# of Sparkle Cola(s) left: "
-					+ vending_machine.getProperty("inventory/sparkle_cola", Integer.class));
-			System.out.println("# of Sparkle Cola Rad(s) left: "
-					+ vending_machine.getProperty("inventory/sparkle_cola_rad", Integer.class));
-
-			vending_machine.setLocation(atrium2.getDBRef());
-			atrium2.addThing(vending_machine);
-
-			// createItem("Notebook", ItemTypes.NONE,
-			// "A blank paper notebook, a remnant of pre-war Equestria.");
-
-			Book notebook = new Book();
-			notebook.setName("Notebook");
-			notebook.setDesc("A blank paper notebook, a remnant of pre-war Equestria.");
-
-			notebook.setTitle("Notebook");
-
-			initCreatedItem(notebook);
-
-			notebook.setLocation(atrium2.getDBRef());
-			atrium2.addItem(notebook);
-
-			Book wsg = new Book("Wasteland Survival Guide", "Ditzy Doo", 250);
-			wsg.setName("The Wasteland Survival Guide");
-			wsg.setDesc("A modestly thick, black book with a white equine skull on the cover.");
-
-			wsg.setAuctionable(false);
-
-			wsg.addPage(Utils.mkList("Chapter 1: Basics of Pony Biology", "", "The things that everypony should know:",
-					"- water, I need it, you need it, the raiders need it. Absolutely Essential.",
-					"- food, same as with water, easier to find though. see chapter 3"));
-			wsg.addPage(Utils.mkList("Chapter 2: Dangers of the Wasteland",
-					"You want dangers, we've got them all, right here for you."));
-			wsg.addPage(Utils.mkList("Raiders", "",
-					"A bunch of nasty ponies if there ever was such a thing. They want your stuff and they'll happily",
-					"end your life to get it. And that's just if you're lucky. Be an unlucky pony and you'll end up enslaved.",
-					"Thing is, that wouldn't be so terrible, maybe, except that they'll put an explosive collar on you.",
-					"Move two steps out of line and *BOOM* no more head. Yeah, loss of your head is fatal."));
-			wsg.addPage(Utils.mkList("Yao Guai", "",
-					"Ah, for the golden days of Old Equestria. Once just ordinary Ursas,",
-					"until your favorite friend, magical radiation, did a stellar job of", "creating an A-1 menace."));
-
-			wsg.addPage(Utils.mkList("Chapter 3: Food",
-					"We're very lucky that pre-war Equestrians we're so diligent about preparing for"
-							+ "the apocalypse. They died too quickly to care about their wasted effort, but"
-							+ "thanks to them us few Wastelanders can survive for a very long time on their stockpiles"
-							+ "Sure, it's hardly the most nutritious stuff compared to fresh food (I would know), but"
-							+ "it's tastier than radroaches and less irradiated, most of the time."));
-
-			initCreatedItem(wsg);
-			wsg.setLocation(atrium2.getDBRef());
-			atrium2.addItem(wsg);
-
-			Thing pipbuck_machine = new Thing("Pipbuck Machine",
-					"A well-preserved and clean, but slight rusty machine. There is an"
-							+ "inactive Stable-tec terminal embedded in it and below that a circular receptacle. Above the circular hole"
-							+ "there is a hoof shape engraved into the metal plate that serves as the front of the machine. Flecks of black"
-							+ "stuff seem to suggest that perhaps it was once filled in with paint for more contrast. Above the symbol the"
-							+ "words \"Insert Hoof Here\" are engraved.");
-
-			pipbuck_machine.setProperty("thingtype", "machine");
-			pipbuck_machine.setProperty("machinetype", "pipbuck_machine");
-			pipbuck_machine.setProperty("contents/pipbuck", 1000);
-
-			// pipbuck_machine.getDBRef()
-			pipbuck_machine.setScriptOnTrigger(TriggerType.onUse,
-					"{if:{gt:{prop:contents/pipbuck,{&this}},0},{do:{give:{&player},{create_item:mud.foe.pipbuck}},{tell:You cautiously stick your hoof into the hole.,{&player}}},{tell:Insufficient Pipbucks Available!,{&player}}}");
-
-			initCreatedThing(pipbuck_machine);
-
-			pipbuck_machine.setLocation(it.getDBRef());
-			it.addThing(pipbuck_machine);
-
-			System.out
-					.println("# of PipBuck(s) left: " + pipbuck_machine.getProperty("contents/pipbuck", Integer.class));
-
-			/*
-			 * mud.foe.Terminal terminal = new mud.foe.Terminal("Terminal");
-			 * terminal.setName("Terminal"); terminal.setDesc(
-			 * "A Stable-Tec terminal, old pre-war technology whose durability is plain to see. On the screen, passively glowing green text indicates that it awaits input."
-			 * ); terminal.setPowerState(mud.foe.Terminal.pwr_states.POWER_ON);
-			 */
-
-			mud.foe.Terminal terminal = new mud.foe.Terminal("Terminal",
-					"A Stable-Tec terminal, old pre-war technology whose durability is plain to see.");
-
-			terminal.setProperty("/visuals/screen", "passively glowing green text indicates that it awaits input");
-
-			terminal.init();
-			System.out.println(terminal.powerOn());
-
-			initCreatedThing(terminal);
-
-			terminal.setLocation(atrium2.getDBRef());
-			atrium2.addThing(terminal);
-
-			// Spark Generator
-			Thing spark_generator = new Thing("Spark Generator",
-					"This advanced piece of magitech produces near limitless electric power via magic");
-
-			initCreatedThing(spark_generator);
-			spark_generator.setLocation(it.getDBRef());
-			it.addThing(spark_generator);
-
-			// TODO convert the above ^ to a prototype creation call
-
-			Item bc = createItem("mud.foe.bottlecap_sc", false);
-
-			initCreatedItem(bc);
-			bc.setLocation(atrium2.getDBRef());
-			atrium2.addItem(bc);
-
-			Item memory_orb = createItem("mud.foe.memory_orb", false);
-
-			initCreatedItem(memory_orb);
-			memory_orb.setLocation(box.getDBRef());
-			box.insert(memory_orb);
-
-			Item pgun1 = createItem("mud.foe.weapons.pistol", false);
-
-			initCreatedItem(pgun1);
-			pgun1.setLocation(atrium2.getDBRef());
-			atrium2.addItem(pgun1);
-
-			// particular item
-			// Weapon gun = (Weapon) new Item(-1);
-			// Item gun = new Item(-1);
-			Weapon gun = new Weapon("Gun",
-					"A sturdy revolver with a mouth grip, clearly of earth pony make or at least designed for one.");
-
-			// gun.setWeaponType(WeaponType.REVOLVER);
-
-			gun.setProperty("name", "Little Macintosh");
-			gun.setProperty("visual/engraving/number", "IF-18");
-			gun.setProperty("visual/engraving/script", "Little Macintosh");
-			gun.setProperty("weapon/maker", "Ironshod Firearms");
-			gun.setProperty("weapon/model", "IF-18");
-			gun.setProperty("weapon/size", "small");
-			gun.setProperty("weapon/type", "revolver");
-			gun.setProperty("damage", 5);
-			gun.setProperty("ammo_size", 0.44);
-			gun.setProperty("ammo_type", "magnum");
-			gun.setProperty("magazine", false);
-			gun.setProperty("chambers", 6);
-
-			initCreatedItem(gun);
-			gun.setLocation(box.getDBRef());
-			box.insert(gun);
-
-			Weapon laser_rifle = (Weapon) createItem("mud.foe.laser_rifle", false);
-
-			initCreatedItem(laser_rifle);
-			laser_rifle.setLocation(atrium2.getDBRef());
-			atrium2.addItem(laser_rifle);
-
-			Weapon laser_rifle1 = (Weapon) createItem("mud.foe.laser_rifle", false);
-
-			initCreatedItem(laser_rifle1);
-			laser_rifle1.setLocation(atrium2.getDBRef());
-			atrium2.addItem(laser_rifle1);
-
-			Armor battle_saddle = new Armor("Battle Saddle", "");
-
-			battle_saddle.setProperty("gun1", -1);
-			battle_saddle.setProperty("gun2", -1);
-
-			initCreatedItem(battle_saddle);
-			battle_saddle.setLocation(atrium2.getDBRef());
-			atrium2.addItem(battle_saddle);
-
-			// laser_rifle.setLocation(battle_saddle.getDBRef());
-			// laser_rifle1.setLocation(battle_saddle.getDBRef());
-			// battle_saddle.setProperty("gun1", laser_rifle.getDBRef());
-			// battle_saddle.setProperty("gun2", laser_rifle1.getDBRef());
-
-			Weapon wing_blades = (Weapon) createItem("mud.foe.wing_blades", false);
-
-			initCreatedItem(wing_blades);
-
-			wing_blades.setLocation(atrium2.getDBRef());
-			atrium2.addItem(wing_blades);
-
-			// Bank Test -- DB Safe
-			Bank bank = new Bank("Bank of Equestria");
-
-			banks.put(bank.getName(), bank);
-
-			BankAccount acct = new BankAccount(0, Coins.platinum(1000));
-
-			bank.addAcount(0, acct);
+		
+		// uses Fallout Equestria module and testing database
+		if (moduleLoaded("FOE") && world.equals("foe") && DB_FILE.endsWith("foe.txt")) {
+			world_test_foe();
 		}
 
 		/* Item/Creature/Quest Testing -- NOT DB Safe (expects a room to exist, etc) */
@@ -2685,215 +2383,515 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		// the expected data
 		if (moduleLoaded("DND35") && world.equals("forgotten_realms")
 				&& (DB_FILE.endsWith("db.txt") || DB_FILE.endsWith("new.txt"))) {
-			/*
-			 * // Arrow Testing -- Not DB Safe Arrow a = new Arrow(); initCreatedItem(a);
-			 * a.setLocation( 25 ); getRoom( 25 ).addItem(a);
-			 * 
-			 * for(int i = 0; i < 5; i++) { Arrow b = new Arrow(); initCreatedItem(b);
-			 * b.setLocation( 25 ); getRoom( 25 ).addItem(b); }
-			 * 
-			 * // Item Testing -- Not DB Safe Jewelry ring = new Jewelry(ItemTypes.RING,
-			 * "Ring of Invisibility",
-			 * "A medium-sized gold ring with a smooth, unmarked surface.", new
-			 * Effect("invisibility")); ring.setItemType(ItemTypes.RING);
-			 * ring.setEquipType(ItemTypes.RING); // the type of equipment it is
-			 * debug("Item Type: " + ring.getItemType() + " Equip Type: " +
-			 * ring.getEquipType() ); initCreatedItem(ring); ring.setLocation( 0 );
-			 * getRoom(0).getItems().add(ring);
-			 * 
-			 * Jewelry circlet = new Jewelry(ItemTypes.NONE, "Copper Circlet", "", new
-			 * Effect("none")); circlet.setItemType(ItemTypes.RING);
-			 */
-
-			// Item properties testing -- Not DB Safe Item item =
-			Item ore = createItem("Copper Ore",
-					"A chunk of copper ore. Veins of copper swirl through the baser rock surrounding them.",
-					start_room);
-
-			Item ore2 = createItem("Iron Ore",
-					"A chunk of iron ore. Bands of reddish brown are intertwined with darker gray spots.", start_room);
-
-			Room ore_loc = null;
-			int n = 0;
-
-			ore_loc = getRoom(ore.getLocation());
-
-			n = 5;
-
-			while (n > 0) {
-				Item oreC = ore.getCopy();
-
-				oreC.setProperty("type", "ore");
-				oreC.setProperty("material", "copper");
-				oreC.setProperty("purity", "0.90");
-
-				initCreatedItem(oreC);
-
-				oreC.setLocation(ore_loc.getDBRef());
-				ore_loc.addItem(oreC);
-
-				n--;
-			}
-
-			n = 5;
-			ore_loc = getRoom(ore2.getLocation());
-
-			while (n > 0) {
-				Item oreC = ore2.getCopy();
-
-				oreC.setProperty("type", "ore");
-				oreC.setProperty("material", "iron");
-				oreC.setProperty("purity", "0.90");
-
-				initCreatedItem(oreC);
-
-				oreC.setLocation(ore_loc.getDBRef());
-				ore_loc.addItem(oreC);
-
-				n--;
-			}
-
-			// initCreatedItem(ore);
-			// getRoom( ore.getLocation() ).addItem(ore);
-
-			recipes.put("iron ingot", new Recipe("IRON_BAR", "iron ore"));
-			recipes.put("copper ingot", new Recipe("IRON_BAR", "copper ore"));
-			recipes.put("iron dagger", new Recipe("IRON_DAGGER", "iron ingot"));
-
-			// Item IronIngot = createItem("Iron Ingot", "", -1);
-			// prototypes.put("mud.iron_ingot", IronIngot);
-
-			prototypes.put("mud.iron_ingot", createItem("Iron Ingot", "", -1));
-
-			// Item CopperIngot = createItem("Copper Ingot", "", -1);
-			// prototypes.put("mud.iron_ingot", IronIngot);
-
-			prototypes.put("mud.copper_ingot", createItem("Copper Ingot", "", -1));
-
-			Weapon IronDagger = new Weapon("Iron Dagger", "A sharp dagger made of iron", 0.5);
-
-			IronDagger.setDamage(3);
-			IronDagger.setDamageType(DamageType.SLASHING);
-
-			IronDagger.setSlotType(SlotTypes.RHAND);
-
-			prototypes.put("mud.iron_dagger", IronDagger);
-
-			resourceNodes.add(new ResourceNode(new Ore("Iron", true)));
-
-			// Bow
-
-			Weapon w = new Weapon(WeaponTypes.BOW);
-
-			w.setSlotType(SlotTypes.HANDS);
-
-			initCreatedItem(w);
-			w.setLocation(start_room);
-			getRoom(start_room).addItem(w);
-
-			Zone rdi = getZone("Red Dragon Inn");
-			// Zone rdi = new Zone("Red Dragon Inn", null);
-			// zones.put(rdi, 0);
-
-			Room inn = getRoom(4); // Red Dragon Inn
-			// rdi.addRoom( inn );
-
-			Room basement = createRoom("Basement", -1);
-			objectDB.addAsNew(basement);
-			objectDB.addRoom(basement);
-
-			basement.setZone(rdi);
-			rdi.addRoom(basement);
-
-			int basement_dbref = basement.getDBRef();
-
-			// add code for exits to and from basement -- 1/6/2014
-			Exit down = new Exit("down", inn.getDBRef(), basement.getDBRef());
-			Exit up = new Exit("up", basement.getDBRef(), inn.getDBRef());
-
-			objectDB.addAsNew(down);
-			objectDB.addExit(down);
-			objectDB.addAsNew(up);
-			objectDB.addExit(up);
-
-			inn.addExit(down);
-			basement.addExit(up);
-
-			Creature c = new Creature("Mangy Rat", "A large, scruffy gray rat with red beady eyes and pointy teeth.");
-
-			c.setMaxHP(5);
-			c.setLocation(basement_dbref);
-			c.setRace(Races.NONE);
-
-			Creature c1 = c.getCopy();
-			Creature c2 = c.getCopy();
-			Creature c3 = c.getCopy();
-			Creature c4 = c.getCopy();
-
-			for (final Creature cre : Utils.mkList(c, c1, c2, c3, c4)) {
-				objectDB.addAsNew(cre);
-				objectDB.addCreature(cre);
-			}
-
-			// NAME: Help the Innkeeper
-			// DESC: The inn's basement is full of rats. Help the innkeeper out
-			// by killing a few.
-			// LOCATION: Basement
-			// ZONE: Red Dragon Inn
-			// TASK: KILL 5 RAT
-			// REWARD: Bread, 5 gold
-
-			Room room = getRoom("Basement");
-
-			Data objectiveData = new Data();
-
-			objectiveData.addObject("toKill", 5);
-			objectiveData.addObject("target", c);
-
-			Quest quest = new Quest("Help the Innkeeper",
-					"The inn's basement is full of rats. Help the innkeeper out by killing a few.", rdi,
-					new KillTask("Kill 5 rats", room.getDBRef(), objectiveData));
-
-			Item bread = new Item("Bread", "A tasty looking loaf of yellow bread.");
-
-			quest.setReward(new Reward(Coins.gold(5), bread));
-
-			if (quest.getTasks().get(0).getObjective() == null) {
-				debug("ERROR! Objective Data is NULL?");
-			} else {
-				for (Entry<String, Object> entry : quest.getTasks().get(0).getObjective().getObjects().entrySet()) {
-					debug(entry.getKey());
-					// debug(entry.getValue());
-				}
-			}
-
-			NPC npc = getNPC("Iridan");
-
-			if (npc != null) {
-				System.out.println(npc.getName()); //
-				npc.setQuestGiver(true);
-				npc.addQuest(quest); // assign the quest to this NPC
-			} else {
-				System.out.println("NPC is null!");
-			}
-
-			quests.add(quest); // add to main quest table
-			questsByZone.put(quest.getLocation(), Utils.mkList(quest));
-
-			// Bank Test -- DB Safe
-			Bank bank = new Bank("Bank of Faerun");
-
-			banks.put(bank.getName(), bank);
-
-			BankAccount acct = new BankAccount(0, Coins.platinum(1000));
-
-			bank.addAcount(0, acct);
-
-			inn.setProperty("_game/isBank", "true");
-			inn.setProperty("_game/bank/name", "Bank of Faerun");
+			world_test_dndfr();
 		}
 	}
+	
+	private void world_test_foe() {
+		debug("Fallout Equestria (FOE) Item Testing setup");
 
+		// TODO need to prototype all these things or something and then just make an
+		// instance in the test database
+
+		// rules = mud.foe.FOESpecial.getInstance();
+
+		System.out.println("Abilities: " + Arrays.asList(rules.getAbilities()));
+
+		// pull in prototypes
+		this.prototypes.putAll(module.getItemPrototypes());
+		this.prototypes1.putAll(module.getThingPrototypes());
+
+		// TODO greetings really should be persisted with npcs
+
+		/* Set existing NPC Greetings (bit of a hack, really) */
+		getNPC("Life Bloom").setGreeting("Welcome to Tenpony tower.");
+		getNPC("Ditzy Doo").setGreeting("Ditzy Doo smiles at you, which is oddly nice and also looks gross.");	
+		
+		/* set up an existing NPC as a quest giver */
+		Data objectiveData = new Data();
+
+		Quest quest = new Quest(
+				"Explore Stable 64",
+				"Now that you have located the mysterious Stable 64, you may as well have a look around.",
+				getZone("Stable 64"),
+				new KillTask("Explore", -1, objectiveData));
+		
+		getNPC("Ditzy Doo").setQuestGiver(true);
+		getNPC("Ditzy Doo").addQuest(quest);
+
+		//Room atrium = getRoom("Atrium");
+		Room atrium2 = getRoom("Atrium2");
+		Room it = getRoom("IT Center");
+
+		atrium2.setProperty("/visuals/grass",
+				"On a closer inspection, the \"grass\" is made of an unknown substance,probably inorganic. Looks pretty good, still you probably wouldn't want to eat it.");
+
+		// Safe
+		Box box = new Box("Safe", "A heavy metal safe");
+
+		box.lock();
+
+		initCreatedThing(box);
+		box.setLocation(atrium2.getDBRef());
+		atrium2.addThing(box);
+
+		// PipBuck (foe version of PipBoy from Bethesda's Fallout video games)
+		// Item pb = createItem("mud.foe.pipbuck", false);
+
+		// initCreatedItem(pb);
+
+		// pb.setLocation(box.getDBRef());
+		// pb.setLocation( atrium2.getDBRef() );
+		// box.insert(pb);
+		// atrium2.addItem( pb );
+
+		// StealthBuck - PipBuck Stealth/Invis Module
+		mud.foe.items.StealthBuck sb = new mud.foe.items.StealthBuck();
+
+		initCreatedItem(sb);
+
+		// sb.setLocation(box.getDBRef());
+		sb.setLocation(atrium2.getDBRef());
+		// box.insert(sb);
+		atrium2.addItem(sb);
+
+		// Disruptor - PipBuck Disruptor Module
+		mud.foe.items.Disruptor dr = new mud.foe.items.Disruptor();
+
+		initCreatedItem(dr);
+		// dr.setLocation(box.getDBRef());
+		dr.setLocation(atrium2.getDBRef());
+		// box.insert(dr);
+		atrium2.addItem(dr);
+		
+		// Vending Machine (Sparkle Cola) -- from prototype
+		Thing vending_machine = createThing("mud.foe.vending_machine", false);
+		
+		initCreatedThing(vending_machine);
+		
+		vending_machine.setLocation(atrium2.getDBRef());
+		atrium2.addThing(vending_machine);
+		
+		// make some modifications to the Vending Machine
+		
+		// {if:{eq:{prop:money,291},
+		// 1},{give:{&player},{create_item:mud.foe.sparkle_cola}},Insufficient
+		// Money!}
+		// {tell:{&player},{&this} dispenses a bottle of Sparkle-Cola}
+
+		vending_machine.setProperty("money", 20);
+
+		// IF has money && sparkle_cola are valid drink/exist &&
+		// sparkle_colas > 0 THEN create new sparkle_cola and give to player
+		// and decrease money by 3 bits and decrease
+		// count of remaining sparkle_cola by 1
+
+		// TODO resolve issue with scripting system that makes it not work
+		// when you want to execute
+		// three functions in succession
+		/*
+		 * vending_machine.setScriptOnTrigger( TriggerType.onUse,
+		 * "{if:{ge:{prop:money,{&this}},1},{if:{ge:{prop:inventory/sparkle_cola,{&this}},1},{do:{tell:{colors:green,Enough Money!},{&player}},{store:money,{&this},{sub:{prop:money,{&this}},1}},{store:inventory/sparkle_cola,{&this},{sub:{prop:inventory/sparkle_cola,{&this}},1}},{tell:PCHING! A bottle of sparkle cola!,{&player}},{give:{&player},{create_item:mud.foe.sparkle_cola}}},{tell:Sold Out!,{&player}}},{tell:{colors:red,Insufficient Funds!},{&player}}}"
+		 * );
+		 */
+		vending_machine.setScriptOnTrigger(TriggerType.onUse, ""
+				+ "{do:{set:money,{prop:money,{&this}}},{set:stock,{prop:inventory/sparkle_cola,{&this}}},{if:{ge:{&money},1},{if:{ge:{&stock},1},{do:{tell:{colors:green,Enough Money!},{&player}},{set:money,{sub:{&money},1}},{store:money,{&this},{&money}},{set:stock,{sub:{&stock},1}},{store:inventory/sparkle_cola,{&this},{&stock}},{tell:PCHING! A bottle of sparkle cola!,{&player}},{give:{&player},{create_item:mud.foe.sparkle_cola}}},{tell:Sold Out!,{&player}}},{tell:{colors:red,Insufficient Funds!},{&player}}}}");
+
+		System.out.println("# of Sparkle Cola(s) left: "
+				+ vending_machine.getProperty("inventory/sparkle_cola", Integer.class));
+		System.out.println("# of Sparkle Cola Rad(s) left: "
+				+ vending_machine.getProperty("inventory/sparkle_cola_rad", Integer.class));
+
+		// createItem("Notebook", ItemTypes.NONE,
+		// "A blank paper notebook, a remnant of pre-war Equestria.");
+
+		Book notebook = new Book();
+		notebook.setName("Notebook");
+		notebook.setDesc("A blank paper notebook, a remnant of pre-war Equestria.");
+
+		notebook.setTitle("Notebook");
+
+		initCreatedItem(notebook);
+
+		notebook.setLocation(atrium2.getDBRef());
+		atrium2.addItem(notebook);
+
+		Book wsg = new Book("Wasteland Survival Guide", "Ditzy Doo", 250);
+		wsg.setName("The Wasteland Survival Guide");
+		wsg.setDesc("A modestly thick, black book with a white equine skull on the cover.");
+
+		wsg.setAuctionable(false);
+
+		wsg.addPage(Utils.mkList("Chapter 1: Basics of Pony Biology", "", "The things that everypony should know:",
+				"- water, I need it, you need it, the raiders need it. Absolutely Essential.",
+				"- food, same as with water, easier to find though. see chapter 3"));
+		wsg.addPage(Utils.mkList("Chapter 2: Dangers of the Wasteland",
+				"You want dangers, we've got them all, right here for you."));
+		wsg.addPage(Utils.mkList("Raiders", "",
+				"A bunch of nasty ponies if there ever was such a thing. They want your stuff and they'll happily",
+				"end your life to get it. And that's just if you're lucky. Be an unlucky pony and you'll end up enslaved.",
+				"Thing is, that wouldn't be so terrible, maybe, except that they'll put an explosive collar on you.",
+				"Move two steps out of line and *BOOM* no more head. Yeah, loss of your head is fatal."));
+		wsg.addPage(Utils.mkList("Yao Guai", "",
+				"Ah, for the golden days of Old Equestria. Once just ordinary Ursas,",
+				"until your favorite friend, magical radiation, did a stellar job of", "creating an A-1 menace."));
+
+		wsg.addPage(Utils.mkList("Chapter 3: Food",
+				"We're very lucky that pre-war Equestrians we're so diligent about preparing for"
+						+ "the apocalypse. They died too quickly to care about their wasted effort, but"
+						+ "thanks to them us few Wastelanders can survive for a very long time on their stockpiles"
+						+ "Sure, it's hardly the most nutritious stuff compared to fresh food (I would know), but"
+						+ "it's tastier than radroaches and less irradiated, most of the time."));
+
+		initCreatedItem(wsg);
+		wsg.setLocation(atrium2.getDBRef());
+		atrium2.addItem(wsg);
+		
+		// Pipbuck Machine -- from prototype
+		Thing pipbuck_machine = createThing("mud.foe.pipbuck_machine", false);
+
+		// make some modifications to the Pipbuck Machine
+		pipbuck_machine.setProperty("contents/pipbuck", 1000);
+		
+		pipbuck_machine.setScriptOnTrigger(TriggerType.onUse,
+				"{if:{gt:{prop:contents/pipbuck,{&this}},0},{do:{give:{&player},{create_item:mud.foe.pipbuck}},{tell:You cautiously stick your hoof into the hole.,{&player}}},{tell:Insufficient Pipbucks Available!,{&player}}}");
+
+		initCreatedThing(pipbuck_machine);
+
+		pipbuck_machine.setLocation(it.getDBRef());
+		it.addThing(pipbuck_machine);
+
+		System.out.println("# of PipBuck(s) left: " + pipbuck_machine.getProperty("contents/pipbuck", Integer.class));
+
+		/*
+		 * mud.foe.Terminal terminal = new mud.foe.Terminal("Terminal");
+		 * terminal.setName("Terminal"); terminal.setDesc(
+		 * "A Stable-Tec terminal, old pre-war technology whose durability is plain to see. On the screen, passively glowing green text indicates that it awaits input."
+		 * ); terminal.setPowerState(mud.foe.Terminal.pwr_states.POWER_ON);
+		 */
+
+		mud.foe.Terminal terminal = new mud.foe.Terminal("Terminal",
+				"A Stable-Tec terminal, old pre-war technology whose durability is plain to see.");
+
+		terminal.setProperty("/visuals/screen", "passively glowing green text indicates that it awaits input");
+
+		terminal.init();
+		System.out.println(terminal.powerOn());
+
+		initCreatedThing(terminal);
+
+		terminal.setLocation(atrium2.getDBRef());
+		atrium2.addThing(terminal);
+
+		// Spark Generator -- from prototype
+		Thing spark_generator = createThing("mud.foe.spark_generator");
+
+		initCreatedThing(spark_generator);
+		spark_generator.setLocation(it.getDBRef());
+		it.addThing(spark_generator);
+		
+		// Bottle Cap (SC) -- from prototype
+		Item bc = createItem("mud.foe.bottlecap_sc", false);
+
+		initCreatedItem(bc);
+		bc.setLocation(atrium2.getDBRef());
+		atrium2.addItem(bc);
+		
+		// Memory Orb -- from prototype
+		Item memory_orb = createItem("mud.foe.memory_orb", false);
+
+		initCreatedItem(memory_orb);
+		memory_orb.setLocation(box.getDBRef());
+		box.insert(memory_orb);
+		
+		// Pistol -- from prototype
+		Item pgun1 = createItem("mud.foe.weapons.pistol", false);
+
+		initCreatedItem(pgun1);
+		pgun1.setLocation(atrium2.getDBRef());
+		atrium2.addItem(pgun1);
+
+		// particular item
+		// Weapon gun = (Weapon) new Item(-1);
+		// Item gun = new Item(-1);
+		Weapon gun = new Weapon("Gun",
+				"A sturdy revolver with a mouth grip, clearly of earth pony make or at least designed for one.");
+
+		// gun.setWeaponType(WeaponType.REVOLVER);
+
+		gun.setProperty("name", "Little Macintosh");
+		gun.setProperty("visual/engraving/number", "IF-18");
+		gun.setProperty("visual/engraving/script", "Little Macintosh");
+		gun.setProperty("weapon/maker", "Ironshod Firearms");
+		gun.setProperty("weapon/model", "IF-18");
+		gun.setProperty("weapon/size", "small");
+		gun.setProperty("weapon/type", "revolver");
+		gun.setProperty("damage", 5);
+		gun.setProperty("ammo_size", 0.44);
+		gun.setProperty("ammo_type", "magnum");
+		gun.setProperty("magazine", false);
+		gun.setProperty("chambers", 6);
+
+		initCreatedItem(gun);
+		gun.setLocation(box.getDBRef());
+		box.insert(gun);
+		
+		// Laser Rifle -- from prototype (1)
+		Weapon laser_rifle = (Weapon) createItem("mud.foe.laser_rifle", false);
+
+		initCreatedItem(laser_rifle);
+		laser_rifle.setLocation(atrium2.getDBRef());
+		atrium2.addItem(laser_rifle);
+		
+		// Laser Rifle -- from prototype (2)
+		Weapon laser_rifle1 = (Weapon) createItem("mud.foe.laser_rifle", false);
+
+		initCreatedItem(laser_rifle1);
+		laser_rifle1.setLocation(atrium2.getDBRef());
+		atrium2.addItem(laser_rifle1);
+		
+		// Battle Saddle
+		Armor battle_saddle = new Armor("Battle Saddle", "");
+
+		battle_saddle.setProperty("gun1", -1);
+		battle_saddle.setProperty("gun2", -1);
+
+		initCreatedItem(battle_saddle);
+		battle_saddle.setLocation(atrium2.getDBRef());
+		atrium2.addItem(battle_saddle);
+
+		// laser_rifle.setLocation(battle_saddle.getDBRef());
+		// laser_rifle1.setLocation(battle_saddle.getDBRef());
+		// battle_saddle.setProperty("gun1", laser_rifle.getDBRef());
+		// battle_saddle.setProperty("gun2", laser_rifle1.getDBRef());
+		
+		// Wing Blades -- from prototype
+		Weapon wing_blades = (Weapon) createItem("mud.foe.wing_blades", false);
+
+		initCreatedItem(wing_blades);
+
+		wing_blades.setLocation(atrium2.getDBRef());
+		atrium2.addItem(wing_blades);
+
+		// Bank Test -- DB Safe
+		Bank bank = new Bank("Bank of Equestria");
+
+		banks.put(bank.getName(), bank);
+
+		BankAccount acct = new BankAccount(0, Coins.platinum(1000));
+
+		bank.addAcount(0, acct);	
+	}
+	
+	private void world_test_dndfr() {
+		/*
+		 * // Arrow Testing -- Not DB Safe Arrow a = new Arrow(); initCreatedItem(a);
+		 * a.setLocation( 25 ); getRoom( 25 ).addItem(a);
+		 * 
+		 * for(int i = 0; i < 5; i++) { Arrow b = new Arrow(); initCreatedItem(b);
+		 * b.setLocation( 25 ); getRoom( 25 ).addItem(b); }
+		 * 
+		 * // Item Testing -- Not DB Safe Jewelry ring = new Jewelry(ItemTypes.RING,
+		 * "Ring of Invisibility",
+		 * "A medium-sized gold ring with a smooth, unmarked surface.", new
+		 * Effect("invisibility")); ring.setItemType(ItemTypes.RING);
+		 * ring.setEquipType(ItemTypes.RING); // the type of equipment it is
+		 * debug("Item Type: " + ring.getItemType() + " Equip Type: " +
+		 * ring.getEquipType() ); initCreatedItem(ring); ring.setLocation( 0 );
+		 * getRoom(0).getItems().add(ring);
+		 * 
+		 * Jewelry circlet = new Jewelry(ItemTypes.NONE, "Copper Circlet", "", new
+		 * Effect("none")); circlet.setItemType(ItemTypes.RING);
+		 */
+
+		// Item properties testing -- Not DB Safe Item item =
+		Item ore = createItem("Copper Ore",
+				"A chunk of copper ore. Veins of copper swirl through the baser rock surrounding them.",
+				start_room);
+
+		Item ore2 = createItem("Iron Ore",
+				"A chunk of iron ore. Bands of reddish brown are intertwined with darker gray spots.", start_room);
+
+		Room ore_loc = null;
+		int n = 0;
+
+		ore_loc = getRoom(ore.getLocation());
+
+		n = 5;
+
+		while (n > 0) {
+			Item oreC = ore.getCopy();
+
+			oreC.setProperty("type", "ore");
+			oreC.setProperty("material", "copper");
+			oreC.setProperty("purity", "0.90");
+
+			initCreatedItem(oreC);
+
+			oreC.setLocation(ore_loc.getDBRef());
+			ore_loc.addItem(oreC);
+
+			n--;
+		}
+
+		n = 5;
+		ore_loc = getRoom(ore2.getLocation());
+
+		while (n > 0) {
+			Item oreC = ore2.getCopy();
+
+			oreC.setProperty("type", "ore");
+			oreC.setProperty("material", "iron");
+			oreC.setProperty("purity", "0.90");
+
+			initCreatedItem(oreC);
+
+			oreC.setLocation(ore_loc.getDBRef());
+			ore_loc.addItem(oreC);
+
+			n--;
+		}
+
+		// initCreatedItem(ore);
+		// getRoom( ore.getLocation() ).addItem(ore);
+
+		recipes.put("iron ingot", new Recipe("IRON_BAR", "iron ore"));
+		recipes.put("copper ingot", new Recipe("IRON_BAR", "copper ore"));
+		recipes.put("iron dagger", new Recipe("IRON_DAGGER", "iron ingot"));
+
+		// Item IronIngot = createItem("Iron Ingot", "", -1);
+		// prototypes.put("mud.iron_ingot", IronIngot);
+
+		prototypes.put("mud.iron_ingot", createItem("Iron Ingot", "", -1));
+
+		// Item CopperIngot = createItem("Copper Ingot", "", -1);
+		// prototypes.put("mud.iron_ingot", IronIngot);
+
+		prototypes.put("mud.copper_ingot", createItem("Copper Ingot", "", -1));
+
+		Weapon IronDagger = new Weapon("Iron Dagger", "A sharp dagger made of iron", 0.5);
+
+		IronDagger.setDamage(3);
+		IronDagger.setDamageType(DamageType.SLASHING);
+
+		IronDagger.setSlotType(SlotTypes.RHAND);
+
+		prototypes.put("mud.iron_dagger", IronDagger);
+
+		resourceNodes.add(new ResourceNode(new Ore("Iron", true)));
+
+		// Bow
+
+		Weapon w = new Weapon(WeaponTypes.BOW);
+
+		w.setSlotType(SlotTypes.HANDS);
+
+		initCreatedItem(w);
+		w.setLocation(start_room);
+		getRoom(start_room).addItem(w);
+
+		Zone rdi = getZone("Red Dragon Inn");
+		// Zone rdi = new Zone("Red Dragon Inn", null);
+		// zones.put(rdi, 0);
+
+		Room inn = getRoom(4); // Red Dragon Inn
+		// rdi.addRoom( inn );
+
+		Room basement = createRoom("Basement", -1);
+		objectDB.addAsNew(basement);
+		objectDB.addRoom(basement);
+
+		basement.setZone(rdi);
+		rdi.addRoom(basement);
+
+		int basement_dbref = basement.getDBRef();
+
+		// add code for exits to and from basement -- 1/6/2014
+		Exit down = new Exit("down", inn.getDBRef(), basement.getDBRef());
+		Exit up = new Exit("up", basement.getDBRef(), inn.getDBRef());
+
+		objectDB.addAsNew(down);
+		objectDB.addExit(down);
+		objectDB.addAsNew(up);
+		objectDB.addExit(up);
+
+		inn.addExit(down);
+		basement.addExit(up);
+
+		Creature c = new Creature("Mangy Rat", "A large, scruffy gray rat with red beady eyes and pointy teeth.");
+
+		c.setMaxHP(5);
+		c.setLocation(basement_dbref);
+		c.setRace(Races.NONE);
+
+		Creature c1 = c.getCopy();
+		Creature c2 = c.getCopy();
+		Creature c3 = c.getCopy();
+		Creature c4 = c.getCopy();
+
+		for (final Creature cre : Utils.mkList(c, c1, c2, c3, c4)) {
+			objectDB.addAsNew(cre);
+			objectDB.addCreature(cre);
+		}
+
+		// NAME: Help the Innkeeper
+		// DESC: The inn's basement is full of rats. Help the innkeeper out
+		// by killing a few.
+		// LOCATION: Basement
+		// ZONE: Red Dragon Inn
+		// TASK: KILL 5 RAT
+		// REWARD: Bread, 5 gold
+
+		Room room = getRoom("Basement");
+
+		Data objectiveData = new Data();
+
+		objectiveData.addObject("toKill", 5);
+		objectiveData.addObject("target", c);
+
+		Quest quest = new Quest("Help the Innkeeper",
+				"The inn's basement is full of rats. Help the innkeeper out by killing a few.", rdi,
+				new KillTask("Kill 5 rats", room.getDBRef(), objectiveData));
+
+		Item bread = new Item("Bread", "A tasty looking loaf of yellow bread.");
+
+		quest.setReward(new Reward(Coins.gold(5), bread));
+
+		if (quest.getTasks().get(0).getObjective() == null) {
+			debug("ERROR! Objective Data is NULL?");
+		} else {
+			for (Entry<String, Object> entry : quest.getTasks().get(0).getObjective().getObjects().entrySet()) {
+				debug(entry.getKey());
+				// debug(entry.getValue());
+			}
+		}
+
+		NPC npc = getNPC("Iridan");
+
+		if (npc != null) {
+			System.out.println(npc.getName()); //
+			npc.setQuestGiver(true);
+			npc.addQuest(quest); // assign the quest to this NPC
+		} else {
+			System.out.println("NPC is null!");
+		}
+
+		quests.add(quest); // add to main quest table
+		questsByZone.put(quest.getLocation(), Utils.mkList(quest));
+
+		// Bank Test -- DB Safe
+		Bank bank = new Bank("Bank of Faerun");
+
+		banks.put(bank.getName(), bank);
+
+		BankAccount acct = new BankAccount(0, Coins.platinum(1000));
+
+		bank.addAcount(0, acct);
+
+		inn.setProperty("_game/isBank", "true");
+		inn.setProperty("_game/bank/name", "Bank of Faerun");
+	}
+	
 	private void loot_test() {
 		if (world.equals("forgotten_realms")) {
 			// initialize a loot table for a creature
@@ -4036,7 +4034,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 	 * 
 	 * Ask an npc something
 	 * 
-	 * NOTE: Serves as a general npc interaction tool for acquiring information and
+	 * NOTE: Serves as a general tool for NPC interactions, especially acquiring information and
 	 * getting quests
 	 * 
 	 * Syntax: ask <npc name> <keyword> <additional data>
@@ -4211,19 +4209,22 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 
 									// TODO do something so the quest can't be considered again without redoing it
 									player.removeQuest(quest);
-								} else {
-									Message msg = npc.tell(player,
-											"Oh yeah? I can still hear the rats scuttling around down there!");
+								}
+								else {
+									Message msg = npc.tell(player, "Oh yeah? I can still hear the rats scuttling around down there!");
 									addMessage(msg);
 								}
-							} else {
+							}
+							else {
 								send("Wrong questgiver!", client);
 							}
-						} else {
+						}
+						else {
 							send("No such Quest!", client);
 						}
 					}
-				} else {
+				}
+				else {
 					final String str = "Beggars! Bunch of lazy bums, the lot of them. I'm not offering any reward for whatever it is you did!";
 					final Message msg = npc.tell(player, str);
 
@@ -4742,7 +4743,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 						messageNum = board.getNumMessages() - 1;
 					}
 
-					if (Utils.range(messageNum, 0, board.getNumMessages())) {
+					if (Utils.inRange(messageNum, 0, board.getNumMessages())) {
 						final BBEntry entry = board.getEntry(messageNum);
 
 						if (entry != null) {
@@ -6672,11 +6673,13 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			send("--------------------------------------------------------------------------", client);
 		} else if (param.equals("creatures")) {
 			send("Creatures", client);
+			send(String.format("%s %s %s %s", Utils.padRight("DBREF", 6), Utils.padRight("Name", 16),
+					Utils.padRight("Room", 24), Utils.padRight("Locat", 6)), client);
 			send("--------------------------------------------------------------------------", client);
 
 			for (final Creature c : objectDB.getCreatures()) {
-				send(String.format("%s %s %s (#%s)", c.getDBRef(), c.getName(), getRoom(c.getLocation()).getName(),
-						c.getLocation()), client);
+				send(String.format("%-6s %-16s %-24s %-6s",
+						c.getDBRef(), c.getName(), getRoom(c.getLocation()).getName(), c.getLocation()), client);
 			}
 
 			send("--------------------------------------------------------------------------", client);
@@ -6694,7 +6697,15 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 				debug(entry.getKey() + ": " + MONTH_NAMES[d.getMonth() - 1] + " " + d.getDay());
 				send(entry.getKey() + ": " + MONTH_NAMES[d.getMonth() - 1] + " " + d.getDay(), client);
 			}
-		} else if (args2[0].toLowerCase().equals("instanceof")) {
+		} else if(param.equals("hostiles")) {
+			send("Hostiles", client);
+			send("--------------------------------------------------------------------------", client);
+			for(Creature c : this.hostiles) {
+				send(c.getName() + "(#" + c.getDBRef() + "): HP=" + c.getHP() + ", Target=" + c.target.getName(), client);
+			}
+			send("--------------------------------------------------------------------------", client);
+		}
+		else if (args2[0].toLowerCase().equals("instanceof")) {
 			// @debug instanceof Laser_Rifle Weapon
 			if (args2.length >= 3) {
 				final String objectName = args2[1].replace('_', ' ');
@@ -6754,7 +6765,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		} else if (param.equals("players")) {
 			send("Players", client);
 			send(String.format("%s %s %s %s %s", Utils.padRight("DBREF", 6), Utils.padRight("Name", 16),
-					Utils.padRight("Room", 24), Utils.padRight("DBREF", 6), "New"), client);
+					Utils.padRight("Room", 24), Utils.padRight("Location", 9), "New"), client);
 			send("--------------------------------------------------------------------------", client);
 
 			for (final Player p : objectDB.getPlayers()) {
@@ -9598,12 +9609,15 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			} else {
 				s = room.getProperty("/visuals/" + arg);
 			}
-
-			if (s.equals(Constants.NO_PROP_VALUE))
-				send("You look at the " + arg + ": " + s, client);
+			
+			debug("PROP - KEY: \'" + arg + "\', VALUE: \'" + s + "\'");
+			
+			if (!s.equals(Constants.NO_PROP_VALUE))
+				send("You look at the \'" + arg + "\': " + s, client);
 			else
 				send("You look around, but don't see that.", client);
-		} else {
+		}
+		else {
 			send("Look at what?", client);
 		}
 	}
@@ -11715,6 +11729,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 					break;
 				default:
 					mobj = getObject(target);
+					if( mobj == null ) mobj = getObject( Utils.toInt(target, -1) );
 					break;
 				}
 
@@ -11739,16 +11754,19 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 							mobj.setProperty(key, value);
 							send("Property \'" + key + "\' with value of \'" + value + "\' set on " + mobj.getName(),
 									client);
-						} else {
+						}
+						else {
 							mobj.getProperties().remove(key);
 							send("Property \'" + key + "\' removed from " + mobj.getName(), client);
 						}
 					}
 				}
-			} else {
+			}
+			else {
 				send("SET: Invalid key-value pair!", client);
 			}
-		} else {
+		}
+		else {
 			send("SET: No property specified!", client);
 		}
 	}
@@ -15849,7 +15867,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 
 					char c = args[2].charAt(0);
 
-					if (Utils.range(x, 0, width - 1) && Utils.range(y, 0, length - 1)) {
+					if (Utils.inRange(x, 0, width - 1) && Utils.inRange(y, 0, length - 1)) {
 						tiles[y * width + x] = c;
 
 						send("Ok.", client);
@@ -15873,8 +15891,8 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 					char c = args[3].charAt(0);
 
 					// Bounds Checking
-					if (Utils.range(x, 0, width - 1) && Utils.range(y, 0, length - 1)) {
-						if (Utils.range(w, x, width) && Utils.range(l, y, length)) {
+					if (Utils.inRange(x, 0, width - 1) && Utils.inRange(y, 0, length - 1)) {
+						if (Utils.inRange(w, x, width) && Utils.inRange(l, y, length)) {
 							debug("Initial index value: " + ((y * width) + x));
 
 							for (int n = 0; n < l; n++) {
@@ -20876,7 +20894,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		final Zone zone = room.getZone();
 
 		if (zone != null)
-			send("Zone: " + zone.getName(), client);
+			send("Zone: " + colors(zone.getName(), "magenta"), client);
 		else
 			send("Zone: null", client);
 
@@ -22065,7 +22083,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 					final Integer i = player.getProperty("wet", Integer.class);
 
 					if (i != null) {
-						if (Utils.range(i, 0, 5)) {
+						if (Utils.inRange(i, 0, 5)) {
 
 						}
 					}
@@ -22496,7 +22514,45 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 
 		return items;
 	}
+	
+	/**
+	 * Create a Thing based on an existing prototype, identified by a string.
+	 * 
+	 * @param prototype
+	 * @return
+	 */
+	public Thing createThing(final String prototype) {
+		return createThing(prototype, true);
+	}
+	
+	
+	/**
+	 * Create a Thing based on an existing prototype, identified by a string.
+	 * 
+	 * @param prototype id of an existing prototype
+	 * @param init      should we initialize this item (add to database)
+	 * @return
+	 */
+	public Thing createThing(final String prototype, final boolean init) {
+		final Thing template = prototypes1.get(prototype);
 
+		if (template != null) {
+			final Thing newThing = template.getCopy();
+
+			if (init) {
+				objectDB.addAsNew(newThing);
+				objectDB.addThing(newThing);
+			}
+
+			return newThing;
+		}
+		else {
+			debug("ERROR: null template?!");
+		}
+
+		return null;
+	}
+	
 	// TODO need to deal with the ambiguity of stat values...
 	/**
 	 * createNPC
@@ -24110,17 +24166,18 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 
 	// C killed by P
 	public void handleDeath(final Creature creature, final Player player) {
+		// TODO I have mixed feelings on early returns like this
 		if (creature == null) {
 			send("Error!", player.getClient());
 			return;
 		}
 
-		final Room room = getRoom(creature.getLocation());
-
 		if (creature.getHP() <= 0) {
-			debug("Creature: \"" + creature.getName() + "\" Location: " + room.getName() + " (#" + room.getDBRef()
-					+ ")");
+			final Room room = getRoom(creature.getLocation());
+			
+			debug("Creature: \"" + creature.getName() + "\" Location: " + room.getName() + " (#" + room.getDBRef() + ")");
 
+			// TODO is setting the creature's location to -1 a good idea? should we physically put it somewhere else?
 			// remove/destroy creature ?
 			creature.setLocation(-1);
 			// destroy(creature);

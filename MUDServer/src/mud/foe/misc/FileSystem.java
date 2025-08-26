@@ -138,7 +138,7 @@ public class FileSystem {
 		
 		final Integer fileNode = fileTable.containsKey(path) ? fileTable.get(path) : -1;
 
-		if( fileNode != null && fileNode != -1 && Utils.range(fileNode, 0, MAX_FILES) ) {
+		if( fileNode != null && fileNode != -1 && Utils.inRange(fileNode, 0, MAX_FILES) ) {
 			final File file = files.get(fileNode);
 
 			boolean delete_ok = true;
@@ -219,7 +219,7 @@ public class FileSystem {
 	public boolean hasFile(final String path) {
 		final Integer fileNode = fileTable.containsKey(path) ? fileTable.get(path) : -1;
 
-		if( fileNode != null && fileNode != -1 && Utils.range(fileNode, 0, MAX_FILES) ) {
+		if( fileNode != null && fileNode != -1 && Utils.inRange(fileNode, 0, MAX_FILES) ) {
 			final File file = files.get(fileNode);
 			
 			if( file != null ) return true;
@@ -232,7 +232,7 @@ public class FileSystem {
 	public boolean hasDir(final String path) {
 		final Integer fileNode = fileTable.containsKey(path) ? fileTable.get(path) : -1;
 
-		if( fileNode != null && fileNode != -1 && Utils.range(fileNode, 0, MAX_FILES) ) {
+		if( fileNode != null && fileNode != -1 && Utils.inRange(fileNode, 0, MAX_FILES) ) {
 			final File file = files.get(fileNode);
 			
 			if( file != null && file.isDir ) return true;
@@ -248,7 +248,7 @@ public class FileSystem {
 	public File getFile(final String path) {
 		final Integer fileNode = fileTable.containsKey(path) ? fileTable.get(path) : -1;
 
-		if( fileNode != null && fileNode != -1 && Utils.range(fileNode, 0, MAX_FILES) ) {
+		if( fileNode != null && fileNode != -1 && Utils.inRange(fileNode, 0, MAX_FILES) ) {
 			final File file = files.get(fileNode);
 			
 			if( file != null ) return file;
@@ -260,7 +260,7 @@ public class FileSystem {
 	public File getDirectory(final String directory) {
 		final Integer fileNode = fileTable.containsKey(directory) ? fileTable.get(directory) : -1;
 
-		if( fileNode != null && fileNode != -1 && Utils.range(fileNode, 0, MAX_FILES) ) {
+		if( fileNode != null && fileNode != -1 && Utils.inRange(fileNode, 0, MAX_FILES) ) {
 			final File file = files.get(fileNode);
 			
 			if( file != null ) return file;

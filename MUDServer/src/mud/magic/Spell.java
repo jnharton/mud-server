@@ -227,15 +227,15 @@ public class Spell
 			return "none";
 		}
 		
-		if( Utils.range(temp, 4, 7) ) {
+		if( Utils.inRange(temp, 4, 7) ) {
 			temp = temp ^ SELF;
 			
-			if( Utils.range(temp, 1, 3) ) {
+			if( Utils.inRange(temp, 1, 3) ) {
 				sb.append("self, ");
 				
 				temp = temp ^ FRIEND;
 				
-				if( Utils.range(temp, 1, 1) ) {
+				if( Utils.inRange(temp, 1, 1) ) {
 					sb.append("friend, ");
 					
 					temp = temp ^ ENEMY;

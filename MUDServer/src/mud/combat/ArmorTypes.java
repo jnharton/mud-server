@@ -1,4 +1,4 @@
-package mud.objects.items;
+package mud.combat;
 
 public final class ArmorTypes {
 	/* Fields - Type, Name, Cost, ? (P), ? (G), ? (S), ? (C) , Armor Bonus (AB), Dexterity Bonus (DB),

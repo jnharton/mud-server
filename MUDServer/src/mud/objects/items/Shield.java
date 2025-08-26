@@ -4,6 +4,7 @@ import java.util.EnumSet;
 
 import mud.ObjectFlag;
 import mud.TypeFlag;
+import mud.combat.ShieldType;
 import mud.game.Coins;
 import mud.misc.SlotTypes;
 import mud.objects.Item;

@@ -8,6 +8,9 @@ public class Console {
 	private ConsoleMonitor cm;
 	private Client client;
 	
+	static final List<String> COMMANDS = Utils.mkList(
+			"clientinfo", "clients", "gc", "help", "logout", "mem", "modereset", "who", "quit");
+	
 	public Console(final Client client) {
 		this.client = client;
 	}
@@ -34,11 +37,8 @@ public class Console {
 			command = _input.trim();
 		}
 		
-		if( command.equalsIgnoreCase("help") || command.equals("?") ) {
-			final List<String> commands = Utils.mkList( "clientinfo", "clients", "gc", "help", "logout", "mem", "who", "quit");
-			client.writeln("Available Commands: " + Utils.join(commands, ", "));
-		}
-		else if( command.equalsIgnoreCase("clientinfo") ) {
+		
+		if( command.equalsIgnoreCase("clientinfo") ) {
 			/*if( !arg.equals("") ) {
 				int c = Utils.toInt(arg, -1);
 				
@@ -82,15 +82,18 @@ public class Console {
 			
 			cm.fireEvent(this, "clients");
 		}
-		else if( command.equalsIgnoreCase("mem") ) {
-			cm.fireEvent(this, "checkmemory");
-		}
 		else if( command.equalsIgnoreCase("gc") ) {
 			cm.fireEvent(this, "collectgarbage");
 			client.writeln("Garbage Collection requested.");
 		}
+		else if( command.equalsIgnoreCase("help") || command.equals("?") ) {
+			client.writeln("Available Commands: " + Utils.join(Console.COMMANDS, ", "));
+		}
 		else if( command.equalsIgnoreCase("logout") ) {
 			cm.fireEvent(this, "logout");
+		}
+		else if( command.equalsIgnoreCase("mem") ) {
+			cm.fireEvent(this, "checkmemory");
 		}
 		else if( command.equalsIgnoreCase("modereset") ) {
 			cm.fireEvent(this, "modereset");

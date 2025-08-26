@@ -6,6 +6,7 @@ import mud.Command;
 import mud.Constants;
 import mud.MUDObject;
 import mud.combat.CombatManager;
+import mud.combat.WeaponTypes;
 import mud.misc.PlayerMode;
 import mud.net.Client;
 import mud.objects.Creature;
@@ -84,6 +85,9 @@ public class AttackCommand extends Command {
 
 					// get weapon
 					Weapon weapon = CombatUtils.getWeapon(player);
+					
+					// TODO resolve this kludge, somehow
+					if( weapon == null ) weapon = new Weapon( WeaponTypes.NONE);
 
 					// check range (assuming all weapons can reach enemies for now)
 					boolean inRange = true;
@@ -101,10 +105,14 @@ public class AttackCommand extends Command {
 							}
 							
 							// figure out damage (should have way to tell if weapon can hit critically)
+							
+							// roll for a critical hit
 							int criticalCheckRoll = Utils.roll(1, 20);
 							
-							boolean criticalHit = Utils.range(criticalCheckRoll, weapon.getCritMin(), weapon.getCritMax());
-
+							// determine if we got a critical hit
+							boolean criticalHit = Utils.inRange(criticalCheckRoll, weapon.getCritMin(), weapon.getCritMax());
+							
+							// determine what the resulting damage was
 							int damage = CombatUtils.calculateDamage(weapon, criticalHit);
 							
 							debug(playerName + ": hits " + player.getTarget() + " for " + damage + " damage");
@@ -113,7 +121,7 @@ public class AttackCommand extends Command {
 							if( damage <= 1 ) {
 								send("Pff. You practically missed them anyway (" + damage + " damage )", client);
 							}
-							else if ( Utils.range(damage, 2,  5) ) {
+							else if ( Utils.inRange(damage, 2,  5) ) {
 								send("A solid hit! (" + damage + " damage )", client);
 							}
 							else {

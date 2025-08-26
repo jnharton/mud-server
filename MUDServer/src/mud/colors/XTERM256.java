@@ -56,7 +56,7 @@ public class XTERM256 {
 	public XTERM256 parseRGB(int red, int blue, int green) {
 		int number = 0;
 		
-		if( Utils.range(red, 0, 5) && Utils.range(green, 0, 5) && Utils.range(blue, 0, 5) ) {
+		if( Utils.inRange(red, 0, 5) && Utils.inRange(green, 0, 5) && Utils.inRange(blue, 0, 5) ) {
 			number = (red * 36) + (green * 6) + blue;
 		}
 		else {

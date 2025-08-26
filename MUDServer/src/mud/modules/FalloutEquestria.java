@@ -13,6 +13,7 @@ import mud.MUDObject;
 import mud.MUDServer;
 import mud.ObjectFlag;
 import mud.TypeFlag;
+import mud.combat.DamageType;
 import mud.foe.*;
 import mud.foe.items.*;
 import mud.game.Faction;
@@ -30,7 +31,6 @@ import mud.objects.ItemTypes;
 import mud.objects.Player;
 import mud.objects.Thing;
 import mud.objects.ThingType;
-import mud.objects.items.DamageType;
 import mud.objects.items.Drink;
 import mud.objects.items.Weapon;
 import mud.rulesets.foe.FOESpecial;
@@ -115,7 +115,7 @@ public final class FalloutEquestria extends GameModule implements ExtraCommands 
 		}};
 		
 		/* Items */
-		prototypes  = new Hashtable<String, Item>();
+		FalloutEquestria.prototypes  = new Hashtable<String, Item>();
 		
 		/************************************************************/
 		/** PipBuck                                                **/
@@ -126,7 +126,7 @@ public final class FalloutEquestria extends GameModule implements ExtraCommands 
 		
 		//pipbuck.setLocation(-1); // TODO this should be unnecessary
 		
-		prototypes.put("mud.foe.pipbuck", pipbuck);
+		FalloutEquestria.prototypes.put("mud.foe.pipbuck", pipbuck);
 		
 		/************************************************************/
 		/** Memory Orb                                             **/
@@ -140,7 +140,7 @@ public final class FalloutEquestria extends GameModule implements ExtraCommands 
 						+ "light which shifts through the whole spectrum of visible colors.");
 		MemoryOrb.setLocation(-1);
 
-		prototypes.put("mud.foe.memory_orb", MemoryOrb);
+		FalloutEquestria.prototypes.put("mud.foe.memory_orb", MemoryOrb);
 		
 		/************************************************************/
 		/** Sparkle Cola soda                                      **/
@@ -161,7 +161,7 @@ public final class FalloutEquestria extends GameModule implements ExtraCommands 
 
 		System.out.println("SparkleCola(onUse Script): " + SparkleCola.getScript(TriggerType.onUse).getText());
 
-		prototypes.put("mud.foe.sparkle_cola", SparkleCola);
+		FalloutEquestria.prototypes.put("mud.foe.sparkle_cola", SparkleCola);
 		
 		/************************************************************/
 		/** Sunrise Sarsaparilla soda                              **/
@@ -178,7 +178,7 @@ public final class FalloutEquestria extends GameModule implements ExtraCommands 
 		
 		SunriseSarsaparilla.setProperty("stackable", true);
 		
-		prototypes.put("mud.foe.sunrise_sarsaparilla", SunriseSarsaparilla);
+		FalloutEquestria.prototypes.put("mud.foe.sunrise_sarsaparilla", SunriseSarsaparilla);
 		
 		/************************************************************/
 		/** Bottle Cap (SC)                                        **/
@@ -194,7 +194,7 @@ public final class FalloutEquestria extends GameModule implements ExtraCommands 
 		BottleCap.setProperty("value", 1);
 		BottleCap.setProperty("stackable", true);
 
-		prototypes.put("mud.foe.bottlecap_sc", BottleCap);
+		FalloutEquestria.prototypes.put("mud.foe.bottlecap_sc", BottleCap);
 		
 		/************************************************************/
 		/** Bottle Cap (SS)                                        **/
@@ -210,7 +210,7 @@ public final class FalloutEquestria extends GameModule implements ExtraCommands 
 		BottleCap1.setProperty("value", 1);
 		BottleCap1.setProperty("stackable", true);
 
-		prototypes.put("mud.foe.bottlecap_ss", BottleCap);
+		FalloutEquestria.prototypes.put("mud.foe.bottlecap_ss", BottleCap);
 		
 		/* Weapons */
 		
@@ -228,7 +228,7 @@ public final class FalloutEquestria extends GameModule implements ExtraCommands 
 		pgun.setDamageType(DamageType.PIERCING);		
 		pgun.setDamage(5);
 
-		prototypes.put("mud.foe.weapons.pistol", pgun);
+		FalloutEquestria.prototypes.put("mud.foe.weapons.pistol", pgun);
 		
 		/************************************************************/
 		/** Laser Rifle                                            **/
@@ -244,7 +244,7 @@ public final class FalloutEquestria extends GameModule implements ExtraCommands 
 		laser_rifle.setDamageType(DamageType.ENERGY);
 		laser_rifle.setDamage(10);
 		
-		prototypes.put("mud.foe.laser_rifle", laser_rifle);
+		FalloutEquestria.prototypes.put("mud.foe.laser_rifle", laser_rifle);
 		
 		/************************************************************/
 		/** Wing Blades                                            **/
@@ -260,10 +260,10 @@ public final class FalloutEquestria extends GameModule implements ExtraCommands 
 		wing_blades.setDamageType(DamageType.SLASHING);
 		wing_blades.setDamage(5);
 		
-		prototypes.put("mud.foe.wing_blades", wing_blades);
+		FalloutEquestria.prototypes.put("mud.foe.wing_blades", wing_blades);
 
 		/* Things */
-		prototypes1 = new Hashtable<String, Thing>();
+		FalloutEquestria.prototypes1 = new Hashtable<String, Thing>();
 
 		/************************************************************/
 		/** Spark Generator                                        **/
@@ -275,7 +275,43 @@ public final class FalloutEquestria extends GameModule implements ExtraCommands 
 		SparkGenerator.setProperty("thingtype", "spark_generator");
 		SparkGenerator.setProperty("power", 10);
 
-		prototypes1.put("mud.foe.spark_generator", SparkGenerator);
+		FalloutEquestria.prototypes1.put("mud.foe.spark_generator", SparkGenerator);
+		
+		/************************************************************/
+		/** Vending Machine                                        **/
+		/************************************************************/
+		Thing VendingMachine = new Thing(
+				"Vending Machine",
+				"What stand before you is a grime-coated relic of it's former glory. The once glorious purple and gold Sparkle Cola ad has "
+						+ "long since faded, though a few splotches of color remain to remind you of it's former state. In several spots the paint has begun peeling off the metal "
+						+ "and rust peeks out from beneath it.");
+		
+		VendingMachine.setProperty("thingtype", "machine");
+		VendingMachine.setProperty("machinetype", "vending_machine");
+		VendingMachine.setProperty("inventory/sparkle_cola", 10);
+		VendingMachine.setProperty("inventory/sparkle_cola_rad", 10);
+		VendingMachine.setProperty("selection/0", "sparkle_cola");
+		VendingMachine.setProperty("selection/1", "sparkle_cola_rad");
+		VendingMachine.setProperty("/visuals/options", "This vending machine only offers Sparkle Cola and Sparkle Cola Rad.");
+		VendingMachine.setProperty("money", 0);
+		
+		FalloutEquestria.prototypes1.put("mud.foe.vending_machine", VendingMachine);
+		
+		/************************************************************/
+		/** Pipbuck Machine                                        **/
+		/************************************************************/
+		Thing PipbuckMachine = new Thing("Pipbuck Machine",
+				"A well-preserved and clean, but slight rusty machine. There is an"
+						+ "inactive Stable-tec terminal embedded in it and below that a circular receptacle. Above the circular hole"
+						+ "there is a hoof shape engraved into the metal plate that serves as the front of the machine. Flecks of black"
+						+ "stuff seem to suggest that perhaps it was once filled in with paint for more contrast. Above the symbol the"
+						+ "words \"Insert Hoof Here\" are engraved.");
+		
+		PipbuckMachine.setProperty("thingtype", "machine");
+		PipbuckMachine.setProperty("machinetype", "pipbuck_machine");
+		PipbuckMachine.setProperty("contents/pipbuck", 0);
+		
+		FalloutEquestria.prototypes1.put("mud.foe.pipbuck_machine", PipbuckMachine);
 		
 		/************************************************************/
 		/** Terminal                                               **/
@@ -285,7 +321,7 @@ public final class FalloutEquestria extends GameModule implements ExtraCommands 
 				"A Stable-Tec terminal, old pre-war technology whose durability is plain to see. On the screen, passively glowing green text indicates that it awaits input.",
 				mud.foe.Terminal.Power.POWER_ON, null, null);
 
-		prototypes1.put("mud.foe.terminal", terminal);
+		FalloutEquestria.prototypes1.put("mud.foe.terminal", terminal);
 	}
 	
 	@Override

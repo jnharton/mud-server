@@ -786,7 +786,7 @@ public class Player extends MUDObject implements Mobile
 
 	public void setHP(final int hp) {
 		// you can only set HP up to the total hp
-		if( Utils.range(this.hp + hp, 0, getTotalHP()) ) {
+		if( Utils.inRange(this.hp + hp, 0, getTotalHP()) ) {
 			this.hp += hp;
 		}
 		else {
@@ -806,7 +806,7 @@ public class Player extends MUDObject implements Mobile
 
 	public void setMana(final int mana) {
 		// you can only set MANA up to total mana
-		if( Utils.range(this.mana + mana, 0, getTotalMana()) ) {
+		if( Utils.inRange(this.mana + mana, 0, getTotalMana()) ) {
 			this.mana += mana;
 		}
 		else {

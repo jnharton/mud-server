@@ -979,7 +979,7 @@ public final class Utils {
 		return result;
 	}
 	
-	public static boolean range(int value, int min, int max) {
+	public static boolean inRange(int value, int min, int max) {
 		return (value >= min && value <= max);
 	}
 	

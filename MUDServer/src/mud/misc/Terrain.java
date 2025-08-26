@@ -1,4 +1,4 @@
-package mud.objects;
+package mud.misc;
 
 public class Terrain {
 	// NON,FOR,MSH,HILL,MTN,DST,AQU,SKY?

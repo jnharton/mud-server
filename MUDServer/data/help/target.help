@@ -1,3 +1,10 @@
 target
 TARGET
 
+Report the player's current target, if any, or set the player's target to the
+specified object.
+
+Syntax: target
+        target <object>
+
+Last Updated: August 25th, 2025

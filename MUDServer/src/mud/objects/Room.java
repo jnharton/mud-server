@@ -17,6 +17,7 @@ import mud.events.SayEvent;
 import mud.events.SayEventListener;
 import mud.interfaces.Instance;
 import mud.misc.Direction;
+import mud.misc.Terrain;
 import mud.misc.Trigger;
 import mud.misc.TriggerType;
 import mud.misc.Zone;

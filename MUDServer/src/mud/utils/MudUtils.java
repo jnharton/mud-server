@@ -11,6 +11,7 @@ import mud.Constants;
 import mud.MUDObject;
 import mud.ObjectFlag;
 import mud.TypeFlag;
+import mud.combat.WeaponType;
 import mud.game.Coins;
 import mud.misc.BBEntry;
 import mud.misc.BulletinBoard;
@@ -28,7 +29,6 @@ import mud.objects.exits.Portal;
 import mud.objects.exits.PortalType;
 import mud.objects.items.Container;
 import mud.objects.items.Weapon;
-import mud.objects.items.WeaponType;
 
 public final class MudUtils {
 	public static double calculateWeight(final Coins money) {
