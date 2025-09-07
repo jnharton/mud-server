@@ -1,8 +1,10 @@
 package mud.objects.items;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import mud.ObjectFlag;
 import mud.interfaces.Editable;
@@ -11,15 +13,13 @@ import mud.objects.Item;
 import mud.objects.ItemTypes;
 import mud.utils.Utils;
 
-/* genericized or not? */
-
-
 public class Book extends Item implements Editable {
 	private String title = "";
 	private String author = "";
-	private List<List<String>> pages;
 	
 	private Integer currentPage = 0;
+	
+	private Map<Integer, List<String>> pages;
 	
 	public Book() {
 		this("", "", 0);
@@ -41,14 +41,14 @@ public class Book extends Item implements Editable {
 		this.title = bTitle;
 		this.author = bAuthor;
 		
-		this.pages = new ArrayList<List<String>>(pages);
+		this.pages = new HashMap<Integer, List<String>>();
 	}
 	
 	// TODO make sure this properly duplicates the template, which it doesn't atm
 	protected Book(final Book template) {
 		this(template.title, template.author, template.pages.size());
 		
-		this.pages.addAll( template.pages );
+		this.pages.putAll( template.pages );
 	}
 	
 	/**
@@ -72,7 +72,7 @@ public class Book extends Item implements Editable {
 		this.item_type = ItemTypes.BOOK;
 		this.slot_type = SlotTypes.NONE;
 		
-		this.pages = new ArrayList<List<String>>(0);
+		this.pages = new HashMap<Integer, List<String>>();
 	}
 	
 	/*@Override
@@ -120,21 +120,32 @@ public class Book extends Item implements Editable {
 		}
 	}
 	
+	/**
+	 * getPage(int pageNum)
+	 * 
+	 * Gets the contents of the specified page or returns an empty list.
+	 * 
+	 * @param pageNum
+	 * @return
+	 */
 	public List<String> getPage(int pageNum) {
-		return this.pages.get(pageNum);
+		if( this.pages.containsKey(pageNum) ) {
+			return this.pages.get(pageNum);
+		}
+		else {
+			return Collections.emptyList();
+		}
+		
 	}
 
 	public void setPage(final Integer newPageNum, final List<String> list) {
 		if( newPageNum > -1 ) {
-			if( this.pages.get(newPageNum) != null ) {
-				this.pages.set(newPageNum, list);
-			}
-			else this.pages.add(list);
+			this.pages.put(newPageNum, list);
 		}
 	}
 	
 	public void addPage(final List<String> list) {
-		this.pages.add(list);
+		this.pages.put(this.pages.size() + 1, list);
 	}
 	
 	/* Navigation */

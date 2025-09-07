@@ -68,7 +68,17 @@ public class Container extends Item implements Storage<Item> {
 		
 		this.displayWidth = template.displayWidth;
 	}
-
+	
+	/**
+	 * Object Loading Constructor
+	 * 
+	 * @param dbref
+	 * @param name
+	 * @param flags
+	 * @param description
+	 * @param location
+	 * @param size
+	 */
 	public Container(final int dbref, final String name, final EnumSet<ObjectFlag> flags, final String description, final int location, final int size)
 	{
 		super(dbref, name, flags, description, location);
@@ -177,7 +187,9 @@ public class Container extends Item implements Storage<Item> {
 		output[0] = "" + this.size;
 		//output[1] = sb.toString();
 		
-		// NOTE: uses the toDB() method of Item and simply ppends the size to the end 
+		/*
+		 * NOTE: this uses the toDB() method of the parent Item and simply appends the container size to the end 
+		 */
 		return super.toDB() + "#" + Utils.join(output, "#");
 	}
 	

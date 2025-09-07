@@ -295,7 +295,6 @@ public final class Quest {
 		return true;
 	}
 
-	
 	/**
 	 * Applies the update, changing the status of this Quest
 	 * to match the new data.

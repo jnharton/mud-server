@@ -90,6 +90,11 @@ public class BulletinBoard {
 		this.owner = newOwner;
 	}
 	
+	/**
+	 * 
+	 * @param messageNum
+	 * @return
+	 */
 	public BBEntry getEntry(final int messageNum) {
 		BBEntry message = null;
 		
@@ -106,7 +111,11 @@ public class BulletinBoard {
 	public List<BBEntry> getEntries() {
 		return Collections.unmodifiableList(this.entries);
 	}
-
+	
+	/**
+	 * 
+	 * @param entry
+	 */
 	public void addEntry(final BBEntry entry) {
 		this.entries.add(entry);
 	}
@@ -116,6 +125,10 @@ public class BulletinBoard {
 		this.lastId = entry.getId();
 	}
 
+	/**
+	 * 
+	 * @param index
+	 */
 	public void removeEntry(int index) {
 		this.entries.remove(index);
 	}
@@ -128,6 +141,13 @@ public class BulletinBoard {
 		write("", subject, message);
 	}
 	
+	/**
+	 * Write a message to the bulletin board.
+	 * 
+	 * @param author
+	 * @param subject
+	 * @param message
+	 */
 	public void write(final String author, final String subject, final String message) {
 		this.addEntry( new BBEntry(++lastId, author, subject, message) );
 	}
@@ -147,7 +167,10 @@ public class BulletinBoard {
 			entry.setId( entry.getId() - 1);
 		}
 	}
-
+	
+	/**
+	 * renumber the messages, starting with message 0
+	 */
 	public void renumber() {
 		renumber(0);
 	}

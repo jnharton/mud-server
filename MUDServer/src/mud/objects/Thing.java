@@ -1,8 +1,10 @@
 package mud.objects;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Hashtable;
+import java.util.Map;
 
 import mud.ObjectFlag;
 import mud.MUDObject;
@@ -35,27 +37,14 @@ import mud.utils.Utils;
  * 
  */
 public class Thing extends MUDObject {
-
-	/**
-	 * 
-	 */
+	protected ThingType thing_type = ThingTypes.NONE;
 	
-	public ThingType thing_type = ThingTypes.NONE;
+	private Map<String, String> attributes;
 	
-	public Hashtable<String, String> attributes;
-	
-	public int durability = 20;
+	public int durability = 100;
 	
 	// triggers
-	public Trigger onUse;
-	
-	public Thing(int tempDBREF) {
-		super(tempDBREF);
-		
-		this.type = TypeFlag.THING;
-		
-		this.attributes = new Hashtable<String, String>();
-	}
+	private Trigger onUse = null;
 	
 	public Thing(final String name) {
 		super(-1, name, "");
@@ -102,7 +91,21 @@ public class Thing extends MUDObject {
 		
 		this.type = TypeFlag.THING;
 		
+		this.thing_type = ThingTypes.NONE;
+		
 		this.attributes = new Hashtable<String, String>();
+	}
+	
+	public ThingType getThingType() {
+		return this.thing_type;
+	}
+	
+	public void setThingType(ThingType newType) {
+		this.thing_type = newType;
+	}
+	
+	public Map<String, String> getAttributes() {
+		return Collections.unmodifiableMap(this.attributes);
 	}
 	
 	public void setScriptOnTrigger(TriggerType type, String script) {

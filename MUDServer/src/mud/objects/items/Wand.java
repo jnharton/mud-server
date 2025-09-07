@@ -18,7 +18,7 @@ public class Wand extends Item implements MagicItem {
 	// NOTE: if the player does not have an equipment slot of that ItemType, you won't be able to use it? Weapon works for using stuff...
 
 	public int charges;
-	public Spell spell;
+	private Spell spell;
 	
 	// TODO is there a such a thing as a wand with no spell/charges or one with a generic spell/num charges?
 	
@@ -42,6 +42,7 @@ public class Wand extends Item implements MagicItem {
 	 * Use this only for testing purposes and loading objects into the
 	 * server database, for anything else, use one of the other two constructors
 	 * that have parameters.
+	 * 
 	 * @param dbref
 	 * @param name
 	 * @param description
@@ -101,14 +102,12 @@ public class Wand extends Item implements MagicItem {
 	
 	@Override
 	public Spell getSpell() {
-		// TODO Auto-generated method stub
-		return null;
+		return this.spell;
 	}
 
 	@Override
 	public List<Spell> getSpells() {
-		// TODO Auto-generated method stub
-		return null;
+		return List.of(this.spell);
 	}
 	
 	/*public Effect getEffect() {
@@ -116,6 +115,22 @@ public class Wand extends Item implements MagicItem {
 		this.spell.getEffects()
 	}*/
 
+	@Override
+	public Effect getEffect() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
+	@Override
+	public List<Effect> getEffects() {
+		return this.spell.getEffects();
+	}
+	
+	@Override
+	public Wand getCopy() {
+		return new Wand(this);
+	}
+	
 	public String toDB() {
 		final String[] output = new String[2];
 		
@@ -134,21 +149,5 @@ public class Wand extends Item implements MagicItem {
 		if (this.spell != null) return "Wand of " + this.spell.getName();
 		else                    return "Wand of NULL";
 		// return "Wand of " + this.spell.getName();
-	}
-	
-	@Override
-	public Wand getCopy() {
-		return new Wand(this);
-	}
-
-	@Override
-	public Effect getEffect() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-	
-	@Override
-	public List<Effect> getEffects() {
-		return this.spell.getEffects();
 	}
 }

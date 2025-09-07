@@ -345,7 +345,8 @@ public final class FalloutEquestria extends GameModule implements ExtraCommands 
 		// check to see if the player has been initialized
 		if( !player.isInitialized() ) {
 			final SpecialRuleset rules = FOESpecial.getInstance();
-
+			
+			// TODO this looks janky considering that we load races from a file 
 			Race EARTH = new Race(rules, "Earth", 0, false, false);
 			Race PEGASUS = new Race(rules, "Pegasus", 1, true, false);
 			Race UNICORN = new Race(rules, "Unicorn", 2, false, false);
@@ -558,7 +559,7 @@ public final class FalloutEquestria extends GameModule implements ExtraCommands 
 		else if( tt == FOEThingTypes.VENDING_MACHINE ) {
 			final Thing thing = new Thing(oDBRef, oName, flags, oDesc, oLocation);
 			
-			thing.thing_type = FOEThingTypes.VENDING_MACHINE;
+			thing.setThingType(FOEThingTypes.VENDING_MACHINE);
 			
 			String[] temp = Utils.loadStrings( String.format("%s\\%s\\%s", DATA_DIR, "scripts", "pipbuck_machine.s") );
 			
@@ -654,7 +655,7 @@ public final class FalloutEquestria extends GameModule implements ExtraCommands 
 				break;
 			}*/
 			
-			if( thing.thing_type == FOEThingTypes.TERMINAL ) {
+			if( thing.getThingType() == FOEThingTypes.TERMINAL ) {
 				final Terminal term = (Terminal) thing;
 				
 				if ( term.checkStatus(Terminal.Power.POWER_ON, Terminal.Use.USABLE) ) {

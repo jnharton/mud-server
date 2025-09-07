@@ -109,26 +109,26 @@ public class Race {
 	
 	@Override
 	public boolean equals(Object object) {
+		boolean result = false;
+		
 		if(object instanceof Race) {
 			final Race otherRace = (Race) object;
 			
 			// TODO fix kludge, two races of the same name are equal according to this
-			if(this.getName().equals( otherRace.getName() )) {
-				return true;
+			
+			// ruleset name test
+			if( this.rules.getName().equals( otherRace.rules.getName() ) ) {
+				// race name and id test
+				if(this.getName().equals( otherRace.getName() ) && this.getId() == otherRace.getId() ) {
+					//return true;
+					result = true;
+				}
 			}
 			
-			return false;
+			//return false;
 		}
 		
-		return false;
-	}
-	
-	public final class Subraces {
-		public final Subrace DARK_ELF = new Subrace(Races.ELF, "Dark Elf", "Drow");
-		public final Subrace MOON_ELF = new Subrace(Races.ELF, "Moon Elf", "Gray Elf");
-		public final Subrace SEA_ELF = new Subrace(Races.ELF, "Sea Elf", "");
-		public final Subrace SUN_ELF = new Subrace(Races.ELF, "Sun Elf", "Gold Elf");
-		public final Subrace WILD_ELF = new Subrace(Races.ELF, "Wild Elf", "");
-		public final Subrace WOOD_ELF = new Subrace(Races.ELF, "Wood Elf", "");
+		//return false;
+		return result;
 	}
 }

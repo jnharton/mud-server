@@ -763,7 +763,7 @@ public class ObjectLoader {
 			String title = attr[8];
 			int pages = Integer.parseInt(attr[9]);
 			
-			// TODO improve persistence issues
+			// TODO improve persistence issues - need to load contents
 			final Book book = new Book(oDBRef, oName, flags, oDesc, oLocation);
 
 			book.setAuthor(author);

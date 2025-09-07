@@ -11,7 +11,6 @@ import mud.ObjectFlag;
 import mud.interfaces.Closeable;
 import mud.interfaces.Lockable;
 import mud.interfaces.Storage;
-import mud.misc.Lock;
 import mud.objects.Item;
 import mud.objects.Thing;
 import mud.objects.ThingTypes;
@@ -20,7 +19,6 @@ import mud.utils.Utils;
 public class Box extends Thing implements Closeable, Lockable<Item>, Storage<Item> {
 	private boolean isOpen = false;
 	
-	private Lock lock = null;
 	private Item key = null;
 	private boolean isLocked = false;
 	

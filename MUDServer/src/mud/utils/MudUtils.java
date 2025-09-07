@@ -13,6 +13,7 @@ import mud.ObjectFlag;
 import mud.TypeFlag;
 import mud.combat.WeaponType;
 import mud.game.Coins;
+import mud.magic.Spell;
 import mud.misc.BBEntry;
 import mud.misc.BulletinBoard;
 import mud.misc.Direction;
@@ -421,6 +422,56 @@ public final class MudUtils {
 
 					}
 				}
+			}
+		}
+		
+		// is TARGET a valid target for SPELL cast by PLAYER
+		public static boolean isValidTarget(final MUDObject target, final Spell spell, final Player player) {
+			/*
+			 * NOTES
+			 * If the spell is an area affect spell, then not having a target is valid, as  is having a target.
+			 * 
+			 * The spell having no target means that the spell will hit a general area somewhere in front of you,
+			 * you, otherwise the spell hits the target and radiates out from their position.
+			 */
+
+			List<String> targets = Arrays.asList(Spell.decodeTargets(spell).split(","));
+
+			System.out.println("Targets: " + targets);
+
+			if (target instanceof Player) {
+				Player player1 = (Player) target;
+
+				// determine whether the target player is hostile or friendly with regard to
+				// the caster
+
+				// I'd like a better method that uses numerical equivalents
+				if (targets.contains("self")) {
+					if (player == player1)
+						return true;
+
+					return false;
+				}
+				else if (targets.contains("enemy")) {
+					if (player != player1)
+						return false;
+					else {
+						return false;
+					}
+				}
+				else if (targets.contains("friend")) {
+					if (player != player1)
+						return false;
+					else {
+						return false;
+					}
+				}
+				else {
+					return false;
+				}
+			}
+			else {
+				return true; // assuming that the spell can target any non-player object, regardless
 			}
 		}
 }

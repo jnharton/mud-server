@@ -63,7 +63,7 @@ public class Item extends MUDObject {
 	
 	//protected Hashtable<String, Integer> skill_buffs = new Hashtable<String, Integer>();
 	
-	public Trigger onUse = null;
+	protected Trigger onUse = null;
 	
 	/**
 	 * Only for sub-classes, so they can set a database reference number

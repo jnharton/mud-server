@@ -2505,7 +2505,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		// createItem("Notebook", ItemTypes.NONE,
 		// "A blank paper notebook, a remnant of pre-war Equestria.");
 
-		Book notebook = new Book();
+		Book notebook = new Book("Notebook");
 		notebook.setName("Notebook");
 		notebook.setDesc("A blank paper notebook, a remnant of pre-war Equestria.");
 
@@ -4262,13 +4262,15 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 
 				if (param.equalsIgnoreCase("search") || param.equalsIgnoreCase("s")) {
 
-				} else if (param.equalsIgnoreCase("cancel") || param.equalsIgnoreCase("c")) {
-					final Auction auction = getAuction(player, args[1]);
+				}
+				else if (param.equalsIgnoreCase("cancel") || param.equalsIgnoreCase("c")) {
+					final Auction auction = getAuction(player, args[1].replace('_', ' '));
 
 					if (auction != null) {
 						if (auction.hasBids()) {
 							send("You cannot cancel an auction once someone has bid on it.", client);
-						} else {
+						}
+						else {
 							final Item item = auction.getItem();
 
 							synchronized (auctions) {
@@ -4279,29 +4281,35 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 
 							player.getInventory().add(item);
 						}
-					} else
-						send("No such auction!", client);
+					}
+					else send("No such auction!", client);
 				}
-			} else {
-				final Item item = getItem(args[0], player);
+			}
+			else {
+				final Item item = getItem(args[0].replace('_', ' '), player);
 
 				if (item != null) {
 					if (item.isAuctionable()) {
-						Coins price = Coins.copper(Utils.toInt(args[1], -1));
+						player.getInventory().remove(item);
+						
+						int timeMinutes = Utils.toInt(args[1], -1);
+						Coins price = Coins.copper(Utils.toInt(args[2], -1));
 
 						// create auction and add it to the list
-						Auction auction = createAuction(player, item, price, 21600);
-
-						auctions.add(auction);
-
-						// create and store a timer for the auction
-						addAuctionTimer(new AuctionTimer(auction), player);
+						//Auction auction = createAuction(player, item, price, 21600);
+						
+						Auction auction = createAuction(player, item, price, timeMinutes * 60);
+						AuctionTimer aTime = new AuctionTimer(auction);
+						
+						addAuction(auction, aTime, player);
 
 						send(item.getName() + " put up for auction at " + price.toString(true));
-					} else {
+					}
+					else {
 						send("You cannot auction that item.", client);
 					}
-				} else {
+				}
+				else {
 					send("What do you want to auction?", client);
 				}
 			}
@@ -4325,7 +4333,9 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			// | Staff of the Archmagi | 2d 13h | 32sp | 2gp5sp |
 
 			List<String> output = new LinkedList<String>();
-
+			
+			output.add("+----------------------+");
+			output.add("| AUCTIONS             |");
 			output.add("+----------------------+-----------------+------------------+------------------+");
 			output.add("|      Item Name       |    Duration     |  current price   |   buyout price   |");
 			output.add("+----------------------+-----------------+------------------+------------------+");
@@ -4355,9 +4365,11 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 				int remainder = auction.getTimeLeft() % 60;
 
 				if (remainder > 0) {
-					sb.append(Utils.center("> " + rem + "s", 15));
-				} else
-					sb.append(Utils.center("" + rem + "s", 15));
+					sb.append(Utils.center("> " + rem + "m" + remainder + "s", 15));
+				}
+				else {
+					sb.append(Utils.center("" + remainder + "s", 15));
+				}
 
 				// sb.append(Utils.center("" + auction.getTimeLeft(), 16));
 
@@ -5250,7 +5262,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			final MUDObject target = player.getTarget();
 
 			// check validity of target for this spell
-			if (!validTarget(target, spell, player)) {
+			if (!MudUtils.isValidTarget(target, spell, player)) {
 				send("Game> Invalid Target for Spell!", client);
 				return;
 			}
@@ -5307,12 +5319,12 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 						}
 					}
 				}
-			} else
-				send("A bit of magical energy sparks off you briefly, then fizzles out. Drat!", client);
+			}
+			else send("A bit of magical energy sparks off you briefly, then fizzles out. Drat!", client);
 
 			player.setLastSpell(spell);
-		} else
-			send("Insufficient spell mastery (level too low).", client);
+		}
+		else send("Insufficient spell mastery (level too low).", client);
 	}
 
 	private void cmd_chargen(final String arg, final Client client) {
@@ -5760,13 +5772,16 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 
 			// evaluate results
 			if (canClimb) {
-				Integer height = Utils.toInt(thing.attributes.get("height"), 1);
+				Integer height = Utils.toInt(thing.getAttributes().get("height"), 1);
 
 				if (height > 1) {
 					send("You start climbing <direction> the " + thing.getName().toLowerCase(), client);
-				} else if (height == 1) {
+				}
+				else if (height == 1) {
 					send("You climb <up/onto> the " + thing.getName().toLowerCase(), client);
+					
 					Point thingPos = thing.getPosition();
+					
 					player.setPosition(thingPos.getX(), thingPos.getY());
 					player.changePosition(0, 0, 1);
 				}
@@ -5774,7 +5789,8 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			// answer dependent on how badly check was failed
 			else {
 			}
-		} else {
+		}
+		else {
 			send("That's too far away.", client);
 		}
 	}
@@ -8363,7 +8379,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 					else if (object.isType(TypeFlag.THING)) {
 						final Thing thing = (Thing) object;
 
-						if (thing.thing_type == ThingTypes.CONTAINER) {
+						if (thing.getThingType() == ThingTypes.CONTAINER) {
 							s = (Box) thing;
 
 							success = get(player, s, itemName);
@@ -10972,7 +10988,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 						if (!found_container) {
 							if (temp.getName().equals(args[0]) || temp.getName().startsWith(args[0])
 									|| temp.getName().endsWith(args[0])) {
-								if (temp.thing_type == ThingTypes.CONTAINER) {
+								if (temp.getThingType() == ThingTypes.CONTAINER) {
 									s = (Box) temp;
 									found_container = true;
 
@@ -20653,7 +20669,7 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 				send("Equippable: " + item.isEquippable(), client);
 			}
 			else if (m.isType(TypeFlag.THING)) {
-				send("Thing Type: " + ((Thing) m).thing_type.toString(), client);
+				send("Thing Type: " + ((Thing) m).getThingType().toString(), client);
 			}
 
 			final Player owner = m.getOwner();
@@ -23092,18 +23108,21 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 	 */
 	private void use_wand(final Wand wand, final Client client) {
 		if (wand.charges > 0) {
-			Spell.decodeTargets(wand.getSpell());
+			Spell magicSpell = wand.getSpell();
+			
+			Spell.decodeTargets(magicSpell);
 
-			send("You use your Wand of " + wand.spell.getName() + " to cast " + wand.spell.getName() + " on yourself.",
+			send("You use your Wand of " + magicSpell.getName() + " to cast " + magicSpell.getName() + " on yourself.",
 					client);
 
-			debug("Game> Casting..." + wand.spell.getName());
+			debug("Game> Casting..." + magicSpell.getName());
 
 			try {
 				// cmd_cast(wand.spell.name, client);
 				// getCommand("cast").execute(wand.spell.name, client);
-				cmd("cast " + wand.spell.getName(), client);
-			} catch (final Exception e) {
+				cmd("cast " + magicSpell.getName(), client);
+			}
+			catch (final Exception e) {
 				// TODO what exception are we expecting to catch here?
 				debug(e);
 			}
@@ -23111,7 +23130,8 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			debug("Game> Spell Cast.");
 
 			wand.charges--;
-		} else {
+		}
+		else {
 			send("You wave the wand, but nothing happens. It must be drained of it's magic.", client);
 		}
 	}
@@ -23137,14 +23157,15 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			send("You use a Potion of " + potion.getSpell().getName() + " on yourself.", client);
 			player.setTarget(player); // target yourself
 			cmd_cast(potion.getSpell().getName(), client);
-		} else if (potion.getEffect() != null) {
+		}
+		else if (potion.getEffect() != null) {
 			send("You use a Potion of " + potion.getEffect().getName() + " on yourself.", client);
 			applyEffect(player, potion.getEffect());
 		}
 
 		// destroy the "used" item
 		player.getInventory().remove(potion); // remove from player inventory
-		objectDB.remove(potion); // remove from "live" database (replace with NullObject)
+		objectDB.remove(potion);              // remove from "live" database (replace with NullObject)
 	}
 
 	/**
@@ -24224,7 +24245,8 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 
 							if (objectiveData != null) {
 								objective = (MUDObject) objectiveData.getObject("target");
-							} else {
+							}
+							else {
 								send("Game> Error? Objective Data is NULL.");
 								break;
 							}
@@ -24244,15 +24266,15 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 
 										done = true;
 									}
-								} else if (objective.isType(TypeFlag.PLAYER)) {
+								}
+								else if (objective.isType(TypeFlag.PLAYER)) {
 								}
 
-								if (done)
-									break; // exit the loop
+								if (done) break; // exit the loop
 
 								// update quest? tasks?
-							} else
-								send("Task> Invalid Target!", player.getClient());
+							}
+							else send("Task> Invalid Target!", player.getClient());
 						}
 					}
 				}
@@ -24293,9 +24315,10 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 	/* Auctions */
 
 	/**
-	 * Creates a new auction and a timer for it, then schedules the timer for a 1
-	 * second tick and returns the auction object.
+	 * Creates a new auction and a timer for it, then schedules the timer for a 1 second tick and
+	 * returns the auction object.
 	 * 
+	 * @param seller
 	 * @param item
 	 * @param price
 	 * @return
@@ -25861,6 +25884,8 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 				// is correct
 
 				final String name = item.getName();
+				
+				// break the name into substrings
 				final List<String> components = Arrays.asList(item.getName().toLowerCase().split(" "));
 
 				String name_lc = name.toLowerCase();
@@ -25942,7 +25967,8 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			addCommand(cmdName, newCmd);
 
 			success = true;
-		} else {
+		}
+		else {
 			debug("Error> A command with that name already exists.");
 		}
 
@@ -25999,10 +26025,12 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 	protected void addAlias(final String command, final String alias) {
 		this.aliases.put(alias, command);
 	}
-
-	public void addAuctionTimer(final AuctionTimer atimer, final Player player) {
-		auctionTimers.get(player).add(atimer);
-		timer.scheduleAtFixedRate(atimer, 0, 1000);
+	
+	public void addAuction(final Auction auction, final AuctionTimer atimer, final Player player) {
+		this.auctions.add( auction );
+		
+		this.auctionTimers.get(player).add(atimer);
+		this.timer.scheduleAtFixedRate(atimer, 0, 1000);
 	}
 
 	/**
@@ -26042,7 +26070,8 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		if (creature != null) {
 			if (creature.Edit_Ok) {
 				creature.Edit_Ok = false;
-			} else {
+			}
+			else {
 				abortEdit("creature not editable (!Edit_Ok)", old_status, client);
 				return;
 			}
@@ -26065,7 +26094,8 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			player.setEditorData(newEDD);
 
 			op_creatureedit("show", client); // print out the info page
-		} else {
+		}
+		else {
 			send("No Such Creature");
 		}
 	}
@@ -26087,6 +26117,8 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		if (room != null) {
 			if (room.Edit_Ok) {
 				room.Edit_Ok = false; // further edit access not permitted (only one person may access at a time)
+				
+				send("Room marked as not okay for anyone else to edit!", client);
 			}
 			else {
 				// room is not editable, exit the editor
@@ -26151,7 +26183,8 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 				item.Edit_Ok = false; // further edit access not permitted (only one person may access at a time)
 
 				send("Item marked as not okay for anyone else to edit!", client);
-			} else {
+			}
+			else {
 				// room is not editable, exit the editor
 				abortEdit("item not editable (!Edit_Ok)", old_status, client);
 				return;
@@ -26175,7 +26208,8 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			player.setEditorData(newEDD);
 
 			op_itemedit("show", client); // print out the info page
-		} else {
+		}
+		else {
 			// item does not exist
 			// send("Game> Item Editor - Error: item does not exist", client);
 			send("item does not exist", client);
@@ -26261,19 +26295,16 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			newEDD.addObject("id", zone.getId());
 			newEDD.addObject("name", zone.getName());
 
-			if (zone.getParent() != null) {
-				newEDD.addObject("parent", zone.getParent().getName());
-			} else {
-				newEDD.addObject("parent", "");
-			}
+			if (zone.getParent() != null) newEDD.addObject("parent", zone.getParent().getName());
+			else                          newEDD.addObject("parent", "");
 
 			//
 			player.setEditorData(newEDD);
 
 			// newEDD
 			op_zoneedit("show", client);
-		} else
-			send("No such zone!", client); // abort editing..
+		}
+		else send("No such zone!", client); // abort editing..
 	}
 
 	/**
@@ -26407,6 +26438,10 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 	private void addCommand(final String text, final Command cmd) {
 		cmd.init(this);
 		this.commandMap.put(text, cmd);
+	}
+	
+	private void remCommand() {
+		
 	}
 	
 	/**
@@ -26611,7 +26646,8 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 					if (dot != -1) {
 						bb.setName(nameLine.substring(0, dot));
 						bb.setShortName(nameLine.substring(dot + 1, nameLine.length()));
-					} else {
+					}
+					else {
 						bb.setName(nameLine);
 					}
 
@@ -26653,8 +26689,14 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 			saveBoard(board);
 		}
 	}
-
+	
+	/**
+	 * saveBoard
+	 * 
+	 * @param board BulletinBoard object from which to save the entries
+	 */
 	public void saveBoard(final BulletinBoard board) {
+		// TODO finish implementing saving of boards
 		/*
 		 * File file; RandomAccessFile raf;
 		 * 
@@ -26682,7 +26724,8 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		// TODO resolvePath(...) is ugly as sin
 		try {
 			file = new File(resolvePath(BOARD_DIR, board.getFilename()));
-		} catch (final NullPointerException npe) {
+		}
+		catch (final NullPointerException npe) {
 			// TODO do I really need to catch an exception here?
 			System.out.println("--- Stack Trace ---");
 			npe.printStackTrace();
@@ -26762,14 +26805,12 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 					if (item instanceof Stackable<?>) {
 						Stackable s = (Stackable<?>) item;
 
-						if (s.stackSize() < 1)
-							result = false;
+						if (s.stackSize() < 1) result = false;
 					}
-				} else
-					result = false;
+				}
+				else result = false;
 
-				if (!result)
-					break;
+				if (!result) break;
 			}
 		}
 
@@ -26839,56 +26880,6 @@ public final class MUDServer implements MUDServerI, MUDServerAPI {
 		final List<Item> lt = lootTables.get(creature.getName().toLowerCase());
 
 		return ((lt != null) ? lt : Collections.emptyList());
-	}
-
-	// is TARGET a valid target for SPELL cast by PLAYER
-	private boolean validTarget(final MUDObject target, final Spell spell, final Player player) {
-		/*
-		 * NOTES
-		 * If the spell is an area affect spell, then not having a target is valid, as  is having a target.
-		 * 
-		 * The spell having no target means that the spell will hit a general area somewhere in front of you,
-		 * you, otherwise the spell hits the target and radiates out from their position.
-		 */
-
-		List<String> targets = Arrays.asList(Spell.decodeTargets(spell).split(","));
-
-		System.out.println("Targets: " + targets);
-
-		if (target instanceof Player) {
-			Player player1 = (Player) target;
-
-			// determine whether the target player is hostile or friendly with regard to
-			// the caster
-
-			// I'd like a better method that uses numerical equivalents
-			if (targets.contains("self")) {
-				if (player == player1)
-					return true;
-
-				return false;
-			}
-			else if (targets.contains("enemy")) {
-				if (player != player1)
-					return false;
-				else {
-					return false;
-				}
-			}
-			else if (targets.contains("friend")) {
-				if (player != player1)
-					return false;
-				else {
-					return false;
-				}
-			}
-			else {
-				return false;
-			}
-		}
-		else {
-			return true; // assuming that the spell can target any non-player object, regardless
-		}
 	}
 
 	private final void scheduleAtFixedRate(final TimerTask task, final long delay, final long period) {
