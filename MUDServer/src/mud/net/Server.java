@@ -138,6 +138,17 @@ public class Server implements Runnable {
 		this.clients.removeAll( dead );
 	}
 	
+	public final void purgeUnusedThreads() {
+		for(final Thread t : this.threads.values()) {
+			if( t.isAlive() ) {
+				System.out.println(t.getName() + " is still alive.");
+			}
+			else {
+				System.out.println(t.getName() + " is " + t.getState());
+			}
+		}
+	}
+	
 	private final void startThread(final Runnable r, final String threadName) {
 		Thread thread = new Thread(r, threadName);
 		

@@ -369,6 +369,44 @@ public class ObjectLoader {
 					if (oFlags.contains("M")) {
 						Merchant merchant = new Merchant(oDBRef, oName, ObjectFlag.getFlagsFromString(oFlags), "A merchant.",
 								"Merchant", "VEN", oLocation, Coins.fromArray(new int[] { 1000, 1000, 1000, 1000 }));
+						
+						/// FIXME kludge to deal with weirdness from separate class
+						int access;   // 8 - npc permissions
+						int raceNum;  // 9 - npc race number (enum ordinal)
+						int classNum; // 10 - npc class number (enum ordinal)
+						
+						// Set NPC Access
+						merchant.setAccess(Constants.USER);
+
+						// Set NPC Race
+						//raceNum = Utils.toInt(attr[9], alt);
+						
+						// TODO resolve issue
+						try {
+							raceNum = Integer.parseInt(attr[9]);
+							//npc.setRace(Races.getRace(raceNum));
+							merchant.setRace(parent.getRace(raceNum));
+						}
+						catch (final NumberFormatException nfe) {
+							nfe.printStackTrace();
+							merchant.setRace(Races.NONE);
+						}
+
+						// Set NPC Class
+						try {
+							classNum = Integer.parseInt(attr[10]);
+							merchant.setPClass(Classes.getClass(classNum));
+						}
+						catch (final NumberFormatException nfe) {
+							nfe.printStackTrace();
+							merchant.setPClass(Classes.NONE);
+						}
+						
+						merchant.setStatus(attr[11]); // 11 - npc status
+						
+						// mark ownership
+						merchant.setOwner( merchant );
+						/// END KLUDGE
 
 						debug("log.debug (db entry): " + merchant.toDB(), 2);
 						debug("Merchant", 2);
@@ -824,7 +862,7 @@ public class ObjectLoader {
 			
 			//int effect = Integer.parseInt(attr[]);
 			
-			// TODO this is special, an 'item type' without an associated class!
+			// TODO loadItem(...) this is special, an 'item type' without an associated class!
 			//ring.setItemType(ItemTypes.RING);
 			
 			// TODO fix this, all rings are rings of invisibility now...
@@ -891,6 +929,21 @@ public class ObjectLoader {
 		}
 	}
 	
+	/**
+	 * Load Book
+	 * 
+	 * Looks for a file named <title>.book file with data that should be loaded into the object.
+	 * 
+	 * Expects start and end section markers composed of a string of capitalized text.
+	 * 
+	 * E.g.
+	 * INFO (author, title. description, page count)
+	 * HEADER (unused)
+	 * PAGE (text for each page)
+	 * 
+	 * @param bookName
+	 * @return
+	 */
 	private Book loadBook(final String bookName) {
 		//final String bookFile = DATA_DIR + "\\book\\" + bookName + ".book";
 		final String bookFile = "";

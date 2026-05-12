@@ -20,14 +20,20 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 /**
  * Class to hold data for Character Generation (a.k.a. 'chargen')
  * 
+ * cgData therefore stands for 'character generation Data'
+ * 
  * t      - what part of the evaluation we are in (0=input, 1=answer)
  * step   - what step we are on
  * answer - what answer we picked at the current step
+ * edit   - are we editing our choices (if so, we'll report the existing value)
  * 
  * @author Jeremy
  *
  */
 public class cgData {
+	public static final int QUESTION = 0;
+	public static final int ANSWER = 1;
+	
 	public int t;
 	public int step;
 	public int answer;

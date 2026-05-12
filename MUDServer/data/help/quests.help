@@ -11,7 +11,10 @@ Syntax: quests [#<param>]
 Optional Params:
     abandon <quest id>             - abandon an accepted quest
     ignore <quest id>              - "ignore" a quest (hide from list)
+    ignored                        - show list of quests you have which are ignored
+    info <quest id>                - show detailed information about a quest you have
+    list                           - shows a list that includes all quests in the game
+    remember <quest id>            - "remember" a quest (restore to list)
     share <player name> <quest id> - share the quest with another player
-    list                           - shows a list of all the quests in the game
 
-Last Updated: April 17th, 2016
+Last Updated: April 30th, 2026

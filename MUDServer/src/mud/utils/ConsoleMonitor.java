@@ -142,6 +142,8 @@ public class ConsoleMonitor {
 			}
 			else if (message.equalsIgnoreCase("modereset") ) {
 				server.changeMode(GameMode.WIZARD);
+				
+				source.write("Mode Reset!");
 			}
 		}
 	}

@@ -10,6 +10,7 @@ import mud.net.Client;
 import mud.objects.Item;
 import mud.objects.Player;
 import mud.objects.Room;
+import mud.objects.Thing;
 import mud.utils.Utils;
 
 /*
@@ -110,6 +111,18 @@ public class TeleportCommand extends Command {
 						
 						r1.removeItem( (Item) target);
 						r2.addItem( (Item) target );
+						
+						target.setLocation( dest.getDBRef() );
+						target.setPosition(0, 0);
+					}
+					else if( target.isType(TypeFlag.THING) ) {
+						int tl = target.getLocation();
+						
+						Room r1 = getRoom( tl );
+						Room r2 = getRoom( destination );
+						
+						r1.removeThing((Thing) target);
+						r2.addThing((Thing) target);
 						
 						target.setLocation( dest.getDBRef() );
 						target.setPosition(0, 0);

@@ -25,6 +25,13 @@ import java.util.Map;
 
 import mud.objects.Exit;
 
+/**
+ * An object containing information about an in-game building/structure.
+ * 
+ * @author jnhar
+ *
+ */
+
 public class Structure {
 	private String name;
 	private String shortName;

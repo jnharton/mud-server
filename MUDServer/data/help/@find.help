@@ -9,5 +9,8 @@ Parameters:
   n   npcs    (ONLY!)
   p   players (ONLY!)
   r   rooms   (ONLY!)
+  
+NOTE: search string checks for presence of the literal string given,
+except when it is simply an asterisk (simple wild card for all objects of that type).
 
-Last Updated: June 3rd, 2025
+Last Updated: April 29th, 2026

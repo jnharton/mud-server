@@ -1,24 +1,46 @@
 package mud.objects.items;
 
+import mud.TypeFlag;
 import mud.interfaces.Drinkable;
 import mud.interfaces.Stackable;
+import mud.misc.Trigger;
 import mud.objects.Item;
+import mud.objects.ItemTypes;
 
 public class Drink extends Item implements Drinkable, Stackable<Drink> {
-	private int sips = 1;
+	private int sips = 5;
 	
-	private Drink drink = null;
+	private transient Drink drink = null;
 
 	public Drink(int tempDBREF) {
 		super(tempDBREF);
 		
 		this.drinkable = true;
+		
+		this.item_type = ItemTypes.DRINK;
 	}
 	
 	public Drink(int tempDBREF, String name, String description) {
 		super(tempDBREF, name, description);
 		
 		this.drinkable = true;
+		
+		this.item_type = ItemTypes.DRINK;
+	}
+	
+	/**
+	 * <b>Copy Constructor</b><br/><br/>
+	 * 
+	 * Create a new drink with the same attributes as a template object
+	 * 
+	 * @param template
+	 */
+	protected Drink(final Drink template) {
+		super(template);
+		
+		this.item_type = ItemTypes.DRINK;
+		
+		this.sips = template.sips;
 	}
 	
 	public void sip() {
@@ -27,6 +49,10 @@ public class Drink extends Item implements Drinkable, Stackable<Drink> {
 	
 	public void tossdown() {
 		this.sips = 0;
+	}
+	
+	public int volume() {
+		return this.sips;
 	}
 	
 	public boolean isEmpty() {
@@ -55,15 +81,16 @@ public class Drink extends Item implements Drinkable, Stackable<Drink> {
 	public Drink split(int number) {
 		Drink drink = null;
 		
+		// split(0) would be meaningless, as would split(size of stack)
 		if (number > 0 && stackSize() > number) {
 			if (this.drink == null) {
-				drink = this;
+				drink = this; // no stack if this item has no nested items
 			}
 			else {
-				Drink prev = null; // the arrow before the current one (initially null)
-				Drink curr = this; // the current arrow
+				Drink prev = null; // the drink before the current one (initially null)
+				Drink curr = this; // the current drink
 				
-				int qty = 0;       // the total quantity of arrows, how we know if we have split off enough
+				int qty = 0;       // the total quantity of drink, how we know if we have split off enough
 
 				while (qty < stackSize() - number) {
 					prev = curr;
@@ -97,6 +124,10 @@ public class Drink extends Item implements Drinkable, Stackable<Drink> {
 		else {
 			return 1;
 		}
+	}
+	
+	public Drink getCopy() {
+		return new Drink(this);
 	}
 	
 	public String toString() {

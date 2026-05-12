@@ -122,6 +122,7 @@ public abstract class MUDObject {
 		// TODO restore/duplicate template properties?
 		this.pos = new Point(0, 0, 0);
 		this.properties = new LinkedHashMap<String, String>(MUDObject.NUM_PROPS, MUDObject.LOAD_FACT);
+		this.properties.putAll( template.properties );
 		this.effects = new ArrayList<Effect>();
 	}
 	

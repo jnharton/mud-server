@@ -23,6 +23,7 @@ import mud.objects.Thing;
 import mud.objects.ThingType;
 import mud.objects.ThingTypes;
 import mud.objects.items.Armor;
+import mud.objects.items.Container;
 import mud.objects.items.Weapon;
 import mud.rulesets.d20.D20;
 import mud.rulesets.d20.Skills;
@@ -120,6 +121,15 @@ public class DND35 extends GameModule {
 		long_sword.setSlotType(SlotTypes.RHAND);
 		
 		prototypes.put("mud.dnd35.weapon.longsword", long_sword);
+		
+		
+		final Container bag0 = new Container("Haversack");
+		
+		prototypes.put("mud.dnd35.bags.haversack", bag0);
+		
+		final Container bag1 = new Container("Knapsack");
+		
+		prototypes.put("mud.dnd35.bags.knapsack", bag1);
 		
 		/* Things */
 		prototypes1 = new Hashtable<String, Thing>();

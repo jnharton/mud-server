@@ -1,5 +1,7 @@
 package mud.foe.items;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
@@ -181,17 +183,33 @@ public class PipBuck extends Item implements ModularDevice, ExtraCommands {
 			public void execute(final String arg, final Client client) {
 				final Player player = getPlayer(client);        // get player
 				final PipBuck p = FOEGameUtils.getPipBuck(player); // get pipbuck
+				
+				debug("FOE PB - register");
 
 				// register <tag name>=<tag id>
 				if( p != null ) {
 					final String[] args = arg.split("=");
+					
+					debug("args: " + Arrays.asList(args));
 
 					if( args.length == 2 ) {
 						final String tagName = args[0];
 						final Integer tagId = Utils.toInt(args[1], -1);
+						
+						boolean result = false;
 
 						if( tagId != -1 ) {
-							p.setTag(tagName, tagId);
+							result = p.setTag(tagName, tagId);
+							
+							if( result ) {
+								send("Tag Set!", client);
+							}
+							else {
+								send("Tag Error.", client);
+							}
+						}
+						else {
+							send("Invalid Tag ID", client);
 						}
 					}
 				}
@@ -210,7 +228,7 @@ public class PipBuck extends Item implements ModularDevice, ExtraCommands {
 					for(final Item item2 : player.getInventory()) {
 						if( item2 != null ) {
 							if(item2 instanceof Module) {
-								module = (Module) item;
+								module = (Module) item2;
 
 								final String moduleName = module.getModuleName();
 
@@ -254,7 +272,7 @@ public class PipBuck extends Item implements ModularDevice, ExtraCommands {
 				if( p != null ) {
 					send("--- Tags", client);
 
-					for(final Tag tag : p.tags) {
+					for(final Tag tag : p.getTags()) {
 						send("" + tag, client);
 					}
 				}
@@ -447,6 +465,8 @@ public class PipBuck extends Item implements ModularDevice, ExtraCommands {
 
 		this.fs = new FileSystem();
 		this.modules = new LinkedList<Module>();
+		
+		this.tags = new LinkedList<Tag>();
 	}
 
 	protected PipBuck(final PipBuck template) {
@@ -458,6 +478,8 @@ public class PipBuck extends Item implements ModularDevice, ExtraCommands {
 		this.fs = template.fs; // TODO need to give FileSystem a clone method
 		this.fs = new FileSystem();
 		this.modules = new LinkedList<Module>();
+		
+		this.tags = new LinkedList<Tag>();
 	}
 
 	/*public String getName() {
@@ -542,6 +564,10 @@ public class PipBuck extends Item implements ModularDevice, ExtraCommands {
 
 	public int getMaxPower() {
 		return this.max_power;
+	}
+	
+	public List<Tag> getTags() {
+		return Collections.unmodifiableList(this.tags);
 	}
 
 	public boolean setTag(final String tag, final Integer id) {

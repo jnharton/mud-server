@@ -101,6 +101,10 @@ public final class Constants {
 	public static final String DEBUG_LOG = "debug";
 	public static final String CHAT_LOG = "chat";
 	
+	// general strings
+	// 20 dashes to L,R
+	public static final String stackTraceHDR = "-------------------- Stack Trace --------------------";
+	
 	// ?
 	public static final String NO_PROP_VALUE = "NO-PROP";
 }

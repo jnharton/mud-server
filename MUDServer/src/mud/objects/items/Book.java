@@ -150,6 +150,14 @@ public class Book extends Item implements Editable {
 	
 	/* Navigation */
 	
+	/**
+	 * turntoPage
+	 * 
+	 * Turns to a specific page in this book, which must be
+	 * an integer value between 0  and the number of pages - 1
+	 * 
+	 * @param newPage
+	 */
 	public void turnToPage(int newPage) {
 		if( newPage > -1 ) {
 			if( newPage < numPages() ) this.currentPage = newPage;
@@ -167,6 +175,8 @@ public class Book extends Item implements Editable {
 		this.currentPage--;
 		return getPage(this.currentPage);
 	}
+	
+	/* End Navigation */
 	
 	public int numPages() {
 		return this.pages.size();

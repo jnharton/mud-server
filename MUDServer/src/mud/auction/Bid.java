@@ -37,6 +37,6 @@ public class Bid {
 	}
 	
 	public Coins getMax() {
-		return this.bid;
+		return this.max_bid;
 	}
 }

@@ -17,7 +17,8 @@ public enum TaskType {
 	DELIVER("Deliver"),
 	RETRIEVE("Retrieve"),
 	COLLECT("Collect"),
-	KILL("Kill");
+	KILL("Kill"),
+	EXPLORE("Explore");
 	
 	private String name;
 	

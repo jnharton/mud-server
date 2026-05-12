@@ -347,19 +347,29 @@ public final class FalloutEquestria extends GameModule implements ExtraCommands 
 			final SpecialRuleset rules = FOESpecial.getInstance();
 			
 			// TODO this looks janky considering that we load races from a file 
-			Race EARTH = new Race(rules, "Earth", 0, false, false);
-			Race PEGASUS = new Race(rules, "Pegasus", 1, true, false);
-			Race UNICORN = new Race(rules, "Unicorn", 2, false, false);
-
-			//Race GRIFFIN;
+			//Race EARTH = new Race(rules, "Earth", 0, false, false);
+			//Race PEGASUS = new Race(rules, "Pegasus", 1, true, false);
+			//Race UNICORN = new Race(rules, "Unicorn", 2, false, false);*
 			//Race ZEBRA;
+			//Race GRIFFON;
+			// 0 (NONE),    1 (EARTH),     2 (PEGASUS),  3 (UNICORN)
+			// 4 (ALICORN), 5 (HELLHOUND), 6 (ZEBRA),    7  (GRIFFFON)
+			
+			// TODO better, but not quite as desired
+			Race NONE = Races.NONE;
+			Race EARTH = Races.EARTH;
+			Race PEGASUS = Races.PEGASUS;
+			Race UNICORN = Races.UNICORN;
+			Race ALICORN = Races.ALICORN;
+			
+			Race pRace = player.getRace();
 			
 			// initialize slots
 			player.addSlot("helmet",        new Slot(FOESlotTypes.HEAD, ItemTypes.ARMOR));
 			player.addSlot("clothes_head",  new Slot(FOESlotTypes.HEAD, ItemTypes.CLOTHING));
 			player.addSlot("eyes",          new Slot(FOESlotTypes.EYES, ItemTypes.NONE)); // eyewear? headwear?
 
-			if( player.getRace().equals( UNICORN ) ) {
+			if( pRace != null && ( pRace.equals( UNICORN ) || pRace.equals(ALICORN) ) ) {
 				player.addSlot("horn",      new Slot(FOESlotTypes.HORN, ItemTypes.NONE));
 			}
 
@@ -369,7 +379,7 @@ public final class FalloutEquestria extends GameModule implements ExtraCommands 
 			player.addSlot("battle saddle", new Slot(FOESlotTypes.BACK, ItemTypes.CLOTHING));
 			player.addSlot("saddlebags",    new Slot(FOESlotTypes.BACK, ItemTypes.CLOTHING));
 
-			if( player.getRace().equals( PEGASUS ) ) {
+			if( pRace != null && ( player.getRace().equals( PEGASUS ) || pRace.equals(ALICORN) ) ) {
 				player.addSlot("wings",     new Slot(FOESlotTypes.WINGS, ItemTypes.WEAPON));
 			}
 
@@ -599,7 +609,8 @@ public final class FalloutEquestria extends GameModule implements ExtraCommands 
 			while(line != null) {
 				System.out.println("Line NOT NULL!");
 				
-				client.write( line );
+				//client.write( line );
+				client.writeln( line );
 				
 				line = term.read();
 			}

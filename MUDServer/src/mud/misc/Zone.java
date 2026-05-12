@@ -100,4 +100,9 @@ public class Zone {
 			return -1;
 		}
 	}
+	
+	@Override
+	public String toString() {
+		return this.name + " / " + this.id;
+	}
 }

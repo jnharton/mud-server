@@ -145,7 +145,7 @@ public final class Utils {
 		}
 		catch (FileNotFoundException fnfe) {
 			System.out.println("Error: file not found. (FileNotFoundException)");
-			System.out.println("--- Stack Trace ---");
+			System.out.println(Constants.stackTraceHDR);
 			fnfe.printStackTrace();
 		}
 	}
@@ -184,12 +184,12 @@ public final class Utils {
 		}
 		catch(final FileNotFoundException fnfe) {
 			System.out.println("Error: file not found. (FileNotFoundException)");
-			System.out.println("--- Stack Trace ---");
+			System.out.println(Constants.stackTraceHDR);
 			fnfe.printStackTrace();
 		}
 		catch(final IOException ioe) {
 			System.out.println("Error: problem reading file. (IOException)");
-			System.out.println("--- Stack Trace ---");
+			System.out.println(Constants.stackTraceHDR);
 			ioe.printStackTrace();
 		}
 
@@ -272,7 +272,7 @@ public final class Utils {
 			}
 			catch(final NumberFormatException nfe) {
 				System.out.println("stringsToIntegers: cannot parse element");
-				System.out.println("--- Stack Trace ---");
+				System.out.println(Constants.stackTraceHDR);
 				nfe.printStackTrace();
 			}
 		}
@@ -490,14 +490,13 @@ public final class Utils {
 	 * @return
 	 */
 	public static int roll(int number, int sides) { // roll(3, 4) for 3d4
-		int i = 0;
+		int result = 0;
 
 		for(int n = 0; n < number; n++) {
-			int result = ((int)(Math.random() * sides));
-			i += result;
+			result += ((int)(Math.random() * sides));
 		}
 
-		return i;
+		return result;
 	}
 
 	public static int roll(final int number, final int sides, final int bonus) { // roll(3, 4, 7) for 3d4+7
@@ -566,6 +565,16 @@ public final class Utils {
 
 		return result;
 	}*/
+	
+	public static Integer[] roll2(int number, int sides) { // roll(3, 4) for 3d4
+		Integer[] rolls = new Integer[number];
+
+		for(int n = 0; n < number; n++) {
+			rolls[n] = ((int)(Math.random() * sides));
+		}
+
+		return rolls;
+	}
 
 	/**
 	 * A safe way to parse an integer elsewhere in the code. A default 
@@ -585,7 +594,7 @@ public final class Utils {
 			result = Integer.parseInt(str);
 		}
 		catch(NumberFormatException nfe) {
-			System.out.println("--- Stack Trace ---");
+			System.out.println(Constants.stackTraceHDR);
 			nfe.printStackTrace();
 			
 			result = alt;
@@ -1087,6 +1096,26 @@ public final class Utils {
 		else if (Utils.mkList("f", "F", "false", "False", "FALSE").contains(value) ) return false;
 	}*/
 	
+	// Logic AND
+	private final static boolean and(boolean a, boolean b) {
+		return a && b;
+	}
+	
+	public final static boolean and(boolean...conditions) {
+		if( conditions.length == 1)      return conditions[0];
+		else if( conditions.length == 2) return and( conditions[0], conditions[1] );
+		else if( conditions.length > 2 ) return and(conditions[0], 1, conditions);
+		else                             return false;
+	}
+	
+	private final static boolean and(boolean initial, int startIndex, boolean...conditions) {
+		if( startIndex < conditions.length - 1 ) {
+			return and(initial, and(conditions[startIndex], startIndex + 1, conditions)); 
+		}
+		else return and(initial, conditions[startIndex]);
+	}
+	
+	// Logic OR
 	private final static boolean or(boolean a, boolean b) {
 		return a || b;
 	}

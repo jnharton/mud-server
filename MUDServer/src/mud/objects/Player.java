@@ -40,7 +40,7 @@ import mud.objects.items.Armor;
 import mud.objects.items.Shield;
 import mud.objects.items.Weapon;
 import mud.quest.Quest;
-import mud.rulesets.d20.*;
+import mud.rulesets.d20.Alignments;
 import mud.utils.EditList;
 import mud.utils.Landmark;
 import mud.utils.Pager;
@@ -111,7 +111,7 @@ public class Player extends MUDObject implements Mobile
 	private transient String prev_status = "";
 	private transient boolean isNew = true;             // is the player new? (e.g. hasn't done character gen)
 	private transient boolean controller = false;       // place to indicate if we are controlling an npc (by default, we are not)
-	private transient boolean initialized = false;      // has the player been initialzed as per module PCInit(...)
+	private transient boolean initialized = false;      // has the player been initialized as per module PCInit(...)
 
 	private transient MailBox mailbox = new MailBox();  // player mailbox
 
@@ -294,11 +294,13 @@ public class Player extends MUDObject implements Mobile
 		
 		this.target = null;
 		
-		this.race = Races.NONE;
-		this.gender = "None";
-		this.pclass = Classes.NONE;
-		this.alignment = Alignments.NONE;
 		
+		// removed import - import mud.rulesets.d20.*;
+		this.race = null; /* Races.NONE */
+		this.gender = "None";
+		this.pclass = null; /* Classes.NONE */
+		this.alignment = Alignments.NONE;
+
 		this.status = _STATUS;
 		this.title = "Newbie";
 		
@@ -350,6 +352,7 @@ public class Player extends MUDObject implements Mobile
 		
 		this.config = new LinkedHashMap<String, Boolean>();
 		
+		// initialize player-specific game configuration
 		initConfig();
 		
 		this.statMod = new int[ruleset.getAbilities().length];
@@ -398,10 +401,15 @@ public class Player extends MUDObject implements Mobile
 		
 		this.target = null;
 		
-		this.race = Races.NONE;
+		// removed import - import mud.rulesets.d20.*;
+		this.race = null; /* Races.NONE */
 		this.gender = "None";
-		this.pclass = Classes.NONE;
+		this.pclass = null; /* Classes.NONE */
 		this.alignment = Alignments.NONE;
+		
+		this.race = null;
+		this.pclass = null;
+		this.alignment = null;
 		
 		this.status = tempPStatus;
 		this.title = tempTitle;
@@ -458,6 +466,7 @@ public class Player extends MUDObject implements Mobile
 		
 		this.config = new LinkedHashMap<String, Boolean>();
 		
+		// initialize player-specific game configuration
 		initConfig();
 		
 		this.statMod = new int[ruleset.getAbilities().length];
@@ -494,6 +503,7 @@ public class Player extends MUDObject implements Mobile
 		addConfigOption("notify_newmail",       false); // notify the player on receipt of new mail? (default: false)
 		addConfigOption("silly_messages",       false); // enable sillier/more humorous error messages where used (default: false)
 		addConfigOption("server_echo",          false); // do we want the server to echo command if that option is enabled (default: false)
+		addConfigOption("use-color",            true);  // would the player like the server to use color
 	}
 
 	public void setClient(final Client c) {
@@ -1196,7 +1206,8 @@ public class Player extends MUDObject implements Mobile
 	}
 
 	public int getArmorClass() {
-		Integer armorClass = 10;
+		return 0;
+		/*Integer armorClass = 10;
 		
 		Slot armor_slot = slots.get("armor");
 		Slot shield_slot =  slots.get("weapon1");
@@ -1222,7 +1233,7 @@ public class Player extends MUDObject implements Mobile
 			armorClass += shield.getShieldBonus();
 		}
 		
-		return armorClass + getAbilityMod(Abilities.STRENGTH);
+		return armorClass + getAbilityMod(Abilities.STRENGTH);*/
 	}
 
 	public int getSpeed() {

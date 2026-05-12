@@ -860,6 +860,8 @@ public final class ObjectDB implements ODBI {
 		// could just be?
 		//final Room r = getRoom(loc);
 		//return r.getItems();
+		// TODO getItemByLocation(...) no it can't be that simple, because Room(s) have a contents list!
+		// NOTE: An Item can have an integer location without being in the contents list 
 	}
 
 	/**
@@ -916,7 +918,11 @@ public final class ObjectDB implements ODBI {
 	public List<Thing> getThings() {
 		return new ArrayList<Thing>(this.thingsById.values());
 	}
-
+	
+	/**
+	 * Gets a list of Thing(s) that should be inside the specified Room,
+	 * based only on their location field. 
+	 */
 	public List<Thing> getThingsForRoom(final Room room) {
 		final List<Thing> acc = new LinkedList<Thing>();
 

@@ -114,21 +114,17 @@ public class Race {
 		if(object instanceof Race) {
 			final Race otherRace = (Race) object;
 			
-			// TODO fix kludge, two races of the same name are equal according to this
+			// TODO equals(...) fix kludge, two races of the same name are equal according to this
 			
 			// ruleset name test
 			if( this.rules.getName().equals( otherRace.rules.getName() ) ) {
 				// race name and id test
 				if(this.getName().equals( otherRace.getName() ) && this.getId() == otherRace.getId() ) {
-					//return true;
 					result = true;
 				}
 			}
-			
-			//return false;
 		}
 		
-		//return false;
 		return result;
 	}
 }

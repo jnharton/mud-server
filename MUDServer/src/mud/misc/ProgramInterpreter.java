@@ -352,6 +352,11 @@ public final class ProgramInterpreter {
 
 						//System.out.println("first: " + first);
 						//System.out.println("Second: " + second);
+						
+						if( failNumParse ) {
+							System.out.println("first: " + params[0]);
+							System.out.println("second: " + params[1]);
+						}
 					}
 				}
 
@@ -562,6 +567,7 @@ public final class ProgramInterpreter {
 			// Functions that take 3 parameters
 			else if( params.length == 3 ) {
 				if( debug_enabled ) {
+					System.out.println("Function: " + functionName);
 					System.out.println("Parameter (1): " + params[0]);
 					System.out.println("Parameter (2): " + params[1]);
 					System.out.println("Parameter (3): " + params[2]);
@@ -581,6 +587,10 @@ public final class ProgramInterpreter {
 					else if( result.equals(FALSE) ) {
 						return interpret(params[2], player, object);
 					}
+				}
+				else if( functionName.equals("join") ) {
+				    // {join:str1,str2,str3}
+				    return params[0] + params[2] + params[1];
 				}
 				else if( functionName.equals("store") ) {
 					// {store: propname, object, value }
