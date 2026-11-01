@@ -1,5 +1,6 @@
 package mud.modules;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -7,6 +8,8 @@ import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 import mud.Command;
 import mud.MUDObject;
@@ -23,12 +26,12 @@ import mud.misc.Currency;
 import mud.misc.Script;
 import mud.misc.Slot;
 import mud.misc.SlotType;
-import mud.misc.TriggerType;
 import mud.net.Client;
 import mud.objects.Item;
 import mud.objects.ItemType;
 import mud.objects.ItemTypes;
 import mud.objects.Player;
+import mud.objects.Room;
 import mud.objects.Thing;
 import mud.objects.ThingType;
 import mud.objects.items.Drink;
@@ -36,6 +39,7 @@ import mud.objects.items.Weapon;
 import mud.rulesets.foe.FOESpecial;
 import mud.rulesets.foe.Races;
 import mud.rulesets.special.SpecialRuleset;
+import mud.scripting.TriggerType;
 import mud.utils.Utils;
 
 /*
@@ -103,7 +107,7 @@ public final class FalloutEquestria extends GameModule implements ExtraCommands 
 		this.DATA_DIR = dataDir;
 		
 		/* factions */
-		factions = new LinkedList<Faction>() {{
+		FalloutEquestria.factions = new LinkedList<Faction>() {{
 			add( new Faction("Dashites") );
 			add( new Faction("Grand Pegasus Enclave") );
 			add( new Faction("Raiders") );
@@ -322,8 +326,60 @@ public final class FalloutEquestria extends GameModule implements ExtraCommands 
 				mud.foe.Terminal.Power.POWER_ON, null, null);
 
 		FalloutEquestria.prototypes1.put("mud.foe.terminal", terminal);
+		
+		/* Commands */
+
+		FalloutEquestria.commands = new Hashtable<String, Command>();
+
+		commands.put("poweron", new Command("turn on a device") {
+
+			@Override
+			public void execute(final String arg, final Client client) {
+				final Player player = getPlayer(client);          // get player
+				final Room room = getRoom( player.getLocation()); // get room
+				
+				// this function not exposed to Command
+				//List<Thing> things = getThingsForRoom(room);
+
+				//Predicate<MUDObject> isThing = obj -> obj.getType() == TypeFlag.THING;
+				
+				/*Stream<MUDObject> objects = Stream.of(getByRoom(room).toArray(new MUDObject[0]))
+						.filter(isThing)
+						.map(cast(element) -> (Thing) element );*/
+				
+				List<MUDObject> objects = getByRoom(room);
+				
+				List<Thing> things = new ArrayList<>();
+				
+				//List<MUDObject> mixedList = getByRoom(room);
+				
+				//Stream<MUDObject> filtered = mixedList.stream().filter(o -> o instanceof Thing);
+				//Stream<Thing> thingStream = filtered.map(e -> (Thing) e);
+				
+				//Stream<Thing> thingStream = mixedList.stream().filter(o -> o instanceof Thing).map(e -> (Thing) e);
+				for(final MUDObject m : objects) {
+					if( m.isType(TypeFlag.THING) ) {
+						things.add((Thing) m);
+					}
+				}
+				
+				for(final Thing t : things) {
+					if( t.getName().equals(arg) ) {
+						final ThingType tt = t.getThingType();
+						
+						if( tt == FOEThingTypes.TERMINAL ) {
+							final Terminal term = (Terminal) t;
+							
+							term.powerOn();
+						}
+						else if( tt == FOEThingTypes.VENDING_MACHINE ) {
+						}
+					}
+				}
+			}
+		});
 	}
-	
+
 	@Override
 	public void init2(final List<Faction> mFactions, Hashtable<String, ItemType> mItemTypes) {
 		//this.factions = mFactions;
@@ -368,7 +424,8 @@ public final class FalloutEquestria extends GameModule implements ExtraCommands 
 			player.addSlot("helmet",        new Slot(FOESlotTypes.HEAD, ItemTypes.ARMOR));
 			player.addSlot("clothes_head",  new Slot(FOESlotTypes.HEAD, ItemTypes.CLOTHING));
 			player.addSlot("eyes",          new Slot(FOESlotTypes.EYES, ItemTypes.NONE)); // eyewear? headwear?
-
+			
+			// NOTE: Unicorns and Alicorns get a horn slot
 			if( pRace != null && ( pRace.equals( UNICORN ) || pRace.equals(ALICORN) ) ) {
 				player.addSlot("horn",      new Slot(FOESlotTypes.HORN, ItemTypes.NONE));
 			}
@@ -378,8 +435,9 @@ public final class FalloutEquestria extends GameModule implements ExtraCommands 
 
 			player.addSlot("battle saddle", new Slot(FOESlotTypes.BACK, ItemTypes.CLOTHING));
 			player.addSlot("saddlebags",    new Slot(FOESlotTypes.BACK, ItemTypes.CLOTHING));
-
-			if( pRace != null && ( player.getRace().equals( PEGASUS ) || pRace.equals(ALICORN) ) ) {
+			
+			// NOTE: Pegasi and Alicorns get a wings slot
+			if( pRace != null && ( pRace.equals( PEGASUS ) || pRace.equals(ALICORN) ) ) {
 				player.addSlot("wings",     new Slot(FOESlotTypes.WINGS, ItemTypes.WEAPON));
 			}
 
@@ -388,12 +446,15 @@ public final class FalloutEquestria extends GameModule implements ExtraCommands 
 			player.addSlot("armor",         new Slot(FOESlotTypes.HOOVES, ItemTypes.ARMOR));
 			player.addSlot("hooves",        new Slot(FOESlotTypes.HOOVES, ItemTypes.WEAPON));
 			player.addSlot("weapon2",       new Slot(FOESlotTypes.HOOVES, ItemTypes.WEAPON));
-
+			
+			// NOTE: these slots are a workaround for not being able to put a pipbuck on hooves
 			player.addSlot("special",       new Slot(FOESlotTypes.LFHOOF, FOEItemTypes.PIPBUCK));
 			player.addSlot("special2",      new Slot(FOESlotTypes.RFHOOF, FOEItemTypes.PIPBUCK));
 
 			// initialize faction reputation
 			for(final Faction faction : getFactions()) player.setReputation(faction, 0);
+			
+			player.addCommand("poweron", getCommands().get("poweron"));
 		}
 	}
 

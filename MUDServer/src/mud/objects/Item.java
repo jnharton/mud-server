@@ -10,8 +10,8 @@ import mud.magic.Enchantment;
 import mud.misc.Script;
 import mud.misc.SlotType;
 import mud.misc.SlotTypes;
-import mud.misc.Trigger;
-import mud.misc.TriggerType;
+import mud.scripting.Trigger;
+import mud.scripting.TriggerType;
 import mud.utils.Utils;
 
 /*

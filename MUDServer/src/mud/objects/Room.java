@@ -18,11 +18,11 @@ import mud.events.SayEventListener;
 import mud.interfaces.Instance;
 import mud.misc.Direction;
 import mud.misc.Terrain;
-import mud.misc.Trigger;
-import mud.misc.TriggerType;
 import mud.misc.Zone;
 import mud.objects.Thing;
 import mud.objects.exits.Door;
+import mud.scripting.Trigger;
+import mud.scripting.TriggerType;
 import mud.utils.Utils;
 import mud.weather.Weather;
 

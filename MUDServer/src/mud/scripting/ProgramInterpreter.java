@@ -1,4 +1,4 @@
-package mud.misc;
+package mud.scripting;
 
 import java.util.EnumSet;
 import java.util.Hashtable;
@@ -9,6 +9,7 @@ import java.util.Map;
 import mud.MUDObject;
 import mud.MUDServer;
 import mud.interfaces.ODBI;
+import mud.misc.Script;
 import mud.objects.Item;
 import mud.objects.NPC;
 import mud.objects.Player;
@@ -46,9 +47,10 @@ public final class ProgramInterpreter {
 	// configuration
 	private final boolean debug_enabled;
 	private final EnumSet<Perms> permissions;
-
+	
+	// variables (pre-loaded and temporary)
 	private final Hashtable<String, String> vars;
-
+	
 	public ProgramInterpreter(final MUDServer parent) {
 		this(parent, false);
 	}

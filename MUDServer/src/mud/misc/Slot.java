@@ -38,8 +38,8 @@ public class Slot {
 	private Item item;                 // the item the slot currently holds
 
 	/**
-	 * Constructs a slot based on a two parameters, the type of s
-	 * item type that it can hold.
+	 * Constructs a slot based on a two parameters,
+	 * the slot type and the item type that it can hold.
 	 * 
 	 * @param slotType
 	 * @param itemType

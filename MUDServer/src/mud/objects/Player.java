@@ -1008,6 +1008,13 @@ public class Player extends MUDObject implements Mobile
 		this.names.remove(tName);
 	}
 	
+	/**
+	 * <b>Get Names (known</b>
+	 * 
+	 * Get the names (of other players), that we know.
+	 * 
+	 * @return
+	 */
 	public List<String> getNames() {
 		return Collections.unmodifiableList(this.names);
 	}

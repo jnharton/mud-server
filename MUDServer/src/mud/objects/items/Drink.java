@@ -3,9 +3,9 @@ package mud.objects.items;
 import mud.TypeFlag;
 import mud.interfaces.Drinkable;
 import mud.interfaces.Stackable;
-import mud.misc.Trigger;
 import mud.objects.Item;
 import mud.objects.ItemTypes;
+import mud.scripting.Trigger;
 
 public class Drink extends Item implements Drinkable, Stackable<Drink> {
 	private int sips = 5;

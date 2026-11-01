@@ -1,10 +1,10 @@
 package mud.commands;
 
 import mud.Command;
-import mud.misc.ProgramInterpreter;
 import mud.misc.Script;
 import mud.net.Client;
 import mud.objects.Player;
+import mud.scripting.ProgramInterpreter;
 
 /*
  * Copyright (c) 2015 Jeremy N. Harton

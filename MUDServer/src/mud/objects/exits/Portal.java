@@ -14,12 +14,12 @@ import mud.events.PortalEvent;
 import mud.events.PortalEventListener;
 import mud.events.SayEvent;
 import mud.events.SayEventListener;
-import mud.misc.Trigger;
-import mud.misc.TriggerType;
 import mud.objects.Exit;
 import mud.objects.ExitType;
 import mud.objects.Item;
 import mud.objects.Player;
+import mud.scripting.Trigger;
+import mud.scripting.TriggerType;
 import mud.utils.Utils;
 
 /*

@@ -1,5 +1,6 @@
 package mud.foe.items;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Hashtable;
@@ -26,6 +27,7 @@ import mud.misc.Slot;
 import mud.net.Client;
 
 import mud.objects.Item;
+import mud.objects.ItemType;
 import mud.objects.ItemTypes;
 import mud.objects.Player;
 import mud.objects.Room;
@@ -401,21 +403,27 @@ public class PipBuck extends Item implements ModularDevice, ExtraCommands {
 					}
 					else if( arg.equalsIgnoreCase("items") ) {
 						send(Utils.padRight("", '-', 40), client);
-
+						
+						List<String> itemList = new ArrayList<>(player.getInventory().size());
+						
 						for(final Item item : player.getInventory()) {
-							if( item.getItemType() == ItemTypes.ARMOR ) {
-								send(colors(item.getName(), "red"), client);
+							final ItemType item_type = item.getItemType();
+							
+							if(item_type == ItemTypes.ARMOR ) {
+								itemList.add( colors(item.getName(), "red") );
 							}
-							else if( item.getItemType() == ItemTypes.BOOK ) {
-								send(colors(item.getName(), "cyan"), client);
+							else if( item_type == ItemTypes.BOOK ) {
+								itemList.add( colors(item.getName(), "cyan") );
 							}
-							else if( item.getItemType() == ItemTypes.WEAPON ) {
-								send(colors(item.getName(), "purple2"), client);
+							else if( item_type == ItemTypes.WEAPON ) {
+								itemList.add( colors(item.getName(), "purple2") );
 							}
 							else {
-								send(colors(item.getName(), "yellow"), client);
+								itemList.add( colors(item.getName(), "yellow") );
 							}
 						}
+						
+						send(itemList, client);
 
 						send(Utils.padRight("", '-', 40), client);
 					}
@@ -431,8 +439,13 @@ public class PipBuck extends Item implements ModularDevice, ExtraCommands {
 
 				if( p != null ) {
 					if( p.efs_enabled ) {
-						// the idea here is to look for living things and/or pipbuck tags and mark them as:
-						// hostile, neutral, friendly (red, yellow, green)
+						/*
+						 * the idea here is to look for living things and/or pipbuck tags and mark them as:
+						 * - hostile (red)
+						 * - neutral (yellow)
+						 * - friendly (green)
+						 */
+						// 
 						final Room room = getRoom( player.getLocation() );
 
 						// get a list of all living creatures in range

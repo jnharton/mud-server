@@ -7,7 +7,6 @@ import java.util.TimerTask;
 import mud.interfaces.ODBI;
 import mud.magic.Spell;
 import mud.misc.Effect;
-import mud.misc.ProgramInterpreter;
 import mud.misc.TimeLoop;
 import mud.net.Client;
 import mud.objects.Creature;
@@ -16,6 +15,8 @@ import mud.objects.Item;
 import mud.objects.NPC;
 import mud.objects.Player;
 import mud.objects.Room;
+import mud.objects.Thing;
+import mud.scripting.ProgramInterpreter;
 import mud.utils.EffectTimer;
 import mud.utils.Message;
 import mud.utils.MudUtils;
@@ -32,9 +33,17 @@ import mud.utils.Time;
  * changes are made to the one referred to.
  */
 
+/**
+ * Command is the parent class of all Command objects and exposes various
+ * functionality via an embedded reference to the main server program and
+ * the database (ObjectDB instance)
+ * 
+ * @author jnhar
+ *
+ */
 public abstract class Command {
 	private MUDServer parent;
-	private ODBI dbi;
+	private ODBI dbintf;
 	
 	private String description;
 	
@@ -46,7 +55,7 @@ public abstract class Command {
 		this.parent = mParent;
 		
 		if( mParent != null ) {
-			this.dbi = mParent.getDBInterface();
+			this.dbintf = mParent.getDBInterface();
 		}
 	}
 	
@@ -88,6 +97,10 @@ public abstract class Command {
 	 */
 	protected final void send(final String toSend, final Client client) {
 		// TODO eliminate with intermediate object
+		this.parent.send(toSend, client);
+	}
+	
+	protected final void send(final List<String> toSend, final Client client) {
 		this.parent.send(toSend, client);
 	}
 	
@@ -151,12 +164,15 @@ public abstract class Command {
 		return parent.getSpell(name);
 	}
 	
+	
+	// Database
+	
 	protected final MUDObject getObject(final String name) {
-		return this.dbi.getByName(name);
+		return this.dbintf.getByName(name);
 	}
 	
 	protected final MUDObject getObject(Integer dbref) {
-		return this.dbi.getById(dbref);
+		return this.dbintf.getById(dbref);
 	}
 	
 	/**
@@ -182,7 +198,7 @@ public abstract class Command {
 	 */
 	protected final Player getPlayer(final String name, boolean online) {
 		if( online ) return parent.getPlayer(name);
-		else         return this.dbi.getPlayer(name);
+		else         return this.dbintf.getPlayer(name);
 	}
 	
 	protected final Player getPlayer(final int DBRef) {
@@ -199,11 +215,11 @@ public abstract class Command {
 	}
 	
 	protected final NPC getNPC(final String npcName) {
-		return this.dbi.getNPC(npcName);
+		return this.dbintf.getNPC(npcName);
 	}
 	
 	protected final NPC getNPC(final int DBRef) {
-		return this.dbi.getNPC(DBRef);
+		return this.dbintf.getNPC(DBRef);
 	}
 	
 	/**
@@ -216,39 +232,48 @@ public abstract class Command {
 	 * @return
 	 */	
 	protected final Room getRoom(final String name) {
-		return this.dbi.getRoomByName(name);
+		return this.dbintf.getRoomByName(name);
 	}
 	
 	protected final Room getRoom(final int DBRef) {
-		return this.dbi.getRoomById(DBRef);
+		return this.dbintf.getRoomById(DBRef);
 	}
 	
 	protected final Exit getExit(final String exitName) {
-		return this.dbi.getExit(exitName);
+		return this.dbintf.getExit(exitName);
 	}
 	
 	protected final Exit getExit(final int DBRef) {
-		return this.dbi.getExit(DBRef);
+		return this.dbintf.getExit(DBRef);
 	}
 	
 	protected final Item getItem(final String itemName) {
-		return this.dbi.getItem(itemName);
+		return this.dbintf.getItem(itemName);
 	}
 	
 	protected final Item getItem(final int DBRef) {
-		return this.dbi.getItem(DBRef);
+		return this.dbintf.getItem(DBRef);
 	}
 	
-	protected final List<Player> getPlayers() {
-		return parent.getPlayers();
+	protected final Thing getThing(final String thingName) {
+		return this.dbintf.getThing(thingName);
+	}
+	
+	protected final Thing getThing(final int DBRef) {
+		return this.dbintf.getThing(DBRef);
 	}
 	
 	protected List<MUDObject> getByRoom(final Room room) {
-		return this.dbi.getByRoom(room);
+		return this.dbintf.getByRoom(room);
 	}
 	
 	protected final List<Creature> getCreaturesByRoom(final Room room) {
-		return this.dbi.getCreaturesByRoom(room);
+		return this.dbintf.getCreaturesByRoom(room);
+	}
+	
+	//
+	protected final List<Player> getPlayers() {
+		return parent.getPlayers();
 	}
 	
 	protected final void addSpellTimer(final Player player, final SpellTimer s) {

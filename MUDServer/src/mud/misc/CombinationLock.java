@@ -79,19 +79,17 @@ public class CombinationLock implements Lock {
 		//else                                   this.locked = true;
 	}
 	
-	public boolean isLocked() {
-		return this.locked;
-	}
-
-	@Override
 	public void lock() {
 		// TODO Auto-generated method stub
 		
 	}
-
-	@Override
+	
 	public void unlock() {
 		// TODO Auto-generated method stub
 		
+	}
+	
+	public boolean isLocked() {
+		return this.locked;
 	}
 }
